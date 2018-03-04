@@ -599,7 +599,7 @@ const char web_html[] PROGMEM = R"=====(
     </div>
     <!-------------------------------------------------------------------------------------------------->
     <div id="tab-content4">
-        <p> ESP32 Radio -- Webradio receiver for ESP32, 1.8" color display and VS1053 MP3 module.<br>
+        <p> ESP32 Radio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
         This project is documented at <a target="blank" href="https://github.com/Edzelf/ESP32-radio">Github</a>.</p>
         <p>Author: Ed Smallenburg<br>
         Webinterface design: <a target="blank" href="http://www.sanderjochems.nl/">Sander Jochems</a><br>
