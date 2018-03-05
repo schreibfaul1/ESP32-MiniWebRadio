@@ -12,7 +12,7 @@
 //  eeprom,   data, 0x99,    0x290000, 0x1000,
 //  spiffs,   data, spiffs,  0x291000, 0x169000
 //
-//  for german umlaut change preferences.h in Eclipse in UTF-8
+//  for german umlaut change Properties in Eclipse in UTF-8
 //  File/Properties/Resource:  Text file encoding (other) UTF-8
 //
 //
