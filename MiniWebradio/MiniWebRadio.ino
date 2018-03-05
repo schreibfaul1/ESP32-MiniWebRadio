@@ -39,7 +39,7 @@
 #define VS1053_DREQ   36
 #define TFT_CS        22
 #define TFT_DC        21
-#define TFT_BL		  17
+#define TFT_BL	      17
 #define TP_IRQ        39
 #define TP_CS         16
 #define SD_CS          5
@@ -53,8 +53,8 @@ uint8_t  _buttonNr=0;
 uint8_t  _timefile=0;           // speak the time
 uint32_t _millis=0;
 uint32_t _alarmdays=0;
-boolean  f_1sec=false;			// flag set every one second
-boolean  f_SD_okay=false;		// true if SD card in place and readable
+boolean  f_1sec=false;          // flag set every one second
+boolean  f_SD_okay=false;       // true if SD card in place and readable
 boolean  f_mute=false;
 boolean  f_rtc=false;           // true if time from ntp is received
 boolean  f_mp3eof=false;        // set at the end of mp3 file
@@ -68,7 +68,7 @@ status _state=RADIO; //statemaschine
 //objects
 TFT tft(1); // parameter:  (0) ILI9341,  (1)HX8347D
 VS1053 mp3(VS1053_CS, VS1053_DCS, VS1053_DREQ);
-hw_timer_t* timer=NULL;			// An instance of the timer
+hw_timer_t* timer=NULL;	        // instance of the timer
 HTML web;
 Preferences pref;
 RTIME rtc;
