@@ -49,7 +49,7 @@
 
 char sbuf[256], myIP[100];
 String   _station="", _title="", _info="", _myIP="", _stationname="",_alarmtime="", _time_s="", _hour="", _bitrate="";
-String   _mp3Name[10];
+String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _buttonNr=0;
 uint8_t  _timefile=0;           // speak the time
@@ -64,7 +64,7 @@ boolean  f_alarm=false;         // set if alarmday and alarmtime is equal localt
 boolean  f_timespeech=false;    // if true activate timespeech
 boolean  semaphore=false;
 
-enum status{RADIO, RADIOico, RADIOmenue, CLOCK, CLOCKico, BRIGHTNESS, MP3PLAYER, MP3PLAYER_ico, ALARM};
+enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6, MP3PLAYERico=7, ALARM=8};
 status _state=RADIO; //statemaschine
 
 //objects
@@ -256,7 +256,7 @@ inline void clearHeader() {tft.fillRect(0,   0, 320,  20, TFT_BLACK);}   // y   
 inline void clearStation(){tft.fillRect(0,  20, 320, 100, TFT_BLACK);}   // y  20...119
 inline void clearTitle()  {tft.fillRect(0, 120, 320, 100, TFT_BLACK);}   // y 120...219
 inline void clearFooter() {tft.fillRect(0, 220, 320,  20, TFT_BLACK);}   // y 220...239
-inline void clearDisplay(){tft.fillRect(0,   0, 320, 240, TFT_BLACK);}   // y   0...239
+inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                   // y   0...239
 
 void displayinfo(const char *str, int pos, int height, uint16_t color, uint16_t indent){
     tft.fillRect(0, pos, 320, height, TFT_BLACK);        // Clear the space for new info
@@ -540,122 +540,80 @@ inline void showBrightness(){uint16_t br=tft.width()* pref.getUInt("brightness")
     tft.fillRect(0, 140, br, 5, TFT_RED); tft.fillRect(br+1, 140, tft.width()-br+1, 5, TFT_GREEN);}
 
 //**************************************************************************************************
-void showIcons(uint8_t ico=255, uint8_t val=0){ //defaultvalue ico=255, val=0 in prototype
+//                                M E N U E / B U T T O N S                                        *
+//**************************************************************************************************
+void changeState(int state){
+    uint8_t cntBtn=0; // number of buttons
     if(!f_SD_okay) return;
-    if(_state==RADIOico){
-        if(ico==255){
-            displayinfo("",121,119, TFT_BLACK, 0); //clear title
-            if(f_mute==false) {tft.drawBmpFile(SD, "/btn/Button_Mute_Off_Green.bmp", 0, 167); mp3.loop();}//
-            else {tft.drawBmpFile(SD, "/btn/Button_Mute_Red.bmp", 0 ,167); mp3.loop();}//
-            tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Blue.bmp", 64, 167); mp3.loop();//
-            tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Blue.bmp",128, 167); mp3.loop();//
-            tft.drawBmpFile(SD, "/btn/Button_Previous_Green.bmp", 192, 167); mp3.loop();//
-            tft.drawBmpFile(SD, "/btn/Button_Next_Green.bmp", 256, 167); mp3.loop();} //
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Mute_Off_Green.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Mute_Red.bmp", 0 ,167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Blue.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Blue.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Yellow.bmp",128, 167);
-        if((ico==4)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Previous_Green.bmp",192, 167);
-        if((ico==4)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Previous_Yellow.bmp",192, 167);
-        if((ico==5)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Next_Green.bmp",256, 167);
-        if((ico==5)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Next_Yellow.bmp",256, 167);
+    switch(state) {
+    case RADIOico:{
+        _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Off_Green.bmp";
+        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.bmp";
+        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
+        _pressBtn[3]="/btn/Button_Previous_Yellow.bmp";    _releaseBtn[3]="/btn/Button_Previous_Green.bmp";
+        _pressBtn[4]="/btn/Button_Next_Yellow.bmp";        _releaseBtn[4]="/btn/Button_Next_Green.bmp";
+        cntBtn=5;
+        clearTitle(); clearFooter(); showVolume();
+        break;}
+    case RADIOmenue:{
+        _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
+        _pressBtn[1]="/btn/Clock_Yellow.bmp";              _releaseBtn[1]="/btn/Clock_Green.bmp";
+        _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
+        _pressBtn[3]="/btn/Bulb_Yellow.bmp";               _releaseBtn[3]="/btn/Bulb_Green.bmp";
+        cntBtn=4;
+        clearTitle(); clearFooter();
+        break;}
+    case CLOCKico:{
+        _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
+        _pressBtn[1]="/btn/Bell_Yellow.bmp";               _releaseBtn[1]="/btn/Bell_Green.bmp";
+        _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
+        cntBtn=3;
+        break;}
+    case BRIGHTNESS:{
+        _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
+        _pressBtn[1]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[1]="/btn/Button_Right_Blue.bmp";
+        _pressBtn[2]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Ready_Blue.bmp";
+        cntBtn=3;
+        break;}
+    case MP3PLAYER:{
+        _pressBtn[0]="/btn/Radio_Yellow.bmp";              _releaseBtn[0]="/btn/Radio_Green.bmp";
+        _pressBtn[1]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[1]="/btn/Button_Left_Blue.bmp";
+        _pressBtn[2]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Right_Blue.bmp";
+        _pressBtn[3]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[3]="/btn/Button_Ready_Blue.bmp";
+        cntBtn=4;
+        break;}
+    case MP3PLAYERico:{
+        _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Off_Green.bmp";
+        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.bmp";
+        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
+        _pressBtn[3]="/btn/MP3_Yellow.bmp";                _releaseBtn[3]="/btn/MP3_Green.bmp";
+        _pressBtn[4]="/btn/Radio_Yellow.bmp";              _releaseBtn[4]="/btn/Radio_Green.bmp";
+        cntBtn=5;
+        break;}
+    case ALARM:{
+        _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
+        _pressBtn[1]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[1]="/btn/Button_Right_Blue.bmp";
+        _pressBtn[2]="/btn/Button_Up_Yellow.bmp";          _releaseBtn[2]="/btn/Button_Up_Blue.bmp";
+        _pressBtn[3]="/btn/Button_Down_Yellow.bmp";        _releaseBtn[3]="/btn/Button_Down_Blue.bmp";
+        _pressBtn[4]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[4]="/btn/Button_Ready_Blue.bmp";
+        cntBtn=5;
+        break;}
     }
-    if(_state==RADIOmenue){
-        if(ico==255){
-            displayinfo("",121,119, TFT_BLACK, 0); //clear title
-            tft.drawBmpFile(SD, "/btn/MP3_Green.bmp", 0, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Clock_Green.bmp", 64, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Radio_Green.bmp", 128, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Bulb_Green.bmp",192, 167); mp3.loop();}
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/MP3_Green.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/MP3_Yellow.bmp", 0, 167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Clock_Green.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Clock_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Radio_Green.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Radio_Yellow.bmp", 128, 167);
-        if((ico==4)&&(val==0)) tft.drawBmpFile(SD, "/btn/Bulb_Green.bmp",192, 167);
-        if((ico==4)&&(val==1)) tft.drawBmpFile(SD, "/btn/Bulb_Yellow.bmp",192, 167);
+    if(state!=RADIO && state!=CLOCK){ // RADIO and CLOCK have no Buttons
+        int j=0;
+        if(state==RADIOico || state==MP3PLAYERico){  // show correct mute button
+            if(f_mute==false) {tft.drawBmpFile(SD, _releaseBtn[0].c_str(), 0, 167); mp3.loop();}
+            else {tft.drawBmpFile(SD, _pressBtn[0].c_str(), 0 ,167); mp3.loop();}
+            j=1;}
+        for(int i=j; i<cntBtn; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*64 ,167); mp3.loop();}
     }
-    if(_state==CLOCKico){
-        if(ico==255){
-            displayinfo("",160,79, TFT_BLACK, 0); //clear region
-            tft.drawBmpFile(SD, "/btn/MP3_Green.bmp", 0, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Bell_Green.bmp", 64, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Radio_Green.bmp", 128, 167); mp3.loop();}
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/MP3_Green.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/MP3_Yellow.bmp", 0, 167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Bell_Green.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Bell_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Radio_Green.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Radio_Yellow.bmp", 128, 167);
-    }
-    if(_state==ALARM){
-        if(ico==255){
-            tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 0, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp", 64, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Up_Blue.bmp", 128, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Down_Blue.bmp", 192, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp", 256, 167); mp3.loop();}
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Left_Yellow.bmp", 0 ,167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Right_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Up_Blue.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Up_Yellow.bmp",128, 167);
-        if((ico==4)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Down_Blue.bmp",192, 167);
-        if((ico==4)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Down_Yellow.bmp",192, 167);
-        if((ico==5)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp",256, 167);
-        if((ico==5)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Ready_Yellow.bmp",256, 167);
-    }
-    if(_state==BRIGHTNESS){
-        if(ico==255){
-            tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 0, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp", 64, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp", 128, 167); mp3.loop();}
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Left_Yellow.bmp", 0 ,167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Right_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp", 128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Ready_Yellow.bmp", 128, 167);
-    }
-    if(_state==MP3PLAYER){
-        if(ico==255){
-            tft.drawBmpFile(SD, "/btn/Radio_Green.bmp", 0, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 64, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp", 128, 167); mp3.loop();
-            tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp", 192, 167); mp3.loop();
-        }
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/Radio_Green.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/Radio_Yellow.bmp", 0 ,167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Left_Blue.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Left_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Right_Blue.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Right_Yellow.bmp",128, 167);
-        if((ico==4)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Ready_Blue.bmp",192, 167);
-        if((ico==4)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Ready_Yellow.bmp",192, 167);
-    }
-    if(_state==MP3PLAYER_ico){
-        if(ico==255){
-            if(f_mute==false) {tft.drawBmpFile(SD, "/btn/Button_Mute_Off_Green.bmp", 0, 167); mp3.loop();}//
-            else {tft.drawBmpFile(SD, "/btn/Button_Mute_Red.bmp", 0 ,167); mp3.loop();}//
-            tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Blue.bmp", 64, 167); mp3.loop();//
-            tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Blue.bmp",128, 167); mp3.loop();//
-            tft.drawBmpFile(SD, "/btn/MP3_Green.bmp",192, 167); mp3.loop(); //
-            tft.drawBmpFile(SD, "/btn/Radio_Green.bmp", 256, 167); mp3.loop();} //
-        if((ico==1)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Mute_Off_Green.bmp", 0, 167);
-        if((ico==1)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Mute_Red.bmp", 0 ,167);
-        if((ico==2)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Blue.bmp", 64, 167);
-        if((ico==2)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Volume_Down_Yellow.bmp", 64, 167);
-        if((ico==3)&&(val==0)) tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Blue.bmp",128, 167);
-        if((ico==3)&&(val==1)) tft.drawBmpFile(SD, "/btn/Button_Volume_Up_Yellow.bmp",128, 167);
-        if((ico==4)&&(val==0)) tft.drawBmpFile(SD, "/btn/MP3_Green.bmp",192, 167);
-        if((ico==4)&&(val==1)) tft.drawBmpFile(SD, "/btn/MP3_Yellow.bmp",192, 167);
-        if((ico==5)&&(val==0)) tft.drawBmpFile(SD, "/btn/Radio_Green.bmp",256, 167);
-        if((ico==5)&&(val==1)) tft.drawBmpFile(SD, "/btn/Radio_Yellow.bmp",256, 167);
-    }
+    _state=static_cast<status>(state);
+}
+void changeBtn_pressed(uint8_t btnNr){
+    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _pressBtn[btnNr].c_str(), btnNr*64 ,167);
+}
+void changeBtn_released(uint8_t btnNr){
+    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _releaseBtn[btnNr].c_str(), btnNr*64 ,167);
 }
 
 void displayWeekdays(uint8_t ad, boolean showall=false){
@@ -825,7 +783,7 @@ void vs1053_showstation(const char *info){              // called from vs1053
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
     _title=info;
-    if(_state==0)showTitle(_title, false);              //state RADIO
+    if(_state==RADIO)showTitle(_title, false);              //state RADIO
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
@@ -875,7 +833,6 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(str); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply("WOLLES-POWERLINE|1234\n"); return;} //Dummy yet
-
     if(cmd.startsWith("saveprefs")){web.reply("Save settings\n"); clearallpresets();return;}
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
@@ -908,7 +865,6 @@ void HTML_request(const String request){
     else {
         //log_e("unknown request: %s",request.c_str());
         }
-
 }
 void HTML_info(const char *info){                   // called from html
     Serial.print("HTML_info:   ");
@@ -939,13 +895,12 @@ void ir_key(const char* key){
 
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
-    //log_i("Touch %i %i", x, y);
-    uint8_t yPos=0, y1Pos=255, d=0;
+    uint8_t yPos=255, y1Pos=255, d=0;
     _millis=millis();
     if(y<167){
-        if(_state==RADIOico){_state=RADIOmenue; showIcons();}
-        if(_state==RADIO){_state=RADIOico; showIcons(); showVolume(); }
-        if(_state==CLOCK){_state=CLOCKico;showIcons();}
+        if(_state==RADIOico) changeState(RADIOmenue);
+        if(_state==RADIO) changeState(RADIOico);
+        if(_state==CLOCK) changeState(CLOCKico);
         if(_state==BRIGHTNESS){}
         if(y<40){
             switch(x){  //weekdays
@@ -960,130 +915,129 @@ void tp_pressed(uint16_t x, uint16_t y){
     }
     else{
         switch(x){  // icons
-            case   0 ...  63: yPos=1; break;
-            case  64 ... 127: yPos=2; break;
-            case 128 ... 191: yPos=3; break;
-            case 192 ... 255: yPos=4; break;
-            case 256 ... 319: yPos=5; break;}
+            case   0 ...  63: yPos=0; break;
+            case  64 ... 127: yPos=1; break;
+            case 128 ... 191: yPos=2; break;
+            case 192 ... 255: yPos=3; break;
+            case 256 ... 319: yPos=4; break;}
     }
-
+    changeBtn_pressed(yPos);
     if(_state==RADIOico){
-        if(yPos==1){mute(); if(f_mute==false) showIcons(1,0); else showIcons(1,1);}
-        if(yPos==2){showIcons(2,1); _buttonNr=1; downvolume(); showVolume();}
-        if(yPos==3){showIcons(3,1); _buttonNr=2; upvolume(); showVolume();}
-        if(yPos==4){showIcons(4,1); _buttonNr=3; mp3.connecttohost(readnexthostfrompref(false));}
-        if(yPos==5){showIcons(5,1); _buttonNr=4; mp3.connecttohost(readnexthostfrompref(true));}
+        if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
+        if(yPos==1){_buttonNr= 1; downvolume(); showVolume();}
+        if(yPos==2){_buttonNr= 2; upvolume(); showVolume();}
+        if(yPos==3){_buttonNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
+        if(yPos==4){_buttonNr= 4; mp3.connecttohost(readnexthostfrompref(true));}
     }
     if(_state==RADIOmenue){
-        if(yPos==1){showIcons(1,1); _buttonNr= 5; listmp3file();} // MP3
-        if(yPos==2){showIcons(2,1); _buttonNr= 6;} // Clock
-        if(yPos==3){showIcons(3,1); _buttonNr= 7;} // Radio
-        if(yPos==4){showIcons(4,1); _buttonNr=16;} // Brightness
+        if(yPos==0){_buttonNr= 5; listmp3file();} // MP3
+        if(yPos==1){_buttonNr= 6;} // Clock
+        if(yPos==2){_buttonNr= 7;} // Radio
+        if(yPos==3){_buttonNr=16;} // Brightness
     }
     if(_state==CLOCKico){
-        if(yPos==1){showIcons(1,1); _buttonNr= 8; listmp3file();} // MP3
-        if(yPos==2){showIcons(2,1); _buttonNr= 9;} // Bell
-        if(yPos==3){showIcons(3,1); _buttonNr=10;} // Radio
+        if(yPos==0){_buttonNr= 8; listmp3file();} // MP3
+        if(yPos==1){_buttonNr= 9;} // Bell
+        if(yPos==2){_buttonNr=10;} // Radio
     }
     if(_state==ALARM){
-        if(yPos==1){showIcons(1,1); _buttonNr=11;} // left
-        if(yPos==2){showIcons(2,1); _buttonNr=12;} // right
-        if(yPos==3){showIcons(3,1); _buttonNr=13;} // up
-        if(yPos==4){showIcons(4,1); _buttonNr=14;} // down
-        if(yPos==5){showIcons(5,1); _buttonNr=15;} // ready
+        if(yPos==0){_buttonNr=11;} // left
+        if(yPos==1){_buttonNr=12;} // right
+        if(yPos==2){_buttonNr=13;} // up
+        if(yPos==3){_buttonNr=14;} // down
+        if(yPos==4){_buttonNr=15;} // ready
 
         if(y1Pos<7){d=(1<<y1Pos);
         if((_alarmdays & d))_alarmdays-=d; else _alarmdays+=d; displayWeekdays(_alarmdays);}
     }
     if(_state==BRIGHTNESS){
-        if(yPos==1){showIcons(1,1); _buttonNr=17;} // left
-        if(yPos==2){showIcons(2,1); _buttonNr=18;} // right
-        if(yPos==3){showIcons(3,1); _buttonNr=19;} // ready
+        if(yPos==0){_buttonNr=17;} // left
+        if(yPos==1){_buttonNr=18;} // right
+        if(yPos==2){_buttonNr=19;} // ready
     }
     if(_state==MP3PLAYER){
-        if(yPos==1){showIcons(1,1); _buttonNr=20;} // Radio
-        if(yPos==2){showIcons(2,1); _buttonNr=21;} // left
-        if(yPos==3){showIcons(3,1); _buttonNr=22;} // right
-        if(yPos==4){showIcons(4,1); _buttonNr=23;} // ready
+        if(yPos==0){_buttonNr=20;} // Radio
+        if(yPos==1){_buttonNr=21;} // left
+        if(yPos==2){_buttonNr=22;} // right
+        if(yPos==3){_buttonNr=23;} // ready
     }
-    if(_state==MP3PLAYER_ico){
-        if(yPos==1){mute(); if(f_mute==false) showIcons(1,0); else showIcons(1,1);}
-        if(yPos==2){showIcons(2,1); _buttonNr=24; downvolume(); showVolume();} // Vol-
-        if(yPos==3){showIcons(3,1); _buttonNr=25; upvolume(); showVolume();} // Vol+
-        if(yPos==4){showIcons(4,1); _buttonNr=26;} // MP3
-        if(yPos==5){showIcons(5,1); _buttonNr=27;} // Radio
+    if(_state==MP3PLAYERico){
+        if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
+        if(yPos==1){_buttonNr=24; downvolume(); showVolume();} // Vol-
+        if(yPos==2){_buttonNr=25; upvolume();   showVolume();} // Vol+
+        if(yPos==3){_buttonNr=26;} // MP3
+        if(yPos==4){_buttonNr=27;} // Radio
     }
 }
 
 void tp_released(){
     static String str="";
     switch(_buttonNr){
-    case  1: showIcons(2,0); break; // RADIOico downvolume
-    case  2: showIcons(3,0); break; // RADIOico upvolume
-    case  3: showIcons(4,0); break; // RADIOico nextstation
-    case  4: showIcons(5,0); break; // RADIOico previousstation
-    case  5: _state=MP3PLAYER; tft.fillScreen(TFT_BLACK);
-             showHeadlineItem("* MP3Player *");
-             showIcons(); tft.setTextSize(4); str=_mp3Name[_mp3Index];
+    case  1: changeBtn_released(1); break; // RADIOico downvolume
+    case  2: changeBtn_released(2); break; // RADIOico upvolume
+    case  3: changeBtn_released(3); break; // RADIOico nextstation
+    case  4: changeBtn_released(4); break; // RADIOico previousstation
+    case  5: tft.fillScreen(TFT_BLACK);
+             showHeadlineItem("* MP3Player *");changeState(MP3PLAYER);
+             tft.setTextSize(4); str=_mp3Name[_mp3Index];
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5); break; //MP3
-    case  6: _state=CLOCK; tft.fillScreen(TFT_BLACK);
+    case  6: tft.fillScreen(TFT_BLACK); changeState(CLOCK);
              showHeadlineItem("** Wecker **"); display_time(true); break;//Clock
-    case  7: _state=RADIO; showTitle(_title, true); showFooter(); break;
-    case  8: _state=MP3PLAYER; tft.fillScreen(TFT_BLACK);
+    case  7: changeState(RADIO); showTitle(_title, true); showFooter(); break;
+    case  8: tft.fillScreen(TFT_BLACK); changeState(MP3PLAYER);
              showHeadlineItem("* MP3Player *");
-             showIcons(); tft.setTextSize(4); str=_mp3Name[_mp3Index];
+             tft.setTextSize(4); str=_mp3Name[_mp3Index];
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              displayinfo(str.c_str(), 21, 100, TFT_CYAN, 5); break; //MP3
-    case  9: _state=ALARM; showHeadlineItem(""); showIcons();
+    case  9: changeState(ALARM); showHeadlineItem("");
              displayWeekdays(_alarmdays, true);
              displayAlarmtime(0, 0, true); break;
     case 10: showHeadlineItem("** Internet radio **");
              showFooter();
-             _state=RADIO; showStation(); showTitle(_title, true); break;
-    case 11: displayAlarmtime(-1);    showIcons(1,0);  break;
-    case 12: displayAlarmtime(+1);    showIcons(2,0);  break;
-    case 13: displayAlarmtime(0, +1); showIcons(3,0);  break; // alarmtime up
-    case 14: displayAlarmtime(0, -1); showIcons(4,0);  break; // alarmtime down
+             changeState(RADIO); showStation(); showTitle(_title, true); break;
+    case 11: displayAlarmtime(-1);    changeBtn_released(0);  break;
+    case 12: displayAlarmtime(+1);    changeBtn_released(1);  break;
+    case 13: displayAlarmtime(0, +1); changeBtn_released(2);  break; // alarmtime up
+    case 14: displayAlarmtime(0, -1); changeBtn_released(3);  break; // alarmtime down
     case 15: pref.putUInt("alarm_weekday", _alarmdays); // ready
              pref.putString("alarm_time", _alarmtime);
-             _state=CLOCK;
-             tft.fillScreen(TFT_BLACK);
+             tft.fillScreen(TFT_BLACK); changeState(CLOCK);
              showHeadlineItem("** Wecker **");
              display_time(true); break;//Clock
-    case 16: _state=BRIGHTNESS; tft.fillScreen(TFT_BLACK); showHeadlineItem("** Helligkeit **");
-             showBrightness(); mp3.loop(); showIcons();
+    case 16: tft.fillScreen(TFT_BLACK); changeState(BRIGHTNESS); showHeadlineItem("** Helligkeit **");
+             showBrightness(); mp3.loop();
              tft.drawBmpFile(SD, "/Brightness.bmp",0, 21); break;
-    case 17: showIcons(1,0); downBrightness(); showBrightness(); break;
-    case 18: showIcons(2,0); upBrightness(); showBrightness(); break;
+    case 17: changeBtn_released(0); downBrightness(); showBrightness(); break;
+    case 18: changeBtn_released(1); upBrightness(); showBrightness(); break;
     case 19: showHeadlineItem("** Internet radio **");
              showFooter();
-             _state=RADIO; showStation(); showTitle(_title, true); break;
+             changeState(RADIO); showStation(); showTitle(_title, true); break;
     case 20: showHeadlineItem("** Internet radio **");
              showFooter();
-             _state=RADIO; showStation(); showTitle(_title, true);break;
-    case 21: showIcons(2,0); _mp3Index--; if(_mp3Index==-1) _mp3Index=9;
+             changeState(RADIO); showStation(); showTitle(_title, true);break;
+    case 21: changeBtn_released(1); _mp3Index--; if(_mp3Index==-1) _mp3Index=9;
              str=_mp3Name[_mp3Index];
              while(str.length()==0){_mp3Index--; str=_mp3Name[_mp3Index]; if(_mp3Index==0) break;}
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              tft.setTextSize(4);
              displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5);
              break; // left file--
-    case 22: showIcons(3,0); _mp3Index++; if(_mp3Index>9) _mp3Index=0;
+    case 22: changeBtn_released(2); _mp3Index++; if(_mp3Index>9) _mp3Index=0;
              str=_mp3Name[_mp3Index];
              if(str.length()==0){_mp3Index=0; str=_mp3Name[_mp3Index];}
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              tft.setTextSize(4);
              displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5);
              break; // right file++
-    case 23: _state=MP3PLAYER_ico; showIcons(); showVolume();
+    case 23: changeState(MP3PLAYERico); showVolume();
              mp3.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
-    case 24: showIcons(2,0); break; // MP3PLAYERico downvolume
-    case 25: showIcons(3,0); break; // MP3PLAYERico upvolume
-    case 26: _state=MP3PLAYER; tft.fillRect(0, 140, 320, 100, TFT_BLACK); showIcons(); break;
+    case 24: changeBtn_released(1); break; // MP3PLAYERico downvolume
+    case 25: changeBtn_released(2); break; // MP3PLAYERico upvolume
+    case 26: tft.fillRect(0, 140, 320, 100, TFT_BLACK);changeState(MP3PLAYER); break;
     case 27: showHeadlineItem("** Internet radio **");
              mp3.connecttohost(readhostfrompref(-1)); showFooter();
-             _state=RADIO; showStation(); showTitle(_title, true); break;
+             changeState(RADIO); showStation(); showTitle(_title, true); break;
     }
     _buttonNr=0;
 }
