@@ -51,7 +51,7 @@ char sbuf[256], myIP[100];
 String   _station="", _title="", _info="", _myIP="", _stationname="",_alarmtime="", _time_s="", _hour="", _bitrate="";
 String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
-uint8_t  _buttonNr=0;
+uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
 uint32_t _millis=0;
 uint32_t _alarmdays=0;
@@ -924,59 +924,59 @@ void tp_pressed(uint16_t x, uint16_t y){
     changeBtn_pressed(yPos);
     if(_state==RADIOico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
-        if(yPos==1){_buttonNr= 1; downvolume(); showVolume();}
-        if(yPos==2){_buttonNr= 2; upvolume(); showVolume();}
-        if(yPos==3){_buttonNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
-        if(yPos==4){_buttonNr= 4; mp3.connecttohost(readnexthostfrompref(true));}
+        if(yPos==1){_releaseNr= 1; downvolume(); showVolume();} // Vol-
+        if(yPos==2){_releaseNr= 2; upvolume(); showVolume();}   // Vol+
+        if(yPos==3){_releaseNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
+        if(yPos==4){_releaseNr= 4; mp3.connecttohost(readnexthostfrompref(true));}
     }
     if(_state==RADIOmenue){
-        if(yPos==0){_buttonNr= 5; listmp3file();} // MP3
-        if(yPos==1){_buttonNr= 6;} // Clock
-        if(yPos==2){_buttonNr= 7;} // Radio
-        if(yPos==3){_buttonNr=16;} // Brightness
+        if(yPos==0){_releaseNr= 5; mp3.stop_mp3client(); listmp3file();} // MP3
+        if(yPos==1){_releaseNr= 6;} // Clock
+        if(yPos==2){_releaseNr= 7; } // Radio
+        if(yPos==3){_releaseNr=16;} // Brightness
     }
     if(_state==CLOCKico){
-        if(yPos==0){_buttonNr= 8; listmp3file();} // MP3
-        if(yPos==1){_buttonNr= 9;} // Bell
-        if(yPos==2){_buttonNr=10;} // Radio
+        if(yPos==0){_releaseNr= 5; listmp3file();} // MP3
+        if(yPos==1){_releaseNr= 9;} // Bell
+        if(yPos==2){_releaseNr=10;} // Radio
     }
     if(_state==ALARM){
-        if(yPos==0){_buttonNr=11;} // left
-        if(yPos==1){_buttonNr=12;} // right
-        if(yPos==2){_buttonNr=13;} // up
-        if(yPos==3){_buttonNr=14;} // down
-        if(yPos==4){_buttonNr=15;} // ready
+        if(yPos==0){_releaseNr=11;} // left
+        if(yPos==1){_releaseNr=12;} // right
+        if(yPos==2){_releaseNr=13;} // up
+        if(yPos==3){_releaseNr=14;} // down
+        if(yPos==4){_releaseNr=15;} // ready
 
         if(y1Pos<7){d=(1<<y1Pos);
         if((_alarmdays & d))_alarmdays-=d; else _alarmdays+=d; displayWeekdays(_alarmdays);}
     }
     if(_state==BRIGHTNESS){
-        if(yPos==0){_buttonNr=17;} // left
-        if(yPos==1){_buttonNr=18;} // right
-        if(yPos==2){_buttonNr=19;} // ready
+        if(yPos==0){_releaseNr=17;} // left
+        if(yPos==1){_releaseNr=18;} // right
+        if(yPos==2){_releaseNr=19;} // ready
     }
     if(_state==MP3PLAYER){
-        if(yPos==0){_buttonNr=20;} // Radio
-        if(yPos==1){_buttonNr=21;} // left
-        if(yPos==2){_buttonNr=22;} // right
-        if(yPos==3){_buttonNr=23;} // ready
+        if(yPos==0){_releaseNr=7; mp3.connecttohost(readhostfrompref(-1));} // Radio
+        if(yPos==1){_releaseNr=21;} // left
+        if(yPos==2){_releaseNr=22;} // right
+        if(yPos==3){_releaseNr=23;} // ready
     }
     if(_state==MP3PLAYERico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
-        if(yPos==1){_buttonNr=24; downvolume(); showVolume();} // Vol-
-        if(yPos==2){_buttonNr=25; upvolume();   showVolume();} // Vol+
-        if(yPos==3){_buttonNr=26;} // MP3
-        if(yPos==4){_buttonNr=27;} // Radio
+        if(yPos==1){_releaseNr=1; downvolume(); showVolume();} // Vol-
+        if(yPos==2){_releaseNr=2; upvolume();   showVolume();} // Vol+
+        if(yPos==3){_releaseNr=26;} // MP3
+        if(yPos==4){_releaseNr=7; mp3.connecttohost(readhostfrompref(-1));} // Radio
     }
 }
 
 void tp_released(){
     static String str="";
-    switch(_buttonNr){
-    case  1: changeBtn_released(1); break; // RADIOico downvolume
-    case  2: changeBtn_released(2); break; // RADIOico upvolume
-    case  3: changeBtn_released(3); break; // RADIOico nextstation
-    case  4: changeBtn_released(4); break; // RADIOico previousstation
+    switch(_releaseNr){
+    case  1: changeBtn_released(1); break; // Vol-
+    case  2: changeBtn_released(2); break; // Vol+
+    case  3: changeBtn_released(3); break; // RADIO nextstation
+    case  4: changeBtn_released(4); break; // RADIO previousstation
     case  5: tft.fillScreen(TFT_BLACK);
              showHeadlineItem("* MP3Player *");changeState(MP3PLAYER);
              tft.setTextSize(4); str=_mp3Name[_mp3Index];
@@ -984,12 +984,7 @@ void tp_released(){
              displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5); break; //MP3
     case  6: tft.fillScreen(TFT_BLACK); changeState(CLOCK);
              showHeadlineItem("** Wecker **"); display_time(true); break;//Clock
-    case  7: changeState(RADIO); showTitle(_title, true); showFooter(); break;
-    case  8: tft.fillScreen(TFT_BLACK); changeState(MP3PLAYER);
-             showHeadlineItem("* MP3Player *");
-             tft.setTextSize(4); str=_mp3Name[_mp3Index];
-             str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
-             displayinfo(str.c_str(), 21, 100, TFT_CYAN, 5); break; //MP3
+    case  7: changeState(RADIO); showStation(); showTitle(_title, true); showFooter(); break;
     case  9: changeState(ALARM); showHeadlineItem("");
              displayWeekdays(_alarmdays, true);
              displayAlarmtime(0, 0, true); break;
@@ -1015,7 +1010,7 @@ void tp_released(){
              changeState(RADIO); showStation(); showTitle(_title, true); break;
     case 20: showHeadlineItem("** Internet radio **");
              showFooter();
-             changeState(RADIO); showStation(); showTitle(_title, true);break;
+             changeState(RADIO); showStation(); showTitle(_title, true); break;
     case 21: changeBtn_released(1); _mp3Index--; if(_mp3Index==-1) _mp3Index=9;
              str=_mp3Name[_mp3Index];
              while(str.length()==0){_mp3Index--; str=_mp3Name[_mp3Index]; if(_mp3Index==0) break;}
@@ -1032,12 +1027,10 @@ void tp_released(){
              break; // right file++
     case 23: changeState(MP3PLAYERico); showVolume();
              mp3.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
-    case 24: changeBtn_released(1); break; // MP3PLAYERico downvolume
-    case 25: changeBtn_released(2); break; // MP3PLAYERico upvolume
     case 26: tft.fillRect(0, 140, 320, 100, TFT_BLACK);changeState(MP3PLAYER); break;
     case 27: showHeadlineItem("** Internet radio **");
              mp3.connecttohost(readhostfrompref(-1)); showFooter();
              changeState(RADIO); showStation(); showTitle(_title, true); break;
     }
-    _buttonNr=0;
+    _releaseNr=0;
 }
