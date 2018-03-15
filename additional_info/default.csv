@@ -1,0 +1,7 @@
+# Name,   Type,  SubType,  Offset,   Size
+otadata,  data,  ota,      0x9000,   0x2000
+phy_init, data,  phy,      0xb000,   0x5000
+factory,  app,   factory,  0x10000,  1M
+ota_0,    app,   ota_0,    ,         1M
+ota_1,    app,   ota_1,    ,         1M
+nvs,      data,  nvs,      ,         0x16000
