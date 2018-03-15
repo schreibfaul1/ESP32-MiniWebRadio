@@ -99,7 +99,7 @@ void defaultsettings(){
     pref.clear();
     pref.putString("ESP32_Radio","default");
     //
-    pref.putString("wifi_00","Wolles-FRITZBOX/xxxxxx");
+    pref.putString("wifi_00","Wolles-FRITZBOX/xxxxx");
     pref.putString("wifi_01","ADSL-11/yyyyyy");
     //
     pref.putUInt("brightness",100); // 100% display backlight
@@ -111,7 +111,7 @@ void defaultsettings(){
     pref.putUInt("volume",12); // 0...21
     pref.putUInt("mute",   0); // no mute
     pref.putUInt("toneha", 0); // BassFreq 0...15
-    pref.putUInt("tonehf", 0); // TrebleGain 0...15
+    pref.putUInt("tonehf", 0); // TrebleGain 0...14
     pref.putUInt("tonela", 0); // BassGain 0...15
     pref.putUInt("tonelf", 0); // BassFreq 0...13
     //
@@ -519,11 +519,13 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
 //**************************************************************************************************
 inline uint8_t downvolume(){
     uint8_t vol; vol=pref.getUInt("volume");
-    if(vol>0) {vol--; pref.putUInt("volume", vol); mp3.setVolume(vol);} showHeadlineVolume(vol); return vol;}
+    if(vol>0) {vol--; pref.putUInt("volume", vol); if(f_mute==false) mp3.setVolume(vol);}
+    showHeadlineVolume(vol); return vol;}
 
 inline uint8_t upvolume(){
     uint8_t vol; vol=pref.getUInt("volume");
-    if(vol<21){vol++; pref.putUInt("volume", vol) ;mp3.setVolume(vol);} showHeadlineVolume(vol); return vol;}
+    if(vol<21){vol++; pref.putUInt("volume", vol) ;if(f_mute==false) mp3.setVolume(vol);}
+    showHeadlineVolume(vol); return vol;}
 
 inline uint8_t getvolume(){return pref.getUInt("volume");}
 
@@ -543,16 +545,19 @@ inline void showBrightness(){uint16_t br=tft.width()* pref.getUInt("brightness")
 //                                M E N U E / B U T T O N S                                        *
 //**************************************************************************************************
 void changeState(int state){
-    uint8_t cntBtn=0; // number of buttons
     if(!f_SD_okay) return;
-    switch(state) {
+    _state=static_cast<status>(state);
+    switch(_state) {
+    case RADIO:{
+        showFooter(); showHeadlineItem("** Internet radio **");
+        showStation(); showTitle(_title, true); break;
+    }
     case RADIOico:{
         _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Off_Green.bmp";
         _pressBtn[1]="/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.bmp";
         _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
         _pressBtn[3]="/btn/Button_Previous_Yellow.bmp";    _releaseBtn[3]="/btn/Button_Previous_Green.bmp";
         _pressBtn[4]="/btn/Button_Next_Yellow.bmp";        _releaseBtn[4]="/btn/Button_Next_Green.bmp";
-        cntBtn=5;
         clearTitle(); clearFooter(); showVolume();
         break;}
     case RADIOmenue:{
@@ -560,27 +565,29 @@ void changeState(int state){
         _pressBtn[1]="/btn/Clock_Yellow.bmp";              _releaseBtn[1]="/btn/Clock_Green.bmp";
         _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
         _pressBtn[3]="/btn/Bulb_Yellow.bmp";               _releaseBtn[3]="/btn/Bulb_Green.bmp";
-        cntBtn=4;
+        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
         clearTitle(); clearFooter();
         break;}
     case CLOCKico:{
         _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
         _pressBtn[1]="/btn/Bell_Yellow.bmp";               _releaseBtn[1]="/btn/Bell_Green.bmp";
         _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
-        cntBtn=3;
+        _pressBtn[3]="/btn/Black.bmp";                     _releaseBtn[3]="/btn/Black.bmp";
+        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
         break;}
     case BRIGHTNESS:{
         _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
         _pressBtn[1]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[1]="/btn/Button_Right_Blue.bmp";
         _pressBtn[2]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Ready_Blue.bmp";
-        cntBtn=3;
+        _pressBtn[3]="/btn/Black.bmp";                     _releaseBtn[3]="/btn/Black.bmp";
+        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
         break;}
     case MP3PLAYER:{
         _pressBtn[0]="/btn/Radio_Yellow.bmp";              _releaseBtn[0]="/btn/Radio_Green.bmp";
         _pressBtn[1]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[1]="/btn/Button_Left_Blue.bmp";
         _pressBtn[2]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Right_Blue.bmp";
         _pressBtn[3]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[3]="/btn/Button_Ready_Blue.bmp";
-        cntBtn=4;
+        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
         break;}
     case MP3PLAYERico:{
         _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Off_Green.bmp";
@@ -588,7 +595,6 @@ void changeState(int state){
         _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
         _pressBtn[3]="/btn/MP3_Yellow.bmp";                _releaseBtn[3]="/btn/MP3_Green.bmp";
         _pressBtn[4]="/btn/Radio_Yellow.bmp";              _releaseBtn[4]="/btn/Radio_Green.bmp";
-        cntBtn=5;
         break;}
     case ALARM:{
         _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
@@ -596,18 +602,17 @@ void changeState(int state){
         _pressBtn[2]="/btn/Button_Up_Yellow.bmp";          _releaseBtn[2]="/btn/Button_Up_Blue.bmp";
         _pressBtn[3]="/btn/Button_Down_Yellow.bmp";        _releaseBtn[3]="/btn/Button_Down_Blue.bmp";
         _pressBtn[4]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[4]="/btn/Button_Ready_Blue.bmp";
-        cntBtn=5;
         break;}
+    case CLOCK:{ break;}
     }
-    if(state!=RADIO && state!=CLOCK){ // RADIO and CLOCK have no Buttons
+    if(_state!=RADIO && _state!=CLOCK){ // RADIO and CLOCK have no Buttons
         int j=0;
-        if(state==RADIOico || state==MP3PLAYERico){  // show correct mute button
+        if(_state==RADIOico || _state==MP3PLAYERico){  // show correct mute button
             if(f_mute==false) {tft.drawBmpFile(SD, _releaseBtn[0].c_str(), 0, 167); mp3.loop();}
             else {tft.drawBmpFile(SD, _pressBtn[0].c_str(), 0 ,167); mp3.loop();}
             j=1;}
-        for(int i=j; i<cntBtn; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*64 ,167); mp3.loop();}
+        for(int i=j; i<5; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*64 ,167); mp3.loop();}
     }
-    _state=static_cast<status>(state);
 }
 void changeBtn_pressed(uint8_t btnNr){
     if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _pressBtn[btnNr].c_str(), btnNr*64 ,167);
@@ -919,9 +924,10 @@ void tp_pressed(uint16_t x, uint16_t y){
             case  64 ... 127: yPos=1; break;
             case 128 ... 191: yPos=2; break;
             case 192 ... 255: yPos=3; break;
-            case 256 ... 319: yPos=4; break;}
+            case 256 ... 319: yPos=4; break;
+        }
+        changeBtn_pressed(yPos);
     }
-    changeBtn_pressed(yPos);
     if(_state==RADIOico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
         if(yPos==1){_releaseNr= 1; downvolume(); showVolume();} // Vol-
@@ -932,20 +938,20 @@ void tp_pressed(uint16_t x, uint16_t y){
     if(_state==RADIOmenue){
         if(yPos==0){_releaseNr= 5; mp3.stop_mp3client(); listmp3file();} // MP3
         if(yPos==1){_releaseNr= 6;} // Clock
-        if(yPos==2){_releaseNr= 7; } // Radio
+        if(yPos==2){_releaseNr= 7;} // Radio
         if(yPos==3){_releaseNr=16;} // Brightness
     }
     if(_state==CLOCKico){
         if(yPos==0){_releaseNr= 5; listmp3file();} // MP3
         if(yPos==1){_releaseNr= 9;} // Bell
-        if(yPos==2){_releaseNr=10;} // Radio
+        if(yPos==2){_releaseNr= 7;} // Radio
     }
     if(_state==ALARM){
         if(yPos==0){_releaseNr=11;} // left
         if(yPos==1){_releaseNr=12;} // right
         if(yPos==2){_releaseNr=13;} // up
         if(yPos==3){_releaseNr=14;} // down
-        if(yPos==4){_releaseNr=15;} // ready
+        if(yPos==4){_releaseNr=15;} // ready (return to CLOCK)
 
         if(y1Pos<7){d=(1<<y1Pos);
         if((_alarmdays & d))_alarmdays-=d; else _alarmdays+=d; displayWeekdays(_alarmdays);}
@@ -953,7 +959,7 @@ void tp_pressed(uint16_t x, uint16_t y){
     if(_state==BRIGHTNESS){
         if(yPos==0){_releaseNr=17;} // left
         if(yPos==1){_releaseNr=18;} // right
-        if(yPos==2){_releaseNr=19;} // ready
+        if(yPos==2){_releaseNr= 7;} // ready (return to RADIO)
     }
     if(_state==MP3PLAYER){
         if(yPos==0){_releaseNr=7; mp3.connecttohost(readhostfrompref(-1));} // Radio
@@ -984,13 +990,10 @@ void tp_released(){
              displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5); break; //MP3
     case  6: tft.fillScreen(TFT_BLACK); changeState(CLOCK);
              showHeadlineItem("** Wecker **"); display_time(true); break;//Clock
-    case  7: changeState(RADIO); showStation(); showTitle(_title, true); showFooter(); break;
+    case  7: changeState(RADIO); break;
     case  9: changeState(ALARM); showHeadlineItem("");
              displayWeekdays(_alarmdays, true);
              displayAlarmtime(0, 0, true); break;
-    case 10: showHeadlineItem("** Internet radio **");
-             showFooter();
-             changeState(RADIO); showStation(); showTitle(_title, true); break;
     case 11: displayAlarmtime(-1);    changeBtn_released(0);  break;
     case 12: displayAlarmtime(+1);    changeBtn_released(1);  break;
     case 13: displayAlarmtime(0, +1); changeBtn_released(2);  break; // alarmtime up
@@ -1005,12 +1008,6 @@ void tp_released(){
              tft.drawBmpFile(SD, "/Brightness.bmp",0, 21); break;
     case 17: changeBtn_released(0); downBrightness(); showBrightness(); break;
     case 18: changeBtn_released(1); upBrightness(); showBrightness(); break;
-    case 19: showHeadlineItem("** Internet radio **");
-             showFooter();
-             changeState(RADIO); showStation(); showTitle(_title, true); break;
-    case 20: showHeadlineItem("** Internet radio **");
-             showFooter();
-             changeState(RADIO); showStation(); showTitle(_title, true); break;
     case 21: changeBtn_released(1); _mp3Index--; if(_mp3Index==-1) _mp3Index=9;
              str=_mp3Name[_mp3Index];
              while(str.length()==0){_mp3Index--; str=_mp3Name[_mp3Index]; if(_mp3Index==0) break;}
@@ -1028,9 +1025,6 @@ void tp_released(){
     case 23: changeState(MP3PLAYERico); showVolume();
              mp3.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
     case 26: tft.fillRect(0, 140, 320, 100, TFT_BLACK);changeState(MP3PLAYER); break;
-    case 27: showHeadlineItem("** Internet radio **");
-             mp3.connecttohost(readhostfrompref(-1)); showFooter();
-             changeState(RADIO); showStation(); showTitle(_title, true); break;
     }
     _releaseNr=0;
 }
