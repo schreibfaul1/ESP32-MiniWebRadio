@@ -12,9 +12,25 @@
 //  ota_1,    app,    ota_1,     ,         1M
 //  nvs,      data,   nvs,       ,         0x16000
 //
+//-----------------------------------------------------------------------------------------
 //  for german umlaut change Properties in Eclipse in UTF-8
 //  File/Properties/Resource:  Text file encoding (other) UTF-8
+//-----------------------------------------------------------------------------------------
 //
+//  if You have a compiler message in Eclipse: "Invalid arguments ' Candidates are: String SSID()"
+//  comment lines 45...56 in WiFi.h and insert his:
+//
+//  String  SSID(uint8_t networkItem)    {return WiFiScanClass::SSID(networkItem);}
+//  int32_t RSSI(uint8_t networkItem)    {return WiFiScanClass::RSSI(networkItem);}
+//  uint8_t *BSSID(uint8_t networkItem)  {return WiFiScanClass::BSSID(networkItem);}
+//  String  BSSIDstr(uint8_t networkItem){return WiFiScanClass::BSSIDstr(networkItem);}
+//  int32_t channel(uint8_t networkItem) {return WiFiScanClass::channel(networkItem);}
+//
+//  String  SSID(void)                   {return WiFiSTAClass::SSID();}
+//  int32_t RSSI(void)                   {return WiFiSTAClass::RSSI();}
+//  uint8_t *BSSID(void)                 {return WiFiSTAClass::BSSID();}
+//  String  BSSIDstr(void)               {return WiFiSTAClass::BSSIDstr();}
+//  int32_t channel(void)                {return WiFiGenericClass::channel();}
 //
 
 // system libraries
@@ -49,6 +65,7 @@
 
 char sbuf[256], myIP[100];
 String   _station="", _title="", _info="", _myIP="", _stationname="",_alarmtime="", _time_s="", _hour="", _bitrate="";
+String   _SSID="";
 String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
@@ -65,10 +82,10 @@ boolean  f_timespeech=false;    // if true activate timespeech
 boolean  semaphore=false;
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6, MP3PLAYERico=7, ALARM=8};
-status _state=RADIO; //statemaschine
+status _state=RADIO;            //statemaschine
 
 //objects
-TFT tft(1); // parameter:  (0) ILI9341,  (1)HX8347D
+TFT tft(1);                     // parameter:  (0) ILI9341,  (1)HX8347D
 VS1053 mp3(VS1053_CS, VS1053_DCS, VS1053_DREQ);
 hw_timer_t* timer=NULL;         // instance of the timer
 HTML web;
@@ -97,13 +114,11 @@ void defaultsettings(){
     log_i("set default");
     //
     pref.clear();
+    //
+    pref.putString("wifi_00","Wolles-FRITZBOX|40441061073895958449"); // here Your default login credentials
+    //
     pref.putString("ESP32_Radio","default");
-    //
-    pref.putString("wifi_00","Wolles-FRITZBOX/40441061073895958449");
-    pref.putString("wifi_01","ADSL-11/yyyyyy");
-    //
     pref.putUInt("brightness",100); // 100% display backlight
-    //
     pref.putUInt("alarm_weekday",0); // for alarmclock
     pref.putString("alarm_time","00:00");
     pref.putUInt("ringvolume",21);
@@ -117,10 +132,10 @@ void defaultsettings(){
     //
     pref.putUInt("preset", 0);
     //
+    // StationList
     File file = SD.open("/presets.csv");
     if(file){                                   // try to read from SD
-        str=file.readStringUntil('\n');         // title
-        Serial.println(str);
+        str=file.readStringUntil('\n');         // headerline
         while(file.available()){
             str=file.readStringUntil(';');      // station
             str+="#";
@@ -138,7 +153,8 @@ void defaultsettings(){
             i++;
          }
     }
-    else{   // SD not available
+    else{                                       // file not available
+        log_i("SD/presets.csv not found, use default stream URls");
         String s[11], u[11];
         s[  0]="030-berlinfm";          u[  0]="vtuner.stream.laut.fm/030-berlinfm"; //D
         s[  1]="104.6 RTL";             u[  1]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
@@ -161,6 +177,29 @@ void defaultsettings(){
             pref.putString(tkey, "#");
             i++;
          }
+    }
+    // establish a WiFi Networklist from "SD/networks.csv" if present
+    for(i=1; i<10; i++){                        // clear all WiFi items except item wifi_00
+        sprintf(tkey, "wifi_%02d", i);
+        pref.putString(tkey, "|");
+    }
+
+    file = SD.open("/networks.csv");
+    if(file){                                   // try to read from SD
+    str=file.readStringUntil('\n');             // headerline
+        i=0;
+        while(file.available()){
+            str=file.readStringUntil(';');      // SSID/PW
+            info=file.readStringUntil('\n');    // info
+            sprintf(tkey, "wifi_%02d", i);
+            pref.putString(tkey, str);
+            i++;
+            if(i==10) break;
+        }
+        file.close();
+    }
+    else{
+        log_i("SD/network.csv not found, use default WiFi credentials");
     }
 }
 
@@ -434,11 +473,47 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
     return SD_outbuf;
 }
 //**************************************************************************************************
+//                               C O N N E C T   TO   W I F I                                      *
+//**************************************************************************************************
+bool connectToWiFi(){
+    String ssid="", password="", WiFiName="";
+    char tkey[12];
+    int WiFiNr = WiFi.scanNetworks();   // WiFiNr: nr of scanned Networks
+    if(WiFiNr==0) {                     // no WiFi networks can be found
+        tft.fillScreen(TFT_BLACK);      // Clear screen
+        tft.setTextSize(6);
+        displayinfo("no WiFi networks found", 21, 219, TFT_YELLOW, 5);
+        while(1){};                     // endless loop until reset
+    }
+    else {
+        int k=0;
+        for (int i=0; i<WiFiNr; ++i) {
+            WiFiName=WiFi.SSID(i);
+            for(int j=0; j<10; j++){
+                sprintf(tkey, "wifi_%02d", j);
+                ssid=pref.getString(tkey);
+                if(ssid=="|") break;                                // no predefined SSID in list?
+                password=ssid.substring(ssid.indexOf("|")+1);
+                ssid=ssid.substring(0,ssid.indexOf("|"));
+                if(ssid==WiFiName){                                 // available network found, try to connect
+                    WiFi.begin(ssid.c_str(), password.c_str());     // Connect to selected SSID
+                    k=0;
+                    while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
+                        log_i("Try WiFi %s", ssid.c_str());
+                        delay(1000); k++;
+                    }
+                    if(WiFi.status()==WL_CONNECTED){ _SSID=ssid; return true;} // connection successful
+                }
+            }
+        }
+    }
+    return false;  // can't connect to any network
+}
+
+//**************************************************************************************************
 //                                           S E T U P                                             *
 //**************************************************************************************************
 void setup(){
-    String ssid;
-    String password;
     Serial.begin(115200); // For debug
     SPI.begin();    // Init SPI bus
     tft.begin();    // Init TFT interface
@@ -462,13 +537,11 @@ void setup(){
     WiFi.mode(WIFI_STA);
     WiFi.setHostname("ESP32Radio");
     delay(100);
-    ssid=pref.getString("wifi_00");
-    password=ssid.substring(ssid.indexOf("/")+1);
-    ssid=ssid.substring(0,ssid.indexOf("/"));
-    WiFi.begin(ssid.c_str(), password.c_str());             // Connect to selected SSID
-    while(WiFi.status() != WL_CONNECTED){
-        log_i("Try WiFi %s", ssid.c_str());
-        delay(1500);
+    if(!connectToWiFi()){
+        tft.fillScreen(TFT_BLACK);      // Clear screen
+        tft.setTextSize(6);
+        displayinfo("can't connect to WiFi, check Your credentials", 21, 219, TFT_YELLOW, 5);
+        while(1){};                     // endless loop until reset
     }
     web.begin();
     f_rtc= rtc.begin();
@@ -837,7 +910,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(str); return;}
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(str); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
-    if(cmd.startsWith("getnetworks")){web.reply("WOLLES-POWERLINE|1234\n"); return;} //Dummy yet
+    if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     if(cmd.startsWith("saveprefs")){web.reply("Save settings\n"); clearallpresets();return;}
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
