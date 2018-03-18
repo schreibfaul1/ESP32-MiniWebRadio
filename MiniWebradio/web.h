@@ -332,7 +332,7 @@ const char web_html[] PROGMEM = R"=====(
                 prefs.value="";
                 if(xhr.readyState == XMLHttpRequest.DONE) {
                     if(source=='getprefs')prefs.value = xhr.responseText;
-                    else {resultstr2.value=xhr.responseText;}
+                    if(source=='getdefs')prefs.value=xhr.responseText;
                 }
             }
             xhr.open("GET", "/?" + source  + "&version=" + Math.random(), true);
@@ -345,7 +345,7 @@ const char web_html[] PROGMEM = R"=====(
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if( xhr.readyState == XMLHttpRequest.DONE) {
-                    resultstr2.value = xhr.responseText ;
+                    // do nothing 
                 }
             }
             // Remove empty lines
@@ -360,14 +360,13 @@ const char web_html[] PROGMEM = R"=====(
             xhr.send(str + "\n");
         }
 
-        function getnetworks() { // tab Config: load navailable WiFi networks
+        function getnetworks() { // tab Config: load the connevted WiFi network
             var i, select, opt, networks;
             var theUrl = "/?getnetworks" + "&version=" + Math.random() ;
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if(xhr.readyState == XMLHttpRequest.DONE) {
-                    networks=xhr.responseText.split("|");
-                    for(i=ssid.options.length-1; i>=0; i--) ssid.remove(i);
+				    networks=xhr.responseText.split("\n");
                     for(i = 0 ; i < (networks.length - 1); i++ ) {
                         opt = document.createElement( "OPTION" );
                         opt.value = i;
@@ -565,11 +564,11 @@ const char web_html[] PROGMEM = R"=====(
     <!-------------------------------------------------------------------------------------------------->
     <div id="tab-content2">
         <center>
-        <p>You can edit the configuration here. <i>Note that this will be effective on the next restart of the radio.</i></p>
-        <h3>Available WiFi networks
+        <p>You can edit the configuration here. <i>Note that this will be overwritten by "Load default".</i></p>
+        <h3>Connected WiFi network
         <select class="select" onChange="handletone(this)" id="ssid"></select>
         </h3>
-        <textarea wrap="off" rows="20" cols="100" id="prefs">Space for preferences</textarea>
+        <textarea wrap="off" rows="25" cols="100" id="prefs">Space for preferences</textarea>
         <br>
         <button class="button buttongreen" onclick="fsav()">Save</button>
         &nbsp;&nbsp;
@@ -578,7 +577,7 @@ const char web_html[] PROGMEM = R"=====(
         <button class="button buttongreen" onclick="ldef('getprefs')">Load</button>
         &nbsp;&nbsp;
         <button class="button buttonblue" onclick="ldef('getdefs')">Load default</button>
-        <br><input type="text" size="80" id="resultstr2" placeholder="Waiting for input....">
+        <br>
         </center>
     </div>  
     <!-------------------------------------------------------------------------------------------------->
