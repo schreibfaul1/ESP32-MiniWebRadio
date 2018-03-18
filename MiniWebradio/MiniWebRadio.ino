@@ -115,7 +115,7 @@ void defaultsettings(){
     //
     pref.clear();
     //
-    pref.putString("wifi_00","Wolles-FRITZBOX|40441061073895958449"); // here Your default login credentials
+    pref.putString("wifi_00","Wolles-FRITZBOX|xxxxx"); // here Your default login credentials
     //
     pref.putString("ESP32_Radio","default");
     pref.putUInt("brightness",100); // 100% display backlight
@@ -230,13 +230,13 @@ const char* ASCIItoUTF8(const char* str){
     static char chbuf[256];
     while(str[i]!=0){
         switch(str[i]){
-        case 132:{chbuf[j]=0xC3; chbuf[j+1]=164; j+=2; i++; break;} // Ã¤
-        case 142:{chbuf[j]=0xC3; chbuf[j+1]=132; j+=2; i++; break;} // Ã„
-        case 148:{chbuf[j]=0xC3; chbuf[j+1]=182; j+=2; i++; break;} // Ã¶
-        case 153:{chbuf[j]=0xC3; chbuf[j+1]=150; j+=2; i++; break;} // Ã–
-        case 129:{chbuf[j]=0xC3; chbuf[j+1]=188; j+=2; i++; break;} // Ã¼
-        case 154:{chbuf[j]=0xC3; chbuf[j+1]=156; j+=2; i++; break;} // Ãœ
-        case 225:{chbuf[j]=0xC3; chbuf[j+1]=159; j+=2; i++; break;} // ÃŸ
+        case 132:{chbuf[j]=0xC3; chbuf[j+1]=164; j+=2; i++; break;} // ä
+        case 142:{chbuf[j]=0xC3; chbuf[j+1]=132; j+=2; i++; break;} // Ä
+        case 148:{chbuf[j]=0xC3; chbuf[j+1]=182; j+=2; i++; break;} // ö
+        case 153:{chbuf[j]=0xC3; chbuf[j+1]=150; j+=2; i++; break;} // Ö
+        case 129:{chbuf[j]=0xC3; chbuf[j+1]=188; j+=2; i++; break;} // ü
+        case 154:{chbuf[j]=0xC3; chbuf[j+1]=156; j+=2; i++; break;} // Ü
+        case 225:{chbuf[j]=0xC3; chbuf[j+1]=159; j+=2; i++; break;} // ß
         default: {if(str[i]>127){chbuf[j]=0xC3, chbuf[j+1]=' '; j+=2; i++;} // all other
                   else {chbuf[j]=str[i]; j++; i++; break;}}}
     }
@@ -251,13 +251,13 @@ const char* UTF8toASCII(const char* str){
         if(str[i] == 0xC3){
             i++;
             switch(str[i]){
-                case 164: chbuf[j]=132; break; // Ã¤
-                case 132: chbuf[j]=142; break; // Ã„
-                case 182: chbuf[j]=148; break; // Ã¶
-                case 150: chbuf[j]=153; break; // Ã–
-                case 188: chbuf[j]=129; break; // Ã¼
-                case 156: chbuf[j]=154; break; // Ãœ
-                case 159: chbuf[j]=225; break; // ÃŸ
+                case 164: chbuf[j]=132; break; // ä
+                case 132: chbuf[j]=142; break; // Ä
+                case 182: chbuf[j]=148; break; // ö
+                case 150: chbuf[j]=153; break; // Ö
+                case 188: chbuf[j]=129; break; // ü
+                case 156: chbuf[j]=154; break; // Ü
+                case 159: chbuf[j]=225; break; // ß
             }
         }
         i++; j++;
@@ -323,6 +323,7 @@ void showStation(){
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 1, 22)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
         tft.setTextSize(4);
+        if(_stationname.length()>30) tft.setTextSize(3);
         displayinfo(_stationname.c_str(), 21, 100, TFT_YELLOW, 110);
         showTitle("", false);
         //log_i("%s", _stationname.c_str());
@@ -588,6 +589,7 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
         }
     }
     web.reply(val);
+
 }
 //**************************************************************************************************
 inline uint8_t downvolume(){
@@ -894,7 +896,7 @@ void HTML_command(const String cmd){                    // called from html
     //static boolean mute=false;
     if(cmd=="settings"){getsettings(0); return;}
     if(cmd=="getprefs") {getsettings(1); return;}
-    if(cmd=="getdefs"){defaultsettings(); web.reply("defaultsettings has been loaded"); return;}
+    if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
     if(cmd=="gettone"){ web.reply(tone()); return;}
     if(cmd=="test") {sprintf(sbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(sbuf); return;}
     if(cmd=="reset") {ESP.restart(); return;}
@@ -911,7 +913,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(str); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
-    if(cmd.startsWith("saveprefs")){web.reply("Save settings\n"); clearallpresets();return;}
+    if(cmd.startsWith("saveprefs")){clearallpresets(); web.reply(""); return;} // after that starts POST Event "HTML_request"
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
@@ -942,7 +944,7 @@ void HTML_request(const String request){
     }
     else {
         //log_e("unknown request: %s",request.c_str());
-        }
+    }
 }
 void HTML_info(const char *info){                   // called from html
     Serial.print("HTML_info:   ");
