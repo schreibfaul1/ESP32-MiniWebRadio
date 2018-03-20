@@ -261,13 +261,13 @@ const char* ASCIItoUTF8(const char* str){
     static char chbuf[256];
     while(str[i]!=0){
         switch(str[i]){
-        case 132:{chbuf[j]=0xC3; chbuf[j+1]=164; j+=2; i++; break;} // ä
-        case 142:{chbuf[j]=0xC3; chbuf[j+1]=132; j+=2; i++; break;} // Ä
-        case 148:{chbuf[j]=0xC3; chbuf[j+1]=182; j+=2; i++; break;} // ö
-        case 153:{chbuf[j]=0xC3; chbuf[j+1]=150; j+=2; i++; break;} // Ö
-        case 129:{chbuf[j]=0xC3; chbuf[j+1]=188; j+=2; i++; break;} // ü
-        case 154:{chbuf[j]=0xC3; chbuf[j+1]=156; j+=2; i++; break;} // Ü
-        case 225:{chbuf[j]=0xC3; chbuf[j+1]=159; j+=2; i++; break;} // ß
+        case 132:{chbuf[j]=0xC3; chbuf[j+1]=164; j+=2; i++; break;} // Ã¤
+        case 142:{chbuf[j]=0xC3; chbuf[j+1]=132; j+=2; i++; break;} // Ã„
+        case 148:{chbuf[j]=0xC3; chbuf[j+1]=182; j+=2; i++; break;} // Ã¶
+        case 153:{chbuf[j]=0xC3; chbuf[j+1]=150; j+=2; i++; break;} // Ã–
+        case 129:{chbuf[j]=0xC3; chbuf[j+1]=188; j+=2; i++; break;} // Ã¼
+        case 154:{chbuf[j]=0xC3; chbuf[j+1]=156; j+=2; i++; break;} // Ãœ
+        case 225:{chbuf[j]=0xC3; chbuf[j+1]=159; j+=2; i++; break;} // ÃŸ
         default: {if(str[i]>127){chbuf[j]=0xC3, chbuf[j+1]=' '; j+=2; i++;} // all other
                   else {chbuf[j]=str[i]; j++; i++; break;}}}
     }
@@ -282,13 +282,13 @@ const char* UTF8toASCII(const char* str){
         if(str[i] == 0xC3){
             i++;
             switch(str[i]){
-                case 164: chbuf[j]=132; break; // ä
-                case 132: chbuf[j]=142; break; // Ä
-                case 182: chbuf[j]=148; break; // ö
-                case 150: chbuf[j]=153; break; // Ö
-                case 188: chbuf[j]=129; break; // ü
-                case 156: chbuf[j]=154; break; // Ü
-                case 159: chbuf[j]=225; break; // ß
+                case 164: chbuf[j]=132; break; // Ã¤
+                case 132: chbuf[j]=142; break; // Ã„
+                case 182: chbuf[j]=148; break; // Ã¶
+                case 150: chbuf[j]=153; break; // Ã–
+                case 188: chbuf[j]=129; break; // Ã¼
+                case 156: chbuf[j]=154; break; // Ãœ
+                case 159: chbuf[j]=225; break; // ÃŸ
             }
         }
         i++; j++;
