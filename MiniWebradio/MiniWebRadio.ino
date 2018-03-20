@@ -34,17 +34,17 @@
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    | 			_hHeader=20px
+//  | Header                                    |     	_hHeader=20px
 //  +-------------------------------------------+ _yName=20
 //  |                                           |
-//  | Logo                   StationName        | 			_hName=100px
+//  | Logo                   StationName        |     	_hName=100px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=120
 //  |                                           |
-//  |              StreamTitle                  | 			_hTitle=102px
+//  |              StreamTitle                  |     	_hTitle=102px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=222
-//  | Footer                                    |			_hFooter=18px
+//  | Footer                                    |    	_hFooter=18px
 //  +-------------------------------------------+ 320
 //                                             240
 // system libraries
@@ -95,22 +95,22 @@ boolean  f_timespeech=false;    // if true activate timespeech
 boolean  semaphore=false;
 
 // display layout
-const uint16_t _yHeader =0;						// yPos Header
-const uint16_t _hHeader =20;      				// height Header
-const uint16_t _yName  =_yHeader+_hHeader;		// yPos StationName
-const uint16_t _hName  =100;					// height Stationname
-const uint16_t _yTitle =_yName+_hName;			// yPos StreamTitle
-const uint16_t _hTitle =102;					// height StreamTitle
-const uint16_t _yFooter =_yTitle+_hTitle;		// yPos Footer
-const uint16_t _hFooter=18;						// height Footer
-const uint16_t _yVolBar=_yTitle+30;				// yPos VolumeBar
+const uint16_t _yHeader =0;                     // yPos Header
+const uint16_t _hHeader =20;                    // height Header
+const uint16_t _yName  =_yHeader+_hHeader;      // yPos StationName
+const uint16_t _hName  =100;        	        // height Stationname
+const uint16_t _yTitle =_yName+_hName;    	    // yPos StreamTitle
+const uint16_t _hTitle =102;        	        // height StreamTitle
+const uint16_t _yFooter =_yTitle+_hTitle;       // yPos Footer
+const uint16_t _hFooter=18;                     // height Footer
+const uint16_t _yVolBar=_yTitle+30;             // yPos VolumeBar
 const uint16_t _hVolBar=5; 	                	// height VolumeBar
-const uint16_t _wLogo=96;						// width Logo
-const uint16_t _hLogo=96;						// height Logo
+const uint16_t _wLogo=96;                       // width Logo
+const uint16_t _hLogo=96;                       // height Logo
 const uint16_t _yLogo=_yName+(_hName-_hLogo)/2;	// yPos Logos
-const uint16_t _wBtn=64;						// width Button
-const uint16_t _hBtn=64;						// height Button
-const uint16_t _yBtn=_yVolBar+_hVolBar+10;		// yPos Buttons
+const uint16_t _wBtn=64;                        // width Button
+const uint16_t _hBtn=64;                        // height Button
+const uint16_t _yBtn=_yVolBar+_hVolBar+10;      // yPos Buttons
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6, MP3PLAYERico=7, ALARM=8};
 status _state=RADIO;            //statemaschine
@@ -326,7 +326,7 @@ inline void clearHeader() {tft.fillRect(0, _yHeader, tft.width(), _hHeader-1, TF
 inline void clearStation(){tft.fillRect(0, _yName,   tft.width(), _hName-1,   TFT_BLACK);}  // y  20...119
 inline void clearTitle()  {tft.fillRect(0, _yTitle,  tft.width(), _hTitle-1,  TFT_BLACK);}  // y 120...219
 inline void clearFooter() {tft.fillRect(0, _yFooter, tft.width(), _hFooter-1, TFT_BLACK);}  // y 220...239
-inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                   		// y   0...239
+inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                       // y   0...239
 
 void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t indent){
     tft.fillRect(0, ypos, tft.width(), height, TFT_BLACK);  // Clear the space for new info
@@ -894,7 +894,7 @@ void vs1053_showstation(const char *info){              // called from vs1053
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
     _title=info;
-    if(_state==RADIO)showTitle(_title, false);              //state RADIO
+    if(_state==RADIO)showTitle(_title, false);          //state RADIO
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
