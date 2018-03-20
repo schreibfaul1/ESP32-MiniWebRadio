@@ -17,7 +17,7 @@
 //  File/Properties/Resource:  Text file encoding (other) UTF-8
 //-----------------------------------------------------------------------------------------
 //
-//  if You have a compiler message in Eclipse: "Invalid arguments ' Candidates are: String SSID()"
+//  if You see a compiler message in Eclipse: "Invalid arguments ' Candidates are: String SSID()"
 //  comment lines 45...56 in WiFi.h and insert his:
 //
 //  String  SSID(uint8_t networkItem)    {return WiFiScanClass::SSID(networkItem);}
@@ -32,7 +32,21 @@
 //  String  BSSIDstr(void)               {return WiFiSTAClass::BSSIDstr();}
 //  int32_t channel(void)                {return WiFiGenericClass::channel();}
 //
-
+//  Display 320x240
+//  +-------------------------------------------+ _yHeader=0
+//  | Header                                    | 			_hHeader=20px
+//  +-------------------------------------------+ _yName=20
+//  |                                           |
+//  | Logo                   StationName        | 			_hName=100px
+//  |                                           |
+//  +-------------------------------------------+ _yTitle=120
+//  |                                           |
+//  |              StreamTitle                  | 			_hTitle=102px
+//  |                                           |
+//  +-------------------------------------------+ _yFooter=222
+//  | Footer                                    |			_hFooter=18px
+//  +-------------------------------------------+ 320
+//                                             240
 // system libraries
 #include <Preferences.h>
 #include <SPI.h>
@@ -62,7 +76,6 @@
 #define IR_PIN        34
 
 //global variables
-
 char sbuf[256], myIP[100];
 String   _station="", _title="", _info="", _myIP="", _stationname="",_alarmtime="", _time_s="", _hour="", _bitrate="";
 String   _SSID="";
@@ -80,6 +93,24 @@ boolean  f_mp3eof=false;        // set at the end of mp3 file
 boolean  f_alarm=false;         // set if alarmday and alarmtime is equal localtime
 boolean  f_timespeech=false;    // if true activate timespeech
 boolean  semaphore=false;
+
+// display layout
+const uint16_t _yHeader =0;						// yPos Header
+const uint16_t _hHeader =20;      				// height Header
+const uint16_t _yName  =_yHeader+_hHeader;		// yPos StationName
+const uint16_t _hName  =100;					// height Stationname
+const uint16_t _yTitle =_yName+_hName;			// yPos StreamTitle
+const uint16_t _hTitle =102;					// height StreamTitle
+const uint16_t _yFooter =_yTitle+_hTitle;		// yPos Footer
+const uint16_t _hFooter=18;						// height Footer
+const uint16_t _yVolBar=_yTitle+30;				// yPos VolumeBar
+const uint16_t _hVolBar=5; 	                	// height VolumeBar
+const uint16_t _wLogo=96;						// width Logo
+const uint16_t _hLogo=96;						// height Logo
+const uint16_t _yLogo=_yName+(_hName-_hLogo)/2;	// yPos Logos
+const uint16_t _wBtn=64;						// width Button
+const uint16_t _hBtn=64;						// height Button
+const uint16_t _yBtn=_yVolBar+_hVolBar+10;		// yPos Buttons
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6, MP3PLAYERico=7, ALARM=8};
 status _state=RADIO;            //statemaschine
@@ -291,65 +322,65 @@ void startTimer() {
 //**************************************************************************************************
 //                                       D I S P L A Y                                             *
 //**************************************************************************************************
-inline void clearHeader() {tft.fillRect(0,   0, 320,  20, TFT_BLACK);}   // y   0...19
-inline void clearStation(){tft.fillRect(0,  20, 320, 100, TFT_BLACK);}   // y  20...119
-inline void clearTitle()  {tft.fillRect(0, 120, 320, 100, TFT_BLACK);}   // y 120...219
-inline void clearFooter() {tft.fillRect(0, 220, 320,  20, TFT_BLACK);}   // y 220...239
-inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                   // y   0...239
+inline void clearHeader() {tft.fillRect(0, _yHeader, tft.width(), _hHeader-1, TFT_BLACK);}  // y   0...19
+inline void clearStation(){tft.fillRect(0, _yName,   tft.width(), _hName-1,   TFT_BLACK);}  // y  20...119
+inline void clearTitle()  {tft.fillRect(0, _yTitle,  tft.width(), _hTitle-1,  TFT_BLACK);}  // y 120...219
+inline void clearFooter() {tft.fillRect(0, _yFooter, tft.width(), _hFooter-1, TFT_BLACK);}  // y 220...239
+inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                   		// y   0...239
 
-void displayinfo(const char *str, int pos, int height, uint16_t color, uint16_t indent){
-    tft.fillRect(0, pos, 320, height, TFT_BLACK);        // Clear the space for new info
-    tft.setTextColor(color);                             // Set the requested color
-    tft.setCursor(indent, pos);                          // Prepare to show the info
-    tft.print(str);                                      // Show the string
+void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t indent){
+    tft.fillRect(0, ypos, tft.width(), height, TFT_BLACK);  // Clear the space for new info
+    tft.setTextColor(color);                             	// Set the requested color
+    tft.setCursor(indent, ypos);                          	// Prepare to show the info
+    tft.print(str);                                      	// Show the string
 }
 
-void showTitle(String str, bool force){                  //force=true -> show title every time
+void showTitle(String str, bool force){                  	//force=true -> show title every time
     static String title;
     if((title==str)&&(force==false)) return;
     tft.setTextSize(4);
     if(str.length()>45) tft.setTextSize(3);
     if(str.length()>120) tft.setTextSize(1);
-    if(_state==0){displayinfo(str.c_str(), 120, 100, TFT_CYAN, 5);}  //state RADIO
+    if(_state==0){displayinfo(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 5);}  //state RADIO
     title=str;
 }
 void showStation(){
     tft.setTextSize(3);
     if(_stationname==""){
         if(_station.length()>75) tft.setTextSize(1);
-        displayinfo(_station.c_str(), 20, 100, TFT_YELLOW, 110);// Show station name
+        displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, 110);// Show station name
         showTitle("", false);   // and delete showstreamtitle
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_station.c_str()));
-        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 1, 22)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
+        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
         tft.setTextSize(4);
         if(_stationname.length()>30) tft.setTextSize(3);
-        displayinfo(_stationname.c_str(), 21, 100, TFT_YELLOW, 110);
+        displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, 110);
         showTitle("", false);
         //log_i("%s", _stationname.c_str());
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_stationname.c_str()));
         //log_i("%s", sbuf);
-        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 1, 22)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
+        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
 }
 void showHeadlineVolume(uint8_t vol){
     if(_state == ALARM || _state== BRIGHTNESS) return;
     sprintf(sbuf,"Vol %02d",vol);
-    tft.fillRect(175, 0, 69, 20, TFT_BLACK);
-    tft.setCursor(175, 0);
+    tft.fillRect(175, _yHeader, 69, _hHeader, TFT_BLACK);
+    tft.setCursor(175, _yHeader);
     tft.setTextSize(2);
     tft.setTextColor(TFT_DEEPSKYBLUE);
     tft.print(sbuf);
 }
 void showHeadlineItem(const char* hl){
     tft.setTextSize(2);
-    displayinfo(hl, 0, 20, TFT_WHITE, 0);
+    displayinfo(hl, _yHeader, _hHeader, TFT_WHITE, 0);
     showHeadlineVolume(getvolume());
 }
 void showHeadlineTime(){
     if(_state==CLOCK || _state==CLOCKico || _state==BRIGHTNESS || _state==ALARM) return;
     tft.setTextSize(2);
     tft.setTextColor(TFT_GREENYELLOW);
-    tft.fillRect(250, 0, 89, 20, TFT_BLACK);
+    tft.fillRect(250, _yHeader, 89, _hHeader, TFT_BLACK);
     if(!f_rtc) return; // has rtc the correct time? no -> return
     tft.setCursor(250, 0);
     tft.print(rtc.gettime_s());
@@ -464,13 +495,12 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
             filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){
                 sprintf(sbuf,"%s\n",filename.c_str());
-                if(index<10){_mp3Name[index]=sbuf; index++;}; //store the first 10 Names
+                if(index<10){_mp3Name[index]=sbuf; index++;}  //store the first 10 Names
                 SD_outbuf+=ASCIItoUTF8(sbuf);}
         }
         file = root.openNextFile();
     }
     if(SD_outbuf=="") SD_outbuf+"\n"; //nothing found
-    log_i("\n%s",SD_outbuf.c_str());
     return SD_outbuf;
 }
 //**************************************************************************************************
@@ -483,7 +513,7 @@ bool connectToWiFi(){
     if(WiFiNr==0) {                     // no WiFi networks can be found
         tft.fillScreen(TFT_BLACK);      // Clear screen
         tft.setTextSize(6);
-        displayinfo("no WiFi networks found", 21, 219, TFT_YELLOW, 5);
+        displayinfo("no WiFi networks found", 20, 220, TFT_YELLOW, 5);
         while(1){};                     // endless loop until reset
     }
     else {
@@ -541,7 +571,7 @@ void setup(){
     if(!connectToWiFi()){
         tft.fillScreen(TFT_BLACK);      // Clear screen
         tft.setTextSize(6);
-        displayinfo("can't connect to WiFi, check Your credentials", 21, 219, TFT_YELLOW, 5);
+        displayinfo("can't connect to WiFi, check Your credentials", 20, 220, TFT_YELLOW, 5);
         while(1){};                     // endless loop until reset
     }
     web.begin();
@@ -551,7 +581,7 @@ void setup(){
     sprintf(myIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     _myIP=String(myIP);
     tft.setTextSize(1);
-    displayinfo(myIP, 222, 18, TFT_MAGENTA, 165);
+    displayinfo(myIP, _yFooter, _hFooter, TFT_MAGENTA, 165);
     tone();
     mp3.connecttohost(readhostfrompref( -1)); //last used station
     startTimer();
@@ -610,8 +640,9 @@ inline void mute() {
     pref.putUInt("mute", f_mute);
 }
 
-inline void showVolume(){uint16_t vol=tft.width()* pref.getUInt("volume")/21;
-    tft.fillRect(0, 140, vol, 5, TFT_RED); tft.fillRect(vol+1, 140, tft.width()-vol+1, 5, TFT_GREEN);}
+inline void showVolumeBar(){uint16_t vol=tft.width()* pref.getUInt("volume")/21;
+    tft.fillRect(0, _yVolBar, vol, _hVolBar, TFT_RED);
+    tft.fillRect(vol+1, _yVolBar, tft.width()-vol+1, _hVolBar, TFT_GREEN);}
 
 inline void showBrightness(){uint16_t br=tft.width()* pref.getUInt("brightness")/100;
     tft.fillRect(0, 140, br, 5, TFT_RED); tft.fillRect(br+1, 140, tft.width()-br+1, 5, TFT_GREEN);}
@@ -633,7 +664,7 @@ void changeState(int state){
         _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
         _pressBtn[3]="/btn/Button_Previous_Yellow.bmp";    _releaseBtn[3]="/btn/Button_Previous_Green.bmp";
         _pressBtn[4]="/btn/Button_Next_Yellow.bmp";        _releaseBtn[4]="/btn/Button_Next_Green.bmp";
-        clearTitle(); clearFooter(); showVolume();
+        clearTitle(); clearFooter(); showVolumeBar();
         break;}
     case RADIOmenue:{
         _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
@@ -683,17 +714,17 @@ void changeState(int state){
     if(_state!=RADIO && _state!=CLOCK){ // RADIO and CLOCK have no Buttons
         int j=0;
         if(_state==RADIOico || _state==MP3PLAYERico){  // show correct mute button
-            if(f_mute==false) {tft.drawBmpFile(SD, _releaseBtn[0].c_str(), 0, 167); mp3.loop();}
-            else {tft.drawBmpFile(SD, _pressBtn[0].c_str(), 0 ,167); mp3.loop();}
+            if(f_mute==false) {tft.drawBmpFile(SD, _releaseBtn[0].c_str(), 0, _yBtn); mp3.loop();}
+            else {tft.drawBmpFile(SD, _pressBtn[0].c_str(), 0, _yBtn); mp3.loop();}
             j=1;}
-        for(int i=j; i<5; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*64 ,167); mp3.loop();}
+        for(int i=j; i<5; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*_wBtn, _yBtn); mp3.loop();}
     }
 }
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _pressBtn[btnNr].c_str(), btnNr*64 ,167);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
 }
 void changeBtn_released(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _releaseBtn[btnNr].c_str(), btnNr*64 ,167);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
 }
 
 void displayWeekdays(uint8_t ad, boolean showall=false){
@@ -958,7 +989,7 @@ void ir_res(uint32_t res){
 }
 void ir_number(const char* num){
     tft.setTextSize(7);
-    if(_state==0) displayinfo(num, 21, 219, TFT_YELLOW, 100); //state RADIO
+    if(_state==0) displayinfo(num, _yName, _hName +_hTitle, TFT_YELLOW, 100); //state RADIO
 }
 void ir_key(const char* key){
     switch(key[0]){
@@ -1005,8 +1036,8 @@ void tp_pressed(uint16_t x, uint16_t y){
     }
     if(_state==RADIOico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
-        if(yPos==1){_releaseNr= 1; downvolume(); showVolume();} // Vol-
-        if(yPos==2){_releaseNr= 2; upvolume(); showVolume();}   // Vol+
+        if(yPos==1){_releaseNr= 1; downvolume(); showVolumeBar();} // Vol-
+        if(yPos==2){_releaseNr= 2; upvolume(); showVolumeBar();}   // Vol+
         if(yPos==3){_releaseNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
         if(yPos==4){_releaseNr= 4; mp3.connecttohost(readnexthostfrompref(true));}
     }
@@ -1044,8 +1075,8 @@ void tp_pressed(uint16_t x, uint16_t y){
     }
     if(_state==MP3PLAYERico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
-        if(yPos==1){_releaseNr=1; downvolume(); showVolume();} // Vol-
-        if(yPos==2){_releaseNr=2; upvolume();   showVolume();} // Vol+
+        if(yPos==1){_releaseNr=1; downvolume(); showVolumeBar();} // Vol-
+        if(yPos==2){_releaseNr=2; upvolume();   showVolumeBar();} // Vol+
         if(yPos==3){_releaseNr=26;} // MP3
         if(yPos==4){_releaseNr=7; mp3.connecttohost(readhostfrompref(-1));} // Radio
     }
@@ -1062,7 +1093,7 @@ void tp_released(){
              showHeadlineItem("* MP3Player *");changeState(MP3PLAYER);
              tft.setTextSize(4); str=_mp3Name[_mp3Index];
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
-             displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5); break; //MP3
+             displayinfo(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5); break; //MP3
     case  6: tft.fillScreen(TFT_BLACK); changeState(CLOCK);
              showHeadlineItem("** Wecker **"); display_time(true); break;//Clock
     case  7: changeState(RADIO); break;
@@ -1088,18 +1119,18 @@ void tp_released(){
              while(str.length()==0){_mp3Index--; str=_mp3Name[_mp3Index]; if(_mp3Index==0) break;}
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              tft.setTextSize(4);
-             displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5);
+             displayinfo(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5);
              break; // left file--
     case 22: changeBtn_released(2); _mp3Index++; if(_mp3Index>9) _mp3Index=0;
              str=_mp3Name[_mp3Index];
              if(str.length()==0){_mp3Index=0; str=_mp3Name[_mp3Index];}
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              tft.setTextSize(4);
-             displayinfo(ASCIItoUTF8(str.c_str()), 21, 100, TFT_CYAN, 5);
+             displayinfo(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5);
              break; // right file++
-    case 23: changeState(MP3PLAYERico); showVolume();
+    case 23: changeState(MP3PLAYERico); showVolumeBar();
              mp3.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
-    case 26: tft.fillRect(0, 140, 320, 100, TFT_BLACK);changeState(MP3PLAYER); break;
+    case 26: clearTitle(); changeState(MP3PLAYER); break;
     }
     _releaseNr=0;
 }
