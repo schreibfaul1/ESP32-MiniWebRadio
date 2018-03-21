@@ -41,12 +41,12 @@
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=120
 //  |                                           |
-//  |              StreamTitle                  |     	_hTitle=102px
+//  |              StreamTitle                  |     	_hTitle=100px
 //  |                                           |
-//  +-------------------------------------------+ _yFooter=222
+//  +-------------------------------------------+ _yFooter=220
 //  | Footer                                    |    	_hFooter=18px
-//  +-------------------------------------------+ 320
-//                                             240
+//  +-------------------------------------------+ 240
+//                                             320
 // system libraries
 #include <Preferences.h>
 #include <SPI.h>
@@ -100,14 +100,14 @@ const uint16_t _hHeader =20;                    // height Header
 const uint16_t _yName  =_yHeader+_hHeader;      // yPos StationName
 const uint16_t _hName  =100;                    // height Stationname
 const uint16_t _yTitle =_yName+_hName;          // yPos StreamTitle
-const uint16_t _hTitle =102;                    // height StreamTitle
+const uint16_t _hTitle =100;                    // height StreamTitle
 const uint16_t _yFooter =_yTitle+_hTitle;       // yPos Footer
-const uint16_t _hFooter=18;                     // height Footer
+const uint16_t _hFooter=20;                     // height Footer
 const uint16_t _yVolBar=_yTitle+30;             // yPos VolumeBar
 const uint16_t _hVolBar=5;                      // height VolumeBar
 const uint16_t _wLogo=96;                       // width Logo
 const uint16_t _hLogo=96;                       // height Logo
-const uint16_t _yLogo=_yName+(_hName-_hLogo)/2; // yPos Logos
+const uint16_t _yLogo=_yName+(_hName-_hLogo)/2;	// yPos Logos
 const uint16_t _wBtn=64;                        // width Button
 const uint16_t _hBtn=64;                        // height Button
 const uint16_t _yBtn=_yVolBar+_hVolBar+10;      // yPos Buttons
@@ -348,14 +348,14 @@ void showStation(){
     tft.setTextSize(3);
     if(_stationname==""){
         if(_station.length()>75) tft.setTextSize(1);
-        displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, 110);// Show station name
+        displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
         showTitle("", false);   // and delete showstreamtitle
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_station.c_str()));
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
         tft.setTextSize(4);
         if(_stationname.length()>30) tft.setTextSize(3);
-        displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, 110);
+        displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);
         showTitle("", false);
         //log_i("%s", _stationname.c_str());
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_stationname.c_str()));
@@ -390,21 +390,21 @@ void showFooter(){  // bitrate stationnumber, IPaddress
     if(_bitrate.length()==0) _bitrate="   ";  // if bitrate is unknown
     tft.setTextSize(1);
     tft.setTextColor(TFT_GREENYELLOW);
-    tft.setCursor(5, 220);
+    tft.setCursor(5, _yFooter);
     tft.print("BR:");
     tft.setTextColor(TFT_LAVENDER);
     tft.print(_bitrate.c_str());
 
     char tkey[10];   // Key as an array of chars
     uint16_t preset=pref.getUInt("preset");
-    tft.setCursor(80, 220);
+    tft.setCursor(80, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("STA:");
     sprintf(tkey, "%03d", preset);
     tft.setTextColor(TFT_LAVENDER);
     tft.print(tkey);
 
-    tft.setCursor(170, 220);
+    tft.setCursor(170, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("myIP:");
     tft.setTextColor(TFT_LAVENDER);
