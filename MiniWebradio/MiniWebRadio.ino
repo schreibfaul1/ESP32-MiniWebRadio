@@ -2,15 +2,12 @@
 //*  Esp_radio -- Webradio receiver for ESP32, 2.8 color display and VS1053 MP3 module.    *
 //******************************************************************************************
 //
-//  if not enough space in nvs: change defaut.cvs
+//  if not enough space in nvs or flash: change defaut.cvs
 //
 //  Name,     Type,   SubType,   Offset,   Size,     Flags
-//  otadata,  data,   ota,       0x9000,   0x2000
-//  phy_init, data,   phy,       0xb000,   0x5000
-//  factory,  app,    factory,   0x10000,  1M
-//  ota_0,    app,    ota_0,     ,         1M
-//  ota_1,    app,    ota_1,     ,         1M
-//  nvs,      data,   nvs,       ,         0x16000
+//  phy_init, data,   phy,       0x9000,   0x7000
+//  factory,  app,    factory,   0x10000,  3M
+//  nvs,      data,   nvs,       ,         0x32000
 //
 //-----------------------------------------------------------------------------------------
 //  for german umlaut change Properties in Eclipse in UTF-8
@@ -33,6 +30,8 @@
 //  int32_t channel(void)                {return WiFiGenericClass::channel();}
 //
 //  Display 320x240
+//
+//
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |     	_hHeader=20px
 //  +-------------------------------------------+ _yName=20
@@ -82,6 +81,7 @@ String   _SSID="";
 String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
+uint16_t _maxstations=0;        // nr of available radiostreams
 uint8_t  _timefile=0;           // speak the time
 uint32_t _millis=0;
 uint32_t _alarmdays=0;
@@ -107,7 +107,7 @@ const uint16_t _yVolBar=_yTitle+30;             // yPos VolumeBar
 const uint16_t _hVolBar=5;                      // height VolumeBar
 const uint16_t _wLogo=96;                       // width Logo
 const uint16_t _hLogo=96;                       // height Logo
-const uint16_t _yLogo=_yName+(_hName-_hLogo)/2;	// yPos Logos
+const uint16_t _yLogo=_yName+(_hName-_hLogo)/2; // yPos Logos
 const uint16_t _wBtn=64;                        // width Button
 const uint16_t _hBtn=64;                        // height Button
 const uint16_t _yBtn=_yVolBar+_hVolBar+10;      // yPos Buttons
@@ -168,46 +168,37 @@ void defaultsettings(){
     if(file){                                   // try to read from SD
         str=file.readStringUntil('\n');         // headerline
         while(file.available()){
+            i++;
             str=file.readStringUntil(';');      // station
             str+="#";
             str+=file.readStringUntil(';');     // url
             info=file.readStringUntil('\n');    // info
             sprintf(tkey, "preset_%03d", i);
             pref.putString(tkey, str);
-            i++;
-            if(i==256) break;
         }
         file.close();
-        while(i<256){                           // if list has less than 255 entries fill with ""
-            sprintf(tkey, "preset_%03d", i);
-            pref.putString(tkey, "#");
-            i++;
-         }
+        pref.putUInt("maxstations", i);
     }
     else{                                       // file not available
         log_i("SD/presets.csv not found, use default stream URls");
-        String s[11], u[11];
-        s[  0]="030-berlinfm";          u[  0]="vtuner.stream.laut.fm/030-berlinfm"; //D
-        s[  1]="104.6 RTL";             u[  1]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
-        s[  2]="105.5 Spreeradio";      u[  2]="stream.spreeradio.de/spree-live/mp3-128/vtuner/"; //D
-        s[  3]="106.4 TOP FM";          u[  3]="mp3.topfm.c.nmdn.net/ps-topfm/livestream.mp3"; //D
-        s[  4]="1Live, WDR Koeln";      u[  4]="www.wdr.de/wdrlive/media/einslive.m3u"; //D
-        s[  5]="88vier";                u[  5]="ice.rosebud-media.de:8000/88vier"; //D
-        s[  6]="93,6 JAM FM";           u[  6]="stream.jam.fm/jamfm-live/mp3-128/vtuner/"; //D
-        s[  7]="94.3 RS2";              u[  7]="stream.rs2.de/rs2/mp3-128/internetradio"; //D
-        s[  8]="94.3 RS2 Partymix";     u[  8]="stream.rs2.de/rs2-relax/mp3-128/internetradio"; //D
-        s[  9]="95.5 Charivari";        u[  9]="rs5.stream24.net:80/stream"; //D
-        s[ 10]="98.8 KISS FM";          u[ 10]="stream.kissfm.de/kissfm/mp3-128/internetradio"; //D
-        for(i=0; i<11; i++){
+        String s[12], u[12];
+        s[  1]="030-berlinfm";          u[  1]="vtuner.stream.laut.fm/030-berlinfm"; //D
+        s[  2]="104.6 RTL";             u[  2]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
+        s[  3]="105.5 Spreeradio";      u[  3]="stream.spreeradio.de/spree-live/mp3-128/vtuner/"; //D
+        s[  4]="106.4 TOP FM";          u[  4]="mp3.topfm.c.nmdn.net/ps-topfm/livestream.mp3"; //D
+        s[  5]="1Live, WDR Koeln";      u[  5]="www.wdr.de/wdrlive/media/einslive.m3u"; //D
+        s[  6]="88vier";                u[  6]="ice.rosebud-media.de:8000/88vier"; //D
+        s[  7]="93,6 JAM FM";           u[  7]="stream.jam.fm/jamfm-live/mp3-128/vtuner/"; //D
+        s[  8]="94.3 RS2";              u[  8]="stream.rs2.de/rs2/mp3-128/internetradio"; //D
+        s[  9]="94.3 RS2 Partymix";     u[  9]="stream.rs2.de/rs2-relax/mp3-128/internetradio"; //D
+        s[ 10]="95.5 Charivari";        u[ 10]="rs5.stream24.net:80/stream"; //D
+        s[ 11]="98.8 KISS FM";          u[ 11]="stream.kissfm.de/kissfm/mp3-128/internetradio"; //D
+        for(i=0; i<12; i++){
             sprintf(tkey, "preset_%03d", i);
             str=s[i]+String("#")+u[i];
             pref.putString(tkey, str);
         }
-        while(i<256){                           // while list has less than 255 entries fill with ""
-            sprintf(tkey, "preset_%03d", i);
-            pref.putString(tkey, "#");
-            i++;
-         }
+        pref.putUInt("maxstations", 11);
     }
     // establish a WiFi Networklist from "SD/networks.csv" if present
     for(i=1; i<10; i++){                        // clear all WiFi items except item wifi_00
@@ -282,13 +273,33 @@ const char* UTF8toASCII(const char* str){
         if(str[i] == 0xC3){
             i++;
             switch(str[i]){
-                case 164: chbuf[j]=132; break; // ä
                 case 132: chbuf[j]=142; break; // Ä
-                case 182: chbuf[j]=148; break; // ö
+                case 133: chbuf[j]=143; break; // Å
+                case 134: chbuf[j]=146; break; // Æ
+                case 135: chbuf[j]=128; break; // Ç
+                case 137: chbuf[j]=144; break; // É
                 case 150: chbuf[j]=153; break; // Ö
-                case 188: chbuf[j]=129; break; // ü
                 case 156: chbuf[j]=154; break; // Ü
                 case 159: chbuf[j]=225; break; // ß
+                case 160: chbuf[j]=133; break; // à
+                case 162: chbuf[j]=131; break; // â
+                case 164: chbuf[j]=132; break; // ä
+                case 165: chbuf[j]=134; break; // å
+                case 166: chbuf[j]=145; break; // æ
+                case 167: chbuf[j]=135; break; // ç
+                case 168: chbuf[j]=138; break; // è
+                case 169: chbuf[j]=130; break; // é
+                case 170: chbuf[j]=136; break; // ê
+                case 171: chbuf[j]=137; break; // ë
+                case 172: chbuf[j]=141; break; // ì
+                case 174: chbuf[j]=140; break; // î
+                case 175: chbuf[j]=139; break; // i
+                case 178: chbuf[j]=149; break; // ò
+                case 180: chbuf[j]=147; break; // ô
+                case 182: chbuf[j]=148; break; // ö
+                case 185: chbuf[j]=151; break; // ù
+                case 188: chbuf[j]=129; break; // ü
+                case 191: chbuf[j]=152; break; // ÿ
             }
         }
         i++; j++;
@@ -350,6 +361,8 @@ void showStation(){
         if(_station.length()>75) tft.setTextSize(1);
         displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
         showTitle("", false);   // and delete showstreamtitle
+        _station.toLowerCase();
+        _station.replace(",",".");
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_station.c_str()));
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
@@ -358,6 +371,8 @@ void showStation(){
         displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);
         showTitle("", false);
         //log_i("%s", _stationname.c_str());
+        _stationname.toLowerCase();
+        _stationname.replace(",",".");
         sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_stationname.c_str()));
         //log_i("%s", sbuf);
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
@@ -427,21 +442,19 @@ String tone(){
     mp3.setTone(u8_tone);
     return str_tone;
 }
-String readhostfrompref(int16_t preset) // -1 read from current preset
+String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max read nr station
 {
       String content = "" ;    // Result of search
       char   tkey[12] ;        // Key as an array of chars
-      if((preset>255)||(preset<-1)) return "";
-      if(preset==-1) preset=pref.getUInt("preset");
+      log_i("MaxS %i",pref.getUInt("maxstations"));
+      if(preset>pref.getUInt("maxstations")) return "";
+      if(preset==0) preset=pref.getUInt("preset");
       sprintf ( tkey, "preset_%03d", preset);
       content=pref.getString(tkey);
-      //_stationname=content.substring(content.indexOf("#")+8, content.length()); //get stationname from preset
-      //content=content.substring(0, content.indexOf("#"));
       _stationname=content.substring(0, content.indexOf("#")); //get stationname from preset
       content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
-
       content.trim();
-      if(preset>-1) pref.putUInt("preset", preset);
+      if(preset>0) pref.putUInt("preset", preset);
       return content;
 }
 String readnexthostfrompref(boolean updown){
@@ -452,8 +465,8 @@ String readnexthostfrompref(boolean updown){
       int16_t pos=0;
       preset=pref.getUInt("preset");
       do{
-          if(updown==true){preset++; if(preset>255) preset=0;}
-          else{preset--; if(preset<0)preset=255;}
+          if(updown==true){preset++; if(preset>pref.getUInt("maxstations")) preset=0;}
+          else{preset--; if(preset<0)preset=pref.getUInt("maxstations");}
           sprintf(tkey, "preset_%03d", preset);
           content=pref.getString(tkey);
           pos=content.indexOf("#");
@@ -583,7 +596,7 @@ void setup(){
     tft.setTextSize(1);
     displayinfo(myIP, _yFooter, _hFooter, TFT_MAGENTA, 165);
     tone();
-    mp3.connecttohost(readhostfrompref( -1)); //last used station
+    mp3.connecttohost(readhostfrompref(0)); //last used station
     startTimer();
 }
 
@@ -595,10 +608,10 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
     int i, j, ix, s_len=0;
     char tkey[12];
     char nr[8];
-    for ( i = 0 ; i < 256 ; i++ ){ // Max 255 presets
+    for ( i = 1 ; i < (pref.getUInt("maxstations")+1) ; i++ ){ // max presets
         sprintf(tkey, "preset_%03d", i);
         sprintf(nr, "%03d - ", i);
-        content=(pref.getString(tkey));
+        content=pref.getString(tkey);
         ix=content.indexOf("#");
         if(ix>0){
           u=content.substring(ix, content.length());
@@ -610,16 +623,16 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
 
         if(config==0){
             content=String(nr) + s;
-            val+=String(tkey) + String("=") + String(content) + String("\n");
+            val=String(tkey) + String("=") + String(content) + String("\n");
+            web.reply(val, false);
         }
         if(config==1){
             for(j=s_len;j<39;j++) s+=String(" ");
             content=s+u;
-            val+=String(nr) +(String(content) + String("\n"));
+            val=String(nr) +(String(content) + String("\n"));
+            web.reply(val, false);
         }
     }
-    web.reply(val);
-
 }
 //**************************************************************************************************
 inline uint8_t downvolume(){
@@ -876,7 +889,7 @@ void loop() {
             _state=RADIO;
             showHeadlineItem("** Internet radio **");
             mp3.setVolume(pref.getUInt("volume"));
-            mp3.connecttohost(readhostfrompref(-1));
+            mp3.connecttohost(readhostfrompref(0));
         }
         f_mp3eof=false;
     }
