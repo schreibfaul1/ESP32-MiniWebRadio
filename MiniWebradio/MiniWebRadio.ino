@@ -81,8 +81,8 @@ String   _SSID="";
 String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
-uint16_t _maxstations=0;        // nr of available radiostreams
 uint8_t  _timefile=0;           // speak the time
+uint8_t  _commercial_dur=0;     // duration of advertising
 uint32_t _millis=0;
 uint32_t _alarmdays=0;
 boolean  f_1sec=false;          // flag set every one second
@@ -92,6 +92,7 @@ boolean  f_rtc=false;           // true if time from ntp is received
 boolean  f_mp3eof=false;        // set at the end of mp3 file
 boolean  f_alarm=false;         // set if alarmday and alarmtime is equal localtime
 boolean  f_timespeech=false;    // if true activate timespeech
+boolean  f_has_ST=false;        // has StreamTitle?
 boolean  semaphore=false;
 
 // display layout
@@ -161,14 +162,17 @@ void defaultsettings(){
     pref.putUInt("tonela", 0); // BassGain 0...15
     pref.putUInt("tonelf", 0); // BassFreq 0...13
     //
-    pref.putUInt("preset", 0);
+    pref.putUInt("preset", 1);
     //
     // StationList
     File file = SD.open("/presets.csv");
     if(file){                                   // try to read from SD
         str=file.readStringUntil('\n');         // headerline
         while(file.available()){
+            str=file.readStringUntil(';');      // favorit
+            if(str!="*"){str=file.readStringUntil('\n'); continue;}// ignore this entry
             i++;
+            str=file.readStringUntil(';');      // country
             str=file.readStringUntil(';');      // station
             str+="#";
             str+=file.readStringUntil(';');     // url
@@ -223,6 +227,31 @@ void defaultsettings(){
     else{
         log_i("SD/network.csv not found, use default WiFi credentials");
     }
+}
+boolean ST_rep(){  // replace Streamtitle, seek in presets.csv
+    if(!f_SD_okay)return false;
+    File file = SD.open("/presets.csv");
+    if(!file)return false;
+    uint16_t i=0;
+    uint16_t preset=pref.getUInt("preset");
+    String str="";
+    while(file.available()){ // try to read from SD
+        file.readStringUntil('\n');
+        i++;
+        if(i==100) mp3.loop();
+        if(i==200) mp3.loop();
+        if(i==300) mp3.loop();
+        if(i==400) mp3.loop();
+        if(i==preset)break;
+    }
+    file.readStringUntil(';'); //Favoriten
+    file.readStringUntil(';'); //Country
+    file.readStringUntil(';'); //Stationname
+    file.readStringUntil(';'); //URL
+    str=file.readStringUntil('\n');//probably replacement information
+    file.close();
+    if(str.length()>5){showTitle(str); return true;}
+    return false;
 }
 
 //**************************************************************************************************
@@ -346,34 +375,39 @@ void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t
     tft.print(str);                                      	// Show the string
 }
 
-void showTitle(String str, bool force){                  	//force=true -> show title every time
+void showTitle(String str){
     static String title;
-    if((title==str)&&(force==false)) return;
-    tft.setTextSize(4);
-    if(str.length()>45) tft.setTextSize(3);
-    if(str.length()>120) tft.setTextSize(1);
-    if(_state==0){displayinfo(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 5);}  //state RADIO
-    title=str;
+    str.trim();  // remove all leading or trailing whitespaces
+    str.replace(" | ","|"); //replace whitespace before and next a pipe ( | means \n )
+    if(str.length()>4) f_has_ST=true; else {if(str.length()==0) f_has_ST=false;}
+        tft.setTextSize(4);
+        if(str.length()>45) tft.setTextSize(3);
+        if(str.length()>120) tft.setTextSize(1);
+        if(_state==0){displayinfo(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);}  //state RADIO
+        title=str;
 }
 void showStation(){
+    String str="";
     tft.setTextSize(3);
     if(_stationname==""){
         if(_station.length()>75) tft.setTextSize(1);
         displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
-        showTitle("", false);   // and delete showstreamtitle
-        _station.toLowerCase();
-        _station.replace(",",".");
-        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_station.c_str()));
+        showTitle("");   // and delete showstreamtitle
+        str=_station;
+        str.toLowerCase();
+        str.replace(",",".");
+        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
         tft.setTextSize(4);
         if(_stationname.length()>30) tft.setTextSize(3);
         displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);
-        showTitle("", false);
+        showTitle("");
+        str=_stationname;
         //log_i("%s", _stationname.c_str());
-        _stationname.toLowerCase();
-        _stationname.replace(",",".");
-        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(_stationname.c_str()));
+        str.toLowerCase();
+        str.replace(",",".");
+        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
         //log_i("%s", sbuf);
         if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
 }
@@ -455,6 +489,7 @@ String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max
       content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
       content.trim();
       if(preset>0) pref.putUInt("preset", preset);
+      f_has_ST=false; // will probably be set in ShowStreamtitle
       return content;
 }
 String readnexthostfrompref(boolean updown){
@@ -480,6 +515,7 @@ String readnexthostfrompref(boolean updown){
           if(maxtry==255) return"";
       }while(content == "" );
       pref.putUInt("preset", preset);
+      f_has_ST=false; // will probably be set in ShowStreamtitle
       return content;
 }
 //**************************************************************************************************
@@ -669,7 +705,7 @@ void changeState(int state){
     switch(_state) {
     case RADIO:{
         showFooter(); showHeadlineItem("** Internet radio **");
-        showStation(); showTitle(_title, true); break;
+        showStation(); showTitle(_title); break;
     }
     case RADIOico:{
         _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Off_Green.bmp";
@@ -834,6 +870,7 @@ void display_time(boolean showall=false){ //show current time on the TFT Display
 //                                           L O O P                                               *
 //**************************************************************************************************
 void loop() {
+    static uint8_t sec=0;
     mp3.loop();
     web.loop();
     ir.loop();
@@ -858,6 +895,15 @@ void loop() {
             showHeadlineTime();
         }
         display_time();
+        if(f_has_ST==false) sec++; else sec=0; // Streamtitle==""?
+        if(sec>4){
+            sec=0;
+            if(!ST_rep())showTitle("Station provides no Streamtitle");
+        }
+        if(_commercial_dur>0){
+            _commercial_dur--;
+            if(_commercial_dur==2)showTitle("");// end of commercial? clear streamtitle
+        }
         f_1sec=false;
     }
     if(_alarmtime==rtc.gettime_xs()){ //is alarmtime
@@ -868,8 +914,8 @@ void loop() {
     else semaphore=false;
 
     if(_millis+5000<millis()){  //5sec no touch?
-        if(_state==RADIOico)  {_state=RADIO; showTitle(_title, true); showFooter();}
-        if(_state==RADIOmenue){_state=RADIO; showTitle(_title, true); showFooter();}
+        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();}
+        if(_state==RADIOmenue){_state=RADIO; showTitle(_title); showFooter();}
         if(_state==CLOCKico)  {_state=CLOCK; displayinfo("",160,79, TFT_BLACK, 0);}
     }
 
@@ -906,12 +952,13 @@ void vs1053_showstation(const char *info){              // called from vs1053
     showStation();
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
+    //log_i("showTitle %s", info);
     _title=info;
-    if(_state==RADIO)showTitle(_title, false);          //state RADIO
+    if(_state==RADIO)showTitle(_title);          //state RADIO
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
-//    tft.setTextSize(1);
+//    tft.setTextSize(1);                               // host and port
 //    displayinfo(s_info.c_str(), 167, 55, TFT_YELLOW); // show info at position 167
 }
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
@@ -927,6 +974,12 @@ void vs1053_info(const char *info) {                    // called from vs1053
     Serial.print("vs1053_info: ");
     Serial.print(info);                                 // debug infos
 }
+void vs1053_commercial(const char *info){               // called from vs1053
+    String str=info;                                    // info is the duration of advertising
+    _commercial_dur=str.toInt();
+    showTitle("Advertising "+str+"s");
+}
+
 //Events from tft library
 void tft_info(const char *info){
     Serial.print("tft_info: ");
@@ -996,8 +1049,7 @@ void HTML_info(const char *info){                   // called from html
 }
 // Events from IR Library
 void ir_res(uint32_t res){
-    if(res>999) res=res%1000;
-    if(res>255) res=res%100;
+    while(res>pref.getUInt("maxstations")) res=res%100;
     if(_state==0)mp3.connecttohost(readhostfrompref(res));//state RADIO
 }
 void ir_number(const char* num){
