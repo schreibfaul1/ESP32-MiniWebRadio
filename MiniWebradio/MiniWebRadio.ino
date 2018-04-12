@@ -237,14 +237,13 @@ boolean ST_rep(){  // replace Streamtitle, seek in presets.csv
     String str="";
     while(file.available()){ // try to read from SD
         file.readStringUntil('\n');
-        i++;
+        if(file.readStringUntil(';')=="*") i++; // is favorit?
         if(i==100) mp3.loop();
         if(i==200) mp3.loop();
         if(i==300) mp3.loop();
         if(i==400) mp3.loop();
         if(i==preset)break;
     }
-    file.readStringUntil(';'); //Favoriten
     file.readStringUntil(';'); //Country
     file.readStringUntil(';'); //Stationname
     file.readStringUntil(';'); //URL
@@ -276,66 +275,119 @@ inline uint8_t getBrightness(){return pref.getUInt("brightness");}
 //**************************************************************************************************
 //                                       A S C I I                                                 *
 //**************************************************************************************************
+
+char ASCIIfromUNI(char ch){  // if no ascci char available return blank
+    uint8_t ascii;
+    char tab[96]={
+    255,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
+     32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
+     32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
+    154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
+     32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152};
+    ascii=ch;
+    if(ch<128) return ascii;
+    if(ch<160) return 32;
+    ascii-=160;
+    ascii=tab[ascii];
+    return ascii;
+}
+
+uint16_t UNIfromASCII(char ch){
+    uint16_t uni;
+    uint16_t tab[128]={
+     199, 252, 233, 226, 228, 224, 229, 231, 234, 235, 232, 239, 238, 236, 196, 197,
+     201, 230, 198, 244, 246, 242, 251, 249, 255, 214, 220, 162, 163, 165,8359, 402,
+     225, 237, 243, 250, 241, 209, 170, 186, 191,8976, 172, 189, 188, 161, 171, 187,
+    9617,9618,9619,9474,9508,9569,9570,9558,9557,9571,9553,9559,9565,9564,9563,9488,
+    9492,9524,9516,9500,9472,9532,9566,9567,9562,9556,9577,9574,9568,9552,9580,9575,
+    9576,9572,9573,9561,9560,9554,9555,9579,9578,9496,9484,9608,9604,9612,9616,9600,
+     945, 223, 915, 960, 931, 963, 181, 964, 934, 920, 937, 948,8734, 966, 949,8745,
+    8801, 177,8805,8804,8992,8993, 247,8776, 176,8729, 183,8730,8319, 178,9632, 160};
+    uni=ch;
+    if(ch<128)return uni;
+    uni-=128;
+    uni=tab[uni];
+    return uni;
+}
+
 const char* ASCIItoUTF8(const char* str){
-    uint16_t i=0, j=0;
+    uint16_t i=0, j=0, uni=0;
     static char chbuf[256];
     while(str[i]!=0){
-        switch(str[i]){
-        case 132:{chbuf[j]=0xC3; chbuf[j+1]=164; j+=2; i++; break;} // ä
-        case 142:{chbuf[j]=0xC3; chbuf[j+1]=132; j+=2; i++; break;} // Ä
-        case 148:{chbuf[j]=0xC3; chbuf[j+1]=182; j+=2; i++; break;} // ö
-        case 153:{chbuf[j]=0xC3; chbuf[j+1]=150; j+=2; i++; break;} // Ö
-        case 129:{chbuf[j]=0xC3; chbuf[j+1]=188; j+=2; i++; break;} // ü
-        case 154:{chbuf[j]=0xC3; chbuf[j+1]=156; j+=2; i++; break;} // Ü
-        case 225:{chbuf[j]=0xC3; chbuf[j+1]=159; j+=2; i++; break;} // ß
-        default: {if(str[i]>127){chbuf[j]=0xC3, chbuf[j+1]=' '; j+=2; i++;} // all other
-                  else {chbuf[j]=str[i]; j++; i++; break;}}}
+            uni=UNIfromASCII(str[i]);
+            switch(uni){
+            case   0 ... 127:{chbuf[j]=str[i]; i++; j++; break;}
+            case 160 ... 191:{chbuf[j]=0xC2; chbuf[j+1]=uni; j+=2; i++; break;}
+            case 192 ... 255:{chbuf[j]=0xC3; chbuf[j+1]=uni-64; j+=2; i++; break;}
+            default:{chbuf[j]=' '; i++; j++;}}
     }
     chbuf[j]=0;
     return chbuf;
 }
+
 const char* UTF8toASCII(const char* str){
     uint16_t i=0, j=0;
     static char chbuf[255];
     while(str[i] != 0){
         chbuf[j]=str[i];
-        if(str[i] == 0xC3){
+        if(str[i]==0xC2){ // compute unicode from utf-8
             i++;
-            switch(str[i]){
-                case 132: chbuf[j]=142; break; // Ä
-                case 133: chbuf[j]=143; break; // Å
-                case 134: chbuf[j]=146; break; // Æ
-                case 135: chbuf[j]=128; break; // Ç
-                case 137: chbuf[j]=144; break; // É
-                case 150: chbuf[j]=153; break; // Ö
-                case 156: chbuf[j]=154; break; // Ü
-                case 159: chbuf[j]=225; break; // ß
-                case 160: chbuf[j]=133; break; // à
-                case 162: chbuf[j]=131; break; // â
-                case 164: chbuf[j]=132; break; // ä
-                case 165: chbuf[j]=134; break; // å
-                case 166: chbuf[j]=145; break; // æ
-                case 167: chbuf[j]=135; break; // ç
-                case 168: chbuf[j]=138; break; // è
-                case 169: chbuf[j]=130; break; // é
-                case 170: chbuf[j]=136; break; // ê
-                case 171: chbuf[j]=137; break; // ë
-                case 172: chbuf[j]=141; break; // ì
-                case 174: chbuf[j]=140; break; // î
-                case 175: chbuf[j]=139; break; // i
-                case 178: chbuf[j]=149; break; // ò
-                case 180: chbuf[j]=147; break; // ô
-                case 182: chbuf[j]=148; break; // ö
-                case 185: chbuf[j]=151; break; // ù
-                case 188: chbuf[j]=129; break; // ü
-                case 191: chbuf[j]=152; break; // ÿ
-            }
+            if((str[i]>159)&&(str[i]<192)) chbuf[j]=ASCIIfromUNI(str[i]);
+            else chbuf[j]=32;
+        }
+        else if(str[i]==0xC3){
+            i++;
+            if((str[i]>127)&&(str[i]<192)) chbuf[j]=ASCIIfromUNI(str[i]+64);
+            else chbuf[j]=32;
         }
         i++; j++;
     }
     chbuf[j]=0;
     return (chbuf);
 }
+
+const char* decodeURL(const char* str){ // decode url in ascii
+    static char chbuf[255];
+    uint16_t i=0, j=0;
+    char a, b, a1=0, b1=0, ch=0;
+    while(str[i] != 0){
+        if(str[i] == '%'){
+            if((str[i+1]=='C')&&(str[i+2]=='3')){
+                if(str[i+3]=='%'){
+                    a = str[i+4];
+                    b = str[i+5];
+                    if((a>='a' && a<='f')) a1=a-87;
+                    if((a>='A' && a<='F')) a1=a-55;
+                    if((a>='0' && a<='9')) a1=a-48;
+                    if((b>='a' && b<='f')) b1=b-87;
+                    if((b>='A' && b<='F')) b1=b-55;
+                    if((b>='0' && b<='9')) b1=b-48;
+                    ch=16*a1+b1;
+                    ch=ch+0x40;
+                } else ch=' ';
+                i+=6;
+            ch=ASCIIfromUNI(ch);
+            }
+            if(str[i+1]=='2'){
+                a = str[i+2];
+                if((a>='a' && a<='f')) a1=a-87;
+                if((a>='A' && a<='F')) a1=a-55;
+                if((a>='0' && a<='9')) a1=a-48;
+                ch=a1+32;
+                i+=3;
+            }
+            chbuf[j] = ch;
+            j++;
+        } else if(str[i] == '+') {
+             chbuf[j] = ' '; i++; j++;
+        } else {
+             chbuf[j]=str[i]; i++; j++;
+        }
+    }
+    chbuf[j] = '\0';
+    return (chbuf);
+}
+
 //**************************************************************************************************
 //                                        T I M E R                                                *
 //**************************************************************************************************
@@ -480,7 +532,7 @@ String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max
 {
       String content = "" ;    // Result of search
       char   tkey[12] ;        // Key as an array of chars
-      log_i("MaxS %i",pref.getUInt("maxstations"));
+      //log_i("MaxS %i",pref.getUInt("maxstations"));
       if(preset>pref.getUInt("maxstations")) return "";
       if(preset==0) preset=pref.getUInt("preset");
       sprintf ( tkey, "preset_%03d", preset);
@@ -533,7 +585,6 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
     File file = root.openNextFile();
     while(file){
         if(file.isDirectory()){
-            log_i("DIR : %s",file.name());
             if(levels){
                 listmp3file(file.name(), levels -1, fs);
             }
@@ -971,7 +1022,9 @@ void vs1053_bitrate(const char *br){
     if(_state==RADIO)showFooter();
 }
 void vs1053_info(const char *info) {                    // called from vs1053
+    String str=info;
     Serial.print("vs1053_info: ");
+    if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
     Serial.print(info);                                 // debug infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
@@ -1005,9 +1058,9 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
     if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
     if(cmd.startsWith("mute")) {mute();web.reply("OK\n"); return;}
-    if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(str); return;}
-    if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(str); return;}
-    if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(str); return;}
+    if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(_stationname); return;}
+    if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(_stationname); return;}
+    if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(_stationname); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     if(cmd.startsWith("saveprefs")){clearallpresets(); web.reply(""); return;} // after that starts POST Event "HTML_request"
@@ -1016,11 +1069,12 @@ void HTML_command(const String cmd){                    // called from html
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(const String file){                  // called from html
+    log_i("HTML_file %s", file.c_str());
     web.printhttpheader(file).c_str();
     if(file=="index.html") {web.show(web_html); return;}
-    //if(file=="favicon.ico") {web.show((char*)favicon_ico ,sizeof(favicon_ico)); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
-    if(file=="SD/Dev_Board.gif"){web.streamfile(SD, "/Dev_Board.gif"); return;}
+    if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
+    if(file.startsWith("url=")){web.streamfile(SD, (decodeURL(file.substring(6).c_str()))); return;}
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request){
