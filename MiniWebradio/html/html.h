@@ -39,8 +39,6 @@ protected:
 	String  getContentType(String filename);
 	void    handlehttp();
 	uint8_t inbyte(bool forcestart);
-	const char* ISO88591toUTF8(const char* str);
-	const char* ASCIItoUTF8(const char* str);
 	String URLencode(const char* str);
 
 public:
@@ -51,7 +49,9 @@ public:
 	void show(const char* pagename, int16_t len=-1);
 	void show_not_found();
 	void streamfile(fs::FS &fs,const char* path);
-	void reply(const String &response);
+	void reply(const String &response, boolean header=true);
+	const char* ISO88591toUTF8(const char* str);
+	const char* HTMLtoUTF8(const char* str);
 	String  printhttpheader(String file);
 };
 

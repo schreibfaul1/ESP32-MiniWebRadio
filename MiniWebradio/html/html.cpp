@@ -256,8 +256,8 @@ void HTML::loop() {
 		handlehttp();
 	}
 }
-void HTML::reply(const String &response){
-    cmdclient.print(httpheader("text/html"));
+void HTML::reply(const String &response, bool header){
+    if(header==true) cmdclient.print(httpheader("text/html"));
 	cmdclient.print(response);
 }
 
@@ -272,7 +272,7 @@ const char* HTML::ISO88591toUTF8(const char* str){
 	return sbuf;
 }
 
-const char* HTML::ASCIItoUTF8(const char* str){
+const char* HTML::HTMLtoUTF8(const char* str){
 	uint16_t i=0, j=0;
 
 	while(str[i]!=0){
