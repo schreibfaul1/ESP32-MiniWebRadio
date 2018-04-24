@@ -279,7 +279,7 @@ inline uint8_t getBrightness(){return pref.getUInt("brightness");}
 char ASCIIfromUNI(char ch){  // if no ascci char available return blank
     uint8_t ascii;
     char tab[96]={
-    255,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
+     96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
      32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
      32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
     154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
@@ -349,9 +349,10 @@ const char* UTF8toASCII(const char* str){
 const char* decodeURL(const char* str){ // decode url in ascii
     static char chbuf[255];
     uint16_t i=0, j=0;
-    char a, b, a1=0, b1=0, ch=0;
+    char a, b, a1, b1, ch=0;
     while(str[i] != 0){
         if(str[i] == '%'){
+            a1=0, b1=0;
             if((str[i+1]=='C')&&(str[i+2]=='3')){
                 if(str[i+3]=='%'){
                     a = str[i+4];
@@ -368,19 +369,18 @@ const char* decodeURL(const char* str){ // decode url in ascii
                 i+=6;
             ch=ASCIIfromUNI(ch);
             }
-            if(str[i+1]=='2'){
+            if((str[i+1]>'1')&&(str[i+1]<'8')){  // '2'...'7'
                 a = str[i+2];
                 if((a>='a' && a<='f')) a1=a-87;
                 if((a>='A' && a<='F')) a1=a-55;
                 if((a>='0' && a<='9')) a1=a-48;
-                ch=a1+32;
+                b1=str[i+1]-48; ch=a1+b1*16;
                 i+=3;
             }
             chbuf[j] = ch;
             j++;
-        } else if(str[i] == '+') {
-             chbuf[j] = ' '; i++; j++;
-        } else {
+        }
+        else {
              chbuf[j]=str[i]; i++; j++;
         }
     }
@@ -938,7 +938,7 @@ void loop() {
                     h++;
                     if(h==24) h=0;
                     sprintf ( tkey, "/voice_time/%03d.mp3", h);
-                    Serial.println(tkey);
+                    //Serial.println(tkey);
                     _timefile=3;
                     mp3.connecttoSD(tkey);
                 }
@@ -1032,6 +1032,14 @@ void vs1053_commercial(const char *info){               // called from vs1053
     _commercial_dur=str.toInt();
     showTitle("Advertising "+str+"s");
 }
+void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
+    String str=info;
+    if(str.length()>5){
+        Serial.print("Homepage:    ");
+        Serial.println(info);
+    }
+
+}
 
 //Events from tft library
 void tft_info(const char *info){
@@ -1043,7 +1051,7 @@ void HTML_command(const String cmd){                    // called from html
     uint8_t vol;
     String  str;
     boolean f_tone=false;
-    //static boolean mute=false;
+    if(cmd=="to_listen"){web.reply(_stationname);} // return the name of the current station
     if(cmd=="settings"){getsettings(0); return;}
     if(cmd=="getprefs") {getsettings(1); return;}
     if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
@@ -1069,12 +1077,12 @@ void HTML_command(const String cmd){                    // called from html
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(const String file){                  // called from html
-    log_i("HTML_file %s", file.c_str());
+    //log_i("HTML_file %s", file.c_str());
     web.printhttpheader(file).c_str();
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
-    if(file.startsWith("url=")){web.streamfile(SD, (decodeURL(file.substring(6).c_str()))); return;}
+    if(file.startsWith("url=")){web.streamfile(SD,(decodeURL(file.substring(6).c_str()))); Serial.println(file.substring(6));return;}
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request){
