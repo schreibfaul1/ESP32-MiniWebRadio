@@ -33,17 +33,17 @@
 //
 //
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |     	_hHeader=20px
+//  | Header                                    |       _hHeader=20px
 //  +-------------------------------------------+ _yName=20
 //  |                                           |
-//  | Logo                   StationName        |     	_hName=100px
+//  | Logo                   StationName        |       _hName=100px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=120
 //  |                                           |
-//  |              StreamTitle                  |     	_hTitle=100px
+//  |              StreamTitle                  |       _hTitle=100px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |    	_hFooter=18px
+//  | Footer                                    |       _hFooter=18px
 //  +-------------------------------------------+ 240
 //                                             320
 // system libraries
@@ -75,8 +75,9 @@
 #define IR_PIN        34
 
 //global variables
-char sbuf[256], myIP[100];
-String   _station="", _title="", _info="", _myIP="", _stationname="",_alarmtime="", _time_s="", _hour="", _bitrate="";
+char     sbuf[256], myIP[100];
+String   _station="",  _stationname="", _stationURL="", _homepage="";
+String   _title="", _info="", _myIP="",_alarmtime="", _time_s="", _hour="", _bitrate="";
 String   _SSID="";
 String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
@@ -178,6 +179,7 @@ void defaultsettings(){
             str+=file.readStringUntil(';');     // url
             info=file.readStringUntil('\n');    // info
             sprintf(tkey, "preset_%03d", i);
+            //str=ASCIItoUTF8(str.c_str());
             pref.putString(tkey, str);
         }
         file.close();
@@ -369,7 +371,7 @@ const char* decodeURL(const char* str){ // decode url in ascii
                 i+=6;
             ch=ASCIIfromUNI(ch);
             }
-            if((str[i+1]>'1')&&(str[i+1]<'8')){  // '2'...'7'
+            else if((str[i+1]>'1')&&(str[i+1]<'8')){  // '2'...'7'
                 a = str[i+2];
                 if((a>='a' && a<='f')) a1=a-87;
                 if((a>='A' && a<='F')) a1=a-55;
@@ -385,6 +387,7 @@ const char* decodeURL(const char* str){ // decode url in ascii
         }
     }
     chbuf[j] = '\0';
+    log_i("%s",chbuf);
     return (chbuf);
 }
 
@@ -422,9 +425,9 @@ inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                       // 
 
 void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t indent){
     tft.fillRect(0, ypos, tft.width(), height, TFT_BLACK);  // Clear the space for new info
-    tft.setTextColor(color);                             	// Set the requested color
-    tft.setCursor(indent, ypos);                          	// Prepare to show the info
-    tft.print(str);                                      	// Show the string
+    tft.setTextColor(color);                                // Set the requested color
+    tft.setCursor(indent, ypos);                            // Prepare to show the info
+    tft.print(str);                                         // Show the string
 }
 
 void showTitle(String str){
@@ -532,6 +535,7 @@ String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max
 {
       String content = "" ;    // Result of search
       char   tkey[12] ;        // Key as an array of chars
+      _homepage="";
       //log_i("MaxS %i",pref.getUInt("maxstations"));
       if(preset>pref.getUInt("maxstations")) return "";
       if(preset==0) preset=pref.getUInt("preset");
@@ -540,6 +544,7 @@ String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max
       _stationname=content.substring(0, content.indexOf("#")); //get stationname from preset
       content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
       content.trim();
+      _stationURL=content;
       if(preset>0) pref.putUInt("preset", preset);
       f_has_ST=false; // will probably be set in ShowStreamtitle
       return content;
@@ -550,6 +555,7 @@ String readnexthostfrompref(boolean updown){
       char    tkey[12] ;        // Key as an array of chars
       int16_t maxtry=0 ;        // Limit number of tries
       int16_t pos=0;
+      _homepage="";
       preset=pref.getUInt("preset");
       do{
           if(updown==true){preset++; if(preset>pref.getUInt("maxstations")) preset=0;}
@@ -561,6 +567,7 @@ String readnexthostfrompref(boolean updown){
               _stationname=content.substring(0, content.indexOf("#")); //get stationname from preset
               content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
               content.trim();
+              _stationURL=content;
           }
           else content="";
           maxtry++;
@@ -746,6 +753,8 @@ inline void showVolumeBar(){uint16_t vol=tft.width()* pref.getUInt("volume")/21;
 
 inline void showBrightness(){uint16_t br=tft.width()* pref.getUInt("brightness")/100;
     tft.fillRect(0, 140, br, 5, TFT_RED); tft.fillRect(br+1, 140, tft.width()-br+1, 5, TFT_GREEN);}
+
+inline String StationsItems(){return (String(pref.getUInt("preset")) + " " + _stationURL + " " + _stationname);}
 
 //**************************************************************************************************
 //                                M E N U E / B U T T O N S                                        *
@@ -1005,7 +1014,7 @@ void vs1053_showstation(const char *info){              // called from vs1053
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
     //log_i("showTitle %s", info);
     _title=info;
-    if(_state==RADIO)showTitle(_title);          //state RADIO
+    if(_state==RADIO)showTitle(_title);                 //state RADIO
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
@@ -1035,10 +1044,11 @@ void vs1053_commercial(const char *info){               // called from vs1053
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     String str=info;
     if(str.length()>5){
+        _homepage=String(info);
+        if(!_homepage.startsWith("http")) _homepage="http://"+_homepage;
         Serial.print("Homepage:    ");
         Serial.println(info);
     }
-
 }
 
 //Events from tft library
@@ -1051,7 +1061,8 @@ void HTML_command(const String cmd){                    // called from html
     uint8_t vol;
     String  str;
     boolean f_tone=false;
-    if(cmd=="to_listen"){web.reply(_stationname);} // return the name of the current station
+    if(cmd=="homepage"){(web.reply(_homepage)); return;}
+    if(cmd=="to_listen"){web.reply(StationsItems());} // return the name and number of the current station
     if(cmd=="settings"){getsettings(0); return;}
     if(cmd=="getprefs") {getsettings(1); return;}
     if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
@@ -1066,9 +1077,9 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
     if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
     if(cmd.startsWith("mute")) {mute();web.reply("OK\n"); return;}
-    if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(_stationname); return;}
-    if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(_stationname); return;}
-    if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(_stationname); return;}
+    if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     if(cmd.startsWith("saveprefs")){clearallpresets(); web.reply(""); return;} // after that starts POST Event "HTML_request"
@@ -1082,7 +1093,7 @@ void HTML_file(const String file){                  // called from html
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
-    if(file.startsWith("url=")){web.streamfile(SD,(decodeURL(file.substring(6).c_str()))); Serial.println(file.substring(6));return;}
+    if(file.startsWith("url=")){web.streamfile(SD,(decodeURL(file.substring(6).c_str()))); return;}
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request){
