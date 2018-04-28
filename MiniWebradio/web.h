@@ -232,7 +232,7 @@ const char web_html[] PROGMEM = R"=====(
             document.getElementById("tab-content4").style.display = "none";
             gettone();                
             loadstationlist();
-            httpGet("to_listen", 1); 
+            //httpGet("to_listen", 1); 
         });
         document.getElementById("tab2").addEventListener("click", function() {      // tab Config
             console.log("tab-content2");
@@ -265,8 +265,6 @@ const char web_html[] PROGMEM = R"=====(
         gettone();
         // Now load the stationlist (tab Radio)
         loadstationlist(); 
-        // and show the current stationname and stationlogo (tab Radio)
-        httpGet("to_listen", 1); 
     }
     
     //----------------------------------- TAB RADIO ------------------------------------
@@ -311,11 +309,34 @@ const char web_html[] PROGMEM = R"=====(
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE ) {
-                if(nr==1) {resultstr1.value = xhr.responseText;
-                    if(theReq.startsWith("downpreset")) showLabel('label-logo', xhr.responseText);
-                    if(theReq.startsWith("uppreset"))   showLabel('label-logo', xhr.responseText);
-                    if(theReq.startsWith("preset"))     showLabel('label-logo', xhr.responseText);
-                    if(theReq.startsWith("to_listen"))  showLabel('label-logo', xhr.responseText);
+                if(nr==1) {
+                    if(theReq.startsWith("downpreset")||
+                       theReq.startsWith("uppreset")||
+                       theReq.startsWith("preset")||
+                       theReq.startsWith("to_listen")){
+                        resultstr1.value = xhr.responseText;
+                        var res="", num = "", sta="", url="", n=0;
+                        res = xhr.responseText;
+                        n = res.indexOf(" ");
+                        num = res.substring(0, n);      // stationnumber
+                        if(n==1) num="00"+num;
+                        if(n==2) num="0"+num;
+                        selectItemByValue("preset", num);
+                        res = res.substring(n+1);       // remove stationnumber
+                        n = res.indexOf(" ");
+                        url = res.substring(0, n);      // stationURL
+                        sta = res.substring(n+1);
+                        showLabel('label-logo', sta);
+                        resultstr1.value = sta;
+                        station.value = url;
+                    }
+                    else if(xhr.responseText.startsWith("http")){
+                        console.log(xhr.responseText);
+                        window.open(xhr.responseText, '_blank');    // show the station homepage
+                    }
+                    else{
+                        resultstr1.value = xhr.responseText;        // all other
+                    }
                 }
                 if(nr==2) resultstr2.value = xhr.responseText;
                 if(nr==3) resultstr3.value = xhr.responseText;
@@ -335,7 +356,7 @@ const char web_html[] PROGMEM = R"=====(
                 for(i=0; i < (lines.length-1); i++) {
                     parts=lines[i].split("=");
                     if(parts[0].indexOf("tone") == 0) {
-                        selectItemByValue ( parts[0], parts[1] ) ;
+                        setSlider(parts[0], parts[1]) ;
                     }
                 }
             }
@@ -374,15 +395,19 @@ const char web_html[] PROGMEM = R"=====(
 
     function selectItemByValue(elmnt, value) {  // tab Radio: load and set tones
         var sel = document.getElementById(elmnt);
-        //for(var i=0; i < sel.options.length; i++) {
-        //    if(sel.options[i].value == value)
-        //    sel.selectedIndex = i;
-        //}
+        for(var i=0; i < sel.options.length; i++) {
+            if(sel.options[i].value == value)
+            sel.selectedIndex = i;
+        }
+    }
+
+    function setSlider(elmnt, value){
         if(elmnt=="toneha") slider_TG_set(value);
         if(elmnt=="tonehf") slider_TF_set(value);
         if(elmnt=="tonela") slider_BG_set(value);
         if(elmnt=="tonelf") slider_BF_set(value);
     }
+
 
     function loadstationlist() { // tab Radio: load preset stations
         var i, select, opt, lines, parts ;
@@ -402,6 +427,8 @@ const char web_html[] PROGMEM = R"=====(
                         select.add(opt);
                     }
                 }
+                // now show the current stationname and stationlogo (tab Radio)
+                httpGet("to_listen", 1); 
             }
         }
         xhr.open ( "GET", theUrl, true) ;
@@ -628,7 +655,7 @@ const char web_html[] PROGMEM = R"=====(
                 </tr>
                 <tr>
                     <td rowspan="4" width="200" align="left">
-                        <label for="label-logo" id="label-logo" onclick="showLabel('label-logo','unknown.bmp')"> </label>
+                        <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
                     </td>
                     <td align="right" vertical-align="middle"> 
                         <big><label>Treble Gain:</label></big>
