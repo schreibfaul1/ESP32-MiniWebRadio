@@ -9,11 +9,6 @@
 //  factory,  app,    factory,   0x10000,  3M
 //  nvs,      data,   nvs,       ,         0x32000
 //
-//-----------------------------------------------------------------------------------------
-//  for german umlaut change Properties in Eclipse in UTF-8
-//  File/Properties/Resource:  Text file encoding (other) UTF-8
-//-----------------------------------------------------------------------------------------
-//
 //  if You see a compiler message in Eclipse: "Invalid arguments ' Candidates are: String SSID()"
 //  comment lines 45...56 in WiFi.h and insert his:
 //
@@ -30,8 +25,6 @@
 //  int32_t channel(void)                {return WiFiGenericClass::channel();}
 //
 //  Display 320x240
-//
-//
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       _hHeader=20px
 //  +-------------------------------------------+ _yName=20
@@ -74,12 +67,15 @@
 #define SD_CS          5
 #define IR_PIN        34
 
+String   _WIFI = "mySSID";    	// Your WiFi credentials here
+String   _PW   = "myWiFiPassword";
+
 //global variables
-char     sbuf[256], myIP[100];
-String   _station="",  _stationname="", _stationURL="", _homepage="";
-String   _title="", _info="", _myIP="",_alarmtime="", _time_s="", _hour="", _bitrate="";
-String   _SSID="";
-String   _mp3Name[10], _pressBtn[5], _releaseBtn[5];
+char     _sbuf[1024],   _myIP[20];
+String   _station="",   _stationname="",   _stationURL="",      _homepage="";
+String   _title="",     _info="",          _alarmtime="",       _SSID="";
+String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
+String   _pressBtn[5],  _releaseBtn[5];
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
@@ -131,15 +127,6 @@ TP tp(TP_CS, TP_IRQ);
 //                                D E F A U L T S E T T I N G S                                    *
 //**************************************************************************************************
 
-void clearallpresets(){
-    uint16_t i=0;
-    char tkey[12];
-    for(i=0; i<256; i++){
-        sprintf (tkey, "preset_%03d",i);
-        pref.remove(tkey);
-    }
-}
-
 void defaultsettings(){
     String str="", info="";
     char tkey[12];
@@ -147,8 +134,6 @@ void defaultsettings(){
     log_i("set default");
     //
     pref.clear();
-    //
-    pref.putString("wifi_00","Wolles-FRITZBOX|xxxxx"); // here Your default login credentials
     //
     pref.putString("ESP32_Radio","default");
     pref.putUInt("brightness",100); // 100% display backlight
@@ -179,7 +164,6 @@ void defaultsettings(){
             str+=file.readStringUntil(';');     // url
             info=file.readStringUntil('\n');    // info
             sprintf(tkey, "preset_%03d", i);
-            //str=ASCIItoUTF8(str.c_str());
             pref.putString(tkey, str);
         }
         file.close();
@@ -206,31 +190,9 @@ void defaultsettings(){
         }
         pref.putUInt("maxstations", 11);
     }
-    // establish a WiFi Networklist from "SD/networks.csv" if present
-    for(i=1; i<10; i++){                        // clear all WiFi items except item wifi_00
-        sprintf(tkey, "wifi_%02d", i);
-        pref.putString(tkey, "|");
-    }
-
-    file = SD.open("/networks.csv");
-    if(file){                                   // try to read from SD
-    str=file.readStringUntil('\n');             // headerline
-        i=0;
-        while(file.available()){
-            str=file.readStringUntil(';');      // SSID/PW
-            info=file.readStringUntil('\n');    // info
-            sprintf(tkey, "wifi_%02d", i);
-            pref.putString(tkey, str);
-            i++;
-            if(i==10) break;
-        }
-        file.close();
-    }
-    else{
-        log_i("SD/network.csv not found, use default WiFi credentials");
-    }
 }
-boolean ST_rep(){  // replace Streamtitle, seek in presets.csv
+
+boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek in presets.csv
     if(!f_SD_okay)return false;
     File file = SD.open("/presets.csv");
     if(!file)return false;
@@ -239,7 +201,7 @@ boolean ST_rep(){  // replace Streamtitle, seek in presets.csv
     String str="";
     while(file.available()){ // try to read from SD
         file.readStringUntil('\n');
-        if(file.readStringUntil(';')=="*") i++; // is favorit?
+        if(file.readStringUntil(';')=="*") i++; // is favorite?
         if(i==100) mp3.loop();
         if(i==200) mp3.loop();
         if(i==300) mp3.loop();
@@ -278,7 +240,7 @@ inline uint8_t getBrightness(){return pref.getUInt("brightness");}
 //                                       A S C I I                                                 *
 //**************************************************************************************************
 
-char ASCIIfromUNI(char ch){  // if no ascci char available return blank
+char ASCIIfromUNI(char ch){  // if no ascii char available return blank
     uint8_t ascii;
     char tab[96]={
      96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
@@ -332,7 +294,7 @@ const char* UTF8toASCII(const char* str){
     static char chbuf[255];
     while(str[i] != 0){
         chbuf[j]=str[i];
-        if(str[i]==0xC2){ // compute unicode from utf-8
+        if(str[i]==0xC2){ // compute unicode from utf8
             i++;
             if((str[i]>159)&&(str[i]<192)) chbuf[j]=ASCIIfromUNI(str[i]);
             else chbuf[j]=32;
@@ -343,6 +305,26 @@ const char* UTF8toASCII(const char* str){
             else chbuf[j]=32;
         }
         i++; j++;
+    }
+    chbuf[j]=0;
+    return (chbuf);
+}
+const char*UTF8toCp1252(const char* str){  //WinLatin1
+    uint16_t i=0, j=0;
+    static char chbuf[255];
+    while(str[i] != 0){
+        if(str[i]<127){
+            chbuf[j]=str[i];
+            i++; j++;
+        }
+        else if(str[i]>=192 && str[i]<=195){  // 0xC0, 0xC1, 0xC2, 0xC3
+            chbuf[j]=(str[i]-192)*64+(str[i+1]-128);
+            i+=2; j++;
+        }
+        else{
+            chbuf[j]=str[i];
+            i++; j++;
+        }
     }
     chbuf[j]=0;
     return (chbuf);
@@ -387,7 +369,6 @@ const char* decodeURL(const char* str){ // decode url in ascii
         }
     }
     chbuf[j] = '\0';
-    log_i("%s",chbuf);
     return (chbuf);
 }
 
@@ -433,7 +414,7 @@ void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t
 void showTitle(String str){
     static String title;
     str.trim();  // remove all leading or trailing whitespaces
-    str.replace(" | ","|"); //replace whitespace before and next a pipe ( | means \n )
+    //str.replace(" | ","|"); //replace whitespace before and next a pipe ( | means \n )
     if(str.length()>4) f_has_ST=true; else {if(str.length()==0) f_has_ST=false;}
         tft.setTextSize(4);
         if(str.length()>45) tft.setTextSize(3);
@@ -451,8 +432,8 @@ void showStation(){
         str=_station;
         str.toLowerCase();
         str.replace(",",".");
-        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
-        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
+        sprintf(_sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
+        if(f_SD_okay) if(tft.drawBmpFile(SD, _sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
     }else{
         tft.setTextSize(4);
         if(_stationname.length()>30) tft.setTextSize(3);
@@ -462,18 +443,18 @@ void showStation(){
         //log_i("%s", _stationname.c_str());
         str.toLowerCase();
         str.replace(",",".");
-        sprintf(sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
-        //log_i("%s", sbuf);
-        if(f_SD_okay) if(tft.drawBmpFile(SD, sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
+        sprintf(_sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
+        //log_i("%s", _sbuf);
+        if(f_SD_okay) if(tft.drawBmpFile(SD, _sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
 }
 void showHeadlineVolume(uint8_t vol){
     if(_state == ALARM || _state== BRIGHTNESS) return;
-    sprintf(sbuf,"Vol %02d",vol);
+    sprintf(_sbuf,"Vol %02d",vol);
     tft.fillRect(175, _yHeader, 69, _hHeader, TFT_BLACK);
     tft.setCursor(175, _yHeader);
     tft.setTextSize(2);
     tft.setTextColor(TFT_DEEPSKYBLUE);
-    tft.print(sbuf);
+    tft.print(_sbuf);
 }
 void showHeadlineItem(const char* hl){
     tft.setTextSize(2);
@@ -523,8 +504,8 @@ String tone(){
     uint8_t u8_tone[4];
     u8_tone[0]=pref.getUInt("toneha"); u8_tone[1]=pref.getUInt("tonehf");
     u8_tone[2]=pref.getUInt("tonela"); u8_tone[3]=pref.getUInt("tonelf");
-    sprintf(sbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n",u8_tone[0],u8_tone[1],u8_tone[2],u8_tone[3]);
-    str_tone=String(sbuf);
+    sprintf(_sbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n",u8_tone[0],u8_tone[1],u8_tone[2],u8_tone[3]);
+    str_tone=String(_sbuf);
     f_mute=pref.getUInt("mute");
     if(f_mute==false) mp3.setVolume(pref.getUInt("volume"));
     else {mp3.setVolume(0);showHeadlineVolume(0);}
@@ -601,9 +582,9 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
             filename.substring(filename.length()-4).toLowerCase();
             filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){
-                sprintf(sbuf,"%s\n",filename.c_str());
-                if(index<10){_mp3Name[index]=sbuf; index++;}  //store the first 10 Names
-                SD_outbuf+=ASCIItoUTF8(sbuf);}
+                sprintf(_sbuf,"%s\n",filename.c_str());
+                if(index<10){_mp3Name[index]=_sbuf; index++;}  //store the first 10 Names
+                SD_outbuf+=ASCIItoUTF8(_sbuf);}
         }
         file = root.openNextFile();
     }
@@ -614,8 +595,7 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //                               C O N N E C T   TO   W I F I                                      *
 //**************************************************************************************************
 bool connectToWiFi(){
-    String ssid="", password="", WiFiName="";
-    char tkey[12];
+    String s_ssid="", s_password="";
     int WiFiNr = WiFi.scanNetworks();   // WiFiNr: nr of scanned Networks
     if(WiFiNr==0) {                     // no WiFi networks can be found
         tft.fillScreen(TFT_BLACK);      // Clear screen
@@ -624,28 +604,61 @@ bool connectToWiFi(){
         while(1){};                     // endless loop until reset
     }
     else {
-        int k=0;
-        for (int i=0; i<WiFiNr; ++i) {
-            WiFiName=WiFi.SSID(i);
-            for(int j=0; j<10; j++){
-                sprintf(tkey, "wifi_%02d", j);
-                ssid=pref.getString(tkey);
-                if(ssid=="|") break;                                // no predefined SSID in list?
-                password=ssid.substring(ssid.indexOf("|")+1);
-                ssid=ssid.substring(0,ssid.indexOf("|"));
-                if(ssid==WiFiName){                                 // available network found, try to connect
-                    WiFi.begin(ssid.c_str(), password.c_str());     // Connect to selected SSID
-                    k=0;
-                    while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
-                        log_i("Try WiFi %s", ssid.c_str());
-                        delay(1000); k++;
-                    }
-                    if(WiFi.status()==WL_CONNECTED){ _SSID=ssid; return true;} // connection successful
+        String Netw[WiFiNr];
+        for(int i=0; i<WiFiNr; ++i) Netw[i]=WiFi.SSID(i);
+        // found more then one Network with the same SSID (mesh) then seek for the best
+        for(int i=0; i<WiFiNr; i++){
+            for(int j=i+1; j<WiFiNr; j++){
+                if((Netw[i]==Netw[j]) && (Netw[i]!="")){
+                   if(WiFi.RSSI(i)>WiFi.RSSI(j)) Netw[j]=""; else Netw[i]="";
                 }
             }
         }
+        for (int i=0; i<WiFiNr; ++i){ // now we have a list from all scanned WiFi without duplicates
+            if(Netw[i]!="") log_i("scanned WiFi: SSID: %s  RSSID: %i", Netw[i].c_str(), WiFi.RSSI(i));
+        }
+        if(f_SD_okay){  // try credentials given in "/networks.csv"
+             File file = SD.open("/networks.csv");
+             if(file){                                   // try to read from SD
+                 String str=file.readStringUntil('\n');  // headerline
+                 int i=0, j=0;
+                 while(file.available()){
+                     str=file.readStringUntil(';');             // SSID/PW
+                     String info=file.readStringUntil('\n');    // info
+                     s_password=str.substring(str.indexOf("|")+1);
+                     s_ssid=str.substring(0,str.indexOf("|"));
+                     for(i=0; i<WiFiNr; i++){
+                         if(s_ssid==Netw[i]){  // ssid found
+                             WiFi.disconnect();
+                             WiFi.begin(s_ssid.c_str(), s_password.c_str());
+                             int k=0;
+                             while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
+                                 log_i("Try WiFi %s", s_ssid.c_str());
+                                 delay(1000); k++;
+                             }
+                             if(WiFi.status()==WL_CONNECTED){ _SSID=s_ssid; file.close(); return true;} // connection successful
+                         }
+                     }
+                     j++;
+                     if(j==10) break;
+                 }
+                 file.close();
+                 log_i("entries given in networks.csv are not suitable to scanned WiFi networks");
+             }
+        }
+		log_i("use default WiFi credentials");
+		WiFi.begin(_WIFI.c_str(), _PW.c_str());
+		int k=0;
+		while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
+			log_i("Try WiFi %s", _WIFI.c_str());
+			delay(1000); k++;
+		}
+		if(WiFi.status()==WL_CONNECTED){ _SSID=_WIFI; return true;} // connection successful
+		WiFi.disconnect();
+		log_i("WiFi credentials are not correct");
+		return false;  // can't connect to any network
     }
-    return false;  // can't connect to any network
+    return false;
 }
 
 //**************************************************************************************************
@@ -655,7 +668,7 @@ void setup(){
     Serial.begin(115200); // For debug
     SPI.begin();    // Init SPI bus
     tft.begin();    // Init TFT interface
-    SD.end();       // to recognise sd after reset correctly
+    SD.end();       // to recognize SD after reset correctly
     SD.begin(SD_CS, SPI, 16000000); // faster speed, after tft.begin() because GPIO_TP in TFT must be set first
     delay(100); // wait while SD is ready
     ir.begin();  // Init InfraredDecoder
@@ -670,7 +683,7 @@ void setup(){
     mp3.begin(); // Initialize VS1053 player
     _alarmdays=pref.getUInt("alarm_weekday");
     _alarmtime=pref.getString("alarm_time");
-    setTFTbrightness(pref.getUInt("brightness"));  // 50% of maxbrigthness
+    setTFTbrightness(pref.getUInt("brightness"));
     WiFi.disconnect();
     WiFi.mode(WIFI_STA);
     WiFi.setHostname("ESP32Radio");
@@ -685,10 +698,7 @@ void setup(){
     f_rtc= rtc.begin();
     tft.fillScreen(TFT_BLACK); // Clear screen
     showHeadlineItem("** Internet radio **");
-    sprintf(myIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
-    _myIP=String(myIP);
-    tft.setTextSize(1);
-    displayinfo(myIP, _yFooter, _hFooter, TFT_MAGENTA, 165);
+    sprintf(_myIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     tone();
     mp3.connecttohost(readhostfrompref(0)); //last used station
     startTimer();
@@ -842,9 +852,9 @@ void displayWeekdays(uint8_t ad, boolean showall=false){
     d=ad; //alarmday
     for(i=0;i<7;i++){
         if((d & (1<<i))==(old_d & (1<<i))&&!showall) continue; //icon is alread displayed
-        if(d & (1<<i)) sprintf(sbuf,"/day/%i_rt.bmp",i); // k<<i instead pow(2,i)
-        else sprintf(sbuf,"/day/%i_gn.bmp",i);
-        if(f_SD_okay) tft.drawBmpFile(SD, sbuf, 5+i*44, 0);
+        if(d & (1<<i)) sprintf(_sbuf,"/day/%i_rt.bmp",i); // k<<i instead pow(2,i)
+        else sprintf(_sbuf,"/day/%i_gn.bmp",i);
+        if(f_SD_okay) tft.drawBmpFile(SD, _sbuf, 5+i*44, 0);
         mp3.loop();
     }
     old_d=ad;
@@ -886,20 +896,20 @@ void displayAlarmtime(int8_t xy=0, int8_t ud=0, boolean showall=false){
     String at=_alarmtime;
     //log_i("at=%s",_alarmtime.c_str());
     if(pos!=oldpos){
-        sprintf(sbuf,"/digits/%cor.bmp",at.charAt(k[pos]));
-        if(f_SD_okay){tft.drawBmpFile(SD, sbuf, j[pos], 45);mp3.loop();}
-        sprintf(sbuf,"/digits/%crt.bmp",at.charAt(k[oldpos]));
-        if(f_SD_okay){tft.drawBmpFile(SD, sbuf, j[oldpos], 45);mp3.loop();}
+        sprintf(_sbuf,"/digits/%cor.bmp",at.charAt(k[pos]));
+        if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[pos], 45);mp3.loop();}
+        sprintf(_sbuf,"/digits/%crt.bmp",at.charAt(k[oldpos]));
+        if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[oldpos], 45);mp3.loop();}
     }
     for(i=0;i<4;i++){
         if(at[k[i]]!=oldt[k[i]]){
             if(i==pos){
-                sprintf(sbuf,"/digits/%cor.bmp",at.charAt(k[i])); //show orange number
-                if(f_SD_okay){tft.drawBmpFile(SD, sbuf, j[i], 45);mp3.loop();}
+                sprintf(_sbuf,"/digits/%cor.bmp",at.charAt(k[i])); //show orange number
+                if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[i], 45);mp3.loop();}
             }
             else{
-                sprintf(sbuf,"/digits/%crt.bmp",at.charAt(k[i])); //show red numbers
-                if(f_SD_okay){tft.drawBmpFile(SD, sbuf, j[i], 45);mp3.loop();}
+                sprintf(_sbuf,"/digits/%crt.bmp",at.charAt(k[i])); //show red numbers
+                if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[i], 45);mp3.loop();}
             }
         }
     }
@@ -917,8 +927,8 @@ void display_time(boolean showall=false){ //show current time on the TFT Display
         for(i=0;i<5;i++){
             if(t[i]==':'){if(k==false){k=true; t[i]='d';}else{t[i]='e'; k=false;}}
             if(t[i]!=oldt[i]){
-                sprintf(sbuf,"/digits/%cgn.bmp",t[i]);
-                if(f_SD_okay) tft.drawBmpFile(SD, sbuf, 5+j, 45);
+                sprintf(_sbuf,"/digits/%cgn.bmp",t[i]);
+                if(f_SD_okay) tft.drawBmpFile(SD, _sbuf, 5+j, 45);
                 mp3.loop();
             }
             if((t[i]=='d')||(t[i]=='e'))j+=24; else j+=72;
@@ -1034,7 +1044,7 @@ void vs1053_info(const char *info) {                    // called from vs1053
     String str=info;
     Serial.print("vs1053_info: ");
     if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
-    Serial.print(info);                                 // debug infos
+    Serial.print(UTF8toCp1252(info));                   // debug infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
@@ -1062,12 +1072,12 @@ void HTML_command(const String cmd){                    // called from html
     String  str;
     boolean f_tone=false;
     if(cmd=="homepage"){(web.reply(_homepage)); return;}
-    if(cmd=="to_listen"){web.reply(StationsItems());} // return the name and number of the current station
+    if(cmd=="to_listen"){web.reply(StationsItems()); return;} // return the name and number of the current station
     if(cmd=="settings"){getsettings(0); return;}
     if(cmd=="getprefs") {getsettings(1); return;}
     if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
     if(cmd=="gettone"){ web.reply(tone()); return;}
-    if(cmd=="test") {sprintf(sbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(sbuf); return;}
+    if(cmd=="test") {sprintf(_sbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_sbuf); return;}
     if(cmd=="reset") {ESP.restart(); return;}
     if(cmd.startsWith("toneha=")){pref.putUInt("toneha",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Gain set");f_tone=true;}
     if(cmd.startsWith("tonehf=")){pref.putUInt("tonehf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Freq set");f_tone=true;}
@@ -1082,7 +1092,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
     if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
-    if(cmd.startsWith("saveprefs")){clearallpresets(); web.reply(""); return;} // after that starts POST Event "HTML_request"
+    if(cmd.startsWith("saveprefs")){web.reply(""); return;} // after that starts POST Event "HTML_request"
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
@@ -1097,32 +1107,45 @@ void HTML_file(const String file){                  // called from html
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request){
-    String str1, str2, s, u ;
+    String str, s, u ;
     int ix;
+    char tkey[12];
+    static uint16_t cnt=0;
     //log_i("%s",request.c_str());
     if(request.indexOf(" -")==3){
-        ix=request.indexOf("#");
-        if(ix>6){
-            s=request.substring(6,ix); s.trim();
-            u=request.substring(ix+1, request.length()); u.trim();
+        if(request.startsWith("end")){
+            //log_i("the end%i",cnt);
+            pref.putUInt("maxstations", cnt);
+            cnt=0;
+            return;
         }
-        else{s=" "; u=" ";}
-        str1="preset_"+ request.substring(0,3);
-        str2=s+String("#")+u;
-        pref.putString(str1.c_str(), str2); return;
-        return;
+        else{
+            ix=request.indexOf("#");
+            if(ix>6){
+                s=request.substring(6,ix); s.trim();
+                u=request.substring(ix+1, request.length()); u.trim();
+            }
+            else{s=" "; u=" ";}
+            cnt++;
+            sprintf(tkey, "preset_%03d",cnt);
+            str=s+String("#")+u;
+            pref.putString(tkey, str);
+            return;
+        }
     }
     else {
         //log_e("unknown request: %s",request.c_str());
     }
 }
 void HTML_info(const char *info){                   // called from html
+    String Info=info;
+    if(!Info.endsWith("\n"))Info+="\n";
     Serial.print("HTML_info:   ");
-    Serial.print(info);                             // for debug infos
+    Serial.print(UTF8toCp1252(Info.c_str()));        // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
-    while(res>pref.getUInt("maxstations")) res=res%100;
+    while(res>pref.getUInt("maxstations")) res=res%10;
     if(_state==0)mp3.connecttohost(readhostfrompref(res));//state RADIO
 }
 void ir_number(const char* num){
