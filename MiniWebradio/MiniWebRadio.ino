@@ -42,9 +42,10 @@
 // system libraries
 #include <Preferences.h>
 #include <SPI.h>
-#include <WiFi.h>
 #include <SD.h>
 #include <FS.h>
+#include <WiFi.h>
+#include <WiFiMulti.h>
 
 // own libraries
 #include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
@@ -66,16 +67,19 @@
 #define TP_CS         16
 #define SD_CS          5
 #define IR_PIN        34
+#define SPI_MOSI      23
+#define SPI_MISO      19
+#define SPI_SCK       18
 
 String   _WIFI = "mySSID";    	// Your WiFi credentials here
 String   _PW   = "myWiFiPassword";
 
 //global variables
-char     _sbuf[1024],   _myIP[20];
+char     _sbuf[1024];
 String   _station="",   _stationname="",   _stationURL="",      _homepage="";
 String   _title="",     _info="",          _alarmtime="",       _SSID="";
 String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
-String   _pressBtn[5],  _releaseBtn[5];
+String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0";
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
@@ -122,7 +126,7 @@ Preferences pref;
 RTIME rtc;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
-
+WiFiMulti wifiMulti;
 //**************************************************************************************************
 //                                D E F A U L T S E T T I N G S                                    *
 //**************************************************************************************************
@@ -155,7 +159,7 @@ void defaultsettings(){
     if(file){                                   // try to read from SD
         str=file.readStringUntil('\n');         // headerline
         while(file.available()){
-            str=file.readStringUntil(';');      // favorit
+            str=file.readStringUntil(';');      // Favorite
             if(str!="*"){str=file.readStringUntil('\n'); continue;}// ignore this entry
             i++;
             str=file.readStringUntil(';');      // country
@@ -493,7 +497,7 @@ void showFooter(){  // bitrate stationnumber, IPaddress
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("myIP:");
     tft.setTextColor(TFT_LAVENDER);
-    tft.print(_myIP);
+    tft.print(_myIP.c_str());
 }
 
 //**************************************************************************************************
@@ -596,81 +600,49 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //**************************************************************************************************
 bool connectToWiFi(){
     String s_ssid="", s_password="";
-    int WiFiNr = WiFi.scanNetworks();   // WiFiNr: nr of scanned Networks
-    if(WiFiNr==0) {                     // no WiFi networks can be found
-        tft.fillScreen(TFT_BLACK);      // Clear screen
-        tft.setTextSize(6);
-        displayinfo("no WiFi networks found", 20, 220, TFT_YELLOW, 5);
-        while(1){};                     // endless loop until reset
-    }
-    else {
-        String Netw[WiFiNr];
-        for(int i=0; i<WiFiNr; ++i) Netw[i]=WiFi.SSID(i);
-        // found more then one Network with the same SSID (mesh) then seek for the best
-        for(int i=0; i<WiFiNr; i++){
-            for(int j=i+1; j<WiFiNr; j++){
-                if((Netw[i]==Netw[j]) && (Netw[i]!="")){
-                   if(WiFi.RSSI(i)>WiFi.RSSI(j)) Netw[j]=""; else Netw[i]="";
-                }
+    wifiMulti.addAP(_SSID.c_str(), _PW.c_str()); // SSID and PW in code
+    if(f_SD_okay){  // try credentials given in "/networks.csv"
+        File file = SD.open("/networks.csv");
+        if(file){                                   // try to read from SD
+            String str=file.readStringUntil('\n');  // headerline
+            while(file.available()){
+                str=file.readStringUntil(';');                   // SSID/PW
+                String info=file.readStringUntil('\n');            // info
+                s_password=str.substring(str.indexOf("|")+1);
+                s_ssid=str.substring(0,str.indexOf("|"));
+                wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
+            file.close();
         }
-        for (int i=0; i<WiFiNr; ++i){ // now we have a list from all scanned WiFi without duplicates
-            if(Netw[i]!="") log_i("scanned WiFi: SSID: %s  RSSID: %i", Netw[i].c_str(), WiFi.RSSI(i));
-        }
-        if(f_SD_okay){  // try credentials given in "/networks.csv"
-             File file = SD.open("/networks.csv");
-             if(file){                                   // try to read from SD
-                 String str=file.readStringUntil('\n');  // headerline
-                 int i=0, j=0;
-                 while(file.available()){
-                     str=file.readStringUntil(';');             // SSID/PW
-                     String info=file.readStringUntil('\n');    // info
-                     s_password=str.substring(str.indexOf("|")+1);
-                     s_ssid=str.substring(0,str.indexOf("|"));
-                     for(i=0; i<WiFiNr; i++){
-                         if(s_ssid==Netw[i]){  // ssid found
-                             WiFi.disconnect();
-                             WiFi.begin(s_ssid.c_str(), s_password.c_str());
-                             int k=0;
-                             while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
-                                 log_i("Try WiFi %s", s_ssid.c_str());
-                                 delay(1000); k++;
-                             }
-                             if(WiFi.status()==WL_CONNECTED){ _SSID=s_ssid; file.close(); return true;} // connection successful
-                         }
-                     }
-                     j++;
-                     if(j==10) break;
-                 }
-                 file.close();
-                 log_i("entries given in networks.csv are not suitable to scanned WiFi networks");
-             }
-        }
-		log_i("use default WiFi credentials");
-		WiFi.begin(_WIFI.c_str(), _PW.c_str());
-		int k=0;
-		while((WiFi.status() != WL_CONNECTED)&&(k<10)){ // wait max 10 sec
-			log_i("Try WiFi %s", _WIFI.c_str());
-			delay(1000); k++;
-		}
-		if(WiFi.status()==WL_CONNECTED){ _SSID=_WIFI; return true;} // connection successful
-		WiFi.disconnect();
-		log_i("WiFi credentials are not correct");
-		return false;  // can't connect to any network
     }
-    return false;
+    log_i("Connecting WiFi...");
+    if(wifiMulti.run()==WL_CONNECTED){
+        _myIP=WiFi.localIP().toString();
+        _SSID = WiFi.SSID();
+        log_i("WiFi connected, IP address: %s, SSID: %s", _myIP.c_str(), _SSID.c_str());
+        return true;
+    }else{
+        log_i("WiFi credentials are not correct");
+        _SSID = ""; _myIP="0.0.0.0";
+        return false;  // can't connect to any network
+    }
 }
-
 //**************************************************************************************************
 //                                           S E T U P                                             *
 //**************************************************************************************************
 void setup(){
+    // set all components inactive
+    pinMode(SD_CS, OUTPUT);      digitalWrite(SD_CS, HIGH);
+    pinMode(TFT_CS, OUTPUT);     digitalWrite(TFT_CS, HIGH);
+    pinMode(TP_CS, OUTPUT);      digitalWrite(TP_CS, HIGH);
+    pinMode(VS1053_CS, OUTPUT);  digitalWrite(VS1053_CS, HIGH);
+    SPI.begin();
     Serial.begin(115200); // For debug
-    SPI.begin();    // Init SPI bus
-    tft.begin();    // Init TFT interface
     SD.end();       // to recognize SD after reset correctly
-    SD.begin(SD_CS, SPI, 16000000); // faster speed, after tft.begin() because GPIO_TP in TFT must be set first
+    SD.begin(SD_CS);
     delay(100); // wait while SD is ready
+    tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
+    SD.begin(SD_CS, SPI, 16000000);  // faster speed, after tft.begin()
     ir.begin();  // Init InfraredDecoder
     tft.setRotation(3); // Use landscape format
     tp.setRotation(3);
@@ -698,7 +670,6 @@ void setup(){
     f_rtc= rtc.begin();
     tft.fillScreen(TFT_BLACK); // Clear screen
     showHeadlineItem("** Internet radio **");
-    sprintf(_myIP, "%d.%d.%d.%d", WiFi.localIP()[0], WiFi.localIP()[1], WiFi.localIP()[2], WiFi.localIP()[3]);
     tone();
     mp3.connecttohost(readhostfrompref(0)); //last used station
     startTimer();
@@ -963,6 +934,18 @@ void loop() {
                 }
             }
             showHeadlineTime();
+            if (int stat = wifiMulti.run() != WL_CONNECTED) {
+                log_i(">>WiFi not connected! run returned: %i", stat);
+            }
+            else{
+                if(WiFi.localIP().toString()!=_myIP){
+                    _myIP=WiFi.localIP().toString();
+                    _SSID=WiFi.SSID();
+                    log_i("IP has changed, new IP is %s", _myIP.c_str());
+                    log_i("Connected to %s", _SSID.c_str());
+                    showFooter();
+                }
+            }
         }
         display_time();
         if(f_has_ST==false) sec++; else sec=0; // Streamtitle==""?
