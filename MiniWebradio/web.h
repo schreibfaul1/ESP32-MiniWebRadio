@@ -24,7 +24,7 @@ const char web_html[] PROGMEM = R"=====(
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
     
-    <title>ESP32 Radio</title>
+    <title>MiniWebRadio</title>
     <style type="text/css">
         html{
             margin:0px;
@@ -32,88 +32,35 @@ const char web_html[] PROGMEM = R"=====(
             padding:0;
             font:16px "Trebuchet MS";
             color:#222;
-            background-color:#033069
-        }
-        #HEADER {
-            width:100%;
-            min-height:15px;
-            text-align: center;
-            padding-top:5px;
-            padding-bottom:8px;
-            background-color:#033069
-            color:#f0f0ff;
-            font-size:22px;
-            line-height:25px;
-        }
-        @keyframes mymove1 {
-            from {color:#fff;} to {color:#fb0;}
-        }           
-        #HEADER span.bold1 {
-            font-size:22px;
-            width:98%;
-            display:inline;
-            animation:mymove1 3s infinite alternate
+            background-color:#033069;
         }
         #CONTENT {
-            width:96%;
             min-height:620px;
+            min-width: 700px;
             overflow:hidden;
-            margin:auto;
+            margin: 5px;
             background-color: lightblue;
         }
-        #UL1 {
-            list-style-type: none;
-            margin: 0;
-            overflow: hidden;
-            background-color: #033069;
-            width:100%;
-            min-height:40px;
-            z-index:100;
-        }
-        .tabs li {
-            float:left;
-            margin-right:2px;
-        }
-        .tabs input[type="radio"] {
-            position:absolute;
-            left:-9999px
-        }
-        .tabs [id^="tab"]:checked+label {
-            top:16px;
-            padding:12px 14px 8px 14px;
-            font-size:18px;
-            color:#EEE;
-            background:#38c;
-            border-radius:5px
-        }
-        .tabs label {
-            padding:8px 14px 8px 14px;
-            font-weight:normal;
-            background:#39c;
-            cursor:pointer;
-            position:relative;
-            top:16px;
-            -moz-transition:all .2s ease-in-out;
-            -o-transition:all .2s ease-in-out;
-            -webkit-transition:all .2s ease-in-out;
-            transition:all .2s ease-in-out;
-            border-radius:5px
-        }
-        .tabs label:hover {
-            background:#3cc
-        }
+
         #tab-content1 {
             display:block;
+            margin: 20px;
         }
         #tab-content2 {
             display:none;
+            margin: 20px;
         }
         #tab-content3 {
             display:none;
+            margin: 20px;
         }
         #tab-content4 {
             display:none;
-            margin-left:20px;
+            margin: 20px;
+        }
+        #tab-content5 {
+            display:none;
+            margin: 20px;
         }
         .button {
             width: 80px;
@@ -210,10 +157,18 @@ const char web_html[] PROGMEM = R"=====(
             display: inline-block;
             text-align: right;
         }
+        label[for=label_Name] {
+            position: absolute;
+            padding-top: 8px;
+            margin-left: 30px;
+            font-size: 50px;
+            font-family: 'Garamond', Verdana, Halvetica, Arial;
+        }
+        #prefs{
+            width: 100%;
+        }
     </style>
 </head>
-
-<body id="BODY">
 
 <script>
     //global variables
@@ -221,50 +176,54 @@ const char web_html[] PROGMEM = R"=====(
                      "  0,0"," +1,5"," +3,0"," +4,5"," +6,0"," +7,5"," +9,0","+10,5"];
     var treble_val= [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7];
 
-    //functions
-    document.addEventListener("DOMContentLoaded", function(e) {
-        e.preventDefault(); 
-        document.getElementById("tab1").addEventListener("click", function() {  // tab Radio
-            console.log("tab-content1");
-            document.getElementById("tab-content1").style.display = "block";
-            document.getElementById("tab-content2").style.display = "none";
-            document.getElementById("tab-content3").style.display = "none";
-            document.getElementById("tab-content4").style.display = "none";
-            gettone();                
-            loadstationlist();
-            //httpGet("to_listen", 1); 
-        });
-        document.getElementById("tab2").addEventListener("click", function() {      // tab Config
-            console.log("tab-content2");
-            document.getElementById("tab-content1").style.display = "none";
-            document.getElementById("tab-content2").style.display = "block";
-            document.getElementById("tab-content3").style.display = "none";
-            document.getElementById("tab-content4").style.display = "none";
-            getnetworks(); // Now load WiFi Networks
-            ldef("getprefs"); // Now get the configuration parameters from preferences
-        });
-        document.getElementById("tab3").addEventListener("click", function() {      // tab MP3 Player
-            console.log("tab-content3");
-            document.getElementById("tab-content1").style.display = "none";
-            document.getElementById("tab-content2").style.display = "none";
-            document.getElementById("tab-content3").style.display = "block";
-            document.getElementById("tab-content4").style.display = "none";    
-            getmp3list(); // Now get the mp3 list from SD      
-        }); 
-        document.getElementById("tab4").addEventListener("click", function() {      // tab About
-            console.log("tab-content4");
-            document.getElementById("tab-content1").style.display = "none";
-            document.getElementById("tab-content2").style.display = "none";
-            document.getElementById("tab-content3").style.display = "none";
-            document.getElementById("tab-content4").style.display = "block";                
-        });
-    });
- 
     window.onload = function() { // Fill configuration initially
-        // Now load the tones (tab Radio)
-        gettone();
-        // Now load the stationlist (tab Radio)
-        loadstationlist(); 
+        gettone(); //Now load the tones (tab Radio)
+        httpGet("to_listen", 1);
+        getnetworks();
+        ldef("getprefs");
+     }
+
+    function showTab1(){
+        console.log("tab-content1 (Radio)");
+        document.getElementById("tab-content1").style.display = "block";
+        document.getElementById("tab-content2").style.display = "none";
+        document.getElementById("tab-content3").style.display = "none";
+        document.getElementById("tab-content4").style.display = "none";
+        document.getElementById("tab-content5").style.display = "none";
+    }
+    function showTab2(){
+        console.log("tab-content2 (Stations)");
+        document.getElementById("tab-content1").style.display = "none";
+        document.getElementById("tab-content2").style.display = "block";
+        document.getElementById("tab-content3").style.display = "none";
+        document.getElementById("tab-content4").style.display = "none";
+        document.getElementById("tab-content5").style.display = "none";
+    }
+    function showTab3(){
+        console.log("tab-content3 (MP3 Player)");
+        document.getElementById("tab-content1").style.display = "none";
+        document.getElementById("tab-content2").style.display = "none";
+        document.getElementById("tab-content3").style.display = "block";
+        document.getElementById("tab-content4").style.display = "none";
+        document.getElementById("tab-content5").style.display = "none";    
+        getmp3list(); // Now get the mp3 list from SD      
+    }
+    function showTab4(){
+        console.log("tab-content4 (Settings)");
+        document.getElementById("tab-content1").style.display = "none";
+        document.getElementById("tab-content2").style.display = "none";
+        document.getElementById("tab-content3").style.display = "none";
+        document.getElementById("tab-content4").style.display = "block"
+        document.getElementById("tab-content5").style.display = "none";    
+        getmp3list(); // Now get the mp3 list from SD      
+    }
+    function showTab5(){
+        console.log("tab-content5 (About)");
+        document.getElementById("tab-content1").style.display = "none";
+        document.getElementById("tab-content2").style.display = "none";
+        document.getElementById("tab-content3").style.display = "none";
+        document.getElementById("tab-content4").style.display = "none";
+        document.getElementById("tab-content5").style.display = "block";      
     }
     
     //----------------------------------- TAB RADIO ------------------------------------
@@ -311,9 +270,9 @@ const char web_html[] PROGMEM = R"=====(
             if(xhr.readyState == XMLHttpRequest.DONE ) {
                 if(nr==1) {
                     if(theReq.startsWith("downpreset")||
-                       theReq.startsWith("uppreset")||
-                       theReq.startsWith("preset")||
-                       theReq.startsWith("to_listen")){
+                        theReq.startsWith("uppreset")||
+                        theReq.startsWith("preset")||
+                        theReq.startsWith("to_listen")){
                         resultstr1.value = xhr.responseText;
                         var res="", num = "", sta="", url="", n=0;
                         res = xhr.responseText;
@@ -333,6 +292,16 @@ const char web_html[] PROGMEM = R"=====(
                     else if(xhr.responseText.startsWith("http")){
                         console.log(xhr.responseText);
                         window.open(xhr.responseText, '_blank');    // show the station homepage
+                    }
+                    else if(xhr.responseText.startsWith("Mute")){
+                        console.log(xhr.responseText);
+                        resultstr1.value = xhr.responseText;        // all other
+                        if(xhr.responseText.endsWith("off\n")){
+                            document.getElementById("Mute").src="SD/png/Button_Mute_Green.png";
+                        }
+                        if(xhr.responseText.endsWith("on\n")){
+                            document.getElementById("Mute").src="SD/png/Button_Mute_Red.png";
+                        }
                     }
                     else{
                         resultstr1.value = xhr.responseText;        // all other
@@ -408,39 +377,12 @@ const char web_html[] PROGMEM = R"=====(
         if(elmnt=="tonelf") slider_BF_set(value);
     }
 
-
-    function loadstationlist() { // tab Radio: load preset stations
-        var i, select, opt, lines, parts ;
-        var theUrl = "/?settings" + "&version=" + Math.random() ;
-        var xhr = new XMLHttpRequest() ;
-        xhr.onreadystatechange = function() {
-            if ( xhr.readyState == XMLHttpRequest.DONE ) {
-                lines = xhr.responseText.split ( "\n" ) ;
-                select = document.getElementById("preset");
-                select.options.length=1;
-                for(i=0; i < (lines.length-1); i++) {
-                    parts=lines[i].split("=");
-                    if(parts[0].indexOf("preset_") == 0) {
-                        opt = document.createElement("OPTION");
-                        opt.value = parts[0].substring(7);
-                        opt.text = parts[1] ;
-                        select.add(opt);
-                    }
-                }
-                // now show the current stationname and stationlogo (tab Radio)
-                httpGet("to_listen", 1); 
-            }
-        }
-        xhr.open ( "GET", theUrl, true) ;
-        xhr.send();
-    }
-
     function slider_TG_mouseUp() {  // Slider Treble Gain   mouseupevent
         handlectrl("toneha", treble_val[TrebleGain.value]);
-        console.log(TrebleGain.value);
+        //console.log("Treble Gain=%i",Number(TrebleGain.value));
     }
     function slider_TG_change(){    //  Slider Treble Gain  changeevent
-        console.log(TrebleGain.value);
+        console.log("Treble Gain=%i", Number(TrebleGain.value));
         document.getElementById("label_TG_value").innerHTML= treble_dB[TrebleGain.value];
     }
     function slider_TG_set(value){    // set Slider Treble Gain
@@ -449,32 +391,32 @@ const char web_html[] PROGMEM = R"=====(
         else val=val-8;
         document.getElementById("TrebleGain").value=val;
         document.getElementById("label_TG_value").innerHTML= treble_dB[TrebleGain.value];
-        console.log(val);
+        console.log("Treble Gain=%i", val);
     }
     
     function slider_TF_mouseUp() {  // Slider Treble Freq   mouseupevent
         handlectrl("tonehf", TrebleFreq.value);
-        console.log(TrebleFreq.value);
+        //console.log("Treble Freq=%i", Number(TrebleFreq.value));
     }
     function slider_TF_change(){    //  Slider Treble Freq  changeevent
-        console.log(TrebleFreq.value);
+        console.log("Treble Freq=%i", Number(TrebleFreq.value));
         document.getElementById("label_TF_value").innerHTML= TrebleFreq.value;
     }
     function slider_TF_set(value){    // set Slider Treble Freq
         var val= Number(value);
         document.getElementById("TrebleFreq").value=val;
         document.getElementById("label_TF_value").innerHTML= TrebleFreq.value;
-        console.log(val);
+        console.log("Treble Freq=%i", val);
     }
     
     function slider_BG_mouseUp() {  // Slider Bass Gain   mouseupevent
         handlectrl("tonela", BassGain.value);
-        console.log(BassGain.value);
+        //console.log("Bass Gain=%i", Number(BassGain.value));
     }
     function slider_BG_change(){    //  Slider Bass Gain  changeevent
         var sign="";
         if(BassGain.value!="0") sign="\+";
-        console.log(BassGain.value);
+        console.log("Bass Gain=%i", Number(BassGain.value));
         document.getElementById("label_BG_value").innerHTML= sign+BassGain.value;
     }
     function slider_BG_set(value){    // set Slider Bass Gain
@@ -483,24 +425,23 @@ const char web_html[] PROGMEM = R"=====(
         if(BassGain.value!="0") sign="\+";
         document.getElementById("BassGain").value=val;
         document.getElementById("label_BG_value").innerHTML= sign+BassGain.value;
-        console.log(val);
+        console.log("Bass Gain=%i", val);
     }
     
     function slider_BF_mouseUp() {  // Slider Bass Gain   mouseupevent
         handlectrl("tonelf", BassFreq.value);
-        console.log(BassFreq.value);
+        //console.log("Bass Freq=%i", Number(BassFreq.value));
     }
     function slider_BF_change(){    //  Slider Bass Gain  changeevent
-        console.log(BassFreq.value);
+        console.log("Bass Freq=%i", Number(BassFreq.value));
         document.getElementById("label_BF_value").innerHTML= (BassFreq.value-1)*10;
     }
     function slider_BF_set(value){    // set Slider Bass Gain
         var val= Number(value);
         document.getElementById("BassFreq").value=val;
         document.getElementById("label_BF_value").innerHTML= (BassFreq.value-1)*10;
-        console.log(val);
+        console.log("Bass Freq=%i", val);
     }
-
     function handlectrl(id, val) { // Radio: treble, bass, frequ
         var theUrl = "/?" + id + "=" + val + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
@@ -512,18 +453,29 @@ const char web_html[] PROGMEM = R"=====(
         xhr.open ( "GET", theUrl, true);
         xhr.send();
     }
-
-
  
     //----------------------------------- TAB CONFIG ------------------------------------
        
     function ldef(source) {  // Config: Load preferences or defaults
         var xhr = new XMLHttpRequest();
+        var lines, opt, select, i;
         xhr.onreadystatechange = function() {
             prefs.value="";
             if(xhr.readyState == XMLHttpRequest.DONE) {
-                if(source=='getprefs')prefs.value = xhr.responseText;
-                if(source=='getdefs')prefs.value=xhr.responseText;
+                select = document.getElementById("prefs");  // Config: show stationlist and URL
+                if(source=='getprefs')select.value = xhr.responseText;
+                if(source=='getdefs')select.value=xhr.responseText;
+                select = document.getElementById("preset");  // Radio: show stationlist
+                select.options.length=1;
+                lines=xhr.responseText.split("\n");
+                for(i = 0 ; i < (lines.length - 1); i++ ) {
+                    lines[i]=lines[i].substring(0,lines[i].indexOf("#"));
+                    lines[i]=lines[i].trim();
+                    lines[i]+="\n";
+                    opt = document.createElement("OPTION");
+                    opt.text = lines[i];
+                    select.add(opt);
+                }
             }
         }
         xhr.open("GET", "/?" + source  + "&version=" + Math.random(), true);
@@ -532,29 +484,30 @@ const char web_html[] PROGMEM = R"=====(
 
     function fsav() {  // tab Config: save the preferences
         var str = prefs.value;
-        var theUrl = "/?saveprefs&version=" + Math.random();
+        var theUrl = "/?saveprefs=0&version=" + Math.random();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if( xhr.readyState == XMLHttpRequest.DONE) {
-                // do nothing 
+                ldef("getprefs");
             }
         }
         // Remove empty lines
         while(str.indexOf("\r\n\r\n") >= 0) {
-            str=str.replace(/\r\n\r\n/g, "\r\n")
+            str=str.replace(/\r\n\r\n/g, "\r\n");
         }
         while(str.indexOf("\n\n" ) >= 0) {
-            str=str.replace(/\n\n/g, "\n")
+            str=str.replace(/\n\n/g, "\n");
         }
         xhr.open("POST", theUrl, true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.send(str + "\n");
+        xhr.send(str + "end -" + "\n");
     }
 
     function getnetworks() { // tab Config: load the connevted WiFi network
         var i, select, opt, networks;
         var theUrl = "/?getnetworks" + "&version=" + Math.random() ;
         var xhr = new XMLHttpRequest();
+        select = document.getElementById("ssid");  // Radio: show stationlist
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE) {
                 networks=xhr.responseText.split("\n");
@@ -562,7 +515,7 @@ const char web_html[] PROGMEM = R"=====(
                     opt = document.createElement( "OPTION" );
                     opt.value = i;
                     opt.text = networks[i];
-                    ssid.add(opt);
+                    select.add(opt);
                 }
             }
         }
@@ -606,37 +559,45 @@ const char web_html[] PROGMEM = R"=====(
 
 </script>
 
+<body id="BODY">
+ <div id="CONTENT" >
 
-    <div id="HEADER">   <span class="bold1"><span id="meta">** ESP32 Radio **</span></span> </div>  
-    <div id="CONTENT" >
-    <ul  id="UL1" class="tabs">
-        <li>
-            <input type="radio" name="tabs" id="tab1" checked />
-            <label for="tab1">Radio</label>
-        </li>               
-        <li>
-            <input type="radio" name="tabs" id="tab2" />
-            <label for="tab2">Config</label>
-        </li>               
-        <li>
-            <input type="radio" name="tabs" id="tab3" />
-            <label for="tab3">MP3 Player</label>
-        </li>
-        <li>
-            <input type="radio" name="tabs" id="tab4" />
-            <label for="tab4">About</label>
-        </li>
-    </ul>
-    <!-------------------------------------------------------------------------------------------------->
+    <!--==============================================================================================-->
         <div id="tab-content1">
+
+        <img src="SD/png/Radio_Yellow.png"      alt="radio"                         />
+        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
+        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
+ <!--   <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
+        <label for="label_Name">MiniWebRadio</label> 
+        <hr>
         <center>
-            <br><br>
-            <button class="button" onclick="httpGet('downpreset=1', 1)">PREV</button>
-            <button class="button" onclick="httpGet('uppreset=1', 1)">NEXT</button>
-            <button class="button" onclick="httpGet('downvolume=2', 1)">VOL-</button>
-            <button class="button" onclick="httpGet('upvolume=2', 1)">VOL+</button>
-            <button class="button" onclick="httpGet('mute', 1)">MUTE</button>
-            <button class="button" onclick="httpGet('test', 1)">TEST</button>
+            <br>
+            <img src="SD/png/Button_Previous_Green.png" alt="previous" 
+                 onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
+                 onmouseup="this.src='SD/png/Button_Previous_Green.png'"
+                 onclick="httpGet('downpreset=1', 1)"/>
+            <img src="SD/png/Button_Next_Green.png" alt="next" 
+                 onmousedown="this.src='SD/png/Button_Next_Yellow.png'" 
+                 onmouseup="this.src='SD/png/Button_Next_Green.png'"
+                 onclick="httpGet('uppreset=1', 1)"/>
+            <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" 
+                 onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" 
+                 onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                 onclick="httpGet('downvolume=2', 1)"/>
+            <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" 
+                 onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" 
+                 onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                 onclick="httpGet('upvolume=2', 1)"/>
+            <img id="Mute" 
+                 src="SD/png/Button_Mute_Green.png" alt="Mute" 
+                 onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" 
+                 onclick="httpGet('mute', 1)"/>
+            <img src="SD/png/Button_Test_Green.png" alt="Test" 
+                 onmousedown="this.src='SD/png/Button_Test_Yellow.png'" 
+                 onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                 onclick="httpGet('test', 1)"/>
         </center>
         <center>
             <table width="500">
@@ -721,14 +682,19 @@ const char web_html[] PROGMEM = R"=====(
             </div>
         </center>
     </div>
-    <!-------------------------------------------------------------------------------------------------->
+    <!--==============================================================================================-->
     <div id="tab-content2">
+        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
+        <img src="SD/png/Station_Yellow.png"    alt="station"                       /> 
+        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
+<!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
+        <label for="label_Name">MiniWebRadio</label>
+        <hr>
         <center>
         <p>You can edit the configuration here. <i>Note that this will be overwritten by "Load default".</i></p>
-        <h3>Connected WiFi network
-        <select class="select" onChange="handletone(this)" id="ssid"></select>
-        </h3>
-        <textarea wrap="off" rows="25" cols="100" id="prefs">Space for preferences</textarea>
+
+        <textarea wrap="off" rows="25" id="prefs">Space for preferences</textarea>
         <br>
         <button class="button buttongreen" onclick="fsav()">Save</button>
         &nbsp;&nbsp;
@@ -740,8 +706,15 @@ const char web_html[] PROGMEM = R"=====(
         <br>
         </center>
     </div>  
-    <!-------------------------------------------------------------------------------------------------->
+    <!--==============================================================================================-->
     <div id="tab-content3">
+        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
+        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/>
+        <img src="SD/png/MP3_Yellow.png"        alt="mp3"                           />
+<!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+        <img src="SD/png/About_Green.png" alt="radio"           onclick="showTab5()"/>
+        <label for="label_Name">MiniWebRadio</label>
+        <hr>
         <center>
         <br>
         <label for="seltrack"><big>MP3 files on SD card:</big></label>
@@ -756,14 +729,36 @@ const char web_html[] PROGMEM = R"=====(
         <br><br>
         </center>
     </div>
-    <!-------------------------------------------------------------------------------------------------->
+    <!--==============================================================================================-->
     <div id="tab-content4">
-        <p> ESP32 Radio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
+        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
+        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
+        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
+<!--    <img src="SD/png/Settings_Yellow.png"   alt="settings"                      /> -->
+        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
+        <label for="label_Name">MiniWebRadio</label>
+        <hr>
+
+    </div>
+    <!--==============================================================================================-->
+    <div id="tab-content5">
+        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
+        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
+        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
+<!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+        <img src="SD/png/About_Yellow.png"      alt="radio"                         />
+        <label for="label_Name">MiniWebRadio</label>
+        <hr>
+        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
         This project is documented at <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
         <p>Author: Wolle (schreibfaul1)<br>
-        <img src="SD/ESP32_Radio_gr.bmp" alt="ESP32_Radio_gr" border=3>
+        <img src="SD/MiniWebRadio_gr.bmp" alt="MiniWebRadio_gr" border=3>
+        <h3>Connected WiFi network
+        <select class="select" onChange="handletone(this)" id="ssid"></select>
+        </h3>
     </div>
-    <!-------------------------------------------------------------------------------------------------->
+    <!--==============================================================================================-->
+
 </div>
 
 
