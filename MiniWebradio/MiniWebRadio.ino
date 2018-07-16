@@ -2,31 +2,15 @@
 //*  MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display and VS1053 MP3 module.    *
 //******************************************************************************************
 //
-//  if not enough space in nvs or flash: change defaut.cvs
+//  if not enough space in nvs or flash: change defaut.cvs in folder esp32/tools/partitions/
 //
-//  Name,     Type,   SubType,   Offset,   Size,     Flags
-//  phy_init, data,   phy,       0x9000,   0x7000
-//  factory,  app,    factory,   0x10000,  3M
-//  nvs,      data,   nvs,       ,         0x32000
+//# Name,     Type,   SubType,   Offset,   Size,     Flags
+//  phy_init, data,   phy,       0x9000,   0x7000,
+//  factory,  app,    factory,   0x10000,  0x300000,
+//  nvs,      data,   nvs,       0x310000, 0x32000,
+//  spiffs,   data,   spiffs,    0x342000, 0xB0000,
+//  eeprom,   data,   0x99,      0x3F2000, 0xD000,
 //
-//  if You see a compiler message in Eclipse: "Invalid arguments ' Candidates are: String SSID()"
-//  comment lines 45...56 in WiFi.h and insert his:
-//
-//  String  SSID(uint8_t networkItem)    {return WiFiScanClass::SSID(networkItem);}
-//  int32_t RSSI(uint8_t networkItem)    {return WiFiScanClass::RSSI(networkItem);}
-//  uint8_t *BSSID(uint8_t networkItem)  {return WiFiScanClass::BSSID(networkItem);}
-//  String  BSSIDstr(uint8_t networkItem){return WiFiScanClass::BSSIDstr(networkItem);}
-//  int32_t channel(uint8_t networkItem) {return WiFiScanClass::channel(networkItem);}
-//
-//  String  SSID(void)                   {return WiFiSTAClass::SSID();}
-//  int32_t RSSI(void)                   {return WiFiSTAClass::RSSI();}
-//  uint8_t *BSSID(void)                 {return WiFiSTAClass::BSSID();}
-//  String  BSSIDstr(void)               {return WiFiSTAClass::BSSIDstr();}
-//  int32_t channel(void)                {return WiFiGenericClass::channel();}
-//
-//  wrong datatype in WiFiClient:
-//  WiFiClient.cpp 239: size_t WiFiClient::write_P(const unsigned char* buf, size_t size)
-//  WiFiClient.h 47:    size_t write_P(const unsigned char* buf, size_t size);
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -79,13 +63,13 @@
 // Timezone
 #define TZName  "CET-1CEST,M3.5.0,M10.5.0/3"
 
-String   _WIFI = "mySSID";    	// Your WiFi credentials here
+String   _SSID = "mySSID";    	// Your WiFi credentials here
 String   _PW   = "myWiFiPassword";
 
 //global variables
-char     _sbuf[1024],   _chbuf[1024];
+char     _chbuf[1024];
 String   _station="",   _stationname="",   _stationURL="",      _homepage="";
-String   _title="",     _info="",          _alarmtime="",       _SSID="";
+String   _title="",     _info="",          _alarmtime="";
 String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
 String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0";
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
@@ -257,11 +241,12 @@ inline uint8_t getBrightness(){
 char ASCIIfromUTF8(char ch){  // if no ascii char available return blank
     uint8_t ascii;
     char tab[96]={
-     96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
-     32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
-     32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
-    154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
-     32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152};
+         96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
+         32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
+         32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
+        154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
+         32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152
+    };
     ascii=ch;
     if(ch<128) return ascii;
     if(ch<160) return 32;
@@ -269,17 +254,18 @@ char ASCIIfromUTF8(char ch){  // if no ascii char available return blank
     ascii=tab[ascii];
     return ascii;
 }
-uint16_t U8fromASCII(char ch){
+uint16_t UTF8fromASCII(char ch){
     uint16_t uni;
     uint16_t tab[128]={
-     199, 252, 233, 226, 228, 224, 229, 231, 234, 235, 232, 239, 238, 236, 196, 197,
-     201, 230, 198, 244, 246, 242, 251, 249, 255, 214, 220, 162, 163, 165,8359, 402,
-     225, 237, 243, 250, 241, 209, 170, 186, 191,8976, 172, 189, 188, 161, 171, 187,
-    9617,9618,9619,9474,9508,9569,9570,9558,9557,9571,9553,9559,9565,9564,9563,9488,
-    9492,9524,9516,9500,9472,9532,9566,9567,9562,9556,9577,9574,9568,9552,9580,9575,
-    9576,9572,9573,9561,9560,9554,9555,9579,9578,9496,9484,9608,9604,9612,9616,9600,
-     945, 223, 915, 960, 931, 963, 181, 964, 934, 920, 937, 948,8734, 966, 949,8745,
-    8801, 177,8805,8804,8992,8993, 247,8776, 176,8729, 183,8730,8319, 178,9632, 160};
+         199, 252, 233, 226, 228, 224, 229, 231, 234, 235, 232, 239, 238, 236, 196, 197,
+         201, 230, 198, 244, 246, 242, 251, 249, 255, 214, 220, 162, 163, 165,8359, 402,
+         225, 237, 243, 250, 241, 209, 170, 186, 191,8976, 172, 189, 188, 161, 171, 187,
+        9617,9618,9619,9474,9508,9569,9570,9558,9557,9571,9553,9559,9565,9564,9563,9488,
+        9492,9524,9516,9500,9472,9532,9566,9567,9562,9556,9577,9574,9568,9552,9580,9575,
+        9576,9572,9573,9561,9560,9554,9555,9579,9578,9496,9484,9608,9604,9612,9616,9600,
+         945, 223, 915, 960, 931, 963, 181, 964, 934, 920, 937, 948,8734, 966, 949,8745,
+        8801, 177,8805,8804,8992,8993, 247,8776, 176,8729, 183,8730,8319, 178,9632, 160
+    };
     uni=ch;
     if(ch<128)return uni;
     uni-=128;
@@ -289,12 +275,12 @@ uint16_t U8fromASCII(char ch){
 const char* ASCIItoUTF8(const char* str){
     uint16_t i=0, j=0, uni=0;
     while((str[i]!=0)&&(j<1020)){
-            uni=U8fromASCII(str[i]);
+            uni=UTF8fromASCII(str[i]);
             switch(uni){
             case   0 ... 127:{_chbuf[j]=str[i]; i++; j++; break;}
             case 160 ... 191:{_chbuf[j]=0xC2; _chbuf[j+1]=uni; j+=2; i++; break;}
             case 192 ... 255:{_chbuf[j]=0xC3; _chbuf[j+1]=uni-64; j+=2; i++; break;}
-            default:{_chbuf[j]=' '; i++; j++;}}
+            default:{_chbuf[j]=' '; i++; j++;}} // ignore all other
     }
     _chbuf[j]=0;
     return _chbuf;
@@ -360,6 +346,41 @@ const char*UTF8toCp1252(const char* str){  //WinLatin1
         else if(str[i]>=192 && str[i]<=195){  // 0xC0, 0xC1, 0xC2, 0xC3
             _chbuf[j]=(str[i]-192)*64+(str[i+1]-128);
             i+=2; j++;
+        }
+        else{
+            _chbuf[j]=str[i];
+            i++; j++;
+        }
+    }
+    _chbuf[j]=0;
+    return (_chbuf);
+}
+const char*UTF8toCp1253(const char* str){  //Greek
+    uint16_t i=0, j=0;
+    while((str[i]!=0)&&(i<1024)){
+        if(str[i]<184){
+            _chbuf[j]=str[i];
+            i++; j++;
+        }
+        else if(str[i]==206){  // 0xCE
+            if((str[i+1]>=136)&&(str[i+1]<=191)){ //0xCE88..0xCEBF
+                _chbuf[j]=str[i+1]+48;
+                i+=2; j++;
+            }
+            else{
+                _chbuf[j]=str[i];
+                i+=2; j++;
+            }
+        }
+        else if(str[i]==207){  // 0xCF
+            if((str[i+1]>=128)&&(str[i+1]<=142)){ //0xCF88..0xCF8E
+                _chbuf[j]=str[i+1]+112;
+                i+=2; j++;
+            }
+            else{
+                _chbuf[j]=str[i];
+                i+=2; j++;
+            }
         }
         else{
             _chbuf[j]=str[i];
@@ -447,50 +468,49 @@ void displayinfo(const char *str, int ypos, int height, uint16_t color, uint16_t
     tft.print(str);                                         // Show the string
 }
 void showTitle(String str){
-    static String title;
+    static String title="";
     str.trim();  // remove all leading or trailing whitespaces
-    if(str.length()>4) f_has_ST=true; else {if(str.length()==0) f_has_ST=false;}
-        tft.setTextSize(4);
-        if(str.length()>45) tft.setTextSize(3);
-        if(str.length()>120) tft.setTextSize(1);
-        if(_state==0){  //state RADIO
-            displayinfo(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
-        }
-        title=str;
+    if((_state==RADIO)&&(title==str)) return;  // nothing to do
+    if(str.length()>4) f_has_ST=true; else f_has_ST=false;
+    tft.setTextSize(4);
+    if(str.length()> 45) tft.setTextSize(3);
+    if(str.length()> 80) tft.setTextSize(2);
+    if(str.length()>100) tft.setTextSize(1);
+    displayinfo(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
+    title=str;
 }
 void showStation(){
-    String str="";
-    tft.setTextSize(3);
+    String str1="", str2="";
     if(_stationname==""){
+        tft.setTextSize(3);
         if(_station.length()>75) tft.setTextSize(1);
         displayinfo(_station.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
         showTitle("");   // and delete showstreamtitle
-        str=_station;
-        str.toLowerCase();
-        str.replace(",",".");
-        sprintf(_sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
-        if(f_SD_okay) if(tft.drawBmpFile(SD, _sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
+        showFooter();
+        str1=_station;
     }else{
         tft.setTextSize(4);
         if(_stationname.length()>30) tft.setTextSize(3);
         displayinfo(_stationname.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);
         showTitle("");
-        str=_stationname;
-        //log_i("%s", _stationname.c_str());
-        str.toLowerCase();
-        str.replace(",",".");
-        sprintf(_sbuf,"/logo/%s.bmp",UTF8toASCII(str.c_str()));
-        //log_i("%s", _sbuf);
-        if(f_SD_okay) if(tft.drawBmpFile(SD, _sbuf, 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);}
+        showFooter();
+        str1=_stationname;
+    }
+    //log_i("%s", _stationname.c_str());
+    str1.toLowerCase();
+    str1.replace(",",".");
+    str2="/logo/" + String(UTF8toASCII(str1.c_str())) +".bmp";
+    //log_i("%s", _sbuf);
+    if(f_SD_okay) if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
 }
 void showHeadlineVolume(uint8_t vol){
     if(_state == ALARM || _state== BRIGHTNESS) return;
-    sprintf(_sbuf,"Vol %02d",vol);
+    sprintf(_chbuf, "Vol %02d", vol);
     tft.fillRect(175, _yHeader, 69, _hHeader, TFT_BLACK);
     tft.setCursor(175, _yHeader);
     tft.setTextSize(2);
     tft.setTextColor(TFT_DEEPSKYBLUE);
-    tft.print(_sbuf);
+    tft.print(_chbuf);
 }
 void showHeadlineItem(const char* hl){
     tft.setTextSize(2);
@@ -537,8 +557,8 @@ String tone(){
     uint8_t u8_tone[4];
     u8_tone[0]=pref.getUInt("toneha"); u8_tone[1]=pref.getUInt("tonehf");
     u8_tone[2]=pref.getUInt("tonela"); u8_tone[3]=pref.getUInt("tonelf");
-    sprintf(_sbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n",u8_tone[0],u8_tone[1],u8_tone[2],u8_tone[3]);
-    str_tone=String(_sbuf);
+    sprintf(_chbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n",u8_tone[0],u8_tone[1],u8_tone[2],u8_tone[3]);
+    str_tone=String(_chbuf);
     f_mute=pref.getUInt("mute");
     if(f_mute==false) mp3.setVolume(pref.getUInt("volume"));
     else {mp3.setVolume(0);showHeadlineVolume(0);}
@@ -615,9 +635,9 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
             filename.substring(filename.length()-4).toLowerCase();
             filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){
-                sprintf(_sbuf,"%s\n",filename.c_str());
-                if(index<10){_mp3Name[index]=_sbuf; index++;}  //store the first 10 Names
-                SD_outbuf+=ASCIItoUTF8(_sbuf);}
+                filename+="\n";
+                if(index<10){_mp3Name[index]=filename; index++;}  //store the first 10 Names
+                SD_outbuf+=ASCIItoUTF8(filename.c_str());}
         }
         file = root.openNextFile();
     }
@@ -673,6 +693,7 @@ void setup(){
     SPI.begin();
     Serial.begin(115200); // For debug
     SD.end();       // to recognize SD after reset correctly
+    Serial.println("setup      : Init SD card");
     SD.begin(SD_CS);
     delay(100); // wait while SD is ready
     tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
@@ -684,9 +705,14 @@ void setup(){
     pref.begin("MiniWebRadio", false);
     setTFTbrightness(pref.getUInt("brightness"));
     f_SD_okay=(SD.cardType() != CARD_NONE); // See if known card
+    if(!f_SD_okay) Serial.println("setup      : SD card not found");
+    else Serial.println("setup      : found SD card");
     if(pref.getString("MiniWebRadio") != "default") defaultsettings();  // first init
     if(f_SD_okay) tft.drawBmpFile(SD, "/MiniWebRadio.bmp", 0, 0); //Welcomescreen
+    Serial.println("setup      : Init VS1053");
     mp3.begin(); // Initialize VS1053 player
+    if(!mp3.printVersion()) Serial.println("setup      : VS1053 not found");
+    else Serial.println("setup      : found VS1053");
     _alarmdays=pref.getUInt("alarm_weekday");
     _alarmtime=pref.getString("alarm_time");
     setTFTbrightness(pref.getUInt("brightness"));
@@ -706,6 +732,7 @@ void setup(){
     showHeadlineItem("** Internet radio **");
     tone();
     mp3.connecttohost(readhostfrompref(0)); //last used station
+    //mp3.printDetails();
     startTimer();
 }
 //**************************************************************************************************
@@ -716,16 +743,16 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
     int i, j, ix, s_len=0;
     char tkey[12];
     char nr[8];
-    for(i=1 ;i<(pref.getUInt("maxstations")+1); i++){ // max presets
+    for(i=1;i<(pref.getUInt("maxstations")+1);i++){ // max presets
         sprintf(tkey, "preset_%03d", i);
         sprintf(nr, "%03d - ", i);
         content=pref.getString(tkey);
         ix=content.indexOf("#");
         if(ix>0){
-          u=content.substring(ix, content.length());
-          s=content.substring(0,ix);
-          s_len=s.length();
-          for(j=0;j<s_len;j++){if(s[j]==0xC3) s_len--;} //count umlaut, reduce len
+            u=content.substring(ix, content.length());
+            s=content.substring(0,ix);
+            s_len=s.length();
+            for(j=0;j<s_len;j++){if(s[j]==0xC3) s_len--;} //count umlaut, reduce len
         }
         else {s=" "; u=" ";}
         if(config==0){
@@ -853,20 +880,22 @@ void changeBtn_released(uint8_t btnNr){
 }
 void displayWeekdays(uint8_t ad, boolean showall=false){
     uint8_t i=0;
+    String str="";
     static uint8_t d, old_d;
     d=ad; //alarmday
     for(i=0;i<7;i++){
-        if((d & (1<<i))==(old_d & (1<<i))&&!showall) continue; //icon is alread displayed
-        if(d & (1<<i)) sprintf(_sbuf,"/day/%i_rt.bmp",i); // k<<i instead pow(2,i)
-        else sprintf(_sbuf,"/day/%i_gn.bmp",i);
-        if(f_SD_okay) tft.drawBmpFile(SD, _sbuf, 5+i*44, 0);
+        if((d & (1<<i))==(old_d & (1<<i))&&!showall) continue;  //icon is alread displayed
+        str="/day/"+String(i);
+        if(d & (1<<i))  str+="_rt.bmp";    // l<<i instead pow(2,i)
+        else            str+="_gn.bmp";
+        if(f_SD_okay) tft.drawBmpFile(SD, str.c_str(), 5+i*44, 0);
         mp3.loop();
     }
     old_d=ad;
 }
 void displayAlarmtime(int8_t xy=0, int8_t ud=0, boolean showall=false){
-    uint8_t i=0, j[4]={5,77,173,245}, k[4]={0,1,3,4};
-    uint8_t ch=0;
+    uint8_t i=0, j[4]={5,77,173,245}, k[4]={0,1,3,4}, ch=0;
+    String str="";
     static int8_t pos=0, oldpos=0;;
     static String oldt="";
     if(ud==1){
@@ -900,21 +929,17 @@ void displayAlarmtime(int8_t xy=0, int8_t ud=0, boolean showall=false){
     String at=_alarmtime;
     //log_i("at=%s",_alarmtime.c_str());
     if(pos!=oldpos){
-        sprintf(_sbuf,"/digits/%cor.bmp",at.charAt(k[pos]));
-        if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[pos], 45);mp3.loop();}
-        sprintf(_sbuf,"/digits/%crt.bmp",at.charAt(k[oldpos]));
-        if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[oldpos], 45);mp3.loop();}
+        str="/digits/"+String(at.charAt(k[pos]))   +"or.bmp";
+        if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[pos],    45);mp3.loop();}
+        str="/digits/"+String(at.charAt(k[oldpos]))+"rt.bmp";
+        if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[oldpos], 45);mp3.loop();}
     }
     for(i=0;i<4;i++){
         if(at[k[i]]!=oldt[k[i]]){
-            if(i==pos){
-                sprintf(_sbuf,"/digits/%cor.bmp",at.charAt(k[i])); //show orange number
-                if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[i], 45);mp3.loop();}
-            }
-            else{
-                sprintf(_sbuf,"/digits/%crt.bmp",at.charAt(k[i])); //show red numbers
-                if(f_SD_okay){tft.drawBmpFile(SD, _sbuf, j[i], 45);mp3.loop();}
-            }
+            str="/digits/"+String(at.charAt(k[i]));
+            if(i==pos) str+="or.bmp";   //show orange number
+            else       str+="rt.bmp";   //show red numbers
+            if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[i], 45);mp3.loop();}
         }
     }
     oldt=at; oldpos=pos;
@@ -930,8 +955,8 @@ void display_time(boolean showall=false){ //show current time on the TFT Display
         for(i=0;i<5;i++){
             if(t[i]==':'){if(k==false){k=true; t[i]='d';}else{t[i]='e'; k=false;}}
             if(t[i]!=oldt[i]){
-                sprintf(_sbuf,"/digits/%cgn.bmp",t[i]);
-                if(f_SD_okay) tft.drawBmpFile(SD, _sbuf, 5+j, 45);
+                sprintf(_chbuf,"/digits/%cgn.bmp",t[i]);
+                if(f_SD_okay) tft.drawBmpFile(SD, _chbuf, 5+j, 45);
                 mp3.loop();
             }
             if((t[i]=='d')||(t[i]=='e'))j+=24; else j+=72;
@@ -982,7 +1007,7 @@ void loop() {
         if(f_has_ST==false) sec++; else sec=0; // Streamtitle==""?
         if(sec>4){
             sec=0;
-            if(!ST_rep())showTitle("Station provides no Streamtitle");
+            if(!ST_rep()&&(_state==RADIO))showTitle("Station provides no Streamtitle");
         }
         if(_commercial_dur>0){
             _commercial_dur--;
@@ -998,9 +1023,9 @@ void loop() {
     else semaphore=false;
 
     if(_millis+5000<millis()){  //5sec no touch?
-        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();}
-        if(_state==RADIOmenue){_state=RADIO; showTitle(_title); showFooter();}
-        if(_state==CLOCKico)  {_state=CLOCK; displayinfo("",160,79, TFT_BLACK, 0);}
+        if(_state==RADIOico)  {showTitle(_title); showFooter();      _state=RADIO;}
+        if(_state==RADIOmenue){showTitle(_title); showFooter();      _state=RADIO;}
+        if(_state==CLOCKico)  {displayinfo("",160,79, TFT_BLACK, 0); _state=CLOCK;}
     }
 
     if(f_alarm){
@@ -1057,7 +1082,7 @@ void vs1053_info(const char *info) {                    // called from vs1053
     String str=info;
     Serial.print("vs1053_info: ");
     if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
-    Serial.print(UTF8toCp1252(info));                   // debug infos
+    Serial.print(UTF8toCp1252(info));                   // all infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
@@ -1093,7 +1118,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd=="getprefs") {getsettings(1); return;}
     if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
     if(cmd=="gettone"){ web.reply(tone()); return;}
-    if(cmd=="test") {sprintf(_sbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_sbuf); return;}
+    if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_chbuf); return;}
     if(cmd=="reset") {ESP.restart(); return;}
     if(cmd.startsWith("toneha=")){pref.putUInt("toneha",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Gain set"); tone(); return;}
     if(cmd.startsWith("tonehf=")){pref.putUInt("tonehf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Freq set"); tone(); return;}
@@ -1155,7 +1180,7 @@ void HTML_request(const String request){
 void HTML_info(const char *info){                   // called from html
     String Info=info;
     if(!Info.endsWith("\n"))Info+="\n";
-    Serial.print("HTML_info   : ");
+    Serial.print("HTML_info  : ");
     Serial.print(Info.c_str());        // for debug infos
 }
 // Events from IR Library
@@ -1199,12 +1224,12 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(y<40){
             switch(x){  //weekdays
                 case   0 ...  48: y1Pos=0; break; //So
-                case  49 ...  92: y1Pos=1; break; //Mo
-                case  93 ... 136: y1Pos=2; break; //Tu
+                case  49 ...  92: y1Pos=1; break; //Mon
+                case  93 ... 136: y1Pos=2; break; //Tue
                 case 137 ... 180: y1Pos=3; break; //We
                 case 181 ... 224: y1Pos=4; break; //Th
-                case 225 ... 268: y1Pos=5; break; //Fr
-                case 269 ... 319: y1Pos=6; break;}//Sa
+                case 225 ... 268: y1Pos=5; break; //Fri
+                case 269 ... 319: y1Pos=6; break;}//Sat
             }
     }
     else{
