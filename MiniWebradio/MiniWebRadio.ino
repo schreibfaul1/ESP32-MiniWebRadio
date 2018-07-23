@@ -16,15 +16,15 @@
 //
 //     or copy the default.csv from the repository to replace the original one
 //
-//     Arduino IDE only: set treshold in boards.txt from esp32.upload.maximum_size=1310720 to 3145728
+//     Arduino IDE only: set treshold in boards.txt from [boardname].upload.maximum_size=1310720 to 3145728
 //
-// 2)  set the Timezone at line 70, examples are in rtime.cpp
+// 2)  set the Timezone mentioned below, examples are in rtime.cpp
 //
-// 3)  set WiFi credentials at line 75/76, more credentials can be set in networks.csv (SD Card)
+// 3)  set WiFi credentials below, more credentials can be set in networks.csv (SD Card)
 //
 // 4)  extract the zip file on SD Card
 //
-// 5)  change GPIOs (at line 60) if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
+// 5)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
 //
 // 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
 //     TFT controller can be ILI9341 or HX8347D (line 128)
@@ -1049,7 +1049,7 @@ void loop() {
     }
 
     if(f_alarm){
-        log_i("Alarm");
+        // log_i("Alarm");
         f_alarm=false;
         mp3.connecttoSD("/ring/alarm_clock.mp3");
         mp3.setVolume(21);
