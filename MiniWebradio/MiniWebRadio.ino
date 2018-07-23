@@ -2,15 +2,35 @@
 //*  MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display and VS1053 MP3 module.    *
 //******************************************************************************************
 //
-//  if not enough space in nvs or flash: change defaut.cvs in folder esp32/tools/partitions/
+// Preparations:
 //
-//# Name,     Type,   SubType,   Offset,   Size,     Flags
-//  phy_init, data,   phy,       0x9000,   0x7000,
-//  factory,  app,    factory,   0x10000,  0x300000,
-//  nvs,      data,   nvs,       0x310000, 0x32000,
-//  spiffs,   data,   spiffs,    0x342000, 0xB0000,
-//  eeprom,   data,   0x99,      0x3F2000, 0xD000,
+// 1)  change the partitionstable (defaut.csv in folder esp32/tools/partitions/)
+//     MiniWebRadio need 1,5MByte flash and 200KByte nvs
 //
+//   # Name,     Type,   SubType,   Offset,   Size,     Flags
+//     phy_init, data,   phy,       0x9000,   0x7000,
+//     factory,  app,    factory,   0x10000,  0x300000,
+//     nvs,      data,   nvs,       0x310000, 0x32000,
+//     spiffs,   data,   spiffs,    0x342000, 0xB0000,
+//     eeprom,   data,   0x99,      0x3F2000, 0xD000,
+//
+//     or copy the default.csv from the repository to replace the original one
+//
+//     Arduino IDE only: set treshold in boards.txt from esp32.upload.maximum_size=1310720 to 3145728
+//
+// 2)  set the Timezone at line 70, examples are in rtime.cpp
+//
+// 3)  set WiFi credentials at line 75/76, more credentials can be set in networks.csv (SD Card)
+//
+// 4)  extract the zip file on SD Card
+//
+// 5)  change GPIOs (at line 60) if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
+//
+// 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
+//     TFT controller can be ILI9341 or HX8347D (line 128)
+//     or adapt ohter tft libraries (adafruit, bodmer) it is not complicated
+//
+// 7)  at the first run defaultsettings() is calling and copy all predefines stations from presets.csv to nvs
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -24,7 +44,7 @@
 //  |              StreamTitle                  |       _hTitle=100px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |       _hFooter=18px
+//  | Footer                                    |       _hFooter=20px
 //  +-------------------------------------------+ 240
 //                                             320
 // system libraries
@@ -51,9 +71,9 @@
 #define VS1053_DREQ   36
 #define TFT_CS        22
 #define TFT_DC        21
-#define TFT_BL        17
+#define TFT_BL        17  // 33 (pico V4)
 #define TP_IRQ        39
-#define TP_CS         16
+#define TP_CS         16  // 32 (pico V4)
 #define SD_CS          5
 #define IR_PIN        34
 #define SPI_MOSI      23
@@ -63,7 +83,7 @@
 // Timezone
 #define TZName  "CET-1CEST,M3.5.0,M10.5.0/3"
 
-String   _SSID = "mySSID";    	// Your WiFi credentials here
+String   _SSID = "mySSID";      // Your WiFi credentials here
 String   _PW   = "myWiFiPassword";
 
 //global variables
@@ -690,7 +710,7 @@ void setup(){
     pinMode(TFT_CS, OUTPUT);     digitalWrite(TFT_CS, HIGH);
     pinMode(TP_CS, OUTPUT);      digitalWrite(TP_CS, HIGH);
     pinMode(VS1053_CS, OUTPUT);  digitalWrite(VS1053_CS, HIGH);
-    SPI.begin();
+    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
     Serial.begin(115200); // For debug
     SD.end();       // to recognize SD after reset correctly
     Serial.println("setup      : Init SD card");
@@ -1029,6 +1049,7 @@ void loop() {
     }
 
     if(f_alarm){
+        log_i("Alarm");
         f_alarm=false;
         mp3.connecttoSD("/ring/alarm_clock.mp3");
         mp3.setVolume(21);
