@@ -1056,7 +1056,7 @@ void loop() {
             int8_t h=0;
             char tkey[20];
             _time_s=rtc.gettime_s();
-            if((f_mute==false)&&(_state!=SLEEP)){
+            if((f_mute==false)&&(!f_sleeping)){
                 if(_time_s.endsWith("59:51")) { // speech the time 9 sec before a new hour is arrived
                     _hour=_time_s.substring(0,2); // extract the hour
                     h=_hour.toInt();
@@ -1116,6 +1116,7 @@ void loop() {
         f_alarm=false;
         mp3.connecttoSD("/ring/alarm_clock.mp3");
         mp3.setVolume(21);
+        setTFTbrightness(pref.getUInt("brightness"));        
     }
 
     if(f_mp3eof){
