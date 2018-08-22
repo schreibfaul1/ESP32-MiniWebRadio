@@ -194,7 +194,7 @@ void defaultsettings(){
     else{                                       // file not available
         log_i("SD/presets.csv not found, use default stream URls");
         String s[12], u[12];
-        s[  1]="030-berlinfm";          u[  1]="vtuner.stream.laut.fm/030-berlinfm"; //D
+        s[  1]="030-berlinfm";          u[  1]="030-berlinfm.stream.laut.fm/030-berlinfm"; //D
         s[  2]="104.6 RTL";             u[  2]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
         s[  3]="105.5 Spreeradio";      u[  3]="stream.spreeradio.de/spree-live/mp3-128/vtuner/"; //D
         s[  4]="106.4 TOP FM";          u[  4]="mp3.topfm.c.nmdn.net/ps-topfm/livestream.mp3"; //D
@@ -494,16 +494,15 @@ void display_info(const char *str, int ypos, int height, uint16_t color, uint16_
     tft.print(str);                                         // Show the string
 }
 void showTitle(String str){
-    static String title="";
     str.trim();  // remove all leading or trailing whitespaces
-    if((_state==RADIO)&&(title==str)) return;  // nothing to do
+    if(_state!=RADIO) return;
     if(str.length()>4) f_has_ST=true; else f_has_ST=false;
     tft.setTextSize(4);
     if(str.length()> 45) tft.setTextSize(3);
     if(str.length()> 80) tft.setTextSize(2);
     if(str.length()>100) tft.setTextSize(1);
-    display_info(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
-    title=str;
+//    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
+    display_info(UTF8toCp1252(str.c_str()), _yTitle, _hTitle, TFT_CYAN, 0);
 }
 void showStation(){
     String str1="", str2="";
@@ -552,6 +551,7 @@ void showHeadlineTime(){
     tft.print(rtc.gettime_s());
 }
 void showFooter(){  // bitrate stationnumber, IPaddress
+    if(_state!=RADIO) return;
     clearFooter();
     if(_bitrate.length()==0) _bitrate="   ";  // if bitrate is unknown
     tft.setTextSize(1);
@@ -849,7 +849,8 @@ void changeState(int state){
     switch(_state) {
     case RADIO:{
         showFooter(); showHeadlineItem("** Internet radio **");
-        showStation(); showTitle(_title); break;
+        showStation(); showTitle(_title);
+        break;
     }
     case RADIOico:{
         _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Green.bmp";
@@ -1083,14 +1084,14 @@ void loop() {
             }
         }
         display_time();
-        if(f_has_ST==false) sec++; else sec=0; // Streamtitle==""?
+        if((f_has_ST==false)&&(_state==RADIO)) sec++; else sec=0; // Streamtitle==""?
         if(sec>4){
             sec=0;
-            if(!ST_rep()&&(_state==RADIO))showTitle("Station provides no Streamtitle");
+            if(!ST_rep()) showTitle("Station provides no Streamtitle");
         }
         if(_commercial_dur>0){
             _commercial_dur--;
-            if((_commercial_dur==2) && (_state==RADIO))showTitle("");// end of commercial? clear streamtitle
+            if((_commercial_dur==2)&&(_state==RADIO))showTitle("");// end of commercial? clear streamtitle
         }
         f_1sec=false;
     }
@@ -1106,8 +1107,8 @@ void loop() {
     else semaphore=false;
 
     if(_millis+5000<millis()){  //5sec no touch?
-        if(_state==RADIOico)  {showTitle(_title); showFooter();      _state=RADIO;}
-        if(_state==RADIOmenue){showTitle(_title); showFooter();      _state=RADIO;}
+        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();          }
+        if(_state==RADIOmenue){_state=RADIO; showTitle(_title); showFooter();      }
         if(_state==CLOCKico)  {display_info("",160,79, TFT_BLACK, 0); _state=CLOCK;}
     }
 
@@ -1116,7 +1117,7 @@ void loop() {
         f_alarm=false;
         mp3.connecttoSD("/ring/alarm_clock.mp3");
         mp3.setVolume(21);
-        setTFTbrightness(pref.getUInt("brightness"));        
+        setTFTbrightness(pref.getUInt("brightness"));
     }
 
     if(f_mp3eof){
@@ -1145,9 +1146,8 @@ void vs1053_showstation(const char *info){              // called from vs1053
     showStation();
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
-    //log_i("showTitle %s", info);
     _title=info;
-    if(_state==RADIO)showTitle(_title);                 //state RADIO
+    showTitle(info);
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
@@ -1215,7 +1215,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(StationsItems()); return;}
     if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(StationsItems()); return;}
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("station=")){_stationname=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
+    if(cmd.startsWith("station=")){_stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     if(cmd.startsWith("saveprefs")){web.reply(""); return;} // after that starts POST Event "HTML_request"
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
@@ -1287,15 +1287,26 @@ void ir_number(const char* num){
 }
 void ir_key(const char* key){
     switch(key[0]){
-        case 'o': break; //OK
-        case 'r': upvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); break; // right
-        case 'l': downvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); break; // left
-        case 'u': if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(true)); break; // up
-        case 'd': if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(false)); break; // down
-        case '#': mute();break; // #
-        case '*': break; // *
-        default: break;
-        }
+        case 'k':   if(_state==SLEEP) {display_sleeptime(0, true); changeState(RADIO);} //OK
+                    break;
+        case 'r':   upvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); // right
+                    break;
+        case 'l':   downvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); // left
+                    break;
+        case 'u':   if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(true));  // up
+                    if(_state==SLEEP) display_sleeptime(1);
+                    break;
+        case 'd':   if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(false)); // down
+                    if(_state==SLEEP) display_sleeptime(-1);
+                    break;
+        case '#':   if(_state==SLEEP) changeState(RADIO); // #
+                    else mute();
+                    break;
+        case '*':   if(_state==RADIO){tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem("* Einschlafautomatik *");
+                    tft.drawBmpFile(SD, "/Night_Gown.bmp",198, 25); display_sleeptime();}  // *
+                    break;
+        default:    break;
+    }
 }
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
@@ -1332,8 +1343,8 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
         if(yPos==1){_releaseNr= 1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr= 2; upvolume(); showVolumeBar();}   // Vol+
-        if(yPos==3){_releaseNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
-        if(yPos==4){_releaseNr= 4; mp3.connecttohost(readnexthostfrompref(true));}
+        if(yPos==3){_releaseNr= 3 ;mp3.connecttohost(readnexthostfrompref(false));}
+        if(yPos==4){_releaseNr= 4 ;mp3.connecttohost(readnexthostfrompref(true)); }
     }
     if(_state==RADIOmenue){
         if(yPos==0){_releaseNr= 5; mp3.stop_mp3client(); listmp3file();} // MP3
@@ -1363,7 +1374,7 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==2){_releaseNr= 7;} // ready (return to RADIO)
     }
     if(_state==MP3PLAYER){
-        if(yPos==0){_releaseNr=7; mp3.connecttohost(readhostfrompref(0));} // Radio
+        if(yPos==0){_releaseNr=10;} // Radio
         if(yPos==1){_releaseNr=21;} // left
         if(yPos==2){_releaseNr=22;} // right
         if(yPos==3){_releaseNr=23;} // ready
@@ -1373,7 +1384,7 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==1){_releaseNr=1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr=2; upvolume();   showVolumeBar();} // Vol+
         if(yPos==3){_releaseNr=26;} // MP3
-        if(yPos==4){_releaseNr=7; mp3.connecttohost(readhostfrompref(0));} // Radio
+        if(yPos==4){_releaseNr=10; mp3.connecttohost(readhostfrompref(0));} // Radio
     }
     if(_state==SLEEP){
         if(yPos==0){_releaseNr=19;} // sleeptime up
@@ -1394,8 +1405,8 @@ void tp_released(){
     switch(_releaseNr){
     case  1: changeBtn_released(1); break; // Vol-
     case  2: changeBtn_released(2); break; // Vol+
-    case  3: changeBtn_released(3); break; // RADIO nextstation
-    case  4: changeBtn_released(4); break; // RADIO previousstation
+    case  3: changeBtn_released(3); break; // nextstation
+    case  4: changeBtn_released(4); break; // previousstation
     case  5: tft.fillScreen(TFT_BLACK);
              changeState(MP3PLAYER); showHeadlineItem("* MP3Player *");
              tft.setTextSize(4); str=_mp3Name[_mp3Index];
@@ -1409,6 +1420,7 @@ void tp_released(){
     case  9: changeState(ALARM); showHeadlineItem("");
              display_weekdays(_alarmdays, true);
              display_alarmtime(0, 0, true); break;
+    case 10: mp3.connecttohost(readhostfrompref(0)); clearTitle(); clearFooter(); _state=RADIO; break;
     case 11: display_alarmtime(-1);    changeBtn_released(0);  break;
     case 12: display_alarmtime(+1);    changeBtn_released(1);  break;
     case 13: display_alarmtime(0, +1); changeBtn_released(2);  break; // alarmtime up
@@ -1441,7 +1453,7 @@ void tp_released(){
              break; // right file++
     case 23: changeState(MP3PLAYERico); showVolumeBar();
              mp3.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
-    case 26: clearTitle(); changeState(MP3PLAYER); break;
+    case 26: clearTitle(); clearFooter(); changeState(MP3PLAYER); break;
     }
     _releaseNr=0;
 }
