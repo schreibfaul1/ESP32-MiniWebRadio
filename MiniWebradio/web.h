@@ -252,7 +252,7 @@ const char web_html[] PROGMEM = R"=====(
       //src=src.replace(/\|/g , "%7C");  // not allowed in Windows filenames
       //src=src.replace(/\}/g , "%7D");  // not neccecary to replace
         var file="url(url=SD/logo/" + src + ".bmp)";
-        file=file.split(',').join('.'); //replace commas in dots, Miniradio has no commas in filenames
+      //file=file.split(',').join('.'); //replace commas in dots, Miniradio has no commas in filenames
         document.getElementById(id).style.backgroundImage=file;
     }
  

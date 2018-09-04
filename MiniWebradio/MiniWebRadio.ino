@@ -20,9 +20,9 @@
 //
 // 2)  set the Timezone mentioned below, examples are in rtime.cpp
 //
-// 3)  set WiFi credentials below, more credentials can be set in networks.csv (SD Card)
+// 3)  extract the zip file to SD Card
 //
-// 4)  extract the zip file to SD Card
+// 4)  set WiFi credentials below, more credentials can be set in networks.csv (SD Card)
 //
 // 5)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
 //
@@ -90,7 +90,7 @@ char     _chbuf[1024];
 String   _station="",   _stationname="",   _stationURL="",      _homepage="";
 String   _title="",     _info="",          _alarmtime="";
 String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
-String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0";
+String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0",     _lastconnectedhost="";
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
@@ -148,9 +148,9 @@ WiFiMulti wifiMulti;
 //**************************************************************************************************
 
 void defaultsettings(){
-    String str="", info="";
+    String cy="", str="", str_s="", str_u="", info="";
     char tkey[12];
-    uint16_t i=0;
+    uint16_t i=0, j=0, cnt=0;
     log_i("set default");
     //
     pref.clear();
@@ -172,27 +172,49 @@ void defaultsettings(){
     pref.putUInt("sleeptime", 1);
     //
     // StationList
-    File file = SD.open("/presets.csv");
-    if(file){                                   // try to read from SD
-        str=file.readStringUntil('\n');         // headerline
+    File file = SD.open("/presets.txt");
+    if(file){                                       // try to read from SD
         while(file.available()){
-            str=file.readStringUntil(';');      // Favorite
-            if(str!="*"){str=file.readStringUntil('\n'); continue;}// ignore this entry
-            i++;
-            str=file.readStringUntil(';');      // country
-            str=file.readStringUntil(';');      // station
+            str=file.readStringUntil('\n');         // read the line
+            if(str[0]=='*' ) continue;              // ignore this, goto next line
+            if(str[0]=='\n') continue;              // empty line
+            i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
+            j=i;  while(str[j] >= 32) j++;          // end of first entry?
+            cy =  str.substring(i, j);              // is country
+            cy.trim();
+            if(cy.length()==0) {};                  // empty country?
+            i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+            j=i;  while(str[j] >= 32) j++;          // end of next entry?
+            str_s=str.substring(i, j);
+            i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+            j=i;  while(str[j] >= 32) j++;          // end of next entry?
+            str_u=str.substring(i, j);
+            i=j;  while(str[i]=='\t') i++;          // seek last entry, skip tabs
+            j=i;  while(str[j] >= 32) j++;          // end of last entry?
+            info =str.substring(i, j);
+            if(str_s.length()==0) continue;
+            if(str_u.length()==0) continue;
+            str_s.trim(); str_u.trim();
+            cnt++;
+            str=str_s;  // station
             str+="#";
-            str+=file.readStringUntil(';');     // url
-            info=file.readStringUntil('\n');    // info
-            sprintf(tkey, "preset_%03d", i);
+            str+=str_u; // url
+            log_i("cy=%s  str_s=%s  str_u=%s  info=%s", cy.c_str(), str_s.c_str(), str_u.c_str(), info.c_str());
+            sprintf(tkey, "preset_%03d", cnt);
             pref.putString(tkey, str);
+            if(info.length()>4){  // is reasonable? then save additional info
+                info.trim();
+                sprintf(tkey, "info_%03d", cnt);
+                pref.putString(tkey, info);
+            }
+
         }
         file.close();
-        pref.putUInt("maxstations", i);
-        log_i("maxstations: %i", i);
+        pref.putUInt("maxstations", cnt);
+        log_i("maxstations: %i", cnt);
     }
     else{                                       // file not available
-        log_i("SD/presets.csv not found, use default stream URls");
+        log_i("SD/presets.txt not found, use default stream URls");
         String s[12], u[12];
         s[  1]="030-berlinfm";          u[  1]="030-berlinfm.stream.laut.fm/030-berlinfm"; //D
         s[  2]="104.6 RTL";             u[  2]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
@@ -213,27 +235,10 @@ void defaultsettings(){
         pref.putUInt("maxstations", 11);
     }
 }
-boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek in presets.csv
-    if(!f_SD_okay)return false;
-    File file = SD.open("/presets.csv");
-    if(!file)return false;
-    uint16_t i=0;
+boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek in info
     uint16_t preset=pref.getUInt("preset");
-    String str="";
-    while(file.available()){ // try to read from SD
-        file.readStringUntil('\n');
-        if(file.readStringUntil(';')=="*") i++; // is favorite?
-        if(i==100) mp3.loop();
-        if(i==200) mp3.loop();
-        if(i==300) mp3.loop();
-        if(i==400) mp3.loop();
-        if(i==preset)break;
-    }
-    file.readStringUntil(';'); //Country
-    file.readStringUntil(';'); //Stationname
-    file.readStringUntil(';'); //URL
-    str=file.readStringUntil('\n');//probably replacement information
-    file.close();
+    sprintf(_chbuf, "info_%03d", preset);
+    String str=pref.getString(_chbuf, "Station provides no Streamtitle"); // found probably replacement information
     if(str.length()>5){showTitle(str); return true;}
     return false;
 }
@@ -328,132 +333,33 @@ const char* UTF8toASCII(const char* str){
     _chbuf[j]=0;
     return (_chbuf);
 }
-const char* UTF8toCp1251(const char* str){  //cyrillic
-    uint16_t i=0, j=0;
-    boolean k=false;
+const char* decodeURL(const char* str){ // decode url in UTF8
+    uint16_t i=0, j=0, k=0;
+    char a=0, b=0, a1=0, b1=0, ch=0;
     while((str[i]!=0)&&(i<1024)){
-        if(str[i]==0xD0){
-            if((str[i+1]>=0x90)&&(str[i+1]<=0xBF)){
-                _chbuf[j]=str[i+1]+0x30; k=true;
-            }
-            if(str[i+1]==0x81){
-                _chbuf[j]=0xA8; k=true;
-            }
-        }
-        if(str[i]==0xD1){
-            if((str[i+1]>=0x80)&&(str[i+1]<=0x8F)){
-                _chbuf[j]=str[i+1]+0x70; k=true;
-            }
-            if(str[i+1]==0x91){
-                _chbuf[j]=0xB8; k=true;
-            }
-        }
-        if(k==false){
-            _chbuf[j]=str[i];
-            i++; j++;
-        }
-        else{
-           k=false;
-           i+=2; j++;
-        }
-    }
-    _chbuf[j]=0;
-    return (_chbuf);
-}
-const char*UTF8toCp1252(const char* str){  //WinLatin1
-    uint16_t i=0, j=0;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i]<127){
-            _chbuf[j]=str[i];
-            i++; j++;
-        }
-        else if(str[i]>=192 && str[i]<=195){  // 0xC0, 0xC1, 0xC2, 0xC3
-            _chbuf[j]=(str[i]-192)*64+(str[i+1]-128);
-            i+=2; j++;
-        }
-        else{
-            _chbuf[j]=str[i];
-            i++; j++;
-        }
-    }
-    _chbuf[j]=0;
-    return (_chbuf);
-}
-const char*UTF8toCp1253(const char* str){  //Greek
-    uint16_t i=0, j=0;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i]<184){
-            _chbuf[j]=str[i];
-            i++; j++;
-        }
-        else if(str[i]==206){  // 0xCE
-            if((str[i+1]>=136)&&(str[i+1]<=191)){ //0xCE88..0xCEBF
-                _chbuf[j]=str[i+1]+48;
-                i+=2; j++;
-            }
-            else{
-                _chbuf[j]=str[i];
-                i+=2; j++;
-            }
-        }
-        else if(str[i]==207){  // 0xCF
-            if((str[i+1]>=128)&&(str[i+1]<=142)){ //0xCF88..0xCF8E
-                _chbuf[j]=str[i+1]+112;
-                i+=2; j++;
-            }
-            else{
-                _chbuf[j]=str[i];
-                i+=2; j++;
-            }
-        }
-        else{
-            _chbuf[j]=str[i];
-            i++; j++;
-        }
-    }
-    _chbuf[j]=0;
-    return (_chbuf);
-}
-const char* decodeURL(const char* str){ // decode url in UTF8 and then in ASCII
-    uint16_t i=0, j=0;
-    char a, b, a1, b1, ch=0;
-    while((str[i]!=0)&&(i<1010)){
-        if(str[i] == '%'){
-            a1=0, b1=0;
-            if((str[i+1]=='C')&&(str[i+2]=='3')){
-                if(str[i+3]=='%'){
-                    a = str[i+4];
-                    b = str[i+5];
-                    if((a>='a' && a<='f')) a1=a-87;
-                    if((a>='A' && a<='F')) a1=a-55;
-                    if((a>='0' && a<='9')) a1=a-48;
-                    if((b>='a' && b<='f')) b1=b-87;
-                    if((b>='A' && b<='F')) b1=b-55;
-                    if((b>='0' && b<='9')) b1=b-48;
-                    ch=16*a1+b1;
-                    ch=ch+0x40;
-                } else ch=' ';
-                i+=6;
-            ch=ASCIIfromUTF8(ch);
-            }
-            else if((str[i+1]>'1')&&(str[i+1]<'8')){  // '2'...'7'
-                a = str[i+2];
-                if((a>='a' && a<='f')) a1=a-87;
-                if((a>='A' && a<='F')) a1=a-55;
-                if((a>='0' && a<='9')) a1=a-48;
-                b1=str[i+1]-48; ch=a1+b1*16;
-                i+=3;
-            }
+        if(str[i] == '%'){i++; k=1; continue;}
+        if(k==1){a=str[i]; k=2; i++; continue;}
+        if(k==2){b=str[i]; k=0; i++;
+            if((a>='a' && a<='f')) a1=a-87;
+            if((a>='A' && a<='F')) a1=a-55;
+            if((a>='0' && a<='9')) a1=a-48;
+            if((b>='a' && b<='f')) b1=b-87;
+            if((b>='A' && b<='F')) b1=b-55;
+            if((b>='0' && b<='9')) b1=b-48;
+            ch=16*a1+b1;
+//            ch=ch+0x40;
             _chbuf[j] = ch;
+            a=0; b=0; a1=0; b1=0;
             j++;
+            continue;
         }
-        else {
-             _chbuf[j]=str[i]; i++; j++;
-        }
+        _chbuf[j] = str[i];
+        i++; j++;
     }
     _chbuf[j] = '\0';
     return (_chbuf);
 }
+
 //**************************************************************************************************
 //                                        T I M E R                                                *
 //**************************************************************************************************
@@ -486,6 +392,7 @@ inline void clearStation(){tft.fillRect(0, _yName,   tft.width(), _hName,   TFT_
 inline void clearTitle()  {tft.fillRect(0, _yTitle,  tft.width(), _hTitle,  TFT_BLACK);}  // y 120...219
 inline void clearFooter() {tft.fillRect(0, _yFooter, tft.width(), _hFooter, TFT_BLACK);}  // y 220...239
 inline void clearDisplay(){tft.fillScreen(TFT_BLACK);}                       // y   0...239
+inline uint16_t txtlen(String str) {uint16_t len=0; for(int i=0; i<str.length(); i++) if(str[i]<=0xC2) len++; return len;}
 
 void display_info(const char *str, int ypos, int height, uint16_t color, uint16_t indent){
     tft.fillRect(0, ypos, tft.width(), height, TFT_BLACK);  // Clear the space for new info
@@ -495,55 +402,72 @@ void display_info(const char *str, int ypos, int height, uint16_t color, uint16_
 }
 void showTitle(String str){
     str.trim();  // remove all leading or trailing whitespaces
+    str.replace(" | ", "\n");   // some stations use pipe as \n or
+    str.replace("| ", "\n");    // or
+    str.replace("|", "\n");
     if(_state!=RADIO) return;
-    if(str.length()>4) f_has_ST=true; else f_has_ST=false;
-    tft.setTextSize(4);
-    if(str.length()> 45) tft.setTextSize(3);
-    if(str.length()> 80) tft.setTextSize(2);
-    if(str.length()>100) tft.setTextSize(1);
+    if(txtlen(str)>  4) f_has_ST=true; else f_has_ST=false;
+    tft.setFont(Times_New_Roman43x35);
+    if(txtlen(str)> 30) tft.setFont(Times_New_Roman38x31);
+    if(txtlen(str)> 50) tft.setFont(Times_New_Roman34x27);
+    if(txtlen(str)> 70) tft.setFont(Times_New_Roman27x21);
+    if(txtlen(str)>130) tft.setFont(Times_New_Roman21x17);
 //    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
-    display_info(UTF8toCp1252(str.c_str()), _yTitle, _hTitle, TFT_CYAN, 0);
+    display_info(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
 }
 void showStation(){
-    String str1="", str2="";
-    if(_stationname==""){
-        tft.setTextSize(3);
-        if(_station.length()>75) tft.setTextSize(1);
-        display_info(_station.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
-        showTitle("");   // and delete showstreamtitle
-        showFooter();
-        str1=_station;
-    }else{
-        tft.setTextSize(4);
-        if(_stationname.length()>30) tft.setTextSize(3);
-        display_info(_stationname.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);
-        showTitle("");
-        showFooter();
-        str1=_stationname;
+    String str1="", str2="", str3="";
+    int16_t idx=0;
+    if(_stationname=="") str1=_station;
+    else str1=_stationname;
+    str2=str1;
+    str3=str1;  // now str1, str2 and str3 contains either _station or _stationname
+    idx=str1.indexOf('|');
+    if(idx>0){
+        str2=str1.substring(0, idx); // before pipe
+        str2.trim();
+        str3=str1.substring(idx+1); // after pipe
+        str3.trim();
     }
-    //log_i("%s", _stationname.c_str());
-    str1.toLowerCase();
-    str1.replace(",",".");
-    str2="/logo/" + String(UTF8toASCII(str1.c_str())) +".bmp";
-    if(f_SD_okay) if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false) tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);
+
+    tft.setFont(Times_New_Roman43x35);
+    if(txtlen(str2)>30) tft.setFont(Times_New_Roman38x31);
+    if(txtlen(str2)>50) tft.setFont(Times_New_Roman34x27);
+    if(txtlen(str2)>80) tft.setFont(Times_New_Roman27x21);
+    display_info(str2.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
+
+    showTitle("");
+    showFooter();
+
+//    str3.toLowerCase();
+//    str3.replace(",",".");
+    str2="/logo/" + String(UTF8toASCII(str3.c_str())) +".bmp";
+    if(f_SD_okay){
+        if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
+            str2="/logo/" + String(UTF8toASCII(_station.c_str())) +".bmp";
+            if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename given from station exist?
+                tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);  // if no draw unknown
+            }
+        }
+    }
 }
 void showHeadlineVolume(uint8_t vol){
     if(_state == ALARM || _state== BRIGHTNESS) return;
     sprintf(_chbuf, "Vol %02d", vol);
-    tft.fillRect(175, _yHeader, 69, _hHeader, TFT_BLACK);
-    tft.setCursor(175, _yHeader);
-    tft.setTextSize(2);
+    tft.fillRect(180, _yHeader, 69, _hHeader, TFT_BLACK);
+    tft.setCursor(180, _yHeader);
+    tft.setFont(Times_New_Roman27x21);
     tft.setTextColor(TFT_DEEPSKYBLUE);
     tft.print(_chbuf);
 }
 void showHeadlineItem(const char* hl){
-    tft.setTextSize(2);
+    tft.setFont(Times_New_Roman27x21);
     display_info(hl, _yHeader, _hHeader, TFT_WHITE, 0);
     if(_state!=SLEEP) showHeadlineVolume(getvolume());
 }
 void showHeadlineTime(){
     if(_state==CLOCK || _state==CLOCKico || _state==BRIGHTNESS || _state==ALARM || _state==SLEEP) return;
-    tft.setTextSize(2);
+    tft.setFont(Times_New_Roman27x21);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.fillRect(250, _yHeader, 89, _hHeader, TFT_BLACK);
     if(!f_rtc) return; // has rtc the correct time? no -> return
@@ -554,27 +478,27 @@ void showFooter(){  // bitrate stationnumber, IPaddress
     if(_state!=RADIO) return;
     clearFooter();
     if(_bitrate.length()==0) _bitrate="   ";  // if bitrate is unknown
-    tft.setTextSize(1);
+    tft.setFont(Times_New_Roman21x17);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.setCursor(0, _yFooter);
     tft.print("BR:");
     tft.setTextColor(TFT_LAVENDER);
     tft.print(_bitrate.c_str());
-    tft.setCursor(57, _yFooter);
+    tft.setCursor(60, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("STA:");
     tft.setTextColor(TFT_LAVENDER);
     tft.printf("%03d", pref.getUInt("preset"));
-    tft.setCursor(125, _yFooter);
-    tft.setTextColor(TFT_GREENYELLOW);
-    tft.print("S:");
-    if(_sleeptime==0 ) tft.setTextColor(TFT_LAVENDER); else tft.setTextColor(TFT_ORANGE);
-    tft.printf("%03d", _sleeptime);
-    tft.setCursor(170, _yFooter);
+    tft.setCursor(130, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("myIP:");
     tft.setTextColor(TFT_LAVENDER);
     tft.print(_myIP.c_str());
+    tft.setCursor(280, _yFooter);
+    tft.setTextColor(TFT_GREENYELLOW);
+    tft.print("S:");
+    if(_sleeptime==0 ) tft.setTextColor(TFT_LAVENDER); else tft.setTextColor(TFT_ORANGE);
+    tft.printf("%03d", _sleeptime);
 }
 void updateSleepTime(){
     if(_sleeptime>0){
@@ -742,7 +666,6 @@ void setup(){
     ir.begin();  // Init InfraredDecoder
     tft.setRotation(3); // Use landscape format
     tp.setRotation(3);
-    tft.setUTF8encoder(true);
     pref.begin("MiniWebRadio", false);
     setTFTbrightness(pref.getUInt("brightness"));
     f_SD_okay=(SD.cardType() != CARD_NONE); // See if known card
@@ -774,6 +697,7 @@ void setup(){
     tone();
     mp3.connecttohost(readhostfrompref(0)); //last used station
     //mp3.printDetails();
+    if(_station=="") showStation(); // if station gives no icy-name display _stationname
     startTimer();
 }
 //**************************************************************************************************
@@ -792,8 +716,8 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
         if(ix>0){
             u=content.substring(ix, content.length());
             s=content.substring(0,ix);
-            s_len=s.length();
-            for(j=0;j<s_len;j++){if(s[j]==0xC3) s_len--;} //count umlaut, reduce len
+            j=0; s_len=0;
+            while(s[j]!=0){if((s[j]<0xC2)||(s[j]>0xD4)) s_len++; j++;} //count UTF-8 chars, compute len
         }
         else {s=" "; u=" ";}
         if(config==0){
@@ -1085,9 +1009,9 @@ void loop() {
         }
         display_time();
         if((f_has_ST==false)&&(_state==RADIO)) sec++; else sec=0; // Streamtitle==""?
-        if(sec>4){
+        if(sec>6){
             sec=0;
-            if(!ST_rep()) showTitle("Station provides no Streamtitle");
+            ST_rep();
         }
         if(_commercial_dur>0){
             _commercial_dur--;
@@ -1107,7 +1031,7 @@ void loop() {
     else semaphore=false;
 
     if(_millis+5000<millis()){  //5sec no touch?
-        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();          }
+        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();      }
         if(_state==RADIOmenue){_state=RADIO; showTitle(_title); showFooter();      }
         if(_state==CLOCKico)  {display_info("",160,79, TFT_BLACK, 0); _state=CLOCK;}
     }
@@ -1127,10 +1051,9 @@ void loop() {
             if(_timefile==3){mp3.connecttoSD("/voice_time/O'clock.mp3"); _timefile--;}
         }
         else {
-            _state=RADIO;
-            showHeadlineItem("** Internet radio **");
+            changeState(RADIO);
+            mp3.connecttohost(_lastconnectedhost);
             mp3.setVolume(pref.getUInt("volume"));
-            mp3.connecttohost(readhostfrompref(0));
         }
         f_mp3eof=false;
     }
@@ -1141,6 +1064,7 @@ void loop() {
 //Events from vs1053_ext library
 void vs1053_showstation(const char *info){              // called from vs1053
     //log_i("_station %s",info);
+    if((_station==String(info))&&((String(info)!=""))) return;
     _station=info;
     _title="";
     showStation();
@@ -1167,7 +1091,7 @@ void vs1053_info(const char *info) {                    // called from vs1053
     String str=info;
     Serial.print("vs1053_info: ");
     if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
-    Serial.print(UTF8toCp1252(info));                   // all infos
+    Serial.print(info);                                 // all infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
@@ -1182,6 +1106,11 @@ void vs1053_icyurl(const char *info){                   // if the Radio has a ho
         Serial.print("Homepage   : ");
         Serial.println(info);
     }
+}
+void vs1053_lasthost(const char *info){                 // really connected URL
+    _lastconnectedhost=String(info);
+    Serial.print("lastURL    : ");
+    Serial.println(info);
 }
 void RTIME_info(const char *info){
     Serial.print("rtime_info : ");
@@ -1228,9 +1157,15 @@ void HTML_file(const String file){                  // called from html
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
-    if(file.startsWith("url=")){web.streamfile(SD,(decodeURL(file.substring(6).c_str()))); return;}
+    if(file.startsWith("url=")){  // logo
+        String res=decodeURL(file.substring(6).c_str());
+        int idx=res.indexOf('|');
+        if(idx>0) res=res.substring(0,6)+ res.substring(idx+1); // /SD/logo + all after pipe
+        web.streamfile(SD, UTF8toASCII(res.c_str())); return;
+    }
     log_e("unknown HTMLfile %s", file.c_str());
 }
+
 void HTML_request(const String request){
     String str, s, u ;
     int ix;
@@ -1272,16 +1207,19 @@ void HTML_info(const char *info){                   // called from html
 void ir_res(uint32_t res){
     if(_state==RADIO){
         if(res>pref.getUInt("maxstations")){
-            tft.setTextSize(7);
+            tft.setTextSize(6);
             display_info(String(res).c_str(), _yName, _hName +_hTitle, TFT_RED, 100); //state RADIO
             return;
         }
-        else  mp3.connecttohost(readhostfrompref(res));//state RADIO
+        else{
+            _station="";
+            mp3.connecttohost(readhostfrompref(res));//state RADIO
+        }
     }
 }
 void ir_number(const char* num){
     if(_state==RADIO){
-        tft.setTextSize(7);
+        tft.setTextSize(6);
         display_info(num, _yName, _hName +_hTitle, TFT_YELLOW, 100); //state RADIO
     }
 }
@@ -1343,8 +1281,8 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
         if(yPos==1){_releaseNr= 1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr= 2; upvolume(); showVolumeBar();}   // Vol+
-        if(yPos==3){_releaseNr= 3 ;mp3.connecttohost(readnexthostfrompref(false));}
-        if(yPos==4){_releaseNr= 4 ;mp3.connecttohost(readnexthostfrompref(true)); }
+        if(yPos==3){_releaseNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
+        if(yPos==4){_releaseNr= 4; mp3.connecttohost(readnexthostfrompref(true)); }
     }
     if(_state==RADIOmenue){
         if(yPos==0){_releaseNr= 5; mp3.stop_mp3client(); listmp3file();} // MP3
@@ -1384,7 +1322,7 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==1){_releaseNr=1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr=2; upvolume();   showVolumeBar();} // Vol+
         if(yPos==3){_releaseNr=26;} // MP3
-        if(yPos==4){_releaseNr=10; mp3.connecttohost(readhostfrompref(0));} // Radio
+        if(yPos==4){_releaseNr=10; _title=""; changeState(RADIO); mp3.connecttohost(_lastconnectedhost);} // Radio
     }
     if(_state==SLEEP){
         if(yPos==0){_releaseNr=19;} // sleeptime up
@@ -1420,7 +1358,7 @@ void tp_released(){
     case  9: changeState(ALARM); showHeadlineItem("");
              display_weekdays(_alarmdays, true);
              display_alarmtime(0, 0, true); break;
-    case 10: mp3.connecttohost(readhostfrompref(0)); clearTitle(); clearFooter(); _state=RADIO; break;
+    case 10: _title=""; changeState(RADIO); mp3.connecttohost(_lastconnectedhost); break;
     case 11: display_alarmtime(-1);    changeBtn_released(0);  break;
     case 12: display_alarmtime(+1);    changeBtn_released(1);  break;
     case 13: display_alarmtime(0, +1); changeBtn_released(2);  break; // alarmtime up
