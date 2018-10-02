@@ -1,7 +1,7 @@
 /*
- * about_html.h
+ *  web.h
  *
- *  Created on: 09.07.2017
+ *  Created on: 11.09.2018
  *      Author: Wolle
  *
  *  does not work with MS Internetexplorer
@@ -16,14 +16,15 @@
 
 // about.html file in raw data format for PROGMEM
 //
-#define about_html_version 170626
+
 const char web_html[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
 
 <html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
-    
+    <meta http-equiv="Content-Type" content="text/html; charset="utf-8">
+    <meta http-equiv="Cache-Control" content="public, max-age=31536000, must-revalidate" />
+
     <title>MiniWebRadio</title>
     <style type="text/css">
         html{
@@ -128,14 +129,22 @@ const char web_html[] PROGMEM = R"=====(
             cursor: pointer;
             border-radius: 5px;
         }
-        #label-logo {
+        #label-logo {  //tab1
             left 10px;
             margin-left: 20px;
             border:2px solid black;
             display:inline-block;
-            background-image: url("SD/logo/unknown.bmp");
+            background-image: url("SD/logo/unknown.jpg");
             width: 96px;
             height:96px;
+        }
+        canvas {
+          left: 0px;
+          margin-left: 0px;
+          display: inline-block;
+          width: 96px;
+          height: 96px;
+          border: 2px solid black;
         }
         #label_TG_value {
             width: 50px;
@@ -168,6 +177,7 @@ const char web_html[] PROGMEM = R"=====(
     var treble_dB = ["-12,0","-10,5"," -9,0"," -7,5"," -6,0"," -4,5"," -3,0"," -1,5",
                      "  0,0"," +1,5"," +3,0"," +4,5"," +6,0"," +7,5"," +9,0","+10,5"];
     var treble_val= [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7];
+
 
     window.onload = function() { // Fill configuration initially
         gettone(); //Now load the tones (tab Radio)
@@ -208,7 +218,7 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "block"
         document.getElementById("tab-content5").style.display = "none";    
-        getmp3list(); // Now get the mp3 list from SD      
+        loadJSON("http://www.radio-browser.info/webservice/json/countries", gotCountries, 'jsonp');   
     }
     function showTab5(){
         console.log("tab-content5 (About)");
@@ -251,7 +261,7 @@ const char web_html[] PROGMEM = R"=====(
       //src=src.replace(/\{/g , "%7B");  // not neccecary to replace
       //src=src.replace(/\|/g , "%7C");  // not allowed in Windows filenames
       //src=src.replace(/\}/g , "%7D");  // not neccecary to replace
-        var file="url(url=SD/logo/" + src + ".bmp)";
+        var file="url(url=SD/logo/" + src + ".jpg)";
       //file=file.split(',').join('.'); //replace commas in dots, Miniradio has no commas in filenames
         document.getElementById(id).style.backgroundImage=file;
     }
@@ -499,7 +509,7 @@ const char web_html[] PROGMEM = R"=====(
         }
         xhr.open("POST", theUrl, true);
         xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.send(str + "end -" + "\n");
+        xhr.send(str + "end -" + "\n\n");
     }
 
     function getnetworks() { // tab Config: load the connevted WiFi network
@@ -553,24 +563,165 @@ const char web_html[] PROGMEM = R"=====(
         xhr.open ( "GET", theUrl, true ) ;
         xhr.send() ;
     }
+    //----------------------------------- TAB Search Stations ------------------------------------
 
+    // global var
+    var countryallstations
+    
+    function loadJSON(path, success, error) {
+        console.log(path);
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    success(JSON.parse(xhr.responseText));
+                }
+                else {
+                    error(xhr);
+                }
+            }
+        };
+        xhr.open('GET', path, true);
+        xhr.send();
+    }
 
+    function selectcountry(presctrl) {  // tab Radio: preset, select a station
+        loadJSON("http://www.radio-browser.info/webservice/json/stations/bycountry/" + presctrl.value , gotStations, 'jsonp');
+    }
+
+    function gotCountries(data){  // fill select countries
+        var select=select = document.getElementById("country");
+        var opt;
+        select.options.length=1;
+        for(var i=0; i< data.length; i++){
+            if(i<2) continue;
+            opt = document.createElement("OPTION");
+            opt.text = data[i].name;
+            select.add(opt);            
+        }
+        console.log(data.uuid);
+    }
+    
+    function gotStations(data){  // fill select stations
+        var select=select = document.getElementById("stations");
+        var opt;
+        select.options.length=1;
+        for(var i=0; i< data.length; i++){
+            opt = document.createElement("OPTION");
+            opt.text = data[i].name;
+            opt.value=i;
+            select.add(opt);            
+        }
+        countryallstations=data;
+    }
+
+    function selectstation(sd) {  // select a station
+        var e = document.getElementById("stations");
+        var value = e.options[e.selectedIndex].value;
+        sturl=countryallstations[value].url;
+        console.log(value);
+        console.log(sturl);
+        var f = document.getElementById("stationurl");
+        f.value=sturl;
+        var g = document.getElementById("favicon");
+        var favi=countryallstations[value].favicon;
+        g.value=favi;
+        var h = document.getElementById("homepageurl");
+        h.value=countryallstations[value].homepage;
+        scaleCanvasImage(favi);
+        var i = document.getElementById("stations");
+        var j = document.getElementById("stationname");
+        j.value=countryallstations[value].name;
+    }
+
+    function teststationurl() {  // Search: button play - enter a url to play from
+        var theUrl = "/?station=" + stationurl.value + "&version=" + Math.random();
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState == XMLHttpRequest.DONE) {
+            }
+        }
+        xhr.open ( "GET", theUrl, true);
+        xhr.send() ;
+    }
+
+    function scaleCanvasImage(url) {
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var src;
+        ctx.beginPath();
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.fill();       
+        var co = "https://cors-anywhere.herokuapp.com/";
+        src = co + url;
+        var img_obj = new Image();
+        img_obj.onload = function() {
+            var imgWidth = img_obj.width;
+            var imgHeight = img_obj.height;
+            var scaleX = 1;
+            var scaleY = 1;
+            if (imgWidth > canvas.width) scaleX = canvas.width / imgWidth;
+            if (imgHeight > canvas.height) scaleY = canvas.height / imgHeight;
+            var scale = scaleY;
+            if (scaleX < scaleY) scale = scaleX;
+            if (scale < 1) {
+                imgHeight = imgHeight * scale;
+                imgWidth = imgWidth * scale;
+            }
+            var dx = (canvas.width - imgWidth) / 2;
+            var dy = (canvas.height - imgHeight) / 2;
+            ctx.drawImage(img_obj, 0, 0, img_obj.width, img_obj.height, dx, dy, imgWidth, imgHeight);
+        }
+        img_obj.crossOrigin = 'anonymous';
+        img_obj.src = src;
+    }
+
+    function refreshCanvas(){
+        var g = document.getElementById("favicon");
+        scaleCanvasImage(g.value);
+        console.log("refresh");
+    }
+
+    function downloadCanvasImage() {
+        var sn = document.getElementById("stationname");
+        if(sn.value != "") filename=sn.value+".jpg"; else filename="myimage.jpg";
+        var canvas = document.getElementById("canvas");
+        var dataURL = canvas.toDataURL("image/jpeg");
+        document.getElementById('hidden_data').value = dataURL;
+        var fd = new FormData(document.forms["form1"]);
+        var theUrl = "/?uploadfile=" + filename + "&version=" + Math.random();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', theUrl, true);
+ 
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var percentComplete = (e.loaded / e.total) * 100;
+                console.log(percentComplete + '% uploaded');
+                //alert('Succesfully uploaded');
+            }
+        }
+        xhr.onload = function() {
+ 
+        }
+        xhr.send(fd);
+    }
 
 </script>
 
 <body id="BODY">
- <div id="CONTENT" >
 
+    <div id="CONTENT" >
     <!--==============================================================================================-->
         <div id="tab-content1">
         <table width=100%>
             <tr>
-                <td style="width:300px;">
+                <td style="width:350px;">
                     <left>
                         <img src="SD/png/Radio_Yellow.png"      alt="radio"                         />
                         <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
                         <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                 <!--   <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
                         <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
                     </left>
                 </td>
@@ -703,7 +854,7 @@ const char web_html[] PROGMEM = R"=====(
         </table>
         <center>
             <br>Find new radio stations at 
-                <a target="_blank" href="http://vtuner.com/setupapp/guide/asp/BrowseStations/Searchform.asp">vtuner</a>
+                <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
                 or 
                 <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
                 <br>
@@ -713,12 +864,12 @@ const char web_html[] PROGMEM = R"=====(
     <div id="tab-content2">
         <table width=100%>
             <tr>
-                <td style="width:300px;">
+                <td style="width:350px;">
                     <left>
                         <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
                         <img src="SD/png/Station_Yellow.png"    alt="station"                       /> 
                         <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                <!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
                         <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
                     </left>
                 </td>
@@ -735,7 +886,14 @@ const char web_html[] PROGMEM = R"=====(
         <center>
         <p>You can edit the configuration here. <i>Note that this will be overwritten by "Load default".</i></p>
 
-        <textarea wrap="off" rows="25" id="prefs">Space for preferences</textarea>
+        <textarea wrap="off" rows="25" id="prefs" 
+            onkeydown="if(event.keyCode===9){
+                var v=this.value,s=this.selectionStart,e=this.selectionEnd;
+                this.value=v.substring(0, s)+'\t'+v.substring(e);
+                this.selectionStart=this.selectionEnd=s+1;return false;
+            }">
+            Space for preferences
+        </textarea>
         <br>
         <button class="button buttongreen" onclick="fsav()">Save</button>
         &nbsp;&nbsp;
@@ -751,12 +909,12 @@ const char web_html[] PROGMEM = R"=====(
     <div id="tab-content3">
         <table width=100%>
             <tr>
-                <td style="width:300px;">
+                <td style="width:350px;">
                     <left>
                         <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
                         <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/>
                         <img src="SD/png/MP3_Yellow.png"        alt="mp3"                           />
-                <!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
                         <img src="SD/png/About_Green.png" alt="radio"           onclick="showTab5()"/>
                     </left>
                 </td>
@@ -788,12 +946,12 @@ const char web_html[] PROGMEM = R"=====(
     <div id="tab-content4">
         <table width=100%>
             <tr>
-                <td style="width:300px;">
+                <td style="width:350px;">
                     <left>
                         <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
                         <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
                         <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                <!--    <img src="SD/png/Settings_Yellow.png"   alt="settings"                      /> -->
+                        <img src="SD/png/Search_Yellow.png"     alt="search"                        />
                         <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
                     </left>
                 </td>
@@ -807,18 +965,123 @@ const char web_html[] PROGMEM = R"=====(
             </tr>
         </table> 
         <hr>
+        This service is provided by <a target="_blank" href="http://www.radio-browser.info/gui/#/">Community Radio Browser</a>
+        <br><br>
+        <table width=100%>
+            <tr>
+                <td>
+                    <select class="select" style="width:100%;" onChange="selectcountry(this)" id="country">
+                        <option value="-1">Select a country here</option>
+                    </select>
+                </td>
+                <td  width="70">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <select class="select" style="width:100%;" onChange="selectstation(this)" id="stations">
+                        <option value="-1">Select a station here</option>
+                    </select>
+                </td>
+                <td>
+                </td>
+            </tr>
+        </table>
+        <hr>
+        <table width=100%>
+            <tr>
+                <td>
+                    StationURL<br>
+                    <input type="text" style="width:100%;" id="stationurl" placeholder="StationURL">
+                    <br>
+                </td>
+                <td width="70">
+                    <right>
+                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
+                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
+                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                         onclick="teststationurl()"/>
+                    </right>  
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    HomepageUrl<br>
+                    <input type="text" style="width:100%;" id="homepageurl" placeholder="HomepageURL">
+                    <br>
+                </td>
+                <td>
+                    <right>
+                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
+                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
+                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                         onclick="window.open(homepageurl.value, '_blank')"/>
+                    </right> 
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    LogoUrl<br>
+                    <input type="text" style="width:100%;" onclick="refreshCanvas()" id="favicon" placeholder="Favicon">
+                    <br>
+                </td>
+                <td>
+                    <right>
+                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
+                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
+                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                         onclick="window.open(favicon.value, '_blank')"/>
+                    </right> 
+                </td>
+            </tr>
+        </table>
+        <table width=100%>
+            <tr>
+                <td  width="100">
+                    <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
+                </td>
+                <td>
+                    <table width=100%>
+                        <tr>
+                            <td>
+                                <input type="text" style="width:100%;" id="stationname" placeholder="Change the Stationname here">
+                            </td>
+                            <td width="60">
+                            </td>                        
+                        </tr>
+                        <tr>
+                            <td>
+                                <left>
+                                    <img src="SD/png/Button_Download_Blue.png" alt="Vol_up" 
+                                    onmousedown="this.src='SD/png/Button_Download_Yellow.png'" 
+                                    onmouseup="this.src='SD/png/Button_Download_Blue.png'"
+                                    onclick="downloadCanvasImage()"/>
+
+                                    <form method="post" accept-charset="utf-8" name="form1">
+                                    <input name="hidden_data" id='hidden_data' type="hidden"/>
+                                    </form>
+
+                                </left>
+                            </td>
+                        </tr>
+                    </table> 
+                </td>
+                <td >
+                </td>
+            </tr>
+        </table>
 
     </div>
     <!--==============================================================================================-->
     <div id="tab-content5">
         <table width=100%>
             <tr>
-                <td style="width:300px;">
+                <td style="width:350px;">
                     <left>
                         <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
                         <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
                         <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                <!--    <img src="SD/png/Settings_Green.png"    alt="settings"  onclick="showTab4()"/> -->
+                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
                         <img src="SD/png/About_Yellow.png"      alt="radio"                         />
                     </left>
                 </td>
@@ -844,6 +1107,9 @@ const char web_html[] PROGMEM = R"=====(
 
 </div>
 
+
+
+
 </body>
 </html>
 <noscript>
@@ -851,7 +1117,6 @@ const char web_html[] PROGMEM = R"=====(
 </noscript> 
     
 )=====" ;
-
 
 
 #endif /* WEB_H_ */

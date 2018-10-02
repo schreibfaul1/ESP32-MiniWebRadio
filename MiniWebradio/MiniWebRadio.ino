@@ -1,11 +1,13 @@
-//******************************************************************************************
-//*  MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display and VS1053 MP3 module.    *
-//******************************************************************************************
+//*********************************************************************************************************
+//*    MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display (320x240px) and VS1053 MP3 module.  *
+//*********************************************************************************************************
+//
+// Version 18 form Sept.19 2018
 //
 // Preparations:
 //
-// 1)  change the partitionstable (defaut.csv in folder esp32/tools/partitions/)
-//     MiniWebRadio need 1,5MByte flash and 200KByte nvs
+// 1)  change the partitiontable (defaut.csv in folder esp32/tools/partitions/)
+//     MiniWebRadio need 2.3MByte flash and 200KByte nvs
 //
 //   # Name,     Type,   SubType,   Offset,   Size,     Flags
 //     phy_init, data,   phy,       0x9000,   0x7000,
@@ -22,13 +24,14 @@
 //
 // 3)  extract the zip file to SD Card
 //
-// 4)  set WiFi credentials below, more credentials can be set in networks.csv (SD Card)
+// 4)  set WiFi credentials below, more credentials can be set in networks.txt (SD Card)
 //
 // 5)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
 //
 // 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
-//     TFT controller can be ILI9341 or HX8347D
+//     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
 //
+// 7) translate _hl_title entries below in Your language
 //
 //
 //  Display 320x240
@@ -46,6 +49,14 @@
 //  | Footer                                    |       _hFooter=20px
 //  +-------------------------------------------+ 240
 //                                             320
+//
+// THE SOFTWARE IS PROVIDED "AS IS" FOR PRIVATE USE ONLY, IT IS NOT FOR COMMERCIAL USE IN WHOLE OR PART OR CONCEPT.
+// FOR PERSONAL USE IT IS SUPPLIED WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR
+// OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
+//
+//
 // system libraries
 #include <Preferences.h>
 #include <SPI.h>
@@ -65,11 +76,11 @@
 #include "web.h"
 
 // Digital I/O used
-#define VS1053_CS      2
-#define VS1053_DCS     4
+#define VS1053_CS      2  // do not use GPI032 or GPIO33 here
+#define VS1053_DCS     4  // do not use GPI032 or GPIO33 here
 #define VS1053_DREQ   36
-#define TFT_CS        22
-#define TFT_DC        21
+#define TFT_CS        22  // do not use GPI032 or GPIO33 here
+#define TFT_DC        21  // do not use GPI032 or GPIO33 here
 #define TFT_BL        17  // 33 (pico V4)
 #define TP_IRQ        39
 #define TP_CS         16  // 32 (pico V4)
@@ -88,7 +99,7 @@ String   _PW   = "myWiFiPassword";
 //global variables
 char     _chbuf[1024];
 String   _station="",   _stationname="",   _stationURL="",      _homepage="";
-String   _title="",     _info="",          _alarmtime="";
+String   _title="",     _info="",          _alarmtime="",       _filename="";
 String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
 String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0",     _lastconnectedhost="";
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
@@ -109,6 +120,27 @@ boolean  f_timespeech=false;    // if true activate timespeech
 boolean  f_has_ST=false;        // has StreamTitle?
 boolean  f_sleeping=false;      // true if sleepmode
 boolean  semaphore=false;
+boolean  f_upload=false;        // if true next file is saved to SD
+
+String _hl_title[10]{                           // Title in headline
+                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
+                "** Internet Radio **",
+                "** Internet Eadio **",
+                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
+                "** Uhr **",
+                "** Helligkeit **",             // Brightness яркость λάμψη
+                "** MP3-Player **",             // "** цифрово́й плеер **"
+                "** MP3-Player **",
+                "" ,                            // Alarm should be empty
+                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+};
+
+enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
+            MP3PLAYERico=7, ALARM=8, SLEEP=9};
+status _state=RADIO;            //statemaschine
+
+enum request{none=0, saveprefs=1, savefiles=2};
+request _req=none;              //requesttype
 
 // display layout
 const uint16_t _yHeader =0;                     // yPos Header
@@ -127,10 +159,6 @@ const uint16_t _yLogo=_yName+(_hName-_hLogo)/2; // yPos Logos
 const uint16_t _wBtn=64;                        // width Button
 const uint16_t _hBtn=64;                        // height Button
 const uint16_t _yBtn=_yVolBar+_hVolBar+10;      // yPos Buttons
-
-enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
-            MP3PLAYERico=7, ALARM=8, SLEEP=9};
-status _state=RADIO;            //statemaschine
 
 //objects
 TFT tft(1);                     // parameter:  (0)ILI9341, (1)HX8347D
@@ -265,26 +293,38 @@ inline uint8_t getBrightness(){
     return pref.getUInt("brightness");
 }
 //**************************************************************************************************
-//                                       A S C I I                                                 *
+//                                       A S C I I                                                *
 //**************************************************************************************************
-char ASCIIfromUTF8(char ch){  // if no ascii char available return blank
-    uint8_t ascii;
+
+const char* UTF8toASCII(const char* str){
+    uint16_t i=0, j=0;
     char tab[96]={
-         96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
-         32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
-         32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
-        154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
-         32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152
-    };
-    ascii=ch;
-    if(ch<128) return ascii;
-    if(ch<160) return 32;
-    ascii-=160;
-    ascii=tab[ascii];
-    return ascii;
+          96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
+          32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
+          32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
+         154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
+          32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152
+     };
+    while((str[i]!=0)&&(j<1020)){
+        _chbuf[j]=str[i];
+        if(str[i]==0xC2){ // compute unicode from utf8
+            i++;
+            if((str[i]>159)&&(str[i]<192)) _chbuf[j]=tab[str[i]-160];
+            else _chbuf[j]=32;
+        }
+        else if(str[i]==0xC3){
+            i++;
+            if((str[i]>127)&&(str[i]<192)) _chbuf[j]=tab[str[i]-96];
+            else _chbuf[j]=32;
+        }
+        i++; j++;
+    }
+    _chbuf[j]=0;
+    return (_chbuf);
 }
-uint16_t UTF8fromASCII(char ch){
-    uint16_t uni;
+
+const char* ASCIItoUTF8(const char* str){
+    uint16_t i=0, j=0, uni=0;
     uint16_t tab[128]={
          199, 252, 233, 226, 228, 224, 229, 231, 234, 235, 232, 239, 238, 236, 196, 197,
          201, 230, 198, 244, 246, 242, 251, 249, 255, 214, 220, 162, 163, 165,8359, 402,
@@ -295,16 +335,10 @@ uint16_t UTF8fromASCII(char ch){
          945, 223, 915, 960, 931, 963, 181, 964, 934, 920, 937, 948,8734, 966, 949,8745,
         8801, 177,8805,8804,8992,8993, 247,8776, 176,8729, 183,8730,8319, 178,9632, 160
     };
-    uni=ch;
-    if(ch<128)return uni;
-    uni-=128;
-    uni=tab[uni];
-    return uni;
-}
-const char* ASCIItoUTF8(const char* str){
-    uint16_t i=0, j=0, uni=0;
     while((str[i]!=0)&&(j<1020)){
-            uni=UTF8fromASCII(str[i]);
+        uni=str[i];
+        if(uni>=128){uni-=128; uni=tab[uni];}
+//            uni=UTF8fromASCII(str[i]);
             switch(uni){
             case   0 ... 127:{_chbuf[j]=str[i]; i++; j++; break;}
             case 160 ... 191:{_chbuf[j]=0xC2; _chbuf[j+1]=uni; j+=2; i++; break;}
@@ -313,51 +347,6 @@ const char* ASCIItoUTF8(const char* str){
     }
     _chbuf[j]=0;
     return _chbuf;
-}
-const char* UTF8toASCII(const char* str){
-    uint16_t i=0, j=0;
-    while((str[i]!=0)&&(j<1020)){
-        _chbuf[j]=str[i];
-        if(str[i]==0xC2){ // compute unicode from utf8
-            i++;
-            if((str[i]>159)&&(str[i]<192)) _chbuf[j]=ASCIIfromUTF8(str[i]);
-            else _chbuf[j]=32;
-        }
-        else if(str[i]==0xC3){
-            i++;
-            if((str[i]>127)&&(str[i]<192)) _chbuf[j]=ASCIIfromUTF8(str[i]+64);
-            else _chbuf[j]=32;
-        }
-        i++; j++;
-    }
-    _chbuf[j]=0;
-    return (_chbuf);
-}
-const char* decodeURL(const char* str){ // decode url in UTF8
-    uint16_t i=0, j=0, k=0;
-    char a=0, b=0, a1=0, b1=0, ch=0;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i] == '%'){i++; k=1; continue;}
-        if(k==1){a=str[i]; k=2; i++; continue;}
-        if(k==2){b=str[i]; k=0; i++;
-            if((a>='a' && a<='f')) a1=a-87;
-            if((a>='A' && a<='F')) a1=a-55;
-            if((a>='0' && a<='9')) a1=a-48;
-            if((b>='a' && b<='f')) b1=b-87;
-            if((b>='A' && b<='F')) b1=b-55;
-            if((b>='0' && b<='9')) b1=b-48;
-            ch=16*a1+b1;
-//            ch=ch+0x40;
-            _chbuf[j] = ch;
-            a=0; b=0; a1=0; b1=0;
-            j++;
-            continue;
-        }
-        _chbuf[j] = str[i];
-        i++; j++;
-    }
-    _chbuf[j] = '\0';
-    return (_chbuf);
 }
 
 //**************************************************************************************************
@@ -410,7 +399,7 @@ void showTitle(String str){
     tft.setFont(Times_New_Roman43x35);
     if(txtlen(str)> 30) tft.setFont(Times_New_Roman38x31);
     if(txtlen(str)> 50) tft.setFont(Times_New_Roman34x27);
-    if(txtlen(str)> 70) tft.setFont(Times_New_Roman27x21);
+    if(txtlen(str)> 65) tft.setFont(Times_New_Roman27x21);
     if(txtlen(str)>130) tft.setFont(Times_New_Roman21x17);
 //    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
     display_info(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
@@ -431,22 +420,22 @@ void showStation(){
     }
 
     tft.setFont(Times_New_Roman43x35);
-    if(txtlen(str2)>30) tft.setFont(Times_New_Roman38x31);
-    if(txtlen(str2)>50) tft.setFont(Times_New_Roman34x27);
-    if(txtlen(str2)>80) tft.setFont(Times_New_Roman27x21);
+    if(txtlen(str2)>20) tft.setFont(Times_New_Roman38x31);
+    if(txtlen(str2)>32) tft.setFont(Times_New_Roman34x27);
+    if(txtlen(str2)>45) tft.setFont(Times_New_Roman27x21);
+    if(txtlen(str2)>60) tft.setFont(Times_New_Roman21x17);
+    if(txtlen(str2)>90) tft.setFont(Times_New_Roman15x14);
     display_info(str2.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
 
     showTitle("");
     showFooter();
 
-//    str3.toLowerCase();
-//    str3.replace(",",".");
-    str2="/logo/" + String(UTF8toASCII(str3.c_str())) +".bmp";
+    str2="/logo/" + String(UTF8toASCII(str3.c_str())) +".jpg";
     if(f_SD_okay){
-        if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
-            str2="/logo/" + String(UTF8toASCII(_station.c_str())) +".bmp";
-            if(tft.drawBmpFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename given from station exist?
-                tft.drawBmpFile(SD, "/logo/unknown.bmp", 1,22);  // if no draw unknown
+        if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
+            str2="/logo/" + String(UTF8toASCII(_station.c_str())) +".jpg";
+            if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename given from station exist?
+                tft.drawJpgFile(SD, "/logo/unknown.jpg", 1,22);  // if no draw unknown
             }
         }
     }
@@ -454,22 +443,22 @@ void showStation(){
 void showHeadlineVolume(uint8_t vol){
     if(_state == ALARM || _state== BRIGHTNESS) return;
     sprintf(_chbuf, "Vol %02d", vol);
-    tft.fillRect(180, _yHeader, 69, _hHeader, TFT_BLACK);
-    tft.setCursor(180, _yHeader);
+    tft.fillRect(183, _yHeader, 67, _hHeader, TFT_BLACK);
+    tft.setCursor(183, _yHeader);
     tft.setFont(Times_New_Roman27x21);
     tft.setTextColor(TFT_DEEPSKYBLUE);
     tft.print(_chbuf);
 }
-void showHeadlineItem(const char* hl){
+void showHeadlineItem(){
     tft.setFont(Times_New_Roman27x21);
-    display_info(hl, _yHeader, _hHeader, TFT_WHITE, 0);
+    display_info(_hl_title[_state].c_str(), _yHeader, _hHeader, TFT_WHITE, 0);
     if(_state!=SLEEP) showHeadlineVolume(getvolume());
 }
 void showHeadlineTime(){
     if(_state==CLOCK || _state==CLOCKico || _state==BRIGHTNESS || _state==ALARM || _state==SLEEP) return;
     tft.setFont(Times_New_Roman27x21);
     tft.setTextColor(TFT_GREENYELLOW);
-    tft.fillRect(250, _yHeader, 89, _hHeader, TFT_BLACK);
+    tft.fillRect(250, _yHeader, 70, _hHeader, TFT_BLACK);
     if(!f_rtc) return; // has rtc the correct time? no -> return
     tft.setCursor(250, 0);
     tft.print(rtc.gettime_s());
@@ -511,7 +500,6 @@ void updateSleepTime(){
     }
     if(_state==RADIO) showFooter();
 }
-
 
 
 //**************************************************************************************************
@@ -577,6 +565,59 @@ String readnexthostfrompref(boolean updown){
       return content;
 }
 //**************************************************************************************************
+//                                   H A N D L E   R E Q U E S T                                   *
+//**************************************************************************************************
+void savepreferences(String request){  // save the preferences from web in nvs
+    String str, s, u ;
+    int ix;
+    char tkey[12];
+    static uint16_t cnt=0;
+    if(request=="end request\n"){
+        _req=none;                      // reset requesttype
+        //log_i("end request seen");
+        return;
+    }
+    if(request.indexOf(" -")==3){
+        if(request.startsWith("end")){
+            //log_i("the end%i",cnt);
+            pref.putUInt("maxstations", cnt);
+            cnt=0;
+            return;
+        }
+        else{
+            ix=request.indexOf("#");
+            if(ix>6){
+                s=request.substring(6,ix); s.trim();
+                u=request.substring(ix+1, request.length()); u.trim();
+            }
+            else{s=" "; u=" ";}
+            cnt++;
+            sprintf(tkey, "preset_%03d",cnt);
+            str=s+String("#")+u;
+            pref.putString(tkey, str);
+            return;
+        }
+    }
+}
+
+void savefile(String request){ //save the uploadfile on SD
+    //log_i("request=%s",request.c_str());
+    if(request=="end request\n"){
+        //log_i("end request seen");
+        if(!_filename.startsWith("/")) _filename = "/"+_filename;
+        _req=none;                      // reset requesttype
+        if(_filename.endsWith("jpg")){
+            _filename="/logo"+_filename;
+            web.uploadB64image(SD, _filename.c_str());
+        }
+        else{
+            web.uploadfile(SD, _filename.c_str());
+        }
+        web.reply("");
+    }
+}
+
+//**************************************************************************************************
 //                                       L I S T M P 3 F I L E                                     *
 //**************************************************************************************************
 String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &fs=SD){
@@ -613,18 +654,33 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //                               C O N N E C T   TO   W I F I                                      *
 //**************************************************************************************************
 bool connectToWiFi(){
-    String s_ssid="", s_password="";
+    String s_ssid="", s_password="", s_info="";
+    uint16_t i=0, j=0;
     wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
     if(wifiMulti.run()!=WL_CONNECTED){
-        if(f_SD_okay){  // try credentials given in "/networks.csv"
-            File file = SD.open("/networks.csv");
+        if(f_SD_okay){  // try credentials given in "/networks.txt"
+            File file = SD.open("/networks.txt");
             if(file){                                           // try to read from SD
-                String str=file.readStringUntil('\n');          // headerline
+                String str="";
                 while(file.available()){
-                    str=file.readStringUntil(';');              // SSID/PW
-                    String info=file.readStringUntil('\n');     // info
-                    s_password=str.substring(str.indexOf("|")+1);
-                    s_ssid=str.substring(0,str.indexOf("|"));
+                    str=file.readStringUntil('\n');         // read the line
+                    if(str[0]=='*' ) continue;              // ignore this, goto next line
+                    if(str[0]=='\n') continue;              // empty line
+                    i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
+                    j=1;  while(str[j] >= 32) j++;          // end of first entry?
+                    s_ssid =  str.substring(i, j);          // SSID
+                    s_ssid.trim();
+                    i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+                    j=i;  while(str[j] >= 32) j++;          // end of next entry?
+                    s_password=str.substring(i, j);         // PW
+                    s_password.trim();
+                    i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+                    j=i;  while(str[j] >= 32) j++;          // end of next entry?
+                    s_info=str.substring(i, j);             // Info
+                    s_info.trim();
+                    if(s_ssid.length()==0) continue;
+                    if(s_password.length()==0) continue;
+                    //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
                     wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
                 }
                 file.close();
@@ -686,14 +742,14 @@ void setup(){
     delay(100);
     if(!connectToWiFi()){
         tft.fillScreen(TFT_BLACK);      // Clear screen
-        tft.setTextSize(6);
+        tft.setFont(Times_New_Roman43x35);
         display_info("can't connect to WiFi, check Your credentials", 20, 220, TFT_YELLOW, 5);
         while(1){};                     // endless loop until reset
     }
     web.begin();
     f_rtc= rtc.begin(TZName);
     tft.fillScreen(TFT_BLACK); // Clear screen
-    showHeadlineItem("** Internet radio **");
+    showHeadlineItem();
     tone();
     mp3.connecttohost(readhostfrompref(0)); //last used station
     //mp3.printDetails();
@@ -731,7 +787,7 @@ void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update
             val=String(nr) +(String(content) + String("\n"));
             web.reply(val, false);
         }
-    }
+    }web.stop();
 }
 //**************************************************************************************************
 inline uint8_t downvolume(){
@@ -772,67 +828,67 @@ void changeState(int state){
     _state=static_cast<status>(state);
     switch(_state) {
     case RADIO:{
-        showFooter(); showHeadlineItem("** Internet radio **");
+        showFooter(); showHeadlineItem();
         showStation(); showTitle(_title);
         break;
     }
     case RADIOico:{
-        _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Green.bmp";
-        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
-        _pressBtn[3]="/btn/Button_Previous_Yellow.bmp";    _releaseBtn[3]="/btn/Button_Previous_Green.bmp";
-        _pressBtn[4]="/btn/Button_Next_Yellow.bmp";        _releaseBtn[4]="/btn/Button_Next_Green.bmp";
+        _pressBtn[0]="/btn/Button_Mute_Red.jpg";           _releaseBtn[0]="/btn/Button_Mute_Green.jpg";
+        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
+        _pressBtn[3]="/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3]="/btn/Button_Previous_Green.jpg";
+        _pressBtn[4]="/btn/Button_Next_Yellow.jpg";        _releaseBtn[4]="/btn/Button_Next_Green.jpg";
         clearTitle(); clearFooter(); showVolumeBar();
         break;}
     case RADIOmenue:{
-        _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
-        _pressBtn[1]="/btn/Clock_Yellow.bmp";              _releaseBtn[1]="/btn/Clock_Green.bmp";
-        _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
-        _pressBtn[3]="/btn/Button_Sleep_Yellow.bmp";       _releaseBtn[3]="/btn/Button_Sleep_Green.bmp";
-        _pressBtn[4]="/btn/Bulb_Yellow.bmp";               _releaseBtn[4]="/btn/Bulb_Green.bmp";
+        _pressBtn[0]="/btn/MP3_Yellow.jpg";                _releaseBtn[0]="/btn/MP3_Green.jpg";
+        _pressBtn[1]="/btn/Clock_Yellow.jpg";              _releaseBtn[1]="/btn/Clock_Green.jpg";
+        _pressBtn[2]="/btn/Radio_Yellow.jpg";              _releaseBtn[2]="/btn/Radio_Green.jpg";
+        _pressBtn[3]="/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Sleep_Green.jpg";
+        _pressBtn[4]="/btn/Bulb_Yellow.jpg";               _releaseBtn[4]="/btn/Bulb_Green.jpg";
         clearTitle(); clearFooter();
         break;}
     case CLOCKico:{
-        _pressBtn[0]="/btn/MP3_Yellow.bmp";                _releaseBtn[0]="/btn/MP3_Green.bmp";
-        _pressBtn[1]="/btn/Bell_Yellow.bmp";               _releaseBtn[1]="/btn/Bell_Green.bmp";
-        _pressBtn[2]="/btn/Radio_Yellow.bmp";              _releaseBtn[2]="/btn/Radio_Green.bmp";
-        _pressBtn[3]="/btn/Black.bmp";                     _releaseBtn[3]="/btn/Black.bmp";
-        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
+        _pressBtn[0]="/btn/MP3_Yellow.jpg";                _releaseBtn[0]="/btn/MP3_Green.jpg";
+        _pressBtn[1]="/btn/Bell_Yellow.jpg";               _releaseBtn[1]="/btn/Bell_Green.jpg";
+        _pressBtn[2]="/btn/Radio_Yellow.jpg";              _releaseBtn[2]="/btn/Radio_Green.jpg";
+        _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
+        _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
         break;}
     case BRIGHTNESS:{
-        _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
-        _pressBtn[1]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[1]="/btn/Button_Right_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Ready_Blue.bmp";
-        _pressBtn[3]="/btn/Black.bmp";                     _releaseBtn[3]="/btn/Black.bmp";
-        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
+        _pressBtn[0]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[0]="/btn/Button_Left_Blue.jpg";
+        _pressBtn[1]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[1]="/btn/Button_Right_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
+        _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
+        _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
         break;}
     case MP3PLAYER:{
-        _pressBtn[0]="/btn/Radio_Yellow.bmp";              _releaseBtn[0]="/btn/Radio_Green.bmp";
-        _pressBtn[1]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[1]="/btn/Button_Left_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Right_Blue.bmp";
-        _pressBtn[3]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[3]="/btn/Button_Ready_Blue.bmp";
-        _pressBtn[4]="/btn/Black.bmp";                     _releaseBtn[4]="/btn/Black.bmp";
+        _pressBtn[0]="/btn/Radio_Yellow.jpg";              _releaseBtn[0]="/btn/Radio_Green.jpg";
+        _pressBtn[1]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[1]="/btn/Button_Left_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Right_Blue.jpg";
+        _pressBtn[3]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Ready_Blue.jpg";
+        _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
         break;}
     case MP3PLAYERico:{
-        _pressBtn[0]="/btn/Button_Mute_Red.bmp";           _releaseBtn[0]="/btn/Button_Mute_Green.bmp";
-        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.bmp";
-        _pressBtn[3]="/btn/MP3_Yellow.bmp";                _releaseBtn[3]="/btn/MP3_Green.bmp";
-        _pressBtn[4]="/btn/Radio_Yellow.bmp";              _releaseBtn[4]="/btn/Radio_Green.bmp";
+        _pressBtn[0]="/btn/Button_Mute_Red.jpg";           _releaseBtn[0]="/btn/Button_Mute_Green.jpg";
+        _pressBtn[1]="/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
+        _pressBtn[3]="/btn/MP3_Yellow.jpg";                _releaseBtn[3]="/btn/MP3_Green.jpg";
+        _pressBtn[4]="/btn/Radio_Yellow.jpg";              _releaseBtn[4]="/btn/Radio_Green.jpg";
         break;}
     case ALARM:{
-        _pressBtn[0]="/btn/Button_Left_Yellow.bmp";        _releaseBtn[0]="/btn/Button_Left_Blue.bmp";
-        _pressBtn[1]="/btn/Button_Right_Yellow.bmp";       _releaseBtn[1]="/btn/Button_Right_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Up_Yellow.bmp";          _releaseBtn[2]="/btn/Button_Up_Blue.bmp";
-        _pressBtn[3]="/btn/Button_Down_Yellow.bmp";        _releaseBtn[3]="/btn/Button_Down_Blue.bmp";
-        _pressBtn[4]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[4]="/btn/Button_Ready_Blue.bmp";
+        _pressBtn[0]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[0]="/btn/Button_Left_Blue.jpg";
+        _pressBtn[1]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[1]="/btn/Button_Right_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Up_Yellow.jpg";          _releaseBtn[2]="/btn/Button_Up_Blue.jpg";
+        _pressBtn[3]="/btn/Button_Down_Yellow.jpg";        _releaseBtn[3]="/btn/Button_Down_Blue.jpg";
+        _pressBtn[4]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[4]="/btn/Button_Ready_Blue.jpg";
         break;}
     case SLEEP:{
-        _pressBtn[0]="/btn/Button_Up_Yellow.bmp";          _releaseBtn[0]="/btn/Button_Up_Blue.bmp";
-        _pressBtn[1]="/btn/Button_Down_Yellow.bmp";        _releaseBtn[1]="/btn/Button_Down_Blue.bmp";
-        _pressBtn[2]="/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2]="/btn/Button_Ready_Blue.bmp";
-        _pressBtn[3]="/btn/Black.bmp";                     _releaseBtn[3]="/btn/Black.bmp";
-        _pressBtn[4]="/btn/Button_Cancel_Yellow.bmp";      _releaseBtn[4]="/btn/Button_Cancel_Blue.bmp";
+        _pressBtn[0]="/btn/Button_Up_Yellow.jpg";          _releaseBtn[0]="/btn/Button_Up_Blue.jpg";
+        _pressBtn[1]="/btn/Button_Down_Yellow.jpg";        _releaseBtn[1]="/btn/Button_Down_Blue.jpg";
+        _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
+        _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
+        _pressBtn[4]="/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4]="/btn/Button_Cancel_Blue.jpg";
         break;}
     case CLOCK:{ break;}
 
@@ -840,17 +896,17 @@ void changeState(int state){
     if(_state!=RADIO && _state!=CLOCK){ // RADIO and CLOCK have no Buttons
         int j=0;
         if(_state==RADIOico || _state==MP3PLAYERico){  // show correct mute button
-            if(f_mute==false) {tft.drawBmpFile(SD, _releaseBtn[0].c_str(), 0, _yBtn); mp3.loop();}
-            else {tft.drawBmpFile(SD, _pressBtn[0].c_str(), 0, _yBtn); mp3.loop();}
+            if(f_mute==false) {tft.drawJpgFile(SD, _releaseBtn[0].c_str(), 0, _yBtn); mp3.loop();}
+            else {tft.drawJpgFile(SD, _pressBtn[0].c_str(), 0, _yBtn); mp3.loop();}
             j=1;}
-        for(int i=j; i<5; i++){tft.drawBmpFile(SD, _releaseBtn[i].c_str(), i*_wBtn, _yBtn); mp3.loop();}
+        for(int i=j; i<5; i++){tft.drawJpgFile(SD, _releaseBtn[i].c_str(), i*_wBtn, _yBtn); mp3.loop();}
     }
 }
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
 }
 void changeBtn_released(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawBmpFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
 }
 void display_weekdays(uint8_t ad, boolean showall=false){
     uint8_t i=0;
@@ -1051,6 +1107,7 @@ void loop() {
             if(_timefile==3){mp3.connecttoSD("/voice_time/O'clock.mp3"); _timefile--;}
         }
         else {
+            _title="";
             changeState(RADIO);
             mp3.connecttohost(_lastconnectedhost);
             mp3.setVolume(pref.getUInt("volume"));
@@ -1146,68 +1203,42 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
     if(cmd.startsWith("station=")){_stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
-    if(cmd.startsWith("saveprefs")){web.reply(""); return;} // after that starts POST Event "HTML_request"
+    if(cmd.startsWith("saveprefs")) {_req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
+    if(cmd.startsWith("uploadfile")){_req=savefiles;  _filename=cmd.substring(11);  return;}
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
-void HTML_file(const String file){                  // called from html
-    //log_i("HTML_file %s", file.c_str());
+void HTML_file(String file){                  // called from html
     web.printhttpheader(file).c_str();
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
     if(file.startsWith("url=")){  // logo
-        String res=decodeURL(file.substring(6).c_str());
-        int idx=res.indexOf('|');
-        if(idx>0) res=res.substring(0,6)+ res.substring(idx+1); // /SD/logo + all after pipe
-        web.streamfile(SD, UTF8toASCII(res.c_str())); return;
+        file=(file.substring(6));  // remove "url=sd"
+        int idx=file.indexOf('|');
+        if(idx>0) file=(file.substring(0,6)+ file.substring(idx+1)); // /logo + all after pipe
+        web.streamfile(SD, UTF8toASCII(file.c_str())); return;
     }
     log_e("unknown HTMLfile %s", file.c_str());
 }
 
 void HTML_request(const String request){
-    String str, s, u ;
-    int ix;
-    char tkey[12];
-    static uint16_t cnt=0;
-    //log_i("%s",request.c_str());
-    if(request.indexOf(" -")==3){
-        if(request.startsWith("end")){
-            //log_i("the end%i",cnt);
-            pref.putUInt("maxstations", cnt);
-            cnt=0;
-            return;
-        }
-        else{
-            ix=request.indexOf("#");
-            if(ix>6){
-                s=request.substring(6,ix); s.trim();
-                u=request.substring(ix+1, request.length()); u.trim();
-            }
-            else{s=" "; u=" ";}
-            cnt++;
-            sprintf(tkey, "preset_%03d",cnt);
-            str=s+String("#")+u;
-            pref.putString(tkey, str);
-            return;
-        }
-    }
-    else {
-        log_e("unknown request: %s",request.c_str());
-    }
+    //log_i("request=%s", request.c_str());
+    if(_req==saveprefs){savepreferences(request); return;}
+    if(_req==savefiles){savefile(request);        return;}
+    if(request=="end request\n"){                 return;}
+    log_e("unknown request: %s",request.c_str());
 }
-void HTML_info(const char *info){                   // called from html
-    String Info=info;
-    if(!Info.endsWith("\n"))Info+="\n";
-    Serial.print("HTML_info  : ");
-    Serial.print(Info.c_str());        // for debug infos
+void HTML_info(String info){                    // called from html
+//    Serial.print("HTML_info  : ");
+//    Serial.print(info.c_str());               // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
     if(_state==RADIO){
         if(res>pref.getUInt("maxstations")){
-            tft.setTextSize(6);
+            tft.setTextSize(7);
             display_info(String(res).c_str(), _yName, _hName +_hTitle, TFT_RED, 100); //state RADIO
             return;
         }
@@ -1219,7 +1250,7 @@ void ir_res(uint32_t res){
 }
 void ir_number(const char* num){
     if(_state==RADIO){
-        tft.setTextSize(6);
+        tft.setTextSize(7);
         display_info(num, _yName, _hName +_hTitle, TFT_YELLOW, 100); //state RADIO
     }
 }
@@ -1240,7 +1271,7 @@ void ir_key(const char* key){
         case '#':   if(_state==SLEEP) changeState(RADIO); // #
                     else mute();
                     break;
-        case '*':   if(_state==RADIO){tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem("* Einschlafautomatik *");
+        case '*':   if(_state==RADIO){tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem();
                     tft.drawBmpFile(SD, "/Night_Gown.bmp",198, 25); display_sleeptime();}  // *
                     break;
         default:    break;
@@ -1346,16 +1377,16 @@ void tp_released(){
     case  3: changeBtn_released(3); break; // nextstation
     case  4: changeBtn_released(4); break; // previousstation
     case  5: tft.fillScreen(TFT_BLACK);
-             changeState(MP3PLAYER); showHeadlineItem("* MP3Player *");
+             changeState(MP3PLAYER); showHeadlineItem();
              tft.setTextSize(4); str=_mp3Name[_mp3Index];
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              display_info(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5); break; //MP3
     case  6: tft.fillScreen(TFT_BLACK); changeState(CLOCK);
-             showHeadlineItem("** Wecker **"); display_time(true); break;//Clock
+             showHeadlineItem(); display_time(true); break;//Clock
     case  7: changeState(RADIO); break;
-    case  8: tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem("* Einschlafautomatik *");
+    case  8: tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem();
              tft.drawBmpFile(SD, "/Night_Gown.bmp",198, 25); display_sleeptime(); break;
-    case  9: changeState(ALARM); showHeadlineItem("");
+    case  9: changeState(ALARM); showHeadlineItem();
              display_weekdays(_alarmdays, true);
              display_alarmtime(0, 0, true); break;
     case 10: _title=""; changeState(RADIO); mp3.connecttohost(_lastconnectedhost); break;
@@ -1366,9 +1397,9 @@ void tp_released(){
     case 15: pref.putUInt("alarm_weekday", _alarmdays); // ready
              pref.putString("alarm_time", _alarmtime);
              tft.fillScreen(TFT_BLACK); changeState(CLOCK);
-             showHeadlineItem("** Wecker **");
+             showHeadlineItem();
              display_time(true); break;//Clock
-    case 16: tft.fillScreen(TFT_BLACK); changeState(BRIGHTNESS); showHeadlineItem("** Helligkeit **");
+    case 16: tft.fillScreen(TFT_BLACK); changeState(BRIGHTNESS); showHeadlineItem();
              showBrightnessBar(); mp3.loop();
              tft.drawBmpFile(SD, "/Brightness.bmp",0, 21); break;
     case 17: changeBtn_released(0); downBrightness(); showBrightnessBar(); break;
