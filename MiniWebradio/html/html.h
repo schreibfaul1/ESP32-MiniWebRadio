@@ -2,6 +2,7 @@
  * html.h
  *
  *  Created on: 09.07.2017
+ *  updated on: 22.09.2018
  *      Author: Wolle
  */
 
@@ -13,9 +14,9 @@
 #include "SD.h"
 #include "FS.h"
 
-extern __attribute__((weak)) void HTML_info(const char*) ;
+extern __attribute__((weak)) void HTML_info(const String) ;
 extern __attribute__((weak)) void HTML_command(const String);
-extern __attribute__((weak)) void HTML_file(const String);
+extern __attribute__((weak)) void HTML_file(String);
 extern __attribute__((weak)) void HTML_request(const String);
 
 class HTML
@@ -27,19 +28,20 @@ private:
 	bool            http_reponse_flag = false ;               // Response required
 	String          http_rqfile ;                             // Requested file
 	String          http_getcmd ;                             // Contents of last GET command
-	char 			sbuf[256];
 	String 			_Name;
 	String			_Version;
 	String 			contenttype;
     uint8_t 		buf[1024]; 		                          // Inputbuffer
 
-
 protected:
-	String   httpheader (String contentstype);
-	String   getContentType(String filename);
-	void     handlehttp();
+	String  httpheader (String contentstype);
+	String  getContentType(String filename);
+	void    handlehttp();
 	uint8_t inbyte();
-	String   URLencode(const char* str);
+	String  URLdecode(String str);
+	String  UTF8toASCII(String str);
+	String  responseCodeToString(int code);
+
 
 public:
 	HTML(String Name="HTML library", String Version="1.0");
@@ -49,10 +51,23 @@ public:
 	void show(const char* pagename, int16_t len=-1);
 	void show_not_found();
 	boolean streamfile(fs::FS &fs,const char* path);
+	boolean uploadfile(fs::FS &fs,const char* path);
+	boolean uploadB64image(fs::FS &fs,const char* path);
 	void reply(const String &response, boolean header=true);
-	const char* ISO88591toUTF8(const char* str);
 	const char* ASCIItoUTF8(const char* str);
 	String  printhttpheader(String file);
+
+private:
+    const int B64index[123] ={
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
+        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,
+        0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
+        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  63,
+        0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
+    };
 };
 
 

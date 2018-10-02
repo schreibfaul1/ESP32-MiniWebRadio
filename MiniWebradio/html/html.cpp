@@ -2,22 +2,22 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
+ *  updated on: 22.09.2018
  *      Author: Wolle
  */
 
 #include "html.h"
-
+//--------------------------------------------------------------------------------------------------------------
 HTML::HTML(String Name, String Version){
 	_Name=Name; _Version=Version;
 }
-
-void HTML::show_not_found()
-{
+//--------------------------------------------------------------------------------------------------------------
+void HTML::show_not_found(){
 	cmdclient.println("HTTP/1.1 404 Not Found");
 	cmdclient.println("");
 	return;
 }
-
+//--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
 	uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
 	int l=0;                    // Size of requested page
@@ -36,8 +36,7 @@ void HTML::show(const char* pagename, int16_t len){
 		p++;                    // Skip first character
 		l--;
 	}
-	sprintf(sbuf, "Length of page is %d\n", l);
-	if (HTML_info)	HTML_info(sbuf);
+	if (HTML_info)	HTML_info(String("Length of page is ") +String(l, 10) + String("\n"));
 	// The content of the HTTP response follows the header:
 	if(l<10){
 		cmdclient.println("Testline<br>");
@@ -59,11 +58,11 @@ void HTML::show(const char* pagename, int16_t len){
 	cmdclient.println();
 	if (HTML_info)	HTML_info("Response send\n");
 }
-
+//--------------------------------------------------------------------------------------------------------------
 boolean HTML::streamfile(fs::FS &fs,const char* path){
-    size_t bytesPerTransaction = 1024;
+    size_t bytesPerTransaction = 4096;
     uint8_t transBuf[bytesPerTransaction];
-    size_t wIndex = 0;
+    size_t wIndex = bytesPerTransaction;
     uint16_t i=0;
     while(path[i]!=0){     // protect SD for invalid signs to avoid a crash!!
         if(path[i]<32)return false;
@@ -71,19 +70,81 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
     }
 	File file = fs.open(path);
 	if(!file){log_e("Failed to open file for reading"); return false;}
-	sprintf(sbuf, "Length of file %s is %d\n", path, file.size());
-	if (HTML_info)	HTML_info(sbuf);
+	String LOF="Length of file " + String(path) + " is " + String(file.size(),10) +"\n";
+	if (HTML_info)	HTML_info(LOF);
 	while(wIndex < file.size()){
 		file.read(transBuf, bytesPerTransaction);
 		cmdclient.write(transBuf, bytesPerTransaction);
 		wIndex+=bytesPerTransaction;
 	}
-	file.read(transBuf,file.size()-wIndex);
-	cmdclient.write(transBuf, file.size()-wIndex);
+	wIndex-=bytesPerTransaction;
+	wIndex=size_t(file.size()-wIndex);
+	log_i("filesize %i", file.size());
+	log_i("windex %i", wIndex);
+	file.read(transBuf,wIndex);
+	cmdclient.write(transBuf, wIndex);
 	file.close();
 	return true;
 }
+//--------------------------------------------------------------------------------------------------------------
+boolean HTML::uploadB64image(fs::FS &fs,const char* path){
+    size_t   bytesPerTransaction = 1024;
+    uint8_t  tBuf[bytesPerTransaction];
+    uint16_t av, i, j, len=0;
+    int n=0;
+    File file;
+    fs.remove(path); // Remove a previous version, otherwise data is appended the file again
+    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
 
+    cmdclient.read(tBuf,23);
+    tBuf[23]=0;
+    log_i("Content-Type=%s", tBuf);
+
+    while(cmdclient.available()){
+        av=cmdclient.available();
+        if(av>bytesPerTransaction) av=bytesPerTransaction;
+        i=0; j=0;
+        cmdclient.read(tBuf, av); // b64 decode
+        while(i<av){
+            if(tBuf[i]==0)break; // ignore all other stuff
+            n=B64index[tBuf[i]]<<18 | B64index[tBuf[i+1]]<<12 | B64index[tBuf[i+2]]<<6 | B64index[tBuf[i+3]];
+            tBuf[j  ]= n>>16;
+            tBuf[j+1]= n>>8 & 0xFF;
+            tBuf[j+2]= n & 0xFF;
+            i+=4;
+            j+=3;
+        }
+        if(tBuf[j]=='=') j--;
+        if(tBuf[j]=='=') j--; // remove =
+
+        file.write(tBuf, j);
+        len+=j;
+    }
+    file.close();
+    log_i("Image %s written, filesize=%i",path, len);
+    return true;
+}
+//--------------------------------------------------------------------------------------------------------------
+boolean HTML::uploadfile(fs::FS &fs,const char* path){
+    size_t   bytesPerTransaction = 1024;
+    uint8_t  tBuf[bytesPerTransaction];
+    uint16_t av, len=0;
+    File file;
+    fs.remove(path); // Remove a previous version, otherwise data is appended the file again
+    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+
+    while(cmdclient.available()){
+        av=cmdclient.available();
+        if(av>bytesPerTransaction) av=bytesPerTransaction;
+        cmdclient.read(tBuf, av); // b64 decode
+        file.write(tBuf, av);
+        len+=av;
+    }
+    file.close();
+    log_i("filesize=%i",len);
+    return true;
+}
+//--------------------------------------------------------------------------------------------------------------
 String HTML::printhttpheader(String file){
 	String  ct ;                           // Content type
 	ct = getContentType(file);
@@ -96,7 +157,7 @@ String HTML::printhttpheader(String file){
 	cmdclient.print ( httpheader ( ct ) ) ;             // Send header
 	return ct;
 }
-
+//--------------------------------------------------------------------------------------------------------------
 String HTML::httpheader(String contenttype) {
 	String s1 = "HTTP/1.1 200 OK\nContent-type:" + contenttype + "\n";
 	String s2 = "Server: " + _Name+ "\n";
@@ -105,16 +166,25 @@ String HTML::httpheader(String contenttype) {
 	String s5 = "Last-Modified: " + _Version + "\n\n";
 	return String(s1 + s2 + s3 + s4 + s5);
 }
-
+//--------------------------------------------------------------------------------------------------------------
 void HTML::begin() {
 	cmdserver.begin();
 }
+//--------------------------------------------------------------------------------------------------------------
 void HTML::stop() {
-	cmdserver.stop();
+	cmdclient.stop();
 }
-
+//--------------------------------------------------------------------------------------------------------------
 String HTML::getContentType(String filename){
 	if      (filename.endsWith(".html")) return "text/html" ;
+	else if (filename.endsWith(".htm" )) return "text/html";
+	else if (filename.endsWith(".txt" )) return "text/plain";
+	else if (filename.endsWith(".js"  )) return "application/javascript";
+	else if (filename.endsWith(".svg" )) return "image/svg+xml";
+	else if (filename.endsWith(".ttf" )) return "application/x-font-ttf";
+	else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
+	else if (filename.endsWith(".xml" )) return "text/xml";
+	else if (filename.endsWith(".pdf" )) return "application/pdf";
 	else if (filename.endsWith(".png" )) return "image/png" ;
 	else if (filename.endsWith(".gif" )) return "image/gif" ;
 	else if (filename.endsWith(".jpg" )) return "image/jpeg" ;
@@ -123,10 +193,9 @@ String HTML::getContentType(String filename){
 	else if (filename.endsWith(".zip" )) return "application/x-zip" ;
 	else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
 	else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
-	else if (filename.endsWith(".pw"  )) return "" ;              // Passwords are secret
 	return "text/plain" ;
 }
-
+//--------------------------------------------------------------------------------------------------------------
 void HTML::handlehttp() {
 	bool wswitch=true;
 	char c;                                 // Next character from http input
@@ -137,7 +206,9 @@ void HTML::handlehttp() {
 	if (!cmdclient.connected())	return;
 
 	while (wswitch==true){					// first while
-		c = inbyte();					    // Get a byte
+		if(!cmdclient.available()) return;
+	    cmdclient.read(buf, 1);             // Get a byte
+	    c=buf[0];
 		if(c==0) return;                    // c is empty
 		if (c == '\n') {
 			// If the current line is blank, you got two newline characters in a row.
@@ -165,35 +236,35 @@ void HTML::handlehttp() {
 						http_getcmd = "";
 					}
 					if (http_getcmd.length()) {
-						sprintf(sbuf, "%s\n", http_getcmd.c_str());
-						if (HTML_info)HTML_info(sbuf);
-						if (HTML_command) HTML_command((URLencode(http_getcmd.c_str())));
+						if (HTML_info) HTML_info(URLdecode(http_getcmd)+ "\n");
+						if (HTML_command) HTML_command(URLdecode(http_getcmd));
 					}
 					if (http_rqfile.length()) {
-						sprintf(sbuf, "Filename is: %s\n", http_rqfile.c_str());
-						if (HTML_info) HTML_info(sbuf);
-						if (HTML_file) HTML_file(http_rqfile);
+						String FN = "Filename is: " + http_rqfile + "\n";
+						if (HTML_info) HTML_info(URLdecode(FN));
+						if (HTML_file) HTML_file(URLdecode(http_rqfile));
 					}
 					if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
-						sprintf(sbuf, "Filename is: %s\n", "index.html");
-						if (HTML_info) HTML_info(sbuf);
+						if (HTML_info) HTML_info("Filename is: index.html\n");
 						if (HTML_file) HTML_file("index.html");
 					}
 				}
 				currentLine = "";
 			}
-		} else if (c != '\r'){                        // No LINFEED.  Is it a CR?
-			currentLine += c;              // No, add normal char to currentLine
+		} else if (c != '\r'){                      // No LINFEED.  Is it a CR?
+			currentLine += c;                       // No?, add normal char to currentLine
 		}
 	} //end while 1
 	while(wswitch==false){					 		// second while
-		c = inbyte();					// Get a byte
+        cmdclient.read(buf, 1);                     // Get a byte
+        c=buf[0];
 		if(c==0) return;
 		if (c == '\n') {
 			if (currentLine.length() == 0){
 				wswitch=true;  // use first while
-				log_i("end request");
-				reply("", true);
+				//log_i("end request");
+				if (HTML_request) HTML_request("end request\n");
+				//reply("", true);
 				break;
 			}
 			else {   // its the requestbody
@@ -201,84 +272,112 @@ void HTML::handlehttp() {
 				if (HTML_request) HTML_request(currentLine);
 				currentLine += c;
 				currentLine.trim();
-				if (HTML_info) HTML_info(currentLine.c_str());
+				if (HTML_info) HTML_info(currentLine + "\n");
 				currentLine = "";
 			}
 		}
 		else if (c != '\r')currentLine += c;   // No LINFEED.  Is it a CR?
 	} // end while 2
 }
-
-uint8_t HTML::inbyte(){
-    static uint16_t i=0, j=0;
-    static uint16_t len=0;
-    char c;
-    if(i==0){
-        len=cmdclient.available();
-        if(len==0) return 0;
-        if(len>sizeof(buf)) len = sizeof(buf);
-        len = cmdclient.read(buf, len);
-        i=len; j=0;
-    }
-    c=buf[j];
-    j++; i--;
-    return c;
-}
-
+//--------------------------------------------------------------------------------------------------------------
 void HTML::loop() {
 	cmdclient = cmdserver.available();               	// Check Input from client?
-	if (cmdclient)                                      // Client connected?
-	{
+	if (cmdclient){                                      // Client connected?
 		if(HTML_info) HTML_info("Command client available\n");
 		handlehttp();
 	}
 }
+//--------------------------------------------------------------------------------------------------------------
 void HTML::reply(const String &response, bool header){
     if(header==true) cmdclient.print(httpheader("text/html"));
     cmdclient.print(response);
 }
-
-const char* HTML::ISO88591toUTF8(const char* str){
-	uint16_t i=0, j=0;
-
-	while(str[i]!=0){
-		if(str[i]>0x7F){sbuf[j]=0xC3; sbuf[j+1]=str[i]-64; j+=2; i++;}
-		 else{sbuf[j]=str[i]; j++; i++;}
-	}
-	sbuf[j]=0;
-	return sbuf;
+//--------------------------------------------------------------------------------------------------------------
+String HTML::UTF8toASCII(String str){
+    uint16_t i=0;
+    String res="";
+    char tab[96]={
+          96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
+          32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
+          32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
+         154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
+          32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152
+    };
+    while(str[i]!=0){
+        if(str[i]==0xC2){ // compute unicode from utf8
+            i++;
+            if((str[i]>159)&&(str[i]<192)) res+=char(tab[str[i]-160]);
+            else res+=char(32);
+        }
+        else if(str[i]==0xC3){
+            i++;
+            if((str[i]>127)&&(str[i]<192)) res+=char(tab[str[i]-96]);
+            else res+=char(32);
+        }
+        else res+=str[i];
+        i++;
+    }
+    return res;
 }
-
-const char* HTML::ASCIItoUTF8(const char* str){
-	uint16_t i=0, j=0;
-
-	while(str[i]!=0){
-		switch(str[i]){
-		case 132:{sbuf[j]=0xC3; sbuf[j+1]=164; j+=2; i++; break;} // ä
-		case 142:{sbuf[j]=0xC3; sbuf[j+1]=132; j+=2; i++; break;} // Ä
-		case 148:{sbuf[j]=0xC3; sbuf[j+1]=182; j+=2; i++; break;} // ö
-		case 153:{sbuf[j]=0xC3; sbuf[j+1]=150; j+=2; i++; break;} // Ö
-		case 129:{sbuf[j]=0xC3; sbuf[j+1]=188; j+=2; i++; break;} // ü
-		case 154:{sbuf[j]=0xC3; sbuf[j+1]=156; j+=2; i++; break;} // Ü
-		case 225:{sbuf[j]=0xC3; sbuf[j+1]=159; j+=2; i++; break;} // ß
-		default: {if(str[i]>127){sbuf[j]=0xC3, sbuf[j+1]=' '; j+=2; i++;} // all other
-		          else {sbuf[j]=str[i]; j++; i++; break;}}}
-	}
-	sbuf[j]=0;
-	return sbuf;
-}
-
-String HTML::URLencode(const char* str){
+//--------------------------------------------------------------------------------------------------------------
+String HTML::URLdecode(String str){
 	String hex="0123456789ABCDEF";
-	uint16_t i=0, j=0;
+	String res="";
+	uint16_t i=0;
 	while(str[i]!=0){
-		if(str[i]=='%' && isHexadecimalDigit(str[i+1]) && isHexadecimalDigit(str[i+2])){
-			sbuf[j]=(hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2]);j++; i+=3;}
-		else{sbuf[j]=str[i]; j++; i++;}
+		if((str[i]=='%') && isHexadecimalDigit(str[i+1]) && isHexadecimalDigit(str[i+2])){
+			res+=char((hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2])); i+=3;}
+		else{res+=str[i]; i++;}
 	}
-	sbuf[j]=0;
-	return String(sbuf);
+	return res;
 }
+//--------------------------------------------------------------------------------------------------------------
+String HTML::responseCodeToString(int code) {
+  switch (code) {
+    case 100: return F("Continue");
+    case 101: return F("Switching Protocols");
+    case 200: return F("OK");
+    case 201: return F("Created");
+    case 202: return F("Accepted");
+    case 203: return F("Non-Authoritative Information");
+    case 204: return F("No Content");
+    case 205: return F("Reset Content");
+    case 206: return F("Partial Content");
+    case 300: return F("Multiple Choices");
+    case 301: return F("Moved Permanently");
+    case 302: return F("Found");
+    case 303: return F("See Other");
+    case 304: return F("Not Modified");
+    case 305: return F("Use Proxy");
+    case 307: return F("Temporary Redirect");
+    case 400: return F("Bad Request");
+    case 401: return F("Unauthorized");
+    case 402: return F("Payment Required");
+    case 403: return F("Forbidden");
+    case 404: return F("Not Found");
+    case 405: return F("Method Not Allowed");
+    case 406: return F("Not Acceptable");
+    case 407: return F("Proxy Authentication Required");
+    case 408: return F("Request Time-out");
+    case 409: return F("Conflict");
+    case 410: return F("Gone");
+    case 411: return F("Length Required");
+    case 412: return F("Precondition Failed");
+    case 413: return F("Request Entity Too Large");
+    case 414: return F("Request-URI Too Large");
+    case 415: return F("Unsupported Media Type");
+    case 416: return F("Requested range not satisfiable");
+    case 417: return F("Expectation Failed");
+    case 500: return F("Internal Server Error");
+    case 501: return F("Not Implemented");
+    case 502: return F("Bad Gateway");
+    case 503: return F("Service Unavailable");
+    case 504: return F("Gateway Time-out");
+    case 505: return F("HTTP Version not supported");
+    default:  return "";
+  }
+}
+//--------------------------------------------------------------------------------------------------------------
 
 
 
