@@ -69,7 +69,13 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
         i++;
     }
 	File file = fs.open(path);
-	if(!file){log_e("Failed to open file for reading"); return false;}
+	if(!file){
+	    String str=String("Failed to open file for reading ") + path;
+	    if (HTML_info)  HTML_info(str);
+	    show_not_found();
+	    cmdclient.stop();
+	    return false;
+	}
 	String LOF="Length of file " + String(path) + " is " + String(file.size(),10) +"\n";
 	if (HTML_info)	HTML_info(LOF);
 	while(wIndex < file.size()){
@@ -79,11 +85,10 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
 	}
 	wIndex-=bytesPerTransaction;
 	wIndex=size_t(file.size()-wIndex);
-	log_i("filesize %i", file.size());
-	log_i("windex %i", wIndex);
 	file.read(transBuf,wIndex);
 	cmdclient.write(transBuf, wIndex);
 	file.close();
+	cmdclient.stop();
 	return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -91,17 +96,20 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, i, j, len=0;
+    boolean f_werror=false;
+    String str="";
     int n=0;
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
-    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+    file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
 
     cmdclient.read(tBuf,23);
     tBuf[23]=0;
-    log_i("Content-Type=%s", tBuf);
-
+    //log_i("Content-Type=%s", tBuf);
     while(cmdclient.available()){
         av=cmdclient.available();
+        av=av-46;
+        if(av==0) break; // skip \r\n------WebKitFormBoundarynaPOuvWrstplBY0y\r\n\n
         if(av>bytesPerTransaction) av=bytesPerTransaction;
         i=0; j=0;
         cmdclient.read(tBuf, av); // b64 decode
@@ -117,11 +125,18 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){
         if(tBuf[j]=='=') j--;
         if(tBuf[j]=='=') j--; // remove =
 
-        file.write(tBuf, j);
+        if(file.write(tBuf, j)!=j) f_werror=true;  // write error?
         len+=j;
     }
+    cmdclient.read(tBuf, 46); // read the remains
     file.close();
-    log_i("Image %s written, filesize=%i",path, len);
+    if(f_werror) {
+        str=String("File: ") + String(path) + "write error\n";
+        if (HTML_info) HTML_info(str.c_str());
+        return false;
+    }
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10) +"\n";
+    if (HTML_info) HTML_info(str.c_str());
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -129,19 +144,29 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, len=0;
+    boolean f_werror=false;
+    String str="";
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
-
     while(cmdclient.available()){
         av=cmdclient.available();
+        av=av-46;
+        if(av==0) break; // skip \r\n------WebKitFormBoundarynaPOuvWrstplBY0y\r\n\n
         if(av>bytesPerTransaction) av=bytesPerTransaction;
-        cmdclient.read(tBuf, av); // b64 decode
-        file.write(tBuf, av);
+        cmdclient.read(tBuf, av);
+        if(file.write(tBuf, av)!=av) f_werror=true;  // write error?
         len+=av;
     }
+    cmdclient.read(tBuf, 46); // read the remains
     file.close();
-    log_i("filesize=%i",len);
+    if(f_werror) {
+        str=String("File: ") + String(path) + "write error\n";
+        if (HTML_info) HTML_info(str.c_str());
+        return false;
+    }
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10) +"\n";
+    if (HTML_info)  HTML_info(str.c_str());
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -280,12 +305,14 @@ void HTML::handlehttp() {
 	} // end while 2
 }
 //--------------------------------------------------------------------------------------------------------------
-void HTML::loop() {
+boolean HTML::loop() {
 	cmdclient = cmdserver.available();               	// Check Input from client?
 	if (cmdclient){                                      // Client connected?
-		if(HTML_info) HTML_info("Command client available\n");
+	    if(HTML_info) HTML_info("Command client available\n");
 		handlehttp();
+		return true;
 	}
+	return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::reply(const String &response, bool header){

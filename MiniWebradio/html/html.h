@@ -31,7 +31,7 @@ private:
 	String 			_Name;
 	String			_Version;
 	String 			contenttype;
-    uint8_t 		buf[1024]; 		                          // Inputbuffer
+    uint8_t 		buf[1]; 		                          // Inputbuffer
 
 protected:
 	String  httpheader (String contentstype);
@@ -47,7 +47,7 @@ public:
 	HTML(String Name="HTML library", String Version="1.0");
 	void begin();
 	void stop();
-	void loop();
+	boolean loop();
 	void show(const char* pagename, int16_t len=-1);
 	void show_not_found();
 	boolean streamfile(fs::FS &fs,const char* path);
