@@ -2,7 +2,7 @@
 //*    MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display (320x240px) and VS1053 MP3 module.  *
 //*********************************************************************************************************
 //
-// Version 18 form Sept.19 2018
+// Version 20 , Oct.13 2018
 //
 // Preparations:
 //
@@ -31,7 +31,7 @@
 // 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
 //     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
 //
-// 7) translate _hl_title entries below in Your language
+// 7) translate _hl_title, entries below, in Your language
 //
 //
 //  Display 320x240
@@ -166,6 +166,7 @@ VS1053 mp3(VS1053_CS, VS1053_DCS, VS1053_DREQ);
 hw_timer_t* timer=NULL;         // instance of the timer
 HTML web;
 Preferences pref;
+Preferences stations;
 RTIME rtc;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
@@ -174,16 +175,13 @@ WiFiMulti wifiMulti;
 //**************************************************************************************************
 //                                D E F A U L T S E T T I N G S                                    *
 //**************************************************************************************************
-
 void defaultsettings(){
-    String cy="", str="", str_s="", str_u="", info="";
-    char tkey[12];
-    uint16_t i=0, j=0, cnt=0;
+    String str="";
+
     log_i("set default");
     //
     pref.clear();
     //
-    pref.putString("MiniWebRadio","default");
     pref.putUInt("brightness",100); // 100% display backlight
     pref.putUInt("alarm_weekday",0); // for alarmclock
     pref.putString("alarm_time","00:00");
@@ -196,12 +194,19 @@ void defaultsettings(){
     pref.putUInt("tonela", 0); // BassGain 0...15
     pref.putUInt("tonelf", 0); // BassFreq 0...13
     //
-    pref.putUInt("preset", 1);
+    pref.putUInt("station", 1);
     pref.putUInt("sleeptime", 1);
     //
+    saveStationsToNVS();
+}
+boolean saveStationsToNVS(){
+    String cy="", str="", str_s="", str_u="", info="";
+    uint16_t i=0, j=0, cnt=0;
     // StationList
-    File file = SD.open("/presets.txt");
-    if(file){                                       // try to read from SD
+    File file = SD.open("/stations.txt");
+    if(file){  // try to read from SD
+        stations.clear();
+        str=file.readStringUntil('\n');             // read the headline
         while(file.available()){
             str=file.readStringUntil('\n');         // read the line
             if(str[0]=='*' ) continue;              // ignore this, goto next line
@@ -220,53 +225,41 @@ void defaultsettings(){
             i=j;  while(str[i]=='\t') i++;          // seek last entry, skip tabs
             j=i;  while(str[j] >= 32) j++;          // end of last entry?
             info =str.substring(i, j);
-            if(str_s.length()==0) continue;
-            if(str_u.length()==0) continue;
+            if(str_s.length()==0) str_s="empty";
+            if(str_u.length()==0) str_u="empty";
             str_s.trim(); str_u.trim();
             cnt++;
+            if(cnt==1000){
+                Serial.println("No more than 999 entries in stationlist allowed!");
+                cnt--; // maxstations 999
+                break;
+            }
             str=str_s;  // station
             str+="#";
             str+=str_u; // url
-            log_i("cy=%s  str_s=%s  str_u=%s  info=%s", cy.c_str(), str_s.c_str(), str_u.c_str(), info.c_str());
-            sprintf(tkey, "preset_%03d", cnt);
-            pref.putString(tkey, str);
+            //log_i("cy=%s  str_s=%s  str_u=%s  info=%s", cy.c_str(), str_s.c_str(), str_u.c_str(), info.c_str());
+            sprintf(_chbuf, "station_%03d", cnt);
+            stations.putString(_chbuf, str);
+            sprintf(_chbuf, "info_%03d", cnt);
             if(info.length()>4){  // is reasonable? then save additional info
                 info.trim();
-                sprintf(tkey, "info_%03d", cnt);
-                pref.putString(tkey, info);
+                stations.putString(_chbuf, info);
             }
-
         }
+        stations.putLong("stations.size", file.size());
         file.close();
-        pref.putUInt("maxstations", cnt);
+        stations.putUInt("maxstations", cnt);
+        log_i("stationlist internally loaded");
         log_i("maxstations: %i", cnt);
+        //log_i("nvs free entries %i", stations.freeEntries());
+        return true;
     }
-    else{                                       // file not available
-        log_i("SD/presets.txt not found, use default stream URls");
-        String s[12], u[12];
-        s[  1]="030-berlinfm";          u[  1]="030-berlinfm.stream.laut.fm/030-berlinfm"; //D
-        s[  2]="104.6 RTL";             u[  2]="rtlberlin.hoerradar.de/rtlberlin-live-mp3-128"; //D
-        s[  3]="105.5 Spreeradio";      u[  3]="stream.spreeradio.de/spree-live/mp3-128/vtuner/"; //D
-        s[  4]="106.4 TOP FM";          u[  4]="mp3.topfm.c.nmdn.net/ps-topfm/livestream.mp3"; //D
-        s[  5]="1Live, WDR Koeln";      u[  5]="www.wdr.de/wdrlive/media/einslive.m3u"; //D
-        s[  6]="88vier";                u[  6]="ice.rosebud-media.de:8000/88vier"; //D
-        s[  7]="93,6 JAM FM";           u[  7]="stream.jam.fm/jamfm-live/mp3-128/vtuner/"; //D
-        s[  8]="94.3 RS2";              u[  8]="stream.rs2.de/rs2/mp3-128/internetradio"; //D
-        s[  9]="94.3 RS2 Partymix";     u[  9]="stream.rs2.de/rs2-relax/mp3-128/internetradio"; //D
-        s[ 10]="95.5 Charivari";        u[ 10]="rs5.stream24.net:80/stream"; //D
-        s[ 11]="98.8 KISS FM";          u[ 11]="stream.kissfm.de/kissfm/mp3-128/internetradio"; //D
-        for(i=0; i<12; i++){
-            sprintf(tkey, "preset_%03d", i);
-            str=s[i]+String("#")+u[i];
-            pref.putString(tkey, str);
-        }
-        pref.putUInt("maxstations", 11);
-    }
+    else return false;
 }
 boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek in info
-    uint16_t preset=pref.getUInt("preset");
-    sprintf(_chbuf, "info_%03d", preset);
-    String str=pref.getString(_chbuf, "Station provides no Streamtitle"); // found probably replacement information
+    uint16_t station=pref.getUInt("station");
+    sprintf(_chbuf, "info_%03d", station);
+    String str=stations.getString(_chbuf, String("No streamtitle available")); // found probably replacement information
     if(str.length()>5){showTitle(str); return true;}
     return false;
 }
@@ -295,7 +288,6 @@ inline uint8_t getBrightness(){
 //**************************************************************************************************
 //                                       A S C I I                                                *
 //**************************************************************************************************
-
 const char* UTF8toASCII(const char* str){
     uint16_t i=0, j=0;
     char tab[96]={
@@ -322,7 +314,6 @@ const char* UTF8toASCII(const char* str){
     _chbuf[j]=0;
     return (_chbuf);
 }
-
 const char* ASCIItoUTF8(const char* str){
     uint16_t i=0, j=0, uni=0;
     uint16_t tab[128]={
@@ -348,7 +339,6 @@ const char* ASCIItoUTF8(const char* str){
     _chbuf[j]=0;
     return _chbuf;
 }
-
 //**************************************************************************************************
 //                                        T I M E R                                                *
 //**************************************************************************************************
@@ -398,7 +388,7 @@ void showTitle(String str){
     if(txtlen(str)>  4) f_has_ST=true; else f_has_ST=false;
     tft.setFont(Times_New_Roman43x35);
     if(txtlen(str)> 30) tft.setFont(Times_New_Roman38x31);
-    if(txtlen(str)> 50) tft.setFont(Times_New_Roman34x27);
+    if(txtlen(str)> 45) tft.setFont(Times_New_Roman34x27);
     if(txtlen(str)> 65) tft.setFont(Times_New_Roman27x21);
     if(txtlen(str)>130) tft.setFont(Times_New_Roman21x17);
 //    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
@@ -435,7 +425,7 @@ void showStation(){
         if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
             str2="/logo/" + String(UTF8toASCII(_station.c_str())) +".jpg";
             if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename given from station exist?
-                tft.drawJpgFile(SD, "/logo/unknown.jpg", 1,22);  // if no draw unknown
+                tft.drawJpgFile(SD, "/unknown.jpg", 1,22);  // if no draw unknown
             }
         }
     }
@@ -477,7 +467,7 @@ void showFooter(){  // bitrate stationnumber, IPaddress
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("STA:");
     tft.setTextColor(TFT_LAVENDER);
-    tft.printf("%03d", pref.getUInt("preset"));
+    tft.printf("%03d", pref.getUInt("station"));
     tft.setCursor(130, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("myIP:");
@@ -500,10 +490,8 @@ void updateSleepTime(){
     }
     if(_state==RADIO) showFooter();
 }
-
-
 //**************************************************************************************************
-//                                  R E A D H O S T F R O M P R E F                                *
+//                                T O N E / S E T  S T A T I O N S                                 *
 //**************************************************************************************************
 String tone(){
     String str_tone="";
@@ -518,88 +506,31 @@ String tone(){
     mp3.setTone(u8_tone);
     return str_tone;
 }
-String readhostfrompref(uint16_t preset) // 0 read from current preset, 1....max read nr station
+String setStation(int16_t stationNr) // -1: previous station, 0: next station, 1...maxstations: set stationNr
 {
-      String content = "" ;    // Result of search
-      char   tkey[12] ;        // Key as an array of chars
-      _homepage="";
-      //log_i("MaxS %i",pref.getUInt("maxstations"));
-      if(preset>pref.getUInt("maxstations")) return "";
-      if(preset==0) preset=pref.getUInt("preset");
-      sprintf ( tkey, "preset_%03d", preset);
-      content=pref.getString(tkey);
-      _stationname=content.substring(0, content.indexOf("#")); //get stationname from preset
-      content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
-      content.trim();
-      _stationURL=content;
-      if(preset>0) pref.putUInt("preset", preset);
-      f_has_ST=false; // will probably be set in ShowStreamtitle
-      return content;
+    uint16_t maxstations=stations.getUInt("maxstations");
+    int16_t  station=pref.getUInt("station");
+
+    if     (stationNr==0) {if(++station>maxstations)  station=1;}
+    else if(stationNr==-1){if(--station<1) station=maxstations;}
+    else    station=stationNr;
+
+    sprintf (_chbuf, "station_%03d", station);// Result of search
+    String  content=stations.getString(_chbuf);
+    //log_i("content %s", content.c_str());
+    _stationname=content.substring(0, content.indexOf("#")); //get stationname
+    content=content.substring(content.indexOf("#")+1, content.length()); //get URL
+    content.trim();
+    _stationURL=content;
+    _homepage="";
+    pref.putUInt("station", station);
+    f_has_ST=false; // will probably be set in ShowStreamtitle
+    return content;
 }
-String readnexthostfrompref(boolean updown){
-      String content = "" ;    // Result of search
-      int16_t preset;
-      char    tkey[12] ;        // Key as an array of chars
-      int16_t maxtry=0 ;        // Limit number of tries
-      int16_t pos=0;
-      _homepage="";
-      preset=pref.getUInt("preset");
-      do{
-          if(updown==true){preset++; if(preset>pref.getUInt("maxstations")) preset=0;}
-          else{preset--; if(preset<0)preset=pref.getUInt("maxstations");}
-          sprintf(tkey, "preset_%03d", preset);
-          content=pref.getString(tkey);
-          pos=content.indexOf("#");
-          if(pos>0){ //entry is not empty
-              _stationname=content.substring(0, content.indexOf("#")); //get stationname from preset
-              content=content.substring(content.indexOf("#")+1, content.length()); //get URL from preset
-              content.trim();
-              _stationURL=content;
-          }
-          else content="";
-          maxtry++;
-          if(maxtry==255) return"";
-      }while(content == "" );
-      pref.putUInt("preset", preset);
-      f_has_ST=false; // will probably be set in ShowStreamtitle
-      return content;
-}
+
 //**************************************************************************************************
 //                                   H A N D L E   R E Q U E S T                                   *
 //**************************************************************************************************
-void savepreferences(String request){  // save the preferences from web in nvs
-    String str, s, u ;
-    int ix;
-    char tkey[12];
-    static uint16_t cnt=0;
-    if(request=="end request\n"){
-        _req=none;                      // reset requesttype
-        //log_i("end request seen");
-        return;
-    }
-    if(request.indexOf(" -")==3){
-        if(request.startsWith("end")){
-            //log_i("the end%i",cnt);
-            pref.putUInt("maxstations", cnt);
-            cnt=0;
-            return;
-        }
-        else{
-            ix=request.indexOf("#");
-            if(ix>6){
-                s=request.substring(6,ix); s.trim();
-                u=request.substring(ix+1, request.length()); u.trim();
-            }
-            else{s=" "; u=" ";}
-            cnt++;
-            sprintf(tkey, "preset_%03d",cnt);
-            str=s+String("#")+u;
-            pref.putString(tkey, str);
-            return;
-        }
-    }
-}
-
 void savefile(String request){ //save the uploadfile on SD
     //log_i("request=%s",request.c_str());
     if(request=="end request\n"){
@@ -608,15 +539,16 @@ void savefile(String request){ //save the uploadfile on SD
         _req=none;                      // reset requesttype
         if(_filename.endsWith("jpg")){
             _filename="/logo"+_filename;
-            web.uploadB64image(SD, _filename.c_str());
+            if(web.uploadB64image(SD, UTF8toASCII(_filename.c_str()))) web.reply("OK");
+            else web.reply("failure");
         }
         else{
-            web.uploadfile(SD, _filename.c_str());
+            if(web.uploadfile(SD, UTF8toASCII(_filename.c_str()))) web.reply("OK");
+            else web.reply("failure");
+            if(_filename==String("/stations.txt")) saveStationsToNVS();
         }
-        web.reply("");
     }
 }
-
 //**************************************************************************************************
 //                                       L I S T M P 3 F I L E                                     *
 //**************************************************************************************************
@@ -718,17 +650,28 @@ void setup(){
     SD.begin(SD_CS);
     delay(100); // wait while SD is ready
     tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
-    SD.begin(SD_CS, SPI, 16000000);  // faster speed, after tft.begin()
+    SD.begin(SD_CS, SPI, 16000000);
     ir.begin();  // Init InfraredDecoder
     tft.setRotation(3); // Use landscape format
     tp.setRotation(3);
-    pref.begin("MiniWebRadio", false);
+    pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
+    stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
     setTFTbrightness(pref.getUInt("brightness"));
     f_SD_okay=(SD.cardType() != CARD_NONE); // See if known card
-    if(!f_SD_okay) Serial.println("setup      : SD card not found");
+    if(!f_SD_okay){
+        Serial.println("setup       : SD card not found");
+        while(1){};                     // endless loop, MiniWebRadio does not work without SD
+    }
     else Serial.println("setup      : found SD card");
-    if(pref.getString("MiniWebRadio") != "default") defaultsettings();  // first init
-    if(f_SD_okay) tft.drawBmpFile(SD, "/MiniWebRadio.bmp", 0, 0); //Welcomescreen
+    File file=SD.open("/stations.txt");
+    if(!file){
+        Serial.println("setup       : stations.txt not found");
+        while(1){};                     // endless loop, MiniWebRadio does not work without stations.txt
+    }
+    int size= file.size();
+    file.close();
+    if(stations.getLong("stations.size") != size) defaultsettings();  // first init
+    tft.drawJpgFile(SD, "/MiniWebRadio.jpg", 0, 0); //Welcomescreen
     Serial.println("setup      : Init VS1053");
     mp3.begin(); // Initialize VS1053 player
     if(!mp3.printVersion()) Serial.println("setup      : VS1053 not found");
@@ -751,43 +694,10 @@ void setup(){
     tft.fillScreen(TFT_BLACK); // Clear screen
     showHeadlineItem();
     tone();
-    mp3.connecttohost(readhostfrompref(0)); //last used station
+    mp3.connecttohost(setStation(pref.getUInt("station"))); //last used station
     //mp3.printDetails();
     if(_station=="") showStation(); // if station gives no icy-name display _stationname
     startTimer();
-}
-//**************************************************************************************************
-//                                      S E T T I N G S                                            *
-//**************************************************************************************************
-void getsettings(int8_t config=0){ //config=0 update index.html, config=1 update config.html
-    String val="", content="", s="", u="";
-    int i, j, ix, s_len=0;
-    char tkey[12];
-    char nr[8];
-    for(i=1;i<(pref.getUInt("maxstations")+1);i++){ // max presets
-        sprintf(tkey, "preset_%03d", i);
-        sprintf(nr, "%03d - ", i);
-        content=pref.getString(tkey);
-        ix=content.indexOf("#");
-        if(ix>0){
-            u=content.substring(ix, content.length());
-            s=content.substring(0,ix);
-            j=0; s_len=0;
-            while(s[j]!=0){if((s[j]<0xC2)||(s[j]>0xD4)) s_len++; j++;} //count UTF-8 chars, compute len
-        }
-        else {s=" "; u=" ";}
-        if(config==0){
-            content=String(nr) + s;
-            val=String(tkey) + String("=") + String(content) + String("\n");
-            web.reply(val, false);
-        }
-        if(config==1){
-            for(j=s_len;j<39;j++) s+=String(" ");
-            content=s+u;
-            val=String(nr) +(String(content) + String("\n"));
-            web.reply(val, false);
-        }
-    }web.stop();
 }
 //**************************************************************************************************
 inline uint8_t downvolume(){
@@ -818,7 +728,7 @@ inline void showBrightnessBar(){
     tft.fillRect(0, 140, br, 5, TFT_RED); tft.fillRect(br+1, 140, tft.width()-br+1, 5, TFT_GREEN);
 }
 inline String StationsItems(){
-    return (String(pref.getUInt("preset")) + " " + _stationURL + " " + _stationname);
+    return (String(pref.getUInt("station")) + " " + _stationURL + " " + _stationname);
 }
 //**************************************************************************************************
 //                                M E N U E / B U T T O N S                                        *
@@ -916,8 +826,8 @@ void display_weekdays(uint8_t ad, boolean showall=false){
     for(i=0;i<7;i++){
         if((d & (1<<i))==(old_d & (1<<i))&&!showall) continue;  //icon is alread displayed
         str="/day/"+String(i);
-        if(d & (1<<i))  str+="_rt.bmp";    // l<<i instead pow(2,i)
-        else            str+="_gn.bmp";
+        if(d & (1<<i))  str+="_rt_en.bmp";    // l<<i instead pow(2,i)
+        else            str+="_gn_en.bmp";
         if(f_SD_okay) tft.drawBmpFile(SD, str.c_str(), 5+i*44, 0);
         mp3.loop();
     }
@@ -1028,14 +938,13 @@ void display_sleeptime(int8_t ud=0, boolean ready=false){  // set sleeptimer
 //**************************************************************************************************
 void loop() {
     static uint8_t sec=0;
+    if(web.loop()) return; // if true: ignore all other for faster response to web
     mp3.loop();
-    web.loop();
     ir.loop();
     tp.loop();
     if(f_1sec==true){
         if(f_rtc==true){ // true -> rtc has the current time
             int8_t h=0;
-            char tkey[20];
             _time_s=rtc.gettime_s();
             if((f_mute==false)&&(!f_sleeping)){
                 if(_time_s.endsWith("59:51")) { // speech the time 9 sec before a new hour is arrived
@@ -1043,10 +952,9 @@ void loop() {
                     h=_hour.toInt();
                     h++;
                     if(h==24) h=0;
-                    sprintf ( tkey, "/voice_time/%03d.mp3", h);
-                    //Serial.println(tkey);
                     _timefile=3;
-                    mp3.connecttoSD(tkey);
+                    sprintf (_chbuf, "/voice_time/%03d.mp3", h);
+                    mp3.connecttoSD(_chbuf);
                 }
             }
             showHeadlineTime();
@@ -1124,7 +1032,7 @@ void vs1053_showstation(const char *info){              // called from vs1053
     if((_station==String(info))&&((String(info)!=""))) return;
     _station=info;
     _title="";
-    showStation();
+    //avoid double logo paint, show it when last connected host is received
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
     _title=info;
@@ -1166,6 +1074,7 @@ void vs1053_icyurl(const char *info){                   // if the Radio has a ho
 }
 void vs1053_lasthost(const char *info){                 // really connected URL
     _lastconnectedhost=String(info);
+    showStation();
     Serial.print("lastURL    : ");
     Serial.println(info);
 }
@@ -1185,28 +1094,25 @@ void HTML_command(const String cmd){                    // called from html
     String  str;
     if(cmd=="homepage"){(web.reply(_homepage)); return;}
     if(cmd=="to_listen"){web.reply(StationsItems()); return;} // return the name and number of the current station
-    if(cmd=="settings"){getsettings(0); return;}
-    if(cmd=="getprefs") {getsettings(1); return;}
-    if(cmd=="getdefs"){defaultsettings(); getsettings(1); return;}
     if(cmd=="gettone"){ web.reply(tone()); return;}
+    if(cmd=="getmute"){ web.reply(String(int(f_mute))); return;}
     if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_chbuf); return;}
-    if(cmd=="reset") {ESP.restart(); return;}
+    if(cmd=="mute") {mute();if(f_mute==true) web.reply("Mute on\n"); else web.reply("Mute off\n"); return;}
     if(cmd.startsWith("toneha=")){pref.putUInt("toneha",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Gain set"); tone(); return;}
     if(cmd.startsWith("tonehf=")){pref.putUInt("tonehf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Freq set"); tone(); return;}
     if(cmd.startsWith("tonela=")){pref.putUInt("tonela",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Bass Gain set"); tone(); return;}
     if(cmd.startsWith("tonelf=")){pref.putUInt("tonelf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Bass Freq set"); tone(); return;}
-    if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
-    if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
-    if(cmd.startsWith("mute")) {mute();if(f_mute==true) web.reply("Mute on\n"); else web.reply("Mute off\n"); return;}
-    if(cmd.startsWith("downpreset")){str=readnexthostfrompref(false); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("uppreset")){str=readnexthostfrompref(true); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("preset=")){ mp3.connecttohost(str=readhostfrompref(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("station=")){_stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
-    if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
-    if(cmd.startsWith("saveprefs")) {_req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
-    if(cmd.startsWith("uploadfile")){_req=savefiles;  _filename=cmd.substring(11);  return;}
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
+    if(cmd.startsWith("saveprefs")) {_req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
+    if(cmd.startsWith("uploadfile")){_req=savefiles;  _filename=cmd.substring(11);  return;}
+    if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
+    if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
+    if(cmd.startsWith("prev_station")){str=setStation(-1); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("next_station")){str=setStation(0); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("set_station=")){ mp3.connecttohost(str=setStation(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("stationURL=")){_stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
+    if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(String file){                  // called from html
@@ -1222,12 +1128,10 @@ void HTML_file(String file){                  // called from html
     }
     log_e("unknown HTMLfile %s", file.c_str());
 }
-
 void HTML_request(const String request){
     //log_i("request=%s", request.c_str());
-    if(_req==saveprefs){savepreferences(request); return;}
-    if(_req==savefiles){savefile(request);        return;}
-    if(request=="end request\n"){                 return;}
+    if(_req==savefiles){savefile(request);  return;}
+    if(request=="end request\n"){           return;}
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                    // called from html
@@ -1237,14 +1141,14 @@ void HTML_info(String info){                    // called from html
 // Events from IR Library
 void ir_res(uint32_t res){
     if(_state==RADIO){
-        if(res>pref.getUInt("maxstations")){
+        if(res>stations.getUInt("maxstations")){
             tft.setTextSize(7);
             display_info(String(res).c_str(), _yName, _hName +_hTitle, TFT_RED, 100); //state RADIO
             return;
         }
         else{
             _station="";
-            mp3.connecttohost(readhostfrompref(res));//state RADIO
+            mp3.connecttohost(setStation(res));//state RADIO
         }
     }
 }
@@ -1262,10 +1166,10 @@ void ir_key(const char* key){
                     break;
         case 'l':   downvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); // left
                     break;
-        case 'u':   if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(true));  // up
+        case 'u':   if(_state==RADIO) mp3.connecttohost(setStation(0));  // up
                     if(_state==SLEEP) display_sleeptime(1);
                     break;
-        case 'd':   if(_state==RADIO) mp3.connecttohost(readnexthostfrompref(false)); // down
+        case 'd':   if(_state==RADIO) mp3.connecttohost(setStation(-1)); // down
                     if(_state==SLEEP) display_sleeptime(-1);
                     break;
         case '#':   if(_state==SLEEP) changeState(RADIO); // #
@@ -1312,8 +1216,8 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
         if(yPos==1){_releaseNr= 1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr= 2; upvolume(); showVolumeBar();}   // Vol+
-        if(yPos==3){_releaseNr= 3; mp3.connecttohost(readnexthostfrompref(false));}
-        if(yPos==4){_releaseNr= 4; mp3.connecttohost(readnexthostfrompref(true)); }
+        if(yPos==3){_releaseNr= 3; mp3.connecttohost(setStation(-1));} // station--
+        if(yPos==4){_releaseNr= 4; mp3.connecttohost(setStation(0)); } // station++
     }
     if(_state==RADIOmenue){
         if(yPos==0){_releaseNr= 5; mp3.stop_mp3client(); listmp3file();} // MP3
