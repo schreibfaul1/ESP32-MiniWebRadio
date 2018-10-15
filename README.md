@@ -4,7 +4,7 @@
 
 Can play streams and mp3 files up to 320Kbit/s<br> 
 SD-Card, TFT Display with Touchpad, MP3 Module with VS1053 is nessesary<br>
-more than 350 stations are predefined<br>
+can handle max 999 stations<br>
 IR remote control is optional<br>
 obtains time from NTP<br>
 can used as alarmclock, has sleeptimer<br>
