@@ -1,7 +1,7 @@
 /*
  *  web.h
  *
- *  Created on: 11.09.2018
+ *  Created on: 04.10.2018
  *      Author: Wolle
  *
  *  does not work with MS Internetexplorer
@@ -14,7 +14,7 @@
 
 #include "Arduino.h"
 
-// about.html file in raw data format for PROGMEM
+// file in raw data format for PROGMEM
 //
 
 const char web_html[] PROGMEM = R"=====(
@@ -22,10 +22,14 @@ const char web_html[] PROGMEM = R"=====(
 
 <html>
 <head>
-    <meta http-equiv="Content-Type" content="text/html; charset="utf-8">
-    <meta http-equiv="Cache-Control" content="public, max-age=31536000, must-revalidate" />
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+    
     <title>MiniWebRadio</title>
+    
     <style type="text/css">
         html{
             margin:0px;
@@ -37,12 +41,11 @@ const char web_html[] PROGMEM = R"=====(
         }
         #CONTENT {
             min-height:620px;
-            min-width: 700px;
+            min-width: 720px;
             overflow:hidden;
             margin: 5px;
             background-color: lightblue;
         }
-
         #tab-content1 {
             display:block;
             margin: 20px;
@@ -75,9 +78,8 @@ const char web_html[] PROGMEM = R"=====(
             font-size: 16px;
             margin: 4px 2px;
             cursor: pointer;
-            border-radius: 10px;
+            border-radius: 5px;
         }
-        .buttonred  {background-color: #D62C1A; width: 120px;}
         .buttonblue {background-color: blue;    width: 120px;}
         .buttongreen{background-color: #128F76; width: 120px;}
         .select {
@@ -110,7 +112,7 @@ const char web_html[] PROGMEM = R"=====(
             -moz-border-radius: 5px;
             -webkit-appearance: none;
             border: 1px solid black;
-            border-radius: 10px;
+            border-radius: 5px;
         }
         input[type="text"]:focus {
             outline: none;
@@ -134,17 +136,17 @@ const char web_html[] PROGMEM = R"=====(
             margin-left: 20px;
             border:2px solid black;
             display:inline-block;
-            background-image: url("SD/logo/unknown.jpg");
+            background-image: url("SD/unknown.jpg");
             width: 96px;
             height:96px;
         }
         canvas {
-          left: 0px;
-          margin-left: 0px;
-          display: inline-block;
-          width: 96px;
-          height: 96px;
-          border: 2px solid black;
+            left: 0px;
+            margin-left: 0px;
+            display: inline-block;
+            width: 96px;
+            height: 96px;
+            border: 2px solid black;
         }
         #label_TG_value {
             width: 50px;
@@ -169,23 +171,45 @@ const char web_html[] PROGMEM = R"=====(
         #prefs{
             width: 100%;
         }
+        .jsgrid-header-cell {
+            padding: 0.1em 0.1em !important;
+        }
+        .jsgrid-cell {
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            padding: 0.1em 0.2em !important;
+        }
+        .ui-widget-header {
+            background: #11e9e9 !important;
+        }
+        .ui-dialog .ui-dialog-buttonpane {
+            border-width: 0 0 0 0 !important;
+            margin-top: 0 !important;
+            padding: 0 0 0 1em !important;
+        }
+        .ui-dialog .ui-dialog-content {
+            margin-top: 0.3em !important;
+            padding: 0.1em 0.1em !important;
+        }
     </style>
 </head>
 
 <script>
-    //global variables
+
+    //global variables and functions
     var treble_dB = ["-12,0","-10,5"," -9,0"," -7,5"," -6,0"," -4,5"," -3,0"," -1,5",
                      "  0,0"," +1,5"," +3,0"," +4,5"," +6,0"," +7,5"," +9,0","+10,5"];
     var treble_val= [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7];
 
-
     window.onload = function() { // Fill configuration initially
+        document.getElementById("dialog").style.display = "none"; // hide the div (its only a template)        
         gettone(); //Now load the tones (tab Radio)
         httpGet("to_listen", 1);
         getnetworks();
-        ldef("getprefs");
-     }
-
+        showExcelGrid();
+        loadGridFileFromSD();
+        getmute();
+    }
     function showTab1(){
         console.log("tab-content1 (Radio)");
         document.getElementById("tab-content1").style.display = "block";
@@ -193,6 +217,7 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
         document.getElementById("tab-content5").style.display = "none";
+        getmute();
     }
     function showTab2(){
         console.log("tab-content2 (Stations)");
@@ -201,6 +226,7 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
         document.getElementById("tab-content5").style.display = "none";
+        $("#jsGrid").jsGrid("refresh");
     }
     function showTab3(){
         console.log("tab-content3 (MP3 Player)");
@@ -212,7 +238,7 @@ const char web_html[] PROGMEM = R"=====(
         getmp3list(); // Now get the mp3 list from SD      
     }
     function showTab4(){
-        console.log("tab-content4 (Settings)");
+        console.log("tab-content4 (Search Stations)");
         document.getElementById("tab-content1").style.display = "none";
         document.getElementById("tab-content2").style.display = "none";
         document.getElementById("tab-content3").style.display = "none";
@@ -227,6 +253,20 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
         document.getElementById("tab-content5").style.display = "block";      
+    }
+    function uploadTextFile(fileName, content ) {
+        var fd = new FormData();
+        fd.append("Text=", content);
+        var theUrl = "/?uploadfile=" + fileName + "&version=" + Math.random();
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', theUrl, true);
+        xhr.onreadystatechange = function() {   //Call a function when the state changes.
+            if(xhr.readyState == 4) {
+                if(xhr.responseText=="OK") alert(fileName + ' succesfully uploaded');
+                else alert(fileName + ' not uploaded')
+            }
+        }
+        xhr.send(fd);   // send
     }
     
     //----------------------------------- TAB RADIO ------------------------------------
@@ -272,9 +312,9 @@ const char web_html[] PROGMEM = R"=====(
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE ) {
                 if(nr==1) {
-                    if(theReq.startsWith("downpreset")||
-                        theReq.startsWith("uppreset")||
-                        theReq.startsWith("preset")||
+                    if(theReq.startsWith ("prev_station")||
+                        theReq.startsWith("next_station")||
+                        theReq.startsWith("set_station=")||
                         theReq.startsWith("to_listen")){
                         resultstr1.value = xhr.responseText;
                         var res="", num = "", sta="", url="", n=0;
@@ -285,10 +325,9 @@ const char web_html[] PROGMEM = R"=====(
                         sel.selectedIndex = Number(num);
                         if(n==1) num="00"+num;
                         if(n==2) num="0"+num;
-               //         selectItemByValue("preset", num);
                         res = res.substring(n+1);       // remove stationnumber
                         n = res.indexOf(" ");
-                        url = res.substring(0, n);      // stationURL
+                        url = res.substring(0, n);      // streamURL
                         sta = res.substring(n+1);
                         showLabel('label-logo', sta);
                         resultstr1.value = "";  //sta;
@@ -324,7 +363,7 @@ const char web_html[] PROGMEM = R"=====(
         xhr.send();
     }
 
-    function gettone() {   // tab Radio: get tones values and set they
+    function gettone() {   // tab Radio: get tones values and set them
         var i, sel, lines, parts ;            
         var theUrl = "/?gettone" + "&version=" + Math.random();
         var xhr = new XMLHttpRequest() ;
@@ -343,8 +382,25 @@ const char web_html[] PROGMEM = R"=====(
         xhr.send();
     }
 
-    function handlepreset(presctrl) {  // tab Radio: preset, select a station
-        httpGet("preset=" + presctrl.value, 1);
+    function getmute(){
+        var mute;            
+        var theUrl = "/?getmute" + "&version=" + Math.random();
+        var xhr = new XMLHttpRequest() ;
+        xhr.onreadystatechange = function() {
+            if ( xhr.readyState == XMLHttpRequest.DONE ) {
+                if(xhr.responseText==1) // muteOn
+                    document.getElementById("Mute").src="SD/png/Button_Mute_Red.png";
+                else
+                    document.getElementById("Mute").src="SD/png/Button_Mute_Green.png";
+            }
+        }
+        xhr.open ( "GET", theUrl, true) ;
+        xhr.send();
+    }
+
+
+    function handleStation(presctrl) {  // tab Radio: preset, select a station
+        httpGet("set_station=" + (presctrl.value), 1);
     }
 
     function handletone(tonectrl) { // Radio: treble, bass, frequ
@@ -360,11 +416,12 @@ const char web_html[] PROGMEM = R"=====(
     }
 
     function setstation() {  // Radio: button play - enter a url to play from
-        var theUrl = "/?station=" + station.value + "&version=" + Math.random();
+        var theUrl = "/?stationURL=" + station.value + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE) {
-                resultstr1.value = xhr.responseText; showLabel('label-logo', 'unknown');
+                resultstr1.value = xhr.responseText;
+                showLabel('label-logo', 'unknown');
             }
         }
         xhr.open ( "GET", theUrl, true);
@@ -465,71 +522,275 @@ const char web_html[] PROGMEM = R"=====(
  
     //----------------------------------- TAB CONFIG ------------------------------------
        
-    function ldef(source) {  // Config: Load preferences or defaults
-        var xhr = new XMLHttpRequest();
-        var lines, opt, select, i;
-        xhr.onreadystatechange = function() {
-            prefs.value="";
-            if(xhr.readyState == XMLHttpRequest.DONE) {
-                select = document.getElementById("prefs");  // Config: show stationlist and URL
-                if(source=='getprefs')select.value = xhr.responseText;
-                if(source=='getdefs')select.value=xhr.responseText;
-                select = document.getElementById("preset");  // Radio: show stationlist
-                select.options.length=1;
-                lines=xhr.responseText.split("\n");
-                for(i = 0 ; i < (lines.length - 1); i++ ) {
-                    lines[i]=lines[i].substring(0,lines[i].indexOf("#"));
-                    lines[i]=lines[i].trim();
-                    lines[i]+="\n";
+    function saveGridFileToSD(){  // save to SD
+        var ws_data = $("#jsGrid").jsGrid("option", "data");
+        var strJSON = JSON.stringify(ws_data);
+        var objJSON = JSON.parse(strJSON);
+        console.log(ws_data.length);
+        var txt="";
+        var l;
+        var c;
+        select = document.getElementById("preset");  // Radio: show stationlist
+        select.options.length=1;                   
+        var j=1;
+        txt="X\tCy\tStationName\t\t\t\t\t\t\tStreamURL\t\t\t\t\t\t\t\t\t\t\t\t\STsubstitute\r\n"
+        for (var i = 0; i<ws_data.length; i++) {
+            c="";
+            if(objJSON[i].X){
+                c=objJSON[i].X; l=c.length;
+                while(l<8){c=c+'\t'; l+=8;} txt+=c;
+            }
+            else txt+='\t';
+            if(objJSON[i].X != '*'){
+                if(j<1000){ 
                     opt = document.createElement("OPTION");
-                    opt.text = lines[i];
+                    opt.text = (("000" + j).slice(-3)+ " - " + objJSON[i].StationName );
                     select.add(opt);
                 }
+                j++;
             }
+            if(objJSON[i].Cy){
+                c=objJSON[i].Cy; l=c.length;
+                while(l<8){c=c+'\t'; l+=8;} txt+=c;
+            }
+            else txt+='\t';
+            if(objJSON[i].StationName){
+                c=objJSON[i].StationName; l=c.length;
+                while(l<(8*8)){c=c+'\t'; l+=8;} txt+=c;
+            }
+            else txt+='\t';
+            if(objJSON[i].StreamURL){
+                c=objJSON[i].StreamURL; l=c.length;
+                while(l<(8*13)){c=c+'\t'; l+=8;} txt+=c;
+            }
+            else txt+='\t';
+            if(objJSON[i].STsubstitute){
+                txt+=objJSON[i].STsubstitute;
+            }
+            txt+='\r';
+            txt+='\n';
         }
-        xhr.open("GET", "/?" + source  + "&version=" + Math.random(), true);
-        xhr.send() ;
+        uploadTextFile("stations.txt", txt);
+        updateStationlist();
+    }
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    function loadGridFileFromSD(){ // load from SD
+        var XL_row_object;
+        var rawFile = new XMLHttpRequest();
+        rawFile.open("POST", "/SD/stations.txt", true);
+        rawFile.onreadystatechange = function(){
+            if (rawFile.readyState === 4){
+                var rawdata = rawFile.responseText;
+                rawdata=rawdata.replace(/(\t\t)/g,'\t'); // shrink more tabs to one tab in 3 steps
+                rawdata=rawdata.replace(/(\t\t)/g,'\t');
+                rawdata=rawdata.replace(/(\t\t)/g,'\t');
+                var workbook = XLSX.read(rawdata, {raw: true, type: "string", cellDates:false, cellText:true});
+                workbook.SheetNames.forEach(function(sheetName){ 
+                    XL_row_object = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+                });
+                var strJSON = JSON.stringify(XL_row_object);
+                var objJSON = JSON.parse(strJSON);
+                $("#jsGrid").jsGrid({data: objJSON});
+                updateStationlist();
+            };
+        }
+        rawFile.send();
+    }
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    function saveExcel() {  // save xlsx to PC
+        var wb = XLSX.utils.book_new();
+        wb.Props = {
+            Title: "Stations",
+            Subject: "Stationlist",
+            Author: "MiniWebRadio",
+            CreatedDate: new Date("2018.10.10")
+        };
+        wb.SheetNames.push("Stations");
+        var ws_data = $("#jsGrid").jsGrid("option", "data");
+        var wscols = [
+            { wch: 3 },     // "characters"
+            { wch: 5 },     // "characters"
+            { wch: 100 },   // "characters"
+            { wch: 150 },   // "characters"
+            { wch: 200 }    // "characters"
+        ];
+        var ws = XLSX.utils.json_to_sheet(ws_data, {
+            header: ["X", "Cy", "StationName", "StreamURL", "STsubstitute"]
+        });
+        ws["!cols"] = wscols;
+        wb.Sheets["Stations"] = ws;
+    
+        var wbout = XLSX.write(wb, { bookType: "xlsx", type: "binary" });
+    
+        function s2ab(s) {
+            var buf = new ArrayBuffer(s.length);
+            var view = new Uint8Array(buf);
+            for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff;
+            return buf;
+        }
+        saveAs(
+            new Blob([s2ab(wbout)], { type: "application/octet-stream" }),
+            "stations.xlsx"
+        );
+        updateStationlist();
+    }
+    
+
+
+    var clients = [  // testdata
+        {
+            X: "*",
+            Cy: "D",
+            StationName: "Station",
+            StreamURL: "URL",
+            STsubstitute: ""
+        }
+    ];
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    function showExcelGrid() {
+        $("#jsGrid").jsGrid({
+            width: "100%",
+            height: "432px",
+            editing: true,
+            sorting: true,
+            paging: false,
+            shrinkToFit: false,
+            onItemDeleted: function(args) {updateStationlist();},
+            onItemUpdated: function(args) {updateStationlist();},
+            onItemInserted: function(args){updateStationlist();},
+            deleteConfirm: function(item) {
+                return 'The entry "' + item.StationName + '" will be removed. Are you sure?';
+            },
+            rowClick: function(args) {
+                showDetailsDialog("Edit", args.item);
+            },
+            data: clients,
+            fields: [
+                { name: "X", type: "text", width: 20, align: "center" },
+                { name: "Cy", type: "text", width: 25, align: "center" },
+                { name: "StationName", type: "text", width: 170 },
+                { name: "StreamURL", type: "text", width: 320 },
+                { name: "STsubstitute", type: "text", width: 90 },
+                {
+                    type: "control",
+                    modeSwitchButton: false,
+                    editButton: false,
+                    shrinkToFit: true,
+                    headerTemplate: function() {
+                        return $("<button>")
+                        .attr("type", "button")
+                        .text("Add")
+                        .on("click", function() {
+                            showDetailsDialog("Add", {});
+                        });
+                    }
+                }
+            ]
+        });
     }
 
-    function fsav() {  // tab Config: save the preferences
-        var str = prefs.value;
-        var theUrl = "/?saveprefs=0&version=" + Math.random();
-        var xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
-            if( xhr.readyState == XMLHttpRequest.DONE) {
-                ldef("getprefs");
-            }
-        }
-        // Remove empty lines
-        while(str.indexOf("\r\n\r\n") >= 0) {
-            str=str.replace(/\r\n\r\n/g, "\r\n");
-        }
-        while(str.indexOf("\n\n" ) >= 0) {
-            str=str.replace(/\n\n/g, "\n");
-        }
-        xhr.open("POST", theUrl, true);
-        xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-        xhr.send(str + "end -" + "\n\n");
-    }
 
-    function getnetworks() { // tab Config: load the connevted WiFi network
-        var i, select, opt, networks;
-        var theUrl = "/?getnetworks" + "&version=" + Math.random() ;
-        var xhr = new XMLHttpRequest();
-        select = document.getElementById("ssid");  // Radio: show stationlist
-        xhr.onreadystatechange = function() {
-            if(xhr.readyState == XMLHttpRequest.DONE) {
-                networks=xhr.responseText.split("\n");
-                for(i = 0 ; i < (networks.length - 1); i++ ) {
-                    opt = document.createElement( "OPTION" );
-                    opt.value = i;
-                    opt.text = networks[i];
-                    select.add(opt);
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    var showDetailsDialog = function(dialogType, client) { // popUp window
+        $("#txtX").val(client.X);
+        $("#txtCy").val(client.Cy);
+        $("#txtStationName").val(client.StationName);
+        $("#txtStreamURL").val(client.StreamURL);
+        $("#txtStSub").val(client.STsubstitute);
+        var divdialog = $("#dialog");
+        $("#dialog").attr("title", "Edit");
+        $("#dialog").dialog({
+            width: 505,
+            resizable: false,
+            show: "fade",
+            modal: false,
+            buttons: {
+                OK: function() {
+                    client.X = $("#txtX").val();
+                    client.Cy = $("#txtCy").val();
+                    client.StationName = $("#txtStationName").val();
+                    client.StreamURL = $("#txtStreamURL").val();
+                    client.STsubstitute = $("#txtStSub").val();
+                    includeStation(client, dialogType === "Add");
+                    $(this).dialog("close");
+                    console.log("dialog saved");
                 }
             }
+        });
+        divdialog.dialog();
+        console.log("dialog opened");
+    };
+    
+    var includeStation = function(client, isNew) {
+        $.extend(client, {
+            X: $("#txX").val(),
+            Cy: $("#txtCy").val(),
+            StationName: $("#txtStationName").val(),
+            StreamURL: $("#txtStreamURL").val(),
+            StSub: $("#txtStSub").val()
+        });
+    
+        $("#jsGrid").jsGrid(isNew ? "insertItem" : "updateItem", client);
+        $("#detailsDialog").dialog("close");
+    };
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    function loadDataExcel(event) {  // load xlsx from PC
+        var file = event[0];
+        var reader = new FileReader();
+        var excelData = [];
+        reader.onload = function(event) {
+            var data = event.target.result;
+            var workbook = XLSX.read(data, {
+                type: "binary"
+            });
+            workbook.SheetNames.forEach(function(sheetName) {
+                // Here is your object
+                var XL_row_object = XLSX.utils.sheet_to_row_object_array(
+                    workbook.Sheets[sheetName]
+                );
+    
+                for (var i = 0; i < XL_row_object.length; i++) {
+                    excelData.push(XL_row_object[i]["your column name"]);
+                }
+    
+                var strJSON = JSON.stringify(XL_row_object);
+                var objJSON = JSON.parse(strJSON);
+                //alert(strJSON);
+                $("#jsGrid").jsGrid({
+                    data: objJSON
+                });
+                updateStationlist();
+            });
+        };
+        $("#file").val(''); // allow load twice
+        reader.onerror = function(ex) {
+            console.log(ex);
+        };
+    
+        reader.readAsBinaryString(file);
+    }
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    function updateStationlist(){  // select in tab Radio
+        var ws_data = $("#jsGrid").jsGrid("option", "data");
+        var strJSON = JSON.stringify(ws_data);
+        var objJSON = JSON.parse(strJSON);
+        console.log(ws_data.length);
+        select = document.getElementById("preset");  // Radio: show stationlist
+        select.options.length=1; 
+        j=1;
+        for (var i = 0; i<ws_data.length; i++) {
+            if(objJSON[i].X != '*'){
+                if(j<1000){ 
+                    opt = document.createElement("OPTION");
+                    opt.text = (("000" + j).slice(-3)+ " - " + objJSON[i].StationName );
+                    select.add(opt);
+                }
+                j++;
+            }
         }
-        xhr.open ( "GET", theUrl, true);
-        xhr.send();
     }
 
     //----------------------------------- TAB MP3 PLAYER ------------------------------------
@@ -567,6 +828,12 @@ const char web_html[] PROGMEM = R"=====(
 
     // global var
     var countryallstations
+
+    function addStationsToGrid(){
+        showDetailsDialog('Add', {});
+        $("#txtStreamURL").val($("#streamurl").val());
+        $("#txtStationName").val($("#stationname").val());
+    }
     
     function loadJSON(path, success, error) {
         console.log(path);
@@ -621,7 +888,7 @@ const char web_html[] PROGMEM = R"=====(
         sturl=countryallstations[value].url;
         console.log(value);
         console.log(sturl);
-        var f = document.getElementById("stationurl");
+        var f = document.getElementById("streamurl");
         f.value=sturl;
         var g = document.getElementById("favicon");
         var favi=countryallstations[value].favicon;
@@ -634,8 +901,8 @@ const char web_html[] PROGMEM = R"=====(
         j.value=countryallstations[value].name;
     }
 
-    function teststationurl() {  // Search: button play - enter a url to play from
-        var theUrl = "/?station=" + stationurl.value + "&version=" + Math.random();
+    function teststreamurl() {  // Search: button play - enter a url to play from
+        var theUrl = "/?stationURL=" + streamurl.value + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE) {
@@ -683,7 +950,7 @@ const char web_html[] PROGMEM = R"=====(
         console.log("refresh");
     }
 
-    function downloadCanvasImage() {
+    function uploadCanvasImage() {
         var sn = document.getElementById("stationname");
         if(sn.value != "") filename=sn.value+".jpg"; else filename="myimage.jpg";
         var canvas = document.getElementById("canvas");
@@ -698,18 +965,63 @@ const char web_html[] PROGMEM = R"=====(
             if (e.lengthComputable) {
                 var percentComplete = (e.loaded / e.total) * 100;
                 console.log(percentComplete + '% uploaded');
-                //alert('Succesfully uploaded');
             }
         }
         xhr.onload = function() {
  
         }
+        xhr.onreadystatechange = function() {   //Call a function when the state changes.
+            if(xhr.readyState == 4) {
+                if(xhr.responseText=="OK") alert(filename + ' succesfully uploaded');
+                else alert(filename + ' not uploaded')
+            }
+        }
         xhr.send(fd);
+    }
+
+    function downloadCanvasImage() {
+        var sn = document.getElementById("stationname");
+        if(sn.value != "") filename=sn.value+".jpg"; else filename="myimage.jpg";
+        var lnk = document.createElement('a'), e;  // create an "off-screen" anchor tag
+        lnk.download = filename; // the key here is to set the download attribute of the a tag
+        lnk.href = canvas.toDataURL("image/jpeg");
+        if (document.createEvent) { // create a "fake" click-event to trigger the download
+            e = document.createEvent("MouseEvents");
+            e.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+            lnk.dispatchEvent(e);
+        } else if (lnk.fireEvent) {
+            lnk.fireEvent("onclick");
+        }
+    }
+    //-------------------------------------- TAB Info ---------------------------------------
+    function getnetworks() { // tab Config: load the connevted WiFi network
+        var i, select, opt, networks;
+        var theUrl = "/?getnetworks" + "&version=" + Math.random() ;
+        var xhr = new XMLHttpRequest();
+        select = document.getElementById("ssid");  // Radio: show stationlist
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState == XMLHttpRequest.DONE) {
+                networks=xhr.responseText.split("\n");
+                for(i = 0 ; i < (networks.length - 1); i++ ) {
+                    opt = document.createElement( "OPTION" );
+                    opt.value = i;
+                    opt.text = networks[i];
+                    select.add(opt);
+                }
+            }
+        }
+        xhr.open ( "GET", theUrl, true);
+        xhr.send();
     }
 
 </script>
 
 <body id="BODY">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 
     <div id="CONTENT" >
     <!--==============================================================================================-->
@@ -742,16 +1054,16 @@ const char web_html[] PROGMEM = R"=====(
                         <img src="SD/png/Button_Previous_Green.png" alt="previous" 
                              onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
                              onmouseup="this.src='SD/png/Button_Previous_Green.png'"
-                             onclick="httpGet('downpreset=1', 1)"/>
+                             onclick="httpGet('prev_station', 1)"/>
                         <img src="SD/png/Button_Next_Green.png" alt="next" 
                              onmousedown="this.src='SD/png/Button_Next_Yellow.png'" 
                              onmouseup="this.src='SD/png/Button_Next_Green.png'"
-                             onclick="httpGet('uppreset=1', 1)"/>
+                             onclick="httpGet('next_station', 1)"/>
                     </left>
                 </td>
                 <td colspan="2">
-                 <select class="select" style="width:100%;"  onChange="handlepreset(this)" id="preset">
-                    <option value="-1">Select a preset here</option>
+                 <select class="select" style="width:100%;"  onChange="handleStation(this)" id="preset">
+                    <option value="-1">Select a station here</option>
                  </select>
                 </td>
             </tr>
@@ -828,7 +1140,7 @@ const char web_html[] PROGMEM = R"=====(
             <tr>
             </tr>
                 <td>
-                    <input type="text" style="width:100%;" id="station" placeholder="Enter a stationURL here....">
+                    <input type="text" style="width:100%;" id="station" placeholder="Enter a streamURL here....">
                 </td>
                 <td width="70">
                     <right>
@@ -862,6 +1174,32 @@ const char web_html[] PROGMEM = R"=====(
     </div>
     <!--==============================================================================================-->
     <div id="tab-content2">
+        <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
+        <div id="dialog">
+            <table>
+                <tr>
+                    <td> x </td>
+                    <td> <input type=text id="txtX" size="45"/></td>
+                </tr>
+                <tr>
+                    <td>  Cy  </td>
+                    <td> <input type=text id="txtCy" size="45"/></td>
+                </tr>
+                <tr>
+                    <td>  StationName  </td>
+                    <td> <input type=text id="txtStationName" size="45"/></td>
+                </tr> 
+                <tr>
+                    <td>  StreamURL  </td>
+                    <td> <input type=text id="txtStreamURL" size="45"/></td>
+                </tr>     
+                <tr>
+                    <td>  STsubstitute  </td>
+                    <td> <input type=text id="txtStSub" size="45"/></td>
+                </tr>        
+            </table>
+        </div>
+        <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->  
         <table width=100%>
             <tr>
                 <td style="width:350px;">
@@ -884,24 +1222,29 @@ const char web_html[] PROGMEM = R"=====(
         </table> 
         <hr>
         <center>
-        <p>You can edit the configuration here. <i>Note that this will be overwritten by "Load default".</i></p>
-
-        <textarea wrap="off" rows="25" id="prefs" 
-            onkeydown="if(event.keyCode===9){
-                var v=this.value,s=this.selectionStart,e=this.selectionEnd;
-                this.value=v.substring(0, s)+'\t'+v.substring(e);
-                this.selectionStart=this.selectionEnd=s+1;return false;
-            }">
-            Space for preferences
-        </textarea>
+        <div id="jsGrid"></div>
         <br>
-        <button class="button buttongreen" onclick="fsav()">Save</button>
-        &nbsp;&nbsp;
-        <button class="button buttonred" onclick="httpGet('reset', 2)">Restart</button>
-        &nbsp;&nbsp;
-        <button class="button buttongreen" onclick="ldef('getprefs')">Load</button>
-        &nbsp;&nbsp;
-        <button class="button buttonblue" onclick="ldef('getdefs')">Load default</button>
+        <button class="button buttongreen" 
+                onclick="saveGridFileToSD()" 
+                onmousedown="this.style.backgroundColor='#D62C1A'" 
+                onmouseup="this.style.backgroundColor='#128F76'"
+                title="Save to SD">Save
+        </button>
+        &nbsp;
+        <button class="button buttongreen" 
+                onclick="loadGridFileFromSD()"
+                onmousedown="this.style.backgroundColor='#D62C1A'" 
+                onmouseup="this.style.backgroundColor='#128F76'" 
+                id="loadSD" title="Load from SD">Load
+        </button>
+        &nbsp;
+        <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+        &nbsp;
+        <button class="button buttonblue" 
+                onclick="javascript:document.getElementById('file').click();"
+                title="Load from PC">load xlsx
+        </button>
+        <input id="file" type="file" style='visibility: hidden; width: 0px' name="img" onchange="loadDataExcel(this.files);"/>
         <br>
         </center>
     </div>  
@@ -991,8 +1334,8 @@ const char web_html[] PROGMEM = R"=====(
         <table width=100%>
             <tr>
                 <td>
-                    StationURL<br>
-                    <input type="text" style="width:100%;" id="stationurl" placeholder="StationURL">
+                    StreamURL<br>
+                    <input type="text" style="width:100%;" id="streamurl" placeholder="StreamURL">
                     <br>
                 </td>
                 <td width="70">
@@ -1000,7 +1343,7 @@ const char web_html[] PROGMEM = R"=====(
                          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
                          onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
                          onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                         onclick="teststationurl()"/>
+                         onclick="teststreamurl()"/>
                     </right>  
                 </td>
             </tr>
@@ -1052,10 +1395,20 @@ const char web_html[] PROGMEM = R"=====(
                         <tr>
                             <td>
                                 <left>
-                                    <img src="SD/png/Button_Download_Blue.png" alt="Vol_up" 
+                                    <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD" 
+                                    onmousedown="this.src='SD/png/Button_Upload_Yellow.png'" 
+                                    onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+                                    onclick="uploadCanvasImage()"/>
+                                    
+                                    <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC" 
                                     onmousedown="this.src='SD/png/Button_Download_Yellow.png'" 
                                     onmouseup="this.src='SD/png/Button_Download_Blue.png'"
                                     onclick="downloadCanvasImage()"/>
+                        
+                                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list" 
+                                    onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
+                                    onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
+                                    onclick="addStationsToGrid()"/>
 
                                     <form method="post" accept-charset="utf-8" name="form1">
                                     <input name="hidden_data" id='hidden_data' type="hidden"/>
@@ -1098,7 +1451,7 @@ const char web_html[] PROGMEM = R"=====(
         <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
         This project is documented at <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
         <p>Author: Wolle (schreibfaul1)<br>
-        <img src="SD/MiniWebRadio_gr.bmp" alt="MiniWebRadio_gr" border=3>
+        <img src="SD/MiniWebRadio_gr.jpg" alt="MiniWebRadio_gr" border=3>
         <h3>Connected WiFi network
         <select class="select" onChange="handletone(this)" id="ssid"></select>
         </h3>
