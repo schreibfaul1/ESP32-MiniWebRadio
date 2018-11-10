@@ -31,7 +31,9 @@
 // 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
 //     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
 //
-// 7) translate _hl_title, entries below, in Your language
+// 7)  uncomment #include "fonts/Times_New_Roman.h" in tft.h
+//
+// 8)  translate _hl_title, entries below, in Your language
 //
 //
 //  Display 320x240
@@ -123,16 +125,16 @@ boolean  semaphore=false;
 boolean  f_upload=false;        // if true next file is saved to SD
 
 String _hl_title[10]{                           // Title in headline
-                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
+                "** Internet Radio **",         // "* ΠΈΠ½Ρ‚ΠµΡ€Π½ΠµΡ‚-Ρ€Π°Π΄ΠΈΠΎ *"  "ΟΞ±Ξ΄ΞΉΟΟ†Ο‰Ξ½ΞΏ Internet"
                 "** Internet Radio **",
                 "** Internet Eadio **",
-                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
+                "** Uhr **",                    // Clock "** Ρ‡Π°ΡΡ‹Μ **"  "** ΟΞΏΞ»ΟΞΉ **"
                 "** Uhr **",
-                "** Helligkeit **",             // Brightness яркость λάμψη
-                "** MP3-Player **",             // "** цифрово́й плеер **"
+                "** Helligkeit **",             // Brightness ΡΡ€ΠΊΠΎΡΡ‚Ρ Ξ»Ξ¬ΞΌΟΞ·
+                "** MP3-Player **",             // "** Ρ†ΠΈΡ„Ρ€ΠΎΠ²ΠΎΜΠΉ ΠΏΠ»ΠµΠµΡ€ **"
                 "** MP3-Player **",
                 "" ,                            // Alarm should be empty
-                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+                "* Einschlafautomatik *",       // "Sleeptimer" "Ξ§ΟΞΏΞ½ΞΏΞΌΞµΟ„ΟΞ·Ο„Ξ®Ο‚" "ΠΆΠ°ΠΉΠΌΠµΡ€ ΡΠ½Π°"
 };
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
@@ -178,7 +180,7 @@ WiFiMulti wifiMulti;
 void defaultsettings(){
     String str="";
 
-    log_i("set default");
+    Serial.println("set default");
     //
     pref.clear();
     //
@@ -249,8 +251,8 @@ boolean saveStationsToNVS(){
         stations.putLong("stations.size", file.size());
         file.close();
         stations.putUInt("maxstations", cnt);
-        log_i("stationlist internally loaded");
-        log_i("maxstations: %i", cnt);
+        Serial.printf("stationlist internally loaded\n");
+        Serial.printf("maxstations: %i\n", cnt);
         //log_i("nvs free entries %i", stations.freeEntries());
         return true;
     }
@@ -623,13 +625,12 @@ bool connectToWiFi(){
     if(wifiMulti.run()==WL_CONNECTED){
         _myIP=WiFi.localIP().toString();
         _SSID = WiFi.SSID();
-        Serial.println("WiFI_info  : WiFi connected");
-        Serial.print  ("WiFI_info  : IP address "); Serial.println(_myIP);
-        Serial.print  ("WiFI_info  : connected to "); Serial.println(_SSID);
-        //log_i("WiFi connected, IP address: %s, SSID: %s", _myIP.c_str(), _SSID.c_str());
+        Serial.printf("WiFI_info  : WiFi connected\n");
+        Serial.printf("WiFI_info  : IP address %s\n", _myIP.c_str());
+        Serial.printf("WiFI_info  : connected to %s\n", _SSID.c_str());
         return true;
     }else{
-        log_i("WiFi credentials are not correct");
+        Serial.printf("WiFi credentials are not correct\n");
         _SSID = ""; _myIP="0.0.0.0";
         return false;  // can't connect to any network
     }
@@ -650,7 +651,7 @@ void setup(){
     SD.begin(SD_CS);
     delay(100); // wait while SD is ready
     tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
-    SD.begin(SD_CS, SPI, 16000000);
+    SD.begin(SD_CS, SPI, 16000000);  // fast SDcard set 80000000, must have short SPI-wires
     ir.begin();  // Init InfraredDecoder
     tft.setRotation(3); // Use landscape format
     tp.setRotation(3);
@@ -959,14 +960,14 @@ void loop() {
             }
             showHeadlineTime();
             if(wifiMulti.run()!=WL_CONNECTED) {
-                log_i(">>WiFi not connected! run returned: %i", stat);
+                Serial.printf("WiFi not connected! run returned");
             }
             else{
                 if(WiFi.localIP().toString()!=_myIP){
                     _myIP=WiFi.localIP().toString();
                     _SSID=WiFi.SSID();
-                    log_i("IP has changed, new IP is %s", _myIP.c_str());
-                    log_i("Connected to %s", _SSID.c_str());
+                    Serial.printf("Connected to %s\n", _SSID.c_str());
+                    Serial.printf("IP is %s\n", _myIP.c_str());
                     showFooter();
                 }
             }
@@ -1045,8 +1046,7 @@ void vs1053_showstreaminfo(const char *info){           // called from vs1053
 }
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
     f_mp3eof=true;
-//    Serial.print("vs1053_eof: ");
-//    Serial.print(info);
+    Serial.printf("vs1053_eof : %s\n", info);
 }
 void vs1053_bitrate(const char *br){
     _bitrate=br;
@@ -1056,7 +1056,7 @@ void vs1053_info(const char *info) {                    // called from vs1053
     String str=info;
     Serial.print("vs1053_info: ");
     if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
-    Serial.print(info);                                 // all infos
+    Serial.println(info);                                 // all infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
@@ -1068,25 +1068,21 @@ void vs1053_icyurl(const char *info){                   // if the Radio has a ho
     if(str.length()>5){
         _homepage=String(info);
         if(!_homepage.startsWith("http")) _homepage="http://"+_homepage;
-        Serial.print("Homepage   : ");
-        Serial.println(info);
+        Serial.printf("Homepage   : %s\n", info);
     }
 }
 void vs1053_lasthost(const char *info){                 // really connected URL
     _lastconnectedhost=String(info);
     showStation();
-    Serial.print("lastURL    : ");
-    Serial.println(info);
+    Serial.printf("lastURL    : %s\n", info);
 }
 void RTIME_info(const char *info){
-    Serial.print("rtime_info : ");
-    Serial.println(info);
+    Serial.printf("rtime_info : %s\n", info);
 }
 
 //Events from tft library
 void tft_info(const char *info){
-    Serial.print("tft_info   : ");
-    Serial.print(info);
+    Serial.printf("tft_info   : %s\n", info);
 }
 //Events from html library
 void HTML_command(const String cmd){                    // called from html
@@ -1134,9 +1130,8 @@ void HTML_request(const String request){
     if(request=="end request\n"){           return;}
     log_e("unknown request: %s",request.c_str());
 }
-void HTML_info(String info){                    // called from html
-//    Serial.print("HTML_info  : ");
-//    Serial.print(info.c_str());               // for debug infos
+void HTML_info(String info){                            // called from html
+    Serial.printf("HTML_info  : %s\n", info.c_str());    // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
