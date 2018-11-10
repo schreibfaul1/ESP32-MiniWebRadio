@@ -125,16 +125,16 @@ boolean  semaphore=false;
 boolean  f_upload=false;        // if true next file is saved to SD
 
 String _hl_title[10]{                           // Title in headline
-                "** Internet Radio **",         // "* ΠΈΠ½Ρ‚ΠµΡ€Π½ΠµΡ‚-Ρ€Π°Π΄ΠΈΠΎ *"  "ΟΞ±Ξ΄ΞΉΟΟ†Ο‰Ξ½ΞΏ Internet"
+                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
                 "** Internet Eadio **",
-                "** Uhr **",                    // Clock "** Ρ‡Π°ΡΡ‹Μ **"  "** ΟΞΏΞ»ΟΞΉ **"
+                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
                 "** Uhr **",
-                "** Helligkeit **",             // Brightness ΡΡ€ΠΊΠΎΡΡ‚Ρ Ξ»Ξ¬ΞΌΟΞ·
-                "** MP3-Player **",             // "** Ρ†ΠΈΡ„Ρ€ΠΎΠ²ΠΎΜΠΉ ΠΏΠ»ΠµΠµΡ€ **"
+                "** Helligkeit **",             // Brightness яркость λάμψη
+                "** MP3-Player **",             // "** цифрово́й плеер **"
                 "** MP3-Player **",
                 "" ,                            // Alarm should be empty
-                "* Einschlafautomatik *",       // "Sleeptimer" "Ξ§ΟΞΏΞ½ΞΏΞΌΞµΟ„ΟΞ·Ο„Ξ®Ο‚" "ΠΆΠ°ΠΉΠΌΠµΡ€ ΡΠ½Π°"
+                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
 };
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
