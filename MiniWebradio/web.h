@@ -25,8 +25,12 @@ const char web_html[] PROGMEM = R"=====(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+
+/*    <link rel="stylesheet" href="SD/css/jquery-ui.css" />     */
+/*    <link rel="stylesheet" href="SD/css/jsgrid.css" />        */
+/*    <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> */
     
     <title>MiniWebRadio</title>
     
@@ -98,7 +102,7 @@ const char web_html[] PROGMEM = R"=====(
             -moz-border-radius: 5px;
             -webkit-appearance: none;
             border: 1px solid black;
-            border-radius: 10px;
+            border-radius: 5px;
         }
         input[type="text"] {
             margin: 0;
@@ -1022,6 +1026,12 @@ const char web_html[] PROGMEM = R"=====(
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.4/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+
+<!--  <script src="SD/js/jquery.js"></script>    --->
+<!--  <script src="SD/js/jquery-ui.js"></script> --->
+<!--  <script src="SD/js/jsgrid.js"></script>    --->
+<!--  <script src="SD/js/xlsx.js"></script>      --->
+<!--  <script src="SD/js/FileSaver.js"></script> --->
 
     <div id="CONTENT" >
     <!--==============================================================================================-->
