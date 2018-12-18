@@ -22,40 +22,40 @@ extern __attribute__((weak)) void HTML_request(const String);
 class HTML
 {
 private:
-	WiFiClient      cmdclient ;                               // An instance of the client for commands
-	WiFiServer		cmdserver;
+    WiFiClient      cmdclient ;                               // An instance of the client for commands
+    WiFiServer      cmdserver;
 
-	bool            http_reponse_flag = false ;               // Response required
-	String          http_rqfile ;                             // Requested file
-	String          http_getcmd ;                             // Contents of last GET command
-	String 			_Name;
-	String			_Version;
-	String 			contenttype;
-    uint8_t 		buf[1]; 		                          // Inputbuffer
+    bool            http_reponse_flag = false ;               // Response required
+    String          http_rqfile ;                             // Requested file
+    String          http_getcmd ;                             // Contents of last GET command
+    String          _Name;
+    String          _Version;
+    String          contenttype;
+    uint8_t         buf[1];                                   // Inputbuffer
 
 protected:
-	String  httpheader (String contentstype);
-	String  getContentType(String filename);
-	void    handlehttp();
-	uint8_t inbyte();
-	String  URLdecode(String str);
-	String  UTF8toASCII(String str);
-	String  responseCodeToString(int code);
+    String  httpheader (String contentstype);
+    String  getContentType(String filename);
+    void    handlehttp();
+    uint8_t inbyte();
+    String  URLdecode(String str);
+    String  UTF8toASCII(String str);
+    String  responseCodeToString(int code);
 
 
 public:
-	HTML(String Name="HTML library", String Version="1.0");
-	void begin();
-	void stop();
-	boolean loop();
-	void show(const char* pagename, int16_t len=-1);
-	void show_not_found();
-	boolean streamfile(fs::FS &fs,const char* path);
-	boolean uploadfile(fs::FS &fs,const char* path);
-	boolean uploadB64image(fs::FS &fs,const char* path);
-	void reply(const String &response, boolean header=true);
-	const char* ASCIItoUTF8(const char* str);
-	String  printhttpheader(String file);
+    HTML(String Name="HTML library", String Version="1.0");
+    void begin();
+    void stop();
+    boolean loop();
+    void show(const char* pagename, int16_t len=-1);
+    void show_not_found();
+    boolean streamfile(fs::FS &fs,const char* path);
+    boolean uploadfile(fs::FS &fs,const char* path);
+    boolean uploadB64image(fs::FS &fs,const char* path);
+    void reply(const String &response, boolean header=true);
+    const char* ASCIItoUTF8(const char* str);
+    String  printhttpheader(String file);
 
 private:
     const int B64index[123] ={

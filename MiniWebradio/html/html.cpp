@@ -2,61 +2,61 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 22.09.2018
+ *  updated on: 18.12.2018
  *      Author: Wolle
  */
 
 #include "html.h"
 //--------------------------------------------------------------------------------------------------------------
 HTML::HTML(String Name, String Version){
-	_Name=Name; _Version=Version;
+    _Name=Name; _Version=Version;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
-	cmdclient.println("HTTP/1.1 404 Not Found");
-	cmdclient.println("");
-	return;
+    cmdclient.println("HTTP/1.1 404 Not Found");
+    cmdclient.println("");
+    return;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
-	uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
-	int l=0;                    // Size of requested page
-	const unsigned char* p;
+    uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
+    int l=0;                    // Size of requested page
+    const unsigned char* p;
 
-	p = reinterpret_cast<const unsigned char*>(pagename);
+    p = reinterpret_cast<const unsigned char*>(pagename);
 
-	if(len==-1){
-		l=strlen(pagename);
-	}
-	else{
-		if(len>0) l = len;
-	}
+    if(len==-1){
+        l=strlen(pagename);
+    }
+    else{
+        if(len>0) l = len;
+    }
 
-	if(*p=='\n'){               // If page starts with newline:
-		p++;                    // Skip first character
-		l--;
-	}
-	if (HTML_info)	HTML_info(String("Length of page is ") +String(l, 10) + String("\n"));
-	// The content of the HTTP response follows the header:
-	if(l<10){
-		cmdclient.println("Testline<br>");
-	}
-	else{
-		while(l){                       // Loop through the output page
-			if (l <= TCPCHUNKSIZE){     // Near the end?
-				cmdclient.write(p, l);  // Yes, send last part
-				l = 0;
-			}
-			else{
-				cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
-				p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
-				l -= TCPCHUNKSIZE;
-			}
-		}
-	}
-	// The HTTP response ends with another blank line:
-	cmdclient.println();
-	if (HTML_info)	HTML_info("Response send\n");
+    if(*p=='\n'){               // If page starts with newline:
+        p++;                    // Skip first character
+        l--;
+    }
+    if (HTML_info)  HTML_info(String("Length of page is ") +String(l, 10));
+    // The content of the HTTP response follows the header:
+    if(l<10){
+        cmdclient.println("Testline<br>");
+    }
+    else{
+        while(l){                       // Loop through the output page
+            if (l <= TCPCHUNKSIZE){     // Near the end?
+                cmdclient.write(p, l);  // Yes, send last part
+                l = 0;
+            }
+            else{
+                cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
+                p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
+                l -= TCPCHUNKSIZE;
+            }
+        }
+    }
+    // The HTTP response ends with another blank line:
+    cmdclient.println();
+    if (HTML_info)  HTML_info("Response send");
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::streamfile(fs::FS &fs,const char* path){
@@ -68,28 +68,28 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
         if(path[i]<32)return false;
         i++;
     }
-	File file = fs.open(path);
-	if(!file){
-	    String str=String("Failed to open file for reading ") + path;
-	    if (HTML_info)  HTML_info(str);
-	    show_not_found();
-	    cmdclient.stop();
-	    return false;
-	}
-	String LOF="Length of file " + String(path) + " is " + String(file.size(),10) +"\n";
-	if (HTML_info)	HTML_info(LOF);
-	while(wIndex < file.size()){
-		file.read(transBuf, bytesPerTransaction);
-		cmdclient.write(transBuf, bytesPerTransaction);
-		wIndex+=bytesPerTransaction;
-	}
-	wIndex-=bytesPerTransaction;
-	wIndex=size_t(file.size()-wIndex);
-	file.read(transBuf,wIndex);
-	cmdclient.write(transBuf, wIndex);
-	file.close();
-	cmdclient.stop();
-	return true;
+    File file = fs.open(path);
+    if(!file){
+        String str=String("Failed to open file for reading ") + path;
+        if (HTML_info)  HTML_info(str);
+        show_not_found();
+        cmdclient.stop();
+        return false;
+    }
+    String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
+    if (HTML_info)  HTML_info(LOF);
+    while(wIndex < file.size()){
+        file.read(transBuf, bytesPerTransaction);
+        cmdclient.write(transBuf, bytesPerTransaction);
+        wIndex+=bytesPerTransaction;
+    }
+    wIndex-=bytesPerTransaction;
+    wIndex=size_t(file.size()-wIndex);
+    file.read(transBuf,wIndex);
+    cmdclient.write(transBuf, wIndex);
+    file.close();
+    cmdclient.stop();
+    return true;
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::uploadB64image(fs::FS &fs,const char* path){
@@ -131,11 +131,11 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){
     cmdclient.read(tBuf, 46); // read the remains
     file.close();
     if(f_werror) {
-        str=String("File: ") + String(path) + "write error\n";
+        str=String("File: ") + String(path) + "write error";
         if (HTML_info) HTML_info(str.c_str());
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10) +"\n";
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10);
     if (HTML_info) HTML_info(str.c_str());
     return true;
 }
@@ -161,158 +161,158 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){
     cmdclient.read(tBuf, 46); // read the remains
     file.close();
     if(f_werror) {
-        str=String("File: ") + String(path) + "write error\n";
+        str=String("File: ") + String(path) + "write error";
         if (HTML_info) HTML_info(str.c_str());
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10) +"\n";
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10);
     if (HTML_info)  HTML_info(str.c_str());
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::printhttpheader(String file){
-	String  ct ;                           // Content type
-	ct = getContentType(file);
-	if ( ( ct == "" ) || ( file == "" ) )             // Empty is illegal
-	{
-	    cmdclient.println ( "HTTP/1.1 404 Not Found" ) ;
-	    cmdclient.println ( "" ) ;
-	    return "";
-	}
-	cmdclient.print ( httpheader ( ct ) ) ;             // Send header
-	return ct;
+    String  ct ;                           // Content type
+    ct = getContentType(file);
+    if ( ( ct == "" ) || ( file == "" ) )             // Empty is illegal
+    {
+        cmdclient.println ( "HTTP/1.1 404 Not Found" ) ;
+        cmdclient.println ( "" ) ;
+        return "";
+    }
+    cmdclient.print ( httpheader ( ct ) ) ;             // Send header
+    return ct;
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::httpheader(String contenttype) {
-	String s1 = "HTTP/1.1 200 OK\nContent-type:" + contenttype + "\n";
-	String s2 = "Server: " + _Name+ "\n";
-	String s3 = "Cache-Control: ";
-	String s4 = "max-age=3600\n";
-	String s5 = "Last-Modified: " + _Version + "\n\n";
-	return String(s1 + s2 + s3 + s4 + s5);
+    String s1 = "HTTP/1.1 200 OK\nContent-type:" + contenttype + "\n";
+    String s2 = "Server: " + _Name+ "\n";
+    String s3 = "Cache-Control: ";
+    String s4 = "max-age=3600\n";
+    String s5 = "Last-Modified: " + _Version + "\n\n";
+    return String(s1 + s2 + s3 + s4 + s5);
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::begin() {
-	cmdserver.begin();
+    cmdserver.begin();
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::stop() {
-	cmdclient.stop();
+    cmdclient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::getContentType(String filename){
-	if      (filename.endsWith(".html")) return "text/html" ;
-	else if (filename.endsWith(".htm" )) return "text/html";
-	else if (filename.endsWith(".txt" )) return "text/plain";
-	else if (filename.endsWith(".js"  )) return "application/javascript";
-	else if (filename.endsWith(".svg" )) return "image/svg+xml";
-	else if (filename.endsWith(".ttf" )) return "application/x-font-ttf";
-	else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
-	else if (filename.endsWith(".xml" )) return "text/xml";
-	else if (filename.endsWith(".pdf" )) return "application/pdf";
-	else if (filename.endsWith(".png" )) return "image/png" ;
-	else if (filename.endsWith(".gif" )) return "image/gif" ;
-	else if (filename.endsWith(".jpg" )) return "image/jpeg" ;
-	else if (filename.endsWith(".ico" )) return "image/x-icon" ;
-	else if (filename.endsWith(".css" )) return "text/css" ;
-	else if (filename.endsWith(".zip" )) return "application/x-zip" ;
-	else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
-	else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
-	return "text/plain" ;
+    if      (filename.endsWith(".html")) return "text/html" ;
+    else if (filename.endsWith(".htm" )) return "text/html";
+    else if (filename.endsWith(".txt" )) return "text/plain";
+    else if (filename.endsWith(".js"  )) return "application/javascript";
+    else if (filename.endsWith(".svg" )) return "image/svg+xml";
+    else if (filename.endsWith(".ttf" )) return "application/x-font-ttf";
+    else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
+    else if (filename.endsWith(".xml" )) return "text/xml";
+    else if (filename.endsWith(".pdf" )) return "application/pdf";
+    else if (filename.endsWith(".png" )) return "image/png" ;
+    else if (filename.endsWith(".gif" )) return "image/gif" ;
+    else if (filename.endsWith(".jpg" )) return "image/jpeg" ;
+    else if (filename.endsWith(".ico" )) return "image/x-icon" ;
+    else if (filename.endsWith(".css" )) return "text/css" ;
+    else if (filename.endsWith(".zip" )) return "application/x-zip" ;
+    else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
+    else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
+    return "text/plain" ;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::handlehttp() {
-	bool wswitch=true;
-	char c;                                 // Next character from http input
-	uint16_t inx0, inx1, inx2, inx3; 		// Pos. of search string in currenLine
-	String currentLine = "";                // Build up to complete line
-	String ct;								// contenttype
+    bool wswitch=true;
+    char c;                                 // Next character from http input
+    uint16_t inx0, inx1, inx2, inx3;        // Pos. of search string in currenLine
+    String currentLine = "";                // Build up to complete line
+    String ct;                              // contenttype
 
-	if (!cmdclient.connected())	return;
+    if (!cmdclient.connected()) return;
 
-	while (wswitch==true){					// first while
-		if(!cmdclient.available()) return;
-	    cmdclient.read(buf, 1);             // Get a byte
-	    c=buf[0];
-		if(c==0) return;                    // c is empty
-		if (c == '\n') {
-			// If the current line is blank, you got two newline characters in a row.
-			// that's the end of the client HTTP request, so send a response:
-			if (currentLine.length() == 0) {
-				wswitch=false; // use second while
-				break;
-			} else {
-				// Newline seen
-				inx0 = 0;
-				if (currentLine.startsWith("GET /")) inx0 = 5;  // GET request?
-				if (currentLine.startsWith("POST /"))inx0 = 6;  // POST request?
+    while (wswitch==true){                  // first while
+        if(!cmdclient.available()) return;
+        cmdclient.read(buf, 1);             // Get a byte
+        c=buf[0];
+        if(c==0) return;                    // c is empty
+        if (c == '\n') {
+            // If the current line is blank, you got two newline characters in a row.
+            // that's the end of the client HTTP request, so send a response:
+            if (currentLine.length() == 0) {
+                wswitch=false; // use second while
+                break;
+            } else {
+                // Newline seen
+                inx0 = 0;
+                if (currentLine.startsWith("GET /")) inx0 = 5;  // GET request?
+                if (currentLine.startsWith("POST /"))inx0 = 6;  // POST request?
 
-				if(inx0>0){
-//					currentLine=currentLine.substring(inx0, currentLine.length()); //remove GET or POST
-				    inx1 = currentLine.indexOf("?");	// Search for 1st parameter
-					inx2 = currentLine.indexOf("&");	// Search for 2nd parameter
-					inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
-					if((inx1>0) && (inx2>inx1)){  		// it is a command
-						http_getcmd = currentLine.substring(inx1+1, inx2);//isolate the command
-				    	http_rqfile = "";				// No file
-					}
-					else{								// it is a filename
-						http_rqfile = currentLine.substring(inx0, inx3);
-						http_getcmd = "";
-					}
-					if (http_getcmd.length()) {
-						if (HTML_info) HTML_info(URLdecode(http_getcmd)+ "\n");
-						if (HTML_command) HTML_command(URLdecode(http_getcmd));
-					}
-					if (http_rqfile.length()) {
-						String FN = "Filename is: " + http_rqfile + "\n";
-						if (HTML_info) HTML_info(URLdecode(FN));
-						if (HTML_file) HTML_file(URLdecode(http_rqfile));
-					}
-					if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
-						if (HTML_info) HTML_info("Filename is: index.html\n");
-						if (HTML_file) HTML_file("index.html");
-					}
-				}
-				currentLine = "";
-			}
-		} else if (c != '\r'){                      // No LINFEED.  Is it a CR?
-			currentLine += c;                       // No?, add normal char to currentLine
-		}
-	} //end while 1
-	while(wswitch==false){					 		// second while
+                if(inx0>0){
+//                  currentLine=currentLine.substring(inx0, currentLine.length()); //remove GET or POST
+                    inx1 = currentLine.indexOf("?");    // Search for 1st parameter
+                    inx2 = currentLine.indexOf("&");    // Search for 2nd parameter
+                    inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
+                    if((inx1>0) && (inx2>inx1)){        // it is a command
+                        http_getcmd = currentLine.substring(inx1+1, inx2);//isolate the command
+                        http_rqfile = "";               // No file
+                    }
+                    else{                               // it is a filename
+                        http_rqfile = currentLine.substring(inx0, inx3);
+                        http_getcmd = "";
+                    }
+                    if (http_getcmd.length()) {
+                        if (HTML_info) HTML_info(URLdecode(http_getcmd));
+                        if (HTML_command) HTML_command(URLdecode(http_getcmd));
+                    }
+                    if (http_rqfile.length()) {
+                        String FN = "Filename is: " + http_rqfile;
+                        if (HTML_info) HTML_info(URLdecode(FN));
+                        if (HTML_file) HTML_file(URLdecode(http_rqfile));
+                    }
+                    if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
+                        if (HTML_info) HTML_info("Filename is: index.html");
+                        if (HTML_file) HTML_file("index.html");
+                    }
+                }
+                currentLine = "";
+            }
+        } else if (c != '\r'){                      // No LINFEED.  Is it a CR?
+            currentLine += c;                       // No?, add normal char to currentLine
+        }
+    } //end while 1
+    while(wswitch==false){                          // second while
         cmdclient.read(buf, 1);                     // Get a byte
         c=buf[0];
-		if(c==0) return;
-		if (c == '\n') {
-			if (currentLine.length() == 0){
-				wswitch=true;  // use first while
-				//log_i("end request");
-				if (HTML_request) HTML_request("end request\n");
-				//reply("", true);
-				break;
-			}
-			else {   // its the requestbody
-				if(currentLine[0]<32)currentLine=String();
-				if (HTML_request) HTML_request(currentLine);
-				currentLine += c;
-				currentLine.trim();
-				if (HTML_info) HTML_info(currentLine + "\n");
-				currentLine = "";
-			}
-		}
-		else if (c != '\r')currentLine += c;   // No LINFEED.  Is it a CR?
-	} // end while 2
+        if(c==0) return;
+        if (c == '\n') {
+            if (currentLine.length() == 0){
+                wswitch=true;  // use first while
+                //log_i("end request");
+                if (HTML_request) HTML_request("end request\n");
+                //reply("", true);
+                break;
+            }
+            else {   // its the requestbody
+                if(currentLine[0]<32)currentLine=String();
+                if (HTML_request) HTML_request(currentLine);
+                currentLine += c;
+                currentLine.trim();
+                if (HTML_info) HTML_info(currentLine);
+                currentLine = "";
+            }
+        }
+        else if (c != '\r')currentLine += c;   // No LINFEED.  Is it a CR?
+    } // end while 2
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::loop() {
-	cmdclient = cmdserver.available();               	// Check Input from client?
-	if (cmdclient){                                      // Client connected?
-	    if(HTML_info) HTML_info("Command client available\n");
-		handlehttp();
-		return true;
-	}
-	return false;
+    cmdclient = cmdserver.available();                  // Check Input from client?
+    if (cmdclient){                                      // Client connected?
+        if(HTML_info) HTML_info("Command client available");
+        handlehttp();
+        return true;
+    }
+    return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::reply(const String &response, bool header){
@@ -348,15 +348,15 @@ String HTML::UTF8toASCII(String str){
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::URLdecode(String str){
-	String hex="0123456789ABCDEF";
-	String res="";
-	uint16_t i=0;
-	while(str[i]!=0){
-		if((str[i]=='%') && isHexadecimalDigit(str[i+1]) && isHexadecimalDigit(str[i+2])){
-			res+=char((hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2])); i+=3;}
-		else{res+=str[i]; i++;}
-	}
-	return res;
+    String hex="0123456789ABCDEF";
+    String res="";
+    uint16_t i=0;
+    while(str[i]!=0){
+        if((str[i]=='%') && isHexadecimalDigit(str[i+1]) && isHexadecimalDigit(str[i+2])){
+            res+=char((hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2])); i+=3;}
+        else{res+=str[i]; i++;}
+    }
+    return res;
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::responseCodeToString(int code) {
@@ -405,7 +405,3 @@ String HTML::responseCodeToString(int code) {
   }
 }
 //--------------------------------------------------------------------------------------------------------------
-
-
-
-
