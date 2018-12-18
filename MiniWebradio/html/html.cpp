@@ -10,6 +10,7 @@
 //--------------------------------------------------------------------------------------------------------------
 HTML::HTML(String Name, String Version){
     _Name=Name; _Version=Version;
+    cmdclient.setNoDelay(true);
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
@@ -68,7 +69,7 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
         if(path[i]<32)return false;
         i++;
     }
-    File file = fs.open(path);
+    File file = fs.open(path, "r");
     if(!file){
         String str=String("Failed to open file for reading ") + path;
         if (HTML_info)  HTML_info(str);
@@ -78,15 +79,16 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
     }
     String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
     if (HTML_info)  HTML_info(LOF);
-    while(wIndex < file.size()){
-        file.read(transBuf, bytesPerTransaction);
-        cmdclient.write(transBuf, bytesPerTransaction);
-        wIndex+=bytesPerTransaction;
-    }
-    wIndex-=bytesPerTransaction;
-    wIndex=size_t(file.size()-wIndex);
-    file.read(transBuf,wIndex);
-    cmdclient.write(transBuf, wIndex);
+//    while(wIndex < file.size()){
+//        file.read(transBuf, bytesPerTransaction);
+//        cmdclient.write(transBuf, bytesPerTransaction);
+//        wIndex+=bytesPerTransaction;
+//    }
+//    wIndex-=bytesPerTransaction;
+//    wIndex=size_t(file.size()-wIndex);
+//    file.read(transBuf,wIndex);
+//    cmdclient.write(transBuf, wIndex);
+    cmdclient.write(file);
     file.close();
     cmdclient.stop();
     return true;
