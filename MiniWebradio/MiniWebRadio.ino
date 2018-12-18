@@ -2,7 +2,7 @@
 //*    MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display (320x240px) and VS1053 MP3 module.  *
 //*********************************************************************************************************
 //
-// Version 20 , Oct.13 2018
+// Version 21 , Dec.18 2018
 //
 // Preparations:
 //
@@ -393,6 +393,7 @@ void showTitle(String str){
     if(txtlen(str)> 45) tft.setFont(Times_New_Roman34x27);
     if(txtlen(str)> 65) tft.setFont(Times_New_Roman27x21);
     if(txtlen(str)>130) tft.setFont(Times_New_Roman21x17);
+    if(txtlen(str)>200) tft.setFont(Times_New_Roman15x14);
 //    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
     display_info(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
 }
