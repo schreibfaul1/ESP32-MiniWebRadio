@@ -2,6 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
+ *  Updated on: 06.01.2019
  *      Author: Wolle
  */
 
@@ -10,7 +11,8 @@
 
 #include "WiFi.h"
 #include "time.h"
-#include "apps/sntp/sntp.h"
+#include "apps/sntp/sntp.h"     // #warning "This header file is deprecated, please include lwip/apps/sntp.h instead." [-Wcpp]
+//#include "lwip/apps/sntp.h"   // espressif esp32/arduino V1.0.1-rc2 or higher
 
 extern __attribute__((weak)) void RTIME_info(const char*);
 
