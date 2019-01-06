@@ -2,7 +2,8 @@
 //*    MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display (320x240px) and VS1053 MP3 module.  *
 //*********************************************************************************************************
 //
-// Version 21 , Dec.18 2018
+// first release on 03/2017
+// Version 22 , Jan.06 2019
 //
 // Preparations:
 //
@@ -60,13 +61,13 @@
 //
 //
 // system libraries
+#include <Arduino.h>
 #include <Preferences.h>
 #include <SPI.h>
 #include <SD.h>
 #include <FS.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
-#include <Arduino.h>
 
 // own libraries
 #include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
@@ -333,10 +334,11 @@ const char* ASCIItoUTF8(const char* str){
         if(uni>=128){uni-=128; uni=tab[uni];}
 //            uni=UTF8fromASCII(str[i]);
             switch(uni){
-            case   0 ... 127:{_chbuf[j]=str[i]; i++; j++; break;}
-            case 160 ... 191:{_chbuf[j]=0xC2; _chbuf[j+1]=uni; j+=2; i++; break;}
-            case 192 ... 255:{_chbuf[j]=0xC3; _chbuf[j+1]=uni-64; j+=2; i++; break;}
-            default:{_chbuf[j]=' '; i++; j++;}} // ignore all other
+                case   0 ... 127:{_chbuf[j]=str[i]; i++; j++; break;}
+                case 160 ... 191:{_chbuf[j]=0xC2; _chbuf[j+1]=uni; j+=2; i++; break;}
+                case 192 ... 255:{_chbuf[j]=0xC3; _chbuf[j+1]=uni-64; j+=2; i++; break;}
+                default:{_chbuf[j]=' '; i++; j++; break;} // ignore all other
+            }
     }
     _chbuf[j]=0;
     return _chbuf;
@@ -345,14 +347,14 @@ const char* ASCIItoUTF8(const char* str){
 //                                        T I M E R                                                *
 //**************************************************************************************************
 void IRAM_ATTR timer1sec() {
-    static uint8_t sec=0;
+    static volatile uint8_t sec=0;
     f_1sec=true;
     sec++;
-    if(sec==60){sec=0; f_1min=true;}
-
+//    log_i("sec=%i", sec);
+    if(sec==60){sec=0; log_i("timer1min"); f_1min=true;}
 }
 void IRAM_ATTR timer5(){                               // called every 5ms
-    static uint8_t  count1sec=0;
+    static volatile uint8_t  count1sec=0;
     count1sec++;
     if(count1sec == 200){
         count1sec=0; timer1sec();                      // 1 second passed?
@@ -363,7 +365,8 @@ void startTimer() {
     timerAttachInterrupt(timer, &timer5, true); // edge = true
     timerAlarmWrite(timer, 5000, true); //5 ms
     timerAlarmEnable(timer);
-    delay(1000);
+//    log_i("timer enabled");
+//    delay(1000);
 }
 //**************************************************************************************************
 //                                       D I S P L A Y                                             *
@@ -682,7 +685,7 @@ void setup(){
     _alarmtime=pref.getString("alarm_time");
     setTFTbrightness(pref.getUInt("brightness"));
     WiFi.disconnect();
-    WiFi.mode(WIFI_STA);
+    WiFi.mode(WIFI_MODE_STA);
     WiFi.setHostname("MiniWebRadio");
     delay(100);
     if(!connectToWiFi()){
@@ -815,10 +818,10 @@ void changeState(int state){
     }
 }
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); mp3.loop();
 }
 void changeBtn_released(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn);
+    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); mp3.loop();
 }
 void display_weekdays(uint8_t ad, boolean showall=false){
     uint8_t i=0;
@@ -1077,6 +1080,9 @@ void vs1053_lasthost(const char *info){                 // really connected URL
     showStation();
     Serial.printf("lastURL    : %s\n", info);
 }
+void vs1053_id3data(const char *info){
+    Serial.printf("id3data    : %s\n", info);
+}
 void RTIME_info(const char *info){
     Serial.printf("rtime_info : %s\n", info);
 }
@@ -1132,7 +1138,7 @@ void HTML_request(const String request){
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                            // called from html
-    Serial.printf("HTML_info  : %s\n", info.c_str());    // for debug infos
+    Serial.printf("HTML_info  : %s\r", info.c_str());   // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
