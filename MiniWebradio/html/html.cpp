@@ -7,10 +7,10 @@
  */
 
 #include "html.h"
+
 //--------------------------------------------------------------------------------------------------------------
 HTML::HTML(String Name, String Version){
     _Name=Name; _Version=Version;
-    cmdclient.setNoDelay(true);
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
@@ -60,10 +60,7 @@ void HTML::show(const char* pagename, int16_t len){
     if (HTML_info)  HTML_info("Response send");
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::streamfile(fs::FS &fs,const char* path){
-    size_t bytesPerTransaction = 4096;
-    uint8_t transBuf[bytesPerTransaction];
-    size_t wIndex = bytesPerTransaction;
+boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD to webbrowser
     uint16_t i=0;
     while(path[i]!=0){     // protect SD for invalid signs to avoid a crash!!
         if(path[i]<32)return false;
@@ -79,22 +76,13 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){
     }
     String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
     if (HTML_info)  HTML_info(LOF);
-//    while(wIndex < file.size()){
-//        file.read(transBuf, bytesPerTransaction);
-//        cmdclient.write(transBuf, bytesPerTransaction);
-//        wIndex+=bytesPerTransaction;
-//    }
-//    wIndex-=bytesPerTransaction;
-//    wIndex=size_t(file.size()-wIndex);
-//    file.read(transBuf,wIndex);
-//    cmdclient.write(transBuf, wIndex);
     cmdclient.write(file);
     file.close();
     cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::uploadB64image(fs::FS &fs,const char* path){
+boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile from webbrowser to SD
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, i, j, len=0;
@@ -142,7 +130,7 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::uploadfile(fs::FS &fs,const char* path){
+boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from webbrowser to sd
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, len=0;
@@ -150,7 +138,7 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){
     String str="";
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
-    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SPIFFS (create it, if doesn't exist)
+    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
     while(cmdclient.available()){
         av=cmdclient.available();
         av=av-46;

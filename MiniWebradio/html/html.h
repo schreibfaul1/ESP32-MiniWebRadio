@@ -2,13 +2,12 @@
  * html.h
  *
  *  Created on: 09.07.2017
- *  updated on: 22.09.2018
+ *  updated on: 18.12.2018
  *      Author: Wolle
  */
 
 #ifndef HTML_H_
 #define HTML_H_
-
 #include "Arduino.h"
 #include "WiFi.h"
 #include "SD.h"
