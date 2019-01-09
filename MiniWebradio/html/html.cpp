@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 18.12.2018
+ *  updated on: 09.01.2019
  *      Author: Wolle
  */
 
@@ -74,11 +74,13 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
         cmdclient.stop();
         return false;
     }
-    String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
-    if (HTML_info)  HTML_info(LOF);
     cmdclient.write(file);
     file.close();
+    cmdclient.println("");
     cmdclient.stop();
+    delay(10);  // this delay must be set since lwip > V1.5.0 (espressif arduino V 1.0.1-rc1 and higher)
+    String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
+    if (HTML_info)  HTML_info(LOF);
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -193,20 +195,24 @@ void HTML::stop() {
 String HTML::getContentType(String filename){
     if      (filename.endsWith(".html")) return "text/html" ;
     else if (filename.endsWith(".htm" )) return "text/html";
+    else if (filename.endsWith(".css" )) return "text/css";
     else if (filename.endsWith(".txt" )) return "text/plain";
     else if (filename.endsWith(".js"  )) return "application/javascript";
+    else if (filename.endsWith(".json")) return "application/json";
     else if (filename.endsWith(".svg" )) return "image/svg+xml";
     else if (filename.endsWith(".ttf" )) return "application/x-font-ttf";
     else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
     else if (filename.endsWith(".xml" )) return "text/xml";
     else if (filename.endsWith(".pdf" )) return "application/pdf";
     else if (filename.endsWith(".png" )) return "image/png" ;
+    else if (filename.endsWith(".bmp" )) return "image/bmp" ;
     else if (filename.endsWith(".gif" )) return "image/gif" ;
     else if (filename.endsWith(".jpg" )) return "image/jpeg" ;
     else if (filename.endsWith(".ico" )) return "image/x-icon" ;
     else if (filename.endsWith(".css" )) return "text/css" ;
     else if (filename.endsWith(".zip" )) return "application/x-zip" ;
     else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
+    else if (filename.endsWith(".xls" )) return "application/msexcel" ;
     else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
     return "text/plain" ;
 }
