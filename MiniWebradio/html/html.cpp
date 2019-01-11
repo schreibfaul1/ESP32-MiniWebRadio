@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 09.01.2019
+ *  updated on: 11.01.2019
  *      Author: Wolle
  */
 
@@ -14,8 +14,7 @@ HTML::HTML(String Name, String Version){
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
-    cmdclient.println("HTTP/1.1 404 Not Found");
-    cmdclient.println("");
+    cmdclient.print("HTTP/1.1 404 Not Found\n\n");
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -56,7 +55,6 @@ void HTML::show(const char* pagename, int16_t len){
         }
     }
     // The HTTP response ends with another blank line:
-    cmdclient.println();
     if (HTML_info)  HTML_info("Response send");
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -71,23 +69,20 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
         String str=String("Failed to open file for reading ") + path;
         if (HTML_info)  HTML_info(str);
         show_not_found();
-        cmdclient.stop();
         return false;
     }
-    cmdclient.write(file);
-    file.close();
-    cmdclient.println("");
-    cmdclient.stop();
-    delay(10);  // this delay must be set since lwip > V1.5.0 (espressif arduino V 1.0.1-rc1 and higher)
     String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
     if (HTML_info)  HTML_info(LOF);
+    cmdclient.write(file);
+    file.close();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile from webbrowser to SD
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
-    uint16_t av, i, j, len=0;
+    uint16_t av, i, j;
+    uint32_t len=0;
     boolean f_werror=false;
     String str="";
     int n=0;
@@ -135,7 +130,8 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile
 boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from webbrowser to sd
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
-    uint16_t av, len=0;
+    uint16_t av;
+    uint32_t len=0;
     boolean f_werror=false;
     String str="";
     File file;
@@ -167,8 +163,7 @@ String HTML::printhttpheader(String file){
     ct = getContentType(file);
     if ( ( ct == "" ) || ( file == "" ) )             // Empty is illegal
     {
-        cmdclient.println ( "HTTP/1.1 404 Not Found" ) ;
-        cmdclient.println ( "" ) ;
+        cmdclient.print("HTTP/1.1 404 Not Found\n\n") ;
         return "";
     }
     cmdclient.print ( httpheader ( ct ) ) ;             // Send header

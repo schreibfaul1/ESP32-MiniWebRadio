@@ -18,6 +18,8 @@ extern __attribute__((weak)) void HTML_command(const String);
 extern __attribute__((weak)) void HTML_file(String);
 extern __attribute__((weak)) void HTML_request(const String);
 
+
+
 class HTML
 {
 private:
