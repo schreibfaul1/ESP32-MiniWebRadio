@@ -9,5 +9,6 @@ IR remote control is optional<br>
 obtains time from NTP<br>
 can used as alarmclock, has sleeptimer<br>
 can speech the time every hour<br>
-if the display has a BL-pin You can change the brightness<br>
+if the display has a Backlight-pin You can change the brightness<br>
+How to install:  https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio_Eclipse.pdf
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio1.jpg)
