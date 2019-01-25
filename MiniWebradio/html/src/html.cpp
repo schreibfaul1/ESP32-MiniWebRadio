@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 11.01.2019
+ *  updated on: 25.01.2019
  *      Author: Wolle
  */
 
@@ -19,7 +19,6 @@ void HTML::show_not_found(){
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
-    uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
     int l=0;                    // Size of requested page
     const unsigned char* p;
 
@@ -32,30 +31,17 @@ void HTML::show(const char* pagename, int16_t len){
         if(len>0) l = len;
     }
 
-    if(*p=='\n'){               // If page starts with newline:
-        p++;                    // Skip first character
-        l--;
-    }
     if (HTML_info)  HTML_info(String("Length of page is ") +String(l, 10));
     // The content of the HTTP response follows the header:
     if(l<10){
         cmdclient.println("Testline<br>");
     }
     else{
-        while(l){                       // Loop through the output page
-            if (l <= TCPCHUNKSIZE){     // Near the end?
-                cmdclient.write(p, l);  // Yes, send last part
-                l = 0;
-            }
-            else{
-                cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
-                p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
-                l -= TCPCHUNKSIZE;
-            }
-        }
+        cmdclient.write(p, len);
     }
     // The HTTP response ends with another blank line:
     if (HTML_info)  HTML_info("Response send");
+    delay(50);
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD to webbrowser
@@ -75,6 +61,7 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
     if (HTML_info)  HTML_info(LOF);
     cmdclient.write(file);
     file.close();
+    delay(50); // must be set since V1.0.2
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -166,17 +153,18 @@ String HTML::printhttpheader(String file){
         cmdclient.print("HTTP/1.1 404 Not Found\n\n") ;
         return "";
     }
-    cmdclient.print ( httpheader ( ct ) ) ;             // Send header
+    cmdclient.print(httpheader( ct )) ;             // Send header
     return ct;
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::httpheader(String contenttype) {
-    String s1 = "HTTP/1.1 200 OK\nContent-type:" + contenttype + "\n";
-    String s2 = "Server: " + _Name+ "\n";
-    String s3 = "Cache-Control: ";
-    String s4 = "max-age=3600\n";
-    String s5 = "Last-Modified: " + _Version + "\n\n";
-    return String(s1 + s2 + s3 + s4 + s5);
+    String s1 = "HTTP/1.1 200 OK\n";
+    String s2 = "Connection: close\n";
+    String s3 = "Content-type:" + contenttype + "\n";
+    String s4 = "Server: " + _Name+ "\n";
+    String s5 = "Cache-Control: max-age=3600\n";
+    String s6 = "Last-Modified: " + _Version + "\n\n";
+    return String(s1 + s2 + s3 + s4 + s5 + s6);
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::begin() {
