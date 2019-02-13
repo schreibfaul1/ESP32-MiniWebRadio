@@ -19,7 +19,8 @@ void HTML::show_not_found(){
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
-    int l=0;                    // Size of requested page
+    uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
+    size_t l=0;                    // Size of requested page
     const unsigned char* p;
 
     p = reinterpret_cast<const unsigned char*>(pagename);
@@ -30,6 +31,10 @@ void HTML::show(const char* pagename, int16_t len){
     else{
         if(len>0) l = len;
     }
+    while((*p=='\n') && (l>0)){         // If page starts with newline:
+        p++;                            // Skip first character
+        l--;
+    }
 
     if (HTML_info)  HTML_info(String("Length of page is ") +String(l, 10));
     // The content of the HTTP response follows the header:
@@ -37,10 +42,18 @@ void HTML::show(const char* pagename, int16_t len){
         cmdclient.println("Testline<br>");
     }
     else{
-        cmdclient.write(p, len);
+        while(l){                       // Loop through the output page
+            if (l <= TCPCHUNKSIZE){     // Near the end?
+                cmdclient.write(p, l);  // Yes, send last part
+                l = 0;
+            }
+            else{
+                cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
+                p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
+                l -= TCPCHUNKSIZE;
+            }
+        }
     }
-    // The HTTP response ends with another blank line:
-    if (HTML_info)  HTML_info("Response send");
     delay(50);
 }
 //--------------------------------------------------------------------------------------------------------------
