@@ -58,11 +58,16 @@ void HTML::show(const char* pagename, int16_t len){
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD to webbrowser
+    size_t bytesPerTransaction = 1024;
+    uint8_t transBuf[bytesPerTransaction];
+    size_t wIndex = bytesPerTransaction;
     uint16_t i=0;
+
     while(path[i]!=0){     // protect SD for invalid signs to avoid a crash!!
         if(path[i]<32)return false;
         i++;
     }
+
     File file = fs.open(path, "r");
     if(!file){
         String str=String("Failed to open file for reading ") + path;
@@ -70,9 +75,22 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
         show_not_found();
         return false;
     }
+
     String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
     if (HTML_info)  HTML_info(LOF);
-    cmdclient.write(file);
+
+    while(wIndex < file.size()){
+        file.read(transBuf, bytesPerTransaction);
+        cmdclient.write(transBuf, bytesPerTransaction);
+        wIndex+=bytesPerTransaction;
+    }
+    wIndex-=bytesPerTransaction;
+    wIndex=size_t(file.size()-wIndex);
+    file.read(transBuf,wIndex);
+    cmdclient.write(transBuf, wIndex);
+
+//    cmdclient.write(file);
+
     file.close();
     delay(50); // must be set since V1.0.2
     return true;
