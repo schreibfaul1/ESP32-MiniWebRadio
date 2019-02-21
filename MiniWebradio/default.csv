@@ -1,6 +1,0 @@
-# Name,     Type,   SubType,   Offset,   Size,     Flags
-  phy_init, data,   phy,       0x9000,   0x7000,
-  factory,  app,    factory,   0x10000,  0x300000,
-  nvs,      data,   nvs,       0x310000, 0x32000,
-  spiffs,   data,   spiffs,    0x342000, 0xB0000,
-  eeprom,   data,   0x99,      0x3F2000, 0xD000,
