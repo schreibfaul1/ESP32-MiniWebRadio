@@ -35,9 +35,8 @@ private:
     uint8_t         buf[1];                                   // Inputbuffer
 
 protected:
-    String  httpheader (String contentstype);
     String  getContentType(String filename);
-    void    handlehttp();
+    boolean handlehttp();
     uint8_t inbyte();
     String  URLdecode(String str);
     String  UTF8toASCII(String str);
@@ -56,7 +55,6 @@ public:
     boolean uploadB64image(fs::FS &fs,const char* path);
     void reply(const String &response, boolean header=true);
     const char* ASCIItoUTF8(const char* str);
-    String  printhttpheader(String file);
 
 private:
     const int B64index[123] ={

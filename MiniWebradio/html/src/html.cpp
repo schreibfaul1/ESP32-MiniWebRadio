@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 25.01.2019
+ *  updated on: 14.02.2019
  *      Author: Wolle
  */
 
@@ -20,49 +20,67 @@ void HTML::show_not_found(){
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
     uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
-    size_t l=0;                    // Size of requested page
+    size_t pagelen=0, res=0;                    // Size of requested page
     const unsigned char* p;
-
     p = reinterpret_cast<const unsigned char*>(pagename);
-
     if(len==-1){
-        l=strlen(pagename);
+        pagelen=strlen(pagename);
     }
     else{
-        if(len>0) l = len;
+        if(len>0) pagelen = len;
     }
-    while((*p=='\n') && (l>0)){         // If page starts with newline:
+    while((*p=='\n') && (pagelen>0)){         // If page starts with newline:
         p++;                            // Skip first character
-        l--;
+        pagelen--;
     }
+    // HTTP header
+    String httpheader="";
+    httpheader += "HTTP/1.1 200 OK\r\n";
+    httpheader += "Connection: close\r\n";
+    httpheader += "Content-type: text/html\r\n";
+    httpheader += "Content-Length: " + String(pagelen, 10) + "\r\n";
+    httpheader += "Server: " + _Name+ "\r\n";
+    httpheader += "Cache-Control: max-age=3600\r\n";
+    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
-    if (HTML_info)  HTML_info(String("Length of page is ") +String(l, 10));
+    cmdclient.print(httpheader) ;             // header sent
+
+
+
+    if (HTML_info)  HTML_info(String("Length of page is ") +String(pagelen, 10));
     // The content of the HTTP response follows the header:
-    if(l<10){
-        cmdclient.println("Testline<br>");
-    }
-    else{
-        while(l){                       // Loop through the output page
-            if (l <= TCPCHUNKSIZE){     // Near the end?
-                cmdclient.write(p, l);  // Yes, send last part
-                l = 0;
+
+    while(pagelen){                       // Loop through the output page
+        if (pagelen <= TCPCHUNKSIZE){     // Near the end?
+            res=cmdclient.write(p, pagelen);  // Yes, send last part
+            if(res!=pagelen){
+                log_e("write error in webpage");
+                cmdclient.clearWriteError();
+                return;
             }
-            else{
-                cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
-                p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
-                l -= TCPCHUNKSIZE;
+            pagelen = 0;
+        }
+        else{
+
+            res=cmdclient.write(p, TCPCHUNKSIZE);   // Send part of the page
+
+            if(res!=TCPCHUNKSIZE){
+                log_e("write error in webpage");
+                cmdclient.clearWriteError();
+                return;
             }
+            p += TCPCHUNKSIZE;                  // Update startpoint and rest of bytes
+            pagelen -= TCPCHUNKSIZE;
         }
     }
-    delay(50);
+    return;
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD to webbrowser
     size_t bytesPerTransaction = 1024;
-    uint8_t transBuf[bytesPerTransaction];
-    size_t wIndex = bytesPerTransaction;
-    uint16_t i=0;
-
+    uint8_t transBuf[bytesPerTransaction], i=0;
+    size_t wIndex = 0, res=0, leftover=0;
+    if(!cmdclient.connected()){log_e("not connected"); return false;}
     while(path[i]!=0){     // protect SD for invalid signs to avoid a crash!!
         if(path[i]<32)return false;
         i++;
@@ -75,24 +93,44 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
         show_not_found();
         return false;
     }
-
     String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
     if (HTML_info)  HTML_info(LOF);
 
-    while(wIndex < file.size()){
+    // HTTP header
+    String httpheader="";
+    httpheader += "HTTP/1.1 200 OK\r\n";
+    httpheader += "Connection: close\r\n";
+    httpheader += "Content-type: " + getContentType(String(path)) +"\r\n";
+    httpheader += "Content-Length: " + String(file.size(),10) + "\r\n";
+    httpheader += "Server: " + _Name+ "\r\n";
+    httpheader += "Cache-Control: max-age=3600\r\n";
+    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
+
+    cmdclient.print(httpheader) ;             // header sent
+
+    while(wIndex+bytesPerTransaction < file.size()){
         file.read(transBuf, bytesPerTransaction);
-        cmdclient.write(transBuf, bytesPerTransaction);
-        wIndex+=bytesPerTransaction;
+        res=cmdclient.write(transBuf, bytesPerTransaction);
+
+        wIndex+=res;
+        if(res!=bytesPerTransaction){
+            log_i("write error %s", path);
+            cmdclient.clearWriteError();
+            return false;
+        }
     }
-    wIndex-=bytesPerTransaction;
-    wIndex=size_t(file.size()-wIndex);
-    file.read(transBuf,wIndex);
-    cmdclient.write(transBuf, wIndex);
-
-//    cmdclient.write(file);
-
+    leftover=file.size()-wIndex;
+    file.read(transBuf, leftover);
+    res=cmdclient.write(transBuf, leftover);
+    wIndex+=res;
+    if(res!=leftover){
+        log_i("write error %s", path);
+        cmdclient.clearWriteError();
+        return false;
+    }
+    if(wIndex!=file.size()) log_e("file %s not correct sent", path);
     file.close();
-    delay(50); // must be set since V1.0.2
+
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -176,28 +214,6 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from web
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-String HTML::printhttpheader(String file){
-    String  ct ;                           // Content type
-    ct = getContentType(file);
-    if ( ( ct == "" ) || ( file == "" ) )             // Empty is illegal
-    {
-        cmdclient.print("HTTP/1.1 404 Not Found\n\n") ;
-        return "";
-    }
-    cmdclient.print(httpheader( ct )) ;             // Send header
-    return ct;
-}
-//--------------------------------------------------------------------------------------------------------------
-String HTML::httpheader(String contenttype) {
-    String s1 = "HTTP/1.1 200 OK\n";
-    String s2 = "Connection: close\n";
-    String s3 = "Content-type:" + contenttype + "\n";
-    String s4 = "Server: " + _Name+ "\n";
-    String s5 = "Cache-Control: max-age=3600\n";
-    String s6 = "Last-Modified: " + _Version + "\n\n";
-    return String(s1 + s2 + s3 + s4 + s5 + s6);
-}
-//--------------------------------------------------------------------------------------------------------------
 void HTML::begin() {
     cmdserver.begin();
 }
@@ -231,20 +247,26 @@ String HTML::getContentType(String filename){
     return "text/plain" ;
 }
 //--------------------------------------------------------------------------------------------------------------
-void HTML::handlehttp() {
+boolean HTML::handlehttp() {
     bool wswitch=true;
     char c;                                 // Next character from http input
     uint16_t inx0, inx1, inx2, inx3;        // Pos. of search string in currenLine
     String currentLine = "";                // Build up to complete line
     String ct;                              // contenttype
 
-    if (!cmdclient.connected()) return;
+    if (!cmdclient.connected()){
+        log_e("cmdclient schould be connected but is not!");
+        return false;
+    }
 
     while (wswitch==true){                  // first while
-        if(!cmdclient.available()) return;
+        if(!cmdclient.available()){
+            log_e("Command client schould be available but is not!");
+            return false;
+        }
         cmdclient.read(buf, 1);             // Get a byte
         c=buf[0];
-        if(c==0) return;                    // c is empty
+        if(c==0) return true;                    // c is empty
         if (c == '\n') {
             // If the current line is blank, you got two newline characters in a row.
             // that's the end of the client HTTP request, so send a response:
@@ -293,7 +315,7 @@ void HTML::handlehttp() {
     while(wswitch==false){                          // second while
         cmdclient.read(buf, 1);                     // Get a byte
         c=buf[0];
-        if(c==0) return;
+        if(c==0) return true;
         if (c == '\n') {
             if (currentLine.length() == 0){
                 wswitch=true;  // use first while
@@ -313,20 +335,34 @@ void HTML::handlehttp() {
         }
         else if (c != '\r')currentLine += c;   // No LINFEED.  Is it a CR?
     } // end while 2
+    return true;
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean HTML::loop() {
     cmdclient = cmdserver.available();                  // Check Input from client?
-    if (cmdclient){                                      // Client connected?
+    if (cmdclient.available()){                                      // Client connected?
         if(HTML_info) HTML_info("Command client available");
-        handlehttp();
-        return true;
+        return handlehttp();
     }
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::reply(const String &response, bool header){
-    if(header==true) cmdclient.print(httpheader("text/html"));
+    if(header==true) {
+        int l= response.length();
+        // HTTP header
+        String httpheader="";
+        httpheader += "HTTP/1.1 200 OK\r\n";
+        httpheader += "Connection: close\r\n";
+        httpheader += "Content-type: text/html\r\n";
+        httpheader += "Content-Length: " + String(l, 10) + "\r\n";
+        httpheader += "Server: " + _Name+ "\r\n";
+        httpheader += "Cache-Control: max-age=3600\r\n";
+        httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
+
+        cmdclient.print(httpheader) ;             // header sent
+        delay(50);
+    }
     cmdclient.print(response);
 }
 //--------------------------------------------------------------------------------------------------------------
