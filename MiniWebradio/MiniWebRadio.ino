@@ -3,12 +3,12 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 22 , Jan.06 2019
+// Version 23 , Feb.21 2019
 //
 // Preparations:
 //
-// 1)  change the partitiontable (defaut.csv in folder esp32/tools/partitions/)
-//     MiniWebRadio need 2.3MByte flash and 200KByte nvs
+// 1)  Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
+//     MiniWebRadio needs 2.3MByte flash and 200KByte nvs
 //
 //   # Name,     Type,   SubType,   Offset,   Size,     Flags
 //     phy_init, data,   phy,       0x9000,   0x7000,
@@ -17,24 +17,26 @@
 //     spiffs,   data,   spiffs,    0x342000, 0xB0000,
 //     eeprom,   data,   0x99,      0x3F2000, 0xD000,
 //
-//     or copy the default.csv from the repository to replace the original one
+// 2)  Add this to boards.txt in section "ESP32 Dev Module:
+/*
+       esp32.menu.PartitionScheme.miniwebradio=MiniWebRadio (3MB No OTA)
+       esp32.menu.PartitionScheme.miniwebradio.build.partitions=miniwebradio
+       esp32.menu.PartitionScheme.miniwebradio.upload.maximum_size=3145728
+*/
+// 3)  set the Timezone mentioned below, examples are in rtime.cpp
 //
-//     Arduino IDE only: set treshold in boards.txt from [boardname].upload.maximum_size=1310720 to 3145728
+// 4)  extract the zip file to SD Card
 //
-// 2)  set the Timezone mentioned below, examples are in rtime.cpp
+// 5)  set WiFi credentials below, more credentials can be set in networks.txt (SD Card)
 //
-// 3)  extract the zip file to SD Card
+// 6)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
 //
-// 4)  set WiFi credentials below, more credentials can be set in networks.txt (SD Card)
-//
-// 5)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
-//
-// 6)  add libraries from my repositories to this project: vs1053_ext, IR and tft
+// 7)  add libraries from my repositories to this project: vs1053_ext, IR and tft
 //     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
 //
-// 7)  uncomment #include "fonts/Times_New_Roman.h" in tft.h
+// 8)  uncomment #include "fonts/Times_New_Roman.h" in tft.h
 //
-// 8)  translate _hl_title, entries below, in Your language
+// 9)  translate _hl_title, entries below, in Your language
 //
 //
 //  Display 320x240
@@ -351,7 +353,7 @@ void IRAM_ATTR timer1sec() {
     f_1sec=true;
     sec++;
 //    log_i("sec=%i", sec);
-    if(sec==60){sec=0; log_i("timer1min"); f_1min=true;}
+    if(sec==60){sec=0; f_1min=true;}
 }
 void IRAM_ATTR timer5(){                               // called every 5ms
     static volatile uint8_t  count1sec=0;
@@ -366,7 +368,7 @@ void startTimer() {
     timerAlarmWrite(timer, 5000, true); //5 ms
     timerAlarmEnable(timer);
 //    log_i("timer enabled");
-//    delay(1000);
+    delay(1000);
 }
 //**************************************************************************************************
 //                                       D I S P L A Y                                             *
@@ -1119,7 +1121,6 @@ void HTML_command(const String cmd){                    // called from html
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(String file){                  // called from html
-    web.printhttpheader(file).c_str();
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
@@ -1138,7 +1139,7 @@ void HTML_request(const String request){
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                            // called from html
-    Serial.printf("HTML_info  : %s\r", info.c_str());   // for debug infos
+//    Serial.printf("HTML_info  : %s\n", info.c_str());   // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
