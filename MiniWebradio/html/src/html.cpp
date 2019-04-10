@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 14.02.2019
+ *  updated on: 10.04.2019
  *      Author: Wolle
  */
 
@@ -53,7 +53,6 @@ void HTML::show(const char* pagename, int16_t len){
     while(pagelen){                       // Loop through the output page
         if (pagelen <= TCPCHUNKSIZE){     // Near the end?
             res=cmdclient.write(p, pagelen);  // Yes, send last part
-            delay(100);
             if(res!=pagelen){
                 log_e("write error in webpage");
                 cmdclient.clearWriteError();
