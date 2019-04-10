@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 23 , Feb.21 2019
+// Version 24 , Apr.10 2019
 //
 // Preparations:
 //
@@ -38,6 +38,11 @@
 //
 // 9)  translate _hl_title, entries below, in Your language
 //
+// 10) only if in use v1.0.1 or v1.0.2 change sdkconfig.h:
+//     see https://github.com/espressif/arduino-esp32/issues/2560
+//     #define CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED 0    // default 1
+//     #define CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED 0    // default 1
+//
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -62,6 +67,7 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 //
 //
+
 // system libraries
 #include <Arduino.h>
 #include <Preferences.h>
@@ -95,6 +101,7 @@
 #define SPI_MISO      19
 #define SPI_SCK       18
 
+
 // Timezone
 #define TZName  "CET-1CEST,M3.5.0,M10.5.0/3"
 
@@ -107,6 +114,7 @@ String   _station="",   _stationname="",   _stationURL="",      _homepage="";
 String   _title="",     _info="",          _alarmtime="",       _filename="";
 String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
 String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0",     _lastconnectedhost="";
+uint16_t _stationnr=0;
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
 uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
@@ -265,6 +273,7 @@ boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek i
     uint16_t station=pref.getUInt("station");
     sprintf(_chbuf, "info_%03d", station);
     String str=stations.getString(_chbuf, String("No streamtitle available")); // found probably replacement information
+    _title=str;
     if(str.length()>5){showTitle(str); return true;}
     return false;
 }
@@ -475,7 +484,7 @@ void showFooter(){  // bitrate stationnumber, IPaddress
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("STA:");
     tft.setTextColor(TFT_LAVENDER);
-    tft.printf("%03d", pref.getUInt("station"));
+    tft.printf("%03d", _stationnr);
     tft.setCursor(130, _yFooter);
     tft.setTextColor(TFT_GREENYELLOW);
     tft.print("myIP:");
@@ -530,6 +539,7 @@ String setStation(int16_t stationNr) // -1: previous station, 0: next station, 1
     content=content.substring(content.indexOf("#")+1, content.length()); //get URL
     content.trim();
     _stationURL=content;
+    _stationnr=station;
     _homepage="";
     pref.putUInt("station", station);
     f_has_ST=false; // will probably be set in ShowStreamtitle
@@ -597,34 +607,32 @@ bool connectToWiFi(){
     String s_ssid="", s_password="", s_info="";
     uint16_t i=0, j=0;
     wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
-    if(wifiMulti.run()!=WL_CONNECTED){
-        if(f_SD_okay){  // try credentials given in "/networks.txt"
-            File file = SD.open("/networks.txt");
-            if(file){                                           // try to read from SD
-                String str="";
-                while(file.available()){
-                    str=file.readStringUntil('\n');         // read the line
-                    if(str[0]=='*' ) continue;              // ignore this, goto next line
-                    if(str[0]=='\n') continue;              // empty line
-                    i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
-                    j=1;  while(str[j] >= 32) j++;          // end of first entry?
-                    s_ssid =  str.substring(i, j);          // SSID
-                    s_ssid.trim();
-                    i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-                    j=i;  while(str[j] >= 32) j++;          // end of next entry?
-                    s_password=str.substring(i, j);         // PW
-                    s_password.trim();
-                    i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-                    j=i;  while(str[j] >= 32) j++;          // end of next entry?
-                    s_info=str.substring(i, j);             // Info
-                    s_info.trim();
-                    if(s_ssid.length()==0) continue;
-                    if(s_password.length()==0) continue;
-                    //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
-                    wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
-                }
-                file.close();
+    if(f_SD_okay){  // try credentials given in "/networks.txt"
+        File file = SD.open("/networks.txt");
+        if(file){                                           // try to read from SD
+            String str="";
+            while(file.available()){
+                str=file.readStringUntil('\n');         // read the line
+                if(str[0]=='*' ) continue;              // ignore this, goto next line
+                if(str[0]=='\n') continue;              // empty line
+                i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
+                j=1;  while(str[j] >= 32) j++;          // end of first entry?
+                s_ssid =  str.substring(i, j);          // SSID
+                s_ssid.trim();
+                i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+                j=i;  while(str[j] >= 32) j++;          // end of next entry?
+                s_password=str.substring(i, j);         // PW
+                s_password.trim();
+                i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
+                j=i;  while(str[j] >= 32) j++;          // end of next entry?
+                s_info=str.substring(i, j);             // Info
+                s_info.trim();
+                if(s_ssid.length()==0) continue;
+                if(s_password.length()==0) continue;
+//                    log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+                wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
+            file.close();
         }
     }
     Serial.println("WiFI_info  : Connecting WiFi...");
@@ -634,6 +642,7 @@ bool connectToWiFi(){
         Serial.printf("WiFI_info  : WiFi connected\n");
         Serial.printf("WiFI_info  : IP address %s\n", _myIP.c_str());
         Serial.printf("WiFI_info  : connected to %s\n", _SSID.c_str());
+        WiFi.setSleep(false);
         return true;
     }else{
         Serial.printf("WiFi credentials are not correct\n");
@@ -686,15 +695,16 @@ void setup(){
     _alarmdays=pref.getUInt("alarm_weekday");
     _alarmtime=pref.getString("alarm_time");
     setTFTbrightness(pref.getUInt("brightness"));
-    WiFi.disconnect();
     WiFi.mode(WIFI_MODE_STA);
     WiFi.setHostname("MiniWebRadio");
-    delay(100);
     if(!connectToWiFi()){
-        tft.fillScreen(TFT_BLACK);      // Clear screen
-        tft.setFont(Times_New_Roman43x35);
-        display_info("can't connect to WiFi, check Your credentials", 20, 220, TFT_YELLOW, 5);
-        while(1){};                     // endless loop until reset
+        WiFi.disconnect(true);
+        if(!connectToWiFi()){ // second try due issue #243, #401
+            tft.fillScreen(TFT_BLACK);      // Clear screen
+            tft.setFont(Times_New_Roman43x35);
+            display_info("can't connect to WiFi, check Your credentials", 20, 220, TFT_YELLOW, 5);
+            while(1){};                     // endless loop until reset
+        }
     }
     web.begin();
     f_rtc= rtc.begin(TZName);
@@ -1067,7 +1077,8 @@ void vs1053_info(const char *info) {                    // called from vs1053
 void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
     _commercial_dur=str.toInt();
-    showTitle("Advertising "+str+"s");
+    _title="Advertising "+str+"s";
+    showTitle(_title);
 }
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     String str=info;
@@ -1095,6 +1106,7 @@ void tft_info(const char *info){
 }
 //Events from html library
 void HTML_command(const String cmd){                    // called from html
+//    log_i("HTML_cmd: %s", cmd.c_str());
     uint8_t vol;
     String  str;
     if(cmd=="homepage"){(web.reply(_homepage)); return;}
@@ -1102,6 +1114,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd=="gettone"){ web.reply(tone()); return;}
     if(cmd=="getmute"){ web.reply(String(int(f_mute))); return;}
     if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_chbuf); return;}
+    if(cmd=="getstreamtitle"){web.reply(_title); return;}
     if(cmd=="mute") {mute();if(f_mute==true) web.reply("Mute on\n"); else web.reply("Mute off\n"); return;}
     if(cmd.startsWith("toneha=")){pref.putUInt("toneha",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Gain set"); tone(); return;}
     if(cmd.startsWith("tonehf=")){pref.putUInt("tonehf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Freq set"); tone(); return;}
@@ -1115,12 +1128,13 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
     if(cmd.startsWith("prev_station")){str=setStation(-1); mp3.connecttohost(str); web.reply(StationsItems()); return;}
     if(cmd.startsWith("next_station")){str=setStation(0); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("set_station=")){ mp3.connecttohost(str=setStation(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("stationURL=")){_stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
+    if(cmd.startsWith("set_station=")){mp3.connecttohost(str=setStation(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
+    if(cmd.startsWith("stationURL=")){_stationnr=0; _stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
     if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(String file){                  // called from html
+    log_i("File: %s", file.c_str());
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
@@ -1133,13 +1147,13 @@ void HTML_file(String file){                  // called from html
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request){
-    //log_i("request=%s", request.c_str());
+//    log_i("request=%s", request.c_str());
     if(_req==savefiles){savefile(request);  return;}
     if(request=="end request\n"){           return;}
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                            // called from html
-//    Serial.printf("HTML_info  : %s\n", info.c_str());   // for debug infos
+    Serial.printf("HTML_info  : %s\n", info.c_str());   // for debug infos
 }
 // Events from IR Library
 void ir_res(uint32_t res){
