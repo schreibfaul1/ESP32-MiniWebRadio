@@ -19,7 +19,6 @@
 
 const char web_html[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
-
 <html>
 <head>
     <meta charset="UTF-8">
@@ -205,15 +204,32 @@ const char web_html[] PROGMEM = R"=====(
                      "  0,0"," +1,5"," +3,0"," +4,5"," +6,0"," +7,5"," +9,0","+10,5"];
     var treble_val= [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7];
 
-    window.onload = function() { // Fill configuration initially
-        document.getElementById("dialog").style.display = "none"; // hide the div (its only a template)        
-        gettone(); //Now load the tones (tab Radio)
-        httpGet("to_listen", 1);
-        getnetworks();
-        showExcelGrid();
-        loadGridFileFromSD();
-        getmute();
+
+   var run2sec_i=0;
+    function run2sec(){ //called every two seconds
+        if(run2sec_i==0) httpGet("to_listen", 1);
+        if(run2sec_i==1) getmute();
+        if(run2sec_i==2) httpGet("getstreamtitle", 1);
+        run2sec_i++; if(run2sec_i>2) run2sec_i=0;
     }
+
+    document.addEventListener('readystatechange', event => {
+        if (event.target.readyState === "interactive") {      //same as:  document.addEventListener("DOMContentLoaded"...   // same as  jQuery.ready
+            console.log("All HTML DOM elements are accessible");
+            document.getElementById("dialog").style.display = "none"; // hide the div (its only a template) 
+        }
+        if (event.target.readyState === "complete") {
+            console.log("Now external resources are loaded too, like css,src etc... ");
+            gettone(); //Now load the tones (tab Radio)
+            getnetworks();
+            getmute();
+            loadGridFileFromSD();
+            showExcelGrid();
+            httpGet("to_listen", 1);
+            setInterval(run2sec,2000) //this will run the function for every 2 sec.
+        }
+    });
+
     function showTab1(){
         console.log("tab-content1 (Radio)");
         document.getElementById("tab-content1").style.display = "block";
@@ -309,7 +325,8 @@ const char web_html[] PROGMEM = R"=====(
       //file=file.split(',').join('.'); //replace commas in dots, Miniradio has no commas in filenames
         document.getElementById(id).style.backgroundImage=file;
     }
- 
+
+    var _num=0;
     function httpGet(theReq, nr) {  // universal request prev, next, vol,  mute...
         var theUrl = "/?" + theReq + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
@@ -320,22 +337,24 @@ const char web_html[] PROGMEM = R"=====(
                         theReq.startsWith("next_station")||
                         theReq.startsWith("set_station=")||
                         theReq.startsWith("to_listen")){
-                        resultstr1.value = xhr.responseText;
                         var res="", num = "", sta="", url="", n=0;
                         res = xhr.responseText;
                         n = res.indexOf(" ");
                         num = res.substring(0, n);      // stationnumber
-                        var sel = document.getElementById('preset');
-                        sel.selectedIndex = Number(num);
-                        if(n==1) num="00"+num;
-                        if(n==2) num="0"+num;
-                        res = res.substring(n+1);       // remove stationnumber
-                        n = res.indexOf(" ");
-                        url = res.substring(0, n);      // streamURL
-                        sta = res.substring(n+1);
-                        showLabel('label-logo', sta);
-                        resultstr1.value = "";  //sta;
-                        station.value = url;
+                        if(_num!=Number(num)){ // only if num has changed
+                            _num=Number(num);
+                            cmd.value="";
+                            var sel = document.getElementById('preset');
+                            sel.selectedIndex = Number(num);
+                            if(n==1) num="00"+num;
+                            if(n==2) num="0"+num;
+                            res = res.substring(n+1);       // remove stationnumber
+                            n = res.indexOf(" ");
+                            url = res.substring(0, n);      // streamURL
+                            sta = res.substring(n+1);
+                            showLabel('label-logo', sta);
+                            station.value = url;
+                        }
                     }
                     else if(xhr.responseText.startsWith("http")){
                         console.log(xhr.responseText);
@@ -351,13 +370,13 @@ const char web_html[] PROGMEM = R"=====(
                             document.getElementById("Mute").src="SD/png/Button_Mute_Red.png";
                         }
                     }
-                }
-                if(nr==1){ 
-                        if(theReq=="mute"||
-                            theReq.startsWith("upvolume")||
-                            theReq.startsWith("downvolume")) cmd.value=xhr.responseText; 
-                else
-                    resultstr1.value = xhr.responseText;
+                    else if(theReq=="mute"||theReq.startsWith("upvolume")||theReq.startsWith("downvolume")){
+                        resultstr1.value=xhr.responseText;
+                    }
+                    else if(theReq=="getstreamtitle"){
+                        cmd.value=xhr.responseText;
+                    }
+                    else resultstr1.value = xhr.responseText;
                 }
                 if(nr==2) resultstr2.value = xhr.responseText;
                 if(nr==3) resultstr3.value = xhr.responseText;
@@ -404,6 +423,7 @@ const char web_html[] PROGMEM = R"=====(
 
 
     function handleStation(presctrl) {  // tab Radio: preset, select a station
+        cmd.value="";
         httpGet("set_station=" + (presctrl.value), 1);
     }
 
@@ -421,6 +441,9 @@ const char web_html[] PROGMEM = R"=====(
 
     function setstation() {  // Radio: button play - enter a url to play from
         var theUrl = "/?stationURL=" + station.value + "&version=" + Math.random();
+        var sel = document.getElementById('preset');
+        sel.selectedIndex =0;
+        cmd.value="";
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
             if(xhr.readyState == XMLHttpRequest.DONE) {
@@ -1142,7 +1165,7 @@ const char web_html[] PROGMEM = R"=====(
                     </left>
                 </td>
                 <td colspan="2">
-                    <input type="text" style="width:100%;"  id="cmd" placeholder="Waiting for a command....">
+                    <input type="text" style="width:100%;"  id="cmd" placeholder=" Waiting....">
                 </td>
             </tr>
         </table>    
@@ -1150,7 +1173,7 @@ const char web_html[] PROGMEM = R"=====(
             <tr>
             </tr>
                 <td>
-                    <input type="text" style="width:100%;" id="station" placeholder="Enter a streamURL here....">
+                    <input type="text" style="width:100%;" id="station" placeholder=" Enter a streamURL here....">
                 </td>
                 <td width="70">
                     <right>
@@ -1162,7 +1185,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <tr>
                 <td>
-                            <input type="text" style="width:100%;" id="resultstr1" placeholder="Test....">
+                            <input type="text" style="width:100%;" id="resultstr1" placeholder=" Test....">
                 </td>
                 <td>
                     <right>
@@ -1480,6 +1503,4 @@ const char web_html[] PROGMEM = R"=====(
 </noscript> 
     
 )=====" ;
-
-
 #endif /* WEB_H_ */
