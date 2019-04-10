@@ -53,6 +53,7 @@ void HTML::show(const char* pagename, int16_t len){
     while(pagelen){                       // Loop through the output page
         if (pagelen <= TCPCHUNKSIZE){     // Near the end?
             res=cmdclient.write(p, pagelen);  // Yes, send last part
+            delay(100);
             if(res!=pagelen){
                 log_e("write error in webpage");
                 cmdclient.clearWriteError();
@@ -111,7 +112,6 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
     while(wIndex+bytesPerTransaction < file.size()){
         file.read(transBuf, bytesPerTransaction);
         res=cmdclient.write(transBuf, bytesPerTransaction);
-
         wIndex+=res;
         if(res!=bytesPerTransaction){
             log_i("write error %s", path);
@@ -130,7 +130,6 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
     }
     if(wIndex!=file.size()) log_e("file %s not correct sent", path);
     file.close();
-
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -361,7 +360,6 @@ void HTML::reply(const String &response, bool header){
         httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
         cmdclient.print(httpheader) ;             // header sent
-        delay(50);
     }
     cmdclient.print(response);
 }
