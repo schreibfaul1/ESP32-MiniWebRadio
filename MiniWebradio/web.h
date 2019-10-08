@@ -2,6 +2,7 @@
  *  web.h
  *
  *  Created on: 04.10.2018
+ *  Updated on: 08.10.2019
  *      Author: Wolle
  *
  *  does not work with MS Internetexplorer
@@ -27,9 +28,9 @@ const char web_html[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
 
-/*    <link rel="stylesheet" href="SD/css/jquery-ui.css" />     */
-/*    <link rel="stylesheet" href="SD/css/jsgrid.css" />        */
-/*    <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> */
+<!--  <link rel="stylesheet" href="SD/css/jquery-ui.css" />      -->
+<!--  <link rel="stylesheet" href="SD/css/jsgrid.css" />         -->
+<!--  <link rel="stylesheet" href="SD/css//jsgrid-theme.css" />  -->
     
     <title>MiniWebRadio</title>
     
@@ -193,6 +194,14 @@ const char web_html[] PROGMEM = R"=====(
         .ui-dialog .ui-dialog-content {
             margin-top: 0.3em !important;
             padding: 0.1em 0.1em !important;
+        }
+        div#preloaded-images {
+           position: absolute;
+           overflow: hidden;
+           left: -9999px; 
+           top: -9999px;
+           height: 1px;
+           width: 1px;
         }
     </style>
 </head>
@@ -1056,6 +1065,40 @@ const char web_html[] PROGMEM = R"=====(
 <!--  <script src="SD/js/xlsx.js"></script>      --->
 <!--  <script src="SD/js/FileSaver.js"></script> --->
 
+    <div id="preloaded-images">
+        <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
+        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" alt="Image 02" />
+        <img src="SD/png/Station_Green.png"             width="1" height="1" alt="Image 03" />
+        <img src="SD/png/Station_Yellow.png"            width="1" height="1" alt="Image 04" />
+        <img src="SD/png/MP3_Green.png"                 width="1" height="1" alt="Image 05" />
+        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" alt="Image 06" />
+        <img src="SD/png/Search_Green.png"              width="1" height="1" alt="Image 06" />
+        <img src="SD/png/Search_Yellow.png"             width="1" height="1" alt="Image 07" />
+        <img src="SD/png/About_Green.png"               width="1" height="1" alt="Image 08" />
+        <img src="SD/png/About_Yellow.png"              width="1" height="1" alt="Image 09" />
+        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" alt="Image 10" />
+        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" alt="Image 11" />
+        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" alt="Image 12" />
+        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" alt="Image 13" />
+        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" alt="Image 14" />
+        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" alt="Image 15" />
+        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" alt="Image 16" />
+        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" alt="Image 17" />
+        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" alt="Image 18" />
+        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" alt="Image 19" />
+        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" alt="Image 20" />
+        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" alt="Image 21" />
+        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" alt="Image 22" />
+        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" alt="Image 23" />
+        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" alt="Image 24" />
+        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" alt="Image 25" />
+        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" alt="Image 26" />
+        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" alt="Image 27" />
+        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" alt="Image 28" />
+        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" alt="Image 29" />
+    </div>
+
+
     <div id="CONTENT" >
     <!--==============================================================================================-->
         <div id="tab-content1">
@@ -1072,7 +1115,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1246,7 +1289,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1296,7 +1339,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1333,7 +1376,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1490,11 +1533,6 @@ const char web_html[] PROGMEM = R"=====(
         </h3>
     </div>
     <!--==============================================================================================-->
-
-</div>
-
-
-
 
 </body>
 </html>
