@@ -1059,11 +1059,11 @@ const char web_html[] PROGMEM = R"=====(
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.4/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 
-<!--  <script src="SD/js/jquery.js"></script>    --->
-<!--  <script src="SD/js/jquery-ui.js"></script> --->
-<!--  <script src="SD/js/jsgrid.js"></script>    --->
-<!--  <script src="SD/js/xlsx.js"></script>      --->
-<!--  <script src="SD/js/FileSaver.js"></script> --->
+<!--  <script src="SD/js/jquery.js"></script>    -->
+<!--  <script src="SD/js/jquery-ui.js"></script> -->
+<!--  <script src="SD/js/jsgrid.js"></script>    -->
+<!--  <script src="SD/js/xlsx.js"></script>      -->
+<!--  <script src="SD/js/FileSaver.js"></script> -->
 
     <div id="preloaded-images">
         <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
@@ -1115,7 +1115,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1289,7 +1289,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1339,7 +1339,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1376,7 +1376,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1516,7 +1516,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
+                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1533,12 +1533,11 @@ const char web_html[] PROGMEM = R"=====(
         </h3>
     </div>
     <!--==============================================================================================-->
-
+</div>
 </body>
 </html>
 <noscript>
   Sorry, MiniWebRadio does not work without JavaScript!
 </noscript> 
-    
 )=====" ;
 #endif /* WEB_H_ */
