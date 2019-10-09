@@ -2,10 +2,10 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 08.10.2019
+ *  Updated on: 09.10.2019
  *      Author: Wolle
  *
- *  does not work with MS Internetexplorer
+ *  does not work with MS InternetExplorer
  *  successfully tested with Chrome, MS Edge and Opera
  *
  */
@@ -28,186 +28,178 @@ const char web_html[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
 
-<!--  <link rel="stylesheet" href="SD/css/jquery-ui.css" />      -->
-<!--  <link rel="stylesheet" href="SD/css/jsgrid.css" />         -->
-<!--  <link rel="stylesheet" href="SD/css//jsgrid-theme.css" />  -->
+<!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
+<!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
+<!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
     
     <title>MiniWebRadio</title>
     
-    <style type="text/css">
-        html{
-            margin:0px;
-            height:100%;
-            padding:0;
-            font:16px "Trebuchet MS";
-            color:#222;
-            background-color:#033069;
+    <style type=text/css>           /* optimized with csstidy */
+        html {
+            height : 100%;
+            font : 16px;
+            font-family : Times;
+            color : #222;
+            background-color : #033069;
+            margin : 0;
+            padding : 0;
         }
         #CONTENT {
-            min-height:620px;
-            min-width: 720px;
-            overflow:hidden;
-            margin: 5px;
-            background-color: lightblue;
+            min-height : 620px;
+            min-width : 720px;
+            overflow : hidden;
+            background-color : #ADD8E6;
+            margin : 5px;
         }
         #tab-content1 {
-            display:block;
-            margin: 20px;
+            display : block;
+            margin : 20px;
         }
         #tab-content2 {
-            display:none;
-            margin: 20px;
+            display : none;
+            margin : 20px;
         }
         #tab-content3 {
-            display:none;
-            margin: 20px;
+            display : none;
+            margin : 20px;
         }
         #tab-content4 {
-            display:none;
-            margin: 20px;
+            display : none;
+            margin : 20px;
         }
         #tab-content5 {
-            display:none;
-            margin: 20px;
+            display : none;
+            margin : 20px;
         }
         .button {
-            width: 80px;
-            height: 30px;
-            background-color: #128F76;
-            border: none;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 5px;
+            width : 80px;
+            height : 30px;
+            background-color : #128F76;
+            border : none;
+            color : #FFF;
+            text-align : center;
+            text-decoration : none;
+            display : inline-block;
+            font-size : 16px;
+            cursor : pointer;
+            border-radius : 5px;
+            margin : 4px 2px;
         }
-        .buttonblue {background-color: blue;    width: 120px;}
-        .buttongreen{background-color: #128F76; width: 120px;}
+        .buttonblue {
+            background-color : blue;
+            width : 120px;
+        }
+        .buttongreen {
+            background-color : #128F76;
+            width : 120px;
+        }
         .select {
-            width: 260px;
-            height: 34px;
-            padding-top: 0px;
-            padding-left: 5px;
-            padding-bottom: 0px;
-            padding-right_ 5px;
-            background: white;
-            font-size: 16px;
-            line-height: normal;
-            border: 1;
-            border-radius: 5px;
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            -webkit-appearance: none;
-            border: 1px solid black;
-            border-radius: 5px;
+            width : 260px;
+            height : 34px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 0;
+            background : #FFF;
+            font-size : 16px;
+            line-height : normal;
+            border : #000 solid 1px;
+            border-radius : 5px;
         }
         input[type="text"] {
-            margin: 0;
-            height: 28px;
-            background: white;
-            font-size: 16px;
-            appearance: none;
-            box-shadow: none;
-            border-radius: 5px;
-            -webkit-border-radius: 5px;
-            -moz-border-radius: 5px;
-            -webkit-appearance: none;
-            border: 1px solid black;
-            border-radius: 5px;
+            height : 28px;
+            background : #FFF;
+            font-size : 16px;
+            appearance : none;
+            box-shadow : none;
+            border : #000 solid 1px;
+            border-radius : 5px;
+            margin : 0;
         }
         input[type="text"]:focus {
-            outline: none;
+            outline : none;
         }
-        input[type=submit] {
-            width: 200px;
-            height: 40px;
-            background-color: #128F76;
-            border: none;
-            color: white;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
-            cursor: pointer;
-            border-radius: 5px;
+        input[type="submit"] {
+            width : 200px;
+            height : 40px;
+            background-color : #128F76;
+            border : none;
+            color : #FFF;
+            text-align : center;
+            text-decoration : none;
+            display : inline-block;
+            font-size : 16px;
+            cursor : pointer;
+            border-radius : 5px;
+            margin : 4px 2px;
         }
-        #label-logo {  //tab1
-            left 10px;
-            margin-left: 20px;
-            border:2px solid black;
-            display:inline-block;
-            background-image: url("SD/unknown.jpg");
-            width: 96px;
-            height:96px;
+        #label-logo {
+            margin-left : 20px;
+            border : #000 solid 2px;
+            display : inline-block;
+            background-image : url(SD/unknown.jpg);
+            width : 96px;
+            height : 96px;
         }
         canvas {
-            left: 0px;
-            margin-left: 0px;
-            display: inline-block;
-            width: 96px;
-            height: 96px;
-            border: 2px solid black;
+            left : 0;
+            margin-left : 0;
+            display : inline-block;
+            width : 96px;
+            height : 96px;
+            border : #000 solid 2px;
         }
         #label_TG_value {
-            width: 50px;
-            display: inline-block;
-            text-align: right;
+            width : 50px;
+            display : inline-block;
+            text-align : right;
         }
         #label_TF_value {
-            width: 50px;
-            display: inline-block;
-            text-align: right;
+            width : 50px;
+            display : inline-block;
+            text-align : right;
         }
         #label_BG_value {
-            width: 50px;
-            display: inline-block;
-            text-align: right;
+            width : 50px;
+            display : inline-block;
+            text-align : right;
         }
         #label_BF_value {
-            width: 50px;
-            display: inline-block;
-            text-align: right;
-        }
-        #prefs{
-            width: 100%;
+            width : 50px;
+            display : inline-block;
+            text-align : right;
         }
         .jsgrid-header-cell {
-            padding: 0.1em 0.1em !important;
+            padding : 0.1em !important ;
         }
         .jsgrid-cell {
-            overflow: hidden !important;
-            white-space: nowrap !important;
-            padding: 0.1em 0.2em !important;
+            overflow : hidden !important ;
+            white-space : nowrap !important ;
+            padding : 0.1em 0.2em !important ;
         }
         .ui-widget-header {
-            background: #11e9e9 !important;
+            background : #11e9e9 !important ;
         }
         .ui-dialog .ui-dialog-buttonpane {
-            border-width: 0 0 0 0 !important;
-            margin-top: 0 !important;
-            padding: 0 0 0 1em !important;
+            margin-top : 0 !important ;
+            border-width : 0 !important ;
+            padding : 0 0 0 1em !important ;
         }
         .ui-dialog .ui-dialog-content {
-            margin-top: 0.3em !important;
-            padding: 0.1em 0.1em !important;
+            margin-top : 0.3em !important ;
+            padding : 0.1em !important ;
         }
         div#preloaded-images {
-           position: absolute;
-           overflow: hidden;
-           left: -9999px; 
-           top: -9999px;
-           height: 1px;
-           width: 1px;
+            position : absolute;
+            overflow : hidden;
+            left : -9999px;
+            top : -9999px;
+            height : 1px;
+            width : 1px;
         }
-    </style>
+    </style> 
 </head>
 
 <script>
-
     //global variables and functions
     var treble_dB = ["-12,0","-10,5"," -9,0"," -7,5"," -6,0"," -4,5"," -3,0"," -1,5",
                      "  0,0"," +1,5"," +3,0"," +4,5"," +6,0"," +7,5"," +9,0","+10,5"];
@@ -291,7 +283,7 @@ const char web_html[] PROGMEM = R"=====(
         xhr.open('POST', theUrl, true);
         xhr.onreadystatechange = function() {   //Call a function when the state changes.
             if(xhr.readyState == 4) {
-                if(xhr.responseText=="OK") alert(fileName + ' succesfully uploaded');
+                if(xhr.responseText=="OK") alert(fileName + ' successfully uploaded');
                 else alert(fileName + ' not uploaded')
             }
         }
@@ -303,35 +295,35 @@ const char web_html[] PROGMEM = R"=====(
     function showLabel(id, src){  // get the bitmap from SD, convert to URL first
         src=src.replace(/%/g  , "%25");  // % must be the first
         src=src.replace(/\s/g , "%20");  // URLs never can have blanks
-      //src=src.replace(/!/g  , "%21");  // not neccecary to replace
+      //src=src.replace(/!/g  , "%21");  // not necessary to replace
       //src=src.replace(/\"/g , "%22");  // not allowed in Windows filenames
       //src=src.replace(/#/g  , "%23");  // can not be used, is separator in list
-      //src=src.replace(/\$/g , "%24");  // not neccecary to replace
-      //src=src.replace(/&/g  , "%26");  // not neccecary to replace
+      //src=src.replace(/\$/g , "%24");  // not necessary to replace
+      //src=src.replace(/&/g  , "%26");  // not necessary to replace
         src=src.replace(/\'/g , "%27");  // must be replace
         src=src.replace(/\(/g , "%28");  // must be replace
         src=src.replace(/\)/g , "%29");  // must be replace
       //src=src.replace(/\*/g , "%2A");  // not allowed in Windows filenames
-        src=src.replace(/\+/g , "%2B");  // is neccecary to replace, + is the same as space
+        src=src.replace(/\+/g , "%2B");  // is necessary to replace, + is the same as space
       //src=src.replace(/,/g  , "%2C");  // commas are later replaced in dots
-      //src=src.replace(/\-/g , "%2D");  // not neccecary to replace
-      //src=src.replace(/\./g , "%2E");  // not neccecary to replace
+      //src=src.replace(/\-/g , "%2D");  // not necessary to replace
+      //src=src.replace(/\./g , "%2E");  // not necessary to replace
       //src=src.replace("/"   , "%2F");  // is separator, not usable
       //src=src.replace(/:/g  , "%3A");  // not allowed in Windows filenames
-      //src=src.replace(/;/g  , "%3B");  // not neccecary to replace
+      //src=src.replace(/;/g  , "%3B");  // not necessary to replace
       //src=src.replace(/</g  , "%3C");  // not allowed in Windows filenames
       //src=src.replace(/\=/g , "%3D");  // can't be used in selectboxes
       //src=src.replace(/>/g  , "%3E");  // not allowed in Windows filenames
       //src=src.replace(/\?/g , "%3F");  // not allowed in Windows filenames
-      //src=src.replace(/@/g  , "%40");  // not neccecary to replace
-      //src=src.replace(/\[/g , "%5B");  // not neccecary to replace
-      //src=src.replace("\"   , "%5C");  // not neccecary to replace
-      //src=src.replace(/\]/g , "%5D");  // not neccecary to replace
-      //src=src.replace(/\{/g , "%7B");  // not neccecary to replace
+      //src=src.replace(/@/g  , "%40");  // not necessary to replace
+      //src=src.replace(/\[/g , "%5B");  // not necessary to replace
+      //src=src.replace("\"   , "%5C");  // not necessary to replace
+      //src=src.replace(/\]/g , "%5D");  // not necessary to replace
+      //src=src.replace(/\{/g , "%7B");  // not necessary to replace
       //src=src.replace(/\|/g , "%7C");  // not allowed in Windows filenames
-      //src=src.replace(/\}/g , "%7D");  // not neccecary to replace
+      //src=src.replace(/\}/g , "%7D");  // not necessary to replace
         var file="url(url=SD/logo/" + src + ".jpg)";
-      //file=file.split(',').join('.'); //replace commas in dots, Miniradio has no commas in filenames
+      //file=file.split(',').join('.'); //replace commas in dots, MiniWebRadio has no commas in filenames
         document.getElementById(id).style.backgroundImage=file;
     }
 
@@ -436,7 +428,7 @@ const char web_html[] PROGMEM = R"=====(
         httpGet("set_station=" + (presctrl.value), 1);
     }
 
-    function handletone(tonectrl) { // Radio: treble, bass, frequ
+    function handletone(tonectrl) { // Radio: treble, bass, freq
         var theUrl = "/?" + tonectrl.id + "=" + tonectrl.value + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -544,7 +536,7 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("label_BF_value").innerHTML= (BassFreq.value-1)*10;
         console.log("Bass Freq=%i", val);
     }
-    function handlectrl(id, val) { // Radio: treble, bass, frequ
+    function handlectrl(id, val) { // Radio: treble, bass, freq
         var theUrl = "/?" + id + "=" + val + "&version=" + Math.random();
         var xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function() {
@@ -850,7 +842,7 @@ const char web_html[] PROGMEM = R"=====(
                 select.options.length=1;
                 for(i = 0 ; i < ( tracks.length - 1 ) ; i++) {
                     opt=document.createElement("OPTION");
-                    strparts=tracks[i].substr(tracks[i].lastIndexOf("/")+1,tracks[i].lenght);
+                    strparts=tracks[i].substr(tracks[i].lastIndexOf("/")+1,tracks[i].length);
                     opt.value = tracks[i] ;
                     opt.text = strparts ;
                     select.add(opt);
@@ -1008,7 +1000,7 @@ const char web_html[] PROGMEM = R"=====(
         }
         xhr.onreadystatechange = function() {   //Call a function when the state changes.
             if(xhr.readyState == 4) {
-                if(xhr.responseText=="OK") alert(filename + ' succesfully uploaded');
+                if(xhr.responseText=="OK") alert(filename + ' successfully uploaded');
                 else alert(filename + ' not uploaded')
             }
         }
@@ -1030,7 +1022,7 @@ const char web_html[] PROGMEM = R"=====(
         }
     }
     //-------------------------------------- TAB Info ---------------------------------------
-    function getnetworks() { // tab Config: load the connevted WiFi network
+    function getnetworks() { // tab Config: load the connected WiFi network
         var i, select, opt, networks;
         var theUrl = "/?getnetworks" + "&version=" + Math.random() ;
         var xhr = new XMLHttpRequest();
@@ -1059,11 +1051,11 @@ const char web_html[] PROGMEM = R"=====(
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.4/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 
-<!--  <script src="SD/js/jquery.js"></script>    -->
-<!--  <script src="SD/js/jquery-ui.js"></script> -->
-<!--  <script src="SD/js/jsgrid.js"></script>    -->
-<!--  <script src="SD/js/xlsx.js"></script>      -->
-<!--  <script src="SD/js/FileSaver.js"></script> -->
+<!--  <script src="SD/js/jquery.js"></script>    --->
+<!--  <script src="SD/js/jquery-ui.js"></script> --->
+<!--  <script src="SD/js/jsgrid.js"></script>    --->
+<!--  <script src="SD/js/xlsx.js"></script>      --->
+<!--  <script src="SD/js/FileSaver.js"></script> --->
 
     <div id="preloaded-images">
         <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
@@ -1115,7 +1107,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
+                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1289,7 +1281,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
+                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1339,7 +1331,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
+                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1376,7 +1368,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
+                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1516,7 +1508,7 @@ const char web_html[] PROGMEM = R"=====(
                 </td>
                 <td>
                     <center>
-                        <label style="font-size: 50px; font-family: Garamond, Verdana, Helvetica, Arial;">
+                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
                             MiniWebRadio
                         </label>
                     </center>
@@ -1533,11 +1525,9 @@ const char web_html[] PROGMEM = R"=====(
         </h3>
     </div>
     <!--==============================================================================================-->
-</div>
+
 </body>
 </html>
-<noscript>
-  Sorry, MiniWebRadio does not work without JavaScript!
-</noscript> 
+    
 )=====" ;
 #endif /* WEB_H_ */
