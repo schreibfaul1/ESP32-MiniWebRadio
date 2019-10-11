@@ -1328,7 +1328,7 @@ const char web_html[] PROGMEM = R"=====(
         <br><br>
         <button class="button" onclick="httpGet('mp3track=0', 3)">STOP</button>
         <br><br>
-        <input type="text" class="boxstyle" size="80" id="resultstr3" placeholder="Waiting for a command...."><br>
+        <input type="text" class="boxstyle" style="width: calc(100% - 8px); id="resultstr3" placeholder="Waiting for a command...."><br>
         <br><br>
         </center>
     </div>
