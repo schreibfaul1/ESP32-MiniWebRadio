@@ -22,8 +22,19 @@ const char web_html[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniWebRadio</title>
+    <meta name="generator" content="Bluefish 2.2.10" >
+    <meta name="author" content="Wolle" >
+    <meta name="date" content="2019-10-11T20:07:54+0200" >
+    <meta name="copyright" content="schreibfaul1">
+    <meta name="keywords" content="">
+    <meta name="description" content="index">
+    <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8">
+    <meta http-equiv="content-style-type" content="text/css">
+    <meta http-equiv="expires" content="0">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />      
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
@@ -31,29 +42,51 @@ const char web_html[] PROGMEM = R"=====(
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
-    
-    <title>MiniWebRadio</title>
-    
+
+   
     <style type=text/css>           /* optimized with csstidy */
-        html {
+        html {  /* This is the groundplane */
+            font-family : serif;
             height : 100%;
-            font : 16px;
-            font-family : Times;
-            color : #222;
-            background-color : #033069;
+            font-size: 16px;
+            color : DarkSlateGray;
+            background-color : navy;
             margin : 0;
             padding : 0;
         }
-        #CONTENT {
-            min-height : 620px;
-            min-width : 720px;
+        #navigation {
+            float: left;
+            width: 345px;
+            height: 66px;
+        }
+        #headline {
+            float: none;
+            margin-left: 348px;
+            max-width: 100%;
+            height: 66px;
+            font-size: 50px;
+            text-align: center;
+        }
+        #preloaded-images{
+            display: none;
+        }
+        #dialog {
+            display: none;       
+        }
+        #content {
+            min-height : 540px;
+            min-width : 725px;
             overflow : hidden;
-            background-color : #ADD8E6;
-            margin : 5px;
+            background-color : lightskyblue;
+            margin : 0;
+            padding : 5px;
         }
         #tab-content1 {
+            font-size: 15px;
             display : block;
-            margin : 20px;
+            padding : 5px 0;
+            max-width: 100%;
+            height: 440px;
         }
         #tab-content2 {
             display : none;
@@ -93,52 +126,16 @@ const char web_html[] PROGMEM = R"=====(
             background-color : #128F76;
             width : 120px;
         }
-        .select {
-            width : 260px;
-            height : 34px;
-            padding-top : 0;
-            padding-left : 5px;
-            padding-bottom : 0;
-            background : #FFF;
-            font-size : 16px;
-            line-height : normal;
-            border : #000 solid 1px;
-            border-radius : 5px;
-        }
-        input[type="text"] {
-            height : 28px;
-            background : #FFF;
-            font-size : 16px;
-            appearance : none;
-            box-shadow : none;
-            border : #000 solid 1px;
-            border-radius : 5px;
-            margin : 0;
-        }
-        input[type="text"]:focus {
-            outline : none;
-        }
-        input[type="submit"] {
-            width : 200px;
-            height : 40px;
-            background-color : #128F76;
-            border : none;
-            color : #FFF;
-            text-align : center;
-            text-decoration : none;
-            display : inline-block;
-            font-size : 16px;
-            cursor : pointer;
-            border-radius : 5px;
-            margin : 4px 2px;
-        }
         #label-logo {
             margin-left : 20px;
-            border : #000 solid 2px;
+            border-color: black;
+            border-style: solid;
+            border-width: 2px;
             display : inline-block;
             background-image : url(SD/unknown.jpg);
             width : 96px;
             height : 96px;
+            margin-top: 5px;
         }
         canvas {
             left : 0;
@@ -147,26 +144,6 @@ const char web_html[] PROGMEM = R"=====(
             width : 96px;
             height : 96px;
             border : #000 solid 2px;
-        }
-        #label_TG_value {
-            width : 50px;
-            display : inline-block;
-            text-align : right;
-        }
-        #label_TF_value {
-            width : 50px;
-            display : inline-block;
-            text-align : right;
-        }
-        #label_BG_value {
-            width : 50px;
-            display : inline-block;
-            text-align : right;
-        }
-        #label_BF_value {
-            width : 50px;
-            display : inline-block;
-            text-align : right;
         }
         .jsgrid-header-cell {
             padding : 0.1em !important ;
@@ -188,13 +165,54 @@ const char web_html[] PROGMEM = R"=====(
             margin-top : 0.3em !important ;
             padding : 0.1em !important ;
         }
-        div#preloaded-images {
-            position : absolute;
-            overflow : hidden;
-            left : -9999px;
-            top : -9999px;
-            height : 1px;
-            width : 1px;
+        .boxstyle {
+            height : 36px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 0;
+            background-color: white;
+            font-size : 16px;
+            line-height : normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius : 5px;
+        }
+        .sdr_lbl_left {
+            display: inline-block;
+            float: left;
+            text-align:right;
+            height: 25px;
+            width: 100px;
+            padding-top: 0px;
+            padding-right: 5px;
+            padding-bottom: 0px;
+        }
+        .sdr_lbl_right {
+            display: inline-block;
+            float: left;
+            text-align:right;
+            height: 25px;
+            width: 45px;
+            padding-top: 0px;
+            padding-left: 5px;
+            padding-bottom: 0px;
+        }
+        .sdr_lbl_measure {
+            display: inline-block;
+            float: left;
+            text-align:left;
+            height: 25px;
+            width: 40px;
+            padding-top: 0px;
+            padding-left: 2px;
+            padding-bottom: 0px;
+        }
+        #preloaded-images{
+            display: none;
+        }
+        #dialog {
+            display: none;       
         }
     </style> 
 </head>
@@ -215,7 +233,8 @@ const char web_html[] PROGMEM = R"=====(
     }
 
     document.addEventListener('readystatechange', event => {
-        if (event.target.readyState === "interactive") {      //same as:  document.addEventListener("DOMContentLoaded"...   // same as  jQuery.ready
+        if (event.target.readyState === "interactive") {    //same as:  document.addEventListener("DOMContentLoaded"...   
+                                                            // same as  jQuery.ready
             console.log("All HTML DOM elements are accessible");
             document.getElementById("dialog").style.display = "none"; // hide the div (its only a template) 
         }
@@ -238,6 +257,11 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
         document.getElementById("tab-content5").style.display = "none";
+        document.getElementById("btn1").src="SD/png/Radio_Yellow.png";
+        document.getElementById("btn2").src="SD/png/Station_Green.png";
+        document.getElementById("btn3").src="SD/png/MP3_Green.png";
+        document.getElementById("btn4").src="SD/png/Search_Green.png";
+        document.getElementById("btn5").src="SD/png/About_Green.png";
         getmute();
     }
     function showTab2(){
@@ -247,6 +271,11 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
         document.getElementById("tab-content5").style.display = "none";
+        document.getElementById("btn1").src="SD/png/Radio_Green.png";
+        document.getElementById("btn2").src="SD/png/Station_Yellow.png";
+        document.getElementById("btn3").src="SD/png/MP3_Green.png";
+        document.getElementById("btn4").src="SD/png/Search_Green.png";
+        document.getElementById("btn5").src="SD/png/About_Green.png";
         $("#jsGrid").jsGrid("refresh");
     }
     function showTab3(){
@@ -255,16 +284,27 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content2").style.display = "none";
         document.getElementById("tab-content3").style.display = "block";
         document.getElementById("tab-content4").style.display = "none";
-        document.getElementById("tab-content5").style.display = "none";    
+        document.getElementById("tab-content5").style.display = "none";
+        document.getElementById("btn1").src="SD/png/Radio_Green.png";
+        document.getElementById("btn2").src="SD/png/Station_Green.png";
+        document.getElementById("btn3").src="SD/png/MP3_Yellow.png";
+        document.getElementById("btn4").src="SD/png/Search_Green.png";
+        document.getElementById("btn5").src="SD/png/About_Green.png";    
         getmp3list(); // Now get the mp3 list from SD      
     }
     function showTab4(){
         console.log("tab-content4 (Search Stations)");
         document.getElementById("tab-content1").style.display = "none";
+        document.getElementById("btn1").src="SD/png/Radio_Green.png"
         document.getElementById("tab-content2").style.display = "none";
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "block"
-        document.getElementById("tab-content5").style.display = "none";    
+        document.getElementById("tab-content5").style.display = "none";
+        document.getElementById("btn1").src="SD/png/Radio_Green.png";
+        document.getElementById("btn2").src="SD/png/Station_Green.png";
+        document.getElementById("btn3").src="SD/png/MP3_Green.png";
+        document.getElementById("btn4").src="SD/png/Search_Yellow.png";
+        document.getElementById("btn5").src="SD/png/About_Green.png";    
         loadJSON("http://www.radio-browser.info/webservice/json/countries", gotCountries, 'jsonp');   
     }
     function showTab5(){
@@ -273,7 +313,12 @@ const char web_html[] PROGMEM = R"=====(
         document.getElementById("tab-content2").style.display = "none";
         document.getElementById("tab-content3").style.display = "none";
         document.getElementById("tab-content4").style.display = "none";
-        document.getElementById("tab-content5").style.display = "block";      
+        document.getElementById("tab-content5").style.display = "block";
+        document.getElementById("btn1").src="SD/png/Radio_Green.png";
+        document.getElementById("btn2").src="SD/png/Station_Green.png";
+        document.getElementById("btn3").src="SD/png/MP3_Green.png";
+        document.getElementById("btn4").src="SD/png/Search_Green.png";
+        document.getElementById("btn5").src="SD/png/About_Yellow.png";        
     }
     function uploadTextFile(fileName, content ) {
         var fd = new FormData();
@@ -1057,6 +1102,9 @@ const char web_html[] PROGMEM = R"=====(
 <!--  <script src="SD/js/xlsx.js"></script>      --->
 <!--  <script src="SD/js/FileSaver.js"></script> --->
 
+<div id="content" >
+
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
     <div id="preloaded-images">
         <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
         <img src="SD/png/Radio_Yellow.png"              width="1" height="1" alt="Image 02" />
@@ -1089,206 +1137,157 @@ const char web_html[] PROGMEM = R"=====(
         <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" alt="Image 28" />
         <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" alt="Image 29" />
     </div>
-
-
-    <div id="CONTENT" >
-    <!--==============================================================================================-->
-        <div id="tab-content1">
-        <table width=100%>
+    
+    <div id="dialog">
+        <table>
             <tr>
-                <td style="width:350px;">
-                    <left>
-                        <img src="SD/png/Radio_Yellow.png"      alt="radio"                         />
-                        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
-                        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
-                        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
-                    </left>
-                </td>
-                <td>
-                    <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
-                            MiniWebRadio
-                        </label>
-                    </center>
-                </td>
-            </tr>
-        </table> 
-        <hr>
-        <table width=100%>
-            <tr>
-                <td width="210">
-                    <left>
-                        <img src="SD/png/Button_Previous_Green.png" alt="previous" 
-                             onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
-                             onmouseup="this.src='SD/png/Button_Previous_Green.png'"
-                             onclick="httpGet('prev_station', 1)"/>
-                        <img src="SD/png/Button_Next_Green.png" alt="next" 
-                             onmousedown="this.src='SD/png/Button_Next_Yellow.png'" 
-                             onmouseup="this.src='SD/png/Button_Next_Green.png'"
-                             onclick="httpGet('next_station', 1)"/>
-                    </left>
-                </td>
-                <td colspan="2">
-                 <select class="select" style="width:100%;"  onChange="handleStation(this)" id="preset">
-                    <option value="-1">Select a station here</option>
-                 </select>
-                </td>
+                <td> x </td>
+                <td> <input type=text id="txtX" size="45"/></td>
             </tr>
             <tr>
-                <td rowspan="4"  align="left">
-                    <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
-                </td>
-                <td align="right" vertical-align="middle"> 
-                    <big><label>Treble Gain:</label></big>
-                </td> 
-                <td align="left" vertical-align="middle"> 
-                    <class="slidecontainer">
-                    <input type="range" min="0" max="15" value="8" class="slider" id="TrebleGain" onmouseup="slider_TG_mouseUp()" oninput="slider_TG_change()">
-                    <big><label id="label_TG_value">000</label></big>
-                    <label><big>dB</big></label>
-                </td>
+                <td>  Cy  </td>
+                <td> <input type=text id="txtCy" size="45"/></td>
             </tr>
             <tr>
-                <td align="right" vertical-align="middle"> 
-                    <big><label>Treble Freq:</label></big>
-                </td>
-                <td align="left" vertical-align="middle"> 
-                    <class="slidecontainer">
-                    <input type="range" min="1" max="15" value="8" class="slider" id="TrebleFreq" onmouseup="slider_TF_mouseUp()" oninput="slider_TF_change()">
-                    <big><label id="label_TF_value">000</label></big>
-                    <label><big>kHz</big></label>
-                </td>
-            </tr>
+                <td>  StationName  </td>
+                <td> <input type=text id="txtStationName" size="45"/></td>
+            </tr> 
             <tr>
-                <td align="right" vertical-align="middle"> 
-                    <big><label>Bass Gain:</label></big>
-                </td>
-                <td align="left" vertical-align="middle">
-                    <class="slidecontainer">
-                    <input type="range" min="0" max="15" value="8" class="slider" id="BassGain" onmouseup="slider_BG_mouseUp()" oninput="slider_BG_change()">
-                    <big><label id="label_BG_value">000</label></big>
-                    <label><big>dB</big></label>
-                </td>
-            </tr>
+                <td>  StreamURL  </td>
+                <td> <input type=text id="txtStreamURL" size="45"/></td>
+            </tr>     
             <tr>
-                <td align="right" vertical-align="middle"> 
-                    <big><label>Bass Freq:</label></big>
-                </td>
-                <td align="left" vertical-align="middle">
-                    <class="slidecontainer">
-                    <input type="range" min="2" max="15" value="6" class="slider" id="BassFreq" onmouseup="slider_BF_mouseUp()" oninput="slider_BF_change()">
-                    <big><label id="label_BF_value">000</label></big>
-                    <label><big>Hz</big></label>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <left>
-                        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" 
-                             onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" 
-                             onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                             onclick="httpGet('downvolume=2', 1)"/>
-                        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" 
-                             onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" 
-                             onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                             onclick="httpGet('upvolume=2', 1)"/>
-                        <img id="Mute" 
-                             src="SD/png/Button_Mute_Green.png" alt="Mute" 
-                             onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" 
-                             onclick="httpGet('mute', 1)"/>
-                    </left>
-                </td>
-                <td colspan="2">
-                    <input type="text" style="width:100%;"  id="cmd" placeholder=" Waiting....">
-                </td>
-            </tr>
-        </table>    
-        <table width=100%>
-            <tr>
-            </tr>
-                <td>
-                    <input type="text" style="width:100%;" id="station" placeholder=" Enter a streamURL here....">
-                </td>
-                <td width="70">
-                    <right>
-                             <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
-                             onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
-                             onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                             onclick="setstation()"/>
-                    </right>
-                </td>
-                <tr>
-                <td>
-                            <input type="text" style="width:100%;" id="resultstr1" placeholder=" Test....">
-                </td>
-                <td>
-                    <right>
-                            <img src="SD/png/Button_Test_Green.png" alt="Test" 
-                            onmousedown="this.src='SD/png/Button_Test_Yellow.png'" 
-                            onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                            onclick="httpGet('test', 1)"/>
-                    </right>
-                </td>
-            </tr>
+                <td>  STsubstitute  </td>
+                <td> <input type=text id="txtStSub" size="45"/></td>
+            </tr>        
         </table>
-        <center>
-            <br>Find new radio stations at 
+    </div>
+    <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->  
+
+    <!--==============================================================================================-->
+    <div id="navigation">
+        <img id="btn1" src="SD/png/Radio_Yellow.png"      alt="radio"     onclick="showTab1()"/>
+        <img id="btn2" src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
+        <img id="btn3" src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
+        <img id="btn4" src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
+        <img id="btn5" src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
+    </div>
+    <div id="headline">
+        MiniWebRadio
+    </div>
+    <hr>
+
+<!--==============================================================================================-->
+    <div id="tab-content1">
+        <div style="float: left; width: 210px; height: 66px; padding: 0;">    
+            <img src="SD/png/Button_Previous_Green.png" alt="previous" 
+                    onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
+                    onmouseup="this.src='  SD/png/Button_Previous_Green.png'"
+                    onclick="httpGet('prev_station', 1)"/>
+            <img src="SD/png/Button_Next_Green.png" alt="next" 
+                    onmousedown="this.src='SD/png/Button_Next_Yellow.png'" 
+                    onmouseup="this.src='  SD/png/Button_Next_Green.png'"
+                    onclick="httpGet('next_station', 1)"/>
+        </div>
+        <div style="float: none; margin-left: 214px; max-width: 100%; height: 66px; padding: 0;">
+            <select class="boxstyle" style="width:100%; margin-top: 14px;" onChange="handleStation(this)" id="preset">
+                <option value="-1">Select a station here</option>
+            </select>
+        </div>
+        
+        <div style="float: left; width: 210px; height: 110px; margin-top:2px; padding: 0;"> 
+            <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
+        </div>
+        
+        <div style="float: none; margin-left: 214px; margin-top:2px; max-width: 100%; height: 110px; padding: 0;">
+            <div style="margin:auto; width: 380px; height: 110px; padding-left: 0;">
+                <label class="sdr_lbl_left">Treble Gain:</label>
+                <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
+                    <input type="range" min="0" max="15" value="8" id="TrebleGain" onmouseup="slider_TG_mouseUp()"
+                        oninput="slider_TG_change()">
+                </div>
+                <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
+                <label class="sdr_lbl_measure">dB</label>
+                
+                <label class="sdr_lbl_left">Treble Freq:</label>
+                <div class="slidecontainer" style="float: left; height: 25px;">
+                    <input type="range" min="1" max="15" value="8" id="TrebleFreq" onmouseup="slider_TF_mouseUp()"
+                        oninput="slider_TF_change()">
+                </div>
+                <label id="label_TF_value" class="sdr_lbl_right">00</label>
+                <label class="sdr_lbl_measure">KHz</label>
+
+                <label class="sdr_lbl_left">Bass Gain:</label>
+                <div class="slidecontainer" style="float: left; height: 25px;">
+                    <input type="range" min="0" max="15" value="8" id="BassGain" onmouseup="slider_BG_mouseUp()"
+                        oninput="slider_BG_change()">
+                </div>
+                <label id="label_BG_value" class="sdr_lbl_right">+00</label>
+                <label class="sdr_lbl_measure">dB</label>
+                
+                <label class="sdr_lbl_left">Bass Freq:</label>
+                <div class="slidecontainer" style="float: left; height: 25px;">
+                    <input type="range" min="2" max="15" value="6" id="BassFreq" onmouseup="slider_BF_mouseUp()"
+                        oninput="slider_BF_change()">
+                </div>
+                <label id="label_BF_value" class="sdr_lbl_right">000</label>
+                <label class="sdr_lbl_measure">Hz</label>
+                
+            </div>
+        </div>
+    
+        <div style="float: left; width: 210px; margin-top:2px; height: 66px; padding: 0;"> 
+            <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" 
+                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" 
+                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    onclick="httpGet('downvolume=2', 1)"/>
+            <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" 
+                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" 
+                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    onclick="httpGet('upvolume=2', 1)"/>
+            <img id="Mute" 
+                    src="SD/png/Button_Mute_Green.png" alt="Mute" 
+                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" 
+                    onclick="httpGet('mute', 1)"/>   
+        </div>
+        <div style="float: none; margin-left: 214px; margin-top:2px; max-width: 100%; height: 66px; padding: 0;">
+            <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
+                    id="cmd" placeholder=" Waiting....">            
+        </div>
+
+        <div style="float: left; margin-left: 0px; margin-top:2px; width: calc(100% - 75px); height: 66px; padding: 0;"> 
+             <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
+                    id="station" placeholder=" Enter a streamURL here....">            
+        </div>
+        <div style="float: right; margin-left: 0px; margin-top:2px; width: 66px; height: 66px; padding: 0;">
+            <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    onclick="setstation()"/>
+        </div>
+        <div style="float: left; margin-left: 0px; margin-top:2px; width: calc(100% - 75px); height: 66px; padding: 0;"> 
+             <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
+                    id="resultstr1" placeholder=" Test....">            
+        </div>
+        <div style="float: right; margin-left: 0px; margin-top:2px; width: 66px; height: 66px; padding: 0;">
+            <img src="SD/png/Button_Test_Green.png" alt="Test" 
+                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'" 
+                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                    onclick="httpGet('test', 1)"/>
+        </div>
+        <div style="margin-top:142px; height: 46px; padding: 0; text-align:center;">
+            <hr>
+                Find new radio stations at 
                 <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
                 or 
                 <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
-                <br>
-        </center>
-    </div>
+
+        </div>
+        
+    </div>    
     <!--==============================================================================================-->
     <div id="tab-content2">
-        <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
-        <div id="dialog">
-            <table>
-                <tr>
-                    <td> x </td>
-                    <td> <input type=text id="txtX" size="45"/></td>
-                </tr>
-                <tr>
-                    <td>  Cy  </td>
-                    <td> <input type=text id="txtCy" size="45"/></td>
-                </tr>
-                <tr>
-                    <td>  StationName  </td>
-                    <td> <input type=text id="txtStationName" size="45"/></td>
-                </tr> 
-                <tr>
-                    <td>  StreamURL  </td>
-                    <td> <input type=text id="txtStreamURL" size="45"/></td>
-                </tr>     
-                <tr>
-                    <td>  STsubstitute  </td>
-                    <td> <input type=text id="txtStSub" size="45"/></td>
-                </tr>        
-            </table>
-        </div>
-        <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->  
-        <table width=100%>
-            <tr>
-                <td style="width:350px;">
-                    <left>
-                        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
-                        <img src="SD/png/Station_Yellow.png"    alt="station"                       /> 
-                        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
-                        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
-                    </left>
-                </td>
-                <td>
-                    <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
-                            MiniWebRadio
-                        </label>
-                    </center>
-                </td>
-            </tr>
-        </table> 
-        <hr>
+
         <center>
         <div id="jsGrid"></div>
         <br>
@@ -1312,76 +1311,37 @@ const char web_html[] PROGMEM = R"=====(
                 onclick="javascript:document.getElementById('file').click();"
                 title="Load from PC">load xlsx
         </button>
-        <input id="file" type="file" style='visibility: hidden; width: 0px' name="img" onchange="loadDataExcel(this.files);"/>
+        <input id="file" type="file" style='visibility: hidden; width: 0px' name="img"
+            onchange="loadDataExcel(this.files);"/>
         <br>
         </center>
     </div>  
     <!--==============================================================================================-->
     <div id="tab-content3">
-        <table width=100%>
-            <tr>
-                <td style="width:350px;">
-                    <left>
-                        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
-                        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/>
-                        <img src="SD/png/MP3_Yellow.png"        alt="mp3"                           />
-                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
-                        <img src="SD/png/About_Green.png" alt="radio"           onclick="showTab5()"/>
-                    </left>
-                </td>
-                <td>
-                    <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
-                            MiniWebRadio
-                        </label>
-                    </center>
-                </td>
-            </tr>
-        </table> 
-        <hr>
         <center>
         <br>
         <label for="seltrack"><big>MP3 files on SD card:</big></label>
         <br>
-        <select class="select selectw" onChange="trackreq(this)" id="seltrack">
+        <select class="boxstyle" onChange="trackreq(this)" id="seltrack">
             <option value="-1">Select a track here</option>
         </select>
         <br><br>
         <button class="button" onclick="httpGet('mp3track=0', 3)">STOP</button>
         <br><br>
-        <input type="text" size="80" id="resultstr3" placeholder="Waiting for a command...."><br>
+        <input type="text" class="boxstyle" size="80" id="resultstr3" placeholder="Waiting for a command...."><br>
         <br><br>
         </center>
     </div>
     <!--==============================================================================================-->
     <div id="tab-content4">
-        <table width=100%>
-            <tr>
-                <td style="width:350px;">
-                    <left>
-                        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
-                        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
-                        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                        <img src="SD/png/Search_Yellow.png"     alt="search"                        />
-                        <img src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
-                    </left>
-                </td>
-                <td>
-                    <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
-                            MiniWebRadio
-                        </label>
-                    </center>
-                </td>
-            </tr>
-        </table> 
-        <hr>
-        This service is provided by <a target="_blank" href="http://www.radio-browser.info/gui/#/">Community Radio Browser</a>
+
+        This service is provided by 
+        <a target="_blank" href="http://www.radio-browser.info/gui/#/">Community Radio Browser</a>
         <br><br>
         <table width=100%>
             <tr>
                 <td>
-                    <select class="select" style="width:100%;" onChange="selectcountry(this)" id="country">
+                    <select class="boxstyle" style="width:100%;" onChange="selectcountry(this)" id="country">
                         <option value="-1">Select a country here</option>
                     </select>
                 </td>
@@ -1390,7 +1350,7 @@ const char web_html[] PROGMEM = R"=====(
             </tr>
             <tr>
                 <td>
-                    <select class="select" style="width:100%;" onChange="selectstation(this)" id="stations">
+                    <select class="boxstyle" style="width:100%;" onChange="selectstation(this)" id="stations">
                         <option value="-1">Select a station here</option>
                     </select>
                 </td>
@@ -1403,7 +1363,8 @@ const char web_html[] PROGMEM = R"=====(
             <tr>
                 <td>
                     StreamURL<br>
-                    <input type="text" style="width:100%;" id="streamurl" placeholder="StreamURL">
+                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                        id="streamurl" placeholder="StreamURL">
                     <br>
                 </td>
                 <td width="70">
@@ -1418,7 +1379,8 @@ const char web_html[] PROGMEM = R"=====(
             <tr>
                 <td>
                     HomepageUrl<br>
-                    <input type="text" style="width:100%;" id="homepageurl" placeholder="HomepageURL">
+                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                        id="homepageurl" placeholder="HomepageURL">
                     <br>
                 </td>
                 <td>
@@ -1433,7 +1395,8 @@ const char web_html[] PROGMEM = R"=====(
             <tr>
                 <td>
                     LogoUrl<br>
-                    <input type="text" style="width:100%;" onclick="refreshCanvas()" id="favicon" placeholder="Favicon">
+                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);" onclick="refreshCanvas()"
+                        id="favicon" placeholder="Favicon">
                     <br>
                 </td>
                 <td>
@@ -1455,7 +1418,8 @@ const char web_html[] PROGMEM = R"=====(
                     <table width=100%>
                         <tr>
                             <td>
-                                <input type="text" style="width:100%;" id="stationname" placeholder="Change the Stationname here">
+                                <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                                    id="stationname" placeholder="Change the Stationname here">
                             </td>
                             <td width="60">
                             </td>                        
@@ -1495,33 +1459,13 @@ const char web_html[] PROGMEM = R"=====(
     </div>
     <!--==============================================================================================-->
     <div id="tab-content5">
-        <table width=100%>
-            <tr>
-                <td style="width:350px;">
-                    <left>
-                        <img src="SD/png/Radio_Green.png"       alt="radio"     onclick="showTab1()"/>
-                        <img src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
-                        <img src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-                        <img src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
-                        <img src="SD/png/About_Yellow.png"      alt="radio"                         />
-                    </left>
-                </td>
-                <td>
-                    <center>
-                        <label style="font-size: 50px; font-family: 'Garamond', Verdana, Halvetica, Arial;">
-                            MiniWebRadio
-                        </label>
-                    </center>
-                </td>
-            </tr>
-        </table> 
-        <hr>
         <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
-        This project is documented at <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
+        This project is documented on 
+        <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
         <p>Author: Wolle (schreibfaul1)<br>
         <img src="SD/MiniWebRadio_gr.jpg" alt="MiniWebRadio_gr" border=3>
         <h3>Connected WiFi network
-        <select class="select" onChange="handletone(this)" id="ssid"></select>
+        <select class="boxstyle" onChange="handletone(this)" id="ssid"></select>
         </h3>
     </div>
     <!--==============================================================================================-->
