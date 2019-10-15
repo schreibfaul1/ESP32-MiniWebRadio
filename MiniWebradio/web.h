@@ -2,11 +2,10 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 09.10.2019
+ *  Updated on: 15.10.2019
  *      Author: Wolle
  *
- *  does not work with MS InternetExplorer
- *  successfully tested with Chrome, MS Edge and Opera
+ *  successfully tested with Chrome and Firefox
  *
  */
 
@@ -36,15 +35,15 @@ const char web_html[] PROGMEM = R"=====(
     <meta http-equiv="expires" content="0">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />      
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
 
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
-   
-    <style type=text/css>           /* optimized with csstidy */
+
+    <style type="text/css">           /* optimized with csstidy */
         html {  /* This is the groundplane */
             font-family : serif;
             height : 100%;
@@ -54,24 +53,12 @@ const char web_html[] PROGMEM = R"=====(
             margin : 0;
             padding : 0;
         }
-        #navigation {
-            float: left;
-            width: 345px;
-            height: 66px;
-        }
-        #headline {
-            float: none;
-            margin-left: 348px;
-            max-width: 100%;
-            height: 66px;
-            font-size: 50px;
-            text-align: center;
-        }
+
         #preloaded-images{
             display: none;
         }
         #dialog {
-            display: none;       
+            display: none;
         }
         #content {
             min-height : 540px;
@@ -205,16 +192,15 @@ const char web_html[] PROGMEM = R"=====(
             height: 25px;
             width: 40px;
             padding-top: 0px;
-            padding-left: 2px;
             padding-bottom: 0px;
         }
         #preloaded-images{
             display: none;
         }
         #dialog {
-            display: none;       
+            display: none;
         }
-    </style> 
+    </style>
 </head>
 
 <script>
@@ -1188,374 +1174,314 @@ function getnetworks () { // tab Config: load the connected WiFi network
 
 <div id="content" >
 
-    <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
-    <div id="preloaded-images">
-        <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
-        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" alt="Image 02" />
-        <img src="SD/png/Station_Green.png"             width="1" height="1" alt="Image 03" />
-        <img src="SD/png/Station_Yellow.png"            width="1" height="1" alt="Image 04" />
-        <img src="SD/png/MP3_Green.png"                 width="1" height="1" alt="Image 05" />
-        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" alt="Image 06" />
-        <img src="SD/png/Search_Green.png"              width="1" height="1" alt="Image 06" />
-        <img src="SD/png/Search_Yellow.png"             width="1" height="1" alt="Image 07" />
-        <img src="SD/png/About_Green.png"               width="1" height="1" alt="Image 08" />
-        <img src="SD/png/About_Yellow.png"              width="1" height="1" alt="Image 09" />
-        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" alt="Image 10" />
-        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" alt="Image 11" />
-        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" alt="Image 12" />
-        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" alt="Image 13" />
-        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" alt="Image 14" />
-        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" alt="Image 15" />
-        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" alt="Image 16" />
-        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" alt="Image 17" />
-        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" alt="Image 18" />
-        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" alt="Image 19" />
-        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" alt="Image 20" />
-        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" alt="Image 21" />
-        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" alt="Image 22" />
-        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" alt="Image 23" />
-        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" alt="Image 24" />
-        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" alt="Image 25" />
-        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" alt="Image 26" />
-        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" alt="Image 27" />
-        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" alt="Image 28" />
-        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" alt="Image 29" />
-    </div>
-    
-    <div id="dialog">
-        <table>
-            <tr>
-                <td> x </td>
-                <td> <input type=text id="txtX" size="45"/></td>
-            </tr>
-            <tr>
-                <td>  Cy  </td>
-                <td> <input type=text id="txtCy" size="45"/></td>
-            </tr>
-            <tr>
-                <td>  StationName  </td>
-                <td> <input type=text id="txtStationName" size="45"/></td>
-            </tr> 
-            <tr>
-                <td>  StreamURL  </td>
-                <td> <input type=text id="txtStreamURL" size="45"/></td>
-            </tr>     
-            <tr>
-                <td>  STsubstitute  </td>
-                <td> <input type=text id="txtStSub" size="45"/></td>
-            </tr>        
-        </table>
-    </div>
-    <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->  
+  <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
+  <div id="preloaded-images">
+    <img src="SD/png/Radio_Green.png"               width="1" height="1" alt="Image 01" />
+    <img src="SD/png/Radio_Yellow.png"              width="1" height="1" alt="Image 02" />
+    <img src="SD/png/Station_Green.png"             width="1" height="1" alt="Image 03" />
+    <img src="SD/png/Station_Yellow.png"            width="1" height="1" alt="Image 04" />
+    <img src="SD/png/MP3_Green.png"                 width="1" height="1" alt="Image 05" />
+    <img src="SD/png/MP3_Yellow.png"                width="1" height="1" alt="Image 06" />
+    <img src="SD/png/Search_Green.png"              width="1" height="1" alt="Image 06" />
+    <img src="SD/png/Search_Yellow.png"             width="1" height="1" alt="Image 07" />
+    <img src="SD/png/About_Green.png"               width="1" height="1" alt="Image 08" />
+    <img src="SD/png/About_Yellow.png"              width="1" height="1" alt="Image 09" />
+    <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" alt="Image 10" />
+    <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" alt="Image 11" />
+    <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" alt="Image 12" />
+    <img src="SD/png/Button_Next_Green.png"         width="1" height="1" alt="Image 13" />
+    <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" alt="Image 14" />
+    <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" alt="Image 15" />
+    <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" alt="Image 16" />
+    <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" alt="Image 17" />
+    <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" alt="Image 18" />
+    <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" alt="Image 19" />
+    <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" alt="Image 20" />
+    <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" alt="Image 21" />
+    <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" alt="Image 22" />
+    <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" alt="Image 23" />
+    <img src="SD/png/Button_Test_Green.png"         width="1" height="1" alt="Image 24" />
+    <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" alt="Image 25" />
+    <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" alt="Image 26" />
+    <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" alt="Image 27" />
+    <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" alt="Image 28" />
+    <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" alt="Image 29" />
+  </div>
 
-    <!--==============================================================================================-->
-    <div id="navigation">
-        <img id="btn1" src="SD/png/Radio_Yellow.png"      alt="radio"     onclick="showTab1()"/>
-        <img id="btn2" src="SD/png/Station_Green.png"     alt="station"   onclick="showTab2()"/> 
-        <img id="btn3" src="SD/png/MP3_Green.png"         alt="mp3"       onclick="showTab3()"/>
-        <img id="btn4" src="SD/png/Search_Green.png"      alt="search"    onclick="showTab4()"/>
-        <img id="btn5" src="SD/png/About_Green.png"       alt="radio"     onclick="showTab5()"/>
+  <div id="dialog">
+    <table>
+      <tr>
+        <td> x </td>
+        <td> <input type="text" id="txtX" size="100"/></td>
+      </tr>
+      <tr>
+        <td>  Cy  </td>
+        <td> <input type="text" id="txtCy" size="100"/></td>
+      </tr>
+      <tr>
+        <td>  StationName  </td>
+        <td> <input type="text" id="txtStationName" size="100"/></td>
+      </tr>
+      <tr>
+        <td>  StreamURL  </td>
+        <td> <input type="text" id="txtStreamURL" size="100"/></td>
+      </tr>
+      <tr>
+        <td>  STsubstitute  </td>
+        <td> <input type="text" id="txtStSub" size="100"/></td>
+      </tr>
+    </table>
+  </div>
+  <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
+
+  <!--==============================================================================================-->
+  <div style="height: 66px; display: flex;">
+    <div style="flex: 0 0 345px;">
+      <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()" />
+      <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()" />
+      <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()" />
+      <img id="btn4" src="SD/png/Search_Green.png" alt="search" onclick="showTab4()" />
+      <img id="btn5" src="SD/png/About_Green.png" alt="radio" onclick="showTab5()" />
     </div>
-    <div id="headline">
-        MiniWebRadio
+    <div style="font-size: 50px; text-align: center; flex: 1;">
+      MiniWebRadio
     </div>
-    <hr>
+  </div>
+  <hr>
 
 <!--==============================================================================================-->
-    <div id="tab-content1">
-        <div style="float: left; width: 210px; height: 66px; padding: 0;">    
-            <img src="SD/png/Button_Previous_Green.png" alt="previous" 
-                    onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
-                    onmouseup="this.src='  SD/png/Button_Previous_Green.png'"
-                    onclick="httpGet('prev_station', 1)"/>
-            <img src="SD/png/Button_Next_Green.png" alt="next" 
-                    onmousedown="this.src='SD/png/Button_Next_Yellow.png'" 
-                    onmouseup="this.src='  SD/png/Button_Next_Green.png'"
-                    onclick="httpGet('next_station', 1)"/>
-        </div>
-        <div style="float: none; margin-left: 214px; max-width: 100%; height: 66px; padding: 0;">
-            <select class="boxstyle" style="width:100%; margin-top: 14px;" onChange="handleStation(this)" id="preset">
-                <option value="-1">Select a station here</option>
-            </select>
-        </div>
-        
-        <div style="float: left; width: 210px; height: 110px; margin-top:2px; padding: 0;"> 
-            <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
-        </div>
-        
-        <div style="float: none; margin-left: 214px; margin-top:2px; max-width: 100%; height: 110px; padding: 0;">
-            <div style="margin:auto; width: 380px; height: 110px; padding-left: 0;">
-                <label class="sdr_lbl_left">Treble Gain:</label>
-                <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
-                    <input type="range" min="0" max="15" value="8" id="TrebleGain" onmouseup="slider_TG_mouseUp()"
-                        oninput="slider_TG_change()">
-                </div>
-                <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
-                <label class="sdr_lbl_measure">dB</label>
-                
-                <label class="sdr_lbl_left">Treble Freq:</label>
-                <div class="slidecontainer" style="float: left; height: 25px;">
-                    <input type="range" min="1" max="15" value="8" id="TrebleFreq" onmouseup="slider_TF_mouseUp()"
-                        oninput="slider_TF_change()">
-                </div>
-                <label id="label_TF_value" class="sdr_lbl_right">00</label>
-                <label class="sdr_lbl_measure">KHz</label>
-
-                <label class="sdr_lbl_left">Bass Gain:</label>
-                <div class="slidecontainer" style="float: left; height: 25px;">
-                    <input type="range" min="0" max="15" value="8" id="BassGain" onmouseup="slider_BG_mouseUp()"
-                        oninput="slider_BG_change()">
-                </div>
-                <label id="label_BG_value" class="sdr_lbl_right">+00</label>
-                <label class="sdr_lbl_measure">dB</label>
-                
-                <label class="sdr_lbl_left">Bass Freq:</label>
-                <div class="slidecontainer" style="float: left; height: 25px;">
-                    <input type="range" min="2" max="15" value="6" id="BassFreq" onmouseup="slider_BF_mouseUp()"
-                        oninput="slider_BF_change()">
-                </div>
-                <label id="label_BF_value" class="sdr_lbl_right">000</label>
-                <label class="sdr_lbl_measure">Hz</label>
-                
-            </div>
-        </div>
-    
-        <div style="float: left; width: 210px; margin-top:2px; height: 66px; padding: 0;"> 
-            <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" 
-                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" 
-                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    onclick="httpGet('downvolume=2', 1)"/>
-            <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" 
-                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" 
-                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    onclick="httpGet('upvolume=2', 1)"/>
-            <img id="Mute" 
-                    src="SD/png/Button_Mute_Green.png" alt="Mute" 
-                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" 
-                    onclick="httpGet('mute', 1)"/>   
-        </div>
-        <div style="float: none; margin-left: 214px; margin-top:2px; max-width: 100%; height: 66px; padding: 0;">
-            <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
-                    id="cmd" placeholder=" Waiting....">            
-        </div>
-
-        <div style="float: left; margin-left: 0px; margin-top:2px; width: calc(100% - 75px); height: 66px; padding: 0;"> 
-             <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
-                    id="station" placeholder=" Enter a streamURL here....">            
-        </div>
-        <div style="float: right; margin-left: 0px; margin-top:2px; width: 66px; height: 66px; padding: 0;">
-            <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
-                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
-                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                    onclick="setstation()"/>
-        </div>
-        <div style="float: left; margin-left: 0px; margin-top:2px; width: calc(100% - 75px); height: 66px; padding: 0;"> 
-             <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;"
-                    id="resultstr1" placeholder=" Test....">            
-        </div>
-        <div style="float: right; margin-left: 0px; margin-top:2px; width: 66px; height: 66px; padding: 0;">
-            <img src="SD/png/Button_Test_Green.png" alt="Test" 
-                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'" 
-                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                    onclick="httpGet('test', 1)"/>
-        </div>
-        <div style="margin-top:142px; height: 46px; padding: 0; text-align:center;">
-            <hr>
-                Find new radio stations at 
-                <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
-                or 
-                <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
-
-        </div>
-        
-    </div>    
-    <!--==============================================================================================-->
-    <div id="tab-content2">
-
-        <center>
-        <div id="jsGrid"></div>
-        <br>
-        <button class="button buttongreen" 
-                onclick="saveGridFileToSD()" 
-                onmousedown="this.style.backgroundColor='#D62C1A'" 
-                onmouseup="this.style.backgroundColor='#128F76'"
-                title="Save to SD">Save
-        </button>
-        &nbsp;
-        <button class="button buttongreen" 
-                onclick="loadGridFileFromSD()"
-                onmousedown="this.style.backgroundColor='#D62C1A'" 
-                onmouseup="this.style.backgroundColor='#128F76'" 
-                id="loadSD" title="Load from SD">Load
-        </button>
-        &nbsp;
-        <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
-        &nbsp;
-        <button class="button buttonblue" 
-                onclick="javascript:document.getElementById('file').click();"
-                title="Load from PC">load xlsx
-        </button>
-        <input id="file" type="file" style='visibility: hidden; width: 0px' name="img"
-            onchange="loadDataExcel(this.files);"/>
-        <br>
-        </center>
-    </div>  
-    <!--==============================================================================================-->
-    <div id="tab-content3">
-        <center>
-        <br>
-        <label for="seltrack"><big>MP3 files on SD card:</big></label>
-        <br>
-        <select class="boxstyle" onChange="trackreq(this)" id="seltrack">
-            <option value="-1">Select a track here</option>
+  <div id="tab-content1">
+    <div style="height: 66px; display: flex;">
+      <div style="flex: 0 0 210px;">
+        <img src="SD/png/Button_Previous_Green.png" alt="previous" onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" onmouseup="this.src='  SD/png/Button_Previous_Green.png'" onclick="httpGet('prev_station', 1)" />
+        <img src="SD/png/Button_Next_Green.png" alt="next" onmousedown="this.src='SD/png/Button_Next_Yellow.png'" onmouseup="this.src='  SD/png/Button_Next_Green.png'" onclick="httpGet('next_station', 1)" />
+      </div>
+      <div style="flex:1;">
+        <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
+          <option value="-1">Select a station here</option>
         </select>
-        <br><br>
-        <button class="button" onclick="httpGet('mp3track=0', 3)">STOP</button>
-        <br><br>
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); id="resultstr3" placeholder="Waiting for a command...."><br>
-        <br><br>
-        </center>
+      </div>
     </div>
-    <!--==============================================================================================-->
-    <div id="tab-content4">
+    <div style="height: 112px; display: flex;">
+      <div style="flex: 0 0 210px;">
+        <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
+      </div>
+      <div style="display: flex; flex:1; justify-content: center;">
+        <div style="width: 380px; height:108px;">
+          <label class="sdr_lbl_left">Treble Gain:</label>
+          <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
+            <input type="range" min="0" max="15" value="8" id="TrebleGain" onmouseup="slider_TG_mouseUp()" oninput="slider_TG_change()">
+          </div>
+          <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
+          <label class="sdr_lbl_measure">dB</label>
 
-        This service is provided by 
+          <label class="sdr_lbl_left">Treble Freq:</label>
+          <div class="slidecontainer" style="float: left; height: 25px;">
+            <input type="range" min="1" max="15" value="8" id="TrebleFreq" onmouseup="slider_TF_mouseUp()" oninput="slider_TF_change()">
+          </div>
+          <label id="label_TF_value" class="sdr_lbl_right">00</label>
+          <label class="sdr_lbl_measure">KHz</label>
+
+          <label class="sdr_lbl_left">Bass Gain:</label>
+          <div class="slidecontainer" style="float: left; height: 25px;">
+            <input type="range" min="0" max="15" value="8" id="BassGain" onmouseup="slider_BG_mouseUp()" oninput="slider_BG_change()">
+          </div>
+          <label id="label_BG_value" class="sdr_lbl_right">+00</label>
+          <label class="sdr_lbl_measure">dB</label>
+
+          <label class="sdr_lbl_left">Bass Freq:</label>
+          <div class="slidecontainer" style="float: left; height: 25px;">
+            <input type="range" min="2" max="15" value="6" id="BassFreq" onmouseup="slider_BF_mouseUp()" oninput="slider_BF_change()">
+          </div>
+          <label  id="label_BF_value" class="sdr_lbl_right">000</label>
+          <label class="sdr_lbl_measure">Hz</label>
+        </div>
+      </div>
+    </div>
+    <div style="height: 66px; display: flex;">
+      <div style="flex: 0 0 210px;">
+        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'" onclick="httpGet('downvolume=2', 1)" />
+        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'" onclick="httpGet('upvolume=2', 1)" />
+        <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute" onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" onclick="httpGet('mute', 1)" />
+      </div>
+      <div style="flex:1;">
+        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
+      </div>
+    </div>
+    <div style="height: 66px; display: flex;">
+      <div style="flex:1;">
+        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station" placeholder=" Enter a streamURL here....">
+      </div>
+      <div style="flex: 0 0 66px;">
+        <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" onmouseup="this.src='SD/png/Button_Ready_Blue.png'" onclick="setstation()" />
+      </div>
+    </div>
+    <div style="height: 66px; display: flex;">
+      <div style="flex:1;">
+        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1" placeholder=" Test....">
+      </div>
+      <div style="flex: 0 0 66px;">
+        <img src="SD/png/Button_Test_Green.png" alt="Test" onmousedown="this.src='SD/png/Button_Test_Yellow.png'" onmouseup="this.src='SD/png/Button_Test_Green.png'" onclick="httpGet('test', 1)" />
+      </div>
+    </div>
+    <hr>
+    <div style="height: 46px; padding: 0; text-align:center;">
+     Find new radio stations at
+      <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
+      or
+      <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
+    </div>
+  </div>
+  <!--==============================================================================================-->
+  <div id="tab-content2">
+      <center>
+      <div id="jsGrid"></div>
+      <br>
+      <button class="button buttongreen"
+              onclick="saveGridFileToSD()"
+              onmousedown="this.style.backgroundColor='#D62C1A'"
+              onmouseup="this.style.backgroundColor='#128F76'"
+              title="Save to SD">Save
+      </button>
+      &nbsp;
+      <button class="button buttongreen"
+              onclick="loadGridFileFromSD()"
+              onmousedown="this.style.backgroundColor='#D62C1A'"
+              onmouseup="this.style.backgroundColor='#128F76'"
+              id="loadSD" title="Load from SD">Load
+      </button>
+      &nbsp;
+      <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+      &nbsp;
+      <button class="button buttonblue"
+              onclick="javascript:document.getElementById('file').click();"
+              title="Load from PC">load xlsx
+      </button>
+      <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img"
+          onchange="loadDataExcel(this.files);"/>
+      <br>
+      </center>
+  </div>
+  <!--==============================================================================================-->
+  <div id="tab-content3">
+      <center>
+      <br>
+      <label for="seltrack"><big>MP3 files on SD card:</big></label>
+      <br>
+      <select class="boxstyle" onchange="trackreq(this)" id="seltrack">
+          <option value="-1">Select a track here</option>
+      </select>
+      <br><br>
+      <button class="button" onclick="httpGet('mp3track=0', 3)">STOP</button>
+      <br><br>
+      <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
+      <br><br>
+      </center>
+  </div>
+  <!--==============================================================================================-->
+  <div id="tab-content4">
+      <div style="height: 30px;">
+        This service is provided by
         <a target="_blank" href="http://www.radio-browser.info/gui/#/">Community Radio Browser</a>
-        <br><br>
-        <table width=100%>
-            <tr>
-                <td>
-                    <select class="boxstyle" style="width:100%;" onChange="selectcountry(this)" id="country">
-                        <option value="-1">Select a country here</option>
-                    </select>
-                </td>
-                <td  width="70">
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <select class="boxstyle" style="width:100%;" onChange="selectstation(this)" id="stations">
-                        <option value="-1">Select a station here</option>
-                    </select>
-                </td>
-                <td>
-                </td>
-            </tr>
-        </table>
-        <hr>
-        <table width=100%>
-            <tr>
-                <td>
-                    StreamURL<br>
-                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
-                        id="streamurl" placeholder="StreamURL">
-                    <br>
-                </td>
-                <td width="70">
-                    <right>
-                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
-                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
-                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                         onclick="teststreamurl()"/>
-                    </right>  
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    HomepageUrl<br>
-                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
-                        id="homepageurl" placeholder="HomepageURL">
-                    <br>
-                </td>
-                <td>
-                    <right>
-                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
-                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
-                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                         onclick="window.open(homepageurl.value, '_blank')"/>
-                    </right> 
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    LogoUrl<br>
-                    <input type="text" class="boxstyle" style="width: calc(100% - 8px);" onclick="refreshCanvas()"
-                        id="favicon" placeholder="Favicon">
-                    <br>
-                </td>
-                <td>
-                    <right>
-                         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" 
-                         onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" 
-                         onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                         onclick="window.open(favicon.value, '_blank')"/>
-                    </right> 
-                </td>
-            </tr>
-        </table>
-        <table width=100%>
-            <tr>
-                <td  width="100">
-                    <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
-                </td>
-                <td>
-                    <table width=100%>
-                        <tr>
-                            <td>
-                                <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
-                                    id="stationname" placeholder="Change the Stationname here">
-                            </td>
-                            <td width="60">
-                            </td>                        
-                        </tr>
-                        <tr>
-                            <td>
-                                <left>
-                                    <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD" 
-                                    onmousedown="this.src='SD/png/Button_Upload_Yellow.png'" 
-                                    onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
-                                    onclick="uploadCanvasImage()"/>
-                                    
-                                    <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC" 
-                                    onmousedown="this.src='SD/png/Button_Download_Yellow.png'" 
-                                    onmouseup="this.src='SD/png/Button_Download_Blue.png'"
-                                    onclick="downloadCanvasImage()"/>
-                        
-                                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list" 
-                                    onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" 
-                                    onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
-                                    onclick="addStationsToGrid()"/>
+      </div>
+      <div style="display: flex;">
+        <div style="flex: 0 0 calc(100% - 66px);">
+          <select class="boxstyle" style="width: 100%;" onchange="selectcountry(this)" id="country">
+            <option value="-1">Select a country here</option>
+          </select>
+          <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectstation(this)" id="stations">
+            <option value="-1">Select a station here</option>
+          </select>
+        </div>
+      </div>
+      <hr>
+      <div style="display: flex;">
+        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+          StreamURL
+          <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+            id="streamurl" placeholder="StreamURL">
+        </div>
+        <div style="flex: 1; padding-left: 2px; height: 66px;">
+          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            onclick="teststreamurl()"/>
+        </div>
+      </div>
+      <div style="display: flex;">
+        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+          HomepageUrl
+          <input type="text" class="boxstyle" style=" width: calc(100% - 8px);"
+          id="homepageurl" placeholder="HomepageURL">
+        </div>
+        <div style="flex: 1; padding-left: 2px; height: 66px;">
+          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            onclick="window.open(homepageurl.value, '_blank')"/>
+        </div>
+      </div>
+      <div style="display: flex;">
+        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+          LogoUrl
+          <input type="text" class="boxstyle" style="width: calc(100% - 8px);" onclick="refreshCanvas()"
+            id="favicon" placeholder="Favicon">
+        </div>
+        <div style="flex: 1;  padding-left: 2px; height: 66px;">
+          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            onclick="window.open(favicon.value, '_blank')"/>
+        </div>
+      </div>
+      <hr>
+      <div style="display: flex;">
+        <div style="flex: 0 0 105px; padding 1px 5px 5px 1px; ">
+          <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
+        </div>
+        <div style="flex: 1;">
+          <div style="flex: 1; height: 38px;">
+            <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
+                id="stationname" placeholder="Change the Stationname here">
+          </div>
+          <div style="flex: 1;  padding-top: 4px;">
+            <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
+            onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+            onclick="uploadCanvasImage()"/>
 
-                                    <form method="post" accept-charset="utf-8" name="form1">
-                                    <input name="hidden_data" id='hidden_data' type="hidden"/>
-                                    </form>
+            <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC"
+            onmousedown="this.src='SD/png/Button_Download_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Download_Blue.png'"
+            onclick="downloadCanvasImage()"/>
 
-                                </left>
-                            </td>
-                        </tr>
-                    </table> 
-                </td>
-                <td >
-                </td>
-            </tr>
-        </table>
+            <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
+            onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+            onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
+            onclick="addStationsToGrid()"/>
 
-    </div>
-    <!--==============================================================================================-->
-    <div id="tab-content5">
-        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
-        This project is documented on 
-        <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
-        <p>Author: Wolle (schreibfaul1)<br>
-        <img src="SD/MiniWebRadio_gr.jpg" alt="MiniWebRadio_gr" border=3>
-        <h3>Connected WiFi network
-        <select class="boxstyle" onChange="handletone(this)" id="ssid"></select>
-        </h3>
-    </div>
-    <!--==============================================================================================-->
-
+            <form method="post" accept-charset="utf-8" name="form1">
+              <input name="hidden_data" id="hidden_data" type="hidden"/>
+            </form>
+          </div>
+        </div>
+      </div>
+  </div>
+  <!--==============================================================================================-->
+  <div id="tab-content5">
+    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
+    This project is documented on
+    <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
+    <p>Author: Wolle (schreibfaul1)</p><br>
+    <img src="SD/MiniWebRadio_gr.jpg" alt="MiniWebRadio_gr" border="3">
+    <h3>Connected WiFi network
+      <select class="boxstyle" onchange="handletone(this)" id="ssid"></select>
+    </h3>
+  </div>
+  <!--==============================================================================================-->
+</div>
 </body>
 </html>
-    
+
 )=====" ;
 #endif /* WEB_H_ */
