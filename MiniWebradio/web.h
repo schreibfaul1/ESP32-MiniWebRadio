@@ -2,7 +2,7 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 15.10.2019
+ *  Updated on: 16.10.2019
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -450,7 +450,7 @@ function getmute () {
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (xhr.responseText === 1) {
+      if (xhr.responseText === '1') {
         document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png' // muteOn
       } else {
         document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
