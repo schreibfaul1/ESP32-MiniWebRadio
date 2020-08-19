@@ -297,7 +297,7 @@ function showTab4 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
   document.getElementById('btn4').src = 'SD/png/Search_Yellow.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
-  loadJSON('http://www.radio-browser.info/webservice/json/countries', gotCountries, 'jsonp')
+  loadJSON('https://de1.api.radio-browser.info/json/countries', gotCountries, 'jsonp')
 }
 
 function showTab5 () {
@@ -990,7 +990,7 @@ function loadJSON (path, success, error) {
 }
 
 function selectcountry (presctrl) { // tab Radio: preset, select a station
-  loadJSON('http://www.radio-browser.info/webservice/json/stations/bycountry/' + presctrl.value, gotStations, 'jsonp')
+  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/' + presctrl.value, gotStations, 'jsonp')
 }
 
 function gotCountries (data) { // fill select countries
