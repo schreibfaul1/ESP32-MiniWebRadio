@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 10.04.2019
+ *  updated on: 17.07.2021
  *      Author: Wolle
  */
 
@@ -139,19 +139,22 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile
     uint32_t len=0;
     boolean f_werror=false;
     String str="";
+    uint16_t count=0;
     int n=0;
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
 
-    cmdclient.read(tBuf,23);
-    tBuf[23]=0;
+    str = str + cmdclient.readStringUntil(',');
+    log_i("str %s len %i", str.c_str(), str.length());
+    count += str.length() + 1;
     //log_i("Content-Type=%s", tBuf);
     while(cmdclient.available()){
         av=cmdclient.available();
-        av=av-46;
-        if(av==0) break; // skip \r\n------WebKitFormBoundarynaPOuvWrstplBY0y\r\n\n
+        av=av-46;   // skip \n\n------WebKitFormBoundarynaPOuvWrstplBY0y--\n\n
+        if(av==0) break;
         if(av>bytesPerTransaction) av=bytesPerTransaction;
+        count += av;
         i=0; j=0;
         cmdclient.read(tBuf, av); // b64 decode
         while(i<av){
@@ -170,7 +173,9 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile
         len+=j;
     }
     cmdclient.read(tBuf, 46); // read the remains
+    count += 46;
     file.close();
+    log_i("count %i", count);
     if(f_werror) {
         str=String("File: ") + String(path) + "write error";
         if (HTML_info) HTML_info(str.c_str());
@@ -191,6 +196,7 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from web
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
+
     while(cmdclient.available()){
         av=cmdclient.available();
         av=av-46;
@@ -250,89 +256,90 @@ boolean HTML::handlehttp() {
     char c;                                 // Next character from http input
     uint16_t inx0, inx1, inx2, inx3;        // Pos. of search string in currenLine
     String currentLine = "";                // Build up to complete line
-    String ct;                              // contenttype
+    String ct;                              // contentType
+    uint32_t cl = 0;                        // contentLength
+    uint8_t count = 0;
 
     if (!cmdclient.connected()){
         log_e("cmdclient schould be connected but is not!");
         return false;
     }
-
     while (wswitch==true){                  // first while
         if(!cmdclient.available()){
             log_e("Command client schould be available but is not!");
             return false;
         }
-        cmdclient.read(buf, 1);             // Get a byte
-        c=buf[0];
-        if(c==0) return true;                    // c is empty
-        if (c == '\n') {
-            // If the current line is blank, you got two newline characters in a row.
-            // that's the end of the client HTTP request, so send a response:
-            if (currentLine.length() == 0) {
-                wswitch=false; // use second while
-                break;
-            } else {
-                // Newline seen
-                inx0 = 0;
-                if (currentLine.startsWith("GET /")) inx0 = 5;  // GET request?
-                if (currentLine.startsWith("POST /"))inx0 = 6;  // POST request?
+        currentLine = cmdclient.readStringUntil('\n');
+        // If the current line is blank, you got two newline characters in a row.
+        // that's the end of the client HTTP request, so send a response:
+        if (currentLine.length() == 1) { // contains '\n' only
+            wswitch=false; // use second while
+            if (http_getcmd.length()) {
+                if (HTML_info) HTML_info(URLdecode(http_getcmd));
+                if (HTML_command) HTML_command(URLdecode(http_getcmd));
+            }
+            if (http_rqfile.length()) {
+                String FN = "Filename is: " + http_rqfile;
+                if (HTML_info) HTML_info(URLdecode(FN));
+                if (HTML_file) HTML_file(URLdecode(http_rqfile));
+            }
+            if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
+                if (HTML_info) HTML_info("Filename is: index.html");
+                if (HTML_file) HTML_file("index.html");
+            }
+            currentLine = "";
+            http_getcmd = "";
+            http_rqfile = "";
+            break;
+        } else {
+            // Newline seen
+            inx0 = 0;
+            if (currentLine.startsWith("Content-Length:")) cl = currentLine.substring(15).toInt();
+            if (currentLine.startsWith("GET /")) inx0 = 5;  // GET request?
+            if (currentLine.startsWith("POST /"))inx0 = 6;  // POST request?
 
-                if(inx0>0){
-//                  currentLine=currentLine.substring(inx0, currentLine.length()); //remove GET or POST
-                    inx1 = currentLine.indexOf("?");    // Search for 1st parameter
-                    inx2 = currentLine.indexOf("&");    // Search for 2nd parameter
-                    inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
-                    if((inx1>0) && (inx2>inx1)){        // it is a command
-                        http_getcmd = currentLine.substring(inx1+1, inx2);//isolate the command
-                        http_rqfile = "";               // No file
-                    }
-                    else{                               // it is a filename
-                        http_rqfile = currentLine.substring(inx0, inx3);
-                        http_getcmd = "";
-                    }
-                    if (http_getcmd.length()) {
-                        if (HTML_info) HTML_info(URLdecode(http_getcmd));
-                        if (HTML_command) HTML_command(URLdecode(http_getcmd));
-                    }
-                    if (http_rqfile.length()) {
-                        String FN = "Filename is: " + http_rqfile;
-                        if (HTML_info) HTML_info(URLdecode(FN));
-                        if (HTML_file) HTML_file(URLdecode(http_rqfile));
-                    }
-                    if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
-                        if (HTML_info) HTML_info("Filename is: index.html");
-                        if (HTML_file) HTML_file("index.html");
-                    }
+            if(inx0>0){
+                inx1 = currentLine.indexOf("?");    // Search for 1st parameter
+                inx2 = currentLine.indexOf("&");    // Search for 2nd parameter
+                inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
+                if((inx1>0) && (inx2>inx1)){        // it is a command
+                    http_getcmd = currentLine.substring(inx1+1, inx2);//isolate the command
+                    http_rqfile = "";               // No file
                 }
-                currentLine = "";
+                else{                               // it is a filename
+                    http_rqfile = currentLine.substring(inx0, inx3);
+                    http_getcmd = "";
+                }
+
             }
-        } else if (c != '\r'){                      // No LINFEED.  Is it a CR?
-            currentLine += c;                       // No?, add normal char to currentLine
+            currentLine = "";
+
         }
-    } //end while 1
+    } //end first while
     while(wswitch==false){                          // second while
-        cmdclient.read(buf, 1);                     // Get a byte
-        c=buf[0];
-        if(c==0) return true;
-        if (c == '\n') {
-            if (currentLine.length() == 0){
-                wswitch=true;  // use first while
-                //log_i("end request");
-                if (HTML_request) HTML_request("end request\n");
-                //reply("", true);
-                break;
-            }
-            else {   // its the requestbody
-                if(currentLine[0]<32)currentLine=String();
-                if (HTML_request) HTML_request(currentLine);
-                currentLine += c;
-                currentLine.trim();
+        if(cmdclient.available()) currentLine = cmdclient.readStringUntil('\n');
+        cl -= currentLine.length();
+    if(!currentLine.length()) return true;
+        if ((currentLine.length() == 1 && count == 0) || count >= 2){
+            wswitch=true;  // use first while
+            currentLine = "";
+            count = 0;
+            break;
+        }
+        else {   // its the requestbody
+            if(currentLine.length() > 1){
+                if (HTML_request) HTML_request(currentLine, 0);
                 if (HTML_info) HTML_info(currentLine);
-                currentLine = "";
+            }
+
+            if(currentLine.startsWith("------WebKit")) count++; // WebKitFormBoundary header and footer
+            if(currentLine.length() == 1 && count == 1){
+                if (HTML_request) HTML_request("fileUpload", cl);
+                count++;
             }
         }
-        else if (c != '\r')currentLine += c;   // No LINFEED.  Is it a CR?
-    } // end while 2
+
+    } // end second while
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------

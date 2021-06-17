@@ -2,7 +2,7 @@
  * html.h
  *
  *  Created on: 09.07.2017
- *  updated on: 18.12.2018
+ *  updated on: 17.06.2021
  *      Author: Wolle
  */
 
@@ -16,7 +16,7 @@
 extern __attribute__((weak)) void HTML_info(const String) ;
 extern __attribute__((weak)) void HTML_command(const String);
 extern __attribute__((weak)) void HTML_file(String);
-extern __attribute__((weak)) void HTML_request(const String);
+extern __attribute__((weak)) void HTML_request(const String, uint32_t contentLength);
 
 
 
