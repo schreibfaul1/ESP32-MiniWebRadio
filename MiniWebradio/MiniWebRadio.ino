@@ -582,7 +582,7 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
             //log_i("FILE: %s, SIZE: %i",file.name(), file.size());
             filename=file.name();
             filename.substring(filename.length()-4).toLowerCase();
-            filename=filename.substring(1,filename.length()); // remove first '/'
+//            filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){
                 filename+="\n";
                 if(index<10){_mp3Name[index]=filename; index++;}  //store the first 10 Names
@@ -1339,3 +1339,4 @@ void tp_released(){
     }
     _releaseNr=0;
 }
+
