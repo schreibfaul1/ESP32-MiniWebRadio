@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 24 , Apr.10 2019
+// Version 25 , Jun 17 2021
 //
 // Preparations:
 //
@@ -37,11 +37,6 @@
 // 8)  uncomment #include "fonts/Times_New_Roman.h" in tft.h
 //
 // 9)  translate _hl_title, entries below, in Your language
-//
-// 10) only if in use v1.0.1 or v1.0.2 change sdkconfig.h:
-//     see https://github.com/espressif/arduino-esp32/issues/2560
-//     #define CONFIG_ESP32_WIFI_AMPDU_TX_ENABLED 0    // default 1
-//     #define CONFIG_ESP32_WIFI_AMPDU_RX_ENABLED 0    // default 1
 //
 //
 //  Display 320x240
@@ -549,22 +544,20 @@ String setStation(int16_t stationNr) // -1: previous station, 0: next station, 1
 //**************************************************************************************************
 //                                   H A N D L E   R E Q U E S T                                   *
 //**************************************************************************************************
-void savefile(String request){ //save the uploadfile on SD
+void savefile(String fileName){ //save the uploadfile on SD
     //log_i("request=%s",request.c_str());
-    if(request=="end request\n"){
-        //log_i("end request seen");
-        if(!_filename.startsWith("/")) _filename = "/"+_filename;
-        _req=none;                      // reset requesttype
-        if(_filename.endsWith("jpg")){
-            _filename="/logo"+_filename;
-            if(web.uploadB64image(SD, UTF8toASCII(_filename.c_str()))) web.reply("OK");
-            else web.reply("failure");
-        }
-        else{
-            if(web.uploadfile(SD, UTF8toASCII(_filename.c_str()))) web.reply("OK");
-            else web.reply("failure");
-            if(_filename==String("/stations.txt")) saveStationsToNVS();
-        }
+    //log_i("end request seen");
+    if(!fileName.startsWith("/")) fileName = "/"+fileName;
+    _req=none;                      // reset requesttype
+    if(fileName.endsWith("jpg")){
+        fileName="/logo"+ fileName;
+        if(web.uploadB64image(SD, UTF8toASCII(fileName.c_str()))) web.reply("OK");
+        else web.reply("failure");
+    }
+    else{
+        if(web.uploadfile(SD, UTF8toASCII(fileName.c_str()))) web.reply("OK");
+        else web.reply("failure");
+        if(fileName==String("/stations.txt")) saveStationsToNVS();
     }
 }
 //**************************************************************************************************
@@ -1106,7 +1099,7 @@ void tft_info(const char *info){
 }
 //Events from html library
 void HTML_command(const String cmd){                    // called from html
-//    log_i("HTML_cmd: %s", cmd.c_str());
+    log_i("HTML_cmd: %s", cmd.c_str());
     uint8_t vol;
     String  str;
     if(cmd=="homepage"){(web.reply(_homepage)); return;}
@@ -1122,7 +1115,7 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd.startsWith("tonelf=")){pref.putUInt("tonelf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Bass Freq set"); tone(); return;}
     if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
     if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
-    if(cmd.startsWith("saveprefs")) {_req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
+    if(cmd.startsWith("saveprefs")) {log_i("saveprefs"); _req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
     if(cmd.startsWith("uploadfile")){_req=savefiles;  _filename=cmd.substring(11);  return;}
     if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
     if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
@@ -1146,14 +1139,13 @@ void HTML_file(String file){                  // called from html
     }
     log_e("unknown HTMLfile %s", file.c_str());
 }
-void HTML_request(const String request){
-//    log_i("request=%s", request.c_str());
-    if(_req==savefiles){savefile(request);  return;}
-    if(request=="end request\n"){           return;}
+void HTML_request(const String request, uint32_t contentLength){
+    log_i("request %s contentLength %d", request.c_str(), contentLength);
+    if((_req==savefiles) && request == "fileUpload"){savefile(_filename);  return;}
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                            // called from html
-    Serial.printf("HTML_info  : %s\n", info.c_str());   // for debug infos
+//    Serial.printf("HTML_info  : %s\n", info.c_str());   // infos for debug
 }
 // Events from IR Library
 void ir_res(uint32_t res){
