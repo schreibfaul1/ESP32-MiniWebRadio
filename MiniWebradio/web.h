@@ -2,7 +2,7 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 16.10.2019
+ *  Updated on: 17.07.2021
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1055,10 +1055,13 @@ function scaleCanvasImage (url) {
   ctx.rect(0, 0, canvas.width, canvas.height)
   ctx.fillStyle = 'white'
   ctx.fill()
-  var co = 'https://cors-anywhere.herokuapp.com/'
+  var co = 'https://api.codetabs.com/v1/proxy?quest='
   src = co + url
   var imgObj = new Image()
-  imgObj.onload = function () {
+  imgObj.crossOrigin = 'anonymous'
+  imgObj.src = src
+
+  imgObj.onload = function() {
     var imgWidth = imgObj.width
     var imgHeight = imgObj.height
     var scaleX = 1
@@ -1075,8 +1078,7 @@ function scaleCanvasImage (url) {
     var dy = (canvas.height - imgHeight) / 2
     ctx.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height, dx, dy, imgWidth, imgHeight)
   }
-  imgObj.crossOrigin = 'anonymous'
-  imgObj.src = src
+
 }
 
 function refreshCanvas () {
