@@ -2,7 +2,7 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 17.07.2021
+ *  Updated on: 18.07.2021
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -317,7 +317,7 @@ function showTab5 () {
 function uploadTextFile (fileName, content) {
   var fd = new FormData()
   fd.append('Text=', content)
-  var theUrl = '/?uploadfile=' + fileName + '&version=' + Math.random()
+  var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.open('POST', theUrl, true)
   xhr.onreadystatechange = function () { // Call a function when the state changes.
@@ -369,7 +369,13 @@ function showLabel (id, src) { // get the bitmap from SD, convert to URL first
 var _num = 0
 
 function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
-  var theUrl = '/?' + theReq + '&version=' + Math.random()
+  var param = ''
+  var idx = theReq.indexOf('=')
+  if (idx > 0){
+    param = theReq.substr(idx+1)
+    theReq = theReq.substr(0, idx)
+  }
+  var theUrl =  '/' + theReq + '?' + param + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -428,7 +434,7 @@ function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
 
 function gettone () { // tab Radio: get tones values and set them
   var i, lines, parts
-  var theUrl = '/?gettone' + '&version=' + Math.random()
+  var theUrl = '/gettone?' + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -446,7 +452,7 @@ function gettone () { // tab Radio: get tones values and set them
 }
 
 function getmute () {
-  var theUrl = '/?getmute' + '&version=' + Math.random()
+  var theUrl = '/getmute?' + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -467,7 +473,7 @@ function handleStation (presctrl) { // tab Radio: preset, select a station
 }
 
 function handletone (tonectrl) { // Radio: treble, bass, freq
-  var theUrl = '/?' + tonectrl.id + '=' + tonectrl.value + '&version=' + Math.random()
+  var theUrl = '/' + tonectrl.id + '?' + tonectrl.value + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -479,7 +485,7 @@ function handletone (tonectrl) { // Radio: treble, bass, freq
 }
 
 function setstation () { // Radio: button play - enter a url to play from
-  var theUrl = '/?stationURL=' + station.value + '&version=' + Math.random()
+  var theUrl = '/stationURL?' + station.value + '&version=' + Math.random()
   var sel = document.getElementById('preset')
   sel.selectedIndex = 0
   cmd.value = ''
@@ -585,7 +591,7 @@ function slider_BF_set (value) { // set Slider Bass Gain
 }
 
 function handlectrl (id, val) { // Radio: treble, bass, freq
-  var theUrl = '/?' + id + '=' + val + '&version=' + Math.random()
+  var theUrl = '/' + id + '?' + val + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -943,7 +949,7 @@ function getmp3list () { // Fill track list initially
   var xhr = new XMLHttpRequest()
   var i, select, opt, tracks, strparts
   select = document.getElementById('seltrack')
-  var theUrl = '/?mp3list' + '&version=' + Math.random()
+  var theUrl = '/mp3list?' + '&version=' + Math.random()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       tracks = xhr.responseText.split('\n')
@@ -1038,7 +1044,7 @@ function selectstation () { // select a station
 }
 
 function teststreamurl () { // Search: button play - enter a url to play from
-  var theUrl = '/?stationURL=' + streamurl.value + '&version=' + Math.random()
+  var theUrl = '/stationURL?' + streamurl.value + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {}
@@ -1099,7 +1105,7 @@ function uploadCanvasImage () {
   var dataURL = canvas.toDataURL('image/jpeg')
   document.getElementById('hidden_data').value = dataURL
   var fd = new FormData(document.forms.form1)
-  var theUrl = '/?uploadfile=' + filename + '&version=' + Math.random()
+  var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   xhr.open('POST', theUrl, true)
 
@@ -1140,7 +1146,7 @@ function downloadCanvasImage () {
 // -------------------------------------- TAB Info ---------------------------------------
 function getnetworks () { // tab Config: load the connected WiFi network
   var i, select, opt, networks
-  var theUrl = '/?getnetworks' + '&version=' + Math.random()
+  var theUrl = '/getnetworks?' + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
   select = document.getElementById('ssid') // Radio: show stationlist
   xhr.onreadystatechange = function () {
@@ -1165,7 +1171,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.13.4/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
 
 <!--  <script src="SD/js/jquery.js"></script>    --->
@@ -1302,8 +1308,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
     </div>
     <div style="height: 66px; display: flex;">
       <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'" onclick="httpGet('downvolume=2', 1)" />
-        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'" onclick="httpGet('upvolume=2', 1)" />
+        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'" onclick="httpGet('downvolume', 1)" />
+        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'" onclick="httpGet('upvolume', 1)" />
         <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute" onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" onclick="httpGet('mute', 1)" />
       </div>
       <div style="flex:1;">
@@ -1374,7 +1380,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
           <option value="-1">Select a track here</option>
       </select>
       <br><br>
-      <button class="button" onclick="httpGet('mp3track=0', 3)">STOP</button>
+      <button class="button" onclick="httpGet('mp3track', 3)">STOP</button>
       <br><br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
       <br><br>
@@ -1384,7 +1390,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
   <div id="tab-content4">
       <div style="height: 30px;">
         This service is provided by
-        <a target="_blank" href="http://www.radio-browser.info/gui/#/">Community Radio Browser</a>
+        <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
       </div>
       <div style="display: flex;">
         <div style="flex: 0 0 calc(100% - 66px);">
