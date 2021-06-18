@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 25 , Jun 17 2021
+// Version 26 , Jun 18 2021
 //
 // Preparations:
 //
@@ -544,18 +544,18 @@ String setStation(int16_t stationNr) // -1: previous station, 0: next station, 1
 //**************************************************************************************************
 //                                   H A N D L E   R E Q U E S T                                   *
 //**************************************************************************************************
-void savefile(String fileName){ //save the uploadfile on SD
+void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on SD
     //log_i("request=%s",request.c_str());
     //log_i("end request seen");
     if(!fileName.startsWith("/")) fileName = "/"+fileName;
     _req=none;                      // reset requesttype
     if(fileName.endsWith("jpg")){
         fileName="/logo"+ fileName;
-        if(web.uploadB64image(SD, UTF8toASCII(fileName.c_str()))) web.reply("OK");
+        if(web.uploadB64image(SD, UTF8toASCII(fileName.c_str()), contentLength)) web.reply("OK");
         else web.reply("failure");
     }
     else{
-        if(web.uploadfile(SD, UTF8toASCII(fileName.c_str()))) web.reply("OK");
+        if(web.uploadfile(SD, UTF8toASCII(fileName.c_str()), contentLength)) web.reply("OK");
         else web.reply("failure");
         if(fileName==String("/stations.txt")) saveStationsToNVS();
     }
@@ -580,9 +580,12 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
             }
         } else {
             //log_i("FILE: %s, SIZE: %i",file.name(), file.size());
-            filename=file.name();
+
+
+            filename = file.path(); // new in ESP32 Arduino V2.0.0
+//          filename = file.name(); // used so far in V1.0.0 ... V1.0.6
             filename.substring(filename.length()-4).toLowerCase();
-//            filename=filename.substring(1,filename.length()); // remove first '/'
+            filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){
                 filename+="\n";
                 if(index<10){_mp3Name[index]=filename; index++;}  //store the first 10 Names
@@ -1098,8 +1101,8 @@ void tft_info(const char *info){
     Serial.printf("tft_info   : %s\n", info);
 }
 //Events from html library
-void HTML_command(const String cmd){                    // called from html
-    log_i("HTML_cmd: %s", cmd.c_str());
+void HTML_command(const String cmd, const String param, const String arg){                    // called from html
+//    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     uint8_t vol;
     String  str;
     if(cmd=="homepage"){(web.reply(_homepage)); return;}
@@ -1109,25 +1112,24 @@ void HTML_command(const String cmd){                    // called from html
     if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_chbuf); return;}
     if(cmd=="getstreamtitle"){web.reply(_title); return;}
     if(cmd=="mute") {mute();if(f_mute==true) web.reply("Mute on\n"); else web.reply("Mute off\n"); return;}
-    if(cmd.startsWith("toneha=")){pref.putUInt("toneha",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Gain set"); tone(); return;}
-    if(cmd.startsWith("tonehf=")){pref.putUInt("tonehf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Treble Freq set"); tone(); return;}
-    if(cmd.startsWith("tonela=")){pref.putUInt("tonela",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Bass Gain set"); tone(); return;}
-    if(cmd.startsWith("tonelf=")){pref.putUInt("tonelf",(cmd.substring(cmd.indexOf("=")+1).toInt()));web.reply("Bass Freq set"); tone(); return;}
-    if(cmd.startsWith("mp3list")){web.reply(listmp3file()); return;}
-    if(cmd.startsWith("mp3track=")){str=cmd; str.replace("mp3track=", "/"); mp3.connecttoSD(str); web.reply("OK\n"); return;}
-    if(cmd.startsWith("saveprefs")) {log_i("saveprefs"); _req=saveprefs; web.reply("");  return;} // after that starts POST Event "HTML_request"
-    if(cmd.startsWith("uploadfile")){_req=savefiles;  _filename=cmd.substring(11);  return;}
-    if(cmd.startsWith("upvolume")){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
-    if(cmd.startsWith("downvolume")){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
-    if(cmd.startsWith("prev_station")){str=setStation(-1); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("next_station")){str=setStation(0); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("set_station=")){mp3.connecttohost(str=setStation(cmd.substring(cmd.indexOf("=")+1).toInt())); web.reply(StationsItems()); return;}
-    if(cmd.startsWith("stationURL=")){_stationnr=0; _stationname=""; _title=""; mp3.connecttohost(cmd.substring(cmd.indexOf("=")+1));web.reply("OK\n"); return;}
-    if(cmd.startsWith("getnetworks")){web.reply(_SSID+"\n"); return;}
+    if(cmd=="toneha"){pref.putUInt("toneha",(param.toInt()));web.reply("Treble Gain set"); tone(); return;}
+    if(cmd=="tonehf"){pref.putUInt("tonehf",(param.toInt()));web.reply("Treble Freq set"); tone(); return;}
+    if(cmd=="tonela"){pref.putUInt("tonela",(param.toInt()));web.reply("Bass Gain set"); tone(); return;}
+    if(cmd=="tonelf"){pref.putUInt("tonelf",(param.toInt()));web.reply("Bass Freq set"); tone(); return;}
+    if(cmd=="mp3list"){web.reply(listmp3file()); return;}
+    if(cmd=="mp3track"){mp3.connecttoSD(param); web.reply("OK\n"); return;}
+    if(cmd=="uploadfile"){_req=savefiles;  _filename=param;  return;}
+    if(cmd=="upvolume"){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
+    if(cmd=="downvolume"){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
+    if(cmd=="prev_station"){str=setStation(-1); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd=="next_station"){str=setStation(0); mp3.connecttohost(str); web.reply(StationsItems()); return;}
+    if(cmd=="set_station"){mp3.connecttohost(str=setStation(param.toInt())); web.reply(StationsItems()); return;}
+    if(cmd=="stationURL"){_stationnr=0; _stationname=""; _title=""; mp3.connecttohost(param);web.reply("OK\n"); return;}
+    if(cmd=="getnetworks"){web.reply(_SSID+"\n"); return;}
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(String file){                  // called from html
-    log_i("File: %s", file.c_str());
+//    log_i("File: %s", file.c_str());
     if(file=="index.html") {web.show(web_html); return;}
     if(file=="favicon.ico"){web.streamfile(SD, "/favicon.ico"); return;}
     if(file.startsWith("SD")){web.streamfile(SD, (file.substring(2).c_str())); return;}
@@ -1140,8 +1142,10 @@ void HTML_file(String file){                  // called from html
     log_e("unknown HTMLfile %s", file.c_str());
 }
 void HTML_request(const String request, uint32_t contentLength){
-    log_i("request %s contentLength %d", request.c_str(), contentLength);
-    if((_req==savefiles) && request == "fileUpload"){savefile(_filename);  return;}
+//    log_i("request %s contentLength %d", request.c_str(), contentLength);
+    if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
+    if(request.indexOf("form-data") > 0) return;  // uninteresting Info
+    if((_req==savefiles) && request == "fileUpload"){savefile(_filename, contentLength);  return;}
     log_e("unknown request: %s",request.c_str());
 }
 void HTML_info(String info){                            // called from html
