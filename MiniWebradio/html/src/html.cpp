@@ -2,7 +2,7 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 17.07.2021
+ *  updated on: 18.07.2021
  *      Author: Wolle
  */
 
@@ -11,6 +11,7 @@
 //--------------------------------------------------------------------------------------------------------------
 HTML::HTML(String Name, String Version){
     _Name=Name; _Version=Version;
+    method = HTTP_NONE;
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
@@ -132,29 +133,27 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile from webbrowser to SD
+boolean HTML::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer imagefile from webbrowser to SD
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, i, j;
-    uint32_t len=0;
+    uint32_t len = contentLength;
     boolean f_werror=false;
     String str="";
-    uint16_t count=0;
     int n=0;
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
 
-    str = str + cmdclient.readStringUntil(',');
-    log_i("str %s len %i", str.c_str(), str.length());
-    count += str.length() + 1;
-    //log_i("Content-Type=%s", tBuf);
+    log_i("ContentLength %i", contentLength);
+    str = str + cmdclient.readStringUntil(','); // data:image/jpeg;base64,
+    len -= str.length();
     while(cmdclient.available()){
         av=cmdclient.available();
-        av=av-46;   // skip \n\n------WebKitFormBoundarynaPOuvWrstplBY0y--\n\n
         if(av==0) break;
         if(av>bytesPerTransaction) av=bytesPerTransaction;
-        count += av;
+        if(av>len) av=len;
+        len -= av;
         i=0; j=0;
         cmdclient.read(tBuf, av); // b64 decode
         while(i<av){
@@ -170,27 +169,27 @@ boolean HTML::uploadB64image(fs::FS &fs,const char* path){ // transfer imagefile
         if(tBuf[j]=='=') j--; // remove =
 
         if(file.write(tBuf, j)!=j) f_werror=true;  // write error?
-        len+=j;
+        if(len == 0) break;
     }
-    cmdclient.read(tBuf, 46); // read the remains
-    count += 46;
+    cmdclient.readStringUntil('\n'); // read the remains, first \n
+    cmdclient.readStringUntil('\n'); // read the remains  webkit\n
     file.close();
-    log_i("count %i", count);
     if(f_werror) {
         str=String("File: ") + String(path) + "write error";
         if (HTML_info) HTML_info(str.c_str());
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10);
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(contentLength, 10);
+    log_i("str =%s", str.c_str());
     if (HTML_info) HTML_info(str.c_str());
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from webbrowser to sd
+boolean HTML::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer file from webbrowser to sd
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
     uint16_t av;
-    uint32_t len=0;
+    uint32_t len = contentLength;
     boolean f_werror=false;
     String str="";
     File file;
@@ -199,21 +198,22 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path){ // transfer file from web
 
     while(cmdclient.available()){
         av=cmdclient.available();
-        av=av-46;
-        if(av==0) break; // skip \r\n------WebKitFormBoundarynaPOuvWrstplBY0y\r\n\n
         if(av>bytesPerTransaction) av=bytesPerTransaction;
+        if(av>len) av=len;
+        len -= av;
         cmdclient.read(tBuf, av);
         if(file.write(tBuf, av)!=av) f_werror=true;  // write error?
-        len+=av;
+        if(len == 0) break;
     }
-    cmdclient.read(tBuf, 46); // read the remains
+    cmdclient.readStringUntil('\n'); // read the remains, first \n
+    cmdclient.readStringUntil('\n'); // read the remains  webkit\n
     file.close();
     if(f_werror) {
         str=String("File: ") + String(path) + "write error";
         if (HTML_info) HTML_info(str.c_str());
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(len, 10);
+    str=String("File: ") + String(path) + " written,  FileSize: " +  String(contentLength, 10);
     if (HTML_info)  HTML_info(str.c_str());
     return true;
 }
@@ -254,7 +254,7 @@ String HTML::getContentType(String filename){
 boolean HTML::handlehttp() {
     bool wswitch=true;
     char c;                                 // Next character from http input
-    uint16_t inx0, inx1, inx2, inx3;        // Pos. of search string in currenLine
+    int16_t inx0, inx1, inx2, inx3;         // Pos. of search string in currenLine
     String currentLine = "";                // Build up to complete line
     String ct;                              // contentType
     uint32_t cl = 0;                        // contentLength
@@ -274,52 +274,71 @@ boolean HTML::handlehttp() {
         // that's the end of the client HTTP request, so send a response:
         if (currentLine.length() == 1) { // contains '\n' only
             wswitch=false; // use second while
-            if (http_getcmd.length()) {
-                if (HTML_info) HTML_info(URLdecode(http_getcmd));
-                if (HTML_command) HTML_command(URLdecode(http_getcmd));
+            if (http_cmd.length()) {
+                if (HTML_info) HTML_info(URLdecode(http_cmd));
+                if (HTML_command) HTML_command(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
             }
             if (http_rqfile.length()) {
                 String FN = "Filename is: " + http_rqfile;
                 if (HTML_info) HTML_info(URLdecode(FN));
                 if (HTML_file) HTML_file(URLdecode(http_rqfile));
             }
-            if(http_rqfile.length() == 0 && http_getcmd.length() == 0 ){   // An empty "GET"?
+            if(http_rqfile.length() == 0 && http_cmd.length() == 0 ){   // An empty "GET"?
                 if (HTML_info) HTML_info("Filename is: index.html");
                 if (HTML_file) HTML_file("index.html");
             }
             currentLine = "";
-            http_getcmd = "";
+            http_cmd    = "";
+            http_param  = "";
+            http_arg    = "";
             http_rqfile = "";
+            method = HTTP_NONE;
             break;
         } else {
             // Newline seen
             inx0 = 0;
             if (currentLine.startsWith("Content-Length:")) cl = currentLine.substring(15).toInt();
-            if (currentLine.startsWith("GET /")) inx0 = 5;  // GET request?
-            if (currentLine.startsWith("POST /"))inx0 = 6;  // POST request?
+            if (currentLine.startsWith("GET /")) {method = HTTP_GET; inx0 = 5;}  // GET request?
+            if (currentLine.startsWith("POST /")){method = HTTP_PUT; inx0 = 6;}  // POST request?
+            if (inx0 == 0) method = HTTP_NONE;
 
             if(inx0>0){
                 inx1 = currentLine.indexOf("?");    // Search for 1st parameter
                 inx2 = currentLine.indexOf("&");    // Search for 2nd parameter
                 inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
-                if((inx1>0) && (inx2>inx1)){        // it is a command
-                    http_getcmd = currentLine.substring(inx1+1, inx2);//isolate the command
+
+                if(inx1 > inx0){     // it is a command
+                    http_cmd = currentLine.substring(inx0, inx1);//isolate the command
                     http_rqfile = "";               // No file
                 }
-                else{                               // it is a filename
-                    http_rqfile = currentLine.substring(inx0, inx3);
-                    http_getcmd = "";
-                }
+                if((inx1>0) && (inx1+1 < inx3)){        // it is a parameter
+                    http_param = currentLine.substring(inx1+1, inx3);//isolate the parameter
 
+                    if(inx2>0){
+                        http_arg = currentLine.substring(inx2+1, inx3);//isolate the arguments
+                        http_param = currentLine.substring(inx1+1, inx2);//cut the parameter
+                    }
+                    http_rqfile = "";               // No file
+                }
+                if(inx1 < 0 && inx2 < 0){   // it is a filename
+                    http_rqfile = currentLine.substring(inx0, inx3);
+                    http_cmd =   "";
+                    http_param = "";
+                    http_arg =   "";
+                }
             }
             currentLine = "";
-
         }
     } //end first while
     while(wswitch==false){                          // second while
-        if(cmdclient.available()) currentLine = cmdclient.readStringUntil('\n');
-        cl -= currentLine.length();
-    if(!currentLine.length()) return true;
+        if(cmdclient.available()) {
+            currentLine = cmdclient.readStringUntil('\n');
+            cl -= currentLine.length();
+        }
+        else{
+            currentLine = "";
+        }
+        if(!currentLine.length()) return true;
         if ((currentLine.length() == 1 && count == 0) || count >= 2){
             wswitch=true;  // use first while
             currentLine = "";
@@ -332,8 +351,12 @@ boolean HTML::handlehttp() {
                 if (HTML_info) HTML_info(currentLine);
             }
 
-            if(currentLine.startsWith("------WebKit")) count++; // WebKitFormBoundary header and footer
+            if(currentLine.startsWith("------")) {
+                count++; // WebKitFormBoundary header
+                cl -= (currentLine.length() + 2); // WebKitFormBoundary footer ist 2 chars longer
+            }
             if(currentLine.length() == 1 && count == 1){
+                cl -= 6; // "\r\n\r\n..."
                 if (HTML_request) HTML_request("fileUpload", cl);
                 count++;
             }

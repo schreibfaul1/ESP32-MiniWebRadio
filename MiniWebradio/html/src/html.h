@@ -2,7 +2,7 @@
  * html.h
  *
  *  Created on: 09.07.2017
- *  updated on: 17.06.2021
+ *  updated on: 18.06.2021
  *      Author: Wolle
  */
 
@@ -14,7 +14,7 @@
 #include "FS.h"
 
 extern __attribute__((weak)) void HTML_info(const String) ;
-extern __attribute__((weak)) void HTML_command(const String);
+extern __attribute__((weak)) void HTML_command(const String, const String, const String);
 extern __attribute__((weak)) void HTML_file(String);
 extern __attribute__((weak)) void HTML_request(const String, uint32_t contentLength);
 
@@ -28,11 +28,14 @@ private:
 
     bool            http_reponse_flag = false ;               // Response required
     String          http_rqfile ;                             // Requested file
-    String          http_getcmd ;                             // Contents of last GET command
+    String          http_cmd ;                                // Content of command
+    String          http_param;                               // Content of parameter
+    String          http_arg;                                 // Content of argument
     String          _Name;
     String          _Version;
     String          contenttype;
     uint8_t         buf[1];                                   // Inputbuffer
+    uint8_t         method;
 
 protected:
     String  getContentType(String filename);
@@ -44,6 +47,7 @@ protected:
 
 
 public:
+    enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_PUT = 2 };
     HTML(String Name="HTML library", String Version="1.0");
     void begin();
     void stop();
@@ -51,8 +55,8 @@ public:
     void show(const char* pagename, int16_t len=-1);
     void show_not_found();
     boolean streamfile(fs::FS &fs,const char* path);
-    boolean uploadfile(fs::FS &fs,const char* path);
-    boolean uploadB64image(fs::FS &fs,const char* path);
+    boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
+    boolean uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength);
     void reply(const String &response, boolean header=true);
     const char* ASCIItoUTF8(const char* str);
 
