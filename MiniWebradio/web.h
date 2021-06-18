@@ -616,7 +616,7 @@ function saveGridFileToSD () { // save to SD
   select = document.getElementById('preset') // Radio: show stationlist
   select.options.length = 1
   var j = 1
-  txt = 'X\tCy\tStationName\t\t\t\t\t\t\tStreamURL\t\t\t\t\t\t\t\t\t\t\t\tSTsubstitute\r\n'
+  txt = 'X\tCy\tStationName\t\t\t\t\t\t\tStreamURL\t\t\t\t\t\t\t\t\t\t\t\tSTsubstitute\n'
   for (var i = 0; i < wsData.length; i++) {
     c = ''
     if (objJSON[i].X) {
@@ -666,7 +666,7 @@ function saveGridFileToSD () { // save to SD
     if (objJSON[i].STsubstitute) {
       txt += objJSON[i].STsubstitute
     }
-    txt += '\r'
+//    txt += '\r'
     txt += '\n'
   }
   uploadTextFile('stations.txt', txt)
@@ -680,7 +680,8 @@ function loadGridFileFromSD () { // load from SD
   rawFile.onreadystatechange = function () {
     if (rawFile.readyState === 4) {
       var rawdata = rawFile.responseText
-      rawdata = rawdata.replace(/(\t\t)/g, '\t') // shrink more tabs to one tab in 3 steps
+      rawdata = rawdata.replace(/(\t\t)/g, '\t') // shrink more tabs to one tab in 4 steps
+      rawdata = rawdata.replace(/(\t\t)/g, '\t')
       rawdata = rawdata.replace(/(\t\t)/g, '\t')
       rawdata = rawdata.replace(/(\t\t)/g, '\t')
       var workbook = XLSX.read(rawdata, {
