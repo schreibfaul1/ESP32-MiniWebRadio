@@ -600,7 +600,7 @@ bool connectToWiFi(){
                 str = file.readStringUntil('\n');         // read the line
                 if(str[0] == '*' ) continue;              // ignore this, goto next line
                 if(str[0] == '\n') continue;              // empty line
-                j = 1;  while(str[j] >= 32)   j++;        // end of first entry?
+                j = 0;  while(str[j] >= 32)   j++;        // end of first entry?
                 s_ssid = str.substring(0, j);             // SSID
                 s_ssid.trim();
                 i = j;  while(str[i] == '\t') i++;        // seek next entry, skip tabs
