@@ -2,7 +2,7 @@
  *  web.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.07.2021
+ *  Updated on: 24.06.2021
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -37,10 +37,24 @@ const char web_html[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
 
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+
+<!--  <script src="SD/js/jquery.js"></script>    --->
+<!--  <script src="SD/js/jquery-ui.js"></script> --->
+<!--  <script src="SD/js/jsgrid.js"></script>    --->
+<!--  <script src="SD/js/xlsx.js"></script>      --->
+<!--  <script src="SD/js/FileSaver.js"></script> --->
 
 
     <style type="text/css">           /* optimized with csstidy */
@@ -119,7 +133,7 @@ const char web_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/unknown.jpg);
+            background-image : url(SD/logo/unknown.jpg);
             width : 96px;
             height : 96px;
             margin-top: 5px;
@@ -211,15 +225,80 @@ var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', '
 
 var trebleVal = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7]
 
-var run2s = 0
+// ---- websocket section------------------------
 
-function run2sec () { // called every two seconds
-  if (run2s === 0) httpGet('to_listen', 1)
-  if (run2s === 1) getmute()
-  if (run2s === 2) httpGet('getstreamtitle', 1)
-  run2s++
-  if (run2s > 2) run2s = 0
+var socket = undefined
+var host = location.hostname
+var tm
+
+function ping() {
+  if (socket.readyState == 1) { // reayState 'open'
+    socket.send("ping")
+    tm = setTimeout(function () {
+      toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
+    }, 2000)
+  }
 }
+
+function connect() {
+  socket = new WebSocket('ws://'+window.location.hostname+':81/');
+
+  socket.onopen = function () {
+    console.log("Websocket connected")
+    socket.send('to_listen')
+    setInterval(ping, 20000)
+  };
+
+  socket.onclose = function (e) {
+    console.log(e)
+    console.log('Socket is closed. Reconnect will be attempted in 1 second.', e)
+    socket = null
+    setTimeout(function () {
+      connect()
+    }, 5000)
+  }
+
+  socket.onerror = function (err) {
+    console.log(err)
+  }
+
+  socket.onmessage = function(event) {
+    var socketMsg = event.data
+    
+    var n   = socketMsg.indexOf('=')
+    var msg = ''
+    var val = ''
+    if (n >= 0) {
+      var msg  = socketMsg.substring(0, n)
+      var val  = socketMsg.substring(n + 1)
+//    console.log("para ",msg, " val ",val)
+    }
+    else {
+      msg = socketMsg
+    }
+
+    switch(msg) {
+      case "pong":        clearTimeout(tm)
+                          break
+      case "mute":        if(val == '1') document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                          if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png' 
+                          break
+      case "stationNr":   document.getElementById('preset').selectedIndex = Number(val)
+                          break
+      case "stationURL":  station.value = val
+                          break
+      case "stationName": showLabel('label-logo', val)
+                          break
+      case "streamtitle": cmd.value = val
+                          break
+      case "homepage":    window.open(val, '_blank') // show the station homepage
+                          break
+      default:            console.log('unknown message', msg, val)
+    }
+  }
+}
+// ---- end websocket section------------------------
+
 
 document.addEventListener('readystatechange', event => {
   if (event.target.readyState === 'interactive') { // same as:  document.addEventListener('DOMContentLoaded'...
@@ -229,15 +308,32 @@ document.addEventListener('readystatechange', event => {
   }
   if (event.target.readyState === 'complete') {
     console.log('Now external resources are loaded too, like css,src etc... ')
-    gettone() // Now load the tones (tab Radio)
+    connect();  // establish websocket connection
+    gettone()   // Now load the tones (tab Radio)
     getnetworks()
     getmute()
     loadGridFileFromSD()
     showExcelGrid()
-    httpGet('to_listen', 1)
-    setInterval(run2sec, 2000) // this will run the function for every 2 sec.
   }
 })
+
+toastr.options = {
+  "closeButton": false,
+  "debug": false,
+  "newestOnTop": false,
+  "progressBar": false,
+  "positionClass": "toast-top-right",
+  "preventDuplicates": false,
+  "onclick": null,
+  "showDuration": "300",
+  "hideDuration": "1000",
+  "timeOut": "5000",
+  "extendedTimeOut": "1000",
+  "showEasing": "swing",
+  "hideEasing": "linear",
+  "showMethod": "fadeIn",
+  "hideMethod": "fadeOut"
+}
 
 function showTab1 () {
   console.log('tab-content1 (Radio)')
@@ -361,6 +457,7 @@ function showLabel (id, src) { // get the bitmap from SD, convert to URL first
   // src=src.replace(/\{/g , '%7B')  // not necessary to replace
   // src=src.replace(/\|/g , '%7C')  // not allowed in Windows filenames
   // src=src.replace(/\}/g , '%7D')  // not necessary to replace
+  if(src=='') src = 'unknown'
   var file = 'url(url=SD/logo/' + src + '.jpg)'
   // file=file.split(',').join('.') //replace commas in dots, MiniWebRadio has no commas in filenames
   document.getElementById(id).style.backgroundImage = file
@@ -380,33 +477,7 @@ function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       if (nr === 1) {
-        if (theReq.startsWith('prev_station') ||
-          theReq.startsWith('next_station') ||
-          theReq.startsWith('set_station=') ||
-          theReq.startsWith('to_listen')) {
-          var res = ''
-          var num = ''
-          var sta = ''
-          var url = ''
-          var n = 0
-          res = xhr.responseText
-          n = res.indexOf(' ')
-          num = res.substring(0, n) // stationnumber
-          if (_num !== Number(num)) { // only if num has changed
-            _num = Number(num)
-            cmd.value = ''
-            var sel = document.getElementById('preset')
-            sel.selectedIndex = Number(num)
-            if (n === 1) num = '00' + num
-            if (n === 2) num = '0' + num
-            res = res.substring(n + 1) // remove stationnumber
-            n = res.indexOf(' ')
-            url = res.substring(0, n) // streamURL
-            sta = res.substring(n + 1)
-            showLabel('label-logo', sta)
-            station.value = url
-          }
-        } else if (xhr.responseText.startsWith('http')) {
+        if (xhr.responseText.startsWith('http')) {
           console.log(xhr.responseText)
           window.open(xhr.responseText, '_blank') // show the station homepage
         } else if (xhr.responseText.startsWith('Mute')) {
@@ -424,7 +495,7 @@ function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
           cmd.value = xhr.responseText
         } else resultstr1.value = xhr.responseText
       }
-      if (nr === 2) resultstr2.value = xhr.responseText
+//    if (nr === 2) resultstr2.value = xhr.responseText
       if (nr === 3) resultstr3.value = xhr.responseText
     }
   }
@@ -469,7 +540,7 @@ function getmute () {
 
 function handleStation (presctrl) { // tab Radio: preset, select a station
   cmd.value = ''
-  httpGet('set_station=' + (presctrl.value), 1)
+  socket.send('set_station=' + presctrl.value)
 }
 
 function handletone (tonectrl) { // Radio: treble, bass, freq
@@ -484,7 +555,7 @@ function handletone (tonectrl) { // Radio: treble, bass, freq
   xhr.send()
 }
 
-function setstation () { // Radio: button play - enter a url to play from
+function setstation () { // Radio: button play - Enter a streamURL here....
   var theUrl = '/stationURL?' + station.value + '&version=' + Math.random()
   var sel = document.getElementById('preset')
   sel.selectedIndex = 0
@@ -616,17 +687,12 @@ function saveGridFileToSD () { // save to SD
   select = document.getElementById('preset') // Radio: show stationlist
   select.options.length = 1
   var j = 1
-  txt = 'X\tCy\tStationName\t\t\t\t\t\t\tStreamURL\t\t\t\t\t\t\t\t\t\t\t\tSTsubstitute\n'
+  txt = 'X\tCy\tStationName\tStreamURL\tSTsubstitute\n'
   for (var i = 0; i < wsData.length; i++) {
     c = ''
     if (objJSON[i].X) {
       c = objJSON[i].X
-      l = c.length
-      while (l < 8) {
-        c = c + '\t'
-        l += 8
-      }
-      txt += c
+      txt += c+ '\t'
     } else txt += '\t'
     if (objJSON[i].X !== '*') {
       if (j < 1000) {
@@ -638,52 +704,35 @@ function saveGridFileToSD () { // save to SD
     }
     if (objJSON[i].Cy) {
       c = objJSON[i].Cy
-      l = c.length
-      while (l < 8) {
-        c = c + '\t'
-        l += 8
-      }
+      c = c + '\t'
       txt += c
     } else txt += '\t'
     if (objJSON[i].StationName) {
       c = objJSON[i].StationName
-      l = c.length
-      while (l < (8 * 8)) {
-        c = c + '\t'
-        l += 8
-      }
+      c = c + '\t'
       txt += c
     } else txt += '\t'
     if (objJSON[i].StreamURL) {
       c = objJSON[i].StreamURL
-      l = c.length
-      while (l < (8 * 13)) {
-        c = c + '\t'
-        l += 8
-      }
+      c = c + '\t'
       txt += c
     } else txt += '\t'
     if (objJSON[i].STsubstitute) {
       txt += objJSON[i].STsubstitute
     }
-//    txt += '\r'
     txt += '\n'
   }
-  uploadTextFile('stations.txt', txt)
+  uploadTextFile('stations.csv', txt)
   updateStationlist()
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function loadGridFileFromSD () { // load from SD
   var XLrowObject
   var rawFile = new XMLHttpRequest()
-  rawFile.open('POST', '/SD/stations.txt', true)
+  rawFile.open('POST', '/SD/stations.csv', true)
   rawFile.onreadystatechange = function () {
     if (rawFile.readyState === 4) {
       var rawdata = rawFile.responseText
-      rawdata = rawdata.replace(/(\t\t)/g, '\t') // shrink more tabs to one tab in 4 steps
-      rawdata = rawdata.replace(/(\t\t)/g, '\t')
-      rawdata = rawdata.replace(/(\t\t)/g, '\t')
-      rawdata = rawdata.replace(/(\t\t)/g, '\t')
       var workbook = XLSX.read(rawdata, {
         raw: true,
         type: 'string',
@@ -1169,17 +1218,6 @@ function getnetworks () { // tab Config: load the connected WiFi network
 </script>
 
 <body id="BODY">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
-
-<!--  <script src="SD/js/jquery.js"></script>    --->
-<!--  <script src="SD/js/jquery-ui.js"></script> --->
-<!--  <script src="SD/js/jsgrid.js"></script>    --->
-<!--  <script src="SD/js/xlsx.js"></script>      --->
-<!--  <script src="SD/js/FileSaver.js"></script> --->
 
 <div id="content" >
 
@@ -1262,8 +1300,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
   <div id="tab-content1">
     <div style="height: 66px; display: flex;">
       <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Previous_Green.png" alt="previous" onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" onmouseup="this.src='  SD/png/Button_Previous_Green.png'" onclick="httpGet('prev_station', 1)" />
-        <img src="SD/png/Button_Next_Green.png" alt="next" onmousedown="this.src='SD/png/Button_Next_Yellow.png'" onmouseup="this.src='  SD/png/Button_Next_Green.png'" onclick="httpGet('next_station', 1)" />
+        <img src="SD/png/Button_Previous_Green.png" alt="previous" onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" onmouseup="this.src='  SD/png/Button_Previous_Green.png'" onclick="socket.send('prev_station')" />
+        <img src="SD/png/Button_Next_Green.png" alt="next" onmousedown="this.src='SD/png/Button_Next_Yellow.png'" onmouseup="this.src='  SD/png/Button_Next_Green.png'" onclick="socket.send('next_station')" />
       </div>
       <div style="flex:1;">
         <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
@@ -1273,7 +1311,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
     </div>
     <div style="height: 112px; display: flex;">
       <div style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo" onclick="httpGet('homepage', 1)"> </label>
+        <label for="label-logo" id="label-logo" onclick="socket.send('homepage')"> </label>
       </div>
       <div style="display: flex; flex:1; justify-content: center;">
         <div style="width: 380px; height:108px;">
