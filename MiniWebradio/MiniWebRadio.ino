@@ -590,7 +590,7 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //**************************************************************************************************
 bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
-    uint16_t i = 0, j = 0;
+    int16_t i = 0, j = 0, k = 0;;
     wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
     if(f_SD_okay){  // try credentials given in "/networks.txt"
         File file = SD.open("/networks.csv");
@@ -600,20 +600,20 @@ bool connectToWiFi(){
                 str = file.readStringUntil('\n');         // read the line
                 if(str[0] == '*' ) continue;              // ignore this, goto next line
                 if(str[0] == '\n') continue;              // empty line
-                j = 0;  while(str[j] >= 32)   j++;        // end of first entry?
-                s_ssid = str.substring(0, j);             // SSID
-                s_ssid.trim();
-                i = j;  while(str[i] == '\t') i++;        // seek next entry, skip tabs
-                j = i;  while(str[j] >= 32)   j++;        // end of next entry?
-                s_password = str.substring(i, j);         // PW
-                s_password.trim();
-                i = j;  while(str[i] == '\t') i++;        // seek next entry, skip tabs
-                j = i;  while(str[j] >= 32) j++;          // end of next entry?
-                s_info = str.substring(i, j);             // Info
-                s_info.trim();
-                if(s_ssid.length() == 0) continue;
-                if(s_password.length() == 0) continue;
-//              log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+                if(str[0] == ' ')  continue;              // space as first char
+                if(str.indexOf('\t') < 1) continue;       // no tab or tab is at pos 0
+                uint p = 0, q = 0;
+                for(int i = 0; i < str.length(); i++){
+                    if(str[i] == '\t' || str[i] == '\n'){
+                        if(p == 0) s_ssid     = str.substring(q, i);
+                        if(p == 1) s_password = str.substring(q, i);
+                        if(p == 2) s_info     = str.substring(q, i);
+                        p++;
+                        i++;
+                        q = i;
+                    }
+                }
+                //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
                 wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
             file.close();
