@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 26 , Jun 18 2021
+// Version 27 , Jun 24 2021
 //
 // Preparations:
 //
@@ -66,6 +66,7 @@
 // system libraries
 #include <Arduino.h>
 #include <Preferences.h>
+#include <Ticker.h>
 #include <SPI.h>
 #include <SD.h>
 #include <FS.h>
@@ -133,7 +134,7 @@ boolean  f_upload=false;        // if true next file is saved to SD
 String _hl_title[10]{                           // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
-                "** Internet Eadio **",
+                "** Internet Radio **",
                 "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
                 "** Uhr **",
                 "** Helligkeit **",             // Brightness яркость λάμψη
@@ -176,6 +177,7 @@ HTML web;
 Preferences pref;
 Preferences stations;
 RTIME rtc;
+Ticker ticker;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 WiFiMulti wifiMulti;
@@ -211,7 +213,7 @@ boolean saveStationsToNVS(){
     String cy="", str="", str_s="", str_u="", info="";
     uint16_t i=0, j=0, cnt=0;
     // StationList
-    File file = SD.open("/stations.txt");
+    File file = SD.open("/stations.csv");
     if(file){  // try to read from SD
         stations.clear();
         str=file.readStringUntil('\n');             // read the headline
@@ -246,11 +248,13 @@ boolean saveStationsToNVS(){
             str+="#";
             str+=str_u; // url
             //log_i("cy=%s  str_s=%s  str_u=%s  info=%s", cy.c_str(), str_s.c_str(), str_u.c_str(), info.c_str());
+            //log_i("str=%s", str.c_str());
             sprintf(_chbuf, "station_%03d", cnt);
             stations.putString(_chbuf, str);
             sprintf(_chbuf, "info_%03d", cnt);
             if(info.length()>4){  // is reasonable? then save additional info
                 info.trim();
+                // log_i("info=%s", info.c_str());
                 stations.putString(_chbuf, info);
             }
         }
@@ -269,7 +273,7 @@ boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek i
     sprintf(_chbuf, "info_%03d", station);
     String str=stations.getString(_chbuf, String("No streamtitle available")); // found probably replacement information
     _title=str;
-    if(str.length()>5){showTitle(str); return true;}
+    if(str.length()>5){showStreamTitle(str); return true;}
     return false;
 }
 //**************************************************************************************************
@@ -352,27 +356,12 @@ const char* ASCIItoUTF8(const char* str){
 //**************************************************************************************************
 //                                        T I M E R                                                *
 //**************************************************************************************************
-void IRAM_ATTR timer1sec() {
+void timer1sec() {
     static volatile uint8_t sec=0;
     f_1sec=true;
     sec++;
-//    log_i("sec=%i", sec);
+    //log_i("sec=%i", sec);
     if(sec==60){sec=0; f_1min=true;}
-}
-void IRAM_ATTR timer5(){                               // called every 5ms
-    static volatile uint8_t  count1sec=0;
-    count1sec++;
-    if(count1sec == 200){
-        count1sec=0; timer1sec();                      // 1 second passed?
-    }
-}
-void startTimer() {
-    timer = timerBegin(0, 80, true); // timer_id = 0; divider=80; countUp = true;
-    timerAttachInterrupt(timer, &timer5, true); // edge = true
-    timerAlarmWrite(timer, 5000, true); //5 ms
-    timerAlarmEnable(timer);
-//    log_i("timer enabled");
-    delay(1000);
 }
 //**************************************************************************************************
 //                                       D I S P L A Y                                             *
@@ -390,21 +379,23 @@ void display_info(const char *str, int ypos, int height, uint16_t color, uint16_
     tft.setCursor(indent, ypos);                            // Prepare to show the info
     tft.print(str);                                         // Show the string
 }
-void showTitle(String str){
-    str.trim();  // remove all leading or trailing whitespaces
-    str.replace(" | ", "\n");   // some stations use pipe as \n or
-    str.replace("| ", "\n");    // or
-    str.replace("|", "\n");
+void showStreamTitle(String ST){
+    ST.trim();  // remove all leading or trailing whitespaces
+    ST.replace(" | ", "\n");   // some stations use pipe as \n or
+    ST.replace("| ", "\n");    // or
+    ST.replace("|", "\n");
     if(_state!=RADIO) return;
-    if(txtlen(str)>  4) f_has_ST=true; else f_has_ST=false;
+    //log_i("Streamtitle=%s txtlen=%i", ST.c_str(), txtlen(ST));
+    if(txtlen(ST) > 4) f_has_ST=true; else f_has_ST=false;
     tft.setFont(Times_New_Roman43x35);
-    if(txtlen(str)> 30) tft.setFont(Times_New_Roman38x31);
-    if(txtlen(str)> 45) tft.setFont(Times_New_Roman34x27);
-    if(txtlen(str)> 65) tft.setFont(Times_New_Roman27x21);
-    if(txtlen(str)>130) tft.setFont(Times_New_Roman21x17);
-    if(txtlen(str)>200) tft.setFont(Times_New_Roman15x14);
+    if(txtlen(ST)> 30) tft.setFont(Times_New_Roman38x31);
+    if(txtlen(ST)> 45) tft.setFont(Times_New_Roman34x27);
+    if(txtlen(ST)> 65) tft.setFont(Times_New_Roman27x21);
+    if(txtlen(ST)>130) tft.setFont(Times_New_Roman21x17);
+    if(txtlen(ST)>200) tft.setFont(Times_New_Roman15x14);
 //    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
-    display_info(str.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
+    display_info(ST.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
+    web.send("streamtitle=" + ST);
 }
 void showStation(){
     String str1="", str2="", str3="";
@@ -429,16 +420,13 @@ void showStation(){
     if(txtlen(str2)>90) tft.setFont(Times_New_Roman15x14);
     display_info(str2.c_str(), _yName, _hName, TFT_YELLOW, _wLogo+14);// Show station name
 
-    showTitle("");
+    showStreamTitle("");
     showFooter();
 
     str2="/logo/" + String(UTF8toASCII(str3.c_str())) +".jpg";
     if(f_SD_okay){
         if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
-            str2="/logo/" + String(UTF8toASCII(_station.c_str())) +".jpg";
-            if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename given from station exist?
-                tft.drawJpgFile(SD, "/unknown.jpg", 1,22);  // if no draw unknown
-            }
+            tft.drawJpgFile(SD, "/logo/unknown.jpg", 0, _yLogo);  // if no draw unknown
         }
     }
 }
@@ -538,6 +526,7 @@ String setStation(int16_t stationNr) // -1: previous station, 0: next station, 1
     _homepage="";
     pref.putUInt("station", station);
     f_has_ST=false; // will probably be set in ShowStreamtitle
+    StationsItems();
     return content;
 }
 
@@ -557,7 +546,7 @@ void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on
     else{
         if(web.uploadfile(SD, UTF8toASCII(fileName.c_str()), contentLength)) web.reply("OK");
         else web.reply("failure");
-        if(fileName==String("/stations.txt")) saveStationsToNVS();
+        if(fileName==String("/stations.csv")) saveStationsToNVS();
     }
 }
 //**************************************************************************************************
@@ -600,40 +589,39 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //                               C O N N E C T   TO   W I F I                                      *
 //**************************************************************************************************
 bool connectToWiFi(){
-    String s_ssid="", s_password="", s_info="";
-    uint16_t i=0, j=0;
+    String s_ssid = "", s_password = "", s_info = "";
+    uint16_t i = 0, j = 0;
     wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
     if(f_SD_okay){  // try credentials given in "/networks.txt"
-        File file = SD.open("/networks.txt");
-        if(file){                                           // try to read from SD
-            String str="";
+        File file = SD.open("/networks.csv");
+        if(file){                                         // try to read from SD
+            String str = "";
             while(file.available()){
-                str=file.readStringUntil('\n');         // read the line
-                if(str[0]=='*' ) continue;              // ignore this, goto next line
-                if(str[0]=='\n') continue;              // empty line
-                i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
-                j=1;  while(str[j] >= 32) j++;          // end of first entry?
-                s_ssid =  str.substring(i, j);          // SSID
+                str = file.readStringUntil('\n');         // read the line
+                if(str[0] == '*' ) continue;              // ignore this, goto next line
+                if(str[0] == '\n') continue;              // empty line
+                j = 1;  while(str[j] >= 32)   j++;        // end of first entry?
+                s_ssid = str.substring(0, j);             // SSID
                 s_ssid.trim();
-                i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-                j=i;  while(str[j] >= 32) j++;          // end of next entry?
-                s_password=str.substring(i, j);         // PW
+                i = j;  while(str[i] == '\t') i++;        // seek next entry, skip tabs
+                j = i;  while(str[j] >= 32)   j++;        // end of next entry?
+                s_password = str.substring(i, j);         // PW
                 s_password.trim();
-                i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-                j=i;  while(str[j] >= 32) j++;          // end of next entry?
-                s_info=str.substring(i, j);             // Info
+                i = j;  while(str[i] == '\t') i++;        // seek next entry, skip tabs
+                j = i;  while(str[j] >= 32) j++;          // end of next entry?
+                s_info = str.substring(i, j);             // Info
                 s_info.trim();
-                if(s_ssid.length()==0) continue;
-                if(s_password.length()==0) continue;
-//                    log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+                if(s_ssid.length() == 0) continue;
+                if(s_password.length() == 0) continue;
+//              log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
                 wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
             file.close();
         }
     }
     Serial.println("WiFI_info  : Connecting WiFi...");
-    if(wifiMulti.run()==WL_CONNECTED){
-        _myIP=WiFi.localIP().toString();
+    if(wifiMulti.run() == WL_CONNECTED){
+        _myIP = WiFi.localIP().toString();
         _SSID = WiFi.SSID();
         Serial.printf("WiFI_info  : WiFi connected\n");
         Serial.printf("WiFI_info  : IP address %s\n", _myIP.c_str());
@@ -642,7 +630,7 @@ bool connectToWiFi(){
         return true;
     }else{
         Serial.printf("WiFi credentials are not correct\n");
-        _SSID = ""; _myIP="0.0.0.0";
+        _SSID = ""; _myIP = "0.0.0.0";
         return false;  // can't connect to any network
     }
 }
@@ -675,10 +663,10 @@ void setup(){
         while(1){};                     // endless loop, MiniWebRadio does not work without SD
     }
     else Serial.println("setup      : found SD card");
-    File file=SD.open("/stations.txt");
+    File file=SD.open("/stations.csv");
     if(!file){
-        Serial.println("setup       : stations.txt not found");
-        while(1){};                     // endless loop, MiniWebRadio does not work without stations.txt
+        Serial.println("setup       : stations.csv not found");
+        while(1){};                     // endless loop, MiniWebRadio does not work without stations.csv
     }
     int size= file.size();
     file.close();
@@ -710,7 +698,8 @@ void setup(){
     mp3.connecttohost(setStation(pref.getUInt("station"))); //last used station
     //mp3.printDetails();
     if(_station=="") showStation(); // if station gives no icy-name display _stationname
-    startTimer();
+    //startTimer();
+    ticker.attach(1, timer1sec);
 }
 //**************************************************************************************************
 inline uint8_t downvolume(){
@@ -727,8 +716,8 @@ inline uint8_t getvolume(){
     return pref.getUInt("volume");
 }
 inline void mute(){
-    if(f_mute==false){f_mute=true; mp3.setVolume(0); showHeadlineVolume(0);}
-    else {f_mute=false; mp3.setVolume(getvolume()); showHeadlineVolume(getvolume());}
+    if(f_mute==false){f_mute=true; mp3.setVolume(0); showHeadlineVolume(0); web.send("mute=1");}
+    else {f_mute=false; mp3.setVolume(getvolume()); showHeadlineVolume(getvolume()); web.send("mute=0");}
     pref.putUInt("mute", f_mute);
 }
 inline void showVolumeBar(){
@@ -740,8 +729,10 @@ inline void showBrightnessBar(){
     uint16_t br=tft.width()* pref.getUInt("brightness")/100;
     tft.fillRect(0, 140, br, 5, TFT_RED); tft.fillRect(br+1, 140, tft.width()-br+1, 5, TFT_GREEN);
 }
-inline String StationsItems(){
-    return (String(pref.getUInt("station")) + " " + _stationURL + " " + _stationname);
+inline void StationsItems(){
+    web.send("stationNr=" + String(pref.getUInt("station")));
+    web.send("stationURL=" + _stationURL);
+    web.send("stationName=" + _stationname);
 }
 //**************************************************************************************************
 //                                M E N U E / B U T T O N S                                        *
@@ -752,7 +743,7 @@ void changeState(int state){
     switch(_state) {
     case RADIO:{
         showFooter(); showHeadlineItem();
-        showStation(); showTitle(_title);
+        showStation(); showStreamTitle(_title);
         break;
     }
     case RADIOico:{
@@ -992,7 +983,7 @@ void loop() {
         }
         if(_commercial_dur>0){
             _commercial_dur--;
-            if((_commercial_dur==2)&&(_state==RADIO))showTitle("");// end of commercial? clear streamtitle
+            if((_commercial_dur==2)&&(_state==RADIO))showStreamTitle("");// end of commercial? clear streamtitle
         }
         f_1sec=false;
     }
@@ -1008,8 +999,8 @@ void loop() {
     else semaphore=false;
 
     if(_millis+5000<millis()){  //5sec no touch?
-        if(_state==RADIOico)  {_state=RADIO; showTitle(_title); showFooter();      }
-        if(_state==RADIOmenue){_state=RADIO; showTitle(_title); showFooter();      }
+        if(_state==RADIOico)  {_state=RADIO; showStreamTitle(_title); showFooter();      }
+        if(_state==RADIOmenue){_state=RADIO; showStreamTitle(_title); showFooter();      }
         if(_state==CLOCKico)  {display_info("",160,79, TFT_BLACK, 0); _state=CLOCK;}
     }
 
@@ -1049,7 +1040,7 @@ void vs1053_showstation(const char *info){              // called from vs1053
 }
 void vs1053_showstreamtitle(const char *info){          // called from vs1053
     _title=info;
-    showTitle(info);
+    showStreamTitle(info);
 }
 void vs1053_showstreaminfo(const char *info){           // called from vs1053
 //    s_info=info;
@@ -1074,7 +1065,7 @@ void vs1053_commercial(const char *info){               // called from vs1053
     String str=info;                                    // info is the duration of advertising
     _commercial_dur=str.toInt();
     _title="Advertising "+str+"s";
-    showTitle(_title);
+    showStreamTitle(_title);
 }
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     String str=info;
@@ -1105,8 +1096,8 @@ void HTML_command(const String cmd, const String param, const String arg){      
 //    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     uint8_t vol;
     String  str;
-    if(cmd=="homepage"){(web.reply(_homepage)); return;}
-    if(cmd=="to_listen"){web.reply(StationsItems()); return;} // return the name and number of the current station
+    if(cmd=="homepage"){web.send("homepage=" + _homepage); return;}
+    if(cmd=="to_listen"){StationsItems(); return;} // via websocket, return the name and number of the current station
     if(cmd=="gettone"){ web.reply(tone()); return;}
     if(cmd=="getmute"){ web.reply(String(int(f_mute))); return;}
     if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),mp3.ringused(), mp3.streamavail()); web.reply(_chbuf); return;}
@@ -1121,11 +1112,13 @@ void HTML_command(const String cmd, const String param, const String arg){      
     if(cmd=="uploadfile"){_req=savefiles;  _filename=param;  return;}
     if(cmd=="upvolume"){ str="Volume is now "; str.concat(vol=upvolume()); web.reply(str); return;}
     if(cmd=="downvolume"){ str="Volume is now "; str.concat(downvolume()); web.reply(str); return;}
-    if(cmd=="prev_station"){str=setStation(-1); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd=="next_station"){str=setStation(0); mp3.connecttohost(str); web.reply(StationsItems()); return;}
-    if(cmd=="set_station"){mp3.connecttohost(str=setStation(param.toInt())); web.reply(StationsItems()); return;}
+    if(cmd=="prev_station"){str=setStation(-1); mp3.connecttohost(str); return;} // via websocket
+    if(cmd=="next_station"){str=setStation(0); mp3.connecttohost(str); return;} // via websocket
+    if(cmd=="set_station"){mp3.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
     if(cmd=="stationURL"){_stationnr=0; _stationname=""; _title=""; mp3.connecttohost(param);web.reply("OK\n"); return;}
     if(cmd=="getnetworks"){web.reply(_SSID+"\n"); return;}
+    if(cmd=="ping"){web.send("pong"); return;}
+
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void HTML_file(String file){                  // called from html
@@ -1343,4 +1336,5 @@ void tp_released(){
     }
     _releaseNr=0;
 }
+
 
