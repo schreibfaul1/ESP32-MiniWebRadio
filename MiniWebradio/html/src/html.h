@@ -2,7 +2,7 @@
  * html.h
  *
  *  Created on: 09.07.2017
- *  updated on: 18.06.2021
+ *  updated on: 24.06.2021
  *      Author: Wolle
  */
 
@@ -12,6 +12,8 @@
 #include "WiFi.h"
 #include "SD.h"
 #include "FS.h"
+#include "mbedtls/sha1.h"
+#include "base64.h"
 
 extern __attribute__((weak)) void HTML_info(const String) ;
 extern __attribute__((weak)) void HTML_command(const String, const String, const String);
@@ -22,11 +24,16 @@ extern __attribute__((weak)) void HTML_request(const String, uint32_t contentLen
 
 class HTML
 {
-private:
-    WiFiClient      cmdclient ;                               // An instance of the client for commands
+protected:
+    WiFiClient      cmdclient;                               // An instance of the client for commands
+    WiFiClient      webSocketClient ;
     WiFiServer      cmdserver;
+    WiFiServer      webSocketServer;
 
+private:
     bool            http_reponse_flag = false ;               // Response required
+    bool            ws_conn_request_flag = false;             // websocket connection attempt
+    bool            hasclient = false;
     String          http_rqfile ;                             // Requested file
     String          http_cmd ;                                // Content of command
     String          http_param;                               // Content of parameter
@@ -34,12 +41,19 @@ private:
     String          _Name;
     String          _Version;
     String          contenttype;
-    uint8_t         buf[1];                                   // Inputbuffer
+    uint8_t         buff[256];
     uint8_t         method;
+    String          WS_sec_Key;
+    String          WS_resp_Key;
+    String          WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 protected:
+    String calculateWebSocketResponseKey(String sec_WS_key);
+    void    printWebSocketHeader(String wsRespKey);
     String  getContentType(String filename);
     boolean handlehttp();
+    boolean handleWS();
+    void    parseWsMessage(uint16_t len);
     uint8_t inbyte();
     String  URLdecode(String str);
     String  UTF8toASCII(String str);
@@ -55,6 +69,10 @@ public:
     void show(const char* pagename, int16_t len=-1);
     void show_not_found();
     boolean streamfile(fs::FS &fs,const char* path);
+    boolean send(String msg);
+    boolean send(const char* msg);
+    void    sendPing();
+    void    sendPong();
     boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
     boolean uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength);
     void reply(const String &response, boolean header=true);

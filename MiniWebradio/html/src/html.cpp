@@ -2,21 +2,43 @@
  * html.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 18.07.2021
+ *  updated on: 24.07.2021
  *      Author: Wolle
  */
 
 #include "html.h"
 
 //--------------------------------------------------------------------------------------------------------------
-HTML::HTML(String Name, String Version){
+HTML::HTML(String Name, String Version) : webSocketServer(81){
     _Name=Name; _Version=Version;
     method = HTTP_NONE;
+    webSocketClient.setNoDelay(true);
+    webSocketClient.setTimeout(100);
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show_not_found(){
     cmdclient.print("HTTP/1.1 404 Not Found\n\n");
     return;
+}
+//--------------------------------------------------------------------------------------------------------------
+String HTML::calculateWebSocketResponseKey(String sec_WS_key){
+    // input  Sec-WebSocket-Key from client
+    // output Sec-WebSocket-Accept-Key (used in response message to client)
+    unsigned char sha1_result[20];
+    String concat = sec_WS_key + WS_sec_conKey;
+    mbedtls_sha1_ret((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
+    return base64::encode(sha1_result, 20);
+}
+//--------------------------------------------------------------------------------------------------------------
+void HTML::printWebSocketHeader(String wsRespKey){
+    String wsHeader = (String)"HTTP/1.1 101 Switching Protocols\r\n"  +
+                              "Upgrade: websocket\r\n"  +
+                              "Connection: Upgrade\r\n" +
+                              "Sec-WebSocket-Accept: "  + wsRespKey + "\r\n" +
+                              "Access-Control-Allow-Origin: \r\n\r\n";
+                             // "Sec-WebSocket-Protocol: chat\r\n\r\n";
+//    log_i("wsheader %s", wsHeader.c_str());
+    webSocketClient.print(wsHeader) ;             // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::show(const char* pagename, int16_t len){
@@ -133,6 +155,82 @@ boolean HTML::streamfile(fs::FS &fs,const char* path){ // transfer file from SD 
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
+boolean HTML::send(String msg) {  // sends text messages via websocket
+    return send(msg.c_str());
+}
+//--------------------------------------------------------------------------------------------------------------
+boolean HTML::send(const char *msg) {  // sends text messages via websocket
+    uint8_t headerLen = 2;
+
+    if(!hasclient) {
+//      log_e("can't send, websocketserver not connected");
+        return false;
+    }
+    size_t msgLen = strlen(msg);
+
+    if(msgLen > UINT16_MAX) {
+        log_e("send: message too long, greather than 64kB");
+        return false;
+    }
+
+    uint8_t fin = 1;
+    uint8_t rsv1 = 0;
+    uint8_t rsv2 = 0;
+    uint8_t rsv3 = 0;
+    uint8_t opcode = 0x01; // text
+    uint8_t mask = 0;
+
+    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
+    if(msgLen < 126) {
+        buff[1] = (128 * mask) + msgLen;
+    }
+    else {
+        headerLen = 4;
+        buff[1] = (128 * mask) + 126;
+        buff[2] = (msgLen >> 8) & 0xFF;
+        buff[3] = msgLen & 0xFF;
+    }
+
+    webSocketClient.write(buff, headerLen);
+    webSocketClient.write(msg, msgLen);
+
+    return true;
+}
+//--------------------------------------------------------------------------------------------------------------
+void HTML::sendPing(){  // heartbeat, keep alive via websockets
+
+    if(!hasclient) {
+        return;
+    }
+    uint8_t fin = 1;
+    uint8_t rsv1 = 0;
+    uint8_t rsv2 = 0;
+    uint8_t rsv3 = 0;
+    uint8_t opcode = 0x09; // denotes a ping
+    uint8_t mask = 0;
+
+    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
+    buff[1] = (128 * mask) + 0;
+    webSocketClient.write(buff,2);
+}
+//--------------------------------------------------------------------------------------------------------------
+void HTML::sendPong(){  // heartbeat, keep alive via websockets
+
+    if(!hasclient) {
+        return;
+    }
+    uint8_t fin = 1;
+    uint8_t rsv1 = 0;
+    uint8_t rsv2 = 0;
+    uint8_t rsv3 = 0;
+    uint8_t opcode = 0x0A; // denotes a pong
+    uint8_t mask = 0;
+
+    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
+    buff[1] = (128 * mask) + 0;
+    webSocketClient.write(buff,2);
+}
+//--------------------------------------------------------------------------------------------------------------
 boolean HTML::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer imagefile from webbrowser to SD
     size_t   bytesPerTransaction = 1024;
     uint8_t  tBuf[bytesPerTransaction];
@@ -220,10 +318,12 @@ boolean HTML::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){ /
 //--------------------------------------------------------------------------------------------------------------
 void HTML::begin() {
     cmdserver.begin();
+    webSocketServer.begin();
 }
 //--------------------------------------------------------------------------------------------------------------
 void HTML::stop() {
     cmdclient.stop();
+    webSocketClient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
 String HTML::getContentType(String filename){
@@ -251,7 +351,7 @@ String HTML::getContentType(String filename){
     return "text/plain" ;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean HTML::handlehttp() {
+boolean HTML::handlehttp() {                // HTTPserver, message received
     bool wswitch=true;
     char c;                                 // Next character from http input
     int16_t inx0, inx1, inx2, inx3;         // Pos. of search string in currenLine
@@ -269,7 +369,9 @@ boolean HTML::handlehttp() {
             log_e("Command client schould be available but is not!");
             return false;
         }
+//        log_i("%i", cmdclient.available());
         currentLine = cmdclient.readStringUntil('\n');
+//        log_i("currLine %s", currentLine.c_str());
         // If the current line is blank, you got two newline characters in a row.
         // that's the end of the client HTTP request, so send a response:
         if (currentLine.length() == 1) { // contains '\n' only
@@ -297,7 +399,9 @@ boolean HTML::handlehttp() {
         } else {
             // Newline seen
             inx0 = 0;
+
             if (currentLine.startsWith("Content-Length:")) cl = currentLine.substring(15).toInt();
+
             if (currentLine.startsWith("GET /")) {method = HTTP_GET; inx0 = 5;}  // GET request?
             if (currentLine.startsWith("POST /")){method = HTTP_PUT; inx0 = 6;}  // POST request?
             if (inx0 == 0) method = HTTP_NONE;
@@ -332,7 +436,9 @@ boolean HTML::handlehttp() {
     } //end first while
     while(wswitch==false){                          // second while
         if(cmdclient.available()) {
+            log_i("%i", cmdclient.available());
             currentLine = cmdclient.readStringUntil('\n');
+            log_i("currLine %s", currentLine.c_str());
             cl -= currentLine.length();
         }
         else{
@@ -366,12 +472,147 @@ boolean HTML::handlehttp() {
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
+boolean HTML::handleWS() {                  // Websocketserver, receive messages
+    int16_t inx0, inx1, inx2, inx3;         // Pos. of search string in currenLine
+    String currentLine = "";                // Build up to complete line
+
+    if (!webSocketClient.connected()){
+        log_e("webSocketClient schould be connected but is not!");
+        return false;
+    }
+
+    if(!hasclient){
+        while(true){
+            currentLine = webSocketClient.readStringUntil('\n');
+
+            if (currentLine.length() == 1) { // contains '\n' only
+                if(ws_conn_request_flag){
+                    ws_conn_request_flag = false;
+                    printWebSocketHeader(WS_resp_Key);
+                    hasclient = true;
+                }
+                break;
+            }
+
+            if (currentLine.startsWith("Sec-WebSocket-Key:")) { // Websocket connection request
+                WS_sec_Key = currentLine.substring(18);
+                WS_sec_Key.trim();
+                WS_resp_Key = calculateWebSocketResponseKey(WS_sec_Key);
+                ws_conn_request_flag = true;
+            }
+        }
+    }
+    int av = webSocketClient.available();
+
+    if(av){
+        parseWsMessage(av);
+    }
+    return true;
+}
+//--------------------------------------------------------------------------------------------------------------
+void HTML::parseWsMessage(uint16_t len){
+    uint8_t  headerLen = 2;
+    uint16_t paylodLen;
+    uint8_t  maskingKey[4];
+
+    if(len > UINT16_MAX){
+        log_e("Websocketmessage too long");
+        return;
+    }
+
+    webSocketClient.readBytes(buff, 1);
+    uint8_t fin       = ((buff[0] >> 7) & 0x01);
+    uint8_t rsv1      = ((buff[0] >> 6) & 0x01);
+    uint8_t rsv2      = ((buff[0] >> 5) & 0x01);
+    uint8_t rsv3      = ((buff[0] >> 4) & 0x01);
+    uint8_t opcode    = (buff[0]  & 0x0F);
+
+    webSocketClient.readBytes(buff, 1);
+    uint8_t mask      = ((buff[0]>>7) & 0x01);
+    paylodLen = (buff[0] & 0x7F);
+
+    if(paylodLen == 126){
+        headerLen = 4;
+        webSocketClient.readBytes(buff, 2);
+        paylodLen  = buff[0] << 8;
+        paylodLen += buff[1];
+
+    }
+
+    if(mask){
+        maskingKey[0] = webSocketClient.read();
+        maskingKey[1] = webSocketClient.read();
+        maskingKey[2] = webSocketClient.read();
+        maskingKey[3] = webSocketClient.read();
+    }
+
+    if(opcode == 0x08) {  // denotes a connection close
+        hasclient = false;
+        webSocketClient.stop();
+        return;
+    }
+
+    if(opcode == 0x09) {  // denotes a ping
+        if(HTML_command) HTML_command("ping received, send pong", "", "");
+        if(HTML_info) HTML_info((const char*) "pong received, send pong");
+        sendPong();
+    }
+
+    if(opcode == 0x0A) {  // denotes a pong
+        if(HTML_command) HTML_command("pong received", "", "");
+        if(HTML_info) HTML_info((const char*) "pong received");
+        return;
+    }
+
+    if(opcode == 0x01) { // denotes a text frame
+        int plen;
+        while(paylodLen){
+            if(paylodLen > 255){
+                plen = 255;
+                paylodLen -= webSocketClient.readBytes(buff, plen);
+            }
+            else{
+                plen = paylodLen;
+                paylodLen = 0;
+                webSocketClient.readBytes(buff, plen);
+            }
+            if(mask){
+                for(int i = 0; i < plen; i++){
+                    buff[i] = (buff[i] ^ maskingKey[i % 4]);
+                }
+            }
+            buff[plen] = 0;
+            if(len < 256){ // can be a command like "mute=1"
+                char *ret;
+                ret = strchr((const char*)buff, '=');
+                if(ret){
+                    *ret = 0;
+                    log_i("cmd=%s, para=%s", buff, ret);
+                    if(HTML_command) HTML_command((const char*) buff, ret + 1, "");
+                    buff[0] = 0;
+                    return;
+                }
+            }
+            if(HTML_command) HTML_command((const char*) buff, "", "");
+            if(HTML_info) HTML_info((const char*) buff);
+        }
+        buff[0] = 0;
+    }
+}
+//--------------------------------------------------------------------------------------------------------------
 boolean HTML::loop() {
-    cmdclient = cmdserver.available();                  // Check Input from client?
-    if (cmdclient.available()){                                      // Client connected?
+    if(!hasclient) webSocketClient = webSocketServer.available();
+    if (webSocketClient.available()){
+        if(HTML_info) HTML_info("WebSocket client available");
+        return handleWS();
+    }
+
+    cmdclient = cmdserver.available();
+    if (cmdclient.available()){                                     // Check Input from client?
         if(HTML_info) HTML_info("Command client available");
         return handlehttp();
     }
+
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
