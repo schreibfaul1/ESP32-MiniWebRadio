@@ -436,9 +436,9 @@ boolean HTML::handlehttp() {                // HTTPserver, message received
     } //end first while
     while(wswitch==false){                          // second while
         if(cmdclient.available()) {
-            log_i("%i", cmdclient.available());
+            //log_i("%i", cmdclient.available());
             currentLine = cmdclient.readStringUntil('\n');
-            log_i("currLine %s", currentLine.c_str());
+            //log_i("currLine %s", currentLine.c_str());
             cl -= currentLine.length();
         }
         else{
