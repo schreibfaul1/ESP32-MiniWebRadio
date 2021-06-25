@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 27 , Jun 24 2021
+// Version 27a , Jun 25 2021
 //
 // Preparations:
 //
@@ -210,52 +210,47 @@ void defaultsettings(){
     saveStationsToNVS();
 }
 boolean saveStationsToNVS(){
-    String cy="", str="", str_s="", str_u="", info="";
-    uint16_t i=0, j=0, cnt=0;
+    String X="", Cy="", StationName="", StreamURL="", STsubstitute="", currentLine="", tmp="";
+    uint16_t cnt=0;
     // StationList
     File file = SD.open("/stations.csv");
     if(file){  // try to read from SD
         stations.clear();
-        str=file.readStringUntil('\n');             // read the headline
+        currentLine = file.readStringUntil('\n');             // read the headline
         while(file.available()){
-            str=file.readStringUntil('\n');         // read the line
-            if(str[0]=='*' ) continue;              // ignore this, goto next line
-            if(str[0]=='\n') continue;              // empty line
-            i=1;  while(str[i]=='\t') i++;          // seek first entry, skip tabs
-            j=i;  while(str[j] >= 32) j++;          // end of first entry?
-            cy =  str.substring(i, j);              // is country
-            cy.trim();
-            if(cy.length()==0) {};                  // empty country?
-            i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-            j=i;  while(str[j] >= 32) j++;          // end of next entry?
-            str_s=str.substring(i, j);
-            i=j;  while(str[i]=='\t') i++;          // seek next entry, skip tabs
-            j=i;  while(str[j] >= 32) j++;          // end of next entry?
-            str_u=str.substring(i, j);
-            i=j;  while(str[i]=='\t') i++;          // seek last entry, skip tabs
-            j=i;  while(str[j] >= 32) j++;          // end of last entry?
-            info =str.substring(i, j);
-            if(str_s.length()==0) str_s="empty";
-            if(str_u.length()==0) str_u="empty";
-            str_s.trim(); str_u.trim();
+            currentLine = file.readStringUntil('\n');         // read the line
+            currentLine += '\t';
+            uint p = 0, q = 0;
+            X=""; Cy=""; StationName=""; StreamURL=""; STsubstitute="";
+            for(int i = 0; i < currentLine.length(); i++){
+                if(currentLine[i] == '\t'){
+                    if(p == 0) X            = currentLine.substring(q, i);
+                    if(p == 1) Cy           = currentLine.substring(q, i);
+                    if(p == 2) StationName  = currentLine.substring(q, i);
+                    if(p == 3) StreamURL    = currentLine.substring(q, i);
+                    if(p == 4) STsubstitute = currentLine.substring(q, i);
+                    p++;
+                    i++;
+                    q = i;
+                }
+            }
+            if(X == "*") continue;
+            if(StationName == "") continue; // is empty
+            if(StreamURL   == "") continue; // is empty
+            //log_i("Cy=%s, StationName=%s, StreamURL=%s, STsubstitute=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str(), STsubstitute.c_str());
             cnt++;
             if(cnt==1000){
                 Serial.println("No more than 999 entries in stationlist allowed!");
                 cnt--; // maxstations 999
                 break;
             }
-            str=str_s;  // station
-            str+="#";
-            str+=str_u; // url
-            //log_i("cy=%s  str_s=%s  str_u=%s  info=%s", cy.c_str(), str_s.c_str(), str_u.c_str(), info.c_str());
-            //log_i("str=%s", str.c_str());
+            tmp = StationName + "#" + StreamURL;
             sprintf(_chbuf, "station_%03d", cnt);
-            stations.putString(_chbuf, str);
-            sprintf(_chbuf, "info_%03d", cnt);
-            if(info.length()>4){  // is reasonable? then save additional info
-                info.trim();
-                // log_i("info=%s", info.c_str());
-                stations.putString(_chbuf, info);
+            stations.putString(_chbuf, tmp);
+
+            if(STsubstitute.length() > 0){  // is reasonable? then save additional info
+                sprintf(_chbuf, "info_%03d", cnt);
+                stations.putString(_chbuf, STsubstitute);
             }
         }
         stations.putLong("stations.size", file.size());
@@ -601,10 +596,12 @@ bool connectToWiFi(){
                 if(str[0] == '*' ) continue;              // ignore this, goto next line
                 if(str[0] == '\n') continue;              // empty line
                 if(str[0] == ' ')  continue;              // space as first char
-                if(str.indexOf('\t') < 1) continue;       // no tab or tab is at pos 0
+                if(str.indexOf('\t') < 1) continue;       // no tab
+                str += "\t";
                 uint p = 0, q = 0;
+                s_ssid = "", s_password = "", s_info = "";
                 for(int i = 0; i < str.length(); i++){
-                    if(str[i] == '\t' || str[i] == '\n'){
+                    if(str[i] == '\t'){
                         if(p == 0) s_ssid     = str.substring(q, i);
                         if(p == 1) s_password = str.substring(q, i);
                         if(p == 2) s_info     = str.substring(q, i);
@@ -614,6 +611,8 @@ bool connectToWiFi(){
                     }
                 }
                 //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+                if(s_ssid == "") continue;
+                if(s_password == "") continue;
                 wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
             file.close();
