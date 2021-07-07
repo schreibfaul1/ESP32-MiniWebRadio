@@ -5,9 +5,10 @@
 // first release on 03/2017
 // Version 28 , Jul 06/2021
 //
-// Preparations:
+// Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
-// 1)  Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
+// 1)  not necessary in PlatformIO
+//     Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
 //     MiniWebRadio needs 2.3MByte flash and 200KByte nvs
 //
 //   # Name,     Type,   SubType,   Offset,   Size,     Flags
@@ -29,14 +30,12 @@
 //
 // 5)  set WiFi credentials below, more credentials can be set in networks.txt (SD Card)
 //
-// 6)  change GPIOs if nessessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
+// 6)  change GPIOs if necessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
 //
 // 7)  add libraries from my repositories to this project: vs1053_ext, IR and tft
 //     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
 //
-// 8)  uncomment #include "fonts/Times_New_Roman.h" in tft.h
-//
-// 9)  translate _hl_title, entries below, in Your language
+// 8)  translate _hl_title, entries below, in your language
 //
 //
 //  Display 320x240
