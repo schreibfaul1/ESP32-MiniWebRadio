@@ -10,6 +10,7 @@ obtains time from NTP<br>
 can used as alarmclock, has sleeptimer<br>
 can speech the time every hour<br>
 if the display has a Backlight-pin You can change the brightness<br>
-How to install: 
+How to install:
+[PlatformIO](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/Notes%20on%20programming%20with%20PlatformIO.pdf) or 
 [Arduino IDE](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/Notes%20on%20programming%20with%20the%20Arduino%20IDE.pdf)<br>
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio1.jpg)
