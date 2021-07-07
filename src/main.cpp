@@ -7,8 +7,7 @@
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
-// 1)  not necessary in PlatformIO
-//     Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
+// 1)  Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
 //     MiniWebRadio needs 2.3MByte flash and 200KByte nvs
 //
 //   # Name,     Type,   SubType,   Offset,   Size,     Flags
