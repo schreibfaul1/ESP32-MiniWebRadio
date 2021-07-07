@@ -592,7 +592,6 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
 //**************************************************************************************************
 bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
-    int16_t i = 0, j = 0, k = 0;;
     wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
     if(f_SD_okay){  // try credentials given in "/networks.txt"
         File file = SD.open("/networks.csv");
