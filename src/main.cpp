@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 28 , Jul 06/2021
+// Version 29 , Aug 04/2021
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -144,10 +144,7 @@ String _hl_title[10]{                           // Title in headline
 
 enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
             MP3PLAYERico=7, ALARM=8, SLEEP=9};
-status _state=RADIO;            //statemaschine
-
-enum request{none=0, saveprefs=1, savefiles=2};
-request _req=none;              //requesttype
+status _state = RADIO;            //statemaschine
 
 // display layout
 const uint16_t _yHeader =0;                     // yPos Header
@@ -537,7 +534,7 @@ void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on
     //log_i("request=%s",request.c_str());
     //log_i("end request seen");
     if(!fileName.startsWith("/")) fileName = "/"+fileName;
-    _req=none;                      // reset requesttype
+
     if(fileName.endsWith("jpg")){
         fileName="/logo"+ fileName;
         if(webSrv.uploadB64image(SD, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
@@ -1103,7 +1100,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="to_listen"){StationsItems(); return;} // via websocket, return the name and number of the current station
     if(cmd=="gettone"){ webSrv.reply(tone()); return;}
     if(cmd=="getmute"){ webSrv.reply(String(int(f_mute))); return;}
-    if(cmd=="test") {sprintf(_chbuf, "free memory: %u, buffer filled: %d, available stream: %d\n", ESP.getFreeHeap(),vs1053.ringused(), vs1053.streamavail()); webSrv.reply(_chbuf); return;}
     if(cmd=="getstreamtitle"){webSrv.reply(_title); return;}
     if(cmd=="mute") {mute();if(f_mute==true) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n"); return;}
     if(cmd=="toneha"){pref.putUInt("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); tone(); return;}
@@ -1111,26 +1107,29 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="tonela"){pref.putUInt("tonela",(param.toInt()));webSrv.reply("Bass Gain set"); tone(); return;}
     if(cmd=="tonelf"){pref.putUInt("tonelf",(param.toInt()));webSrv.reply("Bass Freq set"); tone(); return;}
     if(cmd=="mp3list"){webSrv.reply(listmp3file()); return;}
-    if(cmd=="mp3track"){vs1053.connecttoSD(param); webSrv.reply("OK\n"); return;}
-    if(cmd=="uploadfile"){_req=savefiles;  _filename=param;  return;}
-    if(cmd=="upvolume"){ str="Volume is now "; str.concat(vol=upvolume()); webSrv.reply(str); return;}
-    if(cmd=="downvolume"){ str="Volume is now "; str.concat(downvolume()); webSrv.reply(str); return;}
-    if(cmd=="prev_station"){str=setStation(-1); vs1053.connecttohost(str); return;} // via websocket
-    if(cmd=="next_station"){str=setStation(0); vs1053.connecttohost(str); return;} // via websocket
-    if(cmd=="set_station"){vs1053.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
-    if(cmd=="stationURL"){_stationnr=0; _stationname=""; _title=""; vs1053.connecttohost(param);webSrv.reply("OK\n"); return;}
-    if(cmd=="getnetworks"){webSrv.reply(_SSID+"\n"); return;}
-    if(cmd=="ping"){webSrv.send("pong"); return;}
-    if(cmd=="index.html") {webSrv.show(index_html); return;}
-    if(cmd=="favicon.ico"){webSrv.streamfile(SD, "/favicon.ico"); return;}
+    if(cmd=="mp3track")     {vs1053.connecttoSD(param); webSrv.reply("OK\n"); return;}
+    if(cmd=="uploadfile")   {_filename = param;  return;}
+    if(cmd=="upvolume")     {str="Volume is now "; str.concat(vol=upvolume()); webSrv.reply(str); return;}
+    if(cmd=="downvolume")   {str="Volume is now "; str.concat(downvolume()); webSrv.reply(str); return;}
+    if(cmd=="prev_station") {str=setStation(-1); vs1053.connecttohost(str); return;} // via websocket
+    if(cmd=="next_station") {str=setStation(0); vs1053.connecttohost(str); return;} // via websocket
+    if(cmd=="set_station")  {vs1053.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
+    if(cmd=="stationURL")   {_stationnr=0; _stationname=""; _title=""; vs1053.connecttohost(param);webSrv.reply("OK\n"); return;}
+    if(cmd=="getnetworks")  {webSrv.reply(_SSID+"\n"); return;}
+    if(cmd=="ping")         {webSrv.send("pong"); return;}
+    if(cmd=="index.html")   {webSrv.show(index_html); return;}
+    if(cmd=="favicon.ico")  {webSrv.streamfile(SD, "/favicon.ico"); return;}
     if(cmd.startsWith("SD")){str = cmd.substring(2); webSrv.streamfile(SD, UTF8toASCII(str.c_str())); return;}
+    if(cmd=="test")         {sprintf(_chbuf, "free heap: %u, available stream: %d buffer filled: %d, buffer free %d\n", ESP.getFreeHeap(), 
+                             vs1053.streamavail(), vs1053.bufferFilled(), vs1053.bufferFree()); webSrv.reply(_chbuf); return;}
+ 
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
 //    log_i("request %s contentLength %d", request.c_str(), contentLength);
-    if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
+    if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
-    if((_req==savefiles) && request == "fileUpload"){savefile(_filename, contentLength);  return;}
+    if(request == "fileUpload"){savefile(_filename, contentLength);  return;}
     log_e("unknown request: %s",request.c_str());
 }
 void WEBSRV_onInfo(String info){                            // called from html
