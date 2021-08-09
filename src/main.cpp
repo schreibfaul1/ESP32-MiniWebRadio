@@ -1059,12 +1059,11 @@ void vs1053_info(const char *info) {                    // called from vs1053
     String str=info;
     Serial.print("vs1053_info: ");
     if((str.startsWith("Stream lost"))&&(f_rtc)) Serial.print(String(rtc.gettime())+" ");
-    Serial.println(info);                                 // all infos
+    Serial.println(info);                               // all infos
 }
 void vs1053_commercial(const char *info){               // called from vs1053
-    String str=info;                                    // info is the duration of advertising
-    _commercial_dur=str.toInt();
-    _title="Advertising "+str+"s";
+    _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
+    _title = "Advertising " + (String) _commercial_dur + "ms";
     showStreamTitle(_title);
 }
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
@@ -1082,6 +1081,11 @@ void vs1053_lasthost(const char *info){                 // really connected URL
 }
 void vs1053_id3data(const char *info){
     Serial.printf("id3data    : %s\n", info);
+}
+void vs1053_icydescription(const char *info){
+    Serial.printf("icy_descr  : %s\n", info);
+    sprintf(_chbuf, "icy_description=%s", info);
+    webSrv.send(_chbuf);
 }
 void RTIME_info(const char *info){
     Serial.printf("rtime_info : %s\n", info);

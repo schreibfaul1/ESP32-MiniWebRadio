@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 24.06.2021
+ *  Updated on: 09.08.2021
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -275,22 +275,24 @@ function connect() {
     }
 
     switch(msg) {
-      case "pong":        clearTimeout(tm)
-                          break
-      case "mute":        if(val == '1') document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                          if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png' 
-                          break
-      case "stationNr":   document.getElementById('preset').selectedIndex = Number(val)
-                          break
-      case "stationURL":  station.value = val
-                          break
-      case "stationName": showLabel('label-logo', val)
-                          break
-      case "streamtitle": cmd.value = val
-                          break
-      case "homepage":    window.open(val, '_blank') // show the station homepage
-                          break
-      default:            console.log('unknown message', msg, val)
+      case "pong":            clearTimeout(tm)
+                              break
+      case "mute":            if(val == '1') document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                              if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png' 
+                              break
+      case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
+                              break
+      case "stationURL":      station.value = val
+                              break
+      case "stationName":     showLabel('label-logo', val)
+                              break
+      case "streamtitle":     cmd.value = val
+                              break
+      case "homepage":        window.open(val, '_blank') // show the station homepage
+                              break
+      case "icy_description": resultstr1.value = val
+                              break
+      default:                console.log('unknown message', msg, val)
     }
   }
 }
