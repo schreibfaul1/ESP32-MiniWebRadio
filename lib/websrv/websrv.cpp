@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 07.07.2021
+ *  updated on: 09.08.2021
  *      Author: Wolle
  */
 
@@ -67,8 +67,6 @@ void WebSrv::show(const char* pagename, int16_t len){
     httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
-
-
 
     if (WEBSRV_onInfo)  WEBSRV_onInfo(String("Length of page is ") +String(pagelen, 10));
     // The content of the HTTP response follows the header:
@@ -402,7 +400,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
 
             if(inx0>0){
                 inx1 = currentLine.indexOf("?");    // Search for 1st parameter
-                inx2 = currentLine.indexOf("&");    // Search for 2nd parameter
+                inx2 = currentLine.lastIndexOf("&");    // Search for 2nd parameter
                 inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
 
                 if(inx1 > inx0){     // it is a command
@@ -586,7 +584,7 @@ void WebSrv::parseWsMessage(uint16_t len){
                 ret = strchr((const char*)buff, '=');
                 if(ret){
                     *ret = 0;
-                    log_i("cmd=%s, para=%s", buff, ret);
+                    // log_i("cmd=%s, para=%s", buff, ret);
                     if(WEBSRV_onCommand) WEBSRV_onCommand((const char*) buff, ret + 1, "");
                     buff[0] = 0;
                     return;
