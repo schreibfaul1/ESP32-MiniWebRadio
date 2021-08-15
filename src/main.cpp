@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 29 , Aug 04/2021
+// Version 30 , Aug 15/2021
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -268,9 +268,9 @@ boolean saveStationsToNVS(){
 boolean ST_rep(){  // if station has no streamtitle: replace streamtitle, seek in info
     uint16_t station=pref.getUInt("station");
     sprintf(_chbuf, "info_%03d", station);
-    String str=stations.getString(_chbuf, String("No streamtitle available")); // found probably replacement information
-    _title=str;
-    if(str.length()>5){showStreamTitle(str); return true;}
+    if(stations.isKey(_chbuf)) _title = stations.getString(_chbuf);  // found probably replacement information
+    else _title = "No streamtitle available";
+    if(_title.length() > 5){showStreamTitle(_title); return true;}
     return false;
 }
 //**************************************************************************************************
@@ -638,6 +638,11 @@ bool connectToWiFi(){
 //                                           S E T U P                                             *
 //**************************************************************************************************
 void setup(){
+    #if ESP_ARDUINO_VERSION_MAJOR >= 2
+        log_i("Arduino Version >=2.0.0");
+    #else
+        log_i("Arduino Version < 2.0.0");
+    #endif
     // first set all components inactive
     pinMode(SD_CS, OUTPUT);      digitalWrite(SD_CS, HIGH);
     pinMode(TFT_CS, OUTPUT);     digitalWrite(TFT_CS, HIGH);
@@ -1063,7 +1068,7 @@ void vs1053_info(const char *info) {                    // called from vs1053
 }
 void vs1053_commercial(const char *info){               // called from vs1053
     _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
-    _title = "Advertising " + (String) _commercial_dur + "ms";
+    _title = "Advertising " + (String) _commercial_dur + "s";
     showStreamTitle(_title);
 }
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
