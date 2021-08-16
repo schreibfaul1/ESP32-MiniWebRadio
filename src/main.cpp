@@ -565,11 +565,11 @@ String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &f
                 listmp3file(file.name(), levels -1, fs);
             }
         } else {
-            //log_i("FILE: %s, SIZE: %i",file.name(), file.size());
-
-
-//            filename = file.path(); // new in ESP32 Arduino V2.0.0
-            filename = file.name(); // used so far in V1.0.0 ... V1.0.6
+            #if ESP_ARDUINO_VERSION_MAJOR >= 2
+                filename = file.path(); // new in ESP32 Arduino V2.0.0
+            #else
+                filename = file.name(); // used in V1.0.0 ... V1.0.6
+            #endif
             filename.substring(filename.length()-4).toLowerCase();
             filename=filename.substring(1,filename.length()); // remove first '/'
             if(filename.endsWith(".mp3")){

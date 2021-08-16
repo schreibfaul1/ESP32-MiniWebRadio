@@ -13,11 +13,9 @@
 #include "WiFi.h"
 #include "time.h"
 #include "esp_sntp.h"
-//#include "apps/sntp/sntp.h"   // #warning "This header file is deprecated, please include lwip/apps/sntp.h instead." [-Wcpp]
-//#include "lwip/apps/sntp.h"   // espressif esp32/arduino V1.0.1-rc2 or higher
 
-_VOID      _EXFUN(tzset,	(_VOID));
-int	_EXFUN(setenv,(const char *__string, const char *__value, int __overwrite));
+int	 setenv(const char *__string, const char *__value, int __overwrite);
+void tzset(void);
 
 extern __attribute__((weak)) void RTIME_info(const char*);
 
