@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 30 , Aug 15/2021
+// Version 30a, Aug 18/2021
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -377,11 +377,12 @@ void display_info(const char *str, int ypos, int height, uint16_t color, uint16_
     tft.print(str);                                         // Show the string
 }
 void showStreamTitle(String ST){
+    if(_state!=RADIO) return;
+    webSrv.send("streamtitle=" + ST);
     ST.trim();  // remove all leading or trailing whitespaces
     ST.replace(" | ", "\n");   // some stations use pipe as \n or
     ST.replace("| ", "\n");    // or
     ST.replace("|", "\n");
-    if(_state!=RADIO) return;
     //log_i("Streamtitle=%s txtlen=%i", ST.c_str(), txtlen(ST));
     if(txtlen(ST) > 4) f_has_ST=true; else f_has_ST=false;
     tft.setFont(Times_New_Roman43x35);
@@ -390,9 +391,8 @@ void showStreamTitle(String ST){
     if(txtlen(ST)> 65) tft.setFont(Times_New_Roman27x21);
     if(txtlen(ST)>130) tft.setFont(Times_New_Roman21x17);
     if(txtlen(ST)>200) tft.setFont(Times_New_Roman15x14);
-//    for(int i=0;i<str.length(); i++) log_i("str[%i]=%i", i, str[i]);  // see what You get
+    //for(int i=0;i<ST.length(); i++) log_i("ST[%i]=%i", i, ST[i]);  // see what You get
     display_info(ST.c_str(), _yTitle, _hTitle, TFT_CYAN, 0);
-    webSrv.send("streamtitle=" + ST);
 }
 void showStation(){
     String str1="", str2="", str3="";
@@ -1037,6 +1037,7 @@ void loop() {
 //**************************************************************************************************
 //Events from vs1053_ext library
 void vs1053_showstation(const char *info){              // called from vs1053
+    if(strlen(info)) Serial.printf("icy-name   : %s\n", info);
     //log_i("_station %s",info);
     if((_station==String(info))&&((String(info)!=""))) return;
     _station=info;
@@ -1072,11 +1073,11 @@ void vs1053_commercial(const char *info){               // called from vs1053
     showStreamTitle(_title);
 }
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
+    if(strlen(info)) Serial.printf("icy-url    : %s\n", info);
     String str=info;
     if(str.length()>5){
         _homepage=String(info);
         if(!_homepage.startsWith("http")) _homepage="http://"+_homepage;
-        Serial.printf("Homepage   : %s\n", info);
     }
 }
 void vs1053_lasthost(const char *info){                 // really connected URL
@@ -1088,7 +1089,7 @@ void vs1053_id3data(const char *info){
     Serial.printf("id3data    : %s\n", info);
 }
 void vs1053_icydescription(const char *info){
-    Serial.printf("icy_descr  : %s\n", info);
+    if(strlen(info)) Serial.printf("icy-descr  : %s\n", info);
     sprintf(_chbuf, "icy_description=%s", info);
     webSrv.send(_chbuf);
 }
@@ -1102,7 +1103,7 @@ void tft_info(const char *info){
 }
 //Events from html library
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
-//    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+    // log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     uint8_t vol;
     String  str;
     if(cmd=="homepage"){webSrv.send("homepage=" + _homepage); return;}
@@ -1120,8 +1121,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="uploadfile")   {_filename = param;  return;}
     if(cmd=="upvolume")     {str="Volume is now "; str.concat(vol=upvolume()); webSrv.reply(str); return;}
     if(cmd=="downvolume")   {str="Volume is now "; str.concat(downvolume()); webSrv.reply(str); return;}
-    if(cmd=="prev_station") {str=setStation(-1); vs1053.connecttohost(str); return;} // via websocket
-    if(cmd=="next_station") {str=setStation(0); vs1053.connecttohost(str); return;} // via websocket
+    if(cmd=="prev_station") {vs1053.connecttohost(setStation(-1)); return;} // via websocket
+    if(cmd=="next_station") {vs1053.connecttohost(setStation(0));  return;} // via websocket
     if(cmd=="set_station")  {vs1053.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
     if(cmd=="stationURL")   {_stationnr=0; _stationname=""; _title=""; vs1053.connecttohost(param);webSrv.reply("OK\n"); return;}
     if(cmd=="getnetworks")  {webSrv.reply(_SSID+"\n"); return;}

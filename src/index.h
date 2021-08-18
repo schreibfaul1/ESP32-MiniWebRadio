@@ -231,9 +231,10 @@ var tm
 function ping() {
   if (socket.readyState == 1) { // reayState 'open'
     socket.send("ping")
+    console.log("send ping")
     tm = setTimeout(function () {
       toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
-    }, 2000)
+    }, 10000)
   }
 }
 
@@ -252,7 +253,7 @@ function connect() {
     socket = null
     setTimeout(function () {
       connect()
-    }, 5000)
+    }, 1000)
   }
 
   socket.onerror = function (err) {
@@ -261,7 +262,7 @@ function connect() {
 
   socket.onmessage = function(event) {
     var socketMsg = event.data
-    
+
     var n   = socketMsg.indexOf('=')
     var msg = ''
     var val = ''
@@ -276,9 +277,10 @@ function connect() {
 
     switch(msg) {
       case "pong":            clearTimeout(tm)
+                              toastr.clear()
                               break
       case "mute":            if(val == '1') document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                              if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png' 
+                              if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
                               break
       case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
                               break
@@ -327,7 +329,7 @@ toastr.options = {
   "onclick": null,
   "showDuration": "300",
   "hideDuration": "1000",
-  "timeOut": "5000",
+  "timeOut": "20000",
   "extendedTimeOut": "1000",
   "showEasing": "swing",
   "hideEasing": "linear",
