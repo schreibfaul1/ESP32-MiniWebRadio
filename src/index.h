@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 09.08.2021
+ *  Updated on: 18.11.2021
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -395,7 +395,6 @@ function showTab4 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
   document.getElementById('btn4').src = 'SD/png/Search_Yellow.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
-  loadJSON('https://de1.api.radio-browser.info/json/countries', gotCountries, 'jsonp')
 }
 
 function showTab5 () {
@@ -1025,6 +1024,7 @@ function getmp3list () { // Fill track list initially
 
 // global var
 var countryallstations
+var category
 
 function addStationsToGrid () {
   showDetailsDialog('Add', {})
@@ -1048,12 +1048,20 @@ function loadJSON (path, success, error) {
   xhr.send()
 }
 
-function selectcountry (presctrl) { // tab Radio: preset, select a station
-  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/' + presctrl.value, gotStations, 'jsonp')
+function selectcategory (presctrl) { // tab Search: preset, select a category
+  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
+  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
+  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
 }
 
-function gotCountries (data) { // fill select countries
-  var select = document.getElementById('country')
+function selectitem (presctrl) { // tab Search: preset, select a station
+  if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
+}
+
+function gotItems (data) { // fill select countries
+  var select = document.getElementById('item')
   var opt
   select.options.length = 1
   for (var i = 0; i < data.length; i++) {
@@ -1063,6 +1071,8 @@ function gotCountries (data) { // fill select countries
     select.add(opt)
   }
   console.log(data.uuid)
+  var stations = document.getElementById('stations') // set stations to default
+  stations.options.length = 1
 }
 
 function gotStations (data) { // fill select stations
@@ -1437,8 +1447,14 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </div>
       <div style="display: flex;">
         <div style="flex: 0 0 calc(100% - 66px);">
-          <select class="boxstyle" style="width: 100%;" onchange="selectcountry(this)" id="country">
-            <option value="-1">Select a country here</option>
+          <select class="boxstyle" style="width: 100%;" onchange="selectcategory(this)" id="category">
+            <option value="-1">Select a category</option>
+            <option value="bycountry">By country</option>
+            <option value="bylanguage">By language</option>
+            <option value="bytag">By tag</option>
+          </select>
+          <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectitem(this)" id="item">
+            <option value="-1">Select a item here</option>
           </select>
           <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectstation(this)" id="stations">
             <option value="-1">Select a station here</option>
