@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 24.06.2021
+ *  updated on: 05.01.2022
  *      Author: Wolle
  */
 
@@ -52,7 +52,7 @@ protected:
     String  getContentType(String filename);
     boolean handlehttp();
     boolean handleWS();
-    void    parseWsMessage(uint16_t len);
+    void    parseWsMessage(uint32_t len);
     uint8_t inbyte();
     String  URLdecode(String str);
     String  UTF8toASCII(String str);
