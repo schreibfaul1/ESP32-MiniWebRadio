@@ -3,6 +3,8 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
+ *  Updated on: 05.01.2022
+ * 
  */
 
 #include "rtime.h"
@@ -296,9 +298,12 @@ const char* RTIME::gettime_l(){  // Montag, 04. August 2017 13:12:44
 	localtime_r(&now, &timeinfo);
 //    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
 //    log_i( "The current date/time in Beriln is: %s", strftime_buf);
-	sprintf(strftime_buf,"%s, %02d.%s ", w_day_l[timeinfo.tm_wday].c_str(), timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str());
-	sprintf(strftime_buf,"%s%d %02d:", strftime_buf, timeinfo.tm_year+1900, timeinfo.tm_hour);
-	sprintf(strftime_buf,"%s%02d:%02d ", strftime_buf, timeinfo.tm_min, timeinfo.tm_sec);
+	sprintf(strftime_buf,"%s, %02d.%s %d %02d:%02d:%02d",   w_day_l[timeinfo.tm_wday].c_str(), 
+                                                            timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str(),
+                                                            timeinfo.tm_year+1900,
+                                                            timeinfo.tm_hour,
+                                                            timeinfo.tm_min,
+                                                            timeinfo.tm_sec);
 	return strftime_buf;
 }
 
