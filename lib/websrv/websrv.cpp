@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 09.08.2021
+ *  updated on: 05.01.2022
  *      Author: Wolle
  */
 
@@ -505,7 +505,7 @@ boolean WebSrv::handleWS() {                  // Websocketserver, receive messag
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::parseWsMessage(uint16_t len){
+void WebSrv::parseWsMessage(uint32_t len){
     uint8_t  headerLen = 2;
     uint16_t paylodLen;
     uint8_t  maskingKey[4];
