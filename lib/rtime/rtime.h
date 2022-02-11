@@ -45,5 +45,4 @@ private:
 	String month_s[12]={"Jan","Feb","März","Apr","Mai","Jun","Jul","Sep","Okt","Nov","Dez"};
 };
 
-
 #endif /* RTIME_H_ */
