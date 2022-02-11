@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 1.31, Feb 10/2022
+// Version 1.33, Feb 10/2022
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -124,14 +124,12 @@ struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20
 struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 140; uint16_t h = 20; } const _winSleep;
 struct w_a{uint16_t x = 200; uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winIPaddr;
 struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
-
+struct w_o{uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
 uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
 
 //global variables
 const uint8_t  _max_volume   = 21;
 const uint16_t _max_stations = 1000;
-const uint16_t _wBtn = 64;               // width Button
-const uint16_t _hBtn = 64;               // height Button
 const uint16_t _yBtn = _winTitle.y + 34; // yPos Buttons
 uint8_t        _alarmdays      = 0;
 uint16_t       _cur_station    = 0;      // current station(nr), will be set later
@@ -236,6 +234,7 @@ inline void StationsItems();
 boolean drawImage(const char* path, uint16_t posX = 0, uint16_t posY = 0, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
 inline uint8_t getvolume();
 const char* scaleImage(const char* path);
+void showBrightnessBar();
 
 //**************************************************************************************************
 //                                D E F A U L T S E T T I N G S                                    *
@@ -337,12 +336,23 @@ inline uint32_t getTFTbrightness(){
     return ledcRead(1);
 }
 inline uint8_t downBrightness(){
-    uint8_t br; br=pref.getUShort("brightness");
-    if(br>5) {br-=5; pref.putUShort("brightness", br); setTFTbrightness(br);} return br;
+    uint8_t br; br = pref.getUShort("brightness");
+    if(br>5) {
+        br-=5;
+        pref.putUShort("brightness", br); 
+        setTFTbrightness(br);
+        showBrightnessBar();
+    } return br;
 }
 inline uint8_t upBrightness(){
-    uint8_t br; br=pref.getUShort("brightness");
-    if(br<100){br+=5; pref.putUShort("brightness", br); setTFTbrightness(br);} return br;
+    uint8_t br; br = pref.getUShort("brightness");
+    if(br < 100){
+        br += 5; 
+        pref.putUShort("brightness", br);
+        setTFTbrightness(br);
+        showBrightnessBar();
+    }
+    return br;
 }
 inline uint8_t getBrightness(){
     return pref.getUShort("brightness");
@@ -508,6 +518,13 @@ void updateSleepTime(boolean noDecrement = false){  // decrement and show new va
 }
 void showVolumeBar(){
     uint16_t vol = tft.width() * getvolume()/21;
+    clearVolBar();
+    tft.fillRect(_winVolBar.x, _winVolBar.y + 14, vol, 8, TFT_RED);
+    tft.fillRect(vol+1, _winVolBar.y + 14, tft.width()-vol+1, 8, TFT_GREEN);
+    _f_volBarVisible = true;
+}
+void showBrightnessBar(){
+    uint16_t vol = tft.width() * getBrightness()/100;
     clearVolBar();
     tft.fillRect(_winVolBar.x, _winVolBar.y + 14, vol, 8, TFT_RED);
     tft.fillRect(vol+1, _winVolBar.y + 14, tft.width()-vol+1, 8, TFT_GREEN);
@@ -1104,8 +1121,8 @@ void StationsItems(){
 }
 
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state == ALARM) drawImage(_pressBtn[btnNr], btnNr *_wBtn , _yBtn + _winFooter.h);
-    else                drawImage(_pressBtn[btnNr], btnNr *_wBtn , _yBtn);
+    if(_state == ALARM) drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _yBtn + _winFooter.h);
+    else                drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _yBtn);
 }
 void changeBtn_released(uint8_t btnNr){
     if(_state == RADIOico || _state == PLAYERico){
@@ -1116,8 +1133,8 @@ void changeBtn_released(uint8_t btnNr){
         if(_f_mute)  _releaseBtn[2] = "/btn/Button_Mute_Red.jpg";
         else         _releaseBtn[2] = "/btn/Button_Mute_Green.jpg";
     }    
-    if(_state == ALARM) drawImage(_releaseBtn[btnNr], btnNr *_wBtn , _yBtn + _winFooter.h);
-    else                drawImage(_releaseBtn[btnNr], btnNr *_wBtn , _yBtn);
+    if(_state == ALARM) drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _yBtn + _winFooter.h);
+    else                drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _yBtn);
 }
 
 // void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on SD_MMC
@@ -1201,7 +1218,7 @@ void changeState(int state){
             _pressBtn[4]="/btn/Button_Next_Yellow.jpg";        _releaseBtn[4]="/btn/Button_Next_Green.jpg";
             clearTitle();
             showVolumeBar();
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
         case RADIOmenue:{
@@ -1211,7 +1228,7 @@ void changeState(int state){
             _pressBtn[2]="/btn/Radio_Yellow.jpg";              _releaseBtn[2]="/btn/Radio_Green.jpg";
             _pressBtn[3]="/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Sleep_Green.jpg";
             _pressBtn[4]="/btn/Bulb_Yellow.jpg";               _releaseBtn[4]="/btn/Bulb_Green.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             clearVolBar();
             break;
         }
@@ -1243,7 +1260,7 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Mute_Red.jpg";            _releaseBtn[2] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
             _pressBtn[3] = "/btn/Button_Volume_Down_Yellow.jpg";  _releaseBtn[3] = "/btn/Button_Volume_Down_Blue.jpg";
             _pressBtn[4] = "/btn/Button_Volume_Up_Yellow.jpg";    _releaseBtn[4] = "/btn/Button_Volume_Up_Blue.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
         case BRIGHTNESS:{
@@ -1253,7 +1270,7 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
             _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
             _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
         case PLAYER:{
@@ -1267,7 +1284,7 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Right_Blue.jpg";
             _pressBtn[3]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Ready_Blue.jpg";
             _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
         case PLAYERico:{
@@ -1277,7 +1294,7 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
             _pressBtn[3]="/btn/MP3_Yellow.jpg";                _releaseBtn[3]="/btn/MP3_Green.jpg";
             _pressBtn[4]="/btn/Radio_Yellow.jpg";              _releaseBtn[4]="/btn/Radio_Green.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
         case ALARM:{
@@ -1290,7 +1307,7 @@ void changeState(int state){
             clearTitle();
             display_alarmtime(0, 0, true);
             display_alarmDays(0, true);
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn + _winFooter.h); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y + _winFooter.h); vs1053.loop();}
             break;
         }
         case SLEEP:{
@@ -1304,7 +1321,7 @@ void changeState(int state){
             clearTitle();
             display_sleeptime();
             tft.drawBmpFile(SD_MMC, "/Night_Gown.bmp", 198, 25);
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _wBtn, _yBtn); vs1053.loop();}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
     }
@@ -1519,24 +1536,24 @@ void tp_pressed(uint16_t x, uint16_t y){
         case RADIO:         if(            y <= 119) {yPos = RADIO_1;}
                             break;
         case RADIOico:      if(            y <= 119) {yPos = RADIOico_1;}
-                            if(120 <= y && y <= 220) {yPos = RADIOico_2; btnNr = x / _wBtn;}
+                            if(120 <= y && y <= 220) {yPos = RADIOico_2; btnNr = x / _winButton.w;}
                             break;
-        case RADIOmenue:    if(120 <= y && y <= 220) {yPos = RADIOmenue_1; btnNr = x / _wBtn;}
+        case RADIOmenue:    if(120 <= y && y <= 220) {yPos = RADIOmenue_1; btnNr = x / _winButton.w;}
                             break;
-        case PLAYER:        if(120 <= y && y <= 220) {yPos = PLAYER_1; btnNr = x / _wBtn;}
+        case PLAYER:        if(120 <= y && y <= 220) {yPos = PLAYER_1; btnNr = x / _winButton.w;}
                             break;
-        case PLAYERico:     if(120 <= y && y <= 220) {yPos = PLAYERico_1; btnNr = x / _wBtn;}
+        case PLAYERico:     if(120 <= y && y <= 220) {yPos = PLAYERico_1; btnNr = x / _winButton.w;}
                             break;
         case CLOCK:         if(            y <= 119) {yPos = CLOCK_1;}
                             break;
-        case CLOCKico:      if(120 <= y && y <= 220) {yPos = CLOCKico_1; btnNr = x / _wBtn;}
+        case CLOCKico:      if(120 <= y && y <= 220) {yPos = CLOCKico_1; btnNr = x / _winButton.w;}
                             break;
         case ALARM:         if(            y <=  64) {yPos = ALARM_1; btnNr = (x - 2) / 45;} //weekdays
-                            if(176 <= y && y <= 240) {yPos = ALARM_2; btnNr = x / _wBtn;}
+                            if(176 <= y && y <= 240) {yPos = ALARM_2; btnNr = x / _winButton.w;}
                             break;
-        case SLEEP:         if(120 <= y && y <= 220) {yPos = SLEEP_1; btnNr = x / _wBtn;}
+        case SLEEP:         if(120 <= y && y <= 220) {yPos = SLEEP_1; btnNr = x / _winButton.w;}
                             break;
-        case BRIGHTNESS:    if(110 <= y && y <= 220) {yPos = BRIGHTNESS_1; btnNr = x / _wBtn;}
+        case BRIGHTNESS:    if(110 <= y && y <= 220) {yPos = BRIGHTNESS_1; btnNr = x / _winButton.w;}
         default:            break;
     }
     if(yPos == none) {log_w("Touchpoint not valid x=%d, y=%d", x, y); return;}
@@ -1555,6 +1572,7 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
+                            if(btnNr == 4){_releaseNr = 14;} // Brightness
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
@@ -1592,7 +1610,11 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 2){_releaseNr = 72;} // display_sleeptime(0, true);} // ready, return to RADIO
                             if(btnNr == 3){_releaseNr = 73;} // unused
                             if(btnNr == 4){_releaseNr = 74;} // return to RADIO without saving sleeptime
-                            changeBtn_pressed(btnNr); break; 
+                            changeBtn_pressed(btnNr); break;
+        case BRIGHTNESS_1:  if(btnNr == 0){_releaseNr = 80;} // darker
+                            if(btnNr == 1){_releaseNr = 81;} // brighter
+                            if(btnNr == 2){_releaseNr = 82;} // okay
+                            changeBtn_pressed(btnNr); break;
     }
 }
 void tp_released(){
@@ -1622,7 +1644,7 @@ void tp_released(){
         case 11:    changeState(CLOCK); break;
         case 12:    changeState(RADIO); break;
         case 13:    changeState(SLEEP); break;
-        case 14:    break;  // unused
+        case 14:    changeState(BRIGHTNESS); break;
 
         /* CLOCKico ******************************/
         case 20:    changeState(ALARM); break;
@@ -1679,6 +1701,11 @@ void tp_released(){
         case 74:    _sleeptime = 0;
                     changeBtn_released(4); 
                     changeState(RADIO); break;
+
+        /* BRIGHTNESS ************************************/
+        case 80:    downBrightness(); changeBtn_released(0); break;
+        case 81:    upBrightness();   changeBtn_released(1); break;
+        case 82:    changeState(RADIO); break;
     }
     _releaseNr = -1;
 }
