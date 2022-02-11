@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 30a, Aug 18/2021
+// Version 1.31, Feb 10/2022
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -37,6 +37,66 @@
 // 8)  translate _hl_title, entries below, in your language
 //
 //
+//
+// THE SOFTWARE IS PROVIDED "AS IS" FOR PRIVATE USE ONLY, IT IS NOT FOR COMMERCIAL USE IN WHOLE OR PART OR CONCEPT.
+// FOR PERSONAL USE IT IS SUPPLIED WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
+// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR
+// OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
+//
+//
+#include <Arduino.h>
+#include <Preferences.h>
+#include <Ticker.h>
+#include <SPI.h>
+#include <SD.h> //<SD_MMC.h>
+#include <FS.h>
+#include <WiFiClient.h>
+#include <WiFiMulti.h>
+#include "index.h"
+#include "websrv.h"
+#include "rtime.h"
+#include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
+#include "vs1053_ext.h"     // see my repository at github "ESP32-vs1053_ext"
+#include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
+
+// Digital I/O used
+#define VS1053_CS      2 // 33
+#define VS1053_DCS     4
+#define VS1053_DREQ   36
+#define TFT_CS        22
+#define TFT_DC        21 
+#define TFT_BL        17 // 32
+#define TP_IRQ        39
+#define TP_CS         16 // 5
+#define SD_CS          5
+// #define SD_MMC_D0      2  // cannot be changed
+// #define SD_MMC_CLK    14  // cannot be changed
+// #define SD_MMC_CMD    15  // cannot be changed
+#define IR_PIN        34
+#define SPI_MOSI      23  // (VSPI)
+#define SPI_MISO      19  // (VSPI)
+#define SPI_SCK       18  // (VSPI)
+// #define VS1053_MOSI   13  // VS1053     (HSPI)
+// #define VS1053_MISO   34  // VS1053     (HSPI)
+// #define VS1053_SCK    12  // VS1053     (HSPI)
+
+// some other defines
+#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
+#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D
+#define TFT_FREQUENCY   40000000                        // 27000000, 40000000
+#define TFT_ROTATION    3                               // 0 ... 3
+#define TP_ROTATION     3                               // 0 ... 3
+
+String   _SSID = "mySSID";      // Your WiFi credentials here
+String   _PW   = "myWiFiPassword";
+
+#define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
+                            Serial.printf("%s ", rtc.gettime_s()); \
+                            Serial.printf(__VA_ARGS__); \
+                            Serial.println(""); \
+                            xSemaphoreGive(mutex_rtc);}
+
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
 //  | Header                                    |       _hHeader=20px
@@ -52,55 +112,22 @@
 //  | Footer                                    |       _hFooter=20px
 //  +-------------------------------------------+ 240
 //                                             320
-//
-// THE SOFTWARE IS PROVIDED "AS IS" FOR PRIVATE USE ONLY, IT IS NOT FOR COMMERCIAL USE IN WHOLE OR PART OR CONCEPT.
-// FOR PERSONAL USE IT IS SUPPLIED WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-// WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR
-// OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
-//
-//
-
-// system libraries
-#include <Arduino.h>
-#include <Preferences.h>
-#include <Ticker.h>
-#include <SPI.h>
-#include <SD.h>
-#include <FS.h>
-#include <WiFiClient.h>
-#include <WiFiMulti.h>
-#include "index.h"
-
-// own libraries
-#include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
-#include "vs1053_ext.h"     // see my repository at github "ESP32-vs1053_ext"
-#include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
-
-#include "websrv.h"
-#include "rtime.h"
-
-// Digital I/O used
-#define VS1053_CS      2  // do not use GPI032 or GPIO33 here
-#define VS1053_DCS     4  // do not use GPI032 or GPIO33 here
-#define VS1053_DREQ   36
-#define TFT_CS        22  // do not use GPI032 or GPIO33 here
-#define TFT_DC        21  // do not use GPI032 or GPIO33 here
-#define TFT_BL        17  // 33 (pico V4)
-#define TP_IRQ        39
-#define TP_CS         16  // 32 (pico V4)
-#define SD_CS          5
-#define IR_PIN        34
-#define SPI_MOSI      23
-#define SPI_MISO      19
-#define SPI_SCK       18
+// 
+struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
+struct w_n{uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winName;
+struct w_t{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
+struct w_f{uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
+struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
+struct w_v{uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
+struct w_m{uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
+struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
+struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 140; uint16_t h = 20; } const _winSleep;
+struct w_a{uint16_t x = 200; uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winIPaddr;
+struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
 
 
-// Timezone
-#define TZName  "CET-1CEST,M3.5.0,M10.5.0/3"
 
-String   _SSID = "mySSID";      // Your WiFi credentials here
-String   _PW   = "myWiFiPassword";
+
 
 //global variables
 char     _chbuf[1024];
@@ -110,6 +137,7 @@ String   _time_s="",    _hour="",          _bitrate="",         _mp3Name[10];
 String   _pressBtn[5],  _releaseBtn[5],    _myIP="0.0.0.0",     _lastconnectedhost="";
 uint16_t _stationnr=0;
 int8_t   _mp3Index=0;           // pointer _mp3Name[]
+uint8_t  _state = 0;      //statemaschine
 uint8_t  _releaseNr=0;
 uint8_t  _timefile=0;           // speak the time
 uint8_t  _commercial_dur=0;     // duration of advertising
@@ -129,22 +157,34 @@ boolean  f_sleeping=false;      // true if sleepmode
 boolean  semaphore=false;
 boolean  f_upload=false;        // if true next file is saved to SD
 
-String _hl_title[10]{                           // Title in headline
+char _hl_item[10][25]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
                 "** Internet Radio **",
                 "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
                 "** Uhr **",
                 "** Helligkeit **",             // Brightness яркость λάμψη
-                "** MP3-Player **",             // "** цифрово́й плеер **"
-                "** MP3-Player **",
+                "** Audioplayer **",            // "** цифрово́й плеер **"
+                "** Audioplayer **",
                 "" ,                            // Alarm should be empty
                 "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
 };
 
-enum status{RADIO=0, RADIOico=1, RADIOmenue=2, CLOCK=3, CLOCKico=4, BRIGHTNESS=5, MP3PLAYER=6,
-            MP3PLAYERico=7, ALARM=8, SLEEP=9};
-status _state = RADIO;            //statemaschine
+enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
+            CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5,
+            PLAYER= 6, PLAYERico= 7,
+            ALARM = 8, SLEEP    = 9};
+
+const unsigned short* _fonts[6] = {
+    Times_New_Roman15x14,
+    Times_New_Roman21x17,
+    Times_New_Roman27x21,
+    Times_New_Roman34x27,
+    Times_New_Roman38x31,
+    Times_New_Roman43x35,
+//    Times_New_Roman56x46,
+//    Times_New_Roman66x53,
+};
 
 // display layout
 const uint16_t _yHeader =0;                     // yPos Header
@@ -165,9 +205,8 @@ const uint16_t _hBtn=64;                        // height Button
 const uint16_t _yBtn=_yVolBar+_hVolBar+10;      // yPos Buttons
 
 //objects
-TFT tft(1);                     // parameter:  (0)ILI9341, (1)HX8347D
-VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ);
-hw_timer_t* timer=NULL;         // instance of the timer
+TFT tft(TFT_CONTROLLER);
+VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VSPI, SPI_MOSI, SPI_MISO, SPI_SCK);
 WebSrv webSrv;
 Preferences pref;
 Preferences stations;
@@ -176,13 +215,26 @@ Ticker ticker;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 WiFiMulti wifiMulti;
+File audioFile;
+
+SemaphoreHandle_t  mutex_rtc;
+SemaphoreHandle_t  mutex_display;
 
 //prototypes
+// boolean defaultsettings();
 boolean saveStationsToNVS();
+// uint8_t getvolume();
+const char* UTF8toASCII(const char* str);
+const char* ASCIItoUTF8(const char* str);
+// void StationsItems();
+// void changeState(int state);
+bool endsWith (const char* base, const char* str);
 void showStreamTitle(String ST);
 void showFooter();
 inline void StationsItems();
+boolean drawImage(const char* path, uint16_t posX = 0, uint16_t posY = 0, uint16_t maxHeigth = 0, uint16_t maxWidth = 0);
 inline uint8_t getvolume();
+const char* scaleImage(const char* path);
 
 //**************************************************************************************************
 //                                D E F A U L T S E T T I N G S                                    *
@@ -420,10 +472,10 @@ void showStation(){
     showStreamTitle("");
     showFooter();
 
-    str2="/logo/" + String(UTF8toASCII(str3.c_str())) +".jpg";
+    str2 = "/logo/" + String(str3.c_str()) +".jpg";
     if(f_SD_okay){
-        if(tft.drawJpgFile(SD, str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
-            tft.drawJpgFile(SD, "/logo/unknown.jpg", 0, _yLogo);  // if no draw unknown
+        if(drawImage( str2.c_str(), 0, _yLogo)==false){ // filename mostly given from _stationname exist?
+            drawImage("/common/unknown.jpg", 0, _yLogo);  // if no draw unknown
         }
     }
 }
@@ -438,7 +490,7 @@ void showHeadlineVolume(uint8_t vol){
 }
 void showHeadlineItem(){
     tft.setFont(Times_New_Roman27x21);
-    display_info(_hl_title[_state].c_str(), _yHeader, _hHeader, TFT_WHITE, 0);
+    display_info(_hl_item[_state], _yHeader, _hHeader, TFT_WHITE, 0);
     if(_state!=SLEEP) showHeadlineVolume(getvolume());
 }
 void showHeadlineTime(){
@@ -487,6 +539,18 @@ void updateSleepTime(){
     }
     if(_state==RADIO) showFooter();
 }
+
+boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxHeigth, uint16_t maxWidth){
+    const char* scImg = scaleImage(path);
+    if(endsWith(scImg, "bmp")){
+        return tft.drawBmpFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
+    }
+    if(endsWith(scImg, "jpg")){
+        return tft.drawJpgFile(SD, scImg, posX, posY, maxWidth, maxHeigth);
+    }
+    return false; // not jpg or bmp
+}
+
 //**************************************************************************************************
 //                                T O N E / S E T  S T A T I O N S                                 *
 //**************************************************************************************************
@@ -549,7 +613,7 @@ void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on
 //**************************************************************************************************
 //                                       L I S T M P 3 F I L E                                     *
 //**************************************************************************************************
-String listmp3file(const char * dirname="/mp3files", uint8_t levels=2, fs::FS &fs=SD){
+String listmp3file(const char * dirname="/audiofiles", uint8_t levels=2, fs::FS &fs=SD){
     static String SD_outbuf="";            // Output buffer for cmdclient
     String filename;                       // Copy of filename for lowercase test
     uint8_t index=0;
@@ -638,27 +702,22 @@ bool connectToWiFi(){
 //                                           S E T U P                                             *
 //**************************************************************************************************
 void setup(){
-    #if ESP_ARDUINO_VERSION_MAJOR >= 2
-        log_i("Arduino Version >=2.0.0");
-    #else
-        log_i("Arduino Version < 2.0.0");
-    #endif
-    // first set all components inactive
-    pinMode(SD_CS, OUTPUT);      digitalWrite(SD_CS, HIGH);
-    pinMode(TFT_CS, OUTPUT);     digitalWrite(TFT_CS, HIGH);
-    pinMode(TP_CS, OUTPUT);      digitalWrite(TP_CS, HIGH);
+    mutex_rtc     = xSemaphoreCreateMutex();
+    mutex_display = xSemaphoreCreateMutex();
     pinMode(VS1053_CS, OUTPUT);  digitalWrite(VS1053_CS, HIGH);
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI);
-    Serial.begin(115200); // For debug
-    SD.end();       // to recognize SD after reset correctly
+    Serial.begin(115200);
+    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
+
     Serial.println("setup      : Init SD card");
     SD.begin(SD_CS);
-    delay(100); // wait while SD is ready
+
     tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
-    SD.begin(SD_CS, SPI, 8000000);  // fast SDcard set 80000000, must have short SPI-wires
+    tft.setFrequency(TFT_FREQUENCY);
+    tft.setRotation(TFT_ROTATION);
+    tp.setRotation(TP_ROTATION);
+
     ir.begin();  // Init InfraredDecoder
-    tft.setRotation(3); // Use landscape format
-    tp.setRotation(3);
+
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
     setTFTbrightness(pref.getUInt("brightness"));
@@ -676,7 +735,7 @@ void setup(){
     int size= file.size();
     file.close();
     if(stations.getLong("stations.size") != size) defaultsettings();  // first init
-    tft.drawJpgFile(SD, "/MiniWebRadio.jpg", 0, 0); //Welcomescreen
+    drawImage("/common/MiniWebRadio.jpg", 0, 0); //Welcomescreen
     Serial.println("setup      : Init VS1053");
     vs1053.begin(); // Initialize VS1053 player
     if(!vs1053.printVersion()) Serial.println("setup      : VS1053 not found");
@@ -706,6 +765,55 @@ void setup(){
     ticker.attach(1, timer1sec);
 }
 //**************************************************************************************************
+//                                       C O M M O N                                               *
+//**************************************************************************************************
+const char* byte_to_binary(int8_t x){
+    static char b[9];
+    b[0] = '\0';
+
+    int z;
+    for (z = 128; z > 0; z >>= 1){
+        strcat(b, ((x & z) == z) ? "1" : "0");
+    }
+    return b;
+}
+bool startsWith (const char* base, const char* str) {
+    char c;
+    while ( (c = *str++) != '\0' )
+      if (c != *base++) return false;
+    return true;
+}
+bool endsWith (const char* base, const char* str) {
+    int slen = strlen(str) - 1;
+    const char *p = base + strlen(base) - 1;
+    while(p > base && isspace(*p)) p--;  // rtrim
+    p -= slen;
+    if (p < base) return false;
+    return (strncmp(p, str, slen) == 0);
+}
+
+const char* scaleImage(const char* path){
+    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))){ // not a image
+        return UTF8toASCII(path);
+    }
+    static char pathBuff[256];
+    memset(pathBuff, 0, sizeof(pathBuff));
+    char* pch = strstr(path + 1, "/");
+    if(pch){
+        strncpy(pathBuff, path, (pch - path));
+        if(TFT_CONTROLLER <= 2) strcat(pathBuff, "/s"); // small pic,  320x240px
+        else                    strcat(pathBuff, "/m"); // medium pic, 480x320px
+        strcat(pathBuff, pch);
+    }
+    else{
+        strcpy(pathBuff, "/common");
+        if(TFT_CONTROLLER <= 2) strcat(pathBuff, "/s"); // small pic,  320x240px
+        else                    strcat(pathBuff, "/m"); // medium pic, 480x320px
+        strcat(pathBuff, path);
+    }
+    return UTF8toASCII(pathBuff);  
+}
+
 inline uint8_t downvolume(){
     uint8_t vol; vol=pref.getUInt("volume");
     if(vol>0) {vol--; pref.putUInt("volume", vol); if(f_mute==false) vs1053.setVolume(vol);}
@@ -780,14 +888,14 @@ void changeState(int state){
         _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
         _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
         break;}
-    case MP3PLAYER:{
+    case PLAYER:{
         _pressBtn[0]="/btn/Radio_Yellow.jpg";              _releaseBtn[0]="/btn/Radio_Green.jpg";
         _pressBtn[1]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[1]="/btn/Button_Left_Blue.jpg";
         _pressBtn[2]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Right_Blue.jpg";
         _pressBtn[3]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Ready_Blue.jpg";
         _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
         break;}
-    case MP3PLAYERico:{
+    case PLAYERico:{
         _pressBtn[0]="/btn/Button_Mute_Red.jpg";           _releaseBtn[0]="/btn/Button_Mute_Green.jpg";
         _pressBtn[1]="/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.jpg";
         _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
@@ -813,18 +921,18 @@ void changeState(int state){
     }
     if(_state!=RADIO && _state!=CLOCK){ // RADIO and CLOCK have no Buttons
         int j=0;
-        if(_state==RADIOico || _state==MP3PLAYERico){  // show correct mute button
-            if(f_mute==false) {tft.drawJpgFile(SD, _releaseBtn[0].c_str(), 0, _yBtn); vs1053.loop();}
-            else {tft.drawJpgFile(SD, _pressBtn[0].c_str(), 0, _yBtn); vs1053.loop();}
+        if(_state==RADIOico || _state==PLAYERico){  // show correct mute button
+            if(f_mute==false) {drawImage(_releaseBtn[0].c_str(), 0, _yBtn); vs1053.loop();}
+            else {drawImage(_pressBtn[0].c_str(), 0, _yBtn); vs1053.loop();}
             j=1;}
-        for(int i=j; i<5; i++){tft.drawJpgFile(SD, _releaseBtn[i].c_str(), i*_wBtn, _yBtn); vs1053.loop();}
+        for(int i=j; i<5; i++){drawImage(_releaseBtn[i].c_str(), i*_wBtn, _yBtn); vs1053.loop();}
     }
 }
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); vs1053.loop();
+    if(_state!=RADIO && _state!=CLOCK) drawImage(_pressBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); vs1053.loop();
 }
 void changeBtn_released(uint8_t btnNr){
-    if(_state!=RADIO && _state!=CLOCK) tft.drawJpgFile(SD, _releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); vs1053.loop();
+    if(_state!=RADIO && _state!=CLOCK) drawImage(_releaseBtn[btnNr].c_str(), btnNr*_wBtn , _yBtn); vs1053.loop();
 }
 void display_weekdays(uint8_t ad, boolean showall=false){
     uint8_t i=0;
@@ -835,8 +943,8 @@ void display_weekdays(uint8_t ad, boolean showall=false){
         if((d & (1<<i))==(old_d & (1<<i))&&!showall) continue;  //icon is alread displayed
         str="/day/"+String(i);
         if(d & (1<<i))  str+="_rt_en.bmp";    // l<<i instead pow(2,i)
-        else            str+="_gn_en.bmp";
-        if(f_SD_okay) tft.drawBmpFile(SD, str.c_str(), 5+i*44, 0);
+        else            str+="_gr_en.bmp";
+        if(f_SD_okay) drawImage(str.c_str(), 5+i*44, 0);
         vs1053.loop();
     }
     old_d=ad;
@@ -873,21 +981,21 @@ void display_alarmtime(int8_t xy=0, int8_t ud=0, boolean showall=false){
     if(xy==-1)pos--; if(pos==-1)pos=3;
 
     if(showall==true){oldt="";
-        if(f_SD_okay){tft.drawBmpFile(SD,"/digits/ert.bmp", 149, 45);vs1053.loop();}}
+        if(f_SD_okay){drawImage("/digits/ert.bmp", 149, 45);vs1053.loop();}}
     String at=_alarmtime;
     //log_i("at=%s",_alarmtime.c_str());
     if(pos!=oldpos){
         str="/digits/"+String(at.charAt(k[pos]))   +"or.bmp";
-        if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[pos],    45);vs1053.loop();}
+        if(f_SD_okay){drawImage(str.c_str(), j[pos],    45);vs1053.loop();}
         str="/digits/"+String(at.charAt(k[oldpos]))+"rt.bmp";
-        if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[oldpos], 45);vs1053.loop();}
+        if(f_SD_okay){drawImage(str.c_str(), j[oldpos], 45);vs1053.loop();}
     }
     for(i=0;i<4;i++){
         if(at[k[i]]!=oldt[k[i]]){
             str="/digits/"+String(at.charAt(k[i]));
             if(i==pos) str+="or.bmp";   //show orange number
             else       str+="rt.bmp";   //show red numbers
-            if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), j[i], 45);vs1053.loop();}
+            if(f_SD_okay){drawImage(str.c_str(), j[i], 45);vs1053.loop();}
         }
     }
     oldt=at; oldpos=pos;
@@ -904,7 +1012,7 @@ void display_time(boolean showall=false){ //show current time on the TFT Display
             if(t[i]==':'){if(k==false){k=true; t[i]='d';}else{t[i]='e'; k=false;}}
             if(t[i]!=oldt[i]){
                 sprintf(_chbuf,"/digits/%cgn.bmp",t[i]);
-                if(f_SD_okay) tft.drawBmpFile(SD, _chbuf, 5+j, 45);
+                if(f_SD_okay) drawImage(_chbuf, 5+j, 45);
                 vs1053.loop();
             }
             if((t[i]=='d')||(t[i]=='e'))j+=24; else j+=72;
@@ -933,13 +1041,13 @@ void display_sleeptime(int8_t ud=0, boolean ready=false){  // set sleeptimer
 
     String st=m[p];
     str="/digits/"+String(st.charAt(0))+"s" + color + ".bmp";
-    if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), ypos[0],    48);vs1053.loop();}
+    if(f_SD_okay){drawImage(str.c_str(), ypos[0],    48);vs1053.loop();}
     str="/digits/ds" + color + ".bmp"; // colon
-    if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), ypos[1],    48);vs1053.loop();}
+    if(f_SD_okay){drawImage(str.c_str(), ypos[1],    48);vs1053.loop();}
     str="/digits/"+String(st.charAt(2))+"s" + color + ".bmp";
-    if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), ypos[2],    48);vs1053.loop();}
+    if(f_SD_okay){drawImage(str.c_str(), ypos[2],    48);vs1053.loop();}
     str="/digits/"+String(st.charAt(3))+"s" + color + ".bmp";
-    if(f_SD_okay){tft.drawBmpFile(SD, str.c_str(), ypos[3],    48);vs1053.loop();}
+    if(f_SD_okay){drawImage(str.c_str(), ypos[3],    48);vs1053.loop();}
 }
 //**************************************************************************************************
 //                                           L O O P                                               *
@@ -960,7 +1068,7 @@ void loop() {
                     _hour=_time_s.substring(0,2); // extract the hour
                     h=_hour.toInt();
                     h++;
-                    if(h==24) h=0;
+                    if(h==25) h=1;
                     _timefile=3;
                     sprintf (_chbuf, "/voice_time/%03d.mp3", h);
                     vs1053.connecttoSD(_chbuf);
@@ -1101,50 +1209,7 @@ void RTIME_info(const char *info){
 void tft_info(const char *info){
     Serial.printf("tft_info   : %s\n", info);
 }
-//Events from html library
-void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
-    // log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
-    uint8_t vol;
-    String  str;
-    if(cmd=="homepage"){webSrv.send("homepage=" + _homepage); return;}
-    if(cmd=="to_listen"){StationsItems(); return;} // via websocket, return the name and number of the current station
-    if(cmd=="gettone"){ webSrv.reply(tone()); return;}
-    if(cmd=="getmute"){ webSrv.reply(String(int(f_mute))); return;}
-    if(cmd=="getstreamtitle"){webSrv.reply(_title); return;}
-    if(cmd=="mute") {mute();if(f_mute==true) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n"); return;}
-    if(cmd=="toneha"){pref.putUInt("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); tone(); return;}
-    if(cmd=="tonehf"){pref.putUInt("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); tone(); return;}
-    if(cmd=="tonela"){pref.putUInt("tonela",(param.toInt()));webSrv.reply("Bass Gain set"); tone(); return;}
-    if(cmd=="tonelf"){pref.putUInt("tonelf",(param.toInt()));webSrv.reply("Bass Freq set"); tone(); return;}
-    if(cmd=="mp3list"){webSrv.reply(listmp3file()); return;}
-    if(cmd=="mp3track")     {vs1053.connecttoSD(param); webSrv.reply("OK\n"); return;}
-    if(cmd=="uploadfile")   {_filename = param;  return;}
-    if(cmd=="upvolume")     {str="Volume is now "; str.concat(vol=upvolume()); webSrv.reply(str); return;}
-    if(cmd=="downvolume")   {str="Volume is now "; str.concat(downvolume()); webSrv.reply(str); return;}
-    if(cmd=="prev_station") {vs1053.connecttohost(setStation(-1)); return;} // via websocket
-    if(cmd=="next_station") {vs1053.connecttohost(setStation(0));  return;} // via websocket
-    if(cmd=="set_station")  {vs1053.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
-    if(cmd=="stationURL")   {_stationnr=0; _stationname=""; _title=""; vs1053.connecttohost(param);webSrv.reply("OK\n"); return;}
-    if(cmd=="getnetworks")  {webSrv.reply(_SSID+"\n"); return;}
-    if(cmd=="ping")         {webSrv.send("pong"); return;}
-    if(cmd=="index.html")   {webSrv.show(index_html); return;}
-    if(cmd=="favicon.ico")  {webSrv.streamfile(SD, "/favicon.ico"); return;}
-    if(cmd.startsWith("SD")){str = cmd.substring(2); webSrv.streamfile(SD, UTF8toASCII(str.c_str())); return;}
-    if(cmd=="test")         {sprintf(_chbuf, "free heap: %u, available stream: %d buffer filled: %d, buffer free %d\n", ESP.getFreeHeap(), 
-                             vs1053.streamavail(), vs1053.bufferFilled(), vs1053.bufferFree()); webSrv.reply(_chbuf); return;}
- 
-    log_e("unknown HTMLcommand %s", cmd.c_str());
-}
-void WEBSRV_onRequest(const String request, uint32_t contentLength){
-//    log_i("request %s contentLength %d", request.c_str(), contentLength);
-    if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
-    if(request.indexOf("form-data") > 0) return;  // uninteresting Info
-    if(request == "fileUpload"){savefile(_filename, contentLength);  return;}
-    log_e("unknown request: %s",request.c_str());
-}
-void WEBSRV_onInfo(String info){                            // called from html
-//    Serial.printf("HTML_info  : %s\n", info.c_str());   // infos for debug
-}
+
 // Events from IR Library
 void ir_res(uint32_t res){
     if(_state==RADIO){
@@ -1169,9 +1234,9 @@ void ir_key(const char* key){
     switch(key[0]){
         case 'k':   if(_state==SLEEP) {display_sleeptime(0, true); changeState(RADIO);} //OK
                     break;
-        case 'r':   upvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); // right
+        case 'r':   upvolume(); if((_state==RADIOico)||(_state==PLAYERico)) showVolumeBar(); // right
                     break;
-        case 'l':   downvolume(); if((_state==RADIOico)||(_state==MP3PLAYERico)) showVolumeBar(); // left
+        case 'l':   downvolume(); if((_state==RADIOico)||(_state==PLAYERico)) showVolumeBar(); // left
                     break;
         case 'u':   if(_state==RADIO) vs1053.connecttohost(setStation(0));  // up
                     if(_state==SLEEP) display_sleeptime(1);
@@ -1183,7 +1248,7 @@ void ir_key(const char* key){
                     else mute();
                     break;
         case '*':   if(_state==RADIO){tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem();
-                    tft.drawBmpFile(SD, "/Night_Gown.bmp",198, 25); display_sleeptime();}  // *
+                    drawImage("common/Night_Gown.bmp",198, 25); display_sleeptime();}  // *
                     break;
         default:    break;
     }
@@ -1253,13 +1318,13 @@ void tp_pressed(uint16_t x, uint16_t y){
         if(yPos==1){_releaseNr=18;} // right
         if(yPos==2){_releaseNr= 7;} // ready (return to RADIO)
     }
-    if(_state==MP3PLAYER){
+    if(_state==PLAYER){
         if(yPos==0){_releaseNr=10;} // Radio
         if(yPos==1){_releaseNr=21;} // left
         if(yPos==2){_releaseNr=22;} // right
         if(yPos==3){_releaseNr=23;} // ready
     }
-    if(_state==MP3PLAYERico){
+    if(_state==PLAYERico){
         if(yPos==0){mute(); if(f_mute==false) changeBtn_released(yPos);}
         if(yPos==1){_releaseNr=1; downvolume(); showVolumeBar();} // Vol-
         if(yPos==2){_releaseNr=2; upvolume();   showVolumeBar();} // Vol+
@@ -1288,7 +1353,7 @@ void tp_released(){
     case  3: changeBtn_released(3); break; // nextstation
     case  4: changeBtn_released(4); break; // previousstation
     case  5: tft.fillScreen(TFT_BLACK);
-             changeState(MP3PLAYER); showHeadlineItem();
+             changeState(PLAYER); showHeadlineItem();
              tft.setTextSize(4); str=_mp3Name[_mp3Index];
              str=str.substring(str.lastIndexOf("/")+1, str.length()-5); //only filename, get rid of foldername(s) and suffix
              display_info(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5); break; //MP3
@@ -1296,7 +1361,7 @@ void tp_released(){
              showHeadlineItem(); display_time(true); break;//Clock
     case  7: changeState(RADIO); break;
     case  8: tft.fillScreen(TFT_BLACK); changeState(SLEEP); showHeadlineItem();
-             tft.drawBmpFile(SD, "/Night_Gown.bmp",198, 25); display_sleeptime(); break;
+             drawImage("common/Night_Gown.bmp",198, 25); display_sleeptime(); break;
     case  9: changeState(ALARM); showHeadlineItem();
              display_weekdays(_alarmdays, true);
              display_alarmtime(0, 0, true); break;
@@ -1312,7 +1377,7 @@ void tp_released(){
              display_time(true); break;//Clock
     case 16: tft.fillScreen(TFT_BLACK); changeState(BRIGHTNESS); showHeadlineItem();
              showBrightnessBar(); vs1053.loop();
-             tft.drawBmpFile(SD, "/Brightness.bmp",0, 21); break;
+             drawImage("common/Brightness.bmp",0, 21); break;
     case 17: changeBtn_released(0); downBrightness(); showBrightnessBar(); break;
     case 18: changeBtn_released(1); upBrightness(); showBrightnessBar(); break;
     case 19: display_sleeptime(1);  changeBtn_released(0); break;
@@ -1331,11 +1396,54 @@ void tp_released(){
              tft.setTextSize(4);
              display_info(ASCIItoUTF8(str.c_str()), _yName, _hName, TFT_CYAN, 5);
              break; // right file++
-    case 23: changeState(MP3PLAYERico); showVolumeBar();
+    case 23: changeState(PLAYERico); showVolumeBar();
              vs1053.connecttoSD("/"+_mp3Name[_mp3Index]); break; // play mp3file
-    case 26: clearTitle(); clearFooter(); changeState(MP3PLAYER); break;
+    case 26: clearTitle(); clearFooter(); changeState(PLAYER); break;
     }
     _releaseNr=0;
 }
 
-
+//Events from websrv
+void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
+    // log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+    uint8_t vol;
+    String  str;
+    if(cmd=="homepage"){webSrv.send("homepage=" + _homepage); return;}
+    if(cmd=="to_listen"){StationsItems(); return;} // via websocket, return the name and number of the current station
+    if(cmd=="gettone"){ webSrv.reply(tone()); return;}
+    if(cmd=="getmute"){ webSrv.reply(String(int(f_mute))); return;}
+    if(cmd=="getstreamtitle"){webSrv.reply(_title); return;}
+    if(cmd=="mute") {mute();if(f_mute==true) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n"); return;}
+    if(cmd=="toneha"){pref.putUInt("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); tone(); return;}
+    if(cmd=="tonehf"){pref.putUInt("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); tone(); return;}
+    if(cmd=="tonela"){pref.putUInt("tonela",(param.toInt()));webSrv.reply("Bass Gain set"); tone(); return;}
+    if(cmd=="tonelf"){pref.putUInt("tonelf",(param.toInt()));webSrv.reply("Bass Freq set"); tone(); return;}
+    if(cmd=="mp3list"){webSrv.reply(listmp3file()); return;}
+    if(cmd=="mp3track")     {vs1053.connecttoSD(param); webSrv.reply("OK\n"); return;}
+    if(cmd=="uploadfile")   {_filename = param;  return;}
+    if(cmd=="upvolume")     {str="Volume is now "; str.concat(vol=upvolume()); webSrv.reply(str); return;}
+    if(cmd=="downvolume")   {str="Volume is now "; str.concat(downvolume()); webSrv.reply(str); return;}
+    if(cmd=="prev_station") {vs1053.connecttohost(setStation(-1)); return;} // via websocket
+    if(cmd=="next_station") {vs1053.connecttohost(setStation(0));  return;} // via websocket
+    if(cmd=="set_station")  {vs1053.connecttohost(setStation(param.toInt())); StationsItems(); return;} // via websocket
+    if(cmd=="stationURL")   {_stationnr=0; _stationname=""; _title=""; vs1053.connecttohost(param);webSrv.reply("OK\n"); return;}
+    if(cmd=="getnetworks")  {webSrv.reply(_SSID+"\n"); return;}
+    if(cmd=="ping")         {webSrv.send("pong"); return;}
+    if(cmd=="index.html")   {webSrv.show(index_html); return;}
+    if(cmd=="favicon.ico")  {webSrv.streamfile(SD, "/favicon.ico"); return;}
+    if(cmd.startsWith("SD")){str = cmd.substring(2); webSrv.streamfile(SD, scaleImage(str.c_str())); return;}
+    if(cmd=="test")         {sprintf(_chbuf, "free heap: %u, available stream: %d buffer filled: %d, buffer free %d\n", ESP.getFreeHeap(), 
+                             vs1053.streamavail(), vs1053.bufferFilled(), vs1053.bufferFree()); webSrv.reply(_chbuf); return;}
+ 
+    log_e("unknown HTMLcommand %s", cmd.c_str());
+}
+void WEBSRV_onRequest(const String request, uint32_t contentLength){
+//    log_i("request %s contentLength %d", request.c_str(), contentLength);
+    if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
+    if(request.indexOf("form-data") > 0) return;  // uninteresting Info
+    if(request == "fileUpload"){savefile(_filename, contentLength);  return;}
+    log_e("unknown request: %s",request.c_str());
+}
+void WEBSRV_onInfo(String info){                            // called from html
+//    Serial.printf("HTML_info  : %s\n", info.c_str());   // infos for debug
+}
