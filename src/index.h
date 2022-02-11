@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.11.2021
+ *  Updated on: 10.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -129,7 +129,7 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/logo/unknown.jpg);
+            background-image : url(SD/common/unknown.jpg);
             width : 96px;
             height : 96px;
             margin-top: 5px;
