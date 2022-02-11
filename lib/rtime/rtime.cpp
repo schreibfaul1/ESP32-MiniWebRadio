@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 05.01.2022
+ *  Updated on: 11.02.2022
  * 
  */
 
@@ -327,4 +327,8 @@ uint8_t RTIME::getweekday(){ //So=0, Mo=1 ... Sa=6
     return timeinfo.tm_wday;
 }
 
-
+uint16_t RTIME::getMinuteOfTheDay(){ // counts at 00:00, from 0...23*60+59
+    time(&now);
+    localtime_r(&now, &timeinfo);
+    return timeinfo.tm_hour * 60 + timeinfo.tm_min;
+}
