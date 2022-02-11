@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 10.02.2022
+ *  Updated on: 11.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -294,6 +294,8 @@ function connect() {
                               break
       case "icy_description": resultstr1.value = val
                               break
+      case "AudioFileList":   getAudioFileList(val)
+                              break
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -368,7 +370,7 @@ function showTab2 () {
 }
 
 function showTab3 () {
-  console.log('tab-content3 (MP3 Player)')
+  console.log('tab-content3 (Audio Player)')
   document.getElementById('tab-content1').style.display = 'none'
   document.getElementById('tab-content2').style.display = 'none'
   document.getElementById('tab-content3').style.display = 'block'
@@ -689,7 +691,7 @@ function saveGridFileToSD () { // save to SD
   select = document.getElementById('preset') // Radio: show stationlist
   select.options.length = 1
   var j = 1
-  txt = 'X\tCy\tStationName\tStreamURL\tSTsubstitute\n'
+  txt = 'X\tCy\tStationName\tStreamURL\n'
   for (var i = 0; i < wsData.length; i++) {
     c = ''
     if (objJSON[i].X) {
@@ -716,12 +718,8 @@ function saveGridFileToSD () { // save to SD
     } else txt += '\t'
     if (objJSON[i].StreamURL) {
       c = objJSON[i].StreamURL
-      c = c + '\t'
       txt += c
     } else txt += '\t'
-    if (objJSON[i].STsubstitute) {
-      txt += objJSON[i].STsubstitute
-    }
     txt += '\n'
   }
   uploadTextFile('stations.csv', txt)
@@ -776,13 +774,10 @@ function saveExcel () { // save xlsx to PC
   }, // 'characters'
   {
     wch: 150
-  }, // 'characters'
-  {
-    wch: 200
-  } // 'characters'
+  }  // 'characters'
   ]
   var ws = XLSX.utils.json_to_sheet(wsData, {
-    header: ['X', 'Cy', 'StationName', 'StreamURL', 'STsubstitute']
+    header: ['X', 'Cy', 'StationName', 'StreamURL']
   })
   ws['!cols'] = wscols
   wb.Sheets.Stations = ws
@@ -812,8 +807,7 @@ var clients = [ // testdata
     X: '*',
     Cy: 'D',
     StationName: 'Station',
-    StreamURL: 'URL',
-    STsubstitute: ''
+    StreamURL: 'URL'
   }
 ]
 
@@ -865,11 +859,6 @@ function showExcelGrid () {
       width: 320
     },
     {
-      name: 'STsubstitute',
-      type: 'text',
-      width: 90
-    },
-    {
       type: 'control',
       modeSwitchButton: false,
       editButton: false,
@@ -893,7 +882,6 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
   $('#txtCy').val(client.Cy)
   $('#txtStationName').val(client.StationName)
   $('#txtStreamURL').val(client.StreamURL)
-  $('#txtStSub').val(client.STsubstitute)
   var divdialog = $('#dialog')
   $('#dialog').attr('title', 'Edit')
   $('#dialog').dialog({
@@ -907,7 +895,6 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
         client.Cy = $('#txtCy').val()
         client.StationName = $('#txtStationName').val()
         client.StreamURL = $('#txtStreamURL').val()
-        client.STsubstitute = $('#txtStSub').val()
         includeStation(client, dialogType === 'Add')
         $(this).dialog('close')
         console.log('dialog saved')
@@ -923,8 +910,7 @@ var includeStation = function (client, isNew) {
     X: $('#txX').val(),
     Cy: $('#txtCy').val(),
     StationName: $('#txtStationName').val(),
-    StreamURL: $('#txtStreamURL').val(),
-    StSub: $('#txtStSub').val()
+    StreamURL: $('#txtStreamURL').val()
   })
 
   $('#jsGrid').jsGrid(isNew ? 'insertItem' : 'updateItem', client)
@@ -1286,10 +1272,6 @@ function getnetworks () { // tab Config: load the connected WiFi network
       <tr>
         <td>  StreamURL  </td>
         <td> <input type="text" id="txtStreamURL" size="100"/></td>
-      </tr>
-      <tr>
-        <td>  STsubstitute  </td>
-        <td> <input type="text" id="txtStSub" size="100"/></td>
       </tr>
     </table>
   </div>
