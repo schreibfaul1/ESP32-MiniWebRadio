@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 1.33b, Feb 10/2022
+// Version 1.33c, Feb 10/2022
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -1107,7 +1107,8 @@ void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on
     if(!fileName.startsWith("/")) fileName = "/"+fileName;
 
     if(fileName.endsWith("jpg")){
-        fileName="/logo"+ fileName;
+        if(TFT_CONTROLLER <= 2) fileName = "/logo/s" + fileName;
+        else                    fileName = "/logo/m" + fileName;
         if(webSrv.uploadB64image(SD, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
         else webSrv.reply("failure");
     }
@@ -1390,7 +1391,7 @@ void loop() {
 //**************************************************************************************************
 //Events from vs1053_ext library
 void vs1053_info(const char *info){
-    SerialPrintfln("%s", info);
+    // SerialPrintfln("%s", info);
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
 void vs1053_showstation(const char *info){              // called from vs1053
