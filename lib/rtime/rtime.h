@@ -2,7 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
- *  Updated on: 07.07.2021
+ *  Updated on: 11.02.2022
  *      Author: Wolle
  */
 
@@ -30,6 +30,7 @@ public:
 	const char* gettime_s();
 	const char* gettime_xs();
 	uint8_t getweekday();
+	uint16_t getMinuteOfTheDay();
 protected:
 	boolean obtain_time();
 private:
