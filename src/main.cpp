@@ -3,7 +3,7 @@
 //*********************************************************************************************************
 //
 // first release on 03/2017
-// Version 1.33a, Feb 10/2022
+// Version 1.33b, Feb 10/2022
 //
 // Preparations, Pos 1 and 2 are not necessary in PlatformIO,
 //
@@ -121,8 +121,8 @@ struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20
 struct w_v{uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
 struct w_m{uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
 struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 140; uint16_t h = 20; } const _winSleep;
-struct w_a{uint16_t x = 200; uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winIPaddr;
+struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
+struct w_a{uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
 struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
 struct w_o{uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
 uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
@@ -225,7 +225,7 @@ boolean saveStationsToNVS();
 const char* UTF8toASCII(const char* str);
 const char* ASCIItoUTF8(const char* str);
 // void StationsItems();
-// void changeState(int state);
+void changeState(int state);
 void setStation(uint16_t sta);
 bool endsWith (const char* base, const char* str);
 void showStreamTitle(String ST);
@@ -235,6 +235,7 @@ boolean drawImage(const char* path, uint16_t posX = 0, uint16_t posY = 0, uint16
 inline uint8_t getvolume();
 const char* scaleImage(const char* path);
 void showBrightnessBar();
+String setTone();
 
 //**************************************************************************************************
 //                                D E F A U L T S E T T I N G S                                    *
@@ -1107,16 +1108,16 @@ void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on
 
     if(fileName.endsWith("jpg")){
         fileName="/logo"+ fileName;
-        if(webSrv.uploadB64image(SD_MMC, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
+        if(webSrv.uploadB64image(SD, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
         else webSrv.reply("failure");
     }
     else{
-        if(webSrv.uploadfile(SD_MMC, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
+        if(webSrv.uploadfile(SD, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
         else webSrv.reply("failure");
         if(fileName==String("/stations.csv")) saveStationsToNVS();
     }
 }
-String tone(){
+String setTone(){
     String str_tone="";
     uint8_t u8_tone[4];
     u8_tone[0]=pref.getUShort("toneha"); u8_tone[1]=pref.getUInt("tonehf");
@@ -1296,7 +1297,7 @@ void changeState(int state){
             clearStation();
             clearTitle();
             display_sleeptime();
-            tft.drawBmpFile(SD_MMC, "/Night_Gown.bmp", 198, 25);
+            tft.drawBmpFile(SD, "/Night_Gown.bmp", 198, 25);
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y); vs1053.loop();}
             break;
         }
@@ -1692,16 +1693,16 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     String  str;
     if(cmd=="homepage")      {webSrv.send("homepage=" + _homepage); return;}
     if(cmd=="to_listen")     {StationsItems(); return;} // via websocket, return the name and number of the current station
-//    if(cmd=="gettone")       {webSrv.reply(setTone().c_str()); return;}
+    if(cmd=="gettone")       {webSrv.reply(setTone().c_str()); return;}
     if(cmd=="getmute")       {webSrv.reply(String(int(_f_mute)).c_str()); return;}
     if(cmd=="getstreamtitle"){webSrv.reply(_streamTitle.c_str()); return;}
     if(cmd=="mute")          {mute();if(_f_mute) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n");   return;}
-    if(cmd=="toneha"){pref.putUShort("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); tone(); return;}
-    if(cmd=="tonehf"){pref.putUShort("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); tone(); return;}
-    if(cmd=="tonela"){pref.putUShort("tonela",(param.toInt()));webSrv.reply("Bass Gain set"); tone(); return;}
-    if(cmd=="tonelf"){pref.putUShort("tonelf",(param.toInt()));webSrv.reply("Bass Freq set"); tone(); return;}
+    if(cmd=="toneha")        {pref.putUShort("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); setTone(); return;}
+    if(cmd=="tonehf")        {pref.putUShort("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); setTone(); return;}
+    if(cmd=="tonela")        {pref.putUShort("tonela",(param.toInt()));webSrv.reply("Bass Gain set");   setTone(); return;}
+    if(cmd=="tonelf")        {pref.putUShort("tonelf",(param.toInt()));webSrv.reply("Bass Freq set");   setTone(); return;}
     if(cmd=="audiolist")     {sendAudioList2Web("/audiofiles"); return;} // via websocket
-//    if(cmd=="audiotrack")    {audiotrack(param.c_str()); webSrv.reply("OK\n"); return;}
+    if(cmd=="audiotrack")    {audiotrack(param.c_str()); webSrv.reply("OK\n"); return;}
     if(cmd=="uploadfile")    {_filename = param;  return;}
     if(cmd=="upvolume")      {str = "Volume is now " + (String)upvolume();   webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
     if(cmd=="downvolume")    {str = "Volume is now " + (String)downvolume(); webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
@@ -1712,8 +1713,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
     if(cmd=="ping")          {webSrv.send("pong"); return;}
     if(cmd=="index.html")    {webSrv.show(index_html); return;}
-    if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
-    if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, UTF8toASCII(str.c_str())); return;}
+    if(cmd=="favicon.ico")   {webSrv.streamfile(SD, "/favicon.ico"); return;}
+    if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD, scaleImage(str.c_str())); return;}
     if(cmd=="change_state")  {changeState(param.toInt()); return;}
     if(cmd=="stop")          {vs1053.stop_mp3client(); webSrv.reply("OK\n"); return;}
     if(cmd=="test")          {sprintf(_chbuf, "free heap: %u\n", ESP.getFreeHeap()); webSrv.reply(_chbuf); return;}

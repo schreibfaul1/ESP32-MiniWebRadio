@@ -351,6 +351,7 @@ function showTab1 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  socket.send("change_state=" + "0")
   getmute()
 }
 
@@ -381,7 +382,8 @@ function showTab3 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
-  getmp3list() // Now get the mp3 list from SD
+  socket.send("change_state=" + "6")
+  socket.send("audiolist") // Now get the audio file list from SD
 }
 
 function showTab4 () {
@@ -460,10 +462,17 @@ function showLabel (id, src) { // get the bitmap from SD, convert to URL first
   // src=src.replace(/\{/g , '%7B')  // not necessary to replace
   // src=src.replace(/\|/g , '%7C')  // not allowed in filenames
   // src=src.replace(/\}/g , '%7D')  // not necessary to replace
-  if(src=='') src = 'unknown'
+
+  var timestamp = new Date().getTime()
+  var file
+  if(src == '' || src === 'unknown'){
+    file = 'url(SD/unknown.jpg?t=' + timestamp + ')'
+    document.getElementById(id).style.backgroundImage = file
+    return
+  }
   var idx = src.indexOf('|')
   if(idx > 0) src = src.substring(idx+1); // all after pipe
-  var file = 'url(SD/logo/' + src + '.jpg)'
+  file = 'url(SD/logo/' + src + '.jpg?t=' + timestamp + ')'
   document.getElementById(id).style.backgroundImage = file
 }
 
@@ -975,37 +984,34 @@ function updateStationlist () { // select in tab Radio
   }
 }
 
-// ----------------------------------- TAB MP3 PLAYER ------------------------------------
+// ----------------------------------- TAB AUDIO PLAYER ------------------------------------
 
-function trackreq (presctrl) { // MP3 Player: select mp3 title from track list
+function trackreq (presctrl) { // Audio Player: select audio title from track list
   if (presctrl.value !== '-1') {
-    httpGet('mp3track=' + presctrl.value, 3)
+    httpGet('audiotrack=' + presctrl.value, 3)
   }
 }
 
-function getmp3list () { // Fill track list initially
-  var xhr = new XMLHttpRequest()
-  var i, select, opt, tracks, strparts
-  select = document.getElementById('seltrack')
-  var theUrl = '/mp3list?' + '&version=' + Math.random()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      tracks = xhr.responseText.split('\n')
-      // for(i=select.options.length-1; i>=0; i--) select.remove(i);
-      // select.add('chose a item here');
-      select.options.length = 1
-      for (i = 0; i < (tracks.length - 1); i++) {
-        opt = document.createElement('OPTION')
-        strparts = tracks[i].substr(tracks[i].lastIndexOf('/') + 1, tracks[i].length)
-        opt.value = tracks[i]
-        opt.text = strparts
-        select.add(opt)
-      }
+function getAudioFileList(val){
+  console.log(val)
+  var select = document.getElementById('seltrack')
+  select.options.length = 0;
+  var fileNames = val.split(",")
+  for (i = -1; i < (fileNames.length); i++) {
+    opt = document.createElement('OPTION')
+    if(i == -1){
+      opt.value = ""
+      opt.text =  "select a file here"
     }
+    else{
+      console.log(fileNames[i])
+      opt.value = fileNames[i]
+      opt.text =  fileNames[i]
+    }
+    select.add(opt)
   }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
 }
+
 // ----------------------------------- TAB Search Stations ------------------------------------
 
 // global var
@@ -1201,9 +1207,10 @@ function getnetworks () { // tab Config: load the connected WiFi network
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       networks = xhr.responseText.split('\n')
-      for (i = 0; i < (networks.length - 1); i++) {
+      for (i = 0; i < (networks.length); i++) {
         opt = document.createElement('OPTION')
         opt.value = i
+        console.log(networks[i])
         opt.text = networks[i]
         select.add(opt)
       }
@@ -1406,16 +1413,16 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </center>
   </div>
   <!--==============================================================================================-->
-  <div id="tab-content3">
+ <div id="tab-content3">
       <center>
       <br>
-      <label for="seltrack"><big>MP3 files on SD card:</big></label>
+      <label for="seltrack"><big>Audio files on SD card:</big></label>
       <br>
-      <select class="boxstyle" onchange="trackreq(this)" id="seltrack">
+      <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
           <option value="-1">Select a track here</option>
       </select>
       <br><br>
-      <button class="button" onclick="httpGet('mp3track', 3)">STOP</button>
+      <button class="button" onclick="httpGet('stop', 3)">STOP</button>
       <br><br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
       <br><br>
