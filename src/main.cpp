@@ -1,64 +1,30 @@
-//*********************************************************************************************************
-//*    MiniWebRadio -- Webradio receiver for ESP32, 2.8 color display (320x240px) and VS1053 MP3 module.  *
-//*********************************************************************************************************
-//
-// first release on 03/2017
-// Version 1.33c, Feb 10/2022
-//
-// Preparations, Pos 1 and 2 are not necessary in PlatformIO,
-//
-// 1)  Copy the partition table "MiniWebRadio.csv" into the current esp32 package (folder esp32/tools/partitions/)
-//     MiniWebRadio needs 2.3MByte flash and 200KByte nvs
-//
-//   # Name,     Type,   SubType,   Offset,   Size,     Flags
-//     phy_init, data,   phy,       0x9000,   0x7000,
-//     factory,  app,    factory,   0x10000,  0x300000,
-//     nvs,      data,   nvs,       0x310000, 0x32000,
-//     spiffs,   data,   spiffs,    0x342000, 0xB0000,
-//     eeprom,   data,   0x99,      0x3F2000, 0xD000,
-//
-// 2)  Add this to boards.txt in section "ESP32 Dev Module:
-/*
-       esp32.menu.PartitionScheme.miniwebradio=MiniWebRadio (3MB No OTA)
-       esp32.menu.PartitionScheme.miniwebradio.build.partitions=miniwebradio
-       esp32.menu.PartitionScheme.miniwebradio.upload.maximum_size=3145728
-*/
-// 3)  set the Timezone mentioned below, examples are in rtime.cpp
-//
-// 4)  extract the zip file to SD Card
-//
-// 5)  set WiFi credentials below, more credentials can be set in networks.txt (SD Card)
-//
-// 6)  change GPIOs if necessary, e.g ESP32 Pico V4: GPIO16 and 17 are connected to FLASH
-//
-// 7)  add libraries from my repositories to this project: vs1053_ext, IR and tft
-//     TFT controller can be ILI9341 or HX8347D, set tft(0) or tft(1) below
-//
-// 8)  translate _hl_title, entries below, in your language
-//
-//
-//
+/***********************************************************************************************************************
+    MiniWebRadio -- Webradio receiver for ESP32
+
+    2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
+    3.5" color display (480x320px) wihr controller ILI9486 (SPI)
+
+    HW decoder VS1053 or
+    SW decoder with external DAC over I2S
+
+***********************************************************************************************************************/
+
 // THE SOFTWARE IS PROVIDED "AS IS" FOR PRIVATE USE ONLY, IT IS NOT FOR COMMERCIAL USE IN WHOLE OR PART OR CONCEPT.
 // FOR PERSONAL USE IT IS SUPPLIED WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
 // WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR
 // OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
-//
-//
-#include <Arduino.h>
-#include <Preferences.h>
-#include <Ticker.h>
-#include <SPI.h>
-#include <SD.h> //<SD_MMC.h>
-#include <FS.h>
-#include <WiFiClient.h>
-#include <WiFiMulti.h>
-#include "index.h"
-#include "websrv.h"
-#include "rtime.h"
-#include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
-#include "vs1053_ext.h"     // see my repository at github "ESP32-vs1053_ext"
-#include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
+
+
+
+#define _SSID           "mySSID"                        // Your WiFi credentials here
+#define _PW             "myWiFiPassword"
+#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
+#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D, (2)ILI9486
+#define TFT_FREQUENCY   40000000                        // 27000000, 40000000
+#define TFT_ROTATION    3                               // 0 ... 3
+#define TP_ROTATION     3                               // 0 ... 3
+#define DECODER         0                               // (0)VS1053, (1)SWdecoder with external DAC
 
 // Digital I/O used
 #define VS1053_CS      2 // 33
@@ -77,169 +43,27 @@
 #define SPI_MOSI      23  // (VSPI)
 #define SPI_MISO      19  // (VSPI)
 #define SPI_SCK       18  // (VSPI)
-// #define VS1053_MOSI   13  // VS1053     (HSPI)
-// #define VS1053_MISO   34  // VS1053     (HSPI)
-// #define VS1053_SCK    12  // VS1053     (HSPI)
 
-// some other defines
-#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D
-#define TFT_FREQUENCY   40000000                        // 27000000, 40000000
-#define TFT_ROTATION    3                               // 0 ... 3
-#define TP_ROTATION     3                               // 0 ... 3
+#if DECODER == 0
+    #define VS1053_MOSI   13  // VS1053     (HSPI)
+    #define VS1053_MISO   34  // VS1053     (HSPI)
+    #define VS1053_SCK    12  // VS1053     (HSPI)
+#endif
 
-String   _SSID = "mySSID";      // Your WiFi credentials here
-String   _PW   = "myWiFiPassword";
+#if DECODER == 1
+    #define I2S_DOUT      25
+    #define I2S_BCLK      27
+    #define I2S_LRC       26
+#endif
 
-#define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
-                            Serial.printf("%s ", rtc.gettime_s()); \
-                            Serial.printf(__VA_ARGS__); \
-                            Serial.println(""); \
-                            xSemaphoreGive(mutex_rtc);}
 
-//  Display 320x240
-//  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       _hHeader=20px
-//  +-------------------------------------------+ _yName=20
-//  |                                           |
-//  | Logo                   StationName        |       _hName=100px
-//  |                                           |
-//  +-------------------------------------------+ _yTitle=120
-//  |                                           |
-//  |              StreamTitle                  |       _hTitle=100px
-//  |                                           |
-//  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |       _hFooter=20px
-//  +-------------------------------------------+ 240
-//                                             320
-//
-struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
-struct w_n{uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winName;
-struct w_t{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
-struct w_f{uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
-struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
-struct w_v{uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
-struct w_m{uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
-struct w_a{uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
-struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
-struct w_o{uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
-uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
+#include "common.h"
 
-//global variables
-const uint8_t  _max_volume   = 21;
-const uint16_t _max_stations = 1000;
-const uint16_t _yBtn = _winTitle.y + 34; // yPos Buttons
-uint8_t        _alarmdays      = 0;
-uint16_t       _cur_station    = 0;      // current station(nr), will be set later
-uint16_t       _sleeptime      = 0;      // time in min until MiniWebRadio goes to sleep
-uint16_t       _sum_stations   = 0;
-uint8_t        _cur_volume     = 0;      // will be set from stored preferences
-uint8_t        _state          = 0;      // statemaschine
-uint8_t        _touchCnt       = 0;
-uint8_t        _commercial_dur = 0;      // duration of advertising
-uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
-int8_t         _releaseNr      = -1;
-char           _chbuf[512];
-char           _myIP[25];
-char           _afn[256];                // audioFileName
-char           _path[128];
-const char*    _pressBtn[5];
-const char*    _releaseBtn[5];
-boolean        _f_rtc=false;             // true if time from ntp is received
-boolean        _f_1sec = false;
-boolean        _f_1min = false;
-boolean        _f_mute = false;
-boolean        _f_sleeping = false;
-boolean        _f_isWebConnected = false;
-boolean        _f_isFSConnected = false;
-boolean        _f_eof = false;
-boolean        _f_eof_alarm = false;
-boolean        _f_semaphore = false;
-boolean        _f_alarm = false;
-boolean        _f_irNumberSeen = false;
-boolean        _f_newIcyDescription = false;
-boolean        _f_volBarVisible = false;
-boolean        _f_SD_okay = false;
 
-String         _station = "";
-String         _stationName_nvs = "";
-String         _stationName_air = "";
-String         _stationURL = "";
-String         _homepage = "";
-String         _streamTitle = "";
-String         _lastconnectedhost = "";
-String         _filename = "";
-String         _icydescription = "";
 
-char _hl_item[10][25]{                          // Title in headline
-                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
-                "** Internet Radio **",
-                "** Internet Radio **",
-                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
-                "** Uhr **",
-                "** Helligkeit **",             // Brightness яркость λάμψη
-                "** Audioplayer **",            // "** цифрово́й плеер **"
-                "** Audioplayer **",
-                "" ,                            // Alarm should be empty
-                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-};
-
-enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
-            CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5,
-            PLAYER= 6, PLAYERico= 7,
-            ALARM = 8, SLEEP    = 9};
-
-const unsigned short* _fonts[6] = {
-    Times_New_Roman15x14,
-    Times_New_Roman21x17,
-    Times_New_Roman27x21,
-    Times_New_Roman34x27,
-    Times_New_Roman38x31,
-    Times_New_Roman43x35,
-//    Times_New_Roman56x46,
-//    Times_New_Roman66x53,
-};
-
-//objects
-TFT tft(TFT_CONTROLLER);
-VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VSPI, SPI_MOSI, SPI_MISO, SPI_SCK);
-WebSrv webSrv;
-Preferences pref;
-Preferences stations;
-RTIME rtc;
-Ticker ticker;
-IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
-TP tp(TP_CS, TP_IRQ);
-WiFiMulti wifiMulti;
-File audioFile;
-
-SemaphoreHandle_t  mutex_rtc;
-SemaphoreHandle_t  mutex_display;
-
-//prototypes
-// boolean defaultsettings();
-boolean saveStationsToNVS();
-// uint8_t getvolume();
-const char* UTF8toASCII(const char* str);
-const char* ASCIItoUTF8(const char* str);
-// void StationsItems();
-void changeState(int state);
-void setStation(uint16_t sta);
-bool endsWith (const char* base, const char* str);
-void showStreamTitle(String ST);
-void showFooter();
-inline void StationsItems();
-boolean drawImage(const char* path, uint16_t posX = 0, uint16_t posY = 0, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-inline uint8_t getvolume();
-const char* scaleImage(const char* path);
-void showBrightnessBar();
-String setTone();
-
-//**************************************************************************************************
-//                                D E F A U L T S E T T I N G S                                    *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                              D E F A U L T S E T T I N G S                                           *
+***********************************************************************************************************************/
 boolean defaultsettings(){
     if(pref.getUInt("default", 0) != 1000){
         log_i("first init, set defaults");
