@@ -15,8 +15,49 @@
 #include "vs1053_ext.h"     // see my repository at github "ESP32-vs1053_ext"
 #include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
 
+// Digital I/O used
+#define VS1053_CS      2 // 33
+#define VS1053_DCS     4
+#define VS1053_DREQ   36
+#define TFT_CS        22
+#define TFT_DC        21
+#define TFT_BL        17 // 32
+#define TP_IRQ        39
+#define TP_CS         16 // 5
+#define SD_CS          5
+// #define SD_MMC_D0      2  // cannot be changed
+// #define SD_MMC_CLK    14  // cannot be changed
+// #define SD_MMC_CMD    15  // cannot be changed
+#define IR_PIN        34
+#define SPI_MOSI      23  // (VSPI)
+#define SPI_MISO      19  // (VSPI)
+#define SPI_SCK       18  // (VSPI)
+// #define VS1053_MOSI   13  // VS1053     (HSPI)
+// #define VS1053_MISO   34  // VS1053     (HSPI)
+// #define VS1053_SCK    12  // VS1053     (HSPI)
 
 
+//objects
+#if DECODER == 0
+    VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VSPI, SPI_MOSI, SPI_MISO, SPI_SCK);
+#endif
+
+#if DECODER == 1
+    Audio audio;
+#endif
+
+WebSrv webSrv;
+Preferences pref;
+Preferences stations;
+RTIME rtc;
+Ticker ticker;
+IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
+TP tp(TP_CS, TP_IRQ);
+WiFiMulti wifiMulti;
+File audioFile;
+
+SemaphoreHandle_t  mutex_rtc;
+SemaphoreHandle_t  mutex_display;
 
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
@@ -181,29 +222,9 @@ enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
             ALARM = 8, SLEEP    = 9};
 
 
-//objects
-#if DECODER == 0
-    VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VSPI, SPI_MOSI, SPI_MISO, SPI_SCK);
-#endif
 
-#if DECODER == 1
-    Audio audio;
-#endif
 
-WebSrv webSrv;
-Preferences pref;
-Preferences stations;
-RTIME rtc;
-Ticker ticker;
-IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
-TP tp(TP_CS, TP_IRQ);
-WiFiMulti wifiMulti;
-File audioFile;
-
-SemaphoreHandle_t  mutex_rtc;
-SemaphoreHandle_t  mutex_display;
-
-//prototypes (main.cpp)
+// //prototypes (main.cpp)
 boolean defaultsettings();
 boolean saveStationsToNVS();
 void setTFTbrightness(uint8_t duty);

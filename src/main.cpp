@@ -15,54 +15,18 @@
 // OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
-
-
 #define _SSID           "mySSID"                        // Your WiFi credentials here
 #define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D, (2)ILI9486
+#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000
 #define TFT_ROTATION    3                               // 0 ... 3
 #define TP_ROTATION     3                               // 0 ... 3
-#define DECODER         0                               // (0)VS1053, (1)SWdecoder with external DAC
-
-// Digital I/O used
-#define VS1053_CS      2 // 33
-#define VS1053_DCS     4
-#define VS1053_DREQ   36
-#define TFT_CS        22
-#define TFT_DC        21
-#define TFT_BL        17 // 32
-#define TP_IRQ        39
-#define TP_CS         16 // 5
-#define SD_CS          5
-// #define SD_MMC_D0      2  // cannot be changed
-// #define SD_MMC_CLK    14  // cannot be changed
-// #define SD_MMC_CMD    15  // cannot be changed
-#define IR_PIN        34
-#define SPI_MOSI      23  // (VSPI)
-#define SPI_MISO      19  // (VSPI)
-#define SPI_SCK       18  // (VSPI)
-
-#if DECODER == 0
-    #define VS1053_MOSI   13  // VS1053     (HSPI)
-    #define VS1053_MISO   34  // VS1053     (HSPI)
-    #define VS1053_SCK    12  // VS1053     (HSPI)
-#endif
-
-#if DECODER == 1
-    #define I2S_DOUT      25
-    #define I2S_BCLK      27
-    #define I2S_LRC       26
-#endif
-
 
 #include "common.h"
 
-
-
 /***********************************************************************************************************************
-*                                              D E F A U L T S E T T I N G S                                           *
+*                                        D E F A U L T S E T T I N G S                                                 *
 ***********************************************************************************************************************/
 boolean defaultsettings(){
     if(pref.getUInt("default", 0) != 1000){
@@ -148,10 +112,9 @@ boolean saveStationsToNVS(){
     }
     else return false;
 }
-
-//**************************************************************************************************
-//                                T F T   B R I G H T N E S S                                      *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                        T F T   B R I G H T N E S S                                                   *
+***********************************************************************************************************************/
 void setTFTbrightness(uint8_t duty){ //duty 0...100 (min...max)
     ledcAttachPin(TFT_BL, 1);        //Configure variable led, TFT_BL pin to channel 1
     ledcSetup(1, 12000, 8);          // 12 kHz PWM and 8 bit resolution
@@ -182,9 +145,9 @@ inline uint8_t upBrightness(){
 inline uint8_t getBrightness(){
     return pref.getUShort("brightness");
 }
-//**************************************************************************************************
-//                                       A S C I I                                                *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                     A S C I I                                                        *
+***********************************************************************************************************************/
 const char* UTF8toASCII(const char* str){
     uint16_t i=0, j=0;
     char tab[96]={
@@ -237,9 +200,9 @@ const char* ASCIItoUTF8(const char* str){
     _chbuf[j]=0;
     return _chbuf;
 }
-//**************************************************************************************************
-//                                        T I M E R                                                *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                     T I M E R                                                        *
+***********************************************************************************************************************/
 void timer1sec() {
     static volatile uint8_t sec=0;
     _f_1sec = true;
@@ -247,9 +210,9 @@ void timer1sec() {
     //log_i("sec=%i", sec);
     if(sec==60){sec=0; _f_1min = true;}
 }
-//**************************************************************************************************
-//                                       D I S P L A Y                                             *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                   D I S P L A Y                                                      *
+***********************************************************************************************************************/
 inline void clearHeader() {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
 inline void clearStation(){tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
 inline void clearTitle()  {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
@@ -316,7 +279,7 @@ void showFooterStaNr(){
     tft.printf("%03d", _cur_station);
     xSemaphoreGive(mutex_display);
 }
-void updateSleepTime(boolean noDecrement = false){  // decrement and show new value in footer
+void updateSleepTime(boolean noDecrement){  // decrement and show new value in footer
     if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     boolean sleep = false;
@@ -439,7 +402,7 @@ void showFileName(const char* fname){
     display_info(fname, _winName.y, _winName.h, TFT_CYAN, 0, _winName.y +  _winName.h);
 }
 
-void display_time(boolean showall = false){ //show current time on the TFT Display
+void display_time(boolean showall){ //show current time on the TFT Display
     static String t, oldt = "";
     static boolean k = false;
     uint8_t i = 0;
@@ -461,7 +424,7 @@ void display_time(boolean showall = false){ //show current time on the TFT Displ
         oldt=t;}
 }
 
-void display_alarmDays(uint8_t ad, boolean showall=false){ // Sun ad=0, Mon ad=1, Tue ad=2 ....
+void display_alarmDays(uint8_t ad, boolean showall){ // Sun ad=0, Mon ad=1, Tue ad=2 ....
     uint8_t i = 0;
     String str="";
 
@@ -480,7 +443,7 @@ void display_alarmDays(uint8_t ad, boolean showall=false){ // Sun ad=0, Mon ad=1
     }
 }
 
-void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false){
+void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
     uint16_t j[4] = {5, 77, 173, 245};
     static int8_t pos, h, m;
     int8_t updatePos = -1, oldPos = -1;
@@ -540,7 +503,7 @@ void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false){
     }
 }
 
-void display_sleeptime(int8_t ud = 0){  // set sleeptimer
+void display_sleeptime(int8_t ud){  // set sleeptimer
     uint8_t xpos[4] = {5,54,71,120};
 
     if(ud == 1){
@@ -582,10 +545,9 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     }
     return false; // neither jpg nor bmp
 }
-
-//**************************************************************************************************
-//                                       L I S T A U D I O F I L E                                 *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                         L I S T A U D I O F I L E                                                    *
+***********************************************************************************************************************/
 bool setAudioFolder(const char* audioDir){
     if(audioFile) audioFile.close();  // same as rewind()
     if(!SD.exists(audioDir)){log_e("%s not exist", audioDir); return false;}
@@ -626,12 +588,12 @@ bool sendAudioList2Web(const char* audioDir){
     webSrv.send((const char*)str.c_str());
     return true;
 }
-//**************************************************************************************************
-//                               C O N N E C T   TO   W I F I                                      *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                         C O N N E C T   TO   W I F I                                                 *
+***********************************************************************************************************************/
 bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
-    wifiMulti.addAP(_SSID.c_str(), _PW.c_str());                // SSID and PW in code
+    wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
     if(_f_SD_okay){  // try credentials given in "/networks.txt"
         File file = SD.open("/networks.csv");
         if(file){                                         // try to read from SD
@@ -672,9 +634,9 @@ bool connectToWiFi(){
         return false;  // can't connect to any network
     }
 }
-//**************************************************************************************************
-//                                           S E T U P                                             *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                    S E T U P                                                         *
+***********************************************************************************************************************/
 void setup(){
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -785,9 +747,9 @@ void setup(){
     showFooter();
     ticker.attach(1, timer1sec);
 }
-//**************************************************************************************************
-//                                       C O M M O N                                               *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                  C O M M O N                                                         *
+***********************************************************************************************************************/
 const char* byte_to_binary(int8_t x){
     static char b[9];
     b[0] = '\0';
@@ -976,10 +938,9 @@ void audiotrack(const char* fileName){
     vs1053.connecttoSD(path);
     if(path) free(path);
 }
-
-//**************************************************************************************************
-//                                M E N U E / B U T T O N S                                        *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                          M E N U E / B U T T O N S                                                   *
+***********************************************************************************************************************/
 void changeState(int state){
     if(state == _state) return;  //nothing todo
     _f_volBarVisible = false;
@@ -1129,10 +1090,9 @@ void changeState(int state){
     }
     _state = state;
 }
-
-//**************************************************************************************************
-//                                           L O O P                                               *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                      L O O P                                                         *
+***********************************************************************************************************************/
 void loop() {
     static uint8_t sec=0;
     vs1053.loop();
@@ -1210,9 +1170,9 @@ void loop() {
         _f_1min = false;
     }
 }
-//**************************************************************************************************
-//                                            E V E N T S                                          *
-//**************************************************************************************************
+/***********************************************************************************************************************
+*                                                    E V E N T S                                                       *
+***********************************************************************************************************************/
 //Events from vs1053_ext library
 void vs1053_info(const char *info){
     // SerialPrintfln("%s", info);
