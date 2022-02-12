@@ -4,7 +4,7 @@
 #include <Preferences.h>
 #include <Ticker.h>
 #include <SPI.h>
-#include <SD.h> //<SD_MMC.h>
+#include <SD_MMC.h>
 #include <FS.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
@@ -12,53 +12,38 @@
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
-#include "vs1053_ext.h"     // see my repository at github "ESP32-vs1053_ext"
 #include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
 
+
+/**********************************************************************************************************************/
+
+#define _SSID           "Wolles-FRITZBOX"//"mySSID"                        // Your WiFi credentials here
+#define _PW             "40441061073895958449"//"myWiFiPassword"
+#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
+#define TFT_CONTROLLER  0                               // (0)ILI9341, (1)HX8347D, (3)ILI9486
+#define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
+#define TFT_ROTATION    3                               // 0 ... 3
+#define TP_ROTATION     1                               // 0 ... 3
+
 // Digital I/O used
-#define VS1053_CS      2 // 33
+#define VS1053_CS     33
 #define VS1053_DCS     4
 #define VS1053_DREQ   36
 #define TFT_CS        22
 #define TFT_DC        21
-#define TFT_BL        17 // 32
+#define TFT_BL        32
 #define TP_IRQ        39
-#define TP_CS         16 // 5
-#define SD_CS          5
-// #define SD_MMC_D0      2  // cannot be changed
-// #define SD_MMC_CLK    14  // cannot be changed
-// #define SD_MMC_CMD    15  // cannot be changed
+#define TP_CS          5
+#define SD_MMC_D0      2  // cannot be changed
+#define SD_MMC_CLK    14  // cannot be changed
+#define SD_MMC_CMD    15  // cannot be changed
 #define IR_PIN        34
 #define SPI_MOSI      23  // (VSPI)
 #define SPI_MISO      19  // (VSPI)
 #define SPI_SCK       18  // (VSPI)
-// #define VS1053_MOSI   13  // VS1053     (HSPI)
-// #define VS1053_MISO   34  // VS1053     (HSPI)
-// #define VS1053_SCK    12  // VS1053     (HSPI)
-
-
-//objects
-#if DECODER == 0
-    VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, VSPI, SPI_MOSI, SPI_MISO, SPI_SCK);
-#endif
-
-#if DECODER == 1
-    Audio audio;
-#endif
-
-WebSrv webSrv;
-Preferences pref;
-Preferences stations;
-RTIME rtc;
-Ticker ticker;
-IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
-TP tp(TP_CS, TP_IRQ);
-WiFiMulti wifiMulti;
-File audioFile;
-
-SemaphoreHandle_t  mutex_rtc;
-SemaphoreHandle_t  mutex_display;
-
+#define VS1053_MOSI   13  // VS1053     (HSPI)
+#define VS1053_MISO   34  // VS1053     (HSPI)
+#define VS1053_SCK    12  // VS1053     (HSPI)
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \
@@ -66,163 +51,7 @@ SemaphoreHandle_t  mutex_display;
                             Serial.println(""); \
                             xSemaphoreGive(mutex_rtc);}
 
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
-    //
-    //  Display 320x240
-    //  +-------------------------------------------+ _yHeader=0
-    //  | Header                                    |       _hHeader=20px
-    //  +-------------------------------------------+ _yName=20
-    //  |                                           |
-    //  | Logo                   StationName        |       _hName=100px
-    //  |                                           |
-    //  +-------------------------------------------+ _yTitle=120
-    //  |                                           |
-    //  |              StreamTitle                  |       _hTitle=100px
-    //  |                                           |
-    //  +-------------------------------------------+ _yFooter=220
-    //  | Footer                                    |       _hFooter=20px
-    //  +-------------------------------------------+ 240
-    //                                             320
-    const unsigned short* _fonts[6] = {
-        Times_New_Roman15x14,
-        Times_New_Roman21x17,
-        Times_New_Roman27x21,
-        Times_New_Roman34x27,
-        Times_New_Roman38x31,
-        Times_New_Roman43x35,
-    };
-
-    struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
-    struct w_n{uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winName;
-    struct w_t{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
-    struct w_f{uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
-    struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
-    struct w_v{uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
-    struct w_m{uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-    struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-    struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
-    struct w_a{uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
-    struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
-    struct w_o{uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
-    uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
-    //
-    TFT tft(TFT_CONTROLLER);
-    //
-#endif //TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
-
-
-#if TFT_CONTROLLER == 2
-    //
-    //  Display 480x320
-    //  +-------------------------------------------+ _yHeader=0
-    //  | Header                                    |       _winHeader=30px
-    //  +-------------------------------------------+ _yName=30
-    //  |                                           |
-    //  | Logo                   StationName        |       _winName=130px
-    //  |                                           |
-    //  +-------------------------------------------+ _yTitle=160
-    //  |                                           |
-    //  |              StreamTitle                  |       _winTitle=130px
-    //  |                                           |
-    //  +-------------------------------------------+ _yFooter=290
-    //  | Footer                                    |       _winFooter=30px
-    //  +-------------------------------------------+ 320
-    //                                             480
-
-    const unsigned short* _fonts[7] = {
-        Times_New_Roman21x17,
-        Times_New_Roman27x21,
-        Times_New_Roman34x27,
-        Times_New_Roman38x31,
-        Times_New_Roman43x35,
-        Times_New_Roman56x46,
-        Times_New_Roman66x53,
-    };
-
-    struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
-    struct w_n{uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 480; uint16_t h = 130;} const _winName;
-    struct w_t{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
-    struct w_f{uint16_t x = 0;   uint16_t y = 290; uint16_t w = 480; uint16_t h = 30; } const _winFooter;
-    struct w_m{uint16_t x = 390; uint16_t y = 0;   uint16_t w =  90; uint16_t h = 30; } const _winTime;
-    struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 280; uint16_t h = 30; } const _winItem;
-    struct w_v{uint16_t x = 280; uint16_t y = 0;   uint16_t w = 110; uint16_t h = 30; } const _winVolume;
-    struct w_a{uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
-    struct w_s{uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
-    struct w_l{uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
-    struct w_b{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 34; } const _winVolBar;
-    //
-    TFT tft;        // @suppress("Abstract class cannot be instantiated")
-    //
-#endif  // TFT_CONTROLLER == 2
-
-
-
-//global variables
-const uint8_t  _max_volume   = 21;
-const uint16_t _max_stations = 1000;
-const uint16_t _yBtn = _winTitle.y + 34; // yPos Buttons
-uint8_t        _alarmdays      = 0;
-uint16_t       _cur_station    = 0;      // current station(nr), will be set later
-uint16_t       _sleeptime      = 0;      // time in min until MiniWebRadio goes to sleep
-uint16_t       _sum_stations   = 0;
-uint8_t        _cur_volume     = 0;      // will be set from stored preferences
-uint8_t        _state          = 0;      // statemaschine
-uint8_t        _touchCnt       = 0;
-uint8_t        _commercial_dur = 0;      // duration of advertising
-uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
-int8_t         _releaseNr      = -1;
-char           _chbuf[512];
-char           _myIP[25];
-char           _afn[256];                // audioFileName
-char           _path[128];
-const char*    _pressBtn[5];
-const char*    _releaseBtn[5];
-boolean        _f_rtc=false;             // true if time from ntp is received
-boolean        _f_1sec = false;
-boolean        _f_1min = false;
-boolean        _f_mute = false;
-boolean        _f_sleeping = false;
-boolean        _f_isWebConnected = false;
-boolean        _f_isFSConnected = false;
-boolean        _f_eof = false;
-boolean        _f_eof_alarm = false;
-boolean        _f_semaphore = false;
-boolean        _f_alarm = false;
-boolean        _f_irNumberSeen = false;
-boolean        _f_newIcyDescription = false;
-boolean        _f_volBarVisible = false;
-boolean        _f_SD_okay = false;
-
-String         _station = "";
-String         _stationName_nvs = "";
-String         _stationName_air = "";
-String         _stationURL = "";
-String         _homepage = "";
-String         _streamTitle = "";
-String         _lastconnectedhost = "";
-String         _filename = "";
-String         _icydescription = "";
-
-char _hl_item[10][25]{                          // Title in headline
-                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
-                "** Internet Radio **",
-                "** Internet Radio **",
-                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
-                "** Uhr **",
-                "** Helligkeit **",             // Brightness яркость λάμψη
-                "** Audioplayer **",            // "** цифрово́й плеер **"
-                "** Audioplayer **",
-                "" ,                            // Alarm should be empty
-                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-};
-
-enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
-            CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5,
-            PLAYER= 6, PLAYERico= 7,
-            ALARM = 8, SLEEP    = 9};
-
-
-
+/**********************************************************************************************************************/
 
 // //prototypes (main.cpp)
 boolean defaultsettings();
@@ -270,3 +99,13 @@ void savefile(String fileName, uint32_t contentLength);
 String setTone();
 void audiotrack(const char* fileName);
 void changeState(int state);
+
+// //prototypes (audiotask.cpp)
+void audioInit();
+void audioSetVolume(uint8_t vol);
+uint8_t audioGetVolume();
+boolean audioConnecttohost(const char* host);
+void audioConnecttoFS(const char* filename);
+void audioStopSong();
+void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass);
+

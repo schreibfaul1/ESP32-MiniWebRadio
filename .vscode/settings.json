@@ -27,6 +27,7 @@
     "/home/wolle/.platformio/packages/framework-arduinoespressif32@src-9eea8b292a86781612811c67a1286fb5/libraries/Preferences/src",
     "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/lib/websrv",
     "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/lib/rtime",
+    "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/.pio/libdeps/esp32dev/ESP32-TFT-Library-ILI9486/src",
     "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/.pio/libdeps/esp32dev/ESP32-TFT-Library-ILI9341-HX8347D/src",
     "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/.pio/libdeps/esp32dev/ESP32-IR-Remote-Control/src",
     "/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/.pio/libdeps/esp32dev/ESP32-vs1053_ext/src",
@@ -240,5 +241,6 @@
     "**/.*/**",
     "**/.vscode",
     "**/.vscode/**"
-  ]
+  ],
+  "C_Cpp.errorSquiggles": "Disabled"
 }
