@@ -1,4 +1,18 @@
+// created: 10.02.2022
+// updated: 13.02.2022
+
 #pragma once
+
+
+#define _SSID           "Wolles-FRITZBOX"//"mySSID"                        // Your WiFi credentials here
+#define _PW             "40441061073895958449"//"myWiFiPassword"
+#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
+#define TFT_CONTROLLER  0                               // (0)ILI9341, (1)HX8347D, (3)ILI9486
+#define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
+#define TFT_ROTATION    3                               // 0 ... 3
+#define TP_ROTATION     1
+
+/**********************************************************************************************************************/
 
 #include <Arduino.h>
 #include <Preferences.h>
@@ -11,19 +25,15 @@
 #include "index.h"
 #include "websrv.h"
 #include "rtime.h"
-#include "IR.h"             // see my repository at github "ESP32-IR-Remote-Control"
-#include "tft.h"            // see my repository at github "ESP32-TFT-Library-ILI9431-HX8347D"
+#include "IR.h"
 
+#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // 320x240px ILI9431-HX8347D
+    #include "tft.h"
+#endif
 
-/**********************************************************************************************************************/
-
-#define _SSID           "Wolles-FRITZBOX"//"mySSID"                        // Your WiFi credentials here
-#define _PW             "40441061073895958449"//"myWiFiPassword"
-#define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define TFT_CONTROLLER  0                               // (0)ILI9341, (1)HX8347D, (3)ILI9486
-#define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
-#define TFT_ROTATION    3                               // 0 ... 3
-#define TP_ROTATION     1                               // 0 ... 3
+#if TFT_CONTROLLER == 2 // 480x320px ILI9486
+    #include "ili9486.h"
+#endif
 
 // Digital I/O used
 #define VS1053_CS     33
@@ -52,6 +62,8 @@
                             xSemaphoreGive(mutex_rtc);}
 
 /**********************************************************************************************************************/
+
+
 
 // //prototypes (main.cpp)
 boolean defaultsettings();

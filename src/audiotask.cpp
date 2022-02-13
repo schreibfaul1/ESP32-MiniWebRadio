@@ -1,3 +1,6 @@
+// created: 10.02.2022
+// updated: 13.02.2022
+
 #include "common.h"
 
 #if DECODER == 0

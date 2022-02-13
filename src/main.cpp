@@ -1,11 +1,18 @@
 /***********************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32
 
+    first release on 03/2017
+    Version 2.1a, Feb 12/2022
+
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
 
     HW decoder VS1053 or
     SW decoder with external DAC over I2S
+
+    SD_MMC is mandatory
+    IR remote is optional
+
 
 ***********************************************************************************************************************/
 
@@ -16,6 +23,8 @@
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
 #include "common.h"
+
+
 
 //global variables
 const uint8_t  _max_volume   = 21;
