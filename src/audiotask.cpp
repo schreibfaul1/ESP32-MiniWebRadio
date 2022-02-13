@@ -8,6 +8,11 @@
     VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, HSPI, VS1053_MOSI, VS1053_MISO, VS1053_SCK);
 #endif
 
+#if DECODER == 1
+    #include "audio.h"     // see my repository at github "ESP32-audioI2S"
+    VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, HSPI, VS1053_MOSI, VS1053_MISO, VS1053_SCK);
+#endif
+
 
 /***********************************************************************************************************************
 *                                                  A U D I O _ T A S K                                                 *

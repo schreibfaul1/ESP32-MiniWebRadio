@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 05.01.2022
+ *  updated on: 13.02.2022
  *      Author: Wolle
  */
 
@@ -286,9 +286,9 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     boolean f_werror=false;
     String str="";
     File file;
-    fs.remove(path); // Remove a previous version, otherwise data is appended the file again
-    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
+    if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
 
+    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
     while(cmdclient.available()){
         av=cmdclient.available();
         if(av>bytesPerTransaction) av=bytesPerTransaction;

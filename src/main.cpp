@@ -44,6 +44,7 @@ char           _chbuf[512];
 char           _myIP[25];
 char           _afn[256];                // audioFileName
 char           _path[128];
+char           _prefix[5]      = "/s";
 const char*    _pressBtn[5];
 const char*    _releaseBtn[5];
 boolean        _f_rtc=false;             // true if time from ntp is received
@@ -177,6 +178,8 @@ SemaphoreHandle_t  mutex_display;
         Times_New_Roman66x53,
     };
 
+    strcpy(_prefix, "/m");
+
     struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
     struct w_n{uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 480; uint16_t h = 130;} const _winName;
     struct w_t{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
@@ -261,7 +264,7 @@ boolean saveStationsToNVS(){
             if(X == "*") continue;
             if(StationName == "") continue; // is empty
             if(StreamURL   == "") continue; // is empty
-            log_i("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
+            //log_i("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
             cnt++;
             if(cnt ==_max_stations){
                 SerialPrintfln("No more than %d entries in stationlist allowed!", _max_stations);
@@ -809,6 +812,8 @@ bool connectToWiFi(){
 void setup(){
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
+    if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
+    if(TFT_CONTROLLER == 2) strcpy(_prefix, "/m");
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
     Serial.begin(115200);
@@ -947,14 +952,14 @@ const char* scaleImage(const char* path){
     char* pch = strstr(path + 1, "/");
     if(pch){
         strncpy(pathBuff, path, (pch - path));
-        if(TFT_CONTROLLER <= 2) strcat(pathBuff, "/s"); // small pic,  320x240px
-        else                    strcat(pathBuff, "/m"); // medium pic, 480x320px
+        if(TFT_CONTROLLER <= 2) strcat(pathBuff, _prefix); // small pic,  320x240px
+        else                    strcat(pathBuff, _prefix); // medium pic, 480x320px
         strcat(pathBuff, pch);
     }
     else{
         strcpy(pathBuff, "/common");
-        if(TFT_CONTROLLER <= 2) strcat(pathBuff, "/s"); // small pic,  320x240px
-        else                    strcat(pathBuff, "/m"); // medium pic, 480x320px
+        if(TFT_CONTROLLER <= 2) strcat(pathBuff, _prefix); // small pic,  320x240px
+        else                    strcat(pathBuff, _prefix); // medium pic, 480x320px
         strcat(pathBuff, path);
     }
     return UTF8toASCII(pathBuff);
@@ -1044,20 +1049,34 @@ void changeBtn_released(uint8_t btnNr){
     else                drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _winButton.y);
 }
 
-void savefile(String fileName, uint32_t contentLength){ //save the uploadfile on SD_MMC
-    //log_i("request=%s",request.c_str());
-    if(!fileName.startsWith("/")) fileName = "/"+fileName;
+void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfile on SD_MMC
+    char fn[256];
 
-    if(fileName.endsWith("jpg")){
-        if(TFT_CONTROLLER <= 2) fileName = "/logo/s" + fileName;
-        else                    fileName = "/logo/m" + fileName;
-        if(webSrv.uploadB64image(SD_MMC, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
+    if(endsWith(fileName, "jpg")){
+        strcpy(fn, "/logo");
+        strcat(fn, _prefix);
+        if(!startsWith(fileName, "/")) strcat(fn, "/");
+        strcat(fn, fileName);
+        if(webSrv.uploadB64image(SD_MMC, UTF8toASCII(fn), contentLength)){
+            SerialPrintfln("save image %s to SD card was successfully", fn);
+            webSrv.reply("OK");
+        }
         else webSrv.reply("failure");
     }
     else{
-        if(webSrv.uploadfile(SD_MMC, UTF8toASCII(fileName.c_str()), contentLength)) webSrv.reply("OK");
+        if(!startsWith(fileName, "/")){
+            strcpy(fn, "/");
+            strcat(fn, fileName);
+        }
+        else{
+            strcpy(fn, fileName);
+        }
+        if(webSrv.uploadfile(SD_MMC, UTF8toASCII(fn), contentLength)){
+            SerialPrintfln("save file %s to SD card was successfully", fn);
+            webSrv.reply("OK");
+        }
         else webSrv.reply("failure");
-        if(fileName==String("/stations.csv")) saveStationsToNVS();
+        if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
 String setTone(){
@@ -1664,7 +1683,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength){
     log_i("request %s contentLength %d", request.c_str(), contentLength);
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
-    if(request == "fileUpload"){savefile(_filename, contentLength);  return;}
+    if(request == "fileUpload"){savefile(_filename.c_str(), contentLength);  return;}
     log_e("unknown request: %s",request.c_str());
 }
 void WEBSRV_onInfo(const char* info){

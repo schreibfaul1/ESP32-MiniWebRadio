@@ -107,7 +107,7 @@ void prevStation();
 void StationsItems();
 void changeBtn_pressed(uint8_t btnNr);
 void changeBtn_released(uint8_t btnNr);
-void savefile(String fileName, uint32_t contentLength);
+void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
 void audiotrack(const char* fileName);
 void changeState(int state);
