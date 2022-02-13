@@ -178,8 +178,6 @@ SemaphoreHandle_t  mutex_display;
         Times_New_Roman66x53,
     };
 
-    strcpy(_prefix, "/m");
-
     struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
     struct w_n{uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 480; uint16_t h = 130;} const _winName;
     struct w_t{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
@@ -191,6 +189,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_s{uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
     struct w_l{uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
     struct w_b{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 34; } const _winVolBar;
+    struct w_o{uint16_t x = 0;   uint16_t y = 222; uint16_t w =  96; uint16_t h = 96; } const _winButton;
+    uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
     //
     TFT tft;        // @suppress("Abstract class cannot be instantiated")
     //
@@ -819,7 +819,7 @@ void setup(){
     Serial.begin(115200);
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
 
-    tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK, TFT_BL);    // Init TFT interface
+    tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tp.setRotation(TP_ROTATION);
@@ -838,9 +838,11 @@ void setup(){
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
     SerialPrintfln("setup: SD card found");
+    if     (TFT_CONTROLLER  < 2) drawImage("/common/MiniWebRadio.jpg", 0, 0);   // Welcomescreen
+    else if(TFT_CONTROLLER == 2) drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
 
-    drawImage("/common/MiniWebRadio.jpg", 0, 0); // Welcomescreen
 
+    else log_e("The value in TFT_CONTROLLER is invalid");
     SerialPrintfln("setup: seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
     if(!file){
