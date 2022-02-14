@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.1a, Feb 12/2022
+    Version 2.2, Feb 14/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -131,18 +131,19 @@ SemaphoreHandle_t  mutex_display;
         Times_New_Roman43x35,
     };
 
-    struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
-    struct w_n{uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winName;
-    struct w_t{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
-    struct w_f{uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
-    struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
-    struct w_v{uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
-    struct w_m{uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-    struct w_s{uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-    struct w_l{uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
-    struct w_a{uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
-    struct w_b{uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
-    struct w_o{uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
+    struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
+    struct w_l {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 100; uint16_t h = 100;} const _winLogo;
+    struct w_n {uint16_t x = 100; uint16_t y = 20;  uint16_t w = 220; uint16_t h = 100;} const _winName;
+    struct w_t {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
+    struct w_f {uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
+    struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
+    struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
+    struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
+    struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
+    struct w_l {uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
+    struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
+    struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
+    struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
     uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
     //
     TFT tft(TFT_CONTROLLER);
@@ -168,8 +169,7 @@ SemaphoreHandle_t  mutex_display;
     //  +-------------------------------------------+ 320
     //                                             480
 
-    const unsigned short* _fonts[7] = {
-        Times_New_Roman21x17,
+    const unsigned short* _fonts[6] = {
         Times_New_Roman27x21,
         Times_New_Roman34x27,
         Times_New_Roman38x31,
@@ -178,19 +178,20 @@ SemaphoreHandle_t  mutex_display;
         Times_New_Roman66x53,
     };
 
-    struct w_h{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
-    struct w_n{uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 480; uint16_t h = 130;} const _winName;
-    struct w_t{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
-    struct w_f{uint16_t x = 0;   uint16_t y = 290; uint16_t w = 480; uint16_t h = 30; } const _winFooter;
-    struct w_m{uint16_t x = 390; uint16_t y = 0;   uint16_t w =  90; uint16_t h = 30; } const _winTime;
-    struct w_i{uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 280; uint16_t h = 30; } const _winItem;
-    struct w_v{uint16_t x = 280; uint16_t y = 0;   uint16_t w = 110; uint16_t h = 30; } const _winVolume;
-    struct w_a{uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
-    struct w_s{uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
-    struct w_l{uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
-    struct w_b{uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 34; } const _winVolBar;
-    struct w_o{uint16_t x = 0;   uint16_t y = 222; uint16_t w =  96; uint16_t h = 96; } const _winButton;
-    uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
+    struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
+    struct w_l {uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 130; uint16_t h = 130;} const _winLogo;
+    struct w_n {uint16_t x = 130; uint16_t y = 30;  uint16_t w = 350; uint16_t h = 130;} const _winName;
+    struct w_t {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
+    struct w_f {uint16_t x = 0;   uint16_t y = 290; uint16_t w = 480; uint16_t h = 30; } const _winFooter;
+    struct w_m {uint16_t x = 390; uint16_t y = 0;   uint16_t w =  90; uint16_t h = 30; } const _winTime;
+    struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 280; uint16_t h = 30; } const _winItem;
+    struct w_v {uint16_t x = 280; uint16_t y = 0;   uint16_t w = 110; uint16_t h = 30; } const _winVolume;
+    struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
+    struct w_s {uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
+    struct w_p {uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
+    struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 34; } const _winVolBar;
+    struct w_o {uint16_t x = 0;   uint16_t y = 222; uint16_t w =  96; uint16_t h = 96; } const _winButton;
+    uint16_t  _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
     //
     TFT tft(TFT_CONTROLLER);
     //
@@ -387,6 +388,7 @@ void timer1sec() {
 *                                                   D I S P L A Y                                                      *
 ***********************************************************************************************************************/
 inline void clearHeader() {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
+inline void clearLogo()   {tft.fillRect(_winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   TFT_BLACK);}
 inline void clearStation(){tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
 inline void clearTitle()  {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
 inline void clearFooter() {tft.fillRect(_winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h, TFT_BLACK);}
@@ -495,16 +497,18 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     updateSleepTime();
     showFooterIPaddr();
 }
-void display_info(const char *str, int ypos, int height, uint16_t color, uint16_t indent, uint16_t winHight){
-    tft.fillRect(0, ypos, tft.width(), height, TFT_BLACK);  // Clear the space for new info
+void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight){
+    tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
     tft.setTextColor(color);                                // Set the requested color
-    tft.setCursor(indent, ypos);                            // Prepare to show the info
-    uint16_t ch_written = tft.writeText((const uint8_t*) str); // todo winHight
+    tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
+    // log_i("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
+    uint16_t ch_written = tft.writeText((const uint8_t*) str, winHeight); // todo winHeight
     if(ch_written < strlen(str)){
-        log_w("txt overflow, winHight=%d, strlen=%d, written=%d, str=%s", winHight, strlen(str), ch_written, str);
+        log_w("txt overflow, winHeight=%d, strlen=%d, written=%d, str=%s", winHeight, strlen(str), ch_written, str);
     }
 }
 void showStreamTitle(){
+
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     String ST = _streamTitle;
     ST.trim();  // remove all leading or trailing whitespaces
@@ -521,7 +525,7 @@ void showStreamTitle(){
         case 131 ... 200: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(ST.c_str(), _winTitle.y, _winTitle.h, TFT_CORNSILK, 0, _winTitle.y +  _winTitle.h);
+    display_info(ST.c_str(), _winTitle.x, _winTitle.y, TFT_CORNSILK, 5, _winTitle.h);
     xSemaphoreGive(mutex_display);
 }
 void showLogoAndStationName(){
@@ -553,7 +557,7 @@ void showLogoAndStationName(){
         case  61 ... 90:  tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(SN_utf8.c_str(), _winName.y, _winName.h, TFT_CYAN, 100, _winName.y +  _winName.h);
+    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, _winName.h);
 
     String logo = "/logo/" + String(UTF8toASCII(SN_ascii.c_str())) +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
@@ -571,7 +575,7 @@ void showFileName(const char* fname){
         case 121 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(fname, _winName.y, _winName.h, TFT_CYAN, 0, _winName.y +  _winName.h);
+    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.h);
 }
 
 void display_time(boolean showall){ //show current time on the TFT Display
@@ -1734,7 +1738,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="stationURL")    {audioConnecttohost(param.c_str());webSrv.reply("OK\n"); return;}
     if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
     if(cmd=="ping")          {webSrv.send("pong"); return;}
-    if(cmd=="index.html")    {webSrv.show(index_html); return;}
+    if(cmd=="index.html")    {if(TFT_CONTROLLER < 2) webSrv.show(index_s_html); else webSrv.show(index_m_html); return;}
     if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
     if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
     if(cmd=="change_state")  {changeState(param.toInt()); return;}

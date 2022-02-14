@@ -1269,9 +1269,6 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
 
     int16_t sHeight = height();
     int16_t sWidth =  width();
-    if(maxHeight > 0){
-        sHeight = maxHeight;
-    }  
 
     uint16_t len=0;
     while(str[len]!=0)len++;  // determine length of text
@@ -1281,6 +1278,10 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
     static int16_t tmp_curY=0;
 
     if(_f_curPos==true){tmp_curX=_curX; tmp_curY=_curY; _f_curPos=false;} //new CursorValues?
+
+    int16_t mHeight = maxHeight + _curY;
+    if(maxHeight < 1) mHeight = 1000; // unused, set it larger than display size
+
 
     boolean  f_wrap=false;
     uint16_t color=_textcolor;
@@ -1356,6 +1357,7 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
             if(_textorientation==0) {
                 if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
                 if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
             }
             else {
                 if((Ypos+char_width+space)>sHeight){Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
@@ -1412,10 +1414,12 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
                 if(_textorientation==0){
                     {Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
                     if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
                 }
                 else{
                     {Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
                     if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
                 }
             }
         }

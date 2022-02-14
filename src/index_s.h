@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 11.02.2022
+ *  Updated on: 14.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -17,7 +17,7 @@
 // file in raw data format for PROGMEM
 //
 
-const char index_html[] PROGMEM = R"=====(
+const char index_s_html[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
 <html>
 <head>

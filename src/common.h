@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 13.02.2022
+// updated: 14.02.2022
 
 #pragma once
 
@@ -23,7 +23,8 @@
 #include <FS.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
-#include "index.h"
+#include "index_s.h"
+#include "index_m.h"
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
@@ -86,7 +87,7 @@ void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();
 void showFooter();
-void display_info(const char *str, int ypos, int height, uint16_t color, uint16_t indent, uint16_t winHight);
+void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight);
 void showStreamTitle();
 void showLogoAndStationName();
 void showFileName(const char* fname);
