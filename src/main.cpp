@@ -192,7 +192,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_o{uint16_t x = 0;   uint16_t y = 222; uint16_t w =  96; uint16_t h = 96; } const _winButton;
     uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
     //
-    TFT tft;        // @suppress("Abstract class cannot be instantiated")
+    TFT tft(TFT_CONTROLLER);
     //
 #endif  // TFT_CONTROLLER == 2
 
@@ -819,7 +819,7 @@ void setup(){
     Serial.begin(115200);
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
 
-    tft.begin(TFT_CS, TFT_DC, SPI_MOSI, SPI_MISO, SPI_SCK);    // Init TFT interface
+    tft.begin(TFT_CS, TFT_DC, VSPI);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tp.setRotation(TP_ROTATION);
@@ -1353,31 +1353,66 @@ void vs1053_info(const char *info){
     // SerialPrintfln("%s", info);
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
-void vs1053_showstation(const char *info){              // called from vs1053
+void audio_info(const char *info){
+     SerialPrintfln("%s", info);
+    if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
+}
+//----------------------------------------------------------------------------------------
+void vs1053_showstation(const char *info){
     _stationName_air = info;
     if(!_cur_station) showLogoAndStationName();
 }
-void vs1053_showstreamtitle(const char *info){          // called from vs1053
+void audio_showstation(const char *info){
+    _stationName_air = info;
+    if(!_cur_station) showLogoAndStationName();
+}
+//----------------------------------------------------------------------------------------
+void vs1053_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
     if(_state == RADIO) showStreamTitle();
     SerialPrintfln("StreamTitle: %s", info);
 }
-void vs1053_commercial(const char *info){               // called from I2S lib
+void audio_showstreamtitle(const char *info){
+    if(_f_irNumberSeen) return; // discard streamtitle
+    _streamTitle = info;
+    if(_state == RADIO) showStreamTitle();
+    SerialPrintfln("StreamTitle: %s", info);
+}
+//----------------------------------------------------------------------------------------
+void vs1053_commercial(const char *info){
     _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
     _streamTitle = "Advertising: " + (String) _commercial_dur + "s";
     showStreamTitle();
     SerialPrintfln("StreamTitle: %s", info);
 }
+void audio_commercial(const char *info){
+    _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
+    _streamTitle = "Advertising: " + (String) _commercial_dur + "s";
+    showStreamTitle();
+    SerialPrintfln("StreamTitle: %s", info);
+}
+//----------------------------------------------------------------------------------------
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: %s", info);
 }
+void audio_eof_mp3(const char *info){                  // end of mp3 file (filename)
+    _f_eof = true;
+    if(startsWith(info, "alarm")) _f_eof_alarm = true;
+    SerialPrintfln("end of file: %s", info);
+}
+//----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char *info){                 // really connected URL
     _lastconnectedhost = String(info);
     SerialPrintfln("lastURL: %s", info);
 }
+void audio_lasthost(const char *info){                 // really connected URL
+    _lastconnectedhost = String(info);
+    SerialPrintfln("lastURL: %s", info);
+}
+//----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5){
         SerialPrintfln("icy-url: %s", info);
@@ -1385,9 +1420,21 @@ void vs1053_icyurl(const char *info){                   // if the Radio has a ho
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
+void audio_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
+    if(strlen(info) > 5){
+        SerialPrintfln("icy-url: %s", info);
+        _homepage = String(info);
+        if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
+    }
+}
+//----------------------------------------------------------------------------------------
 void vs1053_id3data(const char *info){
     SerialPrintfln("id3data: %s", info);
 }
+void audio_id3data(const char *info){
+    SerialPrintfln("id3data: %s", info);
+}
+//----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
     _icydescription = String(info);
     if(_streamTitle.length()==0 && _state == RADIO){
@@ -1399,6 +1446,21 @@ void vs1053_icydescription(const char *info){
         SerialPrintfln("icy-descr: %s", info);
     }
 }
+void audio_icydescription(const char *info){
+    _icydescription = String(info);
+    if(_streamTitle.length()==0 && _state == RADIO){
+        _streamTitle = String(info);
+        showStreamTitle();
+    }
+    if(strlen(info)){
+        _f_newIcyDescription = true;
+        SerialPrintfln("icy-descr: %s", info);
+    }
+}
+//----------------------------------------------------------------------------------------
+
+
+
 void RTIME_info(const char *info){
     Serial.printf("rtime_info : %s\n", info);
 }

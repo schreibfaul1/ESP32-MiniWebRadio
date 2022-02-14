@@ -11,7 +11,7 @@
 #define TFT_CONTROLLER  2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
-#define TP_ROTATION     1
+#define TP_ROTATION     3                               // 0 ... 3
 
 /**********************************************************************************************************************/
 
@@ -33,7 +33,8 @@
 #endif
 
 #if TFT_CONTROLLER == 2 // 480x320px ILI9486
-    #include "ili9486.h"
+    //#include "ili9486.h"
+    #include "tft.h"
 #endif
 
 // Digital I/O used
