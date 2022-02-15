@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2, Feb 14/2022
+    Version 2.a, Feb 15/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -134,6 +134,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
     struct w_l {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 100; uint16_t h = 100;} const _winLogo;
     struct w_n {uint16_t x = 100; uint16_t y = 20;  uint16_t w = 220; uint16_t h = 100;} const _winName;
+    struct w_e {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winFName;
     struct w_t {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
     struct w_f {uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
@@ -144,7 +145,9 @@ SemaphoreHandle_t  mutex_display;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
     struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
-    uint16_t _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
+    uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
+    uint8_t   _alarmdays_w = 44 + 4;
+    uint8_t   _alarmdays_h = 40;
     //
     TFT tft(TFT_CONTROLLER);
     //
@@ -158,7 +161,7 @@ SemaphoreHandle_t  mutex_display;
     //  | Header                                    |       _winHeader=30px
     //  +-------------------------------------------+ _yName=30
     //  |                                           |
-    //  | Logo                   StationName        |       _winName=130px
+    //  | Logo                   StationName        |       _winFName=130px
     //  |                                           |
     //  +-------------------------------------------+ _yTitle=160
     //  |                                           |
@@ -181,6 +184,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
     struct w_l {uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 130; uint16_t h = 130;} const _winLogo;
     struct w_n {uint16_t x = 130; uint16_t y = 30;  uint16_t w = 350; uint16_t h = 130;} const _winName;
+    struct w_e {uint16_t x = 0;   uint16_t y = 30;  uint16_t w = 480; uint16_t h = 130;} const _winFName;
     struct w_t {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
     struct w_f {uint16_t x = 0;   uint16_t y = 290; uint16_t w = 480; uint16_t h = 30; } const _winFooter;
     struct w_m {uint16_t x = 390; uint16_t y = 0;   uint16_t w =  90; uint16_t h = 30; } const _winTime;
@@ -189,9 +193,13 @@ SemaphoreHandle_t  mutex_display;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
     struct w_s {uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
     struct w_p {uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
-    struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 34; } const _winVolBar;
-    struct w_o {uint16_t x = 0;   uint16_t y = 222; uint16_t w =  96; uint16_t h = 96; } const _winButton;
-    uint16_t  _alarmdaysXPos_s[7] = {3, 48, 93, 138, 183, 228, 273};
+    struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 30; } const _winVolBar;
+    struct w_o {uint16_t x = 0;   uint16_t y = 190; uint16_t w =  96; uint16_t h = 96; } const _winButton;
+    uint16_t  _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
+    uint8_t   _alarmdays_w = 64 + 4;
+    uint8_t   _alarmdays_h = 56;
+    uint16_t  _alarmtimeXPos[5] = {12, 118, 266, 372, 224}; // last is colon
+    uint16_t  _dispHeight = 320;
     //
     TFT tft(TFT_CONTROLLER);
     //
@@ -390,6 +398,7 @@ void timer1sec() {
 inline void clearHeader() {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
 inline void clearLogo()   {tft.fillRect(_winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   TFT_BLACK);}
 inline void clearStation(){tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
+inline void clearFName()  {tft.fillRect(_winFName.x,  _winFName.y,  _winFName.w,  _winFName.h,  TFT_BLACK);}
 inline void clearTitle()  {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
 inline void clearFooter() {tft.fillRect(_winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h, TFT_BLACK);}
 inline void clearTime()   {tft.fillRect(_winTime.x,   _winTime.y,   _winTime.w,   _winTime.h,   TFT_BLACK);}
@@ -530,7 +539,7 @@ void showStreamTitle(){
 }
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearStation();
+    clearFName();
     String  SN_utf8 = "";
     String  SN_ascii = "";
     if(_cur_station){
@@ -575,29 +584,49 @@ void showFileName(const char* fname){
         case 121 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.h);
+    display_info(fname, _winFName.x, _winFName.y, TFT_CYAN, 0, _winFName.h);
 }
 
 void display_time(boolean showall){ //show current time on the TFT Display
     static String t, oldt = "";
     static boolean k = false;
-    uint8_t i = 0;
-    uint16_t j = 0;
+    uint8_t  i = 0;
+    uint16_t x, y, space, imgHeigh, imgWidth_l, imgWidth_s;
+    if(TFT_CONTROLLER < 2){
+        x = 0;
+        y = _winFName.y;
+        space = 2;
+        imgHeigh = 120;
+        imgWidth_s = 24;
+        imgWidth_l = 72;
+    }
+    else{
+        x = 11;
+        y = _winFName.y + 50;
+        space = 10; // 10px between jpgs
+        imgHeigh = 160;
+        imgWidth_s = 32;
+        imgWidth_l = 96;
+    }
     if(showall == true) oldt = "";
-    if((_state == CLOCK)||(_state == CLOCKico)){
-        uint8_t y, h;
-        _state == CLOCK ? y = 55 : y =  25;
-        _f_volBarVisible? h = 96 : h = 120;
+    if((_state == CLOCK) || (_state == CLOCKico)){
         t = rtc.gettime_s();
-        for(i = 0; i < 5; i++){
+        for(i = 0; i < 5; i++) {
             if(t[i] == ':') {if(k == false) {k = true; t[i] = 'd';} else{t[i] = 'e'; k = false;}}
-            if(t[i] != oldt[i]){
-                sprintf(_chbuf,"/digits/%cgn.bmp",t[i]);
-                drawImage(_chbuf, 5+j, y, 72, h);
+            if(t[i] != oldt[i]) {
+                if(TFT_CONTROLLER < 2){
+                    sprintf(_chbuf,"/digits/%cgn.bmp",t[i]);
+                }
+                else{
+                    sprintf(_chbuf,"/digits/%cgn.jpg",t[i]);
+                }
+                if(_state == CLOCKico) drawImage(_chbuf, x, _winFName.y);
+                else drawImage(_chbuf, x, y);
             }
-            if((t[i] == 'd') || (t[i] == 'e')) j += 24; else j += 72;
+            if((t[i]=='d')||(t[i]=='e'))x += imgWidth_s + space; else x += imgWidth_l + space;
         }
-        oldt=t;}
+        oldt=t;
+    }
 }
 
 void display_alarmDays(uint8_t ad, boolean showall){ // Sun ad=0, Mon ad=1, Tue ad=2 ....
@@ -615,7 +644,7 @@ void display_alarmDays(uint8_t ad, boolean showall){ // Sun ad=0, Mon ad=1, Tue 
         str = "/day/" + String(i);
         if(_alarmdays & (1 << i))  str+="_rt_en.bmp";    // l<<i instead pow(2,i)
         else                       str+="_gr_en.bmp";
-        drawImage(str.c_str(), _alarmdaysXPos_s[i], 0);
+        drawImage(str.c_str(), _alarmdaysXPos[i], 0);
     }
 }
 
@@ -623,6 +652,18 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
     uint16_t j[4] = {5, 77, 173, 245};
     static int8_t pos, h, m;
     int8_t updatePos = -1, oldPos = -1;
+    uint8_t corrY = 0;
+    if(TFT_CONTROLLER < 2){
+    ;
+    }
+    else {
+        corrY = 3;
+    }
+
+    char ch[5];
+    const char* type = nullptr;
+    if(TFT_CONTROLLER < 2) type = ".bmp";
+    else                   type = ".jpg";
 
     if(showall){
         h = _alarmtime / 60;
@@ -657,23 +698,32 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
 
     char hhmm[15];
     sprintf(hhmm,"%d%d%d%d", h / 10, h %10, m /10, m %10);
+
+    if(showall){
+        if(TFT_CONTROLLER <2) drawImage("/digits/drt.bmp", _alarmtimeXPos[4], _alarmdays_h + corrY);
+        else                  drawImage("/digits/drt.jpg", _alarmtimeXPos[4], _alarmdays_h + corrY);
+    }
+
     for(uint8_t i = 0; i < 4; i++){
         strcpy(_path, "/digits/");
         strncat(_path, (const char*) hhmm + i, 1);
         if(showall){
-            drawImage("/digits/ert.bmp", 149, 45);
-            if(i == pos) strcat(_path, "or.bmp");   //show orange number
-            else         strcat(_path, "rt.bmp");   //show red numbers
-            drawImage(_path, j[i], _winName.y + 30);
+            if(i == pos) strcat(_path, "or");   //show orange number
+            else         strcat(_path, "rt");   //show red numbers
+            strcat(_path, type);
+            drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
         }
+
         else{
             if(i == updatePos){
-                strcat(_path, "or.bmp");
-                drawImage(_path, j[i], _winName.y + 30);
+                strcat(_path, "or");
+                strcat(_path, type);
+                drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
             }
             if(i == oldPos){
-                strcat(_path, "rt.bmp");
-                drawImage(_path, j[i], _winName.y + 30);
+                strcat(_path, "rt");
+                strcat(_path, type);
+                drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
             }
         }
     }
@@ -710,7 +760,7 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
     const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)){
-        log_e("file \"%s\" not found", path);
+        log_e("file \"%s\" not found", scImg);
         return false;
     }
     if(endsWith(scImg, "bmp")){
@@ -826,6 +876,7 @@ void setup(){
     tft.begin(TFT_CS, TFT_DC, VSPI);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
+    tp.setVersion(TFT_CONTROLLER);
     tp.setRotation(TP_ROTATION);
     setTFTbrightness(pref.getUShort("brightness"));
 
@@ -958,14 +1009,14 @@ const char* scaleImage(const char* path){
     char* pch = strstr(path + 1, "/");
     if(pch){
         strncpy(pathBuff, path, (pch - path));
-        if(TFT_CONTROLLER <= 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else                    strcat(pathBuff, _prefix); // medium pic, 480x320px
+        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
+        else                   strcat(pathBuff, _prefix); // medium pic, 480x320px
         strcat(pathBuff, pch);
     }
     else{
         strcpy(pathBuff, "/common");
-        if(TFT_CONTROLLER <= 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else                    strcat(pathBuff, _prefix); // medium pic, 480x320px
+        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
+        else                   strcat(pathBuff, _prefix); // medium pic, 480x320px
         strcat(pathBuff, path);
     }
     return UTF8toASCII(pathBuff);
@@ -1039,7 +1090,7 @@ void StationsItems(){
 }
 
 void changeBtn_pressed(uint8_t btnNr){
-    if(_state == ALARM) drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _winButton.y + _winFooter.h);
+    if(_state == ALARM) drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _dispHeight - _winButton.h);
     else                drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _winButton.y);
 }
 void changeBtn_released(uint8_t btnNr){
@@ -1051,7 +1102,7 @@ void changeBtn_released(uint8_t btnNr){
         if(_f_mute)  _releaseBtn[2] = "/btn/Button_Mute_Red.jpg";
         else         _releaseBtn[2] = "/btn/Button_Mute_Green.jpg";
     }
-    if(_state == ALARM) drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _winButton.y + _winFooter.h);
+    if(_state == ALARM) drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _dispHeight - _winButton.h);
     else                drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _winButton.y);
 }
 
@@ -1112,7 +1163,7 @@ void audiotrack(const char* fileName){
     char* path = (char*)malloc(strlen(fileName) + 20);
     strcpy(path, "/audiofiles/");
     strcat(path, fileName);
-    clearStation();
+    clearFName();
     showVolumeBar();
     showFileName(fileName);
     changeState(PLAYERico);
@@ -1140,7 +1191,7 @@ void changeState(int state){
                 showStreamTitle();
             }
             else if(_state == SLEEP){
-                clearStation();
+                clearFName();
                 clearTitle();
                 audioConnecttohost(_lastconnectedhost.c_str());
                 showLogoAndStationName();
@@ -1188,7 +1239,7 @@ void changeState(int state){
             if(!_f_mute) showHeadlineVolume(_cur_volume); else showHeadlineVolume(0);
             showHeadlineTime();
             showFooter();
-            clearStation();
+            clearFName();
             clearTitle();
             display_time(true);
             break;
@@ -1196,7 +1247,7 @@ void changeState(int state){
         case CLOCKico:{
             _state = CLOCKico;
             showHeadlineItem(CLOCKico);
-            clearStation();
+            clearFName();
             clearTitle();
             display_time(true);
             _pressBtn[0] = "/btn/Bell_Yellow.jpg";                _releaseBtn[0] = "/btn/Bell_Green.jpg";
@@ -1219,7 +1270,7 @@ void changeState(int state){
         }
         case PLAYER:{
             if(_state == RADIO){
-                clearStation();
+                clearFName();
                 clearTitle();
             }
             showHeadlineItem(PLAYER);
@@ -1247,11 +1298,11 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Up_Yellow.jpg";          _releaseBtn[2]="/btn/Button_Up_Blue.jpg";
             _pressBtn[3]="/btn/Button_Down_Yellow.jpg";        _releaseBtn[3]="/btn/Button_Down_Blue.jpg";
             _pressBtn[4]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[4]="/btn/Button_Ready_Blue.jpg";
-            clearStation();
+            clearFName();
             clearTitle();
             display_alarmtime(0, 0, true);
             display_alarmDays(0, true);
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y + _winFooter.h);}
+            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w,  _dispHeight - _winButton.h);}
             break;
         }
         case SLEEP:{
@@ -1261,7 +1312,7 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
             _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
             _pressBtn[4]="/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4]="/btn/Button_Cancel_Blue.jpg";
-            clearStation();
+            clearFName();
             clearTitle();
             display_sleeptime();
             tft.drawBmpFile(SD_MMC, "/Night_Gown.bmp", 198, 25);
@@ -1536,27 +1587,27 @@ void tp_pressed(uint16_t x, uint16_t y){
     if(_f_sleeping) return; // awake in tp_released()
 
     switch(_state){
-        case RADIO:         if(            y <= 119) {yPos = RADIO_1;}
+        case RADIO:         if(                     y <= _winTitle.y)                 {yPos = RADIO_1;}
                             break;
-        case RADIOico:      if(            y <= 119) {yPos = RADIOico_1;}
-                            if(120 <= y && y <= 220) {yPos = RADIOico_2; btnNr = x / _winButton.w;}
+        case RADIOico:      if(                     y <= _winTitle.y)                 {yPos = RADIOico_1;}
+                            if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = RADIOico_2;   btnNr = x / _winButton.w;}
                             break;
-        case RADIOmenue:    if(120 <= y && y <= 220) {yPos = RADIOmenue_1; btnNr = x / _winButton.w;}
+        case RADIOmenue:    if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = RADIOmenue_1; btnNr = x / _winButton.w;}
                             break;
-        case PLAYER:        if(120 <= y && y <= 220) {yPos = PLAYER_1; btnNr = x / _winButton.w;}
+        case PLAYER:        if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = PLAYER_1;     btnNr = x / _winButton.w;}
                             break;
-        case PLAYERico:     if(120 <= y && y <= 220) {yPos = PLAYERico_1; btnNr = x / _winButton.w;}
+        case PLAYERico:     if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = PLAYERico_1;  btnNr = x / _winButton.w;}
                             break;
-        case CLOCK:         if(            y <= 119) {yPos = CLOCK_1;}
+        case CLOCK:         if(                     y <= _winTitle.y)                 {yPos = CLOCK_1;}
                             break;
-        case CLOCKico:      if(120 <= y && y <= 220) {yPos = CLOCKico_1; btnNr = x / _winButton.w;}
+        case CLOCKico:      if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = CLOCKico_1; btnNr = x / _winButton.w;}
                             break;
-        case ALARM:         if(            y <=  64) {yPos = ALARM_1; btnNr = (x - 2) / 45;} //weekdays
-                            if(176 <= y && y <= 240) {yPos = ALARM_2; btnNr = x / _winButton.w;}
+        case ALARM:         if(                     y <= _alarmdays_h)                {yPos = ALARM_1; btnNr = (x - 2) / _alarmdays_w;} //weekdays
+                            if(                     y >= _winButton.y + _winFooter.h) {yPos = ALARM_2; btnNr = x / _winButton.w;}
                             break;
-        case SLEEP:         if(120 <= y && y <= 220) {yPos = SLEEP_1; btnNr = x / _winButton.w;}
+        case SLEEP:         if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = SLEEP_1; btnNr = x / _winButton.w;}
                             break;
-        case BRIGHTNESS:    if(110 <= y && y <= 220) {yPos = BRIGHTNESS_1; btnNr = x / _winButton.w;}
+        case BRIGHTNESS:    if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = BRIGHTNESS_1; btnNr = x / _winButton.w;}
         default:            break;
     }
     if(yPos == none) {log_w("Touchpoint not valid x=%d, y=%d", x, y); return;}

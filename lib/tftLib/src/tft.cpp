@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 06 2022
+// updated on Feb 15 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -4086,37 +4086,12 @@ uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_byt
 
   // Code für Touchpad mit XPT2046
 TP::TP(uint8_t CS, uint8_t IRQ){
+    //log_i("TP init CS = %i, IRQ = %i", CS, IRQ);
     TP_CS=CS;
     TP_IRQ=IRQ;
     pinMode(TP_CS, OUTPUT);
     digitalWrite(TP_CS, HIGH);
     pinMode(TP_IRQ, INPUT);
-
-    if(TP_vers == 0){   // ILI9341 display
-        Xmax=1913;    // Values Calibration
-        Xmin=150;
-        Ymax=1944;
-        Ymin=220;
-        xFaktor=float(Xmax-Xmin) / ILI9341_WIDTH;
-        yFaktor=float(Ymax-Ymin) / ILI9341_HEIGHT;
-    }
-    if(TP_vers == 1){   // Waveshare HX8347D display
-        Xmax=1850;
-        Xmin=170;
-        Ymax=1880;
-        Ymin=140;
-        xFaktor=float(Xmax-Xmin) / HX8347D_WIDTH;
-        yFaktor=float(Ymax-Ymin) / HX8347D_HEIGHT;
-    }
-    if(TP_vers == 2){   // ILI9486 display
-        Xmax=1922;
-        Xmin=140;
-        Ymax=1930;
-        Ymin=125;
-        xFaktor=float(Xmax-Xmin) / ILI9486_WIDTH;
-        yFaktor=float(Ymax-Ymin) / ILI9486_HEIGHT;
-    }
-
     TP_SPI=SPISettings(400000, MSBFIRST, SPI_MODE0); //slower speed
     _rotation=0;
 }
@@ -4152,53 +4127,126 @@ void TP::setVersion(uint8_t v){
     if(v == 0) TP_vers = 0;
     if(v == 1) TP_vers = 1;
     if(v == 2) TP_vers = 2;
+
+    if(TP_vers == 0){   // ILI9341 display
+        Xmax=1913;    // Values Calibration
+        Xmin=150;
+        Ymax=1944;
+        Ymin=220;
+        xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
+        yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
+    }
+    if(TP_vers == 1){   // Waveshare HX8347D display
+        Xmax=1850;
+        Xmin=170;
+        Ymax=1880;
+        Ymin=140;
+        xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
+        yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
+    }
+    if(TP_vers == 2){   // ILI9486 display
+        Xmax=1922;
+        Xmin=140;
+        Ymax=1930;
+        Ymin=125;
+        xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
+        yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
+    }
 }
 
 bool TP::read_TP(uint16_t& x, uint16_t& y){
-  uint16_t _y[3];
-  uint16_t _x[3];
-  uint16_t tmpxy;
-  uint8_t i;
-  if (digitalRead(TP_IRQ)) return false;
-  for(i=0; i<3; i++){
-      x = TP_Send(0xD0);  //x
-      //log_i("TP X=%i",x);
-      if((x<Xmin) || (x>Xmax)) return false;  //outside the display
-       x=Xmax-x;
-      _x[i]=x/xFaktor;
-
-      y=  TP_Send(0x90); //y
-      //log_i("TP y=%i",y);
-      if((y<Ymin) || (y>Ymax)) return false;  //outside the display
-      y=Ymax-y;
-     _y[i]=y/yFaktor;
-
-  }
-  x=(_x[0]+_x[1]+_x[2])/3; // take the mean
-  y=(_y[0]+_y[1]+_y[2])/3;
-
-  // display with y-inverted touch (ILI9341)
-  if(TP_vers == 0){
-      if(_rotation == 0) {y = ILI9341_HEIGHT-y;}
-      if(_rotation == 1) {tmpxy = x; x = y; y = tmpxy; y = ILI9341_WIDTH - y; x = ILI9341_HEIGHT - x;}
-      if(_rotation == 2) {x = ILI9341_WIDTH  -x;}
-      if(_rotation == 3) {tmpxy=x; x=y; y=tmpxy;}
-  }
-
-  // Waveshare display
-  if(TP_vers == 1){
-      if(_rotation == 0) {;}  // do nothing
-      if(_rotation == 1) {tmpxy = x; x = y;   y = HX8347D_WIDTH - tmpxy;  if(x > HX8347D_HEIGHT - 1) x = 0; if(y > HX8347D_WIDTH - 1) y = 0;}
-      if(_rotation == 2) {x = HX8347D_WIDTH - x; y = HX8347D_HEIGHT - y; if(x > HX8347D_WIDTH - 1) x = 0; if(y > HX8347D_HEIGHT - 1) y = 0;}
-      if(_rotation == 3) {tmpxy = y; y = x; x = HX8347D_HEIGHT - tmpxy; if(x > HX8347D_HEIGHT - 1) x = 0; if(y > HX8347D_WIDTH - 1) y = 0;}
-  }
-
-    if(TP_vers == 2){  // ILI9486
-        if(_rotation==1){tmpxy = x; x = y;    y = ILI9486_WIDTH-tmpxy;  if(x > ILI9486_HEIGHT -1) x = 0; if(y > ILI9486_WIDTH  -1) y = 0;}
-        if(_rotation==2){x = ILI9486_WIDTH-x; y = ILI9486_HEIGHT-y;     if(x > ILI9486_WIDTH  -1) x = 0; if(y > ILI9486_HEIGHT -1) y = 0;}
-        if(_rotation==3){tmpxy = y; y = x;    x = ILI9486_HEIGHT-tmpxy; if(x > ILI9486_HEIGHT -1) x = 0; if(y > ILI9486_WIDTH  -1) y = 0;}
+    uint16_t _y[3];
+    uint16_t _x[3];
+    uint16_t tmpxy;
+    uint8_t i;
+    if (digitalRead(TP_IRQ)) return false;
+    for(i = 0; i < 3; i++){
+        x = TP_Send(0xD0);  //x
         //log_i("TP X=%i",x);
-        //log_i("TP Y=%i",y);
+        if((x < Xmin) || (x > Xmax)) return false;  //outside the display
+         x = Xmax-x;
+        _x[i] = x / xFaktor;
+
+        y = TP_Send(0x90); //y
+        //log_i("TP y=%i",y);
+        if((y<Ymin) || (y>Ymax)) return false;  //outside the display
+        y = Ymax - y;
+        _y[i] = y / yFaktor;
+
+    }
+    x = (_x[0] + _x[1] + _x[2]) / 3; // take the mean
+    y = (_y[0] + _y[1] + _y[2]) / 3;
+
+    if(TP_vers == 0){       // 320px x 240px
+        if(_rotation == 0) {
+            y = ILI9341_HEIGHT - y;
+        }
+        if(_rotation == 1) {
+            tmpxy = x; x = y;
+            y = tmpxy; y = ILI9341_WIDTH - y;
+            x = ILI9341_HEIGHT - x;
+        }
+        if(_rotation == 2) {
+            x = ILI9341_WIDTH - x;
+        }
+        if(_rotation == 3) {
+            tmpxy = x;
+            x = y;
+            y = tmpxy;
+        }
+    }
+
+    if(TP_vers == 1){       // 320px x 240px
+        if(_rotation == 0) {
+            ; // do nothing
+        }
+        if(_rotation == 1) {
+            tmpxy = x;
+            x = y;
+            y = HX8347D_WIDTH - tmpxy;
+            if(x > HX8347D_HEIGHT - 1) x = 0;
+            if(y > HX8347D_WIDTH - 1)  y = 0;
+        }
+        if(_rotation == 2) {
+            x = HX8347D_WIDTH - x;
+            y = HX8347D_HEIGHT - y;
+            if(x > HX8347D_WIDTH - 1) x = 0;
+            if(y > HX8347D_HEIGHT - 1) y = 0;
+        }
+        if(_rotation == 3) {
+            tmpxy = y;
+            y = x;
+            x = HX8347D_HEIGHT - tmpxy;
+            if(x > HX8347D_HEIGHT - 1) x = 0;
+            if(y > HX8347D_WIDTH - 1) y = 0;
+        }
+    }
+
+    if(TP_vers == 2){       // 480px x 320px
+        if(_rotation == 0) {
+            ; // do nothing
+        }
+        if(_rotation == 1) {
+            tmpxy = x;
+            x = y;
+            y = ILI9486_WIDTH-tmpxy;
+            if(x > ILI9486_HEIGHT -1) x = 0;
+            if(y > ILI9486_WIDTH  -1) y = 0;
+        }
+        if(_rotation == 2) {
+            x = ILI9486_WIDTH-x;
+            y = ILI9486_HEIGHT-y;
+            if(x > ILI9486_WIDTH  -1) x = 0;
+            if(y > ILI9486_HEIGHT -1) y = 0;
+        }
+        if(_rotation == 3) {
+            tmpxy = y;
+            y = x;
+            x = ILI9486_HEIGHT-tmpxy;
+            if(x > ILI9486_HEIGHT -1) x = 0;
+            if(y > ILI9486_WIDTH  -1) y = 0;
+        }
+        log_i("TP_vers %d, X = %i, Y = %i",TP_vers, x, y);
     }
     return true;
 }

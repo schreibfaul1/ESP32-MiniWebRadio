@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 14.02.2022
+// updated: 15.02.2022
 
 #pragma once
 
@@ -28,15 +28,8 @@
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
+#include "tft.h"
 
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // 320x240px ILI9431-HX8347D
-    #include "tft.h"
-#endif
-
-#if TFT_CONTROLLER == 2 // 480x320px ILI9486
-    //#include "ili9486.h"
-    #include "tft.h"
-#endif
 
 // Digital I/O used
 #define VS1053_CS     33
