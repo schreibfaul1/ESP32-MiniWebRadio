@@ -13,7 +13,6 @@
     SD_MMC is mandatory
     IR remote is optional
 
-
 ***********************************************************************************************************************/
 
 // THE SOFTWARE IS PROVIDED "AS IS" FOR PRIVATE USE ONLY, IT IS NOT FOR COMMERCIAL USE IN WHOLE OR PART OR CONCEPT.
@@ -141,13 +140,16 @@ SemaphoreHandle_t  mutex_display;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
     struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
     struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-    struct w_l {uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
+    struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
     struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
     uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
-    uint8_t   _alarmdays_w = 44 + 4;
-    uint8_t   _alarmdays_h = 40;
+    uint16_t _alarmtimeXPos[5] = {2, 75, 173, 246, 148}; // last is colon
+    uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
+    uint8_t  _alarmdays_w = 44 + 4;
+    uint8_t  _alarmdays_h = 40;
+    uint16_t _dispHeight = 240;
     //
     TFT tft(TFT_CONTROLLER);
     //
@@ -195,11 +197,12 @@ SemaphoreHandle_t  mutex_display;
     struct w_p {uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
     struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 30; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 190; uint16_t w =  96; uint16_t h = 96; } const _winButton;
-    uint16_t  _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
-    uint8_t   _alarmdays_w = 64 + 4;
-    uint8_t   _alarmdays_h = 56;
-    uint16_t  _alarmtimeXPos[5] = {12, 118, 266, 372, 224}; // last is colon
-    uint16_t  _dispHeight = 320;
+    uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
+    uint16_t _alarmtimeXPos[5] = {12, 118, 266, 372, 224}; // last is colon
+    uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
+    uint8_t  _alarmdays_w = 64 + 4;
+    uint8_t  _alarmdays_h = 56;
+    uint16_t _dispHeight = 320;
     //
     TFT tft(TFT_CONTROLLER);
     //
@@ -590,11 +593,12 @@ void showFileName(const char* fname){
 void display_time(boolean showall){ //show current time on the TFT Display
     static String t, oldt = "";
     static boolean k = false;
-    uint8_t  i = 0;
+    uint8_t  i = 0, yOffset = 0;
     uint16_t x, y, space, imgHeigh, imgWidth_l, imgWidth_s;
     if(TFT_CONTROLLER < 2){
         x = 0;
-        y = _winFName.y;
+        y = _winFName.y +33;
+        yOffset = 8;
         space = 2;
         imgHeigh = 120;
         imgWidth_s = 24;
@@ -603,6 +607,7 @@ void display_time(boolean showall){ //show current time on the TFT Display
     else{
         x = 11;
         y = _winFName.y + 50;
+        yOffset = 0;
         space = 10; // 10px between jpgs
         imgHeigh = 160;
         imgWidth_s = 32;
@@ -615,13 +620,14 @@ void display_time(boolean showall){ //show current time on the TFT Display
             if(t[i] == ':') {if(k == false) {k = true; t[i] = 'd';} else{t[i] = 'e'; k = false;}}
             if(t[i] != oldt[i]) {
                 if(TFT_CONTROLLER < 2){
-                    sprintf(_chbuf,"/digits/%cgn.bmp",t[i]);
+                    sprintf(_chbuf,"/digits/%cgn.jpg",t[i]);
                 }
                 else{
                     sprintf(_chbuf,"/digits/%cgn.jpg",t[i]);
                 }
+                //log_i("drawImage %s, x=%i, y=%i", _chbuf, x, y);
                 if(_state == CLOCKico) drawImage(_chbuf, x, _winFName.y);
-                else drawImage(_chbuf, x, y);
+                else drawImage(_chbuf, x, y + yOffset);
             }
             if((t[i]=='d')||(t[i]=='e'))x += imgWidth_s + space; else x += imgWidth_l + space;
         }
@@ -654,16 +660,11 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
     int8_t updatePos = -1, oldPos = -1;
     uint8_t corrY = 0;
     if(TFT_CONTROLLER < 2){
-    ;
+        corrY = 8;
     }
     else {
         corrY = 3;
     }
-
-    char ch[5];
-    const char* type = nullptr;
-    if(TFT_CONTROLLER < 2) type = ".bmp";
-    else                   type = ".jpg";
 
     if(showall){
         h = _alarmtime / 60;
@@ -700,29 +701,25 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
     sprintf(hhmm,"%d%d%d%d", h / 10, h %10, m /10, m %10);
 
     if(showall){
-        if(TFT_CONTROLLER <2) drawImage("/digits/drt.bmp", _alarmtimeXPos[4], _alarmdays_h + corrY);
-        else                  drawImage("/digits/drt.jpg", _alarmtimeXPos[4], _alarmdays_h + corrY);
+        drawImage("/digits/drt.jpg", _alarmtimeXPos[4], _alarmdays_h + corrY);
     }
 
     for(uint8_t i = 0; i < 4; i++){
         strcpy(_path, "/digits/");
         strncat(_path, (const char*) hhmm + i, 1);
         if(showall){
-            if(i == pos) strcat(_path, "or");   //show orange number
-            else         strcat(_path, "rt");   //show red numbers
-            strcat(_path, type);
+            if(i == pos) strcat(_path, "or.jpg");   //show orange number
+            else         strcat(_path, "rt.jpg");   //show red numbers
             drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
         }
 
         else{
             if(i == updatePos){
-                strcat(_path, "or");
-                strcat(_path, type);
+                strcat(_path, "or.jpg");
                 drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
             }
             if(i == oldPos){
-                strcat(_path, "rt");
-                strcat(_path, type);
+                strcat(_path, "rt.jpg");
                 drawImage(_path, _alarmtimeXPos[i], _alarmdays_h + corrY);
             }
         }
@@ -749,12 +746,22 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
         }
     }
     char tmp[10];
-    sprintf(tmp, "%d:%02d", _sleeptime / 60, _sleeptime % 60);
+    sprintf(tmp, "%d%02d", _sleeptime / 60, _sleeptime % 60);
+    char path[128] = "/digits/";
 
-    drawImage(String("/digits/" + (String)tmp[0] + "srt.bmp").c_str(), xpos[0], 48);
-    drawImage("/digits/dsrt.bmp",                                      xpos[1], 48);
-    drawImage(String("/digits/" + (String)tmp[2] + "srt.bmp").c_str(), xpos[2], 48);
-    drawImage(String("/digits/" + (String)tmp[3] + "srt.bmp").c_str(), xpos[3], 48);
+    for(uint8_t i = 0; i < 4; i ++){
+        strcpy(path, "/digits/");
+        if(i == 3){
+            if(!_sleeptime) strcat(path, "dsgn.jpg");
+            else            strcat(path, "dsrt.jpg");
+        }
+        else{
+            strncat(path, (tmp + i), 1);
+            if(!_sleeptime) strcat(path, "sgn.jpg");
+            else            strcat(path, "srt.jpg");
+        }
+        drawImage(path, _sleeptimeXPos[i], 48);
+    }
 }
 
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
@@ -764,6 +771,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
         return false;
     }
     if(endsWith(scImg, "bmp")){
+        //log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
         return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
     if(endsWith(scImg, "jpg")){
@@ -893,11 +901,8 @@ void setup(){
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
     SerialPrintfln("setup: SD card found");
-    if     (TFT_CONTROLLER  < 2) drawImage("/common/MiniWebRadio.jpg", 0, 0);   // Welcomescreen
-    else if(TFT_CONTROLLER == 2) drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
-
-
-    else log_e("The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 2) log_e("The value in TFT_CONTROLLER is invalid");
+    drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
     if(!file){
@@ -1315,7 +1320,8 @@ void changeState(int state){
             clearFName();
             clearTitle();
             display_sleeptime();
-            tft.drawBmpFile(SD_MMC, "/Night_Gown.bmp", 198, 25);
+            if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
+            else                   drawImage("/common/Night_Gown.bmp", 198, 23);
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
