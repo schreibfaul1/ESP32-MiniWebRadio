@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.a, Feb 15/2022
+    Version 2.b, Feb 16/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -799,8 +799,9 @@ const char* listAudioFile(){
     }
     while(file){
         const char* name = file.name();
-        if(endsWith(name, ".mp3") ||  endsWith(name, ".m4a") || endsWith(name, ".wav") ) return name;
-        file = audioFile.openNextFile();
+        if(endsWith(name, ".mp3") || endsWith(name, ".aac") ||
+           endsWith(name, ".m4a") || endsWith(name, ".wav") ||
+           endsWith(name, ".flac")  ) return name;
     }
     return NULL;
 }
@@ -950,10 +951,16 @@ void setup(){
     _cur_station =  pref.getUInt("station", 1);
     SerialPrintfln("current station number: %d", _cur_station);
     _cur_volume = getvolume();
-    audioSetVolume(_cur_volume);
+
     SerialPrintfln("current volume: %d", _cur_volume);
     _f_mute = pref.getUShort("mute", 0);
-    if(_f_mute) SerialPrintfln("volume is muted: %d", _cur_volume);
+    if(_f_mute) {
+        SerialPrintfln("volume is muted: %d", _cur_volume);
+        audioSetVolume(0);
+    }
+    else {
+        audioSetVolume(_cur_volume);
+    }
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
     _state = RADIO;
@@ -1424,6 +1431,7 @@ void vs1053_info(const char *info){
 }
 void audio_info(const char *info){
     // SerialPrintfln("%s", info);
+    if(startsWith(info, "FLAC")) SerialPrintfln("%s", info);
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
 //----------------------------------------------------------------------------------------
