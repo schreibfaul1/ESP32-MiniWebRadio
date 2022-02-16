@@ -7,9 +7,9 @@
 #define _SSID           "Wolles-FRITZBOX"//"mySSID"                        // Your WiFi credentials here
 #define _PW             "40441061073895958449"//"myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER         1                               // (0)VS1053 , (1)SW DECODER, DAC via I2S
-#define TFT_CONTROLLER  2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486
-#define TFT_FREQUENCY   80000000                        // 27000000, 40000000, 80000000
+#define DECODER         0                               // (0)VS1053 , (1)SW DECODER, DAC via I2S
+#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D, (2)ILI9486
+#define TFT_FREQUENCY   20000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
 #define TP_ROTATION     3                               // 0 ... 3
 
@@ -43,7 +43,7 @@
 #define SD_MMC_D0      2  // cannot be changed
 #define SD_MMC_CLK    14  // cannot be changed
 #define SD_MMC_CMD    15  // cannot be changed
-#define IR_PIN        34
+#define IR_PIN        35
 #define SPI_MOSI      23  // (VSPI)
 #define SPI_MISO      19  // (VSPI)
 #define SPI_SCK       18  // (VSPI)
