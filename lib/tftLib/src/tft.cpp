@@ -543,7 +543,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(ili9341_rotations[_rotation].bmpctl);
     }
-
+    setAddrWindow(x, _height - y - h, w, h);
     if(_TFTcontroller == HX8347D){ // HX8347D
         if(_rotation==0){ writeCommand(0x16);   spi_TFT->write(0x88);} // 0
         if(_rotation==1){ writeCommand(0x16);   spi_TFT->write(0x38);} // 90
@@ -560,7 +560,6 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         if(_rotation==3){SPI.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);}
         writeCommand(ILI9486_RAMWR);
     }
-    setAddrWindow(x, _height - y - h, w, h);
     endWrite();
 }
 
@@ -4080,7 +4079,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y){
             if(x > ILI9486_HEIGHT -1) x = 0;
             if(y > ILI9486_WIDTH  -1) y = 0;
         }
-        log_i("TP_vers %d, X = %i, Y = %i",TP_vers, x, y);
+        //log_i("TP_vers %d, X = %i, Y = %i",TP_vers, x, y);
     }
     return true;
 }

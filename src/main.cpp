@@ -476,7 +476,8 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
         char Slt[15];
         sprintf(Slt,"S  %d:%02d", _sleeptime / 60, _sleeptime % 60);
         tft.setFont(_fonts[1]);
-        tft.setTextColor(TFT_DEEPSKYBLUE);
+        if(!_sleeptime) tft.setTextColor(TFT_DEEPSKYBLUE);
+        else tft.setTextColor(TFT_RED);
         clearSleep();
         tft.setCursor(_winSleep.x + 25 , _winSleep.y + 2);
         tft.print(Slt);
@@ -484,6 +485,7 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     if(sleep){ // fall asleep
         audioStopSong();
         clearAll();
+        setTFTbrightness(0);
         _f_sleeping = true;
         SerialPrintfln("falling asleep");
     }
@@ -520,7 +522,6 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
     }
 }
 void showStreamTitle(){
-
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     String ST = _streamTitle;
     ST.trim();  // remove all leading or trailing whitespaces
@@ -771,7 +772,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
         return false;
     }
     if(endsWith(scImg, "bmp")){
-        //log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
+        log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
         return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
     if(endsWith(scImg, "jpg")){
@@ -1227,7 +1228,12 @@ void changeState(int state){
             _pressBtn[1]="/btn/Clock_Yellow.jpg";              _releaseBtn[1]="/btn/Clock_Green.jpg";
             _pressBtn[2]="/btn/Radio_Yellow.jpg";              _releaseBtn[2]="/btn/Radio_Green.jpg";
             _pressBtn[3]="/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Sleep_Green.jpg";
-            _pressBtn[4]="/btn/Bulb_Yellow.jpg";               _releaseBtn[4]="/btn/Bulb_Green.jpg";
+            if(TFT_CONTROLLER < 2){
+                _pressBtn[4]="/btn/Bulb_Yellow.jpg";           _releaseBtn[4]="/btn/Bulb_Green.jpg";
+            }
+            else{
+                _pressBtn[4]="/btn/Black.jpg";                 _releaseBtn[4]="/btn/Black.jpg";
+            }
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             clearVolBar();
             break;
@@ -1270,6 +1276,8 @@ void changeState(int state){
             _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
             _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
             _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
+            drawImage("/common/Brightness.jpg", 0, _winName.y);
+            showBrightnessBar();
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1321,7 +1329,7 @@ void changeState(int state){
             clearTitle();
             display_sleeptime();
             if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
-            else                   drawImage("/common/Night_Gown.bmp", 198, 23);
+            else                   drawImage("/common/Night_Gown.bmp", 280, 45);
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1415,7 +1423,7 @@ void vs1053_info(const char *info){
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
 void audio_info(const char *info){
-     SerialPrintfln("%s", info);
+    // SerialPrintfln("%s", info);
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
 //----------------------------------------------------------------------------------------
@@ -1632,7 +1640,9 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
+                            if(TFT_CONTROLLER < 2){
                             if(btnNr == 4){_releaseNr = 14;} // Brightness
+                            }
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
@@ -1684,7 +1694,13 @@ void tp_released(){
     if(_f_sleeping == true){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
+        setTFTbrightness(pref.getUShort("brightness"));
         changeState(RADIO);
+        audioConnecttohost(_lastconnectedhost.c_str());
+        showLogoAndStationName();
+        showFooter();
+        showHeadlineItem(RADIO);
+        showHeadlineVolume(_cur_volume);
         return;
     }
 
