@@ -109,6 +109,7 @@ void changeBtn_pressed(uint8_t btnNr);
 void changeBtn_released(uint8_t btnNr);
 void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
+String setI2STone();
 void audiotrack(const char* fileName);
 void changeState(int state);
 

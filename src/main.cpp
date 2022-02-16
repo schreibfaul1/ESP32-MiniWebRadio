@@ -234,9 +234,9 @@ boolean defaultsettings(){
         pref.putUShort("tonela", 0); // BassGain 0...15        VS1053
         pref.putUShort("tonelf", 0); // BassFreq 0...13        VS1053
 
-//        pref.putShort("toneLP", 0); // -40 ... +6 (dB)     I2S DAC
-//        pref.putShort("toneBP", 0); // -40 ... +6 (dB)     I2S DAC
-//        pref.putShort("toneHP", 0); // -40 ... +6 (dB)     I2S DAC
+        pref.putShort("toneLP", 0); // -40 ... +6 (dB)     I2S DAC
+        pref.putShort("toneBP", 0); // -40 ... +6 (dB)     I2S DAC
+        pref.putShort("toneHP", 0); // -40 ... +6 (dB)     I2S DAC
         //
         pref.putUInt("station", 1);
         //
@@ -1163,15 +1163,16 @@ String setTone(){
     return str_tone;
 }
 
-// String setTone(){
-    // int8_t LP = pref.getShort("toneLP");
-    // int8_t BP = pref.getShort("toneBP");
-    // int8_t HP = pref.getShort("toneHP");
-    // audioSetTone(LP, BP, HP);
-    // sprintf(_chbuf, "LowPass=%i BandPass=%i HighPass=%i", LP, BP, HP);
-    // String tone = String(_chbuf);
-    // return tone;
-// }
+String setI2STone(){
+    int8_t LP = pref.getShort("toneLP");
+    int8_t BP = pref.getShort("toneBP");
+    int8_t HP = pref.getShort("toneHP");
+    audioSetTone(LP, BP, HP);
+    sprintf(_chbuf, "LowPass=%i BandPass=%i HighPass=%i", LP, BP, HP);
+    String tone = String(_chbuf);
+    return tone;
+}
+
 void audiotrack(const char* fileName){
     char* path = (char*)malloc(strlen(fileName) + 20);
     strcpy(path, "/audiofiles/");
@@ -1800,14 +1801,17 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     String  str;
     if(cmd=="homepage")      {webSrv.send("homepage=" + _homepage); return;}
     if(cmd=="to_listen")     {StationsItems(); return;} // via websocket, return the name and number of the current station
-    if(cmd=="gettone")       {webSrv.reply(setTone().c_str()); return;}
+    if(cmd=="gettone")       {if(DECODER) webSrv.reply(setI2STone().c_str()); else webSrv.reply(setTone().c_str()); return;}
     if(cmd=="getmute")       {webSrv.reply(String(int(_f_mute)).c_str()); return;}
     if(cmd=="getstreamtitle"){webSrv.reply(_streamTitle.c_str()); return;}
     if(cmd=="mute")          {mute();if(_f_mute) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n");   return;}
-    if(cmd=="toneha")        {pref.putUShort("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); setTone(); return;}
-    if(cmd=="tonehf")        {pref.putUShort("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); setTone(); return;}
-    if(cmd=="tonela")        {pref.putUShort("tonela",(param.toInt()));webSrv.reply("Bass Gain set");   setTone(); return;}
-    if(cmd=="tonelf")        {pref.putUShort("tonelf",(param.toInt()));webSrv.reply("Bass Freq set");   setTone(); return;}
+    if(cmd=="toneha")        {pref.putUShort("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); setTone(); return;}  // vs1053 tone
+    if(cmd=="tonehf")        {pref.putUShort("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); setTone(); return;}  // vs1053 tone
+    if(cmd=="tonela")        {pref.putUShort("tonela",(param.toInt()));webSrv.reply("Bass Gain set");   setTone(); return;}  // vs1053 tone
+    if(cmd=="tonelf")        {pref.putUShort("tonelf",(param.toInt()));webSrv.reply("Bass Freq set");   setTone(); return;}  // vs1053 tone
+    if(cmd=="LowPass" )      {pref.putShort("toneLP", (param.toInt()));webSrv.reply("Lowpass set" ); setI2STone(); return;}  // audioI2S tone
+    if(cmd=="BandPass")      {pref.putShort("toneBP", (param.toInt()));webSrv.reply("Bandpass set"); setI2STone(); return;}  // audioI2S tone
+    if(cmd=="HighPass")      {pref.putShort("toneHP", (param.toInt()));webSrv.reply("Highpass set"); setI2STone(); return;}  // audioI2S tone
     if(cmd=="audiolist")     {sendAudioList2Web("/audiofiles"); return;} // via websocket
     if(cmd=="audiotrack")    {audiotrack(param.c_str()); webSrv.reply("OK\n"); return;}
     if(cmd=="uploadfile")    {_filename = param;  return;}

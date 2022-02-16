@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.11.2021
+ *  Updated on: 16.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -352,6 +352,7 @@ function showTab1 () {
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
   getmute()
+  socket.send('change_state=0')
 }
 
 function showTab2 () {
@@ -381,6 +382,7 @@ function showTab3 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  socket.send("change_state=" + "6")
   socket.send("audiolist") // Now get the audio file list from SD
 }
 
