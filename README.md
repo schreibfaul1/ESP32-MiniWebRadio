@@ -6,10 +6,10 @@ Can handle max 999 stations<br>
 IR remote control is optional<br>
 Obtains time from NTP<br>
 Can used as alarmclock, has sleeptimer<br>
-Speech the time every hour ir radiomode<br>
+Speech the time every hour in radiomode<br>
 If the display has a Backlight-pin You can change the brightness<br>
 supports the Latin, Greek and Cyrillic character sets
-![Community Radio Browser}(https://www.radio-browser.info/) is integrated as a search engine
+[Community Radio Browser](https://www.radio-browser.info/) is integrated as a search engine
 Channel lists can be exported or imported in Excel format (for data backup).
 
 Required HW:
