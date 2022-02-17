@@ -26,6 +26,8 @@ Control is exclusively via the touchscreen or the webpage, no additional compone
 
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MWR_V2_VS1053.jpg">Schematic with VS1053</a><br>
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MWR_V2_DAC.jpg">Schematic with external DAC</a><br>
+<br>
+<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio%20V2%20Layout.pdf">Display (Layout)</a>
 
 How to install:
 PlatformIO is definitely recommended as an IDE
@@ -36,8 +38,8 @@ New in V2:
 <li>The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/SD_Card_Adapter_for_SD_MMC_.jpg">SD card adapter</a> must not have any resistors as pull-ups or in series.</li>
 <li>Instead of the VS1053, it can be decoded using SW. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). A DAC is required (e.g. UDA13348, MAX98357A, PCM5102A) connected via I2S.</li>
 <li>The display can now be 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
+<br>
+<br>
  
 
-[PlatformIO](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/Notes%20on%20programming%20with%20PlatformIO.pdf) or 
-MiniWebRadio/blob/master/additional_info/Notes%20on%20programming%20with%20the%20Arduino%20IDE.pdf)<br>
-![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio1.jpg)
+
