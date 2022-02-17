@@ -1,15 +1,15 @@
 # ESP32-MiniWebRadio V2
 
-![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)<br>
+![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)
 
 Features:
 <ul>
-  <li>Can handle max 999 stations<br></li>
-<li>IR remote control is optional<br></li>
-<li>Obtains time from NTP<br></li>
-<li>Can used as alarmclock, has sleeptimer<br></li>
-<li>Speech the time every hour in radiomode<br></li>
-<li>If the display has a Backlight-pin You can change the brightness<br></li>
+<li>Can handle max 999 stations</li>
+<li>IR remote control is optional</li>
+<li>Obtains time from NTP</li>
+<li>Can used as alarmclock, has sleeptimer</li>
+<li>Speech the time every hour in radiomode</li>
+<li>If the display has a Backlight-pin You can change the brightness</li>
 <li>supports the Latin, Greek and Cyrillic character sets</li>
   <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
