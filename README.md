@@ -2,7 +2,7 @@
 
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)
 
-Features:<br>
+Features:
 <ul>
   <li>Can handle max 999 stations<br></li>
 <li>IR remote control is optional<br></li>
@@ -14,7 +14,7 @@ Features:<br>
   <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
 </ul>
-Required HW:<br>
+Required HW:
 <ul>
 <li>Decoder module VS1053 or external DAC (e.g. PCM5102a)</li>
 <li>TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px) or ILI9486 (480x320px)</li>
