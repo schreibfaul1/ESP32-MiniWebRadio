@@ -24,7 +24,7 @@ Required HW:
 
 Control is exclusively via the touchscreen or the webpage, no additional components such as switches, rotary encoders, capacitors or resistors are required
 
-Schematic with VS1053:
+<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MWR_V2_VS1053.jpg">Schematic with VS1053</a><br>
 
 Schematic with external DAC:
 
