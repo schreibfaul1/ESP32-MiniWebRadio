@@ -259,13 +259,13 @@ void audioTask(void *parameter) {
 
 void audioInit() {
     xTaskCreatePinnedToCore(
-        audioTask,           /* Function to implement the task */
-        "audioplay",          /* Name of the task */
-        5000,                  /* Stack size in words */
-        NULL,                  /* Task input parameter */
-        2 | portPRIVILEGE_BIT, /* Priority of the task */
-        NULL,                  /* Task handle. */
-        1                      /* Core where the task should run */
+        audioTask,              /* Function to implement the task */
+        "audioplay",            /* Name of the task */
+        5000,                   /* Stack size in words */
+        NULL,                   /* Task input parameter */
+        2 | portPRIVILEGE_BIT,  /* Priority of the task */
+        NULL,                   /* Task handle. */
+        0                       /* Core where the task should run */
     );
 }
 

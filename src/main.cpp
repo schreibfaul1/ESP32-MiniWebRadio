@@ -60,7 +60,6 @@ boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
 boolean        _f_volBarVisible = false;
-boolean        _f_SD_okay = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -830,36 +829,35 @@ bool sendAudioList2Web(const char* audioDir){
 bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
-    if(_f_SD_okay){  // try credentials given in "/networks.txt"
-        File file = SD_MMC.open("/networks.csv");
-        if(file){                                         // try to read from SD_MMC
-            String str = "";
-            while(file.available()){
-                str = file.readStringUntil('\n');         // read the line
-                if(str[0] == '*' ) continue;              // ignore this, goto next line
-                if(str[0] == '\n') continue;              // empty line
-                if(str[0] == ' ')  continue;              // space as first char
-                if(str.indexOf('\t') < 0) continue;       // no tab
-                str += "\t";
-                uint p = 0, q = 0;
-                s_ssid = "", s_password = "", s_info = "";
-                for(int i = 0; i < str.length(); i++){
-                    if(str[i] == '\t'){
-                        if(p == 0) s_ssid     = str.substring(q, i);
-                        if(p == 1) s_password = str.substring(q, i);
-                        if(p == 2) s_info     = str.substring(q, i);
-                        p++;
-                        i++;
-                        q = i;
-                    }
+
+    File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
+    if(file){                                         // try to read from SD_MMC
+        String str = "";
+        while(file.available()){
+            str = file.readStringUntil('\n');         // read the line
+            if(str[0] == '*' ) continue;              // ignore this, goto next line
+            if(str[0] == '\n') continue;              // empty line
+            if(str[0] == ' ')  continue;              // space as first char
+            if(str.indexOf('\t') < 0) continue;       // no tab
+            str += "\t";
+            uint p = 0, q = 0;
+            s_ssid = "", s_password = "", s_info = "";
+            for(int i = 0; i < str.length(); i++){
+                if(str[i] == '\t'){
+                    if(p == 0) s_ssid     = str.substring(q, i);
+                    if(p == 1) s_password = str.substring(q, i);
+                    if(p == 2) s_info     = str.substring(q, i);
+                    p++;
+                    i++;
+                    q = i;
                 }
-                //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
-                if(s_ssid == "") continue;
-                if(s_password == "") continue;
-                wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
             }
-            file.close();
+            //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+            if(s_ssid == "") continue;
+            if(s_password == "") continue;
+            wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
         }
+        file.close();
     }
     Serial.println("WiFI_info  : Connecting WiFi...");
     if(wifiMulti.run() == WL_CONNECTED){
