@@ -10,7 +10,7 @@
 <li>Speech the time every hour in radiomode<br></li>
 <li>If the display has a Backlight-pin You can change the brightness<br></li>
 <li>supports the Latin, Greek and Cyrillic character sets</li>
-<li>[Community Radio Browser](https://www.radio-browser.info/) is integrated as a search engine</li>
+  <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
 </ul>
 Required HW:
