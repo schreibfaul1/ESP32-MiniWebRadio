@@ -13,11 +13,13 @@
   <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
 </ul>
-Required HW:
-Decoder module VS1053 or external DAC (e.g. PCM5102a)
-TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px) or ILI9486 (480x320px)
-ESP32 Board (PSRAM not necessary)
-SD Card + adapter
+Required HW:<br>
+<ul>
+<li>Decoder module VS1053 or external DAC (e.g. PCM5102a)</li>
+<li>TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px) or ILI9486 (480x320px)</li>
+<li>ESP32 Board (PSRAM not necessary)</li>
+<li>SD Card + adapter</li>
+</ul>
 
 Control is exclusively s via the touchscreen or the webpage, no additional components such as switches, rotary encoders, capacitors or resistors are required
 
