@@ -2,16 +2,17 @@
 
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)
 
-Can handle max 999 stations<br>
-IR remote control is optional<br>
-Obtains time from NTP<br>
-Can used as alarmclock, has sleeptimer<br>
-Speech the time every hour in radiomode<br>
-If the display has a Backlight-pin You can change the brightness<br>
-supports the Latin, Greek and Cyrillic character sets
-[Community Radio Browser](https://www.radio-browser.info/) is integrated as a search engine
-Channel lists can be exported or imported in Excel format (for data backup).
-
+<ul>
+  <li>Can handle max 999 stations<br></li>
+<li>IR remote control is optional<br></li>
+<li>Obtains time from NTP<br></li>
+<li>Can used as alarmclock, has sleeptimer<br></li>
+<li>Speech the time every hour in radiomode<br></li>
+<li>If the display has a Backlight-pin You can change the brightness<br></li>
+<li>supports the Latin, Greek and Cyrillic character sets</li>
+<li>[Community Radio Browser](https://www.radio-browser.info/) is integrated as a search engine</li>
+<li>Channel lists can be exported or imported in Excel format (for data backup).</li>
+</ul>
 Required HW:
 Decoder module VS1053 or external DAC (e.g. PCM5102a)
 TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px) or ILI9486 (480x320px)
