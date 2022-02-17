@@ -8,6 +8,9 @@ Obtains time from NTP<br>
 Can used as alarmclock, has sleeptimer<br>
 Speech the time every hour ir radiomode<br>
 If the display has a Backlight-pin You can change the brightness<br>
+supports the Latin, Greek and Cyrillic character sets
+![Community Radio Browser}(https://www.radio-browser.info/) is integrated as a search engine
+Channel lists can be exported or imported in Excel format (for data backup).
 
 Required HW:
 Decoder module VS1053 or external DAC (e.g. PCM5102a)
