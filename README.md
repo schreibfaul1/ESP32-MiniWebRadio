@@ -22,7 +22,7 @@ Required HW:
 <li>SD Card + adapter</li>
 </ul><br>
 
-Control is exclusively s via the touchscreen or the webpage, no additional components such as switches, rotary encoders, capacitors or resistors are required
+Control is exclusively via the touchscreen or the webpage, no additional components such as switches, rotary encoders, capacitors or resistors are required
 
 Schematic with VS1053:
 
@@ -36,7 +36,7 @@ New in V2:
 <li>The audioprocess works in his own task amd must therefore be decoupled. If a VS1053 is used, it must have its own SPI bus (HSPI for VS1053 and VSPI for TFT and TP). Dropouts when drawing on the display or when the website is loading are a things of the past. </li>
 <li>The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The SD card adapter must not have any resistors as pull-ups or in series.</li>
 <li>Instead of the VS1053, it can be decoded using SW. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). A DAC is required (e.g. UDA13348, MAX98357A, PCM5102A) connected via I2S.</li>
-<li>The display can now be 320x240 or 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
+<li>The display can now be 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
  
 
 [PlatformIO](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/Notes%20on%20programming%20with%20PlatformIO.pdf) or 
