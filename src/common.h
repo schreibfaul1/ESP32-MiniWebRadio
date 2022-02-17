@@ -4,8 +4,8 @@
 #pragma once
 
 
-#define _SSID           "Wolles-FRITZBOX"//"mySSID"                        // Your WiFi credentials here
-#define _PW             "40441061073895958449"//"myWiFiPassword"
+#define _SSID           "mySSID"                        // Your WiFi credentials here
+#define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
 #define DECODER         1                               // (0)VS1053 , (1)SW DECODER DAC via I2S
 #define TFT_CONTROLLER  2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
@@ -50,10 +50,10 @@
 #define VS1053_MOSI   13  // VS1053     (HSPI)
 #define VS1053_MISO   34  // VS1053     (HSPI)
 #define VS1053_SCK    12  // VS1053     (HSPI)
-#define I2S_DOUT      25
+#define I2S_DOUT      25  // DAC: I2S_DIN
 #define I2S_BCLK      27
 #define I2S_LRC       26
-#define I2S_MCLK       0
+#define I2S_MCLK       0  // mostly not used
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \
