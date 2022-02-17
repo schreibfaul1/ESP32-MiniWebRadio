@@ -16,6 +16,7 @@ Features:
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
 </ul><br>
 Required HW:
+<br>
 <ul>
 <li>Decoder module VS1053 or external DAC (e.g. PCM5102a)</li>
 <li>TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px) or ILI9486 (480x320px)</li>
