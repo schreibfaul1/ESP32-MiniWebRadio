@@ -34,6 +34,8 @@ extern __attribute__((weak)) void tp_released();
 #define HX8347D_HEIGHT 320
 #define ILI9486_WIDTH  320
 #define ILI9486_HEIGHT 480
+#define ILI9488_WIDTH  320
+#define ILI9488_HEIGHT 480
 
 // RGB565 Color definitions
 #define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
@@ -183,7 +185,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
     private:
 
-        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486 = 2};
+        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486 = 2, ILI9488 = 3};
         uint8_t _TFTcontroller = ILI9341;
 
         SPISettings     TFT_SPI;                     // SPI settings for this slave
@@ -309,6 +311,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
         // Transaction API not used by GFX
         void      setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        void      write16BitColor(uint16_t color);
         void      writePixel(uint16_t color);
         void      writePixels(uint16_t * colors, uint32_t len);
         void      writeColor(uint16_t color, uint32_t len);

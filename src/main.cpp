@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.b, Feb 16/2022
+    Version 2.c, Feb 17/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -156,7 +156,7 @@ SemaphoreHandle_t  mutex_display;
 #endif //TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
 
-#if TFT_CONTROLLER == 2
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3
     //
     //  Display 480x320
     //  +-------------------------------------------+ _yHeader=0
@@ -206,7 +206,7 @@ SemaphoreHandle_t  mutex_display;
     //
     TFT tft(TFT_CONTROLLER);
     //
-#endif  // TFT_CONTROLLER == 2
+#endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3
 
 
 
@@ -877,7 +877,7 @@ void setup(){
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
-    if(TFT_CONTROLLER == 2) strcpy(_prefix, "/m");
+    else                    strcpy(_prefix, "/m");
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
     Serial.begin(115200);
@@ -903,7 +903,7 @@ void setup(){
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
     SerialPrintfln("setup: SD card found");
-    if(TFT_CONTROLLER > 2) log_e("The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 3) log_e("The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
