@@ -1,9 +1,8 @@
 # ESP32-MiniWebRadio V2
 
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)
-<br>
-<br>
-Features:
+
+XXXFebatures:
 <ul>
 <li>Can handle max 999 stations</li>
 <li>IR remote control is optional</li>
