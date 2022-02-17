@@ -1,7 +1,8 @@
 # ESP32-MiniWebRadio V2
 
 ![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio.jpg)
-
+<br>
+<br>
 Features:
 <ul>
 <li>Can handle max 999 stations</li>
@@ -13,7 +14,7 @@ Features:
 <li>supports the Latin, Greek and Cyrillic character sets</li>
   <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
-</ul>
+</ul><br>
 Required HW:
 <ul>
 <li>Decoder module VS1053 or external DAC (e.g. PCM5102a)</li>
