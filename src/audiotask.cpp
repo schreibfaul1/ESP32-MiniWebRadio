@@ -147,12 +147,12 @@ boolean audioConnecttohost(const char* host){
     return RX.ret;
 }
 
-void audioConnecttoFS(const char* filename){
+boolean audioConnecttoFS(const char* filename){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt = filename;
     audioTxMessage.value = 0;
     audioMessage RX = transmitReceive(audioTxMessage);
-    (void)RX;
+    return RX.ret;
 }
 
 void audioStopSong(){
@@ -265,7 +265,7 @@ void audioInit() {
         NULL,                   /* Task input parameter */
         2 | portPRIVILEGE_BIT,  /* Priority of the task */
         NULL,                   /* Task handle. */
-        0                       /* Core where the task should run */
+        1                       /* Core where the task should run */
     );
 }
 
@@ -299,12 +299,12 @@ boolean audioConnecttohost(const char* host){
     return RX.ret;
 }
 
-void audioConnecttoFS(const char* filename){
+boolean audioConnecttoFS(const char* filename){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt = filename;
     audioTxMessage.value = 0;
     audioMessage RX = transmitReceive(audioTxMessage);
-    (void)RX;
+    return RX.ret;
 }
 
 void audioStopSong(){

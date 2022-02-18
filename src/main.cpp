@@ -44,6 +44,9 @@ char           _myIP[25];
 char           _afn[256];                // audioFileName
 char           _path[128];
 char           _prefix[5]      = "/s";
+char*          _lastconnectedfile = nullptr;
+char*          _lastconnectedhost = nullptr;
+char*          _stationURL = nullptr;
 const char*    _pressBtn[5];
 const char*    _releaseBtn[5];
 boolean        _f_rtc=false;             // true if time from ntp is received
@@ -64,10 +67,8 @@ boolean        _f_volBarVisible = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
-String         _stationURL = "";
 String         _homepage = "";
 String         _streamTitle = "";
-String         _lastconnectedhost = "";
 String         _filename = "";
 String         _icydescription = "";
 
@@ -99,6 +100,7 @@ IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 WiFiMulti wifiMulti;
 File audioFile;
+FtpServer ftpSrv;
 
 SemaphoreHandle_t  mutex_rtc;
 SemaphoreHandle_t  mutex_display;
@@ -932,6 +934,8 @@ void setup(){
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: connected to %s, IP address is %s", WiFi.SSID().c_str(), _myIP);
 
+    ftpSrv.begin(SD_MMC, "esp32", "esp32"); //username, password for ftp.
+
     _f_rtc = rtc.begin(TZName);
     if(!_f_rtc){
         SerialPrintfln("connection to NTP failed, trying again");
@@ -1011,6 +1015,21 @@ int indexOf (const char* base, const char* str, int startIndex) {
     if (pos == nullptr) return -1;
     return pos - base;
 }
+boolean strCompare(char* str1, char* str2){
+    return strCompare((const char*) str1, str2);
+}
+boolean strCompare(const char* str1, char* str2){ // returns true if str1 == str2
+    if(!str1) return false;
+    if(!str2) return false;
+    if(strlen(str1) != strlen(str2)) return false;
+    boolean f = true;
+    uint16_t i = strlen(str1);
+    while(i){
+        i--;
+        if(str1[i] != str2[i]){f = false; break;}
+    }
+    return f;
+}
 const char* scaleImage(const char* path){
     if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))){ // not a image
         return UTF8toASCII(path);
@@ -1068,7 +1087,8 @@ void setStation(uint16_t sta){
     _stationName_nvs = content.substring(0, content.indexOf("#")); //get stationname
     content = content.substring(content.indexOf("#") + 1, content.length()); //get URL
     content.trim();
-    _stationURL = content;
+    free(_stationURL);
+    _stationURL = strdup(content.c_str());
     _homepage = "";
     _icydescription = "";
     if(_state != RADIOico) clearTitle();
@@ -1076,9 +1096,8 @@ void setStation(uint16_t sta){
     if(!_f_isWebConnected) _streamTitle = "";
     showFooterStaNr();
     pref.putUInt("station", sta);
-    // log_i("%s %s",_stationURL.c_str(),_lastconnectedhost.c_str());
-    if(not(_state == PLAYER && _stationURL == _lastconnectedhost && _f_isWebConnected)){
-        audioConnecttohost(_stationURL.c_str());
+    if(not(_state == PLAYER && strCompare(_stationURL, _lastconnectedhost) && _f_isWebConnected)){
+        audioConnecttohost(_stationURL);
     }
     showLogoAndStationName();
     StationsItems();
@@ -1096,7 +1115,7 @@ void prevStation(){
 
 void StationsItems(){
     webSrv.send("stationNr=" + String(pref.getUInt("station")));
-    webSrv.send("stationURL=" + _stationURL);
+    webSrv.send("stationURL=" + String(_stationURL));
     webSrv.send("stationName=" + _stationName_nvs);
 }
 
@@ -1179,7 +1198,10 @@ void audiotrack(const char* fileName){
     showVolumeBar();
     showFileName(fileName);
     changeState(PLAYERico);
-    audioConnecttoFS(path);
+    if(audioConnecttoFS(path)){
+        free(_lastconnectedfile);
+        _lastconnectedfile = strdup(fileName);
+    }
     if(path) free(path);
 }
 /***********************************************************************************************************************
@@ -1205,7 +1227,7 @@ void changeState(int state){
             else if(_state == SLEEP){
                 clearFName();
                 clearTitle();
-                audioConnecttohost(_lastconnectedhost.c_str());
+                audioConnecttohost(_lastconnectedhost);
                 showLogoAndStationName();
                 showFooter();
                 showHeadlineVolume(_cur_volume);
@@ -1351,6 +1373,7 @@ void loop() {
 
     ir.loop();
     tp.loop();
+    ftpSrv.handleFTP();
     if(_f_1sec){
          _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) showHeadlineTime();
@@ -1378,7 +1401,7 @@ void loop() {
                         mute(); // mute off
                     }
                 }
-                audioConnecttohost(_lastconnectedhost.c_str());
+                audioConnecttohost(_lastconnectedhost);
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -1481,12 +1504,14 @@ void audio_eof_mp3(const char *info){                  // end of mp3 file (filen
 }
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char *info){                 // really connected URL
-    _lastconnectedhost = String(info);
-    SerialPrintfln("lastURL: %s", info);
+    free(_lastconnectedhost);
+    _lastconnectedhost = strdup(info);
+    SerialPrintfln("lastURL: %s", _lastconnectedhost);
 }
 void audio_lasthost(const char *info){                 // really connected URL
-    _lastconnectedhost = String(info);
-    SerialPrintfln("lastURL: %s", info);
+    free(_lastconnectedhost);
+    _lastconnectedhost = strdup(info);
+    SerialPrintfln("lastURL: %s", _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
@@ -1534,9 +1559,11 @@ void audio_icydescription(const char *info){
     }
 }
 //----------------------------------------------------------------------------------------
-
-
-
+void ftp_debug(const char* info) {
+    if(startsWith(info, "File Name")) return;
+    SerialPrintfln("ftpsrv: %s", info);
+}
+//----------------------------------------------------------------------------------------
 void RTIME_info(const char *info){
     Serial.printf("rtime_info : %s\n", info);
 }
@@ -1703,7 +1730,7 @@ void tp_released(){
         SerialPrintfln("awake");
         setTFTbrightness(pref.getUShort("brightness"));
         changeState(RADIO);
-        audioConnecttohost(_lastconnectedhost.c_str());
+        audioConnecttohost(_lastconnectedhost);
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
@@ -1755,7 +1782,10 @@ void tp_released(){
                     showFileName(_afn); break;
         case 43:    changeState(PLAYERico); showVolumeBar(); // ready
                     strcat(path, _afn);
-                    audioConnecttoFS(path); break;
+                    if(audioConnecttoFS(path)){
+                        free(_lastconnectedfile);
+                        _lastconnectedfile = strdup(path);
+                    } break;
         case 44:    break;
 
         /* AUDIOPLAYERico ******************************/

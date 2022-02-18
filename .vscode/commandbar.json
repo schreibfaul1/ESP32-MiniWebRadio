@@ -1,0 +1,16 @@
+{
+  "skipTerminateQuickPick": true,
+  "skipSwitchToOutput": false,
+  "skipErrorMessage": true,
+  "commands": [
+    {
+      "text": "☯ Serve",
+      "tooltip": "Serve UI",
+      "color": "yellow",
+      "command": "npm run serve",
+      "alignment": "left",
+      "skipTerminateQuickPick": false,
+      "priority": 0
+    }
+  ]
+}

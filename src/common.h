@@ -29,6 +29,7 @@
 #include "rtime.h"
 #include "IR.h"
 #include "tft.h"
+#include "ESP32FtpServer.h"
 
 
 // Digital I/O used
@@ -97,6 +98,8 @@ const char* byte_to_binary(int8_t x);
 bool startsWith (const char* base, const char* str);
 bool endsWith (const char* base, const char* str);
 int indexOf (const char* base, const char* str, int startIndex);
+boolean strCompare(char* str1, char* str2);
+boolean strCompare(const char* str1, char* str2);
 const char* scaleImage(const char* path);
 inline uint8_t getvolume();
 uint8_t downvolume();
@@ -118,7 +121,7 @@ void audioInit();
 void audioSetVolume(uint8_t vol);
 uint8_t audioGetVolume();
 boolean audioConnecttohost(const char* host);
-void audioConnecttoFS(const char* filename);
+boolean audioConnecttoFS(const char* filename);
 void audioStopSong();
 void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass);
 
