@@ -38,6 +38,7 @@ New in V2:
 <li>The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/SD_Card_Adapter_for_SD_MMC_.jpg">SD card adapter</a> must not have any resistors as pull-ups or in series.</li>
 <li>Instead of the VS1053, it can be decoded using SW. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). A DAC is required (e.g. UDA13348, MAX98357A, PCM5102A) connected via I2S.</li>
 <li>The display can now be 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
+<li>In the finished device, the SD card may be inaccessible. For this case, an FTP server is integrated. Here are the settings in Filezilla. The username and password are esp32 and can be changed in common.h</li>
 <br>
 <br>
  
