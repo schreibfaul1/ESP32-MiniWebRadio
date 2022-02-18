@@ -934,7 +934,7 @@ void setup(){
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: connected to %s, IP address is %s", WiFi.SSID().c_str(), _myIP);
 
-    ftpSrv.begin(SD_MMC, "esp32", "esp32"); //username, password for ftp.
+    ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); //username, password for ftp.
 
     _f_rtc = rtc.begin(TZName);
     if(!_f_rtc){

@@ -12,6 +12,8 @@
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
 #define TP_ROTATION     3                               // 0 ... 3
+#define FTP_USERNAME    "esp32"                         // enter user and pw in FTP Client
+#define FTP_PASSWORD    "esp32"
 
 /**********************************************************************************************************************/
 
