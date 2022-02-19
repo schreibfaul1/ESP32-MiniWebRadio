@@ -47,9 +47,9 @@
 #define SD_MMC_CLK    14  // cannot be changed
 #define SD_MMC_CMD    15  // cannot be changed
 #define IR_PIN        35
-#define SPI_MOSI      23  // (VSPI)
-#define SPI_MISO      19  // (VSPI)
-#define SPI_SCK       18  // (VSPI)
+#define SPI_MOSI      23  // TFT and TP (VSPI)
+#define SPI_MISO      19  // TFT and TP (VSPI)
+#define SPI_SCK       18  // TFT and TP (VSPI)
 #define VS1053_MOSI   13  // VS1053     (HSPI)
 #define VS1053_MISO   34  // VS1053     (HSPI)
 #define VS1053_SCK    12  // VS1053     (HSPI)
