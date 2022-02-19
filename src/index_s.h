@@ -382,7 +382,7 @@ function showTab3 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
-  socket.send("change_state=" + "6")
+  socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
 }
 
@@ -1259,7 +1259,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
     <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="eager" alt="Image 27" />
     <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="eager" alt="Image 28" />
     <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="eager" alt="Image 29" />
-//  <img src="SD/MiniWebRadio_gr.jpg"               width="1" height="1" loading="eager" alt="Image 30" />
+//  <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 30" />
   </div>
 
   <div id="dialog">
@@ -1423,6 +1423,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </select>
       <br><br>
       <button class="button" onclick="httpGet('stop', 3)">STOP</button>
+      <button class="button" onclick="httpGet('resumefile', 3)">RESUME</button>
       <br><br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
       <br><br>
@@ -1529,7 +1530,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
     This project is documented on
     <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
     <p>Author: Wolle (schreibfaul1)</p><br>
-    <img src="SD/MiniWebRadio_gr.jpg" alt="MiniWebRadio_gr" border="3">
+    <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
     <h3>Connected WiFi network
       <select class="boxstyle" onchange="handletone(this)" id="ssid"></select>
     </h3>

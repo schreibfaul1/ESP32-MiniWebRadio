@@ -39,6 +39,7 @@ uint8_t        _touchCnt       = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
 uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int8_t         _releaseNr      = -1;
+uint32_t       _resumeFilePos  = 0;
 char           _chbuf[512];
 char           _myIP[25];
 char           _afn[256];                // audioFileName
@@ -821,7 +822,7 @@ bool sendAudioList2Web(const char* audioDir){
         }
         else break;
     }
-    // log_i("%s", str.c_str());
+     log_i("%s", str.c_str());
     webSrv.send((const char*)str.c_str());
     return true;
 }
@@ -1190,7 +1191,7 @@ String setI2STone(){
     return tone;
 }
 
-void audiotrack(const char* fileName){
+void audiotrack(const char* fileName, uint32_t resumeFilePos){
     char* path = (char*)malloc(strlen(fileName) + 20);
     strcpy(path, "/audiofiles/");
     strcat(path, fileName);
@@ -1198,9 +1199,10 @@ void audiotrack(const char* fileName){
     showVolumeBar();
     showFileName(fileName);
     changeState(PLAYERico);
-    if(audioConnecttoFS(path)){
+    if(audioConnecttoFS(path, resumeFilePos)){
         free(_lastconnectedfile);
         _lastconnectedfile = strdup(fileName);
+        _resumeFilePos = 0;
     }
     if(path) free(path);
 }
@@ -1825,7 +1827,7 @@ void tp_released(){
 
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
-    // log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+     log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     String  str;
     if(cmd=="homepage")      {webSrv.send("homepage=" + _homepage); return;}
     if(cmd=="to_listen")     {StationsItems(); return;} // via websocket, return the name and number of the current station
@@ -1855,7 +1857,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
     if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
     if(cmd=="change_state")  {changeState(param.toInt()); return;}
-    if(cmd=="stop")          {audioStopSong(); webSrv.reply("OK\n"); return;}
+    if(cmd=="stop")          {_resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
+    if(cmd=="resumefile")    {if(!_lastconnectedfile){ webSrv.reply("nOK\n"); return;}
+        log_i("_lastconnectedfile %s, _resumeFilePos %i", _lastconnectedfile, _resumeFilePos);
+         audiotrack(_lastconnectedfile, _resumeFilePos); webSrv.reply("OK\n"); return;}
     if(cmd=="test")          {sprintf(_chbuf, "free heap: %u\n", ESP.getFreeHeap()); webSrv.reply(_chbuf); return;}
 
     log_e("unknown HTMLcommand %s", cmd.c_str());

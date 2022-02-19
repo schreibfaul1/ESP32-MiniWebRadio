@@ -73,7 +73,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
-                audioTxTaskMessage.ret = vs1053.connecttoFS(SD_MMC, audioRxTaskMessage.txt);
+                audioTxTaskMessage.ret = vs1053.connecttoFS(SD_MMC, audioRxTaskMessage.txt, audioRxTaskMessage.value);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
@@ -83,8 +83,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == STOPSONG){
                 audioTxTaskMessage.cmd = STOPSONG;
-                vs1053.stop_mp3client();
-                audioTxTaskMessage.ret = 0;
+                audioTxTaskMessage.ret = vs1053.stop_mp3client();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == SETTONE){
@@ -147,18 +146,18 @@ boolean audioConnecttohost(const char* host){
     return RX.ret;
 }
 
-boolean audioConnecttoFS(const char* filename){
+boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt = filename;
-    audioTxMessage.value = 0;
+    audioTxMessage.value = resumeFilePos;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
 
-void audioStopSong(){
+uint32_t audioStopSong(){
     audioTxMessage.cmd = STOPSONG;
     audioMessage RX = transmitReceive(audioTxMessage);
-    (void)RX;
+    return RX.ret;
 }
 
 void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass){
@@ -225,7 +224,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
-                audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt);
+                audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt, audioRxTaskMessage.value);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
@@ -235,8 +234,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == STOPSONG){
                 audioTxTaskMessage.cmd = STOPSONG;
-                audio.stopSong();
-                audioTxTaskMessage.ret = 0;
+                audioTxTaskMessage.ret = audio.stopSong();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == SETTONE){
@@ -299,18 +297,18 @@ boolean audioConnecttohost(const char* host){
     return RX.ret;
 }
 
-boolean audioConnecttoFS(const char* filename){
+boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt = filename;
-    audioTxMessage.value = 0;
+    audioTxMessage.value = resumeFilePos;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
 
-void audioStopSong(){
+uint32_t audioStopSong(){
     audioTxMessage.cmd = STOPSONG;
     audioMessage RX = transmitReceive(audioTxMessage);
-    (void)RX;
+    return RX.ret;
 }
 
 void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass){

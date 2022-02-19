@@ -462,14 +462,14 @@ function showLabel (id, src) { // get the bitmap from SD, convert to URL first
   // src=src.replace(/\{/g , '%7B')  // not necessary to replace
   // src=src.replace(/\|/g , '%7C')  // not allowed in filenames
   // src=src.replace(/\}/g , '%7D')  // not necessary to replace
-  
+
   var timestamp = new Date().getTime()
-  var file 
+  var file
   if(src == '' || src === 'unknown'){
     file = 'url(SD/unknown.jpg?t=' + timestamp + ')'
     document.getElementById(id).style.backgroundImage = file
     return
-  } 
+  }
   var idx = src.indexOf('|')
   if(idx > 0) src = src.substring(idx+1); // all after pipe
   file = 'url(SD/logo/' + src + '.jpg?t=' + timestamp + ')'
@@ -978,14 +978,14 @@ function getAudioFileList(val){
     opt = document.createElement('OPTION')
     if(i == -1){
       opt.value = ""
-      opt.text =  "select a file here"   
+      opt.text =  "select a file here"
     }
     else{
       console.log(fileNames[i])
       opt.value = fileNames[i]
       opt.text =  fileNames[i]
     }
-    select.add(opt)      
+    select.add(opt)
   }
 }
 
@@ -1402,6 +1402,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </select>
       <br><br>
       <button class="button" onclick="httpGet('stop', 3)">STOP</button>
+      <button class="button" onclick="httpGet('resumefile', 3)">RESUME</button>
       <br><br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
       <br><br>
