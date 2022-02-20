@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 06 2022
+// updated on Feb 20 2022
 
 
 #pragma once
@@ -123,7 +123,9 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
                                                    (_font==Times_New_Roman27x21)||
                                                    (_font==Times_New_Roman34x27)||
                                                    (_font==Times_New_Roman38x31)||
-                                                   (_font==Times_New_Roman43x35)){
+                                                   (_font==Times_New_Roman43x35)||
+                                                   (_font==Times_New_Roman56x46)||
+                                                   (_font==Times_New_Roman66x53)){
                                                     _f_utf8=true; _f_cp1251=false; _f_cp1252=false; _f_cp1253=false;// font can handle UTF-8
                                                 }
                                                 else _f_utf8=false;

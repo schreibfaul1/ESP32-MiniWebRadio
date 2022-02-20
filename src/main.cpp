@@ -23,12 +23,9 @@
 
 #include "common.h"
 
-
-
 //global variables
-const uint8_t  _max_volume   = 21;
-const uint16_t _max_stations = 1000;
-//const uint16_t _yBtn = _winTitle.y + 34; // yPos Buttons
+const uint8_t  _max_volume     = 21;
+const uint16_t _max_stations   = 1000;
 uint8_t        _alarmdays      = 0;
 uint16_t       _cur_station    = 0;      // current station(nr), will be set later
 uint16_t       _sleeptime      = 0;      // time in min until MiniWebRadio goes to sleep
@@ -50,7 +47,7 @@ char*          _lastconnectedhost = nullptr;
 char*          _stationURL = nullptr;
 const char*    _pressBtn[5];
 const char*    _releaseBtn[5];
-boolean        _f_rtc=false;             // true if time from ntp is received
+boolean        _f_rtc  = false;             // true if time from ntp is received
 boolean        _f_1sec = false;
 boolean        _f_1min = false;
 boolean        _f_mute = false;
@@ -1242,11 +1239,11 @@ void changeState(int state){
         }
         case RADIOico:{
             showHeadlineItem(RADIOico);
-            _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";      _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[1]="/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
-            _pressBtn[3]="/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3]="/btn/Button_Previous_Green.jpg";
-            _pressBtn[4]="/btn/Button_Next_Yellow.jpg";        _releaseBtn[4]="/btn/Button_Next_Green.jpg";
+            _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
+            _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
             clearTitle();
             showVolumeBar();
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
@@ -1254,10 +1251,10 @@ void changeState(int state){
         }
         case RADIOmenue:{
             showHeadlineItem(RADIOmenue);
-            _pressBtn[0]="/btn/MP3_Yellow.jpg";                _releaseBtn[0]="/btn/MP3_Green.jpg";
-            _pressBtn[1]="/btn/Clock_Yellow.jpg";              _releaseBtn[1]="/btn/Clock_Green.jpg";
-            _pressBtn[2]="/btn/Radio_Yellow.jpg";              _releaseBtn[2]="/btn/Radio_Green.jpg";
-            _pressBtn[3]="/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Sleep_Green.jpg";
+            _pressBtn[0] = "/btn/MP3_Yellow.jpg";                _releaseBtn[0] = "/btn/MP3_Green.jpg";
+            _pressBtn[1] = "/btn/Clock_Yellow.jpg";              _releaseBtn[1] = "/btn/Clock_Green.jpg";
+            _pressBtn[2] = "/btn/Radio_Yellow.jpg";              _releaseBtn[2] = "/btn/Radio_Green.jpg";
+            _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
             if(TFT_CONTROLLER < 2){
                 _pressBtn[4]="/btn/Bulb_Yellow.jpg";           _releaseBtn[4]="/btn/Bulb_Green.jpg";
             }
@@ -1301,11 +1298,11 @@ void changeState(int state){
         }
         case BRIGHTNESS:{
             showHeadlineItem(BRIGHTNESS);
-            _pressBtn[0]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[0]="/btn/Button_Left_Blue.jpg";
-            _pressBtn[1]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[1]="/btn/Button_Right_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
-            _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
+            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
+            _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
+            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
+            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             drawImage("/common/Brightness.jpg", 0, _winName.y);
             showBrightnessBar();
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
@@ -1317,30 +1314,30 @@ void changeState(int state){
                 clearTitle();
             }
             showHeadlineItem(PLAYER);
-            _pressBtn[0]="/btn/Radio_Yellow.jpg";              _releaseBtn[0]="/btn/Radio_Green.jpg";
-            _pressBtn[1]="/btn/Button_First_Yellow.jpg";       _releaseBtn[1]="/btn/Button_First_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Right_Blue.jpg";
-            _pressBtn[3]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[3]="/btn/Button_Ready_Blue.jpg";
-            _pressBtn[4]="/btn/Black.jpg";                     _releaseBtn[4]="/btn/Black.jpg";
+            _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
+            _pressBtn[1] = "/btn/Button_First_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_First_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Right_Blue.jpg";
+            _pressBtn[3] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Ready_Blue.jpg";
+            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case PLAYERico:{
             showHeadlineItem(PLAYERico);
-            _pressBtn[0] = "/btn/Button_Mute_Red.jpg";         _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[1]="/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1]="/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2]="/btn/Button_Volume_Up_Blue.jpg";
-            _pressBtn[3]="/btn/MP3_Yellow.jpg";                _releaseBtn[3]="/btn/MP3_Green.jpg";
-            _pressBtn[4]="/btn/Radio_Yellow.jpg";              _releaseBtn[4]="/btn/Radio_Green.jpg";
+            _pressBtn[0] = "/btn/Button_Mute_Red.jpg";           _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[3] = "/btn/MP3_Yellow.jpg";                _releaseBtn[3] = "/btn/MP3_Green.jpg";
+            _pressBtn[4] = "/btn/Radio_Yellow.jpg";              _releaseBtn[4] = "/btn/Radio_Green.jpg";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case ALARM:{
-            _pressBtn[0]="/btn/Button_Left_Yellow.jpg";        _releaseBtn[0]="/btn/Button_Left_Blue.jpg";
-            _pressBtn[1]="/btn/Button_Right_Yellow.jpg";       _releaseBtn[1]="/btn/Button_Right_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Up_Yellow.jpg";          _releaseBtn[2]="/btn/Button_Up_Blue.jpg";
-            _pressBtn[3]="/btn/Button_Down_Yellow.jpg";        _releaseBtn[3]="/btn/Button_Down_Blue.jpg";
-            _pressBtn[4]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[4]="/btn/Button_Ready_Blue.jpg";
+            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
+            _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Up_Yellow.jpg";          _releaseBtn[2] = "/btn/Button_Up_Blue.jpg";
+            _pressBtn[3] = "/btn/Button_Down_Yellow.jpg";        _releaseBtn[3] = "/btn/Button_Down_Blue.jpg";
+            _pressBtn[4] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[4] = "/btn/Button_Ready_Blue.jpg";
             clearFName();
             clearTitle();
             display_alarmtime(0, 0, true);
@@ -1350,11 +1347,11 @@ void changeState(int state){
         }
         case SLEEP:{
             showHeadlineItem(SLEEP);
-            _pressBtn[0]="/btn/Button_Up_Yellow.jpg";          _releaseBtn[0]="/btn/Button_Up_Blue.jpg";
-            _pressBtn[1]="/btn/Button_Down_Yellow.jpg";        _releaseBtn[1]="/btn/Button_Down_Blue.jpg";
-            _pressBtn[2]="/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2]="/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3]="/btn/Black.jpg";                     _releaseBtn[3]="/btn/Black.jpg";
-            _pressBtn[4]="/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4]="/btn/Button_Cancel_Blue.jpg";
+            _pressBtn[0] = "/btn/Button_Up_Yellow.jpg";          _releaseBtn[0] = "/btn/Button_Up_Blue.jpg";
+            _pressBtn[1] = "/btn/Button_Down_Yellow.jpg";        _releaseBtn[1] = "/btn/Button_Down_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
+            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
+            _pressBtn[4] = "/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4] = "/btn/Button_Cancel_Blue.jpg";
             clearFName();
             clearTitle();
             display_sleeptime();
