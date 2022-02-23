@@ -117,6 +117,9 @@ String setTone();
 String setI2STone();
 void audiotrack(const char* fileName, uint32_t resumeFilePos = 0);
 void changeState(int state);
+void connecttohost(const char* host);
+void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
+void stopSong();
 
 // //prototypes (audiotask.cpp)
 void audioInit();

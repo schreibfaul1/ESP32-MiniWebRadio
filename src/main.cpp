@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.c, Feb 17/2022
+    Version 2.d, Feb 22/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -869,6 +869,23 @@ bool connectToWiFi(){
     }
 }
 /***********************************************************************************************************************
+*                                                    A U D I O                                                        *
+***********************************************************************************************************************/
+void connecttohost(const char* host){
+    _f_isWebConnected = audioConnecttohost(host);
+    _f_isFSConnected = false;
+}
+void connecttoFS(const char* filename, uint32_t resumeFilePos){
+    _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
+    _f_isWebConnected = false;
+}
+void stopSong(){
+    audioStopSong();
+    _f_isFSConnected = false;
+    _f_isWebConnected = false;
+}
+
+/***********************************************************************************************************************
 *                                                    S E T U P                                                         *
 ***********************************************************************************************************************/
 void setup(){
@@ -973,6 +990,7 @@ void setup(){
     webSrv.begin(80, 81); // HTTP port, WebSocket port
     tft.fillScreen(TFT_BLACK); // Clear screen
     showHeadlineItem(RADIO);
+    showHeadlineVolume(_cur_volume);
     setStation(_cur_station);
     //tone();
     showFooter();
@@ -1094,8 +1112,11 @@ void setStation(uint16_t sta){
     if(!_f_isWebConnected) _streamTitle = "";
     showFooterStaNr();
     pref.putUInt("station", sta);
-    if(not(_state == PLAYER && strCompare(_stationURL, _lastconnectedhost) && _f_isWebConnected)){
-        audioConnecttohost(_stationURL);
+    if(!_f_isWebConnected){
+        connecttohost(_stationURL);
+    }
+    else{
+        if(!strCompare(_stationURL, _lastconnectedhost)) connecttohost(_stationURL);
     }
     showLogoAndStationName();
     StationsItems();
@@ -1196,7 +1217,8 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
     showVolumeBar();
     showFileName(fileName);
     changeState(PLAYERico);
-    if(audioConnecttoFS(path, resumeFilePos)){
+    connecttoFS((const char*) path, resumeFilePos);
+    if(_f_isFSConnected){
         free(_lastconnectedfile);
         _lastconnectedfile = strdup(fileName);
         _resumeFilePos = 0;
@@ -1226,7 +1248,7 @@ void changeState(int state){
             else if(_state == SLEEP){
                 clearFName();
                 clearTitle();
-                audioConnecttohost(_lastconnectedhost);
+                connecttohost(_lastconnectedhost);
                 showLogoAndStationName();
                 showFooter();
                 showHeadlineVolume(_cur_volume);
@@ -1400,7 +1422,7 @@ void loop() {
                         mute(); // mute off
                     }
                 }
-                audioConnecttohost(_lastconnectedhost);
+                connecttohost(_lastconnectedhost);
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -1409,7 +1431,7 @@ void loop() {
                     h++;
                     if( h== 24) h=0;
                     sprintf (_chbuf, "/voice_time/%d_00.mp3", h);
-                    audioConnecttoFS(_chbuf);
+                    connecttoFS(_chbuf);
                 }
             }
 
@@ -1424,7 +1446,7 @@ void loop() {
             if(_f_alarm){
                 SerialPrintfln("Alarm");
                 _f_alarm=false;
-                audioConnecttoFS("/ring/alarm_clock.mp3");
+                connecttoFS("/ring/alarm_clock.mp3");
                 audioSetVolume(21);
             }
         }
@@ -1729,7 +1751,7 @@ void tp_released(){
         SerialPrintfln("awake");
         setTFTbrightness(pref.getUShort("brightness"));
         changeState(RADIO);
-        audioConnecttohost(_lastconnectedhost);
+        connecttohost(_lastconnectedhost);
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
@@ -1781,7 +1803,8 @@ void tp_released(){
                     showFileName(_afn); break;
         case 43:    changeState(PLAYERico); showVolumeBar(); // ready
                     strcat(path, _afn);
-                    if(audioConnecttoFS(path)){
+                    connecttoFS((const char*) path);
+                    if(_f_isFSConnected){
                         free(_lastconnectedfile);
                         _lastconnectedfile = strdup(path);
                     } break;
@@ -1847,7 +1870,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="prev_station")  {prevStation(); return;} // via websocket
     if(cmd=="next_station")  {nextStation();  return;} // via websocket
     if(cmd=="set_station")   {setStation(param.toInt()); StationsItems(); return;} // via websocket
-    if(cmd=="stationURL")    {audioConnecttohost(param.c_str());webSrv.reply("OK\n"); return;}
+    if(cmd=="stationURL")    {connecttohost(param.c_str());webSrv.reply("OK\n"); return;}
     if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
     if(cmd=="ping")          {webSrv.send("pong"); return;}
     if(cmd=="index.html")    {if(TFT_CONTROLLER < 2) webSrv.show(index_s_html); else webSrv.show(index_m_html); return;}
