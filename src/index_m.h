@@ -1184,7 +1184,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       networks = xhr.responseText.split('\n')
-      for (i = 0; i < (networks.length - 1); i++) {
+      for (i = 0; i < (networks.length); i++) {
         opt = document.createElement('OPTION')
         opt.value = i
         opt.text = networks[i]
