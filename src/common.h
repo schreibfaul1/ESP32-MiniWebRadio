@@ -128,5 +128,4 @@ uint8_t audioGetVolume();
 boolean audioConnecttohost(const char* host);
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 uint32_t audioStopSong();
-void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass);
-
+void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0);

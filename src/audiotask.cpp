@@ -88,11 +88,12 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == SETTONE){
                 audioTxTaskMessage.cmd = SETTONE;
-                int8_t lowPass, bandPass, highPass;
-                lowPass  = (audioRxTaskMessage.value & 0xFF);
-                bandPass = (audioRxTaskMessage.value >>  8) & 0xFF;
-                highPass = (audioRxTaskMessage.value >> 16) & 0xFF;
-            //    audio.setTone(lowPass, bandPass, highPass);
+                uint8_t u8_tone[4];
+                u8_tone[0] = (audioRxTaskMessage.value & 0xFF);       // toneha  Lower limit frequency in 10 Hz steps (2..15)
+                u8_tone[1] = (audioRxTaskMessage.value >>  8) & 0xFF; // tonehf  Bass Enhancement in 1 dB steps (0..15, 0 = off)
+                u8_tone[2] = (audioRxTaskMessage.value >> 16) & 0xFF; // tonela  Lower limit frequency in 1000 Hz steps (1..15)
+                u8_tone[3] = (audioRxTaskMessage.value >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
+                vs1053.setTone(u8_tone);
                 audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -160,13 +161,15 @@ uint32_t audioStopSong(){
     return RX.ret;
 }
 
-void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass){
+void audioSetTone(int8_t toneha, int8_t tonehf, int8_t tonela, int8_t tonelf){
     audioTxMessage.cmd = SETTONE;
-    audioTxMessage.value = (uint8_t)highPass;
+    audioTxMessage.value =  (uint8_t)toneha;
     audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)bandPass;
+    audioTxMessage.value += (uint8_t)tonehf;
     audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)lowPass;
+    audioTxMessage.value += (uint8_t)tonela;
+    audioTxMessage.value <<= 8;
+    audioTxMessage.value += (uint8_t)tonelf;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -311,7 +314,7 @@ uint32_t audioStopSong(){
     return RX.ret;
 }
 
-void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass){
+void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass, int8_t unused){
     audioTxMessage.cmd = SETTONE;
     audioTxMessage.value = (uint8_t)highPass;
     audioTxMessage.value <<= 8;
@@ -319,6 +322,7 @@ void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass){
     audioTxMessage.value <<= 8;
     audioTxMessage.value += (uint8_t)lowPass;
     audioMessage RX = transmitReceive(audioTxMessage);
+    (void)unused;
     (void)RX;
 }
 //

@@ -989,7 +989,8 @@ void setup(){
     showHeadlineItem(RADIO);
     showHeadlineVolume(_cur_volume);
     setStation(_cur_station);
-    //tone();
+    if(DECODER == 0) setTone();    // HW Decoder
+    else             setI2STone(); // SW Decoder
     showFooter();
     ticker.attach(1, timer1sec);
 }
@@ -1182,18 +1183,15 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
-String setTone(){
-    String str_tone="";
-    uint8_t u8_tone[4];
-    u8_tone[0]=pref.getUShort("toneha"); u8_tone[1]=pref.getUInt("tonehf");
-    u8_tone[2]=pref.getUShort("tonela"); u8_tone[3]=pref.getUInt("tonelf");
-    sprintf(_chbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n",u8_tone[0],u8_tone[1],u8_tone[2],u8_tone[3]);
-    str_tone=String(_chbuf);
-    _f_mute=pref.getUShort("mute");
-    if(_f_mute==false) audioSetVolume(pref.getUShort("volume"));
-    else {audioSetVolume(0);showHeadlineVolume(0);}
-//    vs1053.setTone(u8_tone);
-    return str_tone;
+String setTone(){ // vs1053
+    uint8_t ha =pref.getUShort("toneha");
+    uint8_t hf =pref.getUShort("tonehf");
+    uint8_t la =pref.getUShort("tonela");
+    uint8_t lf =pref.getUShort("tonelf");
+    audioSetTone(ha, hf, la, lf);
+    sprintf(_chbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n", ha, hf, la, lf);
+    String tone = String(_chbuf);
+    return tone;
 }
 
 String setI2STone(){
@@ -1875,9 +1873,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
     if(cmd=="change_state")  {changeState(param.toInt()); return;}
     if(cmd=="stop")          {_resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
-    if(cmd=="resumefile")    {if(!_lastconnectedfile){ webSrv.reply("nOK\n"); return;}
-        log_i("_lastconnectedfile %s, _resumeFilePos %i", _lastconnectedfile, _resumeFilePos);
-         audiotrack(_lastconnectedfile, _resumeFilePos); webSrv.reply("OK\n"); return;}
+    if(cmd=="resumefile")    {if(!_lastconnectedfile) webSrv.reply("nothing to resume\n"); else {audiotrack(_lastconnectedfile, _resumeFilePos); webSrv.reply("OK\n");} return;}
     if(cmd=="test")          {sprintf(_chbuf, "free heap: %u\n", ESP.getFreeHeap()); webSrv.reply(_chbuf); return;}
 
     log_e("unknown HTMLcommand %s", cmd.c_str());
