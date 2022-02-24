@@ -829,7 +829,7 @@ bool sendAudioList2Web(const char* audioDir){
 bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
-
+    WiFi.setHostname("MiniWebRadio");
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file){                                         // try to read from SD_MMC
         String str = "";
@@ -982,10 +982,7 @@ void setup(){
     _alarmtime = pref.getUInt("alarm_time");
     _state = RADIO;
 
-    WiFi.mode(WIFI_MODE_STA);
-    WiFi.setHostname("MiniWebRadio");
-
-    ir.begin();  // Init InfraredDecoder
+     ir.begin();  // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
     tft.fillScreen(TFT_BLACK); // Clear screen
