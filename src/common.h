@@ -7,8 +7,8 @@
 #define _SSID           "mySSID"                        // Your WiFi credentials here
 #define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER         1                               // (0)VS1053 , (1)SW DECODER DAC via I2S
-#define TFT_CONTROLLER  2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
+#define DECODER         0                               // (0)VS1053 , (1)SW DECODER DAC via I2S
+#define TFT_CONTROLLER  1                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
 #define TP_ROTATION     3                               // 0 ... 3
@@ -129,3 +129,5 @@ boolean audioConnecttohost(const char* host);
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 uint32_t audioStopSong();
 void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0);
+uint32_t audioInbuffFilled();
+uint32_t audioInbuffFree();

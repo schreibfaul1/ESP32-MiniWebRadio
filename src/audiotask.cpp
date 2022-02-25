@@ -23,7 +23,7 @@
 
 #if DECODER == 0
 
-enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE};
+enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -95,6 +95,16 @@ void audioTask(void *parameter) {
                 u8_tone[3] = (audioRxTaskMessage.value >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
                 vs1053.setTone(u8_tone);
                 audioTxTaskMessage.ret = 0;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == INBUFF_FILLED){
+                audioTxTaskMessage.cmd = INBUFF_FILLED;
+                audioTxTaskMessage.ret = vs1053.bufferFilled();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == INBUFF_FREE){
+                audioTxTaskMessage.cmd = INBUFF_FREE;
+                audioTxTaskMessage.ret = vs1053.bufferFree();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -174,6 +184,18 @@ void audioSetTone(int8_t toneha, int8_t tonehf, int8_t tonela, int8_t tonelf){
     (void)RX;
 }
 
+uint32_t audioInbuffFilled(){
+    audioTxMessage.cmd = INBUFF_FILLED;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioInbuffFree(){
+    audioTxMessage.cmd = INBUFF_FREE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 #endif // DECODER == 0
 
 /***********************************************************************************************************************
@@ -182,7 +204,7 @@ void audioSetTone(int8_t toneha, int8_t tonehf, int8_t tonela, int8_t tonelf){
 
 #if DECODER == 1
 
-enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE};
+enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -248,6 +270,16 @@ void audioTask(void *parameter) {
                 highPass = (audioRxTaskMessage.value >> 16) & 0xFF;
                 audio.setTone(lowPass, bandPass, highPass);
                 audioTxTaskMessage.ret = 0;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == INBUFF_FILLED){
+                audioTxTaskMessage.cmd = INBUFF_FILLED;
+                audioTxTaskMessage.ret = audio.inBufferFilled();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == INBUFF_FREE){
+                audioTxTaskMessage.cmd = INBUFF_FREE;
+                audioTxTaskMessage.ret = audio.inBufferFree();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -324,6 +356,18 @@ void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass, int8_t unuse
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)unused;
     (void)RX;
+}
+
+uint32_t audioInbuffFilled(){
+    audioTxMessage.cmd = INBUFF_FILLED;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioInbuffFree(){
+    audioTxMessage.cmd = INBUFF_FREE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
 }
 //
 #endif // DECODER == 1

@@ -1874,7 +1874,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="change_state")  {changeState(param.toInt()); return;}
     if(cmd=="stop")          {_resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
     if(cmd=="resumefile")    {if(!_lastconnectedfile) webSrv.reply("nothing to resume\n"); else {audiotrack(_lastconnectedfile, _resumeFilePos); webSrv.reply("OK\n");} return;}
-    if(cmd=="test")          {sprintf(_chbuf, "free heap: %u\n", ESP.getFreeHeap()); webSrv.reply(_chbuf); return;}
+    if(cmd=="test")          {sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n", ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree()); webSrv.reply(_chbuf); return;}
 
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
