@@ -1868,7 +1868,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="stationURL")    {connecttohost(param.c_str());webSrv.reply("OK\n"); return;}
     if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
     if(cmd=="ping")          {webSrv.send("pong"); return;}
-    if(cmd=="index.html")    {if(TFT_CONTROLLER < 2) webSrv.show(index_s_html); else webSrv.show(index_m_html); return;}
+    if(cmd=="index.html")    {if(TFT_CONTROLLER < 2) webSrv.show(index_html); else webSrv.show(index_m_html); return;}
     if(cmd=="get_tftSize")   {webSrv.send("tftSize=s"); return;}
     if(cmd=="get_decoder")   {webSrv.send("decoder=h"); return;}
     if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}

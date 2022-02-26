@@ -26,7 +26,7 @@
 #include <FS.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
-#include "index_s.h"
+#include "index.h"
 #include "index_m.h"
 #include "websrv.h"
 #include "rtime.h"

@@ -17,7 +17,7 @@
 // file in raw data format for PROGMEM
 //
 
-const char index_s_html[] PROGMEM = R"=====(
+const char index_html[] PROGMEM = R"=====(
 <!DOCTYPE HTML>
 <html>
 <head>
