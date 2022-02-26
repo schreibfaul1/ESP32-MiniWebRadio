@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 14.02.2022
+ *  Updated on: 26.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -145,12 +145,24 @@ const char index_html[] PROGMEM = R"=====(
             height : 128px;
             margin-top: 5px;
         }
+        #div-logo-s{
+          display: none;
+        }
+        #div-logo-m{
+          display: none;
+        }
+        #div-tone-s{
+          display: none;  // audioI2S SW decoder
+        }
+        #div-tone-h{
+          display: none;  // vs1053 HW decoder
+        }
         canvas {
             left : 0;
             margin-left : 0;
             display : inline-block;
-            width : 96px;
-            height : 96px;
+            //width : 96px;
+            //height : 96px;
             border : #000 solid 2px;
         }
         .jsgrid-header-cell {
@@ -190,7 +202,7 @@ const char index_html[] PROGMEM = R"=====(
             display: inline-block;
             float: left;
             text-align:right;
-            height: 25px;
+            height: 40px;
             width: 100px;
             padding-top: 0px;
             padding-right: 5px;
@@ -200,7 +212,7 @@ const char index_html[] PROGMEM = R"=====(
             display: inline-block;
             float: left;
             text-align:right;
-            height: 25px;
+            height: 40px;
             width: 45px;
             padding-top: 0px;
             padding-left: 5px;
@@ -210,7 +222,7 @@ const char index_html[] PROGMEM = R"=====(
             display: inline-block;
             float: left;
             text-align:left;
-            height: 25px;
+            height: 40px;
             width: 40px;
             padding-top: 0px;
             padding-bottom: 0px;
@@ -257,9 +269,10 @@ function connect() {
 
   socket.onopen = function () {
     console.log("Websocket connected")
-    socket.send('to_listen')
     socket.send('get_tftSize')
     socket.send('get_decoder')
+    socket.send('to_listen')
+
     setInterval(ping, 20000)
   };
 
@@ -302,7 +315,8 @@ function connect() {
                               break
       case "stationURL":      station.value = val
                               break
-      case "stationName":     showLabel('label-logo', val)
+      case "stationName":     if(tft_size == 0) showLabel('label-logo-s', val)
+                              if(tft_size == 1) showLabel('label-logo-m', val)
                               break
       case "streamtitle":     cmd.value = val
                               break
@@ -312,11 +326,30 @@ function connect() {
                               break
       case "AudioFileList":   getAudioFileList(val)
                               break
-      case "tftSize":         if(val == 's') {tft_size = 0; console.log("tftSize is s");}
-                              if(val == 'm') {tft_size = 1; console.log("tftSize is m");}
+      case "tftSize":         if(val == 's')  { tft_size = 0; // 320x240px
+                                                document.getElementById('div-logo-m').style.display = 'none';
+                                                document.getElementById('div-logo-s').style.display = 'block';
+                                                document.getElementById('canvas').width  = 96;
+                                                document.getElementById('canvas').height = 96;
+                                                console.log("tftSize is s");
+                              }
+                              if(val == 'm')  { tft_size = 1;
+                                                document.getElementById('div-logo-s').style.display = 'none';
+                                                document.getElementById('div-logo-m').style.display = 'block';
+                                                document.getElementById('canvas').width  = 128;
+                                                document.getElementById('canvas').height = 128;
+                                                console.log("tftSize is m");
+                              }
                               break
-      case  "decoder":        if(val == 'h') {audio_decoder = 0; console.log("vs1053");}
-                              if(val == 's') {audio_decoder = 1; console.log("audioI2S");}
+      case  "decoder":        if(val == 'h')  { audio_decoder = 0; // vs1053 HW decoder
+                                                document.getElementById('div-tone-s').style.display = 'none';
+                                                document.getElementById('div-tone-h').style.display = 'block';
+                                                console.log("vs1053");
+                              }
+                              if(val == 's')  { audio_decoder = 1; // audioI2S SW decoder
+                                                document.getElementById('div-tone-h').style.display = 'none';
+                                                document.getElementById('div-tone-s').style.display = 'block';
+                                                console.log("audioI2S");}
                               break
       default:                console.log('unknown message', msg, val)
     }
@@ -495,6 +528,7 @@ function showLabel (id, src) { // get the bitmap from SD, convert to URL first
   var idx = src.indexOf('|')
   if(idx > 0) src = src.substring(idx+1); // all after pipe
   file = 'url(SD/logo/' + src + '.jpg?t=' + timestamp + ')'
+  console.log("showLabel id=", id, "file=", file)
   document.getElementById(id).style.backgroundImage = file
 }
 
@@ -599,7 +633,8 @@ function setstation () { // Radio: button play - Enter a streamURL here....
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       resultstr1.value = xhr.responseText
-      showLabel('label-logo', 'unknown')
+      if(tft_size == 0) showLabel('label-logo-s', 'unknown')
+      if(tft_size == 1) showLabel('label-logo-m', 'unknown')
     }
   }
   xhr.open('GET', theUrl, true)
@@ -620,6 +655,11 @@ function setSlider (elmnt, value) {
   if (elmnt === 'tonehf') slider_TF_set(value)
   if (elmnt === 'tonela') slider_BG_set(value)
   if (elmnt === 'tonelf') slider_BF_set(value)
+  v = Math.trunc((40 + parseInt(value, 10)) /3)
+  console.log("setSlider", elmnt, value)
+  if (elmnt === 'LowPass' ) slider_LP_set(v)
+  if (elmnt === 'BandPass') slider_BP_set(v)
+  if (elmnt === 'HighPass') slider_HP_set(v)
 }
 
 function slider_TG_mouseUp () { // Slider Treble Gain   mouseupevent
@@ -694,6 +734,57 @@ function slider_BF_set (value) { // set Slider Bass Gain
   document.getElementById('BassFreq').value = val
   document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
   console.log('Bass Freq=%i', val)
+}
+
+function slider_LP_mouseUp () { // Slider LowPass mouseupevent
+  handlectrl('LowPass', trebleVal[LowPass.value])
+  console.log('LowPass=%i', Number(LowPass.value));
+}
+
+function slider_LP_change () { //  Slider LowPass changeevent
+  console.log('LowPass=%i', Number(LowPass.value))
+  document.getElementById('label_LP_value').innerHTML = trebleDB[LowPass.value]
+}
+
+function slider_LP_set (value) { // set Slider LowPass
+  var val = Number(value)
+  document.getElementById('LowPass').value = val
+  document.getElementById('label_LP_value').innerHTML = trebleDB[LowPass.value]
+  console.log('LowPass=%i', val)
+}
+
+function slider_BP_mouseUp () { // BandPass mouseupevent
+  handlectrl('BandPass', trebleVal[BandPass.value])
+  console.log('BandPass=%i', Number(BandPass.value));
+}
+
+function slider_BP_change () { //  BandPass changeevent
+  console.log('BandPass=%i', Number(BandPass.value))
+  document.getElementById('label_BP_value').innerHTML = trebleDB[BandPass.value]
+}
+
+function slider_BP_set (value) { // set Slider BandPass
+  var val = Number(value)
+  document.getElementById('BandPass').value = val
+  document.getElementById('label_BP_value').innerHTML = trebleDB[BandPass.value]
+  console.log('BandPass=%i', val)
+}
+
+function slider_HP_mouseUp () { // Slider HighPass mouseupevent
+  handlectrl('HighPass', trebleVal[HighPass.value])
+  console.log('HighPass=%i', Number(HighPass.value));
+}
+
+function slider_HP_change () { //  Slider HighPass changeevent
+  console.log('HighPass=%i', Number(HighPass.value))
+  document.getElementById('label_HP_value').innerHTML = trebleDB[HighPass.value]
+}
+
+function slider_HP_set (value) { // set Slider HighPass
+  var val = Number(value)
+  document.getElementById('HighPass').value = val
+  document.getElementById('label_HP_value').innerHTML = trebleDB[HighPass.value]
+  console.log('HighPass=%i', val)
 }
 
 function handlectrl (id, val) { // Radio: treble, bass, freq
@@ -1335,13 +1426,15 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </div>
     </div>
     <div style="display: flex;">
+
       <div id="div-logo-s" style="flex: 0 0 210px;">
         <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
       </div>
       <div id="div-logo-m" style="flex: 0 0 210px;">
         <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
       </div>
-      <div style="display: flex; flex:1; justify-content: center;">
+
+      <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
         <div style="width: 380px; height:108px;">
           <label class="sdr_lbl_left">Treble Gain:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
@@ -1370,6 +1463,31 @@ function getnetworks () { // tab Config: load the connected WiFi network
           </div>
           <label  id="label_BF_value" class="sdr_lbl_right">000</label>
           <label class="sdr_lbl_measure">Hz</label>
+        </div>
+      </div>
+      <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
+        <div style="width: 380px; height:130px;">
+          <label class="sdr_lbl_left">Low:</label>
+          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+            <input type="range" min="0" max="15" value="13" id="LowPass" onmouseup="slider_LP_mouseUp()" oninput="slider_LP_change()">
+          </div>
+          <label id="label_LP_value" class="sdr_lbl_right">0</label>
+          <label class="sdr_lbl_measure">dB</label>
+
+          <label class="sdr_lbl_left">Band:</label>
+          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+            <input type="range" min="1" max="15" value="13" id="BandPass" onmouseup="slider_BP_mouseUp()" oninput="slider_BP_change()">
+          </div>
+          <label id="label_BP_value" class="sdr_lbl_right">0</label>
+          <label class="sdr_lbl_measure">dB</label>
+
+          <label class="sdr_lbl_left">High:</label>
+          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+            <input type="range" min="0" max="15" value="13" id="HighPass" onmouseup="slider_HP_mouseUp()" oninput="slider_HP_change()">
+          </div>
+          <label id="label_HP_value" class="sdr_lbl_right">0</label>
+          <label class="sdr_lbl_measure">dB</label>
+
         </div>
       </div>
     </div>
@@ -1518,15 +1636,15 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </div>
       <hr>
       <div style="display: flex;">
-        <div style="flex: 0 0 105px; padding 1px 5px 5px 1px; ">
+        <div style="flex: 0 0 130px; padding 1px 5px 5px 1px; ">
           <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
         </div>
         <div style="flex: 1;">
-          <div style="flex: 1; height: 38px;">
+          <div style="flex: 1; height: 38px; padding-left: 10px;">
             <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
                 id="stationname" placeholder="Change the Stationname here">
           </div>
-          <div style="flex: 1;  padding-top: 4px;">
+          <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
             <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
             onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
