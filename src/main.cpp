@@ -901,7 +901,7 @@ void setup(){
     tft.begin(TFT_CS, TFT_DC, VSPI);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
-    tp.setVersion(TFT_CONTROLLER);
+    tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     setTFTbrightness(pref.getUShort("brightness"));
 

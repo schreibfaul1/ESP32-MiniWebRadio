@@ -692,7 +692,7 @@ class TP {
         uint16_t Xmin=150;
         uint16_t Ymax=1944;
         uint16_t Ymin=220;
-
+        uint8_t  TP_vers = 0;
 
     protected:
         uint16_t TP_Send(uint8_t set_val);

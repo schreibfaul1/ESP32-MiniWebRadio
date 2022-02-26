@@ -7,8 +7,6 @@
 
 JPEGDecoder JpegDec;
 
-uint8_t TP_vers;
-
 #define TFT_MAX_PIXELS_AT_ONCE  32
 
 #define ILI9341_MADCTL_MY   0x80
@@ -369,25 +367,21 @@ TFT::TFT(uint8_t TFTcontroller) {  //0=ILI9341, 1=HX8347D, 2=ILI9486, 3=ILI9488
     _TFTcontroller = TFTcontroller;
 
     if(_TFTcontroller == ILI9341){
-        TP_vers = 0;
         _height = 320;
         _width  = 240;
         _rotation=0;
     }
     if(_TFTcontroller == HX8347D){
-        TP_vers = 1;
         _height = 320;
         _width  = 240;
         _rotation=0;
     }
     if(_TFTcontroller == ILI9486){
-        TP_vers = 2;
         _height = 480;
         _width  = 3200;
         _rotation=0;
     }
     if(_TFTcontroller == ILI9488){
-        TP_vers = 2;
         _height = 480;
         _width  = 3200;
         _rotation=0;
@@ -4154,16 +4148,25 @@ void TP::setVersion(uint8_t v){
     if(v == 0) TP_vers = 0;
     if(v == 1) TP_vers = 1;
     if(v == 2) TP_vers = 2;
+    if(v == 3) TP_vers = 3;
 
     if(TP_vers == 0){   // ILI9341 display
-        Xmax=1913;    // Values Calibration
+        Xmax=1913;      // Values Calibration
         Xmin=150;
         Ymax=1944;
         Ymin=220;
         xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
     }
-    if(TP_vers == 1){   // Waveshare HX8347D display
+    if(TP_vers == 1){   // ILI9341 display for RaspberryPI  #70
+        Xmax=1940;
+        Xmin=90;
+        Ymax=1864;
+        Ymin=105;
+        xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
+        yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
+    }
+    if(TP_vers == 2){   // Waveshare HX8347D display
         Xmax=1850;
         Xmin=170;
         Ymax=1880;
@@ -4171,7 +4174,7 @@ void TP::setVersion(uint8_t v){
         xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
         yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
     }
-    if(TP_vers == 2){   // ILI9486 display
+    if(TP_vers == 3){   // ILI9486 display for RaspberryPI and ILI9488 display
         Xmax=1922;
         Xmin=140;
         Ymax=1930;
@@ -4223,7 +4226,29 @@ bool TP::read_TP(uint16_t& x, uint16_t& y){
         }
     }
 
-    if(TP_vers == 1){       // 320px x 240px
+   if(TP_vers == 1){       // 320px x 240px
+        if(_rotation == 0) {
+	    y=ILI9341_HEIGHT-y;
+	    x=ILI9341_WIDTH-x;
+        }
+        if(_rotation == 1) {
+	    tmpxy=x;
+            x=y;
+            y=tmpxy;
+            x=ILI9341_HEIGHT-x;
+        }
+        if(_rotation == 2) {
+	    ;
+        }
+        if(_rotation == 3) {
+	    tmpxy=x;
+            x=y;
+            y=tmpxy;
+            y=ILI9341_WIDTH-y;
+        }
+    }
+
+    if(TP_vers == 2){       // 320px x 240px
         if(_rotation == 0) {
             ; // do nothing
         }
@@ -4249,7 +4274,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y){
         }
     }
 
-    if(TP_vers == 2){       // 480px x 320px
+    if(TP_vers == 3){       // 480px x 320px
         if(_rotation == 0) {
             ; // do nothing
         }
