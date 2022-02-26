@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.d, Feb 22/2022
+    Version 2.e, Feb 26/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wihr controller ILI9486 (SPI)
@@ -1843,42 +1843,105 @@ void tp_released(){
 }
 
 //Events from websrv
-void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
+void WEBSRV_onCommand(const String cmd, const String param, const String arg){                       // called from html
 //    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     String  str;
-    if(cmd=="homepage")      {webSrv.send("homepage=" + _homepage); return;}
-    if(cmd=="to_listen")     {StationsItems(); return;} // via websocket, return the name and number of the current station
-    if(cmd=="gettone")       {if(DECODER) webSrv.reply(setI2STone().c_str()); else webSrv.reply(setTone().c_str()); return;}
-    if(cmd=="getmute")       {webSrv.reply(String(int(_f_mute)).c_str()); return;}
-    if(cmd=="getstreamtitle"){webSrv.reply(_streamTitle.c_str()); return;}
-    if(cmd=="mute")          {mute();if(_f_mute) webSrv.reply("Mute on\n"); else webSrv.reply("Mute off\n");   return;}
-    if(cmd=="toneha")        {pref.putUShort("toneha",(param.toInt()));webSrv.reply("Treble Gain set"); setTone(); return;}  // vs1053 tone
-    if(cmd=="tonehf")        {pref.putUShort("tonehf",(param.toInt()));webSrv.reply("Treble Freq set"); setTone(); return;}  // vs1053 tone
-    if(cmd=="tonela")        {pref.putUShort("tonela",(param.toInt()));webSrv.reply("Bass Gain set");   setTone(); return;}  // vs1053 tone
-    if(cmd=="tonelf")        {pref.putUShort("tonelf",(param.toInt()));webSrv.reply("Bass Freq set");   setTone(); return;}  // vs1053 tone
-    if(cmd=="LowPass" )      {pref.putShort("toneLP", (param.toInt()));webSrv.reply("Lowpass set" ); setI2STone(); return;}  // audioI2S tone
-    if(cmd=="BandPass")      {pref.putShort("toneBP", (param.toInt()));webSrv.reply("Bandpass set"); setI2STone(); return;}  // audioI2S tone
-    if(cmd=="HighPass")      {pref.putShort("toneHP", (param.toInt()));webSrv.reply("Highpass set"); setI2STone(); return;}  // audioI2S tone
-    if(cmd=="audiolist")     {sendAudioList2Web("/audiofiles"); return;} // via websocket
-    if(cmd=="audiotrack")    {audiotrack(param.c_str()); webSrv.reply("OK\n"); return;}
-    if(cmd=="uploadfile")    {_filename = param;  return;}
-    if(cmd=="upvolume")      {str = "Volume is now " + (String)upvolume();   webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
-    if(cmd=="downvolume")    {str = "Volume is now " + (String)downvolume(); webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
-    if(cmd=="prev_station")  {prevStation(); return;} // via websocket
-    if(cmd=="next_station")  {nextStation();  return;} // via websocket
-    if(cmd=="set_station")   {setStation(param.toInt()); StationsItems(); return;} // via websocket
-    if(cmd=="stationURL")    {connecttohost(param.c_str());webSrv.reply("OK\n"); return;}
-    if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
-    if(cmd=="ping")          {webSrv.send("pong"); return;}
-    if(cmd=="index.html")    {webSrv.show(index_html); return;}
-    if(cmd=="get_tftSize")   {webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
-    if(cmd=="get_decoder")   {webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
-    if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
-    if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
-    if(cmd=="change_state")  {changeState(param.toInt()); return;}
-    if(cmd=="stop")          {_resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
-    if(cmd=="resumefile")    {if(!_lastconnectedfile) webSrv.reply("nothing to resume\n"); else {audiotrack(_lastconnectedfile, _resumeFilePos); webSrv.reply("OK\n");} return;}
-    if(cmd=="test")          {sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n", ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree()); webSrv.reply(_chbuf); return;}
+    if(cmd == "homepage"){          webSrv.send("homepage=" + _homepage);
+                                    return;}
+
+    if(cmd == "to_listen"){         StationsItems(); // via websocket, return the name and number of the current station
+                                    return;}
+
+    if(cmd == "gettone"){           if(DECODER) webSrv.reply(setI2STone().c_str());
+                                    else webSrv.reply(setTone().c_str());
+                                    return;}
+
+    if(cmd == "getmute"){           webSrv.reply(String(int(_f_mute)).c_str());
+                                    return;}
+
+    if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle.c_str());
+                                    return;}
+
+    if(cmd == "mute"){              mute();
+                                    if(_f_mute) webSrv.reply("Mute on\n");
+                                    else webSrv.reply("Mute off\n");
+                                    return;}
+
+    if(cmd == "toneha"){            pref.putUShort("toneha",(param.toInt()));                             // vs1053 tone
+                                    webSrv.reply("Treble Gain set");
+                                    setTone(); return;}
+
+    if(cmd == "tonehf"){            pref.putUShort("tonehf",(param.toInt()));                             // vs1053 tone
+                                    webSrv.reply("Treble Freq set");
+                                    setTone(); return;}
+
+    if(cmd == "tonela"){            pref.putUShort("tonela",(param.toInt()));                             // vs1053 tone
+                                    webSrv.reply("Bass Gain set");
+                                    setTone(); return;}
+
+    if(cmd == "tonelf"){            pref.putUShort("tonelf",(param.toInt()));                             // vs1053 tone
+                                    webSrv.reply("Bass Freq set");
+                                    setTone(); return;}
+
+    if(cmd == "LowPass"){           pref.putShort("toneLP", (param.toInt()));                           // audioI2S tone
+                                    char lp[25] = "Lowpass set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
+                                    webSrv.reply(lp); setI2STone(); return;}
+
+    if(cmd == "BandPass"){          pref.putShort("toneBP", (param.toInt()));                           // audioI2S tone
+                                    char bp[25] = "Bandpass set to "; strcat(bp, param.c_str()); strcat(bp, "dB");
+                                    webSrv.reply(bp); setI2STone(); return;}
+
+    if(cmd == "HighPass"){          pref.putShort("toneHP", (param.toInt()));                           // audioI2S tone
+                                    char hp[25] = "Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
+                                    webSrv.reply(hp); setI2STone(); return;}
+
+    if(cmd == "audiolist"){         sendAudioList2Web("/audiofiles");                                   // via websocket
+                                    return;}
+
+    if(cmd == "audiotrack"){        audiotrack(param.c_str());
+                                    webSrv.reply("OK\n"); return;}
+
+    if(cmd == "uploadfile"){        _filename = param;  return;}
+
+    if(cmd == "upvolume"){          str = "Volume is now " + (String)upvolume();
+                                    webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
+
+    if(cmd == "downvolume"){        str = "Volume is now " + (String)downvolume();
+                                    webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
+
+    if(cmd == "prev_station"){      prevStation(); return;}                                             // via websocket
+
+    if(cmd == "next_station"){      nextStation(); return;}                                             // via websocket
+
+    if(cmd == "set_station"){       setStation(param.toInt()); StationsItems(); return;}                // via websocket
+
+    if(cmd == "stationURL"){        connecttohost(param.c_str());webSrv.reply("OK\n"); return;}
+
+    if(cmd == "getnetworks"){       webSrv.reply(WiFi.SSID().c_str()); return;}
+
+    if(cmd == "ping"){              webSrv.send("pong"); return;}
+
+    if(cmd == "index.html"){        webSrv.show(index_html); return;}
+
+    if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
+
+    if(cmd == "get_decoder"){       webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
+
+    if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
+
+    if(cmd.startsWith("SD")){       str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
+
+    if(cmd == "change_state"){      changeState(param.toInt()); return;}
+
+    if(cmd == "stop"){              _resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
+
+    if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.reply("nothing to resume\n");
+                                    else {audiotrack(_lastconnectedfile, _resumeFilePos);
+                                    webSrv.reply("OK\n");} return;}
+
+    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
+                                    ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
+                                    webSrv.reply(_chbuf); return;}
 
     log_e("unknown HTMLcommand %s", cmd.c_str());
 }
