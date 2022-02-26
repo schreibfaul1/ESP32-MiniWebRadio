@@ -1842,7 +1842,7 @@ void tp_released(){
 
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){                    // called from html
-     log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+//    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     String  str;
     if(cmd=="homepage")      {webSrv.send("homepage=" + _homepage); return;}
     if(cmd=="to_listen")     {StationsItems(); return;} // via websocket, return the name and number of the current station
@@ -1869,6 +1869,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd=="getnetworks")   {webSrv.reply(WiFi.SSID().c_str()); return;}
     if(cmd=="ping")          {webSrv.send("pong"); return;}
     if(cmd=="index.html")    {if(TFT_CONTROLLER < 2) webSrv.show(index_s_html); else webSrv.show(index_m_html); return;}
+    if(cmd=="get_tftSize")   {webSrv.send("tftSize=s"); return;}
+    if(cmd=="get_decoder")   {webSrv.send("decoder=h"); return;}
     if(cmd=="favicon.ico")   {webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
     if(cmd.startsWith("SD")) {str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
     if(cmd=="change_state")  {changeState(param.toInt()); return;}

@@ -89,10 +89,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == SETTONE){
                 audioTxTaskMessage.cmd = SETTONE;
                 uint8_t u8_tone[4];
-                u8_tone[0] = (audioRxTaskMessage.value & 0xFF);       // toneha  Lower limit frequency in 10 Hz steps (2..15)
-                u8_tone[1] = (audioRxTaskMessage.value >>  8) & 0xFF; // tonehf  Bass Enhancement in 1 dB steps (0..15, 0 = off)
-                u8_tone[2] = (audioRxTaskMessage.value >> 16) & 0xFF; // tonela  Lower limit frequency in 1000 Hz steps (1..15)
-                u8_tone[3] = (audioRxTaskMessage.value >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
+                u8_tone[3] = (audioRxTaskMessage.value & 0xFF);       // toneha  Lower limit frequency in 10 Hz steps (2..15)
+                u8_tone[2] = (audioRxTaskMessage.value >>  8) & 0xFF; // tonehf  Bass Enhancement in 1 dB steps (0..15, 0 = off)
+                u8_tone[1] = (audioRxTaskMessage.value >> 16) & 0xFF; // tonela  Lower limit frequency in 1000 Hz steps (1..15)
+                u8_tone[0] = (audioRxTaskMessage.value >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
+                //log_i("ha %d, hf %d, la %d, lf %d", u8_tone[0], u8_tone[1], u8_tone[2], u8_tone[3]);
                 vs1053.setTone(u8_tone);
                 audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);

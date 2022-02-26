@@ -123,7 +123,7 @@ const char index_s_html[] PROGMEM = R"=====(
             background-color : #128F76;
             width : 120px;
         }
-        #label-logo {
+        #label-logo-s {
             margin-left : 20px;
             border-color: black;
             border-style: solid;
@@ -132,6 +132,17 @@ const char index_s_html[] PROGMEM = R"=====(
             background-image : url(SD/common/unknown.jpg);
             width : 96px;
             height : 96px;
+            margin-top: 5px;
+        }
+        #label-logo-m {
+            margin-left : 40px;
+            border-color: black;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            background-image : url(SD/unknown.jpg);
+            width : 128px;
+            height : 128px;
             margin-top: 5px;
         }
         canvas {
@@ -222,6 +233,9 @@ var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', '
 
 var trebleVal = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7]
 
+var tft_size = 0        // (0)320x240, (1)480x320
+var audio_decoder  = 0  // (0)vs1053,  (1)SW_Decoder
+
 // ---- websocket section------------------------
 
 var socket = undefined
@@ -244,6 +258,8 @@ function connect() {
   socket.onopen = function () {
     console.log("Websocket connected")
     socket.send('to_listen')
+    socket.send('get_tftSize')
+    socket.send('get_decoder')
     setInterval(ping, 20000)
   };
 
@@ -295,6 +311,12 @@ function connect() {
       case "icy_description": resultstr1.value = val
                               break
       case "AudioFileList":   getAudioFileList(val)
+                              break
+      case "tftSize":         if(val == 's') {tft_size = 0; console.log("tftSize is s");}
+                              if(val == 'm') {tft_size = 1; console.log("tftSize is m");}
+                              break
+      case  "decoder":        if(val == 'h') {audio_decoder = 0; console.log("vs1053");}
+                              if(val == 's') {audio_decoder = 1; console.log("audioI2S");}
                               break
       default:                console.log('unknown message', msg, val)
     }
@@ -1312,9 +1334,12 @@ function getnetworks () { // tab Config: load the connected WiFi network
         </select>
       </div>
     </div>
-    <div style="height: 112px; display: flex;">
-      <div style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo" onclick="socket.send('homepage')"> </label>
+    <div style="display: flex;">
+      <div id="div-logo-s" style="flex: 0 0 210px;">
+        <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
+      </div>
+      <div id="div-logo-m" style="flex: 0 0 210px;">
+        <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
       </div>
       <div style="display: flex; flex:1; justify-content: center;">
         <div style="width: 380px; height:108px;">
