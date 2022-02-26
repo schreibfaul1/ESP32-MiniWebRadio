@@ -240,6 +240,11 @@ const char index_html[] PROGMEM = R"=====(
 <script>
 // global variables and functions
 /* eslint-disable no-unused-vars, no-undef */
+var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
+  '-16', '-13', '-10', ' -7', ' -4', '  0', ' +3', ' +6']
+
+var I2S_eq_Val = [-40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -4, 0, +3, +6]
+
 var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', ' -1,5',
   '  0,0', ' +1,5', ' +3,0', ' +4,5', ' +6,0', ' +7,5', ' +9,0', '+10,5']
 
@@ -737,53 +742,53 @@ function slider_BF_set (value) { // set Slider Bass Gain
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
-  handlectrl('LowPass', trebleVal[LowPass.value])
+  handlectrl('LowPass', I2S_eq_Val[LowPass.value])
   console.log('LowPass=%i', Number(LowPass.value));
 }
 
 function slider_LP_change () { //  Slider LowPass changeevent
   console.log('LowPass=%i', Number(LowPass.value))
-  document.getElementById('label_LP_value').innerHTML = trebleDB[LowPass.value]
+  document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
 }
 
 function slider_LP_set (value) { // set Slider LowPass
   var val = Number(value)
   document.getElementById('LowPass').value = val
-  document.getElementById('label_LP_value').innerHTML = trebleDB[LowPass.value]
+  document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
   console.log('LowPass=%i', val)
 }
 
 function slider_BP_mouseUp () { // BandPass mouseupevent
-  handlectrl('BandPass', trebleVal[BandPass.value])
+  handlectrl('BandPass', I2S_eq_Val[BandPass.value])
   console.log('BandPass=%i', Number(BandPass.value));
 }
 
 function slider_BP_change () { //  BandPass changeevent
   console.log('BandPass=%i', Number(BandPass.value))
-  document.getElementById('label_BP_value').innerHTML = trebleDB[BandPass.value]
+  document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
 }
 
 function slider_BP_set (value) { // set Slider BandPass
   var val = Number(value)
   document.getElementById('BandPass').value = val
-  document.getElementById('label_BP_value').innerHTML = trebleDB[BandPass.value]
+  document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
   console.log('BandPass=%i', val)
 }
 
 function slider_HP_mouseUp () { // Slider HighPass mouseupevent
-  handlectrl('HighPass', trebleVal[HighPass.value])
+  handlectrl('HighPass', I2S_eq_Val[HighPass.value])
   console.log('HighPass=%i', Number(HighPass.value));
 }
 
 function slider_HP_change () { //  Slider HighPass changeevent
   console.log('HighPass=%i', Number(HighPass.value))
-  document.getElementById('label_HP_value').innerHTML = trebleDB[HighPass.value]
+  document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
 }
 
 function slider_HP_set (value) { // set Slider HighPass
   var val = Number(value)
   document.getElementById('HighPass').value = val
-  document.getElementById('label_HP_value').innerHTML = trebleDB[HighPass.value]
+  document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
   console.log('HighPass=%i', val)
 }
 
@@ -1476,7 +1481,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
 
           <label class="sdr_lbl_left">Band:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="1" max="15" value="13" id="BandPass" onmouseup="slider_BP_mouseUp()" oninput="slider_BP_change()">
+            <input type="range" min="0" max="15" value="13" id="BandPass" onmouseup="slider_BP_mouseUp()" oninput="slider_BP_change()">
           </div>
           <label id="label_BP_value" class="sdr_lbl_right">0</label>
           <label class="sdr_lbl_measure">dB</label>
