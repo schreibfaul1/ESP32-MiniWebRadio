@@ -1201,7 +1201,7 @@ String setI2STone(){
     int8_t BP = pref.getShort("toneBP");
     int8_t HP = pref.getShort("toneHP");
     audioSetTone(LP, BP, HP);
-    sprintf(_chbuf, "LowPass=%i BandPass=%i HighPass=%i", LP, BP, HP);
+    sprintf(_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\n", LP, BP, HP);
     String tone = String(_chbuf);
     return tone;
 }

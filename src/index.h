@@ -586,9 +586,7 @@ function gettone () { // tab Radio: get tones values and set them
       lines = xhr.responseText.split('\n')
       for (i = 0; i < (lines.length - 1); i++) {
         parts = lines[i].split('=')
-        if (parts[0].indexOf('tone') === 0) {
-          setSlider(parts[0], parts[1])
-        }
+        setSlider(parts[0], parts[1])
       }
     }
   }
