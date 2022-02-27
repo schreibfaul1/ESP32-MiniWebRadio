@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 26.02.2022
+ *  Updated on: 27.02.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1419,8 +1419,16 @@ function getnetworks () { // tab Config: load the connected WiFi network
   <div id="tab-content1">
     <div style="height: 66px; display: flex;">
       <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Previous_Green.png" alt="previous" onmousedown="this.src='SD/png/Button_Previous_Yellow.png'" onmouseup="this.src='  SD/png/Button_Previous_Green.png'" onclick="socket.send('prev_station')" />
-        <img src="SD/png/Button_Next_Green.png" alt="next" onmousedown="this.src='SD/png/Button_Next_Yellow.png'" onmouseup="this.src='  SD/png/Button_Next_Green.png'" onclick="socket.send('next_station')" />
+        <img src="SD/png/Button_Previous_Green.png" alt="previous"
+                          onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Previous_Green.png';  socket.send('prev_station');"
+                          ontouchend="this.src='SD/png/Button_Previous_Green.png'; socket.send('prev_station');" />
+        <img src="SD/png/Button_Next_Green.png" alt="next"
+                          onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Next_Green.png';  socket.send('next_station');"
+                          ontouchend="this.src='SD/png/Button_Next_Green.png'; socket.send('next_station');" />
       </div>
       <div style="flex:1;">
         <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
@@ -1441,28 +1449,40 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <div style="width: 380px; height:108px;">
           <label class="sdr_lbl_left">Treble Gain:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="TrebleGain" onmouseup="slider_TG_mouseUp()" oninput="slider_TG_change()">
+            <input type="range" min="0" max="15" value="8" id="TrebleGain"
+                          onmouseup="slider_TG_mouseUp()"
+                          ontouchend="slider_TG_mouseUp()"
+                          oninput="slider_TG_change()">
           </div>
           <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
           <label class="sdr_lbl_measure">dB</label>
 
           <label class="sdr_lbl_left">Treble Freq:</label>
           <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="1" max="15" value="8" id="TrebleFreq" onmouseup="slider_TF_mouseUp()" oninput="slider_TF_change()">
+            <input type="range" min="1" max="15" value="8" id="TrebleFreq"
+                          onmouseup="slider_TF_mouseUp()"
+                          ontouchend="slider_TF_mouseUp()"
+                          oninput="slider_TF_change()">
           </div>
           <label id="label_TF_value" class="sdr_lbl_right">00</label>
           <label class="sdr_lbl_measure">KHz</label>
 
           <label class="sdr_lbl_left">Bass Gain:</label>
           <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="BassGain" onmouseup="slider_BG_mouseUp()" oninput="slider_BG_change()">
+            <input type="range" min="0" max="15" value="8" id="BassGain"
+                          onmouseup="slider_BG_mouseUp()"
+                          ontouchend="slider_BG_mouseUp()"
+                          oninput="slider_BG_change()">
           </div>
           <label id="label_BG_value" class="sdr_lbl_right">+00</label>
           <label class="sdr_lbl_measure">dB</label>
 
           <label class="sdr_lbl_left">Bass Freq:</label>
           <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="2" max="15" value="6" id="BassFreq" onmouseup="slider_BF_mouseUp()" oninput="slider_BF_change()">
+            <input type="range" min="2" max="15" value="6" id="BassFreq"
+                          onmouseup="slider_BF_mouseUp()"
+                          ontouchend="slider_BF_mouseUp()"
+                          oninput="slider_BF_change()">
           </div>
           <label  id="label_BF_value" class="sdr_lbl_right">000</label>
           <label class="sdr_lbl_measure">Hz</label>
@@ -1472,21 +1492,30 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <div style="width: 380px; height:130px;">
           <label class="sdr_lbl_left">Low:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="LowPass" onmouseup="slider_LP_mouseUp()" oninput="slider_LP_change()">
+            <input type="range" min="0" max="15" value="13" id="LowPass"
+                          onmouseup="slider_LP_mouseUp()"
+                          ontouchend="slider_LP_mouseUp()"
+                          oninput="slider_LP_change()">
           </div>
           <label id="label_LP_value" class="sdr_lbl_right">0</label>
           <label class="sdr_lbl_measure">dB</label>
 
           <label class="sdr_lbl_left">Band:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="BandPass" onmouseup="slider_BP_mouseUp()" oninput="slider_BP_change()">
+            <input type="range" min="0" max="15" value="13" id="BandPass"
+                          onmouseup="slider_BP_mouseUp()"
+                          ontouchend="slider_BP_mouseUp()"
+                          oninput="slider_BP_change()">
           </div>
           <label id="label_BP_value" class="sdr_lbl_right">0</label>
           <label class="sdr_lbl_measure">dB</label>
 
           <label class="sdr_lbl_left">High:</label>
           <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="HighPass" onmouseup="slider_HP_mouseUp()" oninput="slider_HP_change()">
+            <input type="range" min="0" max="15" value="13" id="HighPass"
+                          onmouseup="slider_HP_mouseUp()"
+                          ontouchend="slider_HP_mouseUp()"
+                          oninput="slider_HP_change()">
           </div>
           <label id="label_HP_value" class="sdr_lbl_right">0</label>
           <label class="sdr_lbl_measure">dB</label>
@@ -1496,9 +1525,22 @@ function getnetworks () { // tab Config: load the connected WiFi network
     </div>
     <div style="height: 66px; display: flex;">
       <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down" onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'" onclick="httpGet('downvolume', 1)" />
-        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'" onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'" onclick="httpGet('upvolume', 1)" />
-        <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute" onmousedown="this.src='SD/png/Button_Mute_Yellow.png'" onclick="httpGet('mute', 1)" />
+        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
+                          onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                          ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                          onclick="httpGet('downvolume', 1)" />
+        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
+                          onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                          ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                          onclick="httpGet('upvolume', 1)" />
+        <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
+                          onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
+                          onclick="httpGet('mute', 1)" />
       </div>
       <div style="flex:1;">
         <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
@@ -1509,7 +1551,12 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station" placeholder=" Enter a streamURL here....">
       </div>
       <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up" onmousedown="this.src='SD/png/Button_Ready_Yellow.png'" onmouseup="this.src='SD/png/Button_Ready_Blue.png'" onclick="setstation()" />
+        <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                          onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                          ontouchend='SD/png/Button_Ready_Blue.png'"
+                          onclick="setstation()" />
       </div>
     </div>
     <div style="height: 66px; display: flex;">
@@ -1517,7 +1564,12 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1" placeholder=" Test....">
       </div>
       <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Test_Green.png" alt="Test" onmousedown="this.src='SD/png/Button_Test_Yellow.png'" onmouseup="this.src='SD/png/Button_Test_Green.png'" onclick="httpGet('test', 1)" />
+        <img src="SD/png/Button_Test_Green.png" alt="Test"
+                          onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
+                          ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
+                          onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                          ontouchend="this.src='SD/png/Button_Test_Green.png'"
+                          onclick="httpGet('test', 1)" />
       </div>
     </div>
     <hr>
@@ -1536,14 +1588,18 @@ function getnetworks () { // tab Config: load the connected WiFi network
       <button class="button buttongreen"
               onclick="saveGridFileToSD()"
               onmousedown="this.style.backgroundColor='#D62C1A'"
+              ontouchstart="this.style.backgroundColor='#D62C1A'"
               onmouseup="this.style.backgroundColor='#128F76'"
+              ontouchend="this.style.backgroundColor='#128F76'"
               title="Save to SD">Save
       </button>
       &nbsp;
       <button class="button buttongreen"
               onclick="loadGridFileFromSD()"
               onmousedown="this.style.backgroundColor='#D62C1A'"
+              ontouchstart="this.style.backgroundColor='#D62C1A'"
               onmouseup="this.style.backgroundColor='#128F76'"
+              ontouchend="this.style.backgroundColor='#128F76'"
               id="loadSD" title="Load from SD">Load
       </button>
       &nbsp;
@@ -1607,7 +1663,9 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <div style="flex: 1; padding-left: 2px; height: 66px;">
           <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
             onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
             onclick="teststreamurl()"/>
         </div>
       </div>
@@ -1620,7 +1678,9 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <div style="flex: 1; padding-left: 2px; height: 66px;">
           <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
             onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
             onclick="window.open(homepageurl.value, '_blank')"/>
         </div>
       </div>
@@ -1633,7 +1693,9 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <div style="flex: 1;  padding-left: 2px; height: 66px;">
           <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
             onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
             onclick="window.open(favicon.value, '_blank')"/>
         </div>
       </div>
@@ -1650,17 +1712,23 @@ function getnetworks () { // tab Config: load the connected WiFi network
           <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
             <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
             onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Upload_Blue.png'"
             onclick="uploadCanvasImage()"/>
 
             <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC"
             onmousedown="this.src='SD/png/Button_Download_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Download_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Download_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Download_Blue.png'"
             onclick="downloadCanvasImage()"/>
 
             <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
             onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+            ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
             onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
+            ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
             onclick="addStationsToGrid()"/>
 
             <form method="post" accept-charset="utf-8" name="form1">
