@@ -1275,7 +1275,7 @@ void changeState(int state){
             _pressBtn[1] = "/btn/Clock_Yellow.jpg";              _releaseBtn[1] = "/btn/Clock_Green.jpg";
             _pressBtn[2] = "/btn/Radio_Yellow.jpg";              _releaseBtn[2] = "/btn/Radio_Green.jpg";
             _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
-            if(TFT_CONTROLLER < 2){
+            if(TFT_CONTROLLER != 2){
                 _pressBtn[4]="/btn/Bulb_Yellow.jpg";           _releaseBtn[4]="/btn/Bulb_Green.jpg";
             }
             else{
@@ -1693,7 +1693,7 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
-                            if(TFT_CONTROLLER < 2){
+                            if(TFT_CONTROLLER != 2){
                             if(btnNr == 4){_releaseNr = 14;} // Brightness
                             }
                             changeBtn_pressed(btnNr); break;
