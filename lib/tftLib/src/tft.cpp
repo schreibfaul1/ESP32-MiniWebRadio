@@ -4149,6 +4149,7 @@ void TP::setVersion(uint8_t v){
     if(v == 1) TP_vers = 1;
     if(v == 2) TP_vers = 2;
     if(v == 3) TP_vers = 3;
+    if(v == 4) TP_vers = 4;
 
     if(TP_vers == 0){   // ILI9341 display
         Xmax=1913;      // Values Calibration
@@ -4174,13 +4175,21 @@ void TP::setVersion(uint8_t v){
         xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
         yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
     }
-    if(TP_vers == 3){   // ILI9486 display for RaspberryPI and ILI9488 display
+    if(TP_vers == 3){   // ILI9486 display for RaspberryPI
         Xmax=1922;
         Xmin=140;
         Ymax=1930;
         Ymin=125;
         xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
+    }
+    if(TP_vers == 4){   // ILI9488 display for RaspberryPI
+        Xmax=1922;
+        Xmin=140;
+        Ymax=1930;
+        Ymin=125;
+        xFaktor = float(Xmax - Xmin) / ILI9488_WIDTH;
+        yFaktor = float(Ymax - Ymin) / ILI9488_HEIGHT;
     }
 }
 
@@ -4298,8 +4307,33 @@ bool TP::read_TP(uint16_t& x, uint16_t& y){
             if(x > ILI9486_HEIGHT -1) x = 0;
             if(y > ILI9486_WIDTH  -1) y = 0;
         }
-        //log_i("TP_vers %d, X = %i, Y = %i",TP_vers, x, y);
     }
+
+    if(TP_vers == 4){       // ILI 9488 Display V1.0 480px x 320px
+        if(_rotation == 0) {
+            x = ILI9488_WIDTH - x;
+        }
+        if(_rotation == 1) {                   // landscape
+            tmpxy = x;
+            x = y;
+            y = tmpxy;
+            if(x > ILI9488_HEIGHT -1) x = 0;
+            if(y > ILI9488_WIDTH  -1) y = 0;
+        }
+        if(_rotation == 2) {                    // portrait + 180 degree
+            y = ILI9488_HEIGHT-y;
+            if(x > ILI9488_WIDTH  -1) x = 0;
+            if(y > ILI9488_HEIGHT -1) y = 0;
+        }
+        if(_rotation == 3) {                   // landscape + 180 degree
+            tmpxy = x;
+            x = ILI9488_HEIGHT - y;
+            y = ILI9488_WIDTH - tmpxy;
+            if(x > ILI9488_HEIGHT -1) x = 0;
+            if(y > ILI9488_WIDTH  -1) y = 0;
+        }
+    }
+    //log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
     return true;
 }
 

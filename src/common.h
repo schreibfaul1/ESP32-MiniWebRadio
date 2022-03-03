@@ -8,11 +8,11 @@
 #define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
 #define DECODER         0                               // (0)VS1053 , (1)SW DECODER DAC via I2S
-#define TFT_CONTROLLER  0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
+#define TFT_CONTROLLER  3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
-#define TP_VERSION      0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486RPI and ILI9488
-#define TP_ROTATION     1                               // 0 ... 3
+#define TP_VERSION      4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486RPI, (4)ILI9488
+#define TP_ROTATION     3                               // 0 ... 3
 #define FTP_USERNAME    "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD    "esp32"
 
