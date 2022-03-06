@@ -2,10 +2,10 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.e, Feb 26/2022
+    Version 2.1, Mar 06/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
-    3.5" color display (480x320px) wihr controller ILI9486 (SPI)
+    3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
 
     HW decoder VS1053 or
     SW decoder with external DAC over I2S
@@ -962,8 +962,6 @@ void setup(){
         ESP.restart();
     }
 
-    SerialPrintfln("setup: init VS1053");
-    pinMode(VS1053_CS, OUTPUT);  digitalWrite(VS1053_CS, HIGH);
     audioInit();
 
     _sum_stations = stations.getUInt("sumstations", 0);
