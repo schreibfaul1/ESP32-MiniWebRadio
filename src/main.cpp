@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.1, Mar 06/2022
+    Version 2.1a, Mar 07/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -99,9 +99,16 @@ TP tp(TP_CS, TP_IRQ);
 WiFiMulti wifiMulti;
 File audioFile;
 FtpServer ftpSrv;
+#if DECODER == 2 // ac101
+    AC101 dac;
+#endif
+#if DECODER == 3 // es8388
+    ES8388 dac;
+#endif
 
 SemaphoreHandle_t  mutex_rtc;
 SemaphoreHandle_t  mutex_display;
+
 
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
     //
@@ -994,6 +1001,19 @@ void setup(){
     else             setI2STone(); // SW Decoder
     showFooter();
     ticker.attach(1, timer1sec);
+    if(HP_DETECT != -1){
+        pinMode(HP_DETECT, INPUT);
+        attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
+    }
+    if(GPIO_PA_EN != -1){           // enable onboard amplifier
+        pinMode(GPIO_PA_EN, OUTPUT);
+        digitalWrite(GPIO_PA_EN, HIGH);
+    }
+    #if DECODER > 1 // DAC controlled by I2C
+        if(!dac.begin(I2C_DATA, I2C_CLK){
+            SerialPrintfln("The DAC was not initialized");
+        }
+    #endif
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -1074,6 +1094,19 @@ inline void setVolume(uint8_t vol){
     if(_f_mute==false) audioSetVolume(vol);
     showHeadlineVolume(vol);
     _cur_volume = vol;
+
+    #if DECODER > 1 // ES8388, AC101 ...
+        if(digitalRead(HP_DETECT) ==  HIGH){
+            // log_i("HP_Detect = High, volume %i", vol);
+            dac.SetVolumeSpeaker(cur_volume * 3);
+            dac.SetVolumeHeadphone(0);
+        }
+        else {
+            // log_i("HP_Detect = Low, volume %i", vol);
+            dac.SetVolumeSpeaker(1);
+            dac.SetVolumeHeadphone(cur_volume * 3);
+        }
+    #endif
 }
 uint8_t downvolume(){
     if(_cur_volume == 0) return _cur_volume;
@@ -1221,6 +1254,11 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
     }
     if(path) free(path);
 }
+
+void headphoneDetect(){ // called via interrupt
+    setVolume(_cur_volume);
+}
+
 /***********************************************************************************************************************
 *                                          M E N U E / B U T T O N S                                                   *
 ***********************************************************************************************************************/

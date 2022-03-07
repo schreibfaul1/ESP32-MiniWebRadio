@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 26.02.2022
+// updated: 07.03.2022
 
 #pragma once
 
@@ -7,7 +7,7 @@
 #define _SSID           "mySSID"                        // Your WiFi credentials here
 #define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER         0                               // (0)VS1053 , (1)SW DECODER DAC via I2S
+#define DECODER         0                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3) ES8388
 #define TFT_CONTROLLER  3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
 #define TFT_FREQUENCY   40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION    3                               // 0 ... 3
@@ -24,6 +24,7 @@
 #include <SPI.h>
 #include <SD_MMC.h>
 #include <FS.h>
+#include <Wire.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
 #include "index.h"
@@ -32,31 +33,42 @@
 #include "IR.h"
 #include "tft.h"
 #include "ESP32FtpServer.h"
-
+#include "AC101.h"
+#include "ES8388.h"
 
 // Digital I/O used
-#define VS1053_CS     33
-#define VS1053_DCS     4
-#define VS1053_DREQ   36
-#define TFT_CS        22
-#define TFT_DC        21
-#define TFT_BL        32
-#define TP_IRQ        39
-#define TP_CS          5
-#define SD_MMC_D0      2  // cannot be changed
-#define SD_MMC_CLK    14  // cannot be changed
-#define SD_MMC_CMD    15  // cannot be changed
-#define IR_PIN        35
-#define SPI_MOSI      23  // TFT and TP (VSPI)
-#define SPI_MISO      19  // TFT and TP (VSPI)
-#define SPI_SCK       18  // TFT and TP (VSPI)
-#define VS1053_MOSI   13  // VS1053     (HSPI)
-#define VS1053_MISO   34  // VS1053     (HSPI)
-#define VS1053_SCK    12  // VS1053     (HSPI)
-#define I2S_DOUT      25  // DAC: I2S_DIN
-#define I2S_BCLK      27
-#define I2S_LRC       26
-#define I2S_MCLK       0  // mostly not used
+    #define TFT_CS        22
+    #define TFT_DC        21
+    #define TFT_BL        32
+    #define TP_IRQ        39
+    #define TP_CS          5
+    #define SD_MMC_D0      2  // cannot be changed
+    #define SD_MMC_CLK    14  // cannot be changed
+    #define SD_MMC_CMD    15  // cannot be changed
+    #define IR_PIN        35
+    #define SPI_MOSI      23  // TFT and TP (VSPI)
+    #define SPI_MISO      19  // TFT and TP (VSPI)
+    #define SPI_SCK       18  // TFT and TP (VSPI)
+#if DECODER == 0
+    #define VS1053_CS     33
+    #define VS1053_DCS     4
+    #define VS1053_DREQ   36
+    #define VS1053_MOSI   13  // VS1053     (HSPI)
+    #define VS1053_MISO   34  // VS1053     (HSPI)
+    #define VS1053_SCK    12  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
+#else
+    #define I2S_DOUT      25
+    #define I2S_DIN       -1  // pin not used
+    #define I2S_BCLK      27
+    #define I2S_LRC       26
+    #define I2S_MCLK       0  // mostly not used
+#endif
+    #define I2C_DATA      -1
+    #define I2C_CLK       -1
+    #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
+    #define HP_DETECT     -1
+    #define AMP_ENABLED   -1
+    #define GPIO_PA_EN    -1
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \
@@ -120,6 +132,7 @@ void changeState(int state);
 void connecttohost(const char* host);
 void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void stopSong();
+void headphoneDetect();
 
 // //prototypes (audiotask.cpp)
 void audioInit();
