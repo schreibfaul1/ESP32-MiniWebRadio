@@ -1011,7 +1011,7 @@ void setup(){
         digitalWrite(AMP_ENABLED, HIGH);
     }
     #if DECODER > 1 // DAC controlled by I2C
-        if(!dac.begin(I2C_DATA, I2C_CLK){
+        if(!dac.begin(I2C_DATA, I2C_CLK)){
             SerialPrintfln("The DAC was not initialized");
         }
     #endif
@@ -1099,13 +1099,13 @@ inline void setVolume(uint8_t vol){
     #if DECODER > 1 // ES8388, AC101 ...
         if(digitalRead(HP_DETECT) ==  HIGH){
             // log_i("HP_Detect = High, volume %i", vol);
-            dac.SetVolumeSpeaker(cur_volume * 3);
+            dac.SetVolumeSpeaker(_cur_volume * 3);
             dac.SetVolumeHeadphone(0);
         }
         else {
             // log_i("HP_Detect = Low, volume %i", vol);
             dac.SetVolumeSpeaker(1);
-            dac.SetVolumeHeadphone(cur_volume * 3);
+            dac.SetVolumeHeadphone(_cur_volume * 3);
         }
     #endif
 }
