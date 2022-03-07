@@ -39,6 +39,7 @@ New in V2:
 <li>Instead of the VS1053, it can be decoded using SW. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). A DAC is required (e.g. UDA13348, MAX98357A, PCM5102A) connected via I2S.</li>
 <li>The display can now be 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
 <li>In the finished device, the SD card may be inaccessible. For this case, an FTP server is integrated. Here are the settings in <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/Filezilla.pdf">Filezilla</a>. The username and password are 'esp32' and can be changed in 'common.h'</li>
+<li>supports AC101 and ES8388>/li>
 <br>
 <br>
  
