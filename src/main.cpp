@@ -61,6 +61,7 @@ boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
 boolean        _f_volBarVisible = false;
+boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugged
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -1255,8 +1256,8 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
     if(path) free(path);
 }
 
-void headphoneDetect(){ // called via interrupt
-    setVolume(_cur_volume);
+void IRAM_ATTR headphoneDetect(){ // called via interrupt
+    _f_hpChanged = true;
 }
 
 /***********************************************************************************************************************
@@ -1482,6 +1483,12 @@ void loop() {
                 _f_alarm=false;
                 connecttoFS("/ring/alarm_clock.mp3");
                 audioSetVolume(21);
+            }
+            if(_f_hpChanged){
+                setVolume(_cur_volume);
+                if(!digitalRead(HP_DETECT)) {SerialPrintfln("Headphone plugged in");}
+                else                        {SerialPrintfln("Headphone unplugged");}
+                _f_hpChanged = false;
             }
         }
         if(_commercial_dur > 0){

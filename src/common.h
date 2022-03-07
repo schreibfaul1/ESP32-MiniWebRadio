@@ -3,7 +3,6 @@
 
 #pragma once
 
-
 #define _SSID           "mySSID"                        // Your WiFi credentials here
 #define _PW             "myWiFiPassword"
 #define TZName          "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
@@ -78,8 +77,6 @@
 
 /**********************************************************************************************************************/
 
-
-
 // //prototypes (main.cpp)
 boolean defaultsettings();
 boolean saveStationsToNVS();
@@ -132,7 +129,7 @@ void changeState(int state);
 void connecttohost(const char* host);
 void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void stopSong();
-void headphoneDetect();
+void IRAM_ATTR headphoneDetect();
 
 // //prototypes (audiotask.cpp)
 void audioInit();

@@ -11,7 +11,7 @@
     VS1053 vs1053(VS1053_CS, VS1053_DCS, VS1053_DREQ, HSPI, VS1053_MOSI, VS1053_MISO, VS1053_SCK);
 #endif
 
-#if DECODER == 1
+#if DECODER >= 1
     #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
     Audio audio;
 #endif
@@ -203,7 +203,7 @@ uint32_t audioInbuffFree(){
 *                                          A U D I O _ T A S K     I 2 S                                               *
 ***********************************************************************************************************************/
 
-#if DECODER == 1
+#if DECODER >= 1
 
 enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE};
 
