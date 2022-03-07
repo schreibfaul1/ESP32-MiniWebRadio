@@ -1006,9 +1006,9 @@ void setup(){
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
     }
-    if(GPIO_PA_EN != -1){           // enable onboard amplifier
-        pinMode(GPIO_PA_EN, OUTPUT);
-        digitalWrite(GPIO_PA_EN, HIGH);
+    if(AMP_ENABLED != -1){           // enable onboard amplifier
+        pinMode(AMP_ENABLED, OUTPUT);
+        digitalWrite(AMP_ENABLED, HIGH);
     }
     #if DECODER > 1 // DAC controlled by I2C
         if(!dac.begin(I2C_DATA, I2C_CLK){

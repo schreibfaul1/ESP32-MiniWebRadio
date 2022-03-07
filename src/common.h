@@ -67,7 +67,6 @@
     #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
     #define HP_DETECT     -1
     #define AMP_ENABLED   -1
-    #define GPIO_PA_EN    -1
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \
