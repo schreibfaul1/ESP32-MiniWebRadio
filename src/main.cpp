@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.1a, Mar 07/2022
+    Version 2.2, Mar 08/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -105,6 +105,9 @@ FtpServer ftpSrv;
 #endif
 #if DECODER == 3 // es8388
     ES8388 dac;
+#endif
+#if DECODER == 4 // wm8978
+    WM8978 dac;
 #endif
 
 SemaphoreHandle_t  mutex_rtc;
@@ -243,9 +246,9 @@ boolean defaultsettings(){
         pref.putUShort("tonela", 0); // BassGain 0...15        VS1053
         pref.putUShort("tonelf", 0); // BassFreq 0...13        VS1053
 
-        pref.putShort("toneLP", 0); // -40 ... +6 (dB)     I2S DAC
-        pref.putShort("toneBP", 0); // -40 ... +6 (dB)     I2S DAC
-        pref.putShort("toneHP", 0); // -40 ... +6 (dB)     I2S DAC
+        pref.putShort("toneLP", 0); // -40 ... +6 (dB)         audioI2S
+        pref.putShort("toneBP", 0); // -40 ... +6 (dB)         audioI2S
+        pref.putShort("toneHP", 0); // -40 ... +6 (dB)         audioI2S
         //
         pref.putUInt("station", 1);
         //
@@ -970,6 +973,12 @@ void setup(){
         ESP.restart();
     }
 
+    #if DECODER > 1 // DAC controlled by I2C
+        if(!dac.begin(I2C_DATA, I2C_CLK)){
+            SerialPrintfln("The DAC was not initialized");
+        }
+    #endif
+
     audioInit();
 
     _sum_stations = stations.getUInt("sumstations", 0);
@@ -982,10 +991,10 @@ void setup(){
     _f_mute = pref.getUShort("mute", 0);
     if(_f_mute) {
         SerialPrintfln("volume is muted: %d", _cur_volume);
-        audioSetVolume(0);
+        setVolume(0);
     }
     else {
-        audioSetVolume(_cur_volume);
+        setVolume(_cur_volume);
     }
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
@@ -1010,11 +1019,6 @@ void setup(){
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
     }
-    #if DECODER > 1 // DAC controlled by I2C
-        if(!dac.begin(I2C_DATA, I2C_CLK)){
-            SerialPrintfln("The DAC was not initialized");
-        }
-    #endif
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -1090,23 +1094,30 @@ const char* scaleImage(const char* path){
 inline uint8_t getvolume(){
     return pref.getUShort("volume");
 }
-inline void setVolume(uint8_t vol){
+void setVolume(uint8_t vol){
     pref.putUShort("volume", vol);
     if(_f_mute==false) audioSetVolume(vol);
     showHeadlineVolume(vol);
     _cur_volume = vol;
 
     #if DECODER > 1 // ES8388, AC101 ...
-        if(digitalRead(HP_DETECT) ==  HIGH){
-            // log_i("HP_Detect = High, volume %i", vol);
+        if(HP_DETECT == -1){
             dac.SetVolumeSpeaker(_cur_volume * 3);
-            dac.SetVolumeHeadphone(0);
-        }
-        else {
-            // log_i("HP_Detect = Low, volume %i", vol);
-            dac.SetVolumeSpeaker(1);
             dac.SetVolumeHeadphone(_cur_volume * 3);
         }
+        else{
+            if(digitalRead(HP_DETECT) ==  HIGH){
+                // log_i("HP_Detect = High, volume %i", vol);
+                dac.SetVolumeSpeaker(_cur_volume * 3);
+                dac.SetVolumeHeadphone(0);
+            }
+            else {
+                // log_i("HP_Detect = Low, volume %i", vol);
+                dac.SetVolumeSpeaker(1);
+                dac.SetVolumeHeadphone(_cur_volume * 3);
+            }
+        }
+
     #endif
 }
 uint8_t downvolume(){
