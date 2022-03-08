@@ -40,6 +40,7 @@ New in V2:
 <li>The display can now be 480x320px, the ILI9486 (SPI display from the Raspberry PI) is supported</li>
 <li>In the finished device, the SD card may be inaccessible. For this case, an FTP server is integrated. Here are the settings in <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/Filezilla.pdf">Filezilla</a>. The username and password are 'esp32' and can be changed in 'common.h'</li>
 <li>supports AC101 and ES8388</li>
+ <li>WM8978 support (TTGO audioT board)</li>
 <br>
 <br>
  
