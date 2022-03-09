@@ -976,7 +976,7 @@ void setup(){
 
     #if DECODER > 1 // DAC controlled by I2C
         if(!dac.begin(I2C_DATA, I2C_CLK)){
-            SerialPrintfln("The DAC was not initialized");
+            SerialPrintfln("The DAC was not be initialized");
         }
     #endif
 
@@ -987,16 +987,8 @@ void setup(){
     _cur_station =  pref.getUInt("station", 1);
     SerialPrintfln("current station number: %d", _cur_station);
     _cur_volume = getvolume();
-
     SerialPrintfln("current volume: %d", _cur_volume);
-    _f_mute = pref.getUShort("mute", 0);
-    if(_f_mute) {
-        SerialPrintfln("volume is muted: %d", _cur_volume);
-        setVolume(0);
-    }
-    else {
-        setVolume(_cur_volume);
-    }
+
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
     _state = RADIO;
@@ -1004,14 +996,8 @@ void setup(){
      ir.begin();  // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
-    tft.fillScreen(TFT_BLACK); // Clear screen
-    showHeadlineItem(RADIO);
-    showHeadlineVolume(_cur_volume);
-    setStation(_cur_station);
-    if(DECODER == 0) setTone();    // HW Decoder
-    else             setI2STone(); // SW Decoder
-    showFooter();
-    ticker.attach(1, timer1sec);
+
+     ticker.attach(1, timer1sec);
     if(HP_DETECT != -1){
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
@@ -1020,6 +1006,22 @@ void setup(){
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
     }
+
+    tft.fillScreen(TFT_BLACK); // Clear screen
+    _f_mute = pref.getUShort("mute", 0);
+    if(_f_mute) {
+        SerialPrintfln("volume is muted: %d", _cur_volume);
+        audioSetVolume(0);
+        showHeadlineVolume(0);
+    }
+    else {
+        setVolume(_cur_volume);
+    }
+    showHeadlineItem(RADIO);
+    setStation(_cur_station);
+    if(DECODER == 0) setTone();    // HW Decoder
+    else             setI2STone(); // SW Decoder
+    showFooter();
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -1097,8 +1099,13 @@ inline uint8_t getvolume(){
 }
 void setVolume(uint8_t vol){
     pref.putUShort("volume", vol);
-    if(_f_mute==false) audioSetVolume(vol);
-    showHeadlineVolume(vol);
+    if(_f_mute==false){
+        audioSetVolume(vol);
+        showHeadlineVolume(vol);
+    }
+    else{
+        showHeadlineVolume(0);
+    }
     _cur_volume = vol;
 
     #if DECODER > 1 // ES8388, AC101 ...
