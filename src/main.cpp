@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2, Mar 08/2022
+    Version 2.2a, Mar 09/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -313,6 +313,7 @@ boolean saveStationsToNVS(){
 *                                        T F T   B R I G H T N E S S                                                   *
 ***********************************************************************************************************************/
 void setTFTbrightness(uint8_t duty){ //duty 0...100 (min...max)
+    if(TFT_BL == -1) return;
     ledcAttachPin(TFT_BL, 1);        //Configure variable led, TFT_BL pin to channel 1
     ledcSetup(1, 12000, 8);          // 12 kHz PWM and 8 bit resolution
     ledcWrite(1, duty * 2.55);
@@ -1323,7 +1324,7 @@ void changeState(int state){
             _pressBtn[1] = "/btn/Clock_Yellow.jpg";              _releaseBtn[1] = "/btn/Clock_Green.jpg";
             _pressBtn[2] = "/btn/Radio_Yellow.jpg";              _releaseBtn[2] = "/btn/Radio_Green.jpg";
             _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
-            if(TFT_CONTROLLER != 2){
+            if(TFT_BL != -1){
                 _pressBtn[4]="/btn/Bulb_Yellow.jpg";           _releaseBtn[4]="/btn/Bulb_Green.jpg";
             }
             else{
@@ -1747,7 +1748,7 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
-                            if(TFT_CONTROLLER != 2){
+                            if(TFT_BL != -1){
                             if(btnNr == 4){_releaseNr = 14;} // Brightness
                             }
                             changeBtn_pressed(btnNr); break;

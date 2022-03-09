@@ -38,7 +38,7 @@
 // Digital I/O used
     #define TFT_CS        22
     #define TFT_DC        21
-    #define TFT_BL        32
+    #define TFT_BL        32  // at -1 the brightness menu is not displayed
     #define TP_IRQ        39
     #define TP_CS          5
     #define SD_MMC_D0      2  // cannot be changed
@@ -62,7 +62,7 @@
     #define I2S_LRC       26
     #define I2S_MCLK       0  // mostly not used
 #endif
-    #define I2C_DATA      -1
+    #define I2C_DATA      -1  // some DACs are controlled via I2C
     #define I2C_CLK       -1
     #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
     #define HP_DETECT     -1
