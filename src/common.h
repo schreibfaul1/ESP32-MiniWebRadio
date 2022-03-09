@@ -111,6 +111,7 @@ int indexOf (const char* base, const char* str, int startIndex);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
 const char* scaleImage(const char* path);
+void setVolume(uint8_t vol);
 inline uint8_t getvolume();
 uint8_t downvolume();
 uint8_t upvolume();
