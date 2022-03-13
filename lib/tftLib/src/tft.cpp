@@ -258,44 +258,44 @@ void TFT::init() {
         spi_TFT->write16(0x00);
 
         writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
-        spi_TFT->write16(0x0F);
-        spi_TFT->write16(0x1F);
-        spi_TFT->write16(0x1C);
-        spi_TFT->write16(0x0C);
-        spi_TFT->write16(0x0F);
-        spi_TFT->write16(0x08);
-        spi_TFT->write16(0x48);
-        spi_TFT->write16(0x98);
-        spi_TFT->write16(0x37);
-        spi_TFT->write16(0x0A);
-        spi_TFT->write16(0x13);
-        spi_TFT->write16(0x04);
-        spi_TFT->write16(0x11);
-        spi_TFT->write16(0x0D);
         spi_TFT->write16(0x00);
+        spi_TFT->write16(0x04);
+        spi_TFT->write16(0x0E);
+        spi_TFT->write16(0x08);
+        spi_TFT->write16(0x17);
+        spi_TFT->write16(0x0A);
+        spi_TFT->write16(0x40);
+        spi_TFT->write16(0x79);
+        spi_TFT->write16(0x4D);
+        spi_TFT->write16(0x07);
+        spi_TFT->write16(0x0E);
+        spi_TFT->write16(0x0A);
+        spi_TFT->write16(0x1A);
+        spi_TFT->write16(0x1D);
+        spi_TFT->write16(0x0F);
 
         writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
-        spi_TFT->write16(0x0F);
-        spi_TFT->write16(0x32);
-        spi_TFT->write16(0x2E);
-        spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x0D);
-        spi_TFT->write16(0x05);
-        spi_TFT->write16(0x47);
-        spi_TFT->write16(0x75);
-        spi_TFT->write16(0x37);
-        spi_TFT->write16(0x06);
-        spi_TFT->write16(0x10);
-        spi_TFT->write16(0x03);
-        spi_TFT->write16(0x24);
-        spi_TFT->write16(0x20);
         spi_TFT->write16(0x00);
+        spi_TFT->write16(0x1B);
+        spi_TFT->write16(0x1F);
+        spi_TFT->write16(0x02);
+        spi_TFT->write16(0x10);
+        spi_TFT->write16(0x05);
+        spi_TFT->write16(0x32);
+        spi_TFT->write16(0x34);
+        spi_TFT->write16(0x43);
+        spi_TFT->write16(0x02);
+        spi_TFT->write16(0x0A);
+        spi_TFT->write16(0x09);
+        spi_TFT->write16(0x33);
+        spi_TFT->write16(0x37);
+        spi_TFT->write16(0x0F);
 
         if(_displayInversion == 0){
-            writeCommand(ILI9488_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
+            writeCommand(ILI9486_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
         }
         else{
-            writeCommand(ILI9488_INVON);  // Display Inversion ON,                RPi LCD (B)
+            writeCommand(ILI9486_INVON);  // Display Inversion ON,                RPi LCD (B)
         }
 
         writeCommand(0x36); // Memory Access Control
