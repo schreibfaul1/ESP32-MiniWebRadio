@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2a, Mar 09/2022
+    Version 2.2b, Mar 13/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -162,7 +162,7 @@ SemaphoreHandle_t  mutex_display;
     uint16_t _dispHeight  = 240;
     uint8_t  _tftSize     = 0;
     //
-    TFT tft(TFT_CONTROLLER);
+    TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
 #endif //TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
@@ -216,7 +216,7 @@ SemaphoreHandle_t  mutex_display;
     uint16_t _dispHeight  = 320;
     uint8_t  _tftSize     = 1;
     //
-    TFT tft(TFT_CONTROLLER);
+    TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
 #endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3
 

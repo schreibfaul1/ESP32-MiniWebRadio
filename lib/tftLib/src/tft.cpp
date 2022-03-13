@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 15 2022
+// updated on Mar 13 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -136,6 +136,13 @@ void TFT::init() {
         spi_TFT->write(0x08); spi_TFT->write(0x0F); spi_TFT->write(0x0C);
         spi_TFT->write(0x31); spi_TFT->write(0x36); spi_TFT->write(0x0F);
 
+        if(_displayInversion == 0){
+            writeCommand(ILI9341_INVOFF); // Display Inversion OFF, normal mode
+        }
+        else{
+            writeCommand(ILI9341_INVON);  // Display Inversion ON
+        }
+
         writeCommand(0x11); // Sleep out
         delay(120);
         writeCommand(0x2c);
@@ -196,7 +203,14 @@ void TFT::init() {
 
         writeCommand(0x18); spi_TFT->write(0x36); // I/P_RADJ,N/P_RADJ, Normal mode 60Hz
         writeCommand(0x19); spi_TFT->write(0x01); //OSC_EN='1', start Osc
-        writeCommand(0x01); spi_TFT->write(0x00); //DP_STB='0', out deep sleep
+
+        if(_displayInversion == 0){
+            writeCommand(0x01); spi_TFT->write(0x00); //DP_STB='0', out deep sleep
+        }
+        else{
+            writeCommand(0x01); spi_TFT->write(0x02); //DP_STB='0', out deep sleep, invon = 1
+        }
+
         writeCommand(0x1F); spi_TFT->write(0x88);// GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
         delay(5);
         writeCommand(0x1F); spi_TFT->write(0x80);// GAS=1, VOMG=00, PON=0, DK=0, XDK=0, DVDH_TRI=0, STB=0
@@ -277,8 +291,12 @@ void TFT::init() {
         spi_TFT->write16(0x20);
         spi_TFT->write16(0x00);
 
-        writeCommand(0x20); // Display Inversion OFF   RPi LCD (A)
-//      writeCommand(0x21); // Display Inversion ON    RPi LCD (B)
+        if(_displayInversion == 0){
+            writeCommand(ILI9488_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
+        }
+        else{
+            writeCommand(ILI9488_INVON);  // Display Inversion ON,                RPi LCD (B)
+        }
 
         writeCommand(0x36); // Memory Access Control
         spi_TFT->write16(0x48);
@@ -320,6 +338,14 @@ void TFT::init() {
         spi_TFT->write(0x35);
         spi_TFT->write(0x37);
         spi_TFT->write(0x0F);
+
+        if(_displayInversion == 0){
+            writeCommand(ILI9488_INVOFF); // Display Inversion OFF, normal mode
+        }
+        else{
+            writeCommand(ILI9488_INVON);  // Display Inversion ON
+        }
+
         writeCommand(0xC0); // Power Control 1
         spi_TFT->write(0x17);
         spi_TFT->write(0x15);
@@ -363,8 +389,9 @@ uint16_t TFT::color565(uint8_t r, uint8_t g, uint8_t b) {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3);
 }
 
-TFT::TFT(uint8_t TFTcontroller) {  //0=ILI9341, 1=HX8347D, 2=ILI9486, 3=ILI9488
-    _TFTcontroller = TFTcontroller;
+TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
+    _TFTcontroller = TFTcontroller; //0=ILI9341, 1=HX8347D, 2=ILI9486, 3=ILI9488
+    _displayInversion = dispInv;    //0=off default, 1=on
 
     if(_TFTcontroller == ILI9341){
         _height = 320;

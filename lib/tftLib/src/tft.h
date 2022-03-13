@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 20 2022
+// updated on Mar 13 2022
 
 
 #pragma once
@@ -82,7 +82,7 @@ class TFT : public Print {
     protected:
     File gif_file;
     public:
-        TFT(uint8_t TFT_id=0);
+        TFT(uint8_t TFT_id = 0, uint8_t dispInv = 0);
         virtual ~TFT(){}
 
         void begin(uint8_t CS, uint8_t DC, uint8_t spi = VSPI, uint8_t mosi = 23, uint8_t miso = 19, uint8_t sclk = 18);
@@ -196,6 +196,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint16_t  _height;
         uint16_t  _width;
         uint8_t   _rotation;
+        uint8_t   _displayInversion;
         uint16_t  _curX=0;
         int16_t   _curY=0;
         uint16_t  _textcolor = TFT_BLACK;
