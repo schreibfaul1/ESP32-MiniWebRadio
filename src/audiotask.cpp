@@ -53,12 +53,13 @@ void audioTask(void *parameter) {
     struct audioMessage audioTxTaskMessage;
 
     vs1053.begin(); // Initialize VS1053 player
-    const char* vs1053vers = vs1053.printVersion();
-    if(!vs1053vers){
+    uint32_t chipID = vs1053.printChipID();
+    if(chipID == 0x00000000 || chipID == 0xFFFFFFFF){
         SerialPrintfln(ANSI_ESC_RED "Error: VS1053 not found");
         while(1){};
     }
-    SerialPrintfln("VS1053 " ANSI_ESC_CYAN "%s", vs1053vers);
+    SerialPrintfln("VS1053 chipID = " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", version = "
+                                      ANSI_ESC_CYAN "%d", chipID, vs1053.printVersion());
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
