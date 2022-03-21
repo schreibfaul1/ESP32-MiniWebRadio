@@ -12,8 +12,6 @@
 WebSrv::WebSrv(String Name, String Version){
     _Name=Name; _Version=Version;
     method = HTTP_NONE;
-    webSocketClient.setNoDelay(true);
-    webSocketClient.setTimeout(100);
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show_not_found(){
@@ -605,7 +603,9 @@ boolean WebSrv::loop() {
         return handlehttp();
     }
 
-    if(!webSocketClient.connected()) hasclient_WS = false;
+    if(!webSocketClient.connected()){
+        hasclient_WS = false;
+    }
     if(!hasclient_WS) webSocketClient = webSocketServer.available();
     if (webSocketClient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");

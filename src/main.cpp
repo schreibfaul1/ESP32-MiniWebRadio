@@ -90,14 +90,14 @@ enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
             ALARM = 8, SLEEP    = 9};
 
 
-WebSrv webSrv;
 Preferences pref;
 Preferences stations;
+WebSrv webSrv;
+WiFiMulti wifiMulti;
 RTIME rtc;
 Ticker ticker;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
-WiFiMulti wifiMulti;
 File audioFile;
 FtpServer ftpSrv;
 #if DECODER == 2 // ac101
@@ -903,14 +903,20 @@ void stopSong(){
 *                                                    S E T U P                                                         *
 ***********************************************************************************************************************/
 void setup(){
+    Serial.begin(115200);
+    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
+    SerialPrintfln("");
+    SerialPrintfln(ANSI_ESC_YELLOW "***************************");
+    SerialPrintfln(ANSI_ESC_YELLOW "*     MiniWebRadio V2     *");
+    SerialPrintfln(ANSI_ESC_YELLOW "***************************");
+    SerialPrintfln("");
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
-    Serial.begin(115200);
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
+
 
     tft.begin(TFT_CS, TFT_DC, VSPI);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);

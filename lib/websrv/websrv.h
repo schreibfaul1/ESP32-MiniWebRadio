@@ -47,7 +47,7 @@ private:
     String          WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
 
 protected:
-    String calculateWebSocketResponseKey(String sec_WS_key);
+    String  calculateWebSocketResponseKey(String sec_WS_key);
     void    printWebSocketHeader(String wsRespKey);
     String  getContentType(String filename);
     boolean handlehttp();

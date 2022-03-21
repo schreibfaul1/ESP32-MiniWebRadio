@@ -115,7 +115,7 @@ int FtpServer::handleFTP() {
     else if(cmdStatus == 1) {        // Ftp server waiting for connection
         abortTransfer();
         iniVariables();
-        sprintf(chbuf, "Ftp server waiting for connection on port %i", FTP_CTRL_PORT);
+        sprintf(chbuf, "Ftp server waiting for connection on port \033[36m%i", FTP_CTRL_PORT);
         if(ftp_debug) ftp_debug(chbuf);
         cmdStatus = 2;
     }
