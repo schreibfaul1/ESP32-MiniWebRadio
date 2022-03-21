@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2b, Mar 13/2022
+    Version 2.2c, Mar 21/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -291,7 +291,7 @@ boolean saveStationsToNVS(){
             //log_i("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
             cnt++;
             if(cnt ==_max_stations){
-                SerialPrintfln("No more than %d entries in stationlist allowed!", _max_stations);
+                SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
                 cnt--; // maxstations 999
                 break;
             }
@@ -304,7 +304,7 @@ boolean saveStationsToNVS(){
         file.close();
         stations.putUInt("sumstations", cnt);
         SerialPrintfln("stationlist internally loaded");
-        SerialPrintfln("number of stations: %i", cnt);
+        SerialPrintfln("number of stations: " ANSI_ESC_CYAN "%i", cnt);
         return true;
     }
     else return false;
@@ -873,12 +873,12 @@ bool connectToWiFi(){
         }
         file.close();
     }
-    Serial.println("WiFI_info  : Connecting WiFi...");
+    SerialPrintfln("WiFI_info: Connecting WiFi...");
     if(wifiMulti.run() == WL_CONNECTED){
         WiFi.setSleep(false);
         return true;
     }else{
-        Serial.printf("WiFi credentials are not correct\n");
+        SerialPrintfln(ANSI_ESC_RED "WiFi credentials are not correct\n");
         return false;  // can't connect to any network
     }
 }
@@ -927,15 +927,15 @@ void setup(){
         tft.setCursor(50,100);
         tft.print("SD Card Mount Failed");
         setTFTbrightness(80);
-        log_e("SD Card Mount Failed");
+        SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
-    SerialPrintfln("setup: SD card found");
+    SerialPrintfln(ANSI_ESC_WHITE "setup: SD card found");
 
     defaultsettings();  // first init
     setTFTbrightness(getBrightness());
 
-    if(TFT_CONTROLLER > 3) log_e("The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 3) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
@@ -964,30 +964,31 @@ void setup(){
         while(1){};
     }
     strcpy(_myIP, WiFi.localIP().toString().c_str());
-    SerialPrintfln("setup: connected to %s, IP address is %s", WiFi.SSID().c_str(), _myIP);
+    SerialPrintfln("setup: connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE
+                   ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
 
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); //username, password for ftp.
 
     _f_rtc = rtc.begin(TZName);
     if(!_f_rtc){
-        SerialPrintfln("connection to NTP failed, trying again");
+        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
         ESP.restart();
     }
 
     #if DECODER > 1 // DAC controlled by I2C
         if(!dac.begin(I2C_DATA, I2C_CLK)){
-            SerialPrintfln("The DAC was not be initialized");
+            SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized");
         }
     #endif
 
     audioInit();
 
     _sum_stations = stations.getUInt("sumstations", 0);
-    SerialPrintfln("Number of saved stations: %d", _sum_stations);
+    SerialPrintfln("Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     _cur_station =  pref.getUInt("station", 1);
-    SerialPrintfln("current station number: %d", _cur_station);
+    SerialPrintfln("current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     _cur_volume = getvolume();
-    SerialPrintfln("current volume: %d", _cur_volume);
+    SerialPrintfln("current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
 
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
@@ -1216,7 +1217,7 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         if(!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
         if(webSrv.uploadB64image(SD_MMC, UTF8toASCII(fn), contentLength)){
-            SerialPrintfln("save image %s to SD card was successfully", fn);
+            SerialPrintfln("save image " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.reply("OK");
         }
         else webSrv.reply("failure");
@@ -1230,7 +1231,7 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
             strcpy(fn, fileName);
         }
         if(webSrv.uploadfile(SD_MMC, UTF8toASCII(fn), contentLength)){
-            SerialPrintfln("save file %s to SD card was successfully", fn);
+            SerialPrintfln("save file " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.reply("OK");
         }
         else webSrv.reply("failure");
@@ -1345,7 +1346,8 @@ void changeState(int state){
             if(_state == ALARM){
                 pref.putUInt("alarm_time", _alarmtime);
                 pref.putUShort("alarm_weekday", _alarmdays);
-                SerialPrintfln("Alarm set to %2d:%2d on %s\n", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays));
+                SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%2d:%2d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
+                               "%s\n", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays));
                 clearHeader();
             }
             _state = CLOCK;
@@ -1498,7 +1500,7 @@ void loop() {
             else _f_semaphore=false;
 
             if(_f_alarm){
-                SerialPrintfln("Alarm");
+                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 _f_alarm=false;
                 connecttoFS("/ring/alarm_clock.mp3");
                 audioSetVolume(21);
@@ -1646,12 +1648,12 @@ void ftp_debug(const char* info) {
 }
 //----------------------------------------------------------------------------------------
 void RTIME_info(const char *info){
-    Serial.printf("rtime_info : %s\n", info);
+    SerialPrintfln("rtime_info: %s", info);
 }
 
 //Events from tft library
 void tft_info(const char *info){
-    Serial.printf("tft_info   : %s\n", info);
+    SerialPrintfln("tft_info: %s", info);
 }
 
 // Events from IR Library
@@ -1739,7 +1741,7 @@ void tp_pressed(uint16_t x, uint16_t y){
         case BRIGHTNESS:    if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {yPos = BRIGHTNESS_1; btnNr = x / _winButton.w;}
         default:            break;
     }
-    if(yPos == none) {log_w("Touchpoint not valid x=%d, y=%d", x, y); return;}
+    if(yPos == none) {SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y); return;}
 
     switch(yPos){
         case RADIO_1:       changeState(RADIOico); break;

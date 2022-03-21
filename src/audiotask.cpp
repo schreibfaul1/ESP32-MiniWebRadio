@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 08.03.2022
+// updated: 21.03.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -16,6 +16,8 @@
     Audio audio;
 #endif
 
+extern RTIME rtc;
+extern SemaphoreHandle_t  mutex_rtc;
 
 /***********************************************************************************************************************
 *                                      A U D I O _ T A S K        V S 1 0 5 3                                          *
@@ -43,7 +45,7 @@ void CreateQueues(){
 void audioTask(void *parameter) {
     CreateQueues();
     if(!audioSetQueue || !audioGetQueue){
-        log_e("queues are not initialized");
+        SerialPrintfln(ANSI_ESC_RED "Error: queues are not initialized");
         while(true){;}  // endless loop
     }
 
@@ -53,10 +55,10 @@ void audioTask(void *parameter) {
     vs1053.begin(); // Initialize VS1053 player
     const char* vs1053vers = vs1053.printVersion();
     if(!vs1053vers){
-        log_e("VS1053 not found");
+        SerialPrintfln(ANSI_ESC_RED "Error: VS1053 not found");
         while(1){};
     }
-    Serial.printf("VS1053 %s\n", vs1053vers);
+    SerialPrintfln("VS1053 " ANSI_ESC_CYAN "%s", vs1053vers);
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
@@ -109,7 +111,7 @@ void audioTask(void *parameter) {
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
-                log_i("error");
+                SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage");
             }
         }
         vs1053.loop();
@@ -118,21 +120,22 @@ void audioTask(void *parameter) {
 
 void audioInit() {
     xTaskCreatePinnedToCore(
-        audioTask,           /* Function to implement the task */
-        "audioplay",          /* Name of the task */
+        audioTask,             /* Function to implement the task */
+        "audioplay",           /* Name of the task */
         5000,                  /* Stack size in words */
         NULL,                  /* Task input parameter */
-        2 | portPRIVILEGE_BIT, /* Priority of the task */
+        1,                     /* Priority of the task */
         NULL,                  /* Task handle. */
-        1                      /* Core where the task should run */
+        AUDIOTASK_CORE         /* Core where the task should run */
     );
+    SerialPrintfln("Audiotask is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);
 }
 
 audioMessage transmitReceive(audioMessage msg){
     xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
     if(xQueueReceive(audioGetQueue, &audioRxMessage, portMAX_DELAY) == pdPASS){
         if(msg.cmd != audioRxMessage.cmd){
-            log_e("wrong reply from message queue");
+            SerialPrintfln(ANSI_ESC_RED "Error: wrong reply from message queue");
         }
     }
     return audioRxMessage;
@@ -225,7 +228,7 @@ void CreateQueues(){
 void audioTask(void *parameter) {
     CreateQueues();
     if(!audioSetQueue || !audioGetQueue){
-        log_e("queues are not initialized");
+        SerialPrintfln(ANSI_ESC_RED "Error: queues are not initialized");
         while(true){;}  // endless loop
     }
 
@@ -285,7 +288,7 @@ void audioTask(void *parameter) {
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
-                log_i("error");
+                SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage");
             }
         }
         audio.loop();
@@ -298,17 +301,18 @@ void audioInit() {
         "audioplay",            /* Name of the task */
         5000,                   /* Stack size in words */
         NULL,                   /* Task input parameter */
-        2 | portPRIVILEGE_BIT,  /* Priority of the task */
+        2,                      /* Priority of the task */
         NULL,                   /* Task handle. */
-        1                       /* Core where the task should run */
+        AUDIOTASK_CORE          /* Core where the task should run */
     );
+    SerialPrintfln("Audiotask is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);
 }
 
 audioMessage transmitReceive(audioMessage msg){
     xQueueSend(audioSetQueue, &msg, portMAX_DELAY);
     if(xQueueReceive(audioGetQueue, &audioRxMessage, portMAX_DELAY) == pdPASS){
         if(msg.cmd != audioRxMessage.cmd){
-            log_e("wrong reply from message queue");
+            SerialPrintfln(ANSI_ESC_RED "Error: wrong reply from message queue");
         }
     }
     return audioRxMessage;

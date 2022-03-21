@@ -1,18 +1,19 @@
 // created: 10.02.2022
-// updated: 13.03.2022
+// updated: 21.03.2022
 
 #pragma once
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER             0                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
+#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
 #define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 0 ... 3
 #define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486RPI, (4)ILI9488
 #define TP_ROTATION         3                               // 0 ... 3
+#define AUDIOTASK_CORE      0                               // 0 or 1
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
 
@@ -40,7 +41,7 @@
     #define TFT_CS        22
     #define TFT_DC        21
     #define TFT_BL        32  // at -1 the brightness menu is not displayed
-    #define TP_IRQ        39
+    #define TP_IRQ        39  // VN
     #define TP_CS          5
     #define SD_MMC_D0      2  // cannot be changed
     #define SD_MMC_CLK    14  // cannot be changed
@@ -69,9 +70,22 @@
     #define HP_DETECT     -1
     #define AMP_ENABLED   -1
 
+/**********************************************************************************************************************/
+// output on serial terminal
+#define ANSI_ESC_BLACK      "\033[30m"
+#define ANSI_ESC_RED        "\033[31m"
+#define ANSI_ESC_GREEN      "\033[32m"
+#define ANSI_ESC_YELLOW     "\033[33m"
+#define ANSI_ESC_BLUE       "\033[34m"
+#define ANSI_ESC_MAGENTA    "\033[35m"
+#define ANSI_ESC_CYAN       "\033[36m"
+#define ANSI_ESC_WHITE      "\033[37m"
+#define ANSI_ESC_RESET      "\033[0m"
+
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \
                             Serial.printf(__VA_ARGS__); \
+                            Serial.printf("\033[0m"); \
                             Serial.println(""); \
                             xSemaphoreGive(mutex_rtc);}
 

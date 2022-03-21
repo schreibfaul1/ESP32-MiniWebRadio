@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Mar 13 2022
+// updated on Mar 21 2022
 
 
 #pragma once
@@ -27,6 +27,16 @@ using namespace std;
 extern __attribute__((weak)) void tft_info(const char*);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_released();
+
+#define ANSI_ESC_BLACK      "\033[30m"
+#define ANSI_ESC_RED        "\033[31m"
+#define ANSI_ESC_GREEN      "\033[32m"
+#define ANSI_ESC_YELLOW     "\033[33m"
+#define ANSI_ESC_BLUE       "\033[34m"
+#define ANSI_ESC_MAGENTA    "\033[35m"
+#define ANSI_ESC_CYAN       "\033[36m"
+#define ANSI_ESC_WHITE      "\033[37m"
+#define ANSI_ESC_RESET      "\033[0m"
 
 #define ILI9341_WIDTH  240
 #define ILI9341_HEIGHT 320

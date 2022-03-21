@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Mar 13 2022
+// updated on Mar 21 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -63,7 +63,7 @@ JPEGDecoder JpegDec;
 void TFT::init() {
     startWrite();
     if(_TFTcontroller == ILI9341){
-        log_i("init ILI9341");
+        if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9341");
         writeCommand(0xCB); // POWERA
         spi_TFT->write(0x39); spi_TFT->write(0x2C); spi_TFT->write(0x00);
         spi_TFT->write(0x34); spi_TFT->write(0x02);
@@ -151,7 +151,7 @@ void TFT::init() {
         writeCommand(0x2c);
     }
     if(_TFTcontroller == HX8347D) {
-        log_i("init HX8347D");
+        if(tft_info) tft_info("init " ANSI_ESC_CYAN "HX8347D");
         //Driving ability Setting
         writeCommand(0xEA); spi_TFT->write(0x00); //PTBA[15:8]
         writeCommand(0xEB); spi_TFT->write(0x20); //PTBA[7:0]
@@ -240,7 +240,7 @@ void TFT::init() {
         writeCommand(0x09); spi_TFT->write(0x3F); //Row End
     }
     if(_TFTcontroller == ILI9486){
-        log_i("init ILI9486");
+        if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9486");
         //Driving ability Setting
         writeCommand(0x11); // Sleep out, also SW reset
         delay(120);
@@ -291,6 +291,40 @@ void TFT::init() {
         spi_TFT->write16(0x37);
         spi_TFT->write16(0x0F);
 
+        // writeCommand(0xE0); // PGAMCTRL(alternative Positive Gamma Control)
+        // spi_TFT->write16(0x0F);
+        // spi_TFT->write16(0x1F);
+        // spi_TFT->write16(0x1C);
+        // spi_TFT->write16(0x0C);
+        // spi_TFT->write16(0x0F);
+        // spi_TFT->write16(0x08);
+        // spi_TFT->write16(0x48);
+        // spi_TFT->write16(0x98);
+        // spi_TFT->write16(0x37);
+        // spi_TFT->write16(0x0A);
+        // spi_TFT->write16(0x13);
+        // spi_TFT->write16(0x04);
+        // spi_TFT->write16(0x11);
+        // spi_TFT->write16(0x0D);
+        // spi_TFT->write16(0x00);
+
+        // writeCommand(0xE1); // NGAMCTRL (alternative Negative Gamma Correction)
+        // spi_TFT->write16(0x0F);
+        // spi_TFT->write16(0x32);
+        // spi_TFT->write16(0x2E);
+        // spi_TFT->write16(0x0B);
+        // spi_TFT->write16(0x0D);
+        // spi_TFT->write16(0x05);
+        // spi_TFT->write16(0x47);
+        // spi_TFT->write16(0x75);
+        // spi_TFT->write16(0x37);
+        // spi_TFT->write16(0x06);
+        // spi_TFT->write16(0x10);
+        // spi_TFT->write16(0x03);
+        // spi_TFT->write16(0x24);
+        // spi_TFT->write16(0x20);
+        // spi_TFT->write16(0x00);
+
         if(_displayInversion == 0){
             writeCommand(ILI9486_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
         }
@@ -304,8 +338,8 @@ void TFT::init() {
         writeCommand(0x29); // Display ON
         delay(150);
     }
-   if(_TFTcontroller == ILI9488){
-        log_i("init ILI9488");
+    if(_TFTcontroller == ILI9488){
+        if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9488");
         writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
         spi_TFT->write(0x00);
         spi_TFT->write(0x03);
@@ -481,7 +515,7 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
     digitalWrite(TFT_CS, HIGH);
 
     pinMode(16, OUTPUT); digitalWrite(16, HIGH); //GPIO TP_CS
-    log_i("DC=%d, CS=%d, MISO=%d, MOSI=%d, SCK=%d", TFT_DC, TFT_CS, TFT_MISO, TFT_MOSI, TFT_SCK);
+    // log_i("DC=%d, CS=%d, MISO=%d, MOSI=%d, SCK=%d", TFT_DC, TFT_CS, TFT_MISO, TFT_MOSI, TFT_SCK);
     spi_TFT->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
 
     init();  //
