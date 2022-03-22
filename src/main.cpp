@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2c, Mar 21/2022
+    Version 2.2d, Mar 22/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -347,55 +347,55 @@ inline uint8_t getBrightness(){
 *                                                     A S C I I                                                        *
 ***********************************************************************************************************************/
 const char* UTF8toASCII(const char* str){
-    uint16_t i=0, j=0;
-    char tab[96]={
-          96,173,155,156, 32,157, 32, 32, 32, 32,166,174,170, 32, 32, 32,248,241,253, 32,
-          32,230, 32,250, 32, 32,167,175,172,171, 32,168, 32, 32, 32, 32,142,143,146,128,
-          32,144, 32, 32, 32, 32, 32, 32, 32,165, 32, 32, 32, 32,153, 32, 32, 32, 32, 32,
-         154, 32, 32,225,133,160,131, 32,132,134,145,135,138,130,136,137,141,161,140,139,
-          32,164,149,162,147, 32,148,246, 32,151,163,150,129, 32, 32,152
-     };
-    while((str[i]!=0)&&(j<1020)){
-        _chbuf[j]=str[i];
-        if(str[i]==0xC2){ // compute unicode from utf8
+    uint16_t i = 0, j = 0;
+    char tab[96] = {
+          96, 173, 155, 156,  32, 157,  32,  32,  32,  32, 166, 174, 170,  32,  32,  32, 248, 241, 253,  32,
+          32, 230,  32, 250,  32,  32, 167, 175, 172, 171,  32, 168,  32,  32,  32,  32, 142, 143, 146, 128,
+          32, 144,  32,  32,  32,  32,  32,  32,  32, 165,  32,  32,  32,  32, 153,  32,  32,  32,  32,  32,
+         154,  32,  32, 225, 133, 160, 131,  32, 132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139,
+          32, 164, 149, 162, 147,  32, 148, 246,  32, 151, 163, 150, 129,  32,  32, 152
+       };
+      while((str[i] != 0) && (j < 1020)){
+        _chbuf[j] = str[i];
+        if(str[i] == 0xC2){ // compute unicode from utf8
             i++;
-            if((str[i]>159)&&(str[i]<192)) _chbuf[j]=tab[str[i]-160];
-            else _chbuf[j]=32;
+            if((str[i] > 159) && (str[i] < 192)) _chbuf[j] = tab[str[i] - 160];
+            else _chbuf[j] = 32;
         }
-        else if(str[i]==0xC3){
+        else if(str[i] == 0xC3){
             i++;
-            if((str[i]>127)&&(str[i]<192)) _chbuf[j]=tab[str[i]-96];
-            else _chbuf[j]=32;
+            if((str[i] > 127) && (str[i] < 192)) _chbuf[j] = tab[str[i] - 96];
+            else _chbuf[j] = 32;
         }
         i++; j++;
     }
-    _chbuf[j]=0;
+    _chbuf[j] = 0;
     return (_chbuf);
 }
 const char* ASCIItoUTF8(const char* str){
-    uint16_t i=0, j=0, uni=0;
-    uint16_t tab[128]={
-         199, 252, 233, 226, 228, 224, 229, 231, 234, 235, 232, 239, 238, 236, 196, 197,
-         201, 230, 198, 244, 246, 242, 251, 249, 255, 214, 220, 162, 163, 165,8359, 402,
-         225, 237, 243, 250, 241, 209, 170, 186, 191,8976, 172, 189, 188, 161, 171, 187,
-        9617,9618,9619,9474,9508,9569,9570,9558,9557,9571,9553,9559,9565,9564,9563,9488,
-        9492,9524,9516,9500,9472,9532,9566,9567,9562,9556,9577,9574,9568,9552,9580,9575,
-        9576,9572,9573,9561,9560,9554,9555,9579,9578,9496,9484,9608,9604,9612,9616,9600,
-         945, 223, 915, 960, 931, 963, 181, 964, 934, 920, 937, 948,8734, 966, 949,8745,
-        8801, 177,8805,8804,8992,8993, 247,8776, 176,8729, 183,8730,8319, 178,9632, 160
+    uint16_t i = 0, j = 0, uni = 0;
+    uint16_t tab[128] = {
+         199,  252,  233,  226,  228,  224,  229,  231,  234,  235,  232,  239,  238,  236,  196,  197,
+         201,  230,  198,  244,  246,  242,  251,  249,  255,  214,  220,  162,  163,  165, 8359,  402,
+         225,  237,  243,  250,  241,  209,  170,  186,  191, 8976,  172,  189,  188,  161,  171,  187,
+        9617, 9618, 9619, 9474, 9508, 9569, 9570, 9558, 9557, 9571, 9553, 9559, 9565, 9564, 9563, 9488,
+        9492, 9524, 9516, 9500, 9472, 9532, 9566, 9567, 9562, 9556, 9577, 9574, 9568, 9552, 9580, 9575,
+        9576, 9572, 9573, 9561, 9560, 9554, 9555, 9579, 9578, 9496, 9484, 9608, 9604, 9612, 9616, 9600,
+         945,  223,  915,  960,  931,  963,  181,  964,  934,  920,  937,  948, 8734,  966,  949, 8745,
+        8801,  177, 8805, 8804, 8992, 8993,  247, 8776,  176, 8729,  183, 8730, 8319,  178, 9632,  160
     };
-    while((str[i]!=0)&&(j<1020)){
-        uni=str[i];
-        if(uni>=128){uni-=128; uni=tab[uni];}
+    while((str[i] != 0) && (j < 1020)){
+        uni = str[i];
+        if(uni >= 128){uni -= 128; uni = tab[uni];}
 //            uni=UTF8fromASCII(str[i]);
             switch(uni){
-                case   0 ... 127:{_chbuf[j]=str[i]; i++; j++; break;}
-                case 160 ... 191:{_chbuf[j]=0xC2; _chbuf[j+1]=uni; j+=2; i++; break;}
-                case 192 ... 255:{_chbuf[j]=0xC3; _chbuf[j+1]=uni-64; j+=2; i++; break;}
-                default:{_chbuf[j]=' '; i++; j++; break;} // ignore all other
+                case   0 ... 127:{_chbuf[j] = str[i]; i++; j++; break;}
+                case 160 ... 191:{_chbuf[j] = 0xC2; _chbuf[j+1] = uni; j += 2; i++; break;}
+                case 192 ... 255:{_chbuf[j] = 0xC3; _chbuf[j+1] = uni - 64; j += 2; i++; break;}
+                default:{_chbuf[j] = ' '; i++; j++; break;} // ignore all other
             }
     }
-    _chbuf[j]=0;
+    _chbuf[j] = 0;
     return _chbuf;
 }
 /***********************************************************************************************************************
@@ -1114,6 +1114,7 @@ void setVolume(uint8_t vol){
         showHeadlineVolume(0);
     }
     _cur_volume = vol;
+    SerialPrintfln("current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
 
     #if DECODER > 1 // ES8388, AC101 ...
         if(HP_DETECT == -1){
@@ -1168,6 +1169,7 @@ void setStation(uint16_t sta){
     _icydescription = "";
     if(_state != RADIOico) clearTitle();
     _cur_station = sta;
+    SerialPrintfln("current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     if(!_f_isWebConnected) _streamTitle = "";
     showFooterStaNr();
     pref.putUInt("station", sta);
@@ -1548,10 +1550,12 @@ void audio_info(const char *info){
 //----------------------------------------------------------------------------------------
 void vs1053_showstation(const char *info){
     _stationName_air = info;
+    SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) showLogoAndStationName();
 }
 void audio_showstation(const char *info){
     _stationName_air = info;
+    SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) showLogoAndStationName();
 }
 //----------------------------------------------------------------------------------------
@@ -1559,13 +1563,13 @@ void vs1053_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
     if(_state == RADIO) showStreamTitle();
-    SerialPrintfln("StreamTitle: %s", info);
+    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
 void audio_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
     if(_state == RADIO) showStreamTitle();
-    SerialPrintfln("StreamTitle: %s", info);
+    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_commercial(const char *info){
@@ -1619,10 +1623,10 @@ void audio_icyurl(const char *info){                   // if the Radio has a hom
 }
 //----------------------------------------------------------------------------------------
 void vs1053_id3data(const char *info){
-    SerialPrintfln("id3data: %s", info);
+    SerialPrintfln("id3data: " ANSI_ESC_GREEN "%s", info);
 }
 void audio_id3data(const char *info){
-    SerialPrintfln("id3data: %s", info);
+    SerialPrintfln("id3data: " ANSI_ESC_GREEN "%s", info);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
@@ -1974,11 +1978,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "upvolume"){          str = "Volume is now " + (String)upvolume();
-                                    webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
+    if(cmd == "upvolume"){          str = "Volume is now " + (String)upvolume(); webSrv.reply(str.c_str()); return;}
 
-    if(cmd == "downvolume"){        str = "Volume is now " + (String)downvolume();
-                                    webSrv.reply(str.c_str()); SerialPrintfln("%s", str.c_str()); return;}
+    if(cmd == "downvolume"){        str = "Volume is now " + (String)downvolume(); webSrv.reply(str.c_str()); return;}
 
     if(cmd == "prev_station"){      prevStation(); return;}                                             // via websocket
 
