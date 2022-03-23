@@ -6,12 +6,12 @@
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
+#define DECODER             0                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
+#define TFT_CONTROLLER      1                               // (0)ILI9341, (1)HX8347D, (2)ILI9486, (3)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 0 ... 3
-#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486RPI, (4)ILI9488
+#define TP_VERSION          2                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486RPI, (4)ILI9488
 #define TP_ROTATION         3                               // 0 ... 3
 #define AUDIOTASK_CORE      0                               // 0 or 1
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
@@ -81,6 +81,8 @@
 #define ANSI_ESC_CYAN       "\033[36m"
 #define ANSI_ESC_WHITE      "\033[37m"
 #define ANSI_ESC_RESET      "\033[0m"
+#define ANSI_ESC_BROWN      "\033[38;5;130m"
+#define ANSI_ESC_ORANGE     "\033[38;5;214m"
 
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
                             Serial.printf("%s ", rtc.gettime_s()); \

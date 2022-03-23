@@ -227,7 +227,7 @@ SemaphoreHandle_t  mutex_display;
 ***********************************************************************************************************************/
 boolean defaultsettings(){
     if(pref.getUInt("default", 0) != 1000){
-        log_i("first init, set defaults");
+        SerialPrintfln("first init, set defaults");
 		if(!saveStationsToNVS()) return false;
         pref.clear();
         //
@@ -262,7 +262,7 @@ boolean saveStationsToNVS(){
     uint16_t cnt = 0;
     // StationList
 	if(!SD_MMC.exists("/stations.csv")){
-		log_e("SD_MMC/stations.csv not found");
+		SerialPrintfln(ANSI_ESC_RED "SD_MMC/stations.csv not found");
 		return false;
 	}
 
@@ -288,7 +288,7 @@ boolean saveStationsToNVS(){
             if(X == "*") continue;
             if(StationName == "") continue; // is empty
             if(StreamURL   == "") continue; // is empty
-            //log_i("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
+            //SerialPrintfln("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
             cnt++;
             if(cnt ==_max_stations){
                 SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
@@ -405,7 +405,7 @@ void timer1sec() {
     static volatile uint8_t sec=0;
     _f_1sec = true;
     sec++;
-    //log_i("sec=%i", sec);
+    //SerialPrintfln("sec=%i", sec);
     if(sec==60){sec=0; _f_1min = true;}
 }
 /***********************************************************************************************************************
@@ -528,10 +528,15 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
     tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
     tft.setTextColor(color);                                // Set the requested color
     tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
-    // log_i("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
+    // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
     uint16_t ch_written = tft.writeText((const uint8_t*) str, winHeight); // todo winHeight
     if(ch_written < strlen(str)){
-        log_w("txt overflow, winHeight=%d, strlen=%d, written=%d, str=%s", winHeight, strlen(str), ch_written, str);
+        // If this message appears, there is not enough space on the display to write the entire text,
+        // a part of the text has been cut off
+        SerialPrintfln("txt overflow, winHeight=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
+                                      ", strlen=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
+                                     ", written=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
+                                         ", str=" ANSI_ESC_CYAN "%s", winHeight, strlen(str), ch_written, str);
     }
 }
 void showStreamTitle(){
@@ -781,11 +786,11 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
     const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)){
-        log_e("file \"%s\" not found", scImg);
+        SerialPrintfln(ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
     if(endsWith(scImg, "bmp")){
-        log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
+        // log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
         return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
     if(endsWith(scImg, "jpg")){
@@ -798,25 +803,29 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 ***********************************************************************************************************************/
 bool setAudioFolder(const char* audioDir){
     if(audioFile) audioFile.close();  // same as rewind()
-    if(!SD_MMC.exists(audioDir)){log_e("%s not exist", audioDir); return false;}
+    if(!SD_MMC.exists(audioDir)){SerialPrintfln(ANSI_ESC_RED "%s not exist", audioDir); return false;}
     audioFile = SD_MMC.open(audioDir);
-    if(!audioFile.isDirectory()){log_e("%s is not a directory", audioDir); return false;}
+    if(!audioFile.isDirectory()){SerialPrintfln(ANSI_ESC_RED "%s is not a directory", audioDir); return false;}
     return true;
 }
 const char* listAudioFile(){
     File file = audioFile.openNextFile();
     if(!file) {
-        //log_i("no more files found");
+        // SerialPrintfln(ANSI_ESC_BLUE "no more files found");
         audioFile.close();
-        return NULL;
+        return nullptr;
     }
     while(file){
         const char* name = file.name();
-        if(endsWith(name, ".mp3") || endsWith(name, ".aac") ||
-           endsWith(name, ".m4a") || endsWith(name, ".wav") ||
-           endsWith(name, ".flac")  ) return name;
+        if(endsWith(name, ".mp3") || endsWith(name, ".aac") || endsWith(name, ".m4a") ||
+                                     endsWith(name, ".wav") || endsWith(name, ".flac")){
+            return name;
+        }
+        else{
+            return nullptr;
+        }
     }
-    return NULL;
+    return nullptr;
 }
 
 bool sendAudioList2Web(const char* audioDir){
@@ -833,7 +842,7 @@ bool sendAudioList2Web(const char* audioDir){
         }
         else break;
     }
-     log_i("%s", str.c_str());
+    SerialPrintfln(ANSI_ESC_GREEN "%s", str.c_str());
     webSrv.send((const char*)str.c_str());
     return true;
 }
@@ -952,7 +961,7 @@ void setup(){
         tft.setCursor(50,100);
         tft.print("stations.csv not found");
         setTFTbrightness(80);
-        log_e("stations.csv not found");
+        SerialPrintfln(ANSI_ESC_RED "stations.csv not found");
         while(1){};  // endless loop, MiniWebRadio does not work without stations.csv
     }
     file.close();
@@ -966,7 +975,7 @@ void setup(){
         tft.setCursor(50,100);
         tft.print("WiFi credentials are not correct");
         setTFTbrightness(80);
-        log_e("WiFi credentials are not correct");
+        SerialPrintfln(ANSI_ESC_RED "WiFi credentials are not correct");
         while(1){};
     }
     strcpy(_myIP, WiFi.localIP().toString().c_str());
@@ -1123,12 +1132,12 @@ void setVolume(uint8_t vol){
         }
         else{
             if(digitalRead(HP_DETECT) ==  HIGH){
-                // log_i("HP_Detect = High, volume %i", vol);
+                // SerialPrintfln("HP_Detect = High, volume %i", vol);
                 dac.SetVolumeSpeaker(_cur_volume * 3);
                 dac.SetVolumeHeadphone(0);
             }
             else {
-                // log_i("HP_Detect = Low, volume %i", vol);
+                // SerialPrintfln("HP_Detect = Low, volume %i", vol);
                 dac.SetVolumeSpeaker(1);
                 dac.SetVolumeHeadphone(_cur_volume * 3);
             }
@@ -1155,11 +1164,11 @@ inline void mute(){
 }
 
 void setStation(uint16_t sta){
-    //log_i("sta %d, _cur_station %d", sta, _cur_station );
+    //SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta > _sum_stations) sta = _cur_station;
     sprintf (_chbuf, "station_%03d", sta);
     String content = stations.getString(_chbuf);
-    //log_i("content %s", content.c_str());
+    //SerialPrintfln("content %s", content.c_str());
     _stationName_nvs = content.substring(0, content.indexOf("#")); //get stationname
     content = content.substring(content.indexOf("#") + 1, content.length()); //get URL
     content.trim();
@@ -1500,7 +1509,7 @@ void loop() {
             }
 
             if(_alarmtime == rtc.getMinuteOfTheDay()){ //is alarmtime?
-                log_i("is alarmtime");
+                SerialPrintfln("is alarmtime");
                 if((_alarmdays>>rtc.getweekday())&1){ //is alarmday?
                     if(!_f_semaphore) {_f_alarm = true;  _f_semaphore = true;} //set alarmflag
                 }
@@ -1599,24 +1608,24 @@ void audio_eof_mp3(const char *info){                  // end of mp3 file (filen
 void vs1053_lasthost(const char *info){                 // really connected URL
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: %s", _lastconnectedhost);
+    SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
 }
 void audio_lasthost(const char *info){                 // really connected URL
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: %s", _lastconnectedhost);
+    SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5){
-        SerialPrintfln("icy-url: %s", info);
+        SerialPrintfln("icy-url: ... %s", info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
 void audio_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5){
-        SerialPrintfln("icy-url: %s", info);
+        SerialPrintfln("icy-url: ... %s", info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
@@ -1637,7 +1646,7 @@ void vs1053_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: %s", info);
+        SerialPrintfln("icy-descr: ... %s", info);
     }
 }
 void audio_icydescription(const char *info){
@@ -1648,7 +1657,7 @@ void audio_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: %s", info);
+        SerialPrintfln("icy-descr: ... %s", info);
     }
 }
 //----------------------------------------------------------------------------------------
@@ -1717,7 +1726,7 @@ void ir_key(const char* key){
 }
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
-    //log_i("tp_pressed, state is: %i", _state);
+    //SerialPrintfln("tp_pressed, state is: %i", _state);
     _touchCnt = 5;
     enum : int8_t{none = -1, RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1,
                              PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1,
@@ -1815,7 +1824,7 @@ void tp_pressed(uint16_t x, uint16_t y){
     }
 }
 void tp_released(){
-    //log_i("tp_released, state is: %i", _state);
+    //SerialPrintfln("tp_released, state is: %i", _state);
     const char* chptr = NULL;
     char path[256 + 12] = "/audiofiles/";
     if(_f_sleeping == true){ //awake
@@ -1919,7 +1928,7 @@ void tp_released(){
 
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){                       // called from html
-//    log_i("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+//    SerialPrintfln("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
     String  str;
     if(cmd == "homepage"){          webSrv.send("homepage=" + _homepage);
                                     return;}
@@ -2016,14 +2025,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
                                     webSrv.reply(_chbuf); return;}
 
-    log_e("unknown HTMLcommand %s", cmd.c_str());
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s", cmd.c_str());
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
-    log_i("request %s contentLength %d", request.c_str(), contentLength);
+    SerialPrintfln("request %s contentLength %d", request.c_str(), contentLength);
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
     if(request == "fileUpload"){savefile(_filename.c_str(), contentLength);  return;}
-    log_e("unknown request: %s",request.c_str());
+    SerialPrintfln(ANSI_ESC_RED "unknown request: %s",request.c_str());
 }
 void WEBSRV_onInfo(const char* info){
     // if(startsWith(info, "WebSocket")) return;       // suppress WebSocket client available
