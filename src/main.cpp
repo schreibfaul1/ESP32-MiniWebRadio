@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2d, Mar 22/2022
+    Version 2.2e, Apr 05/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -71,7 +71,7 @@ String         _streamTitle = "";
 String         _filename = "";
 String         _icydescription = "";
 
-char _hl_item[10][25]{                          // Title in headline
+char _hl_item[10][40]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
                 "** Internet Radio **",
@@ -1464,7 +1464,6 @@ void changeState(int state){
 void loop() {
     static uint8_t sec=0;
     if(webSrv.loop()) return; // if true: ignore all other for faster response to web
-
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
@@ -1646,7 +1645,7 @@ void vs1053_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: ... %s", info);
+        SerialPrintfln("icy-descr: . %s", info);
     }
 }
 void audio_icydescription(const char *info){
@@ -1657,7 +1656,7 @@ void audio_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: ... %s", info);
+        SerialPrintfln("icy-descr: . %s", info);
     }
 }
 //----------------------------------------------------------------------------------------
