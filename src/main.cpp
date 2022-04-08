@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2e, Apr 05/2022
+    Version 2.2f, Apr 08/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -131,13 +131,14 @@ SemaphoreHandle_t  mutex_display;
     //  | Footer                                    |       _hFooter=20px
     //  +-------------------------------------------+ 240
     //                                             320
-    const unsigned short* _fonts[6] = {
+    const unsigned short* _fonts[7] = {
         Times_New_Roman15x14,
         Times_New_Roman21x17,
         Times_New_Roman27x21,
         Times_New_Roman34x27,
         Times_New_Roman38x31,
         Times_New_Roman43x35,
+        Big_Numbers133x156      // ASCII 32...64 only
     };
 
     struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
@@ -159,8 +160,11 @@ SemaphoreHandle_t  mutex_display;
     uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
     uint8_t  _alarmdays_w = 44 + 4;
     uint8_t  _alarmdays_h = 40;
+    uint16_t _dispWidth   = 320;
     uint16_t _dispHeight  = 240;
     uint8_t  _tftSize     = 0;
+    uint8_t  _irNumber_x  = 25;
+    uint8_t  _irNumber_y  = 40;
     //
     TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
@@ -185,13 +189,14 @@ SemaphoreHandle_t  mutex_display;
     //  +-------------------------------------------+ 320
     //                                             480
 
-    const unsigned short* _fonts[6] = {
+    const unsigned short* _fonts[7] = {
         Times_New_Roman27x21,
         Times_New_Roman34x27,
         Times_New_Roman38x31,
         Times_New_Roman43x35,
         Times_New_Roman56x46,
         Times_New_Roman66x53,
+        Big_Numbers133x156      // ASCII 32...64 only
     };
 
     struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 480; uint16_t h = 30; } const _winHeader;
@@ -213,8 +218,11 @@ SemaphoreHandle_t  mutex_display;
     uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
     uint8_t  _alarmdays_w = 64 + 4;
     uint8_t  _alarmdays_h = 56;
+    uint16_t _dispWidth   = 480;
     uint16_t _dispHeight  = 320;
     uint8_t  _tftSize     = 1;
+    uint8_t  _irNumber_x  = 100;
+    uint8_t  _irNumber_y  = 80;
     //
     TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
@@ -1689,10 +1697,10 @@ void ir_res(uint32_t res){
 void ir_number(const char* num){
     _f_irNumberSeen = true;
     if(_state != RADIO) return;
-    tft.fillRect(_winName.x, _winName.y, _winName.w , _winName.h + _winTitle.h, TFT_BLACK);
-    tft.setTextSize(7); // tft.setFont(Big_Numbers133x156);
+    tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth , _winName.h + _winTitle.h, TFT_BLACK);
+    tft.setFont(_fonts[6]);
     tft.setTextColor(TFT_GOLD);
-    tft.setCursor(100, 80);
+    tft.setCursor(_irNumber_x, _irNumber_y);
     tft.print(num);
 }
 void ir_key(const char* key){
