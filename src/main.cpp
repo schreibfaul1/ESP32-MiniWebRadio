@@ -1194,7 +1194,17 @@ void setStation(uint16_t sta){
         connecttohost(_stationURL);
     }
     else{
-        if(!strCompare(_stationURL, _lastconnectedhost)) connecttohost(_stationURL);
+        uint8_t idx1 = 0;
+        uint8_t idx2 = 0;
+        if(startsWith(_lastconnectedhost, "http://")) idx1 = 7;
+        if(startsWith(_stationURL,        "http://")) idx2 = 7;
+        if(!strCompare(_stationURL + idx2 , _lastconnectedhost + idx1)){
+            SerialPrintfln("stationURL:  %s", _stationURL);
+            connecttohost(_stationURL);
+        }
+        else{
+            if(_state == RADIO) showStreamTitle();
+        }
     }
     showLogoAndStationName();
     StationsItems();
