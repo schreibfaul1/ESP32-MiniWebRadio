@@ -1686,6 +1686,7 @@ void tft_info(const char *info){
 void ir_res(uint32_t res){
     _f_irNumberSeen = false;
     if(_state != RADIO) return;
+    if(_f_sleeping == true) return;
     if(res != 0){
        setStation(res);
     }
@@ -1705,7 +1706,21 @@ void ir_number(const char* num){
 }
 void ir_key(const char* key){
 
-    if(_f_sleeping) {_f_sleeping = false;  changeState(RADIO);} // awake
+    //if(_f_sleeping) {_f_sleeping = false;  changeState(RADIO);} // awake
+
+    if(_f_sleeping == true && key[0] != 'k') return;
+    if(_f_sleeping == true && key[0] == 'k'){ //awake
+        _f_sleeping = false;
+        SerialPrintfln("awake");
+        setTFTbrightness(pref.getUShort("brightness"));
+        changeState(RADIO);
+        connecttohost(_lastconnectedhost);
+        showLogoAndStationName();
+        showFooter();
+        showHeadlineItem(RADIO);
+        showHeadlineVolume(_cur_volume);
+        return;
+    }
 
     switch(key[0]){
         case 'k':       if(_state == SLEEP) {                           // OK
