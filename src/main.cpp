@@ -1199,7 +1199,7 @@ void setStation(uint16_t sta){
         if(startsWith(_lastconnectedhost, "http://")) idx1 = 7;
         if(startsWith(_stationURL,        "http://")) idx2 = 7;
         if(!strCompare(_stationURL + idx2 , _lastconnectedhost + idx1)){
-            SerialPrintfln("stationURL:  %s", _stationURL);
+            // SerialPrintfln("stationURL:  %s", _stationURL);
             connecttohost(_stationURL);
         }
         else{
