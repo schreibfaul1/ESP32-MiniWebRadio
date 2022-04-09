@@ -1172,8 +1172,12 @@ uint8_t upvolume(){
     return _cur_volume;
 }
 inline void mute(){
-    if(_f_mute==false){_f_mute=true; _f_muteDecrement = true; webSrv.send("mute=1");}
-    else {_f_mute=false; _f_muteIncrement = true; digitalWrite(AMP_ENABLED, HIGH); webSrv.send("mute=0");}
+    if(_f_mute==false){_f_mute=true;  _f_muteDecrement = true; _f_muteIncrement = false;
+                       webSrv.send("mute=1");
+    }
+    else              {_f_mute=false; _f_muteIncrement = true; _f_muteDecrement = false;
+                       digitalWrite(AMP_ENABLED, HIGH); webSrv.send("mute=0");
+    }
     pref.putUShort("mute", _f_mute);
 }
 
