@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2f, Apr 08/2022
+    Version 2.2g, Apr 09/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -31,8 +31,9 @@ uint16_t       _cur_station    = 0;      // current station(nr), will be set lat
 uint16_t       _sleeptime      = 0;      // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations   = 0;
 uint8_t        _cur_volume     = 0;      // will be set from stored preferences
+uint8_t        _mute_volume    = 0;      // decrement to 0 or increment to _cur_volume
 uint8_t        _state          = 0;      // statemaschine
-uint8_t        _touchCnt       = 0;
+uint8_t        _timeCounter       = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
 uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int8_t         _releaseNr      = -1;
@@ -61,7 +62,10 @@ boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
 boolean        _f_volBarVisible = false;
+boolean        _f_switchToClock = false;  // jump into CLOCK mode at the next opportunity
 boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugged
+boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _cur_volume)
+boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -929,6 +933,7 @@ void setup(){
     SerialPrintfln(ANSI_ESC_YELLOW "*     MiniWebRadio V2     *");
     SerialPrintfln(ANSI_ESC_YELLOW "***************************");
     SerialPrintfln("");
+    SerialPrintfln("setup() is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
@@ -1021,7 +1026,7 @@ void setup(){
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-     ticker.attach(1, timer1sec);
+    ticker.attach(1, timer1sec);
     if(HP_DETECT != -1){
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
@@ -1040,6 +1045,7 @@ void setup(){
     }
     else {
         setVolume(_cur_volume);
+        _mute_volume = _cur_volume;
     }
     showHeadlineItem(RADIO);
     setStation(_cur_station);
@@ -1166,8 +1172,8 @@ uint8_t upvolume(){
     return _cur_volume;
 }
 inline void mute(){
-    if(_f_mute==false){_f_mute=true; audioSetVolume(0); showHeadlineVolume(0); webSrv.send("mute=1");}
-    else {_f_mute=false; audioSetVolume(getvolume()); showHeadlineVolume(getvolume()); webSrv.send("mute=0");}
+    if(_f_mute==false){_f_mute=true; _f_muteDecrement = true; webSrv.send("mute=1");}
+    else {_f_mute=false; _f_muteIncrement = true; digitalWrite(AMP_ENABLED, HIGH); webSrv.send("mute=0");}
     pref.putUShort("mute", _f_mute);
 }
 
@@ -1183,41 +1189,31 @@ void setStation(uint16_t sta){
     free(_stationURL);
     _stationURL = strdup(content.c_str());
     _homepage = "";
-    _icydescription = "";
     if(_state != RADIOico) clearTitle();
-    _cur_station = sta;
+
     SerialPrintfln("current station number: " ANSI_ESC_CYAN "%d", _cur_station);
-    if(!_f_isWebConnected) _streamTitle = "";
-    showFooterStaNr();
-    pref.putUInt("station", sta);
-    if(!_f_isWebConnected){
-        connecttohost(_stationURL);
+
+    if(_f_isWebConnected && sta == _cur_station && _state == RADIO){ // Station is already selected
+        showStreamTitle();
     }
     else{
-        uint8_t idx1 = 0;
-        uint8_t idx2 = 0;
-        if(startsWith(_lastconnectedhost, "http://")) idx1 = 7;
-        if(startsWith(_stationURL,        "http://")) idx2 = 7;
-        if(!strCompare(_stationURL + idx2 , _lastconnectedhost + idx1)){
-            // SerialPrintfln("stationURL:  %s", _stationURL);
-            connecttohost(_stationURL);
-        }
-        else{
-            if(_state == RADIO) showStreamTitle();
-        }
+        _streamTitle = "";
+        _icydescription = "";
+        connecttohost(_stationURL);
     }
-    showLogoAndStationName();
+    _cur_station = sta;
+    pref.putUInt("station", sta);
+    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
     StationsItems();
+    showFooterStaNr();
 }
 void nextStation(){
-    if(_cur_station >= _sum_stations) return;
-    _cur_station++;
-    setStation(_cur_station);
+    if(_cur_station >= _sum_stations) setStation(1);
+    else setStation(_cur_station + 1);
 }
 void prevStation(){
-    if(_cur_station <= 1) return;
-    _cur_station--;
-    setStation(_cur_station);
+    if(_cur_station > 1) setStation(_cur_station - 1);
+    else setStation(_sum_stations);
 }
 
 void StationsItems(){
@@ -1480,22 +1476,45 @@ void changeState(int state){
 *                                                      L O O P                                                         *
 ***********************************************************************************************************************/
 void loop() {
-    static uint8_t sec=0;
     if(webSrv.loop()) return; // if true: ignore all other for faster response to web
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
+
+    if(_f_muteDecrement){
+        if(_mute_volume > 0){
+            _mute_volume--;
+            audioSetVolume(_mute_volume);
+            showHeadlineVolume(_mute_volume);
+        }
+        else{
+            digitalWrite(AMP_ENABLED, LOW);
+            _f_muteDecrement = false;
+        }
+    }
+
+    if(_f_muteIncrement){
+        if(_mute_volume < _cur_volume){
+            _mute_volume++;
+            audioSetVolume(_mute_volume);
+            showHeadlineVolume(_mute_volume);
+        }
+        else _f_muteIncrement = false;
+    }
+
     if(_f_1sec){
          _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) showHeadlineTime();
         if(_state == CLOCK || _state == CLOCKico) display_time();
 
-        if(_touchCnt){
-            _touchCnt--;
-            if(!_touchCnt){
-                if(_state == RADIOico)   changeState(RADIO);
-                if(_state == RADIOmenue) changeState(RADIO);
-                if(_state == CLOCKico)   changeState(CLOCK);
+        if(_timeCounter){
+            _timeCounter--;
+            if(!_timeCounter){
+                if(_state == RADIOico)                        changeState(RADIO);
+                else if(_state == RADIOmenue)                 changeState(RADIO);
+                else if(_state == CLOCKico)                   changeState(CLOCK);
+                else if(_state == RADIO && _f_switchToClock) {changeState(CLOCK); _f_switchToClock = false;}
+                else ;  // all other, do nothing
             }
         }
         if(_f_rtc==true){ // true -> rtc has the current time
@@ -1657,9 +1676,11 @@ void audio_id3data(const char *info){
 //----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
     _icydescription = String(info);
-    if(_streamTitle.length()==0 && _state == RADIO){
+    if(_streamTitle.length() == 0){
         _streamTitle = String(info);
-        showStreamTitle();
+        if(_state == RADIO){
+            showStreamTitle();
+        }
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
@@ -1668,9 +1689,11 @@ void vs1053_icydescription(const char *info){
 }
 void audio_icydescription(const char *info){
     _icydescription = String(info);
-    if(_streamTitle.length()==0 && _state == RADIO){
+    if(_streamTitle.length() == 0){
         _streamTitle = String(info);
-        showStreamTitle();
+        if(_state == RADIO){
+            showStreamTitle();
+        }
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
@@ -1698,7 +1721,7 @@ void ir_res(uint32_t res){
     if(_state != RADIO) return;
     if(_f_sleeping == true) return;
     if(res != 0){
-       setStation(res);
+        setStation(res);
     }
     else{
         setStation(_cur_station); // valid between 1 ... 999
@@ -1708,6 +1731,7 @@ void ir_res(uint32_t res){
 void ir_number(const char* num){
     _f_irNumberSeen = true;
     if(_state != RADIO) return;
+    if(_f_sleeping) return;
     tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth , _winName.h + _winTitle.h, TFT_BLACK);
     tft.setFont(_fonts[6]);
     tft.setTextColor(TFT_GOLD);
@@ -1715,9 +1739,6 @@ void ir_number(const char* num){
     tft.print(num);
 }
 void ir_key(const char* key){
-
-    //if(_f_sleeping) {_f_sleeping = false;  changeState(RADIO);} // awake
-
     if(_f_sleeping == true && key[0] != 'k') return;
     if(_f_sleeping == true && key[0] == 'k'){ //awake
         _f_sleeping = false;
@@ -1733,25 +1754,26 @@ void ir_key(const char* key){
     }
 
     switch(key[0]){
-        case 'k':       if(_state == SLEEP) {                           // OK
-                            updateSleepTime(true);
-                            changeState(RADIO);
-                        }
+        case 'k':       if(_state == SLEEP) {                                                   // OK
+                            updateSleepTime(true); changeState(RADIO); break;}
+                        if(_state == RADIO){changeState(CLOCK); break;}
+                        if(_state == CLOCK){changeState(RADIO); break;}
+        case 'r':       upvolume();                                                             // right
                         break;
-        case 'r':       upvolume();                                     // right
+        case 'l':       downvolume();                                                           // left
                         break;
-        case 'l':       downvolume();                                   // left
+        case 'u':       if(_state == RADIO){nextStation(); break;}                              // up
+                        if(_state == CLOCK){nextStation(); changeState(RADIO);
+                                            _timeCounter = 5; _f_switchToClock = true; break;}
+                        if(_state == SLEEP){display_sleeptime(1); break;}
+        case 'd':       if(_state == RADIO){prevStation(); break;}                              // down
+                        if(_state == CLOCK){prevStation(); changeState(RADIO);
+                                            _timeCounter = 5; _f_switchToClock = true; break;}
+                        if(_state == SLEEP) display_sleeptime(-1);
                         break;
-        case 'u':       if(_state==RADIO) nextStation();                // up
-                        if(_state==SLEEP) display_sleeptime(1);
+        case '#':       mute();                                                                 // #
                         break;
-        case 'd':       if(_state==RADIO) prevStation();                // down
-                        if(_state==SLEEP) display_sleeptime(-1);
-                        break;
-        case '#':       mute();                                         // #
-                        break;
-        case '*':       if(     _state == RADIO) changeState(SLEEP);    // *
-                        else if(_state == SLEEP) changeState(RADIO);
+        case '*':       if(_state == RADIO) changeState(SLEEP);                                 // *
                         break;
         default:        break;
     }
@@ -1759,7 +1781,7 @@ void ir_key(const char* key){
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
     //SerialPrintfln("tp_pressed, state is: %i", _state);
-    _touchCnt = 5;
+    _timeCounter = 5;
     enum : int8_t{none = -1, RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1,
                              PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1,
                              CLOCK_1, CLOCKico_1, ALARM_2, SLEEP_1};
