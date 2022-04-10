@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2h, Apr 10/2022
+    Version 2.2i, Apr 10/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1406,11 +1406,11 @@ void changeState(int state){
             clearFName();
             clearTitle();
             display_time(true);
-            _pressBtn[0] = "/btn/Bell_Yellow.jpg";                _releaseBtn[0] = "/btn/Bell_Green.jpg";
-            _pressBtn[1] = "/btn/Radio_Yellow.jpg";               _releaseBtn[1] = "/btn/Radio_Green.jpg";
-            _pressBtn[2] = "/btn/Button_Mute_Red.jpg";            _releaseBtn[2] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[3] = "/btn/Button_Volume_Down_Yellow.jpg";  _releaseBtn[3] = "/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[4] = "/btn/Button_Volume_Up_Yellow.jpg";    _releaseBtn[4] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[0] = "/btn/Bell_Yellow.jpg";               _releaseBtn[0] = "/btn/Bell_Green.jpg";
+            _pressBtn[1] = "/btn/Radio_Yellow.jpg";              _releaseBtn[1] = "/btn/Radio_Green.jpg";
+            _pressBtn[2] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[2] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
+            _pressBtn[3] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Volume_Down_Blue.jpg";
+            _pressBtn[4] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[4] = "/btn/Button_Volume_Up_Blue.jpg";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1442,7 +1442,7 @@ void changeState(int state){
         }
         case PLAYERico:{
             showHeadlineItem(PLAYERico);
-            _pressBtn[0] = "/btn/Button_Mute_Red.jpg";           _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
+            _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
             _pressBtn[3] = "/btn/MP3_Yellow.jpg";                _releaseBtn[3] = "/btn/MP3_Green.jpg";
@@ -1502,8 +1502,11 @@ void loop() {
             _f_mute = true;
             webSrv.send("mute=1");
             pref.putUShort("mute", _f_mute);
-            if(_state == RADIOico){
+            if(_state == RADIOico || _state == PLAYERico){
                 drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y);
+            }
+            if(_state == CLOCKico){
+                drawImage("/btn/Button_Mute_Red.jpg", 2 * _winButton.w, _winButton.y);
             }
         }
     }
@@ -1519,8 +1522,11 @@ void loop() {
             _f_mute = false;
             webSrv.send("mute=0");
             pref.putUShort("mute", _f_mute);
-            if(_state == RADIOico){
+            if(_state == RADIOico || _state == PLAYERico){
                 drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y);
+            }
+            if(_state == CLOCKico){
+                drawImage("/btn/Button_Mute_Green.jpg", 2 * _winButton.w, _winButton.y);
             }
         }
     }
