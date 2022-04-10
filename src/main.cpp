@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2i, Apr 10/2022
+    Version 2.2j, Apr 10/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -61,6 +61,7 @@ boolean        _f_semaphore = false;
 boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
+boolean        _f_newStreamTitle = false;
 boolean        _f_volBarVisible = false;
 boolean        _f_switchToClock = false;  // jump into CLOCK mode at the next opportunity
 boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugged
@@ -565,7 +566,6 @@ void showStreamTitle(){
     String ST = _streamTitle;
     ST.trim();  // remove all leading or trailing whitespaces
     if(ST.length() == 0 && _icydescription.length() != 0) ST = _icydescription;
-    webSrv.send("streamtitle=" + ST);
     ST.replace(" | ", "\n");   // some stations use pipe as \n or
     ST.replace("| ", "\n");    // or
     ST.replace("|", "\n");
@@ -1207,6 +1207,8 @@ void setStation(uint16_t sta){
     else{
         _streamTitle = "";
         _icydescription = "";
+        _f_newIcyDescription = true;
+        _f_newStreamTitle = true;
         connecttohost(_stationURL);
     }
     _cur_station = sta;
@@ -1602,6 +1604,10 @@ void loop() {
             _f_newIcyDescription = false;
             webSrv.send("icy_description=" +_icydescription);
         }
+        if(_f_newStreamTitle){
+            _f_newStreamTitle = false;
+            webSrv.send("streamtitle=" + _streamTitle);
+        }
     }
     if(_f_1min == true){
         updateSleepTime();
@@ -1638,12 +1644,18 @@ void vs1053_showstreamtitle(const char *info){
     _streamTitle = info;
     if(_state == RADIO) showStreamTitle();
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
+    if(strlen(info)){
+        _f_newStreamTitle = true;
+    }
 }
 void audio_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
     if(_state == RADIO) showStreamTitle();
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
+    if(strlen(info)){
+        _f_newStreamTitle = true;
+    }
 }
 //----------------------------------------------------------------------------------------
 void vs1053_commercial(const char *info){
