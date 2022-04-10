@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2g, Apr 09/2022
+    Version 2.2h, Apr 10/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -440,11 +440,20 @@ inline void clearAll()    {tft.fillScreen(TFT_BLACK);}                      // y
 
 inline uint16_t txtlen(String str) {uint16_t len=0; for(int i=0; i<str.length(); i++) if(str[i]<=0xC2) len++; return len;}
 
-void showHeadlineVolume(uint8_t vol){
+void showHeadlineVolume(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_DEEPSKYBLUE);
     clearVolume();
+
+    int vol = 0;
+    if(_f_mute || _f_muteDecrement || _f_muteIncrement){
+        vol = _mute_volume;
+    }
+    else{
+        vol = _cur_volume;
+    }
+
     sprintf(_chbuf, "Vol %02d", vol);
     tft.setCursor(_winVolume.x + 6, _winVolume.y + 2);
     tft.print(_chbuf);
@@ -1041,7 +1050,7 @@ void setup(){
     if(_f_mute) {
         SerialPrintfln("volume is muted: %d", _cur_volume);
         audioSetVolume(0);
-        showHeadlineVolume(0);
+        showHeadlineVolume();
     }
     else {
         setVolume(_cur_volume);
@@ -1131,10 +1140,10 @@ void setVolume(uint8_t vol){
     pref.putUShort("volume", vol);
     if(_f_mute==false){
         audioSetVolume(vol);
-        showHeadlineVolume(vol);
+        showHeadlineVolume();
     }
     else{
-        showHeadlineVolume(0);
+        showHeadlineVolume();
     }
     _cur_volume = vol;
     SerialPrintfln("current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
@@ -1172,13 +1181,8 @@ uint8_t upvolume(){
     return _cur_volume;
 }
 inline void mute(){
-    if(_f_mute==false){_f_mute=true;  _f_muteDecrement = true; _f_muteIncrement = false;
-                       webSrv.send("mute=1");
-    }
-    else              {_f_mute=false; _f_muteIncrement = true; _f_muteDecrement = false;
-                       digitalWrite(AMP_ENABLED, HIGH); webSrv.send("mute=0");
-    }
-    pref.putUShort("mute", _f_mute);
+    if(_f_mute==false){_f_muteDecrement = true; _f_muteIncrement = false;}
+    else              {_f_muteIncrement = true; _f_muteDecrement = false; digitalWrite(AMP_ENABLED, HIGH);}
 }
 
 void setStation(uint16_t sta){
@@ -1195,7 +1199,7 @@ void setStation(uint16_t sta){
     _homepage = "";
     if(_state != RADIOico) clearTitle();
 
-    SerialPrintfln("current station number: " ANSI_ESC_CYAN "%d", _cur_station);
+    SerialPrintfln("switch to station " ANSI_ESC_CYAN "%d", sta);
 
     if(_f_isWebConnected && sta == _cur_station && _state == RADIO){ // Station is already selected
         showStreamTitle();
@@ -1329,6 +1333,7 @@ void changeState(int state){
             }
             else if(_state == PLAYER  || _state == PLAYERico){
                 setStation(_cur_station);
+                showLogoAndStationName();
                 showStreamTitle();
             }
             else if(_state == CLOCKico){
@@ -1341,7 +1346,7 @@ void changeState(int state){
                 connecttohost(_lastconnectedhost);
                 showLogoAndStationName();
                 showFooter();
-                showHeadlineVolume(_cur_volume);
+                showHeadlineVolume();
             }
             else{
                 showLogoAndStationName();
@@ -1387,7 +1392,7 @@ void changeState(int state){
             }
             _state = CLOCK;
             showHeadlineItem(CLOCK);
-            if(!_f_mute) showHeadlineVolume(_cur_volume); else showHeadlineVolume(0);
+            showHeadlineVolume();
             showHeadlineTime();
             showFooter();
             clearFName();
@@ -1489,11 +1494,17 @@ void loop() {
         if(_mute_volume > 0){
             _mute_volume--;
             audioSetVolume(_mute_volume);
-            showHeadlineVolume(_mute_volume);
+            showHeadlineVolume();
         }
         else{
             digitalWrite(AMP_ENABLED, LOW);
             _f_muteDecrement = false;
+            _f_mute = true;
+            webSrv.send("mute=1");
+            pref.putUShort("mute", _f_mute);
+            if(_state == RADIOico){
+                drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y);
+            }
         }
     }
 
@@ -1501,9 +1512,17 @@ void loop() {
         if(_mute_volume < _cur_volume){
             _mute_volume++;
             audioSetVolume(_mute_volume);
-            showHeadlineVolume(_mute_volume);
+            showHeadlineVolume();
         }
-        else _f_muteIncrement = false;
+        else{
+            _f_muteIncrement = false;
+            _f_mute = false;
+            webSrv.send("mute=0");
+            pref.putUShort("mute", _f_mute);
+            if(_state == RADIOico){
+                drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y);
+            }
+        }
     }
 
     if(_f_1sec){
@@ -1592,7 +1611,7 @@ void vs1053_info(const char *info){
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
 void audio_info(const char *info){
-    // SerialPrintfln("%s", info);
+    //  SerialPrintfln("%s", info);
     if(startsWith(info, "FLAC")) SerialPrintfln("%s", info);
     if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
 }
@@ -1753,7 +1772,7 @@ void ir_key(const char* key){
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
-        showHeadlineVolume(_cur_volume);
+        showHeadlineVolume();
         return;
     }
 
@@ -1777,8 +1796,8 @@ void ir_key(const char* key){
                         break;
         case '#':       mute();                                                                 // #
                         break;
-        case '*':       if(_state == RADIO) changeState(SLEEP);                                 // *
-                        break;
+        case '*':       if(_state == RADIO){changeState(SLEEP); break;}                                 // *
+                        if(_state == SLEEP){changeState(RADIO); break;}
         default:        break;
     }
 }
@@ -1894,7 +1913,7 @@ void tp_released(){
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
-        showHeadlineVolume(_cur_volume);
+        showHeadlineVolume();
         return;
     }
 
