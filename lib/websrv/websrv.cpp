@@ -61,7 +61,7 @@ void WebSrv::show(const char* pagename, int16_t len){
     httpheader += "Content-type: text/html\r\n";
     httpheader += "Content-Length: " + String(pagelen, 10) + "\r\n";
     httpheader += "Server: " + _Name+ "\r\n";
-    httpheader += "Cache-Control: max-age=3600\r\n";
+    httpheader += "Cache-Control: max-age=86400\r\n";
     httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
@@ -122,7 +122,7 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     httpheader += "Content-type: " + getContentType(String(path)) +"\r\n";
     httpheader += "Content-Length: " + String(file.size(),10) + "\r\n";
     httpheader += "Server: " + _Name+ "\r\n";
-    httpheader += "Cache-Control: max-age=3600\r\n";
+    httpheader += "Cache-Control: max-age=86400\r\n";
     httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
