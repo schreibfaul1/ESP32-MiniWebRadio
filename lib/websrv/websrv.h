@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 05.01.2022
+ *  updated on: 11.04.2022
  *      Author: Wolle
  */
 
@@ -15,7 +15,7 @@
 #include "mbedtls/sha1.h"
 #include "base64.h"
 
-extern __attribute__((weak)) void WEBSRV_onInfo(const String) ;
+extern __attribute__((weak)) void WEBSRV_onInfo(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const String, uint32_t contentLength);
 
@@ -40,7 +40,7 @@ private:
     String          _Name;
     String          _Version;
     String          contenttype;
-    uint8_t         buff[256];
+    char            buff[256];
     uint8_t         method;
     String          WS_sec_Key;
     String          WS_resp_Key;

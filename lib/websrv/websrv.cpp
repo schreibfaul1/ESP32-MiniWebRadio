@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 10.04.2022
+ *  updated on: 11.04.2022
  *      Author: Wolle
  */
 
@@ -66,7 +66,8 @@ void WebSrv::show(const char* pagename, int16_t len){
 
     cmdclient.print(httpheader) ;             // header sent
 
-    if (WEBSRV_onInfo)  WEBSRV_onInfo(String("Length of page is ") +String(pagelen, 10));
+    sprintf(buff, "Length of page is %d", pagelen);
+    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
     // The content of the HTTP response follows the header:
 
     while(pagelen){                       // Loop through the output page
@@ -107,13 +108,13 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
 
     File file = fs.open(path, "r");
     if(!file){
-        String str=String("Failed to open file for reading ") + path;
-        if (WEBSRV_onInfo)  WEBSRV_onInfo(str);
+        sprintf(buff, "Failed to open file for reading %s", path);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         show_not_found();
         return false;
     }
-    String LOF="Length of file " + String(path) + " is " + String(file.size(),10);
-    if (WEBSRV_onInfo)  WEBSRV_onInfo(LOF);
+    sprintf(buff, "Length of file %s is %d", path, file.size());
+    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
 
     // HTTP header
     String httpheader="";
@@ -266,13 +267,13 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     cmdclient.readStringUntil('\n'); // read the remains  webkit\n
     file.close();
     if(f_werror) {
-        str=String("File: ") + String(path) + "write error";
-        if (WEBSRV_onInfo) WEBSRV_onInfo(str.c_str());
+        sprintf(buff, "File: %s write error", path);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(contentLength, 10);
-    log_i("str =%s", str.c_str());
-    if (WEBSRV_onInfo) WEBSRV_onInfo(str.c_str());
+    sprintf(buff, "File: %s written, FileSize: ", path, contentLength);
+    //log_i(buff);
+    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -300,12 +301,12 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     cmdclient.readStringUntil('\n'); // read the remains  webkit\n
     file.close();
     if(f_werror) {
-        str=String("File: ") + String(path) + "write error";
-        if (WEBSRV_onInfo) WEBSRV_onInfo(str.c_str());
+        sprintf(buff, "File: %s write error", path);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    str=String("File: ") + String(path) + " written,  FileSize: " +  String(contentLength, 10);
-    if (WEBSRV_onInfo)  WEBSRV_onInfo(str.c_str());
+    sprintf(buff, "File: %s written, FileSize: ", path, contentLength);
+    if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -368,16 +369,16 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         if (currentLine.length() == 1) { // contains '\n' only
             wswitch=false; // use second while
             if (http_cmd.length()) {
-                if (WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd));
-                if (WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
+                if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd).c_str());
+                if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
             }
             else if(http_rqfile.length()){
-                if (WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_rqfile));
-                 if (WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_rqfile), URLdecode(http_param), URLdecode(http_arg));
+                if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_rqfile).c_str());
+                if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_rqfile), URLdecode(http_param), URLdecode(http_arg));
             }
             else {   // An empty "GET"?
-                if (WEBSRV_onInfo) WEBSRV_onInfo("Filename is: index.html");
-                if (WEBSRV_onCommand) WEBSRV_onCommand("index.html", URLdecode(http_param), URLdecode(http_arg));
+                if(WEBSRV_onInfo) WEBSRV_onInfo("Filename is: index.html");
+                if(WEBSRV_onCommand) WEBSRV_onCommand("index.html", URLdecode(http_param), URLdecode(http_arg));
             }
             currentLine = "";
             http_cmd    = "";
@@ -437,16 +438,16 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         if(!currentLine.length()){
             return true;
         }
-        if ((currentLine.length() == 1 && count == 0) || count >= 2){
+        if((currentLine.length() == 1 && count == 0) || count >= 2){
             wswitch=true;  // use first while
             currentLine = "";
             count = 0;
             break;
         }
-        else {   // its the requestbody
+        else{   // its the requestbody
             if(currentLine.length() > 1){
-                if (WEBSRV_onRequest) WEBSRV_onRequest(currentLine, 0);
-                if (WEBSRV_onInfo) WEBSRV_onInfo(currentLine);
+                if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, 0);
+                if(WEBSRV_onInfo) WEBSRV_onInfo(currentLine.c_str());
             }
 
             if(currentLine.startsWith("------")) {
@@ -455,7 +456,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             }
             if(currentLine.length() == 1 && count == 1){
                 contentLength -= 6; // "\r\n\r\n..."
-                if (WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
+                if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
                 count++;
             }
         }
@@ -549,13 +550,13 @@ void WebSrv::parseWsMessage(uint32_t len){
 
     if(opcode == 0x09) {  // denotes a ping
         if(WEBSRV_onCommand) WEBSRV_onCommand("ping received, send pong", "", "");
-        if(WEBSRV_onInfo) WEBSRV_onInfo((const char*) "pong received, send pong");
+        if(WEBSRV_onInfo) WEBSRV_onInfo("pong received, send pong");
         sendPong();
     }
 
     if(opcode == 0x0A) {  // denotes a pong
         if(WEBSRV_onCommand) WEBSRV_onCommand("pong received", "", "");
-        if(WEBSRV_onInfo) WEBSRV_onInfo((const char*) "pong received");
+        if(WEBSRV_onInfo) WEBSRV_onInfo("pong received");
         return;
     }
 
@@ -577,6 +578,7 @@ void WebSrv::parseWsMessage(uint32_t len){
                 }
             }
             buff[plen] = 0;
+            if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
             if(len < 256){ // can be a command like "mute=1"
                 char *ret;
                 ret = strchr((const char*)buff, '=');
@@ -589,7 +591,6 @@ void WebSrv::parseWsMessage(uint32_t len){
                 }
             }
             if(WEBSRV_onCommand) WEBSRV_onCommand((const char*) buff, "", "");
-            if(WEBSRV_onInfo) WEBSRV_onInfo((const char*) buff);
         }
         buff[0] = 0;
     }
