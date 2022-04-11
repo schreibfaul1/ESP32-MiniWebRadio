@@ -1740,7 +1740,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
   </div>
   <!--==============================================================================================-->
   <div id="tab-content5">
-    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" color display and VS1053 MP3 module.<br>
+    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display<br>
+    and VS1053 HW decoder or external DAC.<br>
     This project is documented on
     <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
     <p>Author: Wolle (schreibfaul1)</p><br>

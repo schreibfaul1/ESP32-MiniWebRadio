@@ -125,7 +125,7 @@ void audioInit() {
         "audioplay",           /* Name of the task */
         5000,                  /* Stack size in words */
         NULL,                  /* Task input parameter */
-        1,                     /* Priority of the task */
+        AUDIOTASK_PRIO,        /* Priority of the task */
         NULL,                  /* Task handle. */
         AUDIOTASK_CORE         /* Core where the task should run */
     );
@@ -302,7 +302,7 @@ void audioInit() {
         "audioplay",            /* Name of the task */
         5000,                   /* Stack size in words */
         NULL,                   /* Task input parameter */
-        2,                      /* Priority of the task */
+        AUDIOTASK_PRIO,         /* Priority of the task */
         NULL,                   /* Task handle. */
         AUDIOTASK_CORE          /* Core where the task should run */
     );
