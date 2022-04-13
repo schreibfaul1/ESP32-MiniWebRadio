@@ -67,6 +67,8 @@ boolean        _f_switchToClock = false;  // jump into CLOCK mode at the next op
 boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugged
 boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _cur_volume)
 boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
+boolean        _f_showStreamTitle = false;
+boolean        _f_showStationName = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -1232,6 +1234,13 @@ void StationsItems(){
     webSrv.send("stationName=" + _stationName_nvs);
 }
 
+void setStationViaURL(const char* url){
+    _stationName_air = "";
+    _stationName_nvs = "";
+    _cur_station = 0;
+    connecttohost(url);
+}
+
 void changeBtn_pressed(uint8_t btnNr){
     if(_state == ALARM) drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _dispHeight - _winButton.h);
     else                drawImage(_pressBtn[btnNr], btnNr * _winButton.w , _winButton.y);
@@ -1533,6 +1542,16 @@ void loop() {
         }
     }
 
+    if(_f_showStationName){
+        _f_showStationName = false;
+        showLogoAndStationName();
+    }
+
+    if(_f_showStreamTitle){
+        _f_showStreamTitle = false;
+        showStreamTitle();
+    }
+
     if(_f_1sec){
          _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) showHeadlineTime();
@@ -1631,18 +1650,18 @@ void audio_info(const char *info){
 void vs1053_showstation(const char *info){
     _stationName_air = info;
     SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) showLogoAndStationName();
+    if(!_cur_station) _f_showStationName = true;
 }
 void audio_showstation(const char *info){
     _stationName_air = info;
     SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) showLogoAndStationName();
+    if(!_cur_station) _f_showStationName = true;
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
-    if(_state == RADIO) showStreamTitle();
+    if(_state == RADIO) _f_showStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
     if(strlen(info)){
         _f_newStreamTitle = true;
@@ -1651,7 +1670,7 @@ void vs1053_showstreamtitle(const char *info){
 void audio_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
-    if(_state == RADIO) showStreamTitle();
+    if(_state == RADIO) _f_showStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
     if(strlen(info)){
         _f_newStreamTitle = true;
@@ -2090,9 +2109,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "next_station"){      nextStation(); return;}                                             // via websocket
 
-    if(cmd == "set_station"){       setStation(param.toInt()); StationsItems(); return;}                // via websocket
+    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                 // via websocket
 
-    if(cmd == "stationURL"){        connecttohost(param.c_str());webSrv.reply("OK\n"); return;}
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); webSrv.reply("OK\n"); return;}
 
     if(cmd == "getnetworks"){       webSrv.reply(WiFi.SSID().c_str()); return;}
 
