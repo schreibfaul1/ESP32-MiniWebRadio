@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2k, Apr 10/2022
+    Version 2.2l, Apr 25/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -68,7 +68,7 @@ boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugg
 boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _cur_volume)
 boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
 boolean        _f_showStreamTitle = false;
-boolean        _f_showStationName = false;
+boolean        _f_timeAnnouncement = false; // time announcement every full hour
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -241,7 +241,7 @@ SemaphoreHandle_t  mutex_display;
 *                                        D E F A U L T S E T T I N G S                                                 *
 ***********************************************************************************************************************/
 boolean defaultsettings(){
-    if(pref.getUInt("default", 0) != 1000){
+    if(pref.getUInt("default", 0) != 1100){
         SerialPrintfln("first init, set defaults");
 		if(!saveStationsToNVS()) return false;
         pref.clear();
@@ -249,6 +249,7 @@ boolean defaultsettings(){
         pref.putUShort("alarm_weekday",0); // for alarmclock
         pref.putUInt("alarm_time", 0);
         pref.putUShort("ringvolume",21);
+        pref.putBool("timeAnnouncement", 1); // Time announcement every full hour
         //
         pref.putUShort("volume",12); // 0...21
         pref.putUShort("mute",   0); // no mute
@@ -809,6 +810,7 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
     const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)){
+        if(indexOf(scImg, "/.", 0)) return false; // empty filename
         SerialPrintfln(ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
@@ -1031,6 +1033,7 @@ void setup(){
 
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
+    _f_timeAnnouncement = pref.getBool("timeAnnouncement");
     _state = RADIO;
 
      ir.begin();  // Init InfraredDecoder
@@ -1542,16 +1545,6 @@ void loop() {
         }
     }
 
-    if(_f_showStationName){
-        _f_showStationName = false;
-        showLogoAndStationName();
-    }
-
-    if(_f_showStreamTitle){
-        _f_showStreamTitle = false;
-        showStreamTitle();
-    }
-
     if(_f_1sec){
          _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) showHeadlineTime();
@@ -1638,31 +1631,34 @@ void loop() {
 ***********************************************************************************************************************/
 //Events from vs1053_ext library
 void vs1053_info(const char *info){
-    // SerialPrintfln("%s", info);
-    if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
+    if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
+    if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
+    if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
+    log_i("%s", info); // all other
 }
 void audio_info(const char *info){
-    //  SerialPrintfln("%s", info);
-    if(startsWith(info, "FLAC")) SerialPrintfln("%s", info);
-    if(endsWith(info, "Stream lost")) SerialPrintfln("%s", info);
+    if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
+    if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
+    if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
+    log_i("%s", info); // all other
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstation(const char *info){
     _stationName_air = info;
-    SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) _f_showStationName = true;
+    if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
+    if(!_cur_station) showLogoAndStationName();
 }
 void audio_showstation(const char *info){
     _stationName_air = info;
-    SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) _f_showStationName = true;
+    if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
+    if(!_cur_station) showLogoAndStationName();
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
-    if(_state == RADIO) _f_showStreamTitle = true;
-    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
+    if(_state == RADIO) showStreamTitle();
+    if(strlen(info)) SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
     if(strlen(info)){
         _f_newStreamTitle = true;
     }
@@ -1670,8 +1666,8 @@ void vs1053_showstreamtitle(const char *info){
 void audio_showstreamtitle(const char *info){
     if(_f_irNumberSeen) return; // discard streamtitle
     _streamTitle = info;
-    if(_state == RADIO) _f_showStreamTitle = true;
-    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
+    if(_state == RADIO) showStreamTitle();
+    if(strlen(info)) SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
     if(strlen(info)){
         _f_newStreamTitle = true;
     }
