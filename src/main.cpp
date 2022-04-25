@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2l, Apr 25/2022
+    Version 2.2m, Apr 25/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -241,7 +241,7 @@ SemaphoreHandle_t  mutex_display;
 *                                        D E F A U L T S E T T I N G S                                                 *
 ***********************************************************************************************************************/
 boolean defaultsettings(){
-    if(pref.getUInt("default", 0) != 1100){
+    if(pref.getUInt("default", 0) != 1200){
         SerialPrintfln("first init, set defaults");
 		if(!saveStationsToNVS()) return false;
         pref.clear();
@@ -249,7 +249,7 @@ boolean defaultsettings(){
         pref.putUShort("alarm_weekday",0); // for alarmclock
         pref.putUInt("alarm_time", 0);
         pref.putUShort("ringvolume",21);
-        pref.putBool("timeAnnouncement", 1); // Time announcement every full hour
+        pref.putBool("timeAnnouncing", 1); // Time announcement every full hour
         //
         pref.putUShort("volume",12); // 0...21
         pref.putUShort("mute",   0); // no mute
@@ -1033,7 +1033,7 @@ void setup(){
 
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
-    _f_timeAnnouncement = pref.getBool("timeAnnouncement");
+    _f_timeAnnouncement = pref.getBool("timeAnnouncing");
     _state = RADIO;
 
      ir.begin();  // Init InfraredDecoder
