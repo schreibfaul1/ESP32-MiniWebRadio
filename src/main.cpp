@@ -268,7 +268,7 @@ boolean defaultsettings(){
         //
         pref.putUInt("station", 1);
         //
-        pref.putUInt("default", 1000);
+        pref.putUInt("default", 1200);
     }
 	return true;
 }
@@ -2130,6 +2130,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.reply("nothing to resume\n");
                                     else {audiotrack(_lastconnectedfile, _resumeFilePos);
                                     webSrv.reply("OK\n");} return;}
+
+    if(cmd == "get_alarmdays")      webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;
+
+    if(cmd == "set_alarmdays")      _alarmdays = param.toInt(); pref.putUShort("alarm_weekday", _alarmdays); return;
+
+    if(cmd == "get_alarmtime")      webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;
+
+    if(cmd == "set_alarmtime")      _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
