@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2m, Apr 25/2022
+    Version 2.2n, Apr 30/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -2138,6 +2138,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "get_alarmtime")      webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;
 
     if(cmd == "set_alarmtime")      _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;
+
+    if(cmd == "get_timeAnnouncing") webSrv.send("timeAnnouncement=") + String(_f_timeAnnouncement, 10); return;
+
+    if(cmd == "set_timeAnnouncing") _f_timeAnnouncement = param.toInt();
+                                    pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
