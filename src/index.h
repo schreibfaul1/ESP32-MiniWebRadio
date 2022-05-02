@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 27.02.2022
+ *  Updated on: 02.05.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1548,7 +1548,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
     </div>
     <div style="height: 66px; display: flex;">
       <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station" placeholder=" Enter a streamURL here....">
+        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
+                          placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
       </div>
       <div style="flex: 0 0 66px;">
         <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"

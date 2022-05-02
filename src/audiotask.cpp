@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 21.03.2022
+// updated: 02.05.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -29,8 +29,11 @@ enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SE
 
 struct audioMessage{
     uint8_t     cmd;
-    const char* txt;
-    uint32_t    value;
+    const char* txt1;
+    const char* txt2;
+    const char* txt3;
+    uint32_t    value1;
+    uint32_t    value2;
     uint32_t    ret;
 } audioTxMessage, audioRxMessage;
 
@@ -65,18 +68,21 @@ void audioTask(void *parameter) {
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
             if(audioRxTaskMessage.cmd == SET_VOLUME){
                 audioTxTaskMessage.cmd = SET_VOLUME;
-                vs1053.setVolume(audioRxTaskMessage.value);
+                vs1053.setVolume(audioRxTaskMessage.value1);
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOHOST){
                 audioTxTaskMessage.cmd = CONNECTTOHOST;
-                audioTxTaskMessage.ret = vs1053.connecttohost(audioRxTaskMessage.txt);
+                const char* host = audioRxTaskMessage.txt1;
+                const char* user = audioRxTaskMessage.txt2;
+                const char* pwd  = audioRxTaskMessage.txt3;
+                audioTxTaskMessage.ret = vs1053.connecttohost(host, user, pwd);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
-                audioTxTaskMessage.ret = vs1053.connecttoFS(SD_MMC, audioRxTaskMessage.txt, audioRxTaskMessage.value);
+                audioTxTaskMessage.ret = vs1053.connecttoFS(SD_MMC, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
@@ -92,10 +98,10 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == SETTONE){
                 audioTxTaskMessage.cmd = SETTONE;
                 uint8_t u8_tone[4];
-                u8_tone[3] = (audioRxTaskMessage.value & 0xFF);       // toneha  Lower limit frequency in 10 Hz steps (2..15)
-                u8_tone[2] = (audioRxTaskMessage.value >>  8) & 0xFF; // tonehf  Bass Enhancement in 1 dB steps (0..15, 0 = off)
-                u8_tone[1] = (audioRxTaskMessage.value >> 16) & 0xFF; // tonela  Lower limit frequency in 1000 Hz steps (1..15)
-                u8_tone[0] = (audioRxTaskMessage.value >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
+                u8_tone[3] = (audioRxTaskMessage.value1 & 0xFF);       // toneha  Lower limit frequency in 10 Hz steps (2..15)
+                u8_tone[2] = (audioRxTaskMessage.value1 >>  8) & 0xFF; // tonehf  Bass Enhancement in 1 dB steps (0..15, 0 = off)
+                u8_tone[1] = (audioRxTaskMessage.value1 >> 16) & 0xFF; // tonela  Lower limit frequency in 1000 Hz steps (1..15)
+                u8_tone[0] = (audioRxTaskMessage.value1 >> 24) & 0xFF; // tonelf  Treble Control in 1.5 dB steps (-8..7, 0 = off)
                 //log_i("ha %d, hf %d, la %d, lf %d", u8_tone[0], u8_tone[1], u8_tone[2], u8_tone[3]);
                 vs1053.setTone(u8_tone);
                 audioTxTaskMessage.ret = 0;
@@ -144,7 +150,7 @@ audioMessage transmitReceive(audioMessage msg){
 
 void audioSetVolume(uint8_t vol){
     audioTxMessage.cmd = SET_VOLUME;
-    audioTxMessage.value = vol;
+    audioTxMessage.value1 = vol;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -155,17 +161,19 @@ uint8_t audioGetVolume(){
     return RX.ret;
 }
 
-boolean audioConnecttohost(const char* host){
+boolean audioConnecttohost(const char* host, const char* user, const char* pwd){
     audioTxMessage.cmd = CONNECTTOHOST;
-    audioTxMessage.txt = host;
+    audioTxMessage.txt1 = host;
+    audioTxMessage.txt2 = user;
+    audioTxMessage.txt3 = pwd;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
 
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
-    audioTxMessage.txt = filename;
-    audioTxMessage.value = resumeFilePos;
+    audioTxMessage.txt1 = filename;
+    audioTxMessage.value1 = resumeFilePos;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
@@ -178,13 +186,13 @@ uint32_t audioStopSong(){
 
 void audioSetTone(int8_t toneha, int8_t tonehf, int8_t tonela, int8_t tonelf){
     audioTxMessage.cmd = SETTONE;
-    audioTxMessage.value =  (uint8_t)toneha;
-    audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)tonehf;
-    audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)tonela;
-    audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)tonelf;
+    audioTxMessage.value1 =  (uint8_t)toneha;
+    audioTxMessage.value1 <<= 8;
+    audioTxMessage.value1 += (uint8_t)tonehf;
+    audioTxMessage.value1 <<= 8;
+    audioTxMessage.value1 += (uint8_t)tonela;
+    audioTxMessage.value1 <<= 8;
+    audioTxMessage.value1 += (uint8_t)tonelf;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -213,8 +221,11 @@ enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SE
 
 struct audioMessage{
     uint8_t     cmd;
-    const char* txt;
-    uint32_t    value;
+    const char* txt1;
+    const char* txt2;
+    const char* txt3;
+    uint32_t    value1;
+    uint32_t    value2;
     uint32_t    ret;
 } audioTxMessage, audioRxMessage;
 
@@ -244,18 +255,21 @@ void audioTask(void *parameter) {
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
             if(audioRxTaskMessage.cmd == SET_VOLUME){
                 audioTxTaskMessage.cmd = SET_VOLUME;
-                audio.setVolume(audioRxTaskMessage.value);
+                audio.setVolume(audioRxTaskMessage.value1);
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOHOST){
                 audioTxTaskMessage.cmd = CONNECTTOHOST;
-                audioTxTaskMessage.ret = audio.connecttohost(audioRxTaskMessage.txt);
+                const char* host = audioRxTaskMessage.txt1;
+                const char* user = audioRxTaskMessage.txt2;
+                const char* pwd  = audioRxTaskMessage.txt3;
+                audioTxTaskMessage.ret = audio.connecttohost(host, user, pwd);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
-                audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt, audioRxTaskMessage.value);
+                audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
@@ -271,9 +285,9 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == SETTONE){
                 audioTxTaskMessage.cmd = SETTONE;
                 int8_t lowPass, bandPass, highPass;
-                lowPass  = (audioRxTaskMessage.value & 0xFF);
-                bandPass = (audioRxTaskMessage.value >>  8) & 0xFF;
-                highPass = (audioRxTaskMessage.value >> 16) & 0xFF;
+                lowPass  = (audioRxTaskMessage.value1 & 0xFF);
+                bandPass = (audioRxTaskMessage.value1 >>  8) & 0xFF;
+                highPass = (audioRxTaskMessage.value1 >> 16) & 0xFF;
                 audio.setTone(lowPass, bandPass, highPass);
                 audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
@@ -321,7 +335,7 @@ audioMessage transmitReceive(audioMessage msg){
 
 void audioSetVolume(uint8_t vol){
     audioTxMessage.cmd = SET_VOLUME;
-    audioTxMessage.value = vol;
+    audioTxMessage.value1 = vol;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -332,17 +346,19 @@ uint8_t audioGetVolume(){
     return RX.ret;
 }
 
-boolean audioConnecttohost(const char* host){
+boolean audioConnecttohost(const char* host, const char* user, const char* pwd){
     audioTxMessage.cmd = CONNECTTOHOST;
-    audioTxMessage.txt = host;
+    audioTxMessage.txt1 = host;
+    audioTxMessage.txt2 = user;
+    audioTxMessage.txt3 = pwd;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
 
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
-    audioTxMessage.txt = filename;
-    audioTxMessage.value = resumeFilePos;
+    audioTxMessage.txt1 = filename;
+    audioTxMessage.value1 = resumeFilePos;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
@@ -355,11 +371,11 @@ uint32_t audioStopSong(){
 
 void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass, int8_t unused){
     audioTxMessage.cmd = SETTONE;
-    audioTxMessage.value = (uint8_t)highPass;
-    audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)bandPass;
-    audioTxMessage.value <<= 8;
-    audioTxMessage.value += (uint8_t)lowPass;
+    audioTxMessage.value1 = (uint8_t)highPass;
+    audioTxMessage.value1 <<= 8;
+    audioTxMessage.value1 += (uint8_t)bandPass;
+    audioTxMessage.value1 <<= 8;
+    audioTxMessage.value1 += (uint8_t)lowPass;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)unused;
     (void)RX;

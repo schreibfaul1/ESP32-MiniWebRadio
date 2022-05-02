@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2n, Apr 30/2022
+    Version 2.2o, May 02/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -920,8 +920,38 @@ bool connectToWiFi(){
 *                                                    A U D I O                                                        *
 ***********************************************************************************************************************/
 void connecttohost(const char* host){
-    _f_isWebConnected = audioConnecttohost(host);
-    _f_isFSConnected = false;
+    int idx1, idx2;
+    char* url  = nullptr;
+    char* user = nullptr;
+    char* pwd  = nullptr;
+    idx1 = indexOf(host, "|", 0);
+    log_i("idx1 = %i", idx1);
+
+    if(idx1 == -1){ // no pipe found
+        _f_isWebConnected = audioConnecttohost(host);
+        _f_isFSConnected = false;
+        return;
+    }
+    else{ // pipe found
+        int idx2 = indexOf(host, "|", idx1 + 1);
+        log_i("idx2 = %i", idx2);
+        if(idx2 == -1){ // second pipe not found
+            _f_isWebConnected = audioConnecttohost(host);
+            _f_isFSConnected = false;
+            return;
+        }
+        else{ // extract url, user, pwd
+            url  = strndup(host, idx1); // extract url
+            user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
+            pwd  = strdup(host + idx2 + 1);
+            SerialPrintfln("host %s user %s, pwd %s", url, user, pwd)
+            _f_isWebConnected = audioConnecttohost(url, user, pwd);
+            _f_isFSConnected = false;
+            if(url)  free(url);
+            if(user) free(user);
+            if(pwd)  free(pwd);
+        }
+    }
 }
 void connecttoFS(const char* filename, uint32_t resumeFilePos){
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
@@ -1634,12 +1664,14 @@ void vs1053_info(const char *info){
     if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
     if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
     if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
+    if(startsWith(info, "authent"))   {SerialPrintfln("%s", info); return;}
     log_i("%s", info); // all other
 }
 void audio_info(const char *info){
     if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
     if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
     if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
+    if(startsWith(info, "authent"))   {SerialPrintfln("%s", info); return;}
     log_i("%s", info); // all other
 }
 //----------------------------------------------------------------------------------------

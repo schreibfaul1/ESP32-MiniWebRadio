@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 10.04.2022
+// updated: 02.05.2022
 
 #pragma once
 
@@ -155,7 +155,7 @@ void IRAM_ATTR headphoneDetect();
 void audioInit();
 void audioSetVolume(uint8_t vol);
 uint8_t audioGetVolume();
-boolean audioConnecttohost(const char* host);
+boolean audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 uint32_t audioStopSong();
 void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0);
