@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 11.04.2022
+ *  updated on: 05.05.2022
  *      Author: Wolle
  */
 
@@ -101,11 +101,11 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     uint8_t transBuf[bytesPerTransaction], i=0;
     size_t wIndex = 0, res=0, leftover=0;
     if(!cmdclient.connected()){log_e("not connected"); return false;}
-    while(path[i]!=0){     // protect SD for invalid signs to avoid a crash!!
-        if(path[i]<32)return false;
+    while(path[i] != 0){     // protect SD for invalid signs to avoid a crash!!
+        if(path[i] < 32)return false;
         i++;
     }
-
+    if(!fs.exists(path)) return false;
     File file = fs.open(path, "r");
     if(!file){
         sprintf(buff, "Failed to open file for reading %s", path);

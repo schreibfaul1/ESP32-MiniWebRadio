@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2o, May 02/2022
+    Version 2.2p, May 05/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1248,8 +1248,8 @@ void setStation(uint16_t sta){
     }
     _cur_station = sta;
     pref.putUInt("station", sta);
-    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
     StationsItems();
+    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
     showFooterStaNr();
 }
 void nextStation(){
@@ -1262,9 +1262,9 @@ void prevStation(){
 }
 
 void StationsItems(){
+    webSrv.send("stationName=" + _stationName_nvs);
     webSrv.send("stationNr=" + String(pref.getUInt("station")));
     webSrv.send("stationURL=" + String(_stationURL));
-    webSrv.send("stationName=" + _stationName_nvs);
 }
 
 void setStationViaURL(const char* url){
@@ -2069,9 +2069,12 @@ void tp_released(){
 }
 
 //Events from websrv
-void WEBSRV_onCommand(const String cmd, const String param, const String arg){                       // called from html
-//    SerialPrintfln("HTML_cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
+
+     SerialPrintfln("WebServer: . " ANSI_ESC_YELLOW "cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+
     String  str;
+
     if(cmd == "homepage"){          webSrv.send("homepage=" + _homepage);
                                     return;}
 
@@ -2124,14 +2127,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "audiolist"){         sendAudioList2Web("/audiofiles");                                   // via websocket
                                     return;}
 
-    if(cmd == "audiotrack"){        audiotrack(param.c_str());
-                                    webSrv.reply("OK\n"); return;}
+    if(cmd == "audiotrack"){        audiotrack(param.c_str());                                          // via websocket
+                                    webSrv.send("audiotrack=" + param); return;}
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "upvolume"){          str = "Volume is now " + (String)upvolume(); webSrv.reply(str.c_str()); return;}
+    if(cmd == "upvolume"){          webSrv.send("volume=" + (String)upvolume());  return;}              // via websocket
 
-    if(cmd == "downvolume"){        str = "Volume is now " + (String)downvolume(); webSrv.reply(str.c_str()); return;}
+    if(cmd == "downvolume"){        webSrv.send("volume=" + (String)downvolume()); return;}             // via websocket
 
     if(cmd == "prev_station"){      prevStation(); return;}                                             // via websocket
 
@@ -2153,28 +2156,32 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
 
-    if(cmd.startsWith("SD")){       str = cmd.substring(2); webSrv.streamfile(SD_MMC, scaleImage(str.c_str())); return;}
+    if(cmd.startsWith("SD")){       str = cmd.substring(2);
+                                    if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
+                                        webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
+                                    return;}
 
     if(cmd == "change_state"){      changeState(param.toInt()); return;}
 
-    if(cmd == "stop"){              _resumeFilePos = audioStopSong(); webSrv.reply("OK\n"); return;}
+    if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped"); return;}
 
-    if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.reply("nothing to resume\n");
+    if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=nothing to resume");
                                     else {audiotrack(_lastconnectedfile, _resumeFilePos);
-                                    webSrv.reply("OK\n");} return;}
+                                          webSrv.send("resumefile=audiofile resumed");}
+                                    return;}
 
-    if(cmd == "get_alarmdays")      webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;
+    if(cmd == "get_alarmdays"){     webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;}
 
-    if(cmd == "set_alarmdays")      _alarmdays = param.toInt(); pref.putUShort("alarm_weekday", _alarmdays); return;
+    if(cmd == "set_alarmdays"){     _alarmdays = param.toInt(); pref.putUShort("alarm_weekday", _alarmdays); return;}
 
-    if(cmd == "get_alarmtime")      webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;
+    if(cmd == "get_alarmtime"){     webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;}
 
-    if(cmd == "set_alarmtime")      _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;
+    if(cmd == "set_alarmtime"){    _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;}
 
-    if(cmd == "get_timeAnnouncing") webSrv.send("timeAnnouncement=") + String(_f_timeAnnouncement, 10); return;
+    if(cmd == "get_timeAnnouncement"){ webSrv.send("timeAnnouncement=") + String(_f_timeAnnouncement, 10); return;}
 
-    if(cmd == "set_timeAnnouncing") _f_timeAnnouncement = param.toInt();
-                                    pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;
+    if(cmd == "set_timeAnnouncement"){ _f_timeAnnouncement = param.toInt();
+                                    pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;}
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
@@ -2190,9 +2197,12 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength){
     SerialPrintfln(ANSI_ESC_RED "unknown request: %s",request.c_str());
 }
 void WEBSRV_onInfo(const char* info){
-    // if(startsWith(info, "WebSocket")) return;       // suppress WebSocket client available
-    // if(!strcmp("ping", info)) return;               // suppress ping
-    // if(!strcmp("to_listen", info)) return;          // suppress to_isten
-    // if(startsWith(info, "Command client"))return;   // suppress Command client available
-    // SerialPrintfln("HTML_info  : %s", info);    // infos for debug
+    if(startsWith(info, "WebSocket")) return;       // suppress WebSocket client available
+    if(!strcmp("ping", info)) return;               // suppress ping
+    if(!strcmp("to_listen", info)) return;          // suppress to_isten
+    if(startsWith(info, "Command client"))return;   // suppress Command client available
+
+    #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
+        SerialPrintfln("HTML_info  : " ANSI_ESC_YELLOW "%s", info);    // infos for debug
+    #endif
 }

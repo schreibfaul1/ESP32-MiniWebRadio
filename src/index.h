@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 02.05.2022
+ *  Updated on: 05.05.2022
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -356,6 +356,17 @@ function connect() {
                                                 document.getElementById('div-tone-s').style.display = 'block';
                                                 console.log("audioI2S");}
                               break
+      case  "volume":         resultstr1.value = "Volume is now " + val;
+                              break
+      case  "audiotrack":     resultstr3.value = "Audiofile is " + val;
+                              break
+
+      case  "stopfile":       resultstr3.value = val;
+                              break
+
+      case  "resumefile":     resultstr3.value = val;
+                              break
+
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -636,8 +647,6 @@ function setstation () { // Radio: button play - Enter a streamURL here....
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {
       resultstr1.value = xhr.responseText
-      if(tft_size == 0) showLabel('label-logo-s', 'unknown')
-      if(tft_size == 1) showLabel('label-logo-m', 'unknown')
     }
   }
   xhr.open('GET', theUrl, true)
@@ -1104,7 +1113,7 @@ function updateStationlist () { // select in tab Radio
 
 function trackreq (presctrl) { // Audio Player: select audio title from track list
   if (presctrl.value !== '-1') {
-    httpGet('audiotrack=' + presctrl.value, 3)
+    socket.send('audiotrack=' + presctrl.value)
   }
 }
 
@@ -1422,13 +1431,13 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <img src="SD/png/Button_Previous_Green.png" alt="previous"
                           onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Previous_Green.png';  socket.send('prev_station');"
-                          ontouchend="this.src='SD/png/Button_Previous_Green.png'; socket.send('prev_station');" />
+                          onmouseup ="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';"
+                          ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';" />
         <img src="SD/png/Button_Next_Green.png" alt="next"
                           onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Next_Green.png';  socket.send('next_station');"
-                          ontouchend="this.src='SD/png/Button_Next_Green.png'; socket.send('next_station');" />
+                          onmouseup= "socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';"
+                          ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';" />
       </div>
       <div style="flex:1;">
         <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
@@ -1530,13 +1539,13 @@ function getnetworks () { // tab Config: load the connected WiFi network
                           ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
                           onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
                           ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                          onclick="httpGet('downvolume', 1)" />
+                          onclick="socket.send('downvolume')" />
         <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
                           onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                           onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
                           ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                          onclick="httpGet('upvolume', 1)" />
+                          onclick="socket.send('upvolume')" />
         <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
                           onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
@@ -1625,8 +1634,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
           <option value="-1">Select a track here</option>
       </select>
       <br><br>
-      <button class="button" onclick="httpGet('stop', 3)">STOP</button>
-      <button class="button" onclick="httpGet('resumefile', 3)">RESUME</button>
+      <button class="button" onclick="socket.send('stopfile')">STOP</button>
+      <button class="button" onclick="socket.send('resumefile')">RESUME</button>
       <br><br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
       <br><br>
