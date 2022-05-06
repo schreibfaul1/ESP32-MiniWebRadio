@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2p, May 05/2022
+    Version 2.2q, May 06/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1004,8 +1004,8 @@ void setup(){
     SerialPrintfln(ANSI_ESC_WHITE "setup: SD card found");
 
     defaultsettings();  // first init
-    setTFTbrightness(getBrightness());
-
+    if(getBrightness() >= 5) setTFTbrightness(getBrightness());
+    else                     setTFTbrightness(5);
     if(TFT_CONTROLLER > 3) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: seek for stations.csv");
@@ -1612,8 +1612,15 @@ void loop() {
                     h = hour.toInt();
                     h++;
                     if( h== 24) h=0;
-                    sprintf (_chbuf, "/voice_time/%d_00.mp3", h);
-                    connecttoFS(_chbuf);
+                    if(_f_timeAnnouncement){
+                        sprintf (_chbuf, "/voice_time/%d_00.mp3", h);
+                        SerialPrintfln("Time: ...... play Audiofile %s", _chbuf)
+                        connecttoFS(_chbuf);
+                    }
+                    else{
+                        SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", h);
+                    }
+
                 }
             }
 
@@ -1791,7 +1798,7 @@ void audio_icydescription(const char *info){
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
-    SerialPrintfln("ftpsrv: %s", info);
+    SerialPrintfln("ftpServer: . %s", info);
 }
 //----------------------------------------------------------------------------------------
 void RTIME_info(const char *info){
@@ -2071,7 +2078,10 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-     SerialPrintfln("WebServer: . " ANSI_ESC_YELLOW "cmd=%s params=%s arg=%s", cmd.c_str(),param.c_str(), arg.c_str());
+    #ifdef WEBSRV_DEBUG // uncomment in platformio.ini
+        SerialPrintfln("WS_onCmd: .. " ANSI_ESC_YELLOW "cmd=%s params=%s arg=%s",
+                                                        cmd.c_str(),param.c_str(), arg.c_str());
+    #endif
 
     String  str;
 
@@ -2085,15 +2095,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else webSrv.reply(setTone().c_str());
                                     return;}
 
-    if(cmd == "getmute"){           webSrv.reply(String(int(_f_mute)).c_str());
+    if(cmd == "getmute"){           if(_f_mute) webSrv.send("mute=1");
+                                    else        webSrv.send("mute=0");
+                                    return;}
+
+    if(cmd == "setmute"){           mute();
                                     return;}
 
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle.c_str());
-                                    return;}
-
-    if(cmd == "mute"){              mute(); // at this time _f_mute has not changed
-                                    if(_f_mute) webSrv.reply("Mute off\n");
-                                    else webSrv.reply("Mute on\n");
                                     return;}
 
     if(cmd == "toneha"){            pref.putUShort("toneha",(param.toInt()));                             // vs1053 tone
@@ -2178,19 +2187,26 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "set_alarmtime"){    _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;}
 
-    if(cmd == "get_timeAnnouncement"){ webSrv.send("timeAnnouncement=") + String(_f_timeAnnouncement, 10); return;}
+    if(cmd == "get_timeAnnouncement"){ if(_f_timeAnnouncement) webSrv.send("timeAnnouncement=1");
+                                    if(  !_f_timeAnnouncement) webSrv.send("timeAnnouncement=0");
+                                    return;}
 
-    if(cmd == "set_timeAnnouncement"){ _f_timeAnnouncement = param.toInt();
+    if(cmd == "set_timeAnnouncement"){ if(param == "true" ) _f_timeAnnouncement = true;
+                                    if(   param == "false") _f_timeAnnouncement = false;
                                     pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;}
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
                                     webSrv.reply(_chbuf); return;}
 
-    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s", cmd.c_str());
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
-    SerialPrintfln("request %s contentLength %d", request.c_str(), contentLength);
+
+    #ifdef WEBSRV_DEBUG
+        SerialPrintfln("WS_onReq: .. " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
+    #endif
+
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
     if(request == "fileUpload"){savefile(_filename.c_str(), contentLength);  return;}

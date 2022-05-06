@@ -277,6 +277,8 @@ function connect() {
     socket.send('get_tftSize')
     socket.send('get_decoder')
     socket.send('to_listen')
+    socket.send("getmute")
+    socket.send("get_timeAnnouncement")
 
     setInterval(ping, 20000)
   };
@@ -313,8 +315,12 @@ function connect() {
       case "pong":            clearTimeout(tm)
                               toastr.clear()
                               break
-      case "mute":            if(val == '1') document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                              if(val == '0') document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
+      case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                                              resultstr1.value = "mute on"
+                                              console.log("mute on")}
+                              if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
+                                              resultstr1.value = "mute off"
+                                              console.log("mute off")}
                               break
       case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
                               break
@@ -367,6 +373,11 @@ function connect() {
       case  "resumefile":     resultstr3.value = val;
                               break
 
+      case  "timeAnnouncement": console.log("timeAnnouncement=" + val)
+                              if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
+                              if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
+                              break
+
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -379,13 +390,13 @@ document.addEventListener('readystatechange', event => {
     // same as  jQuery.ready
     console.log('All HTML DOM elements are accessible')
     document.getElementById('dialog').style.display = 'none' // hide the div (its only a template)
+
   }
   if (event.target.readyState === 'complete') {
     console.log('Now external resources are loaded too, like css,src etc... ')
     connect();  // establish websocket connection
     gettone()   // Now load the tones (tab Radio)
     getnetworks()
-    getmute()
     loadGridFileFromSD()
     showExcelGrid()
   }
@@ -423,7 +434,7 @@ function showTab1 () {
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
   socket.send("change_state=" + "0")
-  getmute()
+  socket.send("getmute")
 }
 
 function showTab2 () {
@@ -565,17 +576,6 @@ function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
         if (xhr.responseText.startsWith('http')) {
           console.log(xhr.responseText)
           window.open(xhr.responseText, '_blank') // show the station homepage
-        } else if (xhr.responseText.startsWith('Mute')) {
-          console.log(xhr.responseText)
-          resultstr1.value = xhr.responseText // all other
-          if (xhr.responseText.endsWith('off\n')) {
-            document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
-          }
-          if (xhr.responseText.endsWith('on\n')) {
-            document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-          }
-        } else if (theReq === 'mute' || theReq.startsWith('upvolume') || theReq.startsWith('downvolume')) {
-          resultstr1.value = xhr.responseText
         } else if (theReq === 'getstreamtitle') {
           cmd.value = xhr.responseText
         } else resultstr1.value = xhr.responseText
@@ -598,22 +598,6 @@ function gettone () { // tab Radio: get tones values and set them
       for (i = 0; i < (lines.length - 1); i++) {
         parts = lines[i].split('=')
         setSlider(parts[0], parts[1])
-      }
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
-}
-
-function getmute () {
-  var theUrl = '/getmute?' + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (xhr.responseText === '1') {
-        document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png' // muteOn
-      } else {
-        document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
       }
     }
   }
@@ -1549,7 +1533,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
         <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
                           onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                          onclick="httpGet('mute', 1)" />
+                          onclick="socket.send('setmute')" />
       </div>
       <div style="flex:1;">
         <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
@@ -1750,14 +1734,19 @@ function getnetworks () { // tab Config: load the connected WiFi network
   </div>
   <!--==============================================================================================-->
   <div id="tab-content5">
-    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display<br>
-    and VS1053 HW decoder or external DAC.<br>
-    This project is documented on
-    <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.</p>
-    <p>Author: Wolle (schreibfaul1)</p><br>
+    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
+        external DAC. This project is documented on
+    <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
+       Author: Wolle (schreibfaul1)</p>
     <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
     <h3>Connected WiFi network
       <select class="boxstyle" onchange="handletone(this)" id="ssid"></select>
+    </h3>
+    <h3>
+      <p> Time announcement on the hour
+      <input type="checkbox" id="chk_timeSpeech"
+                   onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+      </p>
     </h3>
   </div>
   <!--==============================================================================================-->
