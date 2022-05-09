@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2q, May 06/2022
+    Version 2.2r, May 09/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -178,7 +178,7 @@ SemaphoreHandle_t  mutex_display;
 #endif //TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4
     //
     //  Display 480x320
     //  +-------------------------------------------+ _yHeader=0
@@ -233,7 +233,7 @@ SemaphoreHandle_t  mutex_display;
     //
     TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
-#endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3
+#endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4
 
 
 
@@ -1006,7 +1006,7 @@ void setup(){
     defaultsettings();  // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else                     setTFTbrightness(5);
-    if(TFT_CONTROLLER > 3) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 4) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
@@ -1666,7 +1666,7 @@ void loop() {
 /***********************************************************************************************************************
 *                                                    E V E N T S                                                       *
 ***********************************************************************************************************************/
-//Events from vs1053_ext library
+//Events from vs1053_ext or audioI2S library
 void vs1053_info(const char *info){
     if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
     if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}

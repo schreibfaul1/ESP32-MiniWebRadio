@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Mar 21 2022
+// updated on May 09 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -239,7 +239,7 @@ void TFT::init() {
         writeCommand(0x08); spi_TFT->write(0x01);
         writeCommand(0x09); spi_TFT->write(0x3F); //Row End
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9486");
         //Driving ability Setting
         writeCommand(0x11); // Sleep out, also SW reset
@@ -257,73 +257,77 @@ void TFT::init() {
         spi_TFT->write16(0x00);
         spi_TFT->write16(0x00);
 
-        writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x04);
-        spi_TFT->write16(0x0E);
-        spi_TFT->write16(0x08);
-        spi_TFT->write16(0x17);
-        spi_TFT->write16(0x0A);
-        spi_TFT->write16(0x40);
-        spi_TFT->write16(0x79);
-        spi_TFT->write16(0x4D);
-        spi_TFT->write16(0x07);
-        spi_TFT->write16(0x0E);
-        spi_TFT->write16(0x0A);
-        spi_TFT->write16(0x1A);
-        spi_TFT->write16(0x1D);
-        spi_TFT->write16(0x0F);
+        if(_TFTcontroller ==ILI9486a){
+            writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
+            spi_TFT->write16(0x00);
+            spi_TFT->write16(0x04);
+            spi_TFT->write16(0x0E);
+            spi_TFT->write16(0x08);
+            spi_TFT->write16(0x17);
+            spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x40);
+            spi_TFT->write16(0x79);
+            spi_TFT->write16(0x4D);
+            spi_TFT->write16(0x07);
+            spi_TFT->write16(0x0E);
+            spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x1A);
+            spi_TFT->write16(0x1D);
+            spi_TFT->write16(0x0F);
 
-        writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x1B);
-        spi_TFT->write16(0x1F);
-        spi_TFT->write16(0x02);
-        spi_TFT->write16(0x10);
-        spi_TFT->write16(0x05);
-        spi_TFT->write16(0x32);
-        spi_TFT->write16(0x34);
-        spi_TFT->write16(0x43);
-        spi_TFT->write16(0x02);
-        spi_TFT->write16(0x0A);
-        spi_TFT->write16(0x09);
-        spi_TFT->write16(0x33);
-        spi_TFT->write16(0x37);
-        spi_TFT->write16(0x0F);
+            writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
+            spi_TFT->write16(0x00);
+            spi_TFT->write16(0x1B);
+            spi_TFT->write16(0x1F);
+            spi_TFT->write16(0x02);
+            spi_TFT->write16(0x10);
+            spi_TFT->write16(0x05);
+            spi_TFT->write16(0x32);
+            spi_TFT->write16(0x34);
+            spi_TFT->write16(0x43);
+            spi_TFT->write16(0x02);
+            spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x09);
+            spi_TFT->write16(0x33);
+            spi_TFT->write16(0x37);
+            spi_TFT->write16(0x0F);
+        }
 
-        // writeCommand(0xE0); // PGAMCTRL(alternative Positive Gamma Control)
-        // spi_TFT->write16(0x0F);
-        // spi_TFT->write16(0x1F);
-        // spi_TFT->write16(0x1C);
-        // spi_TFT->write16(0x0C);
-        // spi_TFT->write16(0x0F);
-        // spi_TFT->write16(0x08);
-        // spi_TFT->write16(0x48);
-        // spi_TFT->write16(0x98);
-        // spi_TFT->write16(0x37);
-        // spi_TFT->write16(0x0A);
-        // spi_TFT->write16(0x13);
-        // spi_TFT->write16(0x04);
-        // spi_TFT->write16(0x11);
-        // spi_TFT->write16(0x0D);
-        // spi_TFT->write16(0x00);
+        if(_TFTcontroller == ILI9486b){
+            writeCommand(0xE0); // PGAMCTRL(alternative Positive Gamma Control)
+            spi_TFT->write16(0x0F);
+            spi_TFT->write16(0x1F);
+            spi_TFT->write16(0x1C);
+            spi_TFT->write16(0x0C);
+            spi_TFT->write16(0x0F);
+            spi_TFT->write16(0x08);
+            spi_TFT->write16(0x48);
+            spi_TFT->write16(0x98);
+            spi_TFT->write16(0x37);
+            spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x13);
+            spi_TFT->write16(0x04);
+            spi_TFT->write16(0x11);
+            spi_TFT->write16(0x0D);
+            spi_TFT->write16(0x00);
 
-        // writeCommand(0xE1); // NGAMCTRL (alternative Negative Gamma Correction)
-        // spi_TFT->write16(0x0F);
-        // spi_TFT->write16(0x32);
-        // spi_TFT->write16(0x2E);
-        // spi_TFT->write16(0x0B);
-        // spi_TFT->write16(0x0D);
-        // spi_TFT->write16(0x05);
-        // spi_TFT->write16(0x47);
-        // spi_TFT->write16(0x75);
-        // spi_TFT->write16(0x37);
-        // spi_TFT->write16(0x06);
-        // spi_TFT->write16(0x10);
-        // spi_TFT->write16(0x03);
-        // spi_TFT->write16(0x24);
-        // spi_TFT->write16(0x20);
-        // spi_TFT->write16(0x00);
+            writeCommand(0xE1); // NGAMCTRL (alternative Negative Gamma Correction)
+            spi_TFT->write16(0x0F);
+            spi_TFT->write16(0x32);
+            spi_TFT->write16(0x2E);
+            spi_TFT->write16(0x0B);
+            spi_TFT->write16(0x0D);
+            spi_TFT->write16(0x05);
+            spi_TFT->write16(0x47);
+            spi_TFT->write16(0x75);
+            spi_TFT->write16(0x37);
+            spi_TFT->write16(0x06);
+            spi_TFT->write16(0x10);
+            spi_TFT->write16(0x03);
+            spi_TFT->write16(0x24);
+            spi_TFT->write16(0x20);
+            spi_TFT->write16(0x00);
+        }
 
         if(_displayInversion == 0){
             writeCommand(ILI9486_INVOFF); // Display Inversion OFF, normal mode   RPi LCD (A)
@@ -437,14 +441,19 @@ TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
         _width  = 240;
         _rotation=0;
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a){
         _height = 480;
-        _width  = 3200;
+        _width  = 320;
+        _rotation=0;
+    }
+    if(_TFTcontroller == ILI9486b){ // Waveshare
+        _height = 480;
+        _width  = 320;
         _rotation=0;
     }
     if(_TFTcontroller == ILI9488){
         _height = 480;
-        _width  = 3200;
+        _width  = 320;
         _rotation=0;
     }
     _freq = 20000000;
@@ -470,8 +479,8 @@ void TFT::endWrite(void){
 
 void TFT::writeCommand(uint16_t cmd){
     TFT_DC_LOW();
-    if(_TFTcontroller == ILI9341 || _TFTcontroller == HX8347D || _TFTcontroller == ILI9488) spi_TFT->write(cmd);
-    if(_TFTcontroller == ILI9486) spi_TFT->write16(cmd);
+    if(_TFTcontroller == ILI9341  || _TFTcontroller == HX8347D || _TFTcontroller == ILI9488) spi_TFT->write(cmd);
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) spi_TFT->write16(cmd);
     TFT_DC_HIGH();
 }
 // Return the size of the display (per current rotation)
@@ -591,7 +600,7 @@ void TFT::setRotation(uint8_t m) {
         spi_TFT->write(m);
         endWrite();
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         _rotation = m % 4; // can't be higher than 3
         startWrite();
         writeCommand(ILI9486_MADCTL);
@@ -652,7 +661,7 @@ void TFT::setRotation(uint8_t m) {
 void TFT::invertDisplay(boolean i) {
     startWrite();
     if(_TFTcontroller == ILI9341) {writeCommand(i ? ILI9341_INVON : ILI9341_INVOFF);}
-    if(_TFTcontroller == ILI9486) {writeCommand(i ? ILI9486_INVON : ILI9486_INVOFF);}
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {writeCommand(i ? ILI9486_INVON : ILI9486_INVOFF);}
     if(_TFTcontroller == ILI9488) {writeCommand(i ? ILI9488_INVON : ILI9488_INVOFF);}
     endWrite();
 }
@@ -698,7 +707,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(0x08); spi_TFT->write((y+h-1) >> 8);
         writeCommand(0x09); spi_TFT->write((y+h-1) & 0xFF);  //Row End
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(ILI9486_CASET);    // Column addr set
         spi_TFT->write16(x >> 8);
         spi_TFT->write16(x & 0xFF);          // XSTART
@@ -742,7 +751,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         if(_rotation==3){ writeCommand(0x16);   spi_TFT->write(0xE8);} // 270
         writeCommand(0x22);
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(ILI9486_MADCTL);
         if(_rotation==0){SPI.write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_ML | ILI9486_MADCTL_BGR);}
         if(_rotation==1){SPI.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MV | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
@@ -772,7 +781,7 @@ void TFT::endBitmap() {
     if(_TFTcontroller == HX8347D){ // HX8347D
         setRotation(_rotation); // return to old values
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         setRotation(_rotation);
     }
         if(_TFTcontroller == ILI9488){
@@ -788,7 +797,7 @@ void TFT::startJpeg() {
     if(_TFTcontroller == HX8347D){ // HX8347D
         // nothing to do
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(ILI9486_MADCTL);
         if(_rotation==0){SPI.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
         if(_rotation==1){SPI.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);}
@@ -869,7 +878,7 @@ void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
     if((x < 0) ||(x >= _width) || (y < 0) || (y >= _height)) return;
     setAddrWindow(x,y,1,1);
     if(_TFTcontroller == HX8347D) writeCommand(0x22);
-    if(_TFTcontroller == ILI9486) writeCommand(ILI9486_RAMWR);
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) writeCommand(ILI9486_RAMWR);
     if(_TFTcontroller == ILI9488) writeCommand(ILI9488_RAMWR);
 
     if(_TFTcontroller == ILI9488) write16BitColor(color);
@@ -899,7 +908,7 @@ void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     int32_t len = (int32_t)w * h;
     setAddrWindow(x, y, w, h);
     if(_TFTcontroller == HX8347D) writeCommand(0x22);
-    if(_TFTcontroller == ILI9486) writeCommand(ILI9486_RAMWR);
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) writeCommand(ILI9486_RAMWR);
     if(_TFTcontroller == ILI9488) writeCommand(ILI9488_RAMWR);
     writeColor(color, len);
 }
@@ -1313,7 +1322,7 @@ bool TFT::setCursor(uint16_t x, uint16_t y) {
         writeCommand(0x06); spi_TFT->write(y >> 8);  //Row Start
         writeCommand(0x07); spi_TFT->write(y & 0xFF);
     }
-    if(_TFTcontroller == ILI9486){
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(0x2A);
         spi_TFT->write(x >> 8);
         spi_TFT->write(x & 0xFF);
@@ -2660,7 +2669,7 @@ void TFT::renderJPEG(int xpos, int ypos, uint16_t maxWidth, uint16_t maxHeight) 
                 setAddrWindow(mcu_x, mcu_y, win_w , win_h);
                 if(_TFTcontroller == ILI9341) writeCommand(ILI9341_RAMWR); //ILI9341
                 if(_TFTcontroller == HX8347D) writeCommand(0x22);
-                if(_TFTcontroller == ILI9486) writeCommand(ILI9486_RAMWR);
+                if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) writeCommand(ILI9486_RAMWR);
                 if(_TFTcontroller == ILI9488) writeCommand(ILI9488_RAMWR);
                 // push all the image block pixels to the screen
                 while (mcu_pixels--) writePixel(*pImg++); // Send to TFT 16 bits at a time
