@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.3, May 13/2022
+    Version 2.3a, May 13/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -845,11 +845,11 @@ const char* listAudioFile(){
         return nullptr;
     }
     while(file){
-        const char* name = file.name();
-        if(endsWith(name, ".mp3") || endsWith(name, ".aac") || endsWith(name, ".m4a") ||
-                                     endsWith(name, ".wav") || endsWith(name, ".flac")||
-                                     endsWith(name, ".m3u")){
-            return name;
+        strcpy(_chbuf, file.name());
+        if(endsWith(_chbuf, ".mp3") || endsWith(_chbuf, ".aac") || endsWith(_chbuf, ".m4a") ||
+                                       endsWith(_chbuf, ".wav") || endsWith(_chbuf, ".flac")||
+                                       endsWith(_chbuf, ".m3u")){
+            return _chbuf;
         }
         else{
             return nullptr;
@@ -865,14 +865,12 @@ bool sendAudioList2Web(const char* audioDir){
     uint8_t i = 0;
     while(true){
         FileName = listAudioFile();
-        if(FileName){
-            if(i) str += ",";
-            str += (String)FileName;
-            i++;
-        }
-        else break;
+        if(!FileName) break;
+        if(i) str += ",";
+        str += (String)FileName;
+        i++;
     }
-    SerialPrintfln(ANSI_ESC_GREEN "%s", str.c_str());
+    SerialPrintfln("Audiofiles:  " ANSI_ESC_GREEN "%s", str.c_str() + 14);
     webSrv.send((const char*)str.c_str());
     return true;
 }
@@ -1394,8 +1392,10 @@ void processPlaylist(boolean first){
     String f = "";
     String t = "";
     _playlistTime = millis();
-    while(playlistFile.available()){
+    while(playlistFile.available() > 0){
         f = playlistFile.readStringUntil('\n');
+        if(f.startsWith("#")) SerialPrintfln("Playlist: .. " ANSI_ESC_GREEN "%s", f.c_str());
+        f.trim();
         if(f.length() < 5) continue;
         if(first){
             if(f.startsWith("#EXTM3U")){
