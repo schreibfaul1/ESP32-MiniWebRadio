@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 02.05.2022
+// updated: 13.05.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -25,7 +25,8 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 #if DECODER == 0
 
-enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE};
+enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
+                 ISRUNNING};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -117,6 +118,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == INBUFF_FREE){
                 audioTxTaskMessage.cmd = INBUFF_FREE;
                 audioTxTaskMessage.ret = vs1053.bufferFree();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == ISRUNNING){
+                audioTxTaskMessage.cmd = ISRUNNING;
+                audioTxTaskMessage.ret = vs1053.isRunning();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -211,6 +217,12 @@ uint32_t audioInbuffFree(){
     return RX.ret;
 }
 
+boolean audioIsRunning(){
+    audioTxMessage.cmd = ISRUNNING;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 #endif // DECODER == 0
 
 /***********************************************************************************************************************
@@ -219,7 +231,8 @@ uint32_t audioInbuffFree(){
 
 #if DECODER >= 1
 
-enum : uint8_t {SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE};
+enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
+                 ISRUNNING};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -305,6 +318,11 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = audio.inBufferFree();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == ISRUNNING){
+                audioTxTaskMessage.cmd = ISRUNNING;
+                audioTxTaskMessage.ret = audio.isRunning();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else{
                 SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage");
             }
@@ -317,7 +335,7 @@ void audioInit() {
     xTaskCreatePinnedToCore(
         audioTask,              /* Function to implement the task */
         "audioplay",            /* Name of the task */
-        6000,                   /* Stack size in words */
+        7000,                   /* Stack size in words */
         NULL,                   /* Task input parameter */
         AUDIOTASK_PRIO,         /* Priority of the task */
         NULL,                   /* Task handle. */
@@ -392,6 +410,12 @@ uint32_t audioInbuffFilled(){
 
 uint32_t audioInbuffFree(){
     audioTxMessage.cmd = INBUFF_FREE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+boolean audioIsRunning(){
+    audioTxMessage.cmd = ISRUNNING;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 09.05.2022
+// updated: 13.05.2022
 
 #pragma once
 
@@ -129,6 +129,7 @@ bool endsWith (const char* base, const char* str);
 int indexOf (const char* base, const char* str, int startIndex);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
+void SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char* scaleImage(const char* path);
 void setVolume(uint8_t vol);
 inline uint8_t getvolume();
@@ -145,6 +146,7 @@ void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
 String setI2STone();
 void audiotrack(const char* fileName, uint32_t resumeFilePos = 0);
+void processPlaylist(boolean first = false);
 void changeState(int state);
 void connecttohost(const char* host);
 void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
@@ -161,3 +163,4 @@ uint32_t audioStopSong();
 void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0);
 uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
+boolean audioIsRunning();

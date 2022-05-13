@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.2r, May 09/2022
+    Version 2.3, May 13/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -33,12 +33,14 @@ uint16_t       _sum_stations   = 0;
 uint8_t        _cur_volume     = 0;      // will be set from stored preferences
 uint8_t        _mute_volume    = 0;      // decrement to 0 or increment to _cur_volume
 uint8_t        _state          = 0;      // statemaschine
-uint8_t        _timeCounter       = 0;
+uint8_t        _timeCounter    = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
 uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int8_t         _releaseNr      = -1;
 uint32_t       _resumeFilePos  = 0;
+uint32_t       _playlistTime   = 0;      // playlist start time millis() for timeout
 char           _chbuf[512];
+char           _fName[256];
 char           _myIP[25];
 char           _afn[256];                // audioFileName
 char           _path[128];
@@ -69,6 +71,7 @@ boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _c
 boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
 boolean        _f_showStreamTitle = false;
 boolean        _f_timeAnnouncement = false; // time announcement every full hour
+boolean        _f_playlistEnabled = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -106,6 +109,7 @@ Ticker ticker;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 File audioFile;
+File playlistFile;
 FtpServer ftpSrv;
 #if DECODER == 2 // ac101
     AC101 dac;
@@ -843,7 +847,8 @@ const char* listAudioFile(){
     while(file){
         const char* name = file.name();
         if(endsWith(name, ".mp3") || endsWith(name, ".aac") || endsWith(name, ".m4a") ||
-                                     endsWith(name, ".wav") || endsWith(name, ".flac")){
+                                     endsWith(name, ".wav") || endsWith(name, ".flac")||
+                                     endsWith(name, ".m3u")){
             return name;
         }
         else{
@@ -1147,6 +1152,21 @@ boolean strCompare(const char* str1, char* str2){ // returns true if str1 == str
     }
     return f;
 }
+
+void SerialPrintflnCut(const char* item, const char* color, const char* str){
+    if(strlen(str) > 75){
+        String f = str;
+        SerialPrintfln("%s%s%s ... %s", item,
+                                        color,
+                                        f.substring(0, 50).c_str(),
+                                        f.substring(f.length()- 20, f.length())
+                                        .c_str());
+    }
+    else{
+        SerialPrintfln("%s%s%s", item, color, str);
+    }
+}
+
 const char* scaleImage(const char* path){
     if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))){ // not a image
         return UTF8toASCII(path);
@@ -1346,6 +1366,17 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
     char* path = (char*)malloc(strlen(fileName) + 20);
     strcpy(path, "/audiofiles/");
     strcat(path, fileName);
+    if(endsWith(path, "m3u")){
+        playlistFile.close(); // as a precaution
+        strcpy(_afn, fileName);
+        if(SD_MMC.exists(path)){
+            playlistFile = SD_MMC.open(path);
+            _f_playlistEnabled = false;
+            processPlaylist(true);
+        }
+        if(path) free(path);
+        return;
+    }
     clearFName();
     showVolumeBar();
     showFileName(fileName);
@@ -1357,6 +1388,65 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
         _resumeFilePos = 0;
     }
     if(path) free(path);
+}
+
+void processPlaylist(boolean first){
+    String f = "";
+    String t = "";
+    _playlistTime = millis();
+    while(playlistFile.available()){
+        f = playlistFile.readStringUntil('\n');
+        if(f.length() < 5) continue;
+        if(first){
+            if(f.startsWith("#EXTM3U")){
+                first = false;
+                _f_playlistEnabled = true;
+                continue;
+            }
+            else{
+                SerialPrintfln("Playlist: .. " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", _afn);
+                return;
+            }
+        }
+        if(f.startsWith("#EXTINF")){
+            int8_t idx = f.indexOf(",");
+            if(idx > 8){
+                t = f.substring(idx + 1);
+                t.trim();
+            }
+            continue;
+        }
+        if(!f.startsWith("#")){
+            if(f.startsWith("http")){
+                SerialPrintflnCut("Playlist: .. ", ANSI_ESC_YELLOW, f.c_str());
+                clearFName();
+                showVolumeBar();
+                if(t.length() > 0){
+                    showFileName(t.c_str());
+                    webSrv.send("audiotrack=" + t);
+                }
+                else{
+                    showFileName(f.c_str());
+                    webSrv.send("audiotrack=" + f);
+                }
+                changeState(PLAYERico);
+                audioConnecttohost(f.c_str());
+            }
+            else{
+                SerialPrintfln("Playlist: .. " ANSI_ESC_YELLOW "%s", f.c_str());
+                webSrv.send("audiotrack=" + f);
+                audiotrack(f.c_str());
+            }
+            return;
+        }
+    }
+    SerialPrintfln("end of playlist");
+    webSrv.send("audiotrack=end of playlist");
+    playlistFile.close();
+    _f_playlistEnabled = false;
+    clearFName();
+    showFileName(_afn);
+    changeState(PLAYER);
 }
 
 void IRAM_ATTR headphoneDetect(){ // called via interrupt
@@ -1662,6 +1752,10 @@ void loop() {
         updateSleepTime();
         _f_1min = false;
     }
+    if(_f_playlistEnabled &&  (_playlistTime + 5000 < millis()) && !audioIsRunning()){
+        processPlaylist(false); // something went wrong
+    }
+
 }
 /***********************************************************************************************************************
 *                                                    E V E N T S                                                       *
@@ -1728,20 +1822,29 @@ void audio_commercial(const char *info){
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
-    SerialPrintfln("end of file: %s", info);
+    SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
 }
 void audio_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
-    SerialPrintfln("end of file: %s", info);
+    SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
+}
+//----------------------------------------------------------------------------------------
+void vs1053_eof_stream(const char *info){
+    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
+}
+void audio_eof_stream(const char *info){
+    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char *info){                 // really connected URL
+    if(_f_playlistEnabled) return;
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
     SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
 }
 void audio_lasthost(const char *info){                 // really connected URL
+    if(_f_playlistEnabled) return;
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
     SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
@@ -1763,10 +1866,10 @@ void audio_icyurl(const char *info){                   // if the Radio has a hom
 }
 //----------------------------------------------------------------------------------------
 void vs1053_id3data(const char *info){
-    SerialPrintfln("id3data: " ANSI_ESC_GREEN "%s", info);
+    SerialPrintfln("id3data: ... " ANSI_ESC_GREEN "%s", info);
 }
 void audio_id3data(const char *info){
-    SerialPrintfln("id3data: " ANSI_ESC_GREEN "%s", info);
+    SerialPrintfln("id3data: ... " ANSI_ESC_GREEN "%s", info);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
@@ -2032,8 +2135,7 @@ void tp_released(){
                     if(chptr) strcpy(_afn ,chptr);
                     showFileName(_afn); break;
         case 43:    changeState(PLAYERico); showVolumeBar(); // ready
-                    strcat(path, _afn);
-                    connecttoFS((const char*) path);
+                    audiotrack(_afn);
                     if(_f_isFSConnected){
                         free(_lastconnectedfile);
                         _lastconnectedfile = strdup(path);
@@ -2136,8 +2238,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "audiolist"){         sendAudioList2Web("/audiofiles");                                   // via websocket
                                     return;}
 
-    if(cmd == "audiotrack"){        audiotrack(param.c_str());                                          // via websocket
-                                    webSrv.send("audiotrack=" + param); return;}
+    if(cmd == "audiotrack"){        webSrv.send("audiotrack=" + param);                                 // via websocket
+                                    audiotrack(param.c_str());
+                                    return;}
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
