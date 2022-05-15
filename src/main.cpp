@@ -1235,7 +1235,8 @@ uint8_t upvolume(){
 }
 inline void mute(){
     if(_f_mute==false){_f_muteDecrement = true; _f_muteIncrement = false;}
-    else              {_f_muteIncrement = true; _f_muteDecrement = false; digitalWrite(AMP_ENABLED, HIGH);}
+    else              {_f_muteIncrement = true; _f_muteDecrement = false;
+                       if(AMP_ENABLED != -1) digitalWrite(AMP_ENABLED, HIGH);}
 }
 
 void setStation(uint16_t sta){
@@ -1631,7 +1632,7 @@ void loop() {
             showHeadlineVolume();
         }
         else{
-            digitalWrite(AMP_ENABLED, LOW);
+            if(AMP_ENABLED != -1) digitalWrite(AMP_ENABLED, LOW);
             _f_muteDecrement = false;
             _f_mute = true;
             webSrv.send("mute=1");
