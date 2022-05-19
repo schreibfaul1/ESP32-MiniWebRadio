@@ -971,6 +971,7 @@ void stopSong(){
 ***********************************************************************************************************************/
 void setup(){
     Serial.begin(115200);
+    Serial.print("\n\n");
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1395,7 +1396,7 @@ void processPlaylist(boolean first){
     _playlistTime = millis();
     while(playlistFile.available() > 0){
         f = playlistFile.readStringUntil('\n');
-        if(f.startsWith("#")) SerialPrintfln("Playlist: .. " ANSI_ESC_GREEN "%s", f.c_str());
+        if(f.startsWith("#")) SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", f.c_str());
         f.trim();
         if(f.length() < 5) continue;
         if(first){
@@ -1405,7 +1406,7 @@ void processPlaylist(boolean first){
                 continue;
             }
             else{
-                SerialPrintfln("Playlist: .. " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", _afn);
+                SerialPrintfln("Playlist:    " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", _afn);
                 return;
             }
         }
@@ -1419,7 +1420,7 @@ void processPlaylist(boolean first){
         }
         if(!f.startsWith("#")){
             if(f.startsWith("http")){
-                SerialPrintflnCut("Playlist: .. ", ANSI_ESC_YELLOW, f.c_str());
+                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, f.c_str());
                 clearFName();
                 showVolumeBar();
                 if(t.length() > 0){
@@ -1434,7 +1435,7 @@ void processPlaylist(boolean first){
                 audioConnecttohost(f.c_str());
             }
             else{
-                SerialPrintfln("Playlist: .. " ANSI_ESC_YELLOW "%s", f.c_str());
+                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", f.c_str());
                 webSrv.send("audiotrack=" + f);
                 audiotrack(f.c_str());
             }
@@ -1767,14 +1768,16 @@ void vs1053_info(const char *info){
     if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
     if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(CORE_DEBUG_LEVEL >= 2)         {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)
+                                      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
 }
 void audio_info(const char *info){
     if(startsWith(info, "Request"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
     if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(CORE_DEBUG_LEVEL >= 2)         {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)
+                                      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstation(const char *info){
@@ -2181,7 +2184,7 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL >= 2){
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -2307,7 +2310,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
 
-    if(CORE_DEBUG_LEVEL >= 2){
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN){
         SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
     }
 
@@ -2322,7 +2325,7 @@ void WEBSRV_onInfo(const char* info){
     if(!strcmp("to_listen", info)) return;          // suppress to_isten
     if(startsWith(info, "Command client"))return;   // suppress Command client available
 
-    if(CORE_DEBUG_LEVEL >= 2) {
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "%s", info);    // infos for debug
     }
 }
