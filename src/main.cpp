@@ -971,15 +971,35 @@ void stopSong(){
 ***********************************************************************************************************************/
 void setup(){
     Serial.begin(115200);
+
+    const char* chipModel  = ESP.getChipModel();
+    uint8_t avMajor  = ESP_ARDUINO_VERSION_MAJOR;
+    uint8_t avMinor  = ESP_ARDUINO_VERSION_MINOR;
+    uint8_t avPatch  = ESP_ARDUINO_VERSION_PATCH;
+    Serial.printf("ESP32 Chip: %s\n", chipModel);
+    Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
+
     Serial.print("\n\n");
     SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("");
-    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************");
-    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V2     *");
-    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************");
+    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
+    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V2     *    ");
+    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
     SerialPrintfln("");
+    if(startsWith(chipModel, "ESP32-D")); // ESP32-D    ...  okay
+    if(startsWith(chipModel, "ESP32-P")); // ESP32-PICO ...  okay
+    if(startsWith(chipModel, "ESP32-S2")){
+        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-S2");
+        while(true){;}
+    }
+    if(startsWith(chipModel, "ESP32-C3")){
+        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-C3");
+        while(true){;}
+    }
+    if(startsWith(chipModel, "ESP32-S3")); // ESP32-S3  ...  okay
+
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
