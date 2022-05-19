@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 13.05.2022
+// updated: 19.05.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -143,7 +143,10 @@ void audioInit() {
         NULL,                  /* Task handle. */
         AUDIOTASK_CORE         /* Core where the task should run */
     );
-    SerialPrintfln("Audiotask is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);
+    if(CORE_DEBUG_LEVEL >= 2){
+        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);}
+        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOTASK_PRIO);}
+    }
 }
 
 audioMessage transmitReceive(audioMessage msg){
@@ -341,7 +344,10 @@ void audioInit() {
         NULL,                   /* Task handle. */
         AUDIOTASK_CORE          /* Core where the task should run */
     );
-    SerialPrintfln("Audiotask is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);
+    if(CORE_DEBUG_LEVEL >= 2){
+        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);}
+        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOTASK_PRIO);}
+    }
 }
 
 audioMessage transmitReceive(audioMessage msg){

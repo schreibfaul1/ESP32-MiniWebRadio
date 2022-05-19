@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.3a, May 13/2022
+    Version 2.3b, May 19/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -578,8 +578,8 @@ void showStreamTitle(){
     ST.replace("|", "\n");
     switch(ST.length()){
         case   0 ... 30:  tft.setFont(_fonts[5]); break;
-        case  31 ... 45:  tft.setFont(_fonts[4]); break;
-        case  46 ... 65:  tft.setFont(_fonts[3]); break;
+        case  31 ... 43:  tft.setFont(_fonts[4]); break;
+        case  44 ... 65:  tft.setFont(_fonts[3]); break;
         case  66 ... 130: tft.setFont(_fonts[2]); break;
         case 131 ... 200: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
@@ -910,7 +910,7 @@ bool connectToWiFi(){
         }
         file.close();
     }
-    SerialPrintfln("WiFI_info: Connecting WiFi...");
+    SerialPrintfln("WiFI_info:   Connecting WiFi...");
     if(wifiMulti.run() == WL_CONNECTED){
         WiFi.setSleep(false);
         return true;
@@ -928,7 +928,7 @@ void connecttohost(const char* host){
     char* user = nullptr;
     char* pwd  = nullptr;
     idx1 = indexOf(host, "|", 0);
-    log_i("idx1 = %i", idx1);
+    //log_i("idx1 = %i", idx1);
 
     if(idx1 == -1){ // no pipe found
         _f_isWebConnected = audioConnecttohost(host);
@@ -937,7 +937,7 @@ void connecttohost(const char* host){
     }
     else{ // pipe found
         int idx2 = indexOf(host, "|", idx1 + 1);
-        log_i("idx2 = %i", idx2);
+        //log_i("idx2 = %i", idx2);
         if(idx2 == -1){ // second pipe not found
             _f_isWebConnected = audioConnecttohost(host);
             _f_isFSConnected = false;
@@ -947,7 +947,7 @@ void connecttohost(const char* host){
             url  = strndup(host, idx1); // extract url
             user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
             pwd  = strdup(host + idx2 + 1);
-            SerialPrintfln("host %s user %s, pwd %s", url, user, pwd)
+            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd)
             _f_isWebConnected = audioConnecttohost(url, user, pwd);
             _f_isFSConnected = false;
             if(url)  free(url);
@@ -975,11 +975,11 @@ void setup(){
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("");
-    SerialPrintfln(ANSI_ESC_YELLOW "***************************");
-    SerialPrintfln(ANSI_ESC_YELLOW "*     MiniWebRadio V2     *");
-    SerialPrintfln(ANSI_ESC_YELLOW "***************************");
+    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************");
+    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V2     *");
+    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************");
     SerialPrintfln("");
-    SerialPrintfln("setup() is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
+    SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
@@ -992,7 +992,7 @@ void setup(){
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
 
-    SerialPrintfln("setup: Init SD card");
+    SerialPrintfln("setup: ....  Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
     if(!SD_MMC.begin("/sdcard", true)){
         clearAll();
@@ -1004,14 +1004,14 @@ void setup(){
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
-    SerialPrintfln(ANSI_ESC_WHITE "setup: SD card found");
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found");
 
     defaultsettings();  // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else                     setTFTbrightness(5);
     if(TFT_CONTROLLER > 4) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
-    SerialPrintfln("setup: seek for stations.csv");
+    SerialPrintfln("setup: ....  seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
     if(!file){
         clearAll();
@@ -1024,9 +1024,9 @@ void setup(){
         while(1){};  // endless loop, MiniWebRadio does not work without stations.csv
     }
     file.close();
-    SerialPrintfln("setup: stations.csv found");
+    SerialPrintfln("setup: ....  stations.csv found");
 
-    SerialPrintfln("setup: seek for WiFi networks");
+    SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         clearAll();
         tft.setFont(_fonts[5]);
@@ -1038,7 +1038,7 @@ void setup(){
         while(1){};
     }
     strcpy(_myIP, WiFi.localIP().toString().c_str());
-    SerialPrintfln("setup: connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE
+    SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE
                    ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
 
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); //username, password for ftp.
@@ -1058,11 +1058,11 @@ void setup(){
     audioInit();
 
     _sum_stations = stations.getUInt("sumstations", 0);
-    SerialPrintfln("Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
+    SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     _cur_station =  pref.getUInt("station", 1);
-    SerialPrintfln("current station number: " ANSI_ESC_CYAN "%d", _cur_station);
+    SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     _cur_volume = getvolume();
-    SerialPrintfln("current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
+    SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
 
     _alarmdays = pref.getUShort("alarm_weekday");
     _alarmtime = pref.getUInt("alarm_time");
@@ -1086,7 +1086,7 @@ void setup(){
     tft.fillScreen(TFT_BLACK); // Clear screen
     _f_mute = pref.getUShort("mute", 0);
     if(_f_mute) {
-        SerialPrintfln("volume is muted: %d", _cur_volume);
+        SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume);
         audioSetVolume(0);
         showHeadlineVolume();
     }
@@ -1199,7 +1199,7 @@ void setVolume(uint8_t vol){
         showHeadlineVolume();
     }
     _cur_volume = vol;
-    SerialPrintfln("current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
+    SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
 
     #if DECODER > 1 // ES8388, AC101 ...
         if(HP_DETECT == -1){
@@ -1253,7 +1253,7 @@ void setStation(uint16_t sta){
     _homepage = "";
     if(_state != RADIOico) clearTitle();
 
-    SerialPrintfln("switch to station " ANSI_ESC_CYAN "%d", sta);
+    SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
     if(_f_isWebConnected && sta == _cur_station && _state == RADIO){ // Station is already selected
         showStreamTitle();
@@ -1763,18 +1763,18 @@ void loop() {
 ***********************************************************************************************************************/
 //Events from vs1053_ext or audioI2S library
 void vs1053_info(const char *info){
-    if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
-    if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
-    if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
-    if(startsWith(info, "authent"))   {SerialPrintfln("%s", info); return;}
-    log_i("%s", info); // all other
+    if(startsWith(info, "Request"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(CORE_DEBUG_LEVEL >= 2)         {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
 }
 void audio_info(const char *info){
-    if(startsWith(info, "Request"))   {SerialPrintfln("%s", info); return;}
-    if(startsWith(info, "FLAC"))      {SerialPrintfln("%s", info); return;}
-    if(endsWith(info, "Stream lost")) {SerialPrintfln("%s", info); return;}
-    if(startsWith(info, "authent"))   {SerialPrintfln("%s", info); return;}
-    log_i("%s", info); // all other
+    if(startsWith(info, "Request"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(CORE_DEBUG_LEVEL >= 2)         {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstation(const char *info){
@@ -1842,35 +1842,35 @@ void vs1053_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
+    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost);
 }
 void audio_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
     free(_lastconnectedhost);
     _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: ... %s", _lastconnectedhost);
+    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5){
-        SerialPrintfln("icy-url: ... %s", info);
+        SerialPrintfln("icy-url: ..  %s", info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
 void audio_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5){
-        SerialPrintfln("icy-url: ... %s", info);
+        SerialPrintfln("icy-url: ..  %s", info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
 //----------------------------------------------------------------------------------------
 void vs1053_id3data(const char *info){
-    SerialPrintfln("id3data: ... " ANSI_ESC_GREEN "%s", info);
+    SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info);
 }
 void audio_id3data(const char *info){
-    SerialPrintfln("id3data: ... " ANSI_ESC_GREEN "%s", info);
+    SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
@@ -1883,7 +1883,7 @@ void vs1053_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: . %s", info);
+        SerialPrintfln("icy-descr:   %s", info);
     }
 }
 void audio_icydescription(const char *info){
@@ -1896,22 +1896,22 @@ void audio_icydescription(const char *info){
     }
     if(strlen(info)){
         _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr: . %s", info);
+        SerialPrintfln("icy-descr:   %s", info);
     }
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
-    SerialPrintfln("ftpServer: . %s", info);
+    SerialPrintfln("ftpServer:   %s", info);
 }
 //----------------------------------------------------------------------------------------
 void RTIME_info(const char *info){
-    SerialPrintfln("rtime_info: %s", info);
+    SerialPrintfln("rtime_info:  %s", info);
 }
 
 //Events from tft library
 void tft_info(const char *info){
-    SerialPrintfln("tft_info: %s", info);
+    SerialPrintfln("tft_info: .  %s", info);
 }
 
 // Events from IR Library
@@ -2181,10 +2181,10 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    #ifdef WEBSRV_DEBUG // uncomment in platformio.ini
-        SerialPrintfln("WS_onCmd: .. " ANSI_ESC_YELLOW "cmd=%s params=%s arg=%s",
+    if(CORE_DEBUG_LEVEL >= 2){
+        SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
-    #endif
+    }
 
     String  str;
 
@@ -2307,9 +2307,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
 
-    #ifdef WEBSRV_DEBUG
-        SerialPrintfln("WS_onReq: .. " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
-    #endif
+    if(CORE_DEBUG_LEVEL >= 2){
+        SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
+    }
 
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
@@ -2322,7 +2322,7 @@ void WEBSRV_onInfo(const char* info){
     if(!strcmp("to_listen", info)) return;          // suppress to_isten
     if(startsWith(info, "Command client"))return;   // suppress Command client available
 
-    #if ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO
-        SerialPrintfln("HTML_info  : " ANSI_ESC_YELLOW "%s", info);    // infos for debug
-    #endif
+    if(CORE_DEBUG_LEVEL >= 2) {
+        SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "%s", info);    // infos for debug
+    }
 }
