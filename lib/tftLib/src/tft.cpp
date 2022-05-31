@@ -3153,7 +3153,7 @@ uint8_t* JPEGDecoder::getHuffVal(uint8_t index){
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
-
+uint8_t JPEGDecoder::readDHTMarker(void){
     uint8_t bits[16];
     uint16_t left = getBits1(16);
     if (left < 2) return PJPG_BAD_DHT_MARKER;
