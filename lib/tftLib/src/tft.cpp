@@ -59,6 +59,7 @@ JPEGDecoder JpegDec;
 #define ILI9488_MADCTL_MH   0x04
 #define ILI9488_MADCTL_SS   0x02
 #define ILI9488_MADCTL_GS   0x01
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::init() {
     startWrite();
@@ -421,11 +422,13 @@ void TFT::init() {
     }
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
 uint16_t TFT::color565(uint8_t r, uint8_t g, uint8_t b) {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
     _TFTcontroller = TFTcontroller; //0=ILI9341, 1=HX8347D, 2=ILI9486, 3=ILI9488
@@ -459,6 +462,7 @@ TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
     _freq = 20000000;
     spi_TFT = &SPI;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::setFrequency(uint32_t f){
     if(f>80000000) f=80000000;
@@ -466,6 +470,7 @@ void TFT::setFrequency(uint32_t f){
     spi_TFT->setFrequency(_freq);
     TFT_SPI = SPISettings(_freq, MSBFIRST, SPI_MODE0);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::startWrite(void){
     spi_TFT->beginTransaction(TFT_SPI);
@@ -476,6 +481,7 @@ void TFT::endWrite(void){
     TFT_CS_HIGH();
     spi_TFT->endTransaction();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeCommand(uint16_t cmd){
     TFT_DC_LOW();
@@ -493,6 +499,7 @@ int16_t TFT::height(void) const {
 uint8_t TFT::getRotation(void) const{
     return _rotation;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) {
 
@@ -529,6 +536,7 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
 
     init();  //
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 typedef struct {
         uint8_t madctl;
@@ -559,6 +567,7 @@ const rotation_data_t ili9341_rotations[4] = {
         ILI9341_WIDTH
     }
 };
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::setRotation(uint8_t m) {
     _rotation = m % 4; // can't be higher than 3
@@ -657,6 +666,7 @@ void TFT::setRotation(uint8_t m) {
         endWrite();
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::invertDisplay(boolean i) {
     startWrite();
@@ -665,6 +675,7 @@ void TFT::invertDisplay(boolean i) {
     if(_TFTcontroller == ILI9488) {writeCommand(i ? ILI9488_INVON : ILI9488_INVOFF);}
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::scrollTo(uint16_t y) {
     if(_TFTcontroller != ILI9341) return;
@@ -673,6 +684,7 @@ void TFT::scrollTo(uint16_t y) {
     spi_TFT->write16(y);
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 // void TFT::setBrigthness(uint8_t br){ // not used
 //     startWrite();
@@ -686,6 +698,7 @@ void TFT::scrollTo(uint16_t y) {
 /*
  * Transaction API
  * */
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if(_TFTcontroller == ILI9341){  //ILI9341
@@ -736,6 +749,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         spi_TFT->write(h & 0xFF);          // YEND
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     startWrite();
@@ -769,6 +783,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     }
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::endBitmap() {
     if(_TFTcontroller == ILI9341){  //ILI9341
@@ -788,6 +803,7 @@ void TFT::endBitmap() {
         setRotation(_rotation);
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::startJpeg() {
     startWrite();
@@ -813,10 +829,12 @@ void TFT::startJpeg() {
     }
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::endJpeg() {
         setRotation(_rotation);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::pushColor(uint16_t color) {
     startWrite();
@@ -824,11 +842,13 @@ void TFT::pushColor(uint16_t color) {
     else spi_TFT->write16(color);
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixel(uint16_t color){
     if(_TFTcontroller == ILI9488) write16BitColor(color);
     else spi_TFT->write16(color);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixels(uint16_t * colors, uint32_t len){
     if(_TFTcontroller == ILI9488){
@@ -843,6 +863,7 @@ void TFT::writePixels(uint16_t * colors, uint32_t len){
         spi_TFT->writePixels((uint8_t*)colors , len * 2);
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeColor(uint16_t color, uint32_t len){
     static uint16_t temp[TFT_MAX_PIXELS_AT_ONCE];
@@ -859,6 +880,7 @@ void TFT::writeColor(uint16_t color, uint32_t len){
         len -= tlen;
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::write16BitColor(uint16_t color){
   uint8_t r = (color & 0xF800) >> 11;
@@ -873,6 +895,7 @@ void TFT::write16BitColor(uint16_t color){
   spi_TFT->write(g);
   spi_TFT->write(b);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
     if((x < 0) ||(x >= _width) || (y < 0) || (y >= _height)) return;
@@ -884,6 +907,7 @@ void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
     if(_TFTcontroller == ILI9488) write16BitColor(color);
     else writePixel(color);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color){
     if((x >= _width) || (y >= _height)) return;
@@ -912,14 +936,17 @@ void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     if(_TFTcontroller == ILI9488) writeCommand(ILI9488_RAMWR);
     writeColor(color, len);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color){
     writeFillRect(x, y, 1, h, color);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color){
     writeFillRect(x, y, w, 1, color);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     uint32_t freq = _freq;
@@ -935,12 +962,14 @@ uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     _freq = freq;
     return r;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawPixel(int16_t x, int16_t y, uint16_t color){
     startWrite();
     writePixel(x, y, color);
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawFastVLine(int16_t x, int16_t y,
         int16_t h, uint16_t color) {
@@ -948,6 +977,7 @@ void TFT::drawFastVLine(int16_t x, int16_t y,
     writeFastVLine(x, y, h, color);
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawFastHLine(int16_t x, int16_t y,
         int16_t w, uint16_t color) {
@@ -955,7 +985,8 @@ void TFT::drawFastHLine(int16_t x, int16_t y,
     writeFastHLine(x, y, w, color);
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,  uint16_t color) {
 //  int16_t t;
 //  int16_t steep = abs(y1 - y0) > abs(x1 - x0);
@@ -1042,26 +1073,30 @@ void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,  uint16_t col
     }
     endWrite();
 }
-
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillScreen(uint16_t color) {
     // Update in subclasses if desired!
     fillRect(0, 0, width(), height(), color);
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
         uint16_t color) {
     startWrite();
     writeFillRect(x,y,w,h,color);
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         int16_t x2, int16_t y2, uint16_t color) {
     drawLine(x0, y0, x1, y1, color);
     drawLine(x1, y1, x2, y2, color);
     drawLine(x2, y2, x0, y0, color);
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         int16_t x2, int16_t y2, uint16_t color) {
 
@@ -1143,6 +1178,8 @@ void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color)
 {
     if(Width < 1 || Height < 1) return;
@@ -1153,6 +1190,7 @@ void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, 
     writeFastVLine(Xpos + Width-1, Ypos, Height, Color);
     endWrite();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // smarter version
@@ -1168,7 +1206,8 @@ void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     drawCircleHelper(x + r, y + h - r - 1, r, 8, color);
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // smarter version
     startWrite();
@@ -1179,7 +1218,8 @@ void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1, color);
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -1214,7 +1254,8 @@ void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     }
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::fillCircle(int16_t Xm,       //specify x position.
                      int16_t Ym,       //specify y position.
                      uint16_t  r, //specify the radius of the circle.
@@ -1242,7 +1283,8 @@ void TFT::fillCircle(int16_t Xm,       //specify x position.
     }
     endWrite();
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -1277,7 +1319,8 @@ void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
+
 void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) {
 
     int16_t f = 1 - r;
@@ -1306,6 +1349,8 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 bool TFT::setCursor(uint16_t x, uint16_t y) {
     if (x >= width()|| y >= height()) return false;
     if(_TFTcontroller == ILI9341) //ILI9341
@@ -1346,7 +1391,7 @@ bool TFT::setCursor(uint16_t x, uint16_t y) {
     _f_curPos = true;  //curPos is updated
     return true;
 }
-/*******************************************************************************/
+//----------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer to string
 
@@ -1514,17 +1559,21 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
     endWrite();
     return i;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::write(uint8_t character) {
     /*Code to display letter when given the ASCII code for it*/
     return 0;
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 size_t TFT::write(const uint8_t *buffer, size_t size){
     if(_f_cp1251){writeText(UTF8toCp1251(buffer)); return 0;}
     if(_f_cp1252){writeText(UTF8toCp1252(buffer)); return 0;}
     if(_f_cp1253){writeText(UTF8toCp1253(buffer)); return 0;}
     writeText(buffer); return 0;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1251(const uint8_t* str){  //cyrillic
     uint16_t i=0, j=0;
@@ -1558,6 +1607,7 @@ const uint8_t* TFT::UTF8toCp1251(const uint8_t* str){  //cyrillic
     buf[j]=0;
     return (buf);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1252(const uint8_t* str){  //WinLatin1
     uint16_t i=0, j=0;
@@ -1578,6 +1628,7 @@ const uint8_t* TFT::UTF8toCp1252(const uint8_t* str){  //WinLatin1
     buf[j]=0;
     return (buf);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
     uint16_t i=0, j=0;
@@ -1615,9 +1666,9 @@ const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
     return (buf);
 }
 
-/*******************************************************************************************************************
-                                           B I T M A P
-*******************************************************************************************************************/
+/***********************************************************************************************************************
+                                              B I T M A P
+***********************************************************************************************************************/
 
 #define bmpRead32(d,o) (d[o] | (uint16_t)(d[(o)+1]) << 8 | (uint32_t)(d[(o)+2]) << 16 | (uint32_t)(d[(o)+3]) << 24)
 #define bmpRead16(d,o) (d[o] | (uint16_t)(d[(o)+1]) << 8)
@@ -1626,11 +1677,13 @@ const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
 #define bmpColor16(c)      ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
 #define bmpColor24(c)      (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
 #define bmpColor32(c)      (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpSkipPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesToSkip = (len * bitsPerPixel) / 8;
     file.seek(bytesToSkip, SeekCur);
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesPerTransaction = bitsPerPixel * 4;
@@ -1677,46 +1730,48 @@ void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
         wIndex += pixNow;
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-boolean TFT::drawBmpFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, uint16_t offX, uint16_t offY){
-    if((x + maxWidth) > width() || (y + maxHeight) > height()){
+boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
+                         uint16_t offX, uint16_t offY) {
+    if ((x + maxWidth) > width() || (y + maxHeight) > height()) {
         log_e("Bad dimensions given");
         return false;
     }
 
-    if(!maxWidth){
+    if (!maxWidth) {
         maxWidth = width() - x;
     }
-    if(!maxHeight){
+    if (!maxHeight) {
         maxHeight = height() - y;
     }
     // log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
-    if(!fs.exists(path)){
+    if (!fs.exists(path)) {
         log_e("file %s not exists", path);
         return false;
     }
 
     File bmp_file = fs.open(path);
-    if(!bmp_file){
+    if (!bmp_file) {
         log_e("Failed to open file for reading %s", path);
         return false;
     }
     size_t headerLen = 0x22;
     size_t fileSize = bmp_file.size();
     uint8_t headerBuf[headerLen];
-    if(fileSize < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen){
+    if (fileSize < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
         log_e("Failed to read the file's header");
         bmp_file.close();
         return false;
     }
 
-    if(headerBuf[0] != 'B' || headerBuf[1] != 'M'){
+    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
         log_e("Wrong file format");
         bmp_file.close();
         return false;
     }
 
-    //size_t bmpSize = bmpRead32(headerBuf, 0x02);
+    // size_t bmpSize = bmpRead32(headerBuf, 0x02);
     uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
     int32_t bmpWidthI = bmpRead32(headerBuf, 0x12);
     int32_t bmpHeightI = bmpRead32(headerBuf, 0x16);
@@ -1725,7 +1780,7 @@ boolean TFT::drawBmpFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, 
     size_t bmpWidth = abs(bmpWidthI);
     size_t bmpHeight = abs(bmpHeightI);
 
-    if(offX >= bmpWidth || offY >= bmpHeight){
+    if (offX >= bmpWidth || offY >= bmpHeight) {
         log_e("Offset Outside of bitmap size");
         bmp_file.close();
         return false;
@@ -1733,27 +1788,27 @@ boolean TFT::drawBmpFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, 
 
     size_t bmpMaxWidth = bmpWidth - offX;
     size_t bmpMaxHeight = bmpHeight - offY;
-    size_t outWidth = (bmpMaxWidth > maxWidth)?maxWidth:bmpMaxWidth;
-    size_t outHeight = (bmpMaxHeight > maxHeight)?maxHeight:bmpMaxHeight;
+    size_t outWidth = (bmpMaxWidth > maxWidth) ? maxWidth : bmpMaxWidth;
+    size_t outHeight = (bmpMaxHeight > maxHeight) ? maxHeight : bmpMaxHeight;
     size_t ovfWidth = bmpMaxWidth - outWidth;
     size_t ovfHeight = bmpMaxHeight - outHeight;
 
     bmp_file.seek(dataOffset);
     startBitmap(x, y, outWidth, outHeight);
 
-    if(ovfHeight){
+    if (ovfHeight) {
         bmpSkipPixels(bmp_file, bitsPerPixel, ovfHeight * bmpWidth);
     }
-    if(!offX && !ovfWidth){
+    if (!offX && !ovfWidth) {
         bmpAddPixels(bmp_file, bitsPerPixel, outWidth * outHeight);
     } else {
         size_t ih;
-        for(ih=0;ih<outHeight;ih++){
-            if(offX){
+        for (ih = 0; ih < outHeight; ih++) {
+            if (offX) {
                 bmpSkipPixels(bmp_file, bitsPerPixel, offX);
             }
             bmpAddPixels(bmp_file, bitsPerPixel, outWidth);
-            if(ovfWidth){
+            if (ovfWidth) {
                 bmpSkipPixels(bmp_file, bitsPerPixel, ovfWidth);
             }
         }
@@ -1763,9 +1818,10 @@ boolean TFT::drawBmpFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, 
     bmp_file.close();
     return true;
 }
-/*******************************************************************************************************************
-                                            G I F
-*******************************************************************************************************************/
+
+/***********************************************************************************************************************
+                                                G I F
+***********************************************************************************************************************/
 boolean TFT::drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat){
     //debug=true;
     int iterations=repeat;
@@ -1802,7 +1858,7 @@ boolean TFT::drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, 
     // log_i("freeHeap= %i", ESP.getFreeHeap());
     return true;
 }
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 void TFT::GIF_readHeader(){
 
 //    7 6 5 4 3 2 1 0        Field Name                    Type
@@ -1837,7 +1893,7 @@ void TFT::GIF_readHeader(){
     }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readLogicalScreenDescriptor(){
 
@@ -1886,7 +1942,7 @@ void TFT::GIF_readLogicalScreenDescriptor(){
     }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readImageDescriptor(){
 
@@ -1944,63 +2000,65 @@ void TFT::GIF_readImageDescriptor(){
     }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
-void TFT::GIF_readLocalColorTable(){
+void TFT::GIF_readLocalColorTable() {
     // The size of the local color table can be calculated by the value given in the image descriptor.
     // Just like with the global color table, if the image descriptor specifies a size of N,
     // the color table will contain 2^(N+1) colors and will take up 3*2^(N+1) bytes.
     // The colors are specified in RGB value triplets.
     gif_LocalColorTable.clear();
-    if(gif_LocalColorTableFlag==1){
+    if (gif_LocalColorTableFlag == 1) {
         char rgb_buff[3];
-        uint16_t i=0;
-        while (i!=gif_SizeOfLocalColorTable){
-            gif_file.readBytes(rgb_buff,3);
+        uint16_t i = 0;
+        while (i != gif_SizeOfLocalColorTable) {
+            gif_file.readBytes(rgb_buff, 3);
             // fill LocalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
-            gif_LocalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
+            gif_LocalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) |
+                                          ((rgb_buff[2] & 0xF8) >> 3));
             i++;
         }
-    // for(i=0;i<SizeOfLocalColorTable; i++) log_i("LocalColorTable %i= %i", i, LocalColorTable[i]);
+        // for(i=0;i<SizeOfLocalColorTable; i++) log_i("LocalColorTable %i= %i", i, LocalColorTable[i]);
     }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
-void TFT::GIF_readGlobalColorTable(){
+void TFT::GIF_readGlobalColorTable() {
     // Each GIF has its own color palette. That is, it has a list of all the colors that can be in the image
     // and cannot contain colors that are not in that list.
     // The global color table is where that list of colors is stored. Each color is stored in three bytes.
-    // Each of the bytes represents an RGB color value. The first byte is the value for red (0-255), next green, then blue.
-    // The size of the global color table is determined by the value in the packed byte of the logical screen descriptor.
-    // If the value from that byte is N, then the actual number of colors stored is 2^(N+1).
-    // This means that the global color table will take up 3*2^(N+1) bytes in the stream.
+    // Each of the bytes represents an RGB color value. The first byte is the value for red (0-255), next green, then
+    // blue. The size of the global color table is determined by the value in the packed byte of the logical screen
+    // descriptor. If the value from that byte is N, then the actual number of colors stored is 2^(N+1). This means that
+    // the global color table will take up 3*2^(N+1) bytes in the stream.
 
-//    Value In <Packed Fields>    Number Of Colors    Byte Length
-//        0                           2                   6
-//        1                           4                   12
-//        2                           8                   24
-//        3                           16                  48
-//        4                           32                  96
-//        5                           64                  192
-//        6                           128                 384
-//        7                           256                 768
+    //    Value In <Packed Fields>    Number Of Colors    Byte Length
+    //        0                           2                   6
+    //        1                           4                   12
+    //        2                           8                   24
+    //        3                           16                  48
+    //        4                           32                  96
+    //        5                           64                  192
+    //        6                           128                 384
+    //        7                           256                 768
     gif_GlobalColorTable.clear();
-    if(gif_GlobalColorTableFlag==1){
+    if (gif_GlobalColorTableFlag == 1) {
         char rgb_buff[3];
-        uint16_t i=0;
-        while (i!=gif_SizeOfGlobalColorTable){
-            gif_file.readBytes(rgb_buff,3);
+        uint16_t i = 0;
+        while (i != gif_SizeOfGlobalColorTable) {
+            gif_file.readBytes(rgb_buff, 3);
             // fill GlobalColorTable, pass 8-bit (each) R,G,B, get back 16-bit packed color
-            gif_GlobalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) | ((rgb_buff[2] & 0xF8) >> 3));
+            gif_GlobalColorTable.push_back(((rgb_buff[0] & 0xF8) << 8) | ((rgb_buff[1] & 0xFC) << 3) |
+                                           ((rgb_buff[2] & 0xF8) >> 3));
             i++;
         }
-//    for(i=0;i<gif_SizeOfGlobalColorTable;i++) log_i("GlobalColorTable %i= %i", i, gif_GlobalColorTable[i]);
-//    log_i("Read GlobalColorTable Size=%i", gif_SizeOfGlobalColorTable);
+        //    for(i=0;i<gif_SizeOfGlobalColorTable;i++) log_i("GlobalColorTable %i= %i", i, gif_GlobalColorTable[i]);
+        //    log_i("Read GlobalColorTable Size=%i", gif_SizeOfGlobalColorTable);
     }
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readGraphicControlExtension(){
 
@@ -2045,7 +2103,7 @@ void TFT::GIF_readGraphicControlExtension(){
      gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readPlainTextExtension(char* buf){
 
@@ -2121,7 +2179,7 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf){
     return numBytes;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readApplicationExtension(char* buf){
 
@@ -2176,7 +2234,7 @@ uint8_t TFT::GIF_readApplicationExtension(char* buf){
     return numBytes;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readCommentExtension(char *buf){
 
@@ -2199,7 +2257,7 @@ uint8_t TFT::GIF_readCommentExtension(char *buf){
     return numBytes;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readDataSubBlock(char *buf){
 
@@ -2238,7 +2296,7 @@ uint8_t TFT::GIF_readDataSubBlock(char *buf){
     return BlockSize;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::GIF_readExtension(char Label){
     char buf[256];
@@ -2264,10 +2322,9 @@ boolean TFT::GIF_readExtension(char Label){
     return true;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
-int TFT::GIF_GetCode(int code_size, int flag){
-
+int TFT::GIF_GetCode(int code_size, int flag) {
     //    Assuming a character array of 8 bits per character and using 5 bit codes to be
     //    packed, an example layout would be similar to:
     //
@@ -2292,17 +2349,17 @@ int TFT::GIF_GetCode(int code_size, int flag){
     int i, j, ret;
     uint8_t count;
 
-    if (flag){
+    if (flag) {
         curbit = 0;
         lastbit = 0;
         done = false;
         return 0;
     }
 
-    if ((curbit + code_size) >= lastbit){
-        if (done){
-            //log_i("done");
-            if (curbit >= lastbit){
+    if ((curbit + code_size) >= lastbit) {
+        if (done) {
+            // log_i("done");
+            if (curbit >= lastbit) {
                 return 0;
             }
             return -1;
@@ -2311,15 +2368,14 @@ int TFT::GIF_GetCode(int code_size, int flag){
         DSBbuffer[1] = DSBbuffer[last_byte - 1];
 
         // The rest of the Image Block represent data sub-blocks. Data sub-blocks are are groups of 1 - 256 bytes.
-        // The first byte in the sub-block tells you how many bytes of actual data follow. This can be a value from 0 (00) it 255 (FF).
-        // After you've read those bytes, the next byte you read will tell you now many more bytes of data follow that one.
-        // You continue to read until you reach a sub-block that says that zero bytes follow.
+        // The first byte in the sub-block tells you how many bytes of actual data follow. This can be a value from 0
+        // (00) it 255 (FF). After you've read those bytes, the next byte you read will tell you now many more bytes of
+        // data follow that one. You continue to read until you reach a sub-block that says that zero bytes follow.
         endWrite();
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
         startWrite();
-        //log_i("Dtatblocksize %i", count);
-        if (count== 0)
-            done = true;
+        // log_i("Dtatblocksize %i", count);
+        if (count == 0) done = true;
 
         last_byte = 2 + count;
 
@@ -2328,37 +2384,33 @@ int TFT::GIF_GetCode(int code_size, int flag){
         lastbit = (2 + count) * 8;
     }
     ret = 0;
-    for (i = curbit, j = 0; j<code_size; ++i, ++j)
-        ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
+    for (i = curbit, j = 0; j < code_size; ++i, ++j) ret |= ((DSBbuffer[i / 8] & (1 << (i % 8))) != 0) << j;
 
     curbit += code_size;
 
     return ret;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
-int TFT::GIF_LZWReadByte(boolean init){
-
+int TFT::GIF_LZWReadByte(boolean init) {
     static int fresh = false;
     int code, incode;
     static int firstcode, oldcode;
 
-
-    if(gif_next.capacity()<(1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits)-gif_next.capacity());
-    if(gif_vals.capacity()<(1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits)-gif_vals.capacity());
-    if(gif_stack.capacity()<(1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1))-gif_stack.capacity());
+    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
+    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
+    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1)))
+        gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
 
-
-
-    static uint8_t  *sp;
+    static uint8_t* sp;
 
     register int i;
 
-    if (init){
+    if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
         //    2                   #0-#3           #4              #5
         //    3                   #0-#7           #8              #9
@@ -2368,13 +2420,13 @@ int TFT::GIF_LZWReadByte(boolean init){
         //    7                   #0-#127         #128            #129
         //    8                   #0-#255         #256            #257
 
-        gif_CodeSize=gif_LZWMinimumCodeSize+1;
-        gif_ClearCode=(1<<gif_LZWMinimumCodeSize);
-        gif_EOIcode=gif_ClearCode+1;
+        gif_CodeSize = gif_LZWMinimumCodeSize + 1;
+        gif_ClearCode = (1 << gif_LZWMinimumCodeSize);
+        gif_EOIcode = gif_ClearCode + 1;
         gif_MaxCode = gif_ClearCode + 2;
         gif_MaxCodeSize = 2 * gif_ClearCode;
 
-        if(debug){
+        if (debug) {
             log_i("ClearCode=%i", gif_ClearCode);
             log_i("EOIcode=%i", gif_EOIcode);
             log_i("CodeSize=%i", gif_CodeSize);
@@ -2388,17 +2440,16 @@ int TFT::GIF_LZWReadByte(boolean init){
 
         fresh = true;
 
-        for (i = 0; i<gif_ClearCode; i++){
+        for (i = 0; i < gif_ClearCode; i++) {
             gif_next[i] = 0;
             gif_vals[i] = i;
         }
-        for (; i<(1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
+        for (; i < (1 << gif_MaxLzwBits); i++) gif_next[i] = gif_vals[0] = 0;
 
         sp = &gif_stack[0];
 
         return 0;
-    }
-    else if (fresh){
+    } else if (fresh) {
         fresh = false;
         do {
             firstcode = oldcode = GIF_GetCode(gif_CodeSize, false);
@@ -2407,17 +2458,15 @@ int TFT::GIF_LZWReadByte(boolean init){
         return firstcode;
     }
 
-    if (sp > &gif_stack[0])
-        return *--sp;
+    if (sp > &gif_stack[0]) return *--sp;
 
-    while ((code = GIF_GetCode(gif_CodeSize, false)) >= 0){
-        if (code == gif_ClearCode){
-            for (i = 0; i<gif_ClearCode; ++i){
+    while ((code = GIF_GetCode(gif_CodeSize, false)) >= 0) {
+        if (code == gif_ClearCode) {
+            for (i = 0; i < gif_ClearCode; ++i) {
                 gif_next[i] = 0;
                 gif_vals[i] = i;
             }
-            for (; i<(1 << gif_MaxLzwBits); ++i)
-                gif_next[i] = gif_vals[i] = 0;
+            for (; i < (1 << gif_MaxLzwBits); ++i) gif_next[i] = gif_vals[i] = 0;
 
             gif_CodeSize = gif_LZWMinimumCodeSize + 1;
             gif_MaxCodeSize = 2 * gif_ClearCode;
@@ -2426,54 +2475,53 @@ int TFT::GIF_LZWReadByte(boolean init){
 
             firstcode = oldcode = GIF_GetCode(gif_CodeSize, false);
             return firstcode;
-        }
-        else if (code == gif_EOIcode){
-            if(debug) {log_i("read EOI Code");}
+        } else if (code == gif_EOIcode) {
+            if (debug) {
+                log_i("read EOI Code");
+            }
             int count;
             char buf[260];
 
-            if (gif_ZeroDataBlock)
-                return -2;
-            while ((count = GIF_readDataSubBlock(buf)) >0);
+            if (gif_ZeroDataBlock) return -2;
+            while ((count = GIF_readDataSubBlock(buf)) > 0)
+                ;
 
-            if (count != 0)
-                return -2;
+            if (count != 0) return -2;
         }
 
         incode = code;
 
-        if (code >= gif_MaxCode){
+        if (code >= gif_MaxCode) {
             *sp++ = firstcode;
             code = oldcode;
         }
 
-        while (code >= gif_ClearCode){
+        while (code >= gif_ClearCode) {
             *sp++ = gif_vals[code];
-            if (code == (int)gif_next[code]){
+            if (code == (int)gif_next[code]) {
                 return -1;
             }
             code = gif_next[code];
         }
         *sp++ = firstcode = gif_vals[code];
 
-        if ((code = gif_MaxCode) <(1 << gif_MaxLzwBits)){
+        if ((code = gif_MaxCode) < (1 << gif_MaxLzwBits)) {
             gif_next[code] = oldcode;
             gif_vals[code] = firstcode;
             ++gif_MaxCode;
-            if ((gif_MaxCode >= gif_MaxCodeSize) && (gif_MaxCodeSize < (1 << gif_MaxLzwBits))){
+            if ((gif_MaxCode >= gif_MaxCodeSize) && (gif_MaxCodeSize < (1 << gif_MaxLzwBits))) {
                 gif_MaxCodeSize *= 2;
                 ++gif_CodeSize;
             }
         }
         oldcode = incode;
 
-        if (sp > &gif_stack[0])
-            return *--sp;
+        if (sp > &gif_stack[0]) return *--sp;
     }
     return code;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
     int  j, color;
@@ -2517,7 +2565,7 @@ bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
     return false;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 int TFT::GIF_readGifItems() {
     GIF_readHeader();
@@ -2526,7 +2574,7 @@ int TFT::GIF_readGifItems() {
     return 0;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     char c=0;
@@ -2558,7 +2606,7 @@ boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     return false; // no more images to decode
 }
 
-//-----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_freeMemory(){
     gif_next.clear(); gif_next.shrink_to_fit();
@@ -2568,33 +2616,33 @@ void TFT::GIF_freeMemory(){
     gif_LocalColorTable.clear(); gif_LocalColorTable.shrink_to_fit();
 }
 
+/***********************************************************************************************************************
+                                                J P E G
+***********************************************************************************************************************/
 
-/*******************************************************************************************************************
-                                            J P E G
-*******************************************************************************************************************/
-
-boolean TFT::drawJpgFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, uint16_t offX, uint16_t offY){
-    if((x + maxWidth) > width() || (y + maxHeight) > height()){
+boolean TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
+                         uint16_t offX, uint16_t offY) {
+    if ((x + maxWidth) > width() || (y + maxHeight) > height()) {
         log_e("Bad dimensions given");
         return false;
     }
-    //log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
-    if(!fs.exists(path)){
+    // log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
+    if (!fs.exists(path)) {
         log_e("file %s not exists", path);
         return false;
     }
 
     File file = fs.open(path);
-    if(!file){
+    if (!file) {
         log_e("Failed to open file for reading");
         return false;
     }
     JpegDec.decodeSdFile(file);
 
-//    log_i("Width: %i, Height: %i,", JpegDec.width, JpegDec.height);
-//    log_i("Components: %i, Scan type %i", JpegDec.comps, JpegDec.scanType);
-//    log_i("MCU / row: %i, MCU / col: %i", JpegDec.MCUSPerRow, JpegDec.MCUSPerCol);
-//    log_i("MCU width: %i, MCU height: %i", JpegDec.MCUWidth, JpegDec.MCUHeight);
+    //    log_i("Width: %i, Height: %i,", JpegDec.width, JpegDec.height);
+    //    log_i("Components: %i, Scan type %i", JpegDec.comps, JpegDec.scanType);
+    //    log_i("MCU / row: %i, MCU / col: %i", JpegDec.MCUSPerRow, JpegDec.MCUSPerCol);
+    //    log_i("MCU width: %i, MCU height: %i", JpegDec.MCUWidth, JpegDec.MCUHeight);
 
     renderJPEG(x, y, maxWidth, maxHeight);
 
@@ -2689,15 +2737,9 @@ void TFT::renderJPEG(int xpos, int ypos, uint16_t maxWidth, uint16_t maxHeight) 
     endJpeg();
 }
 
-
-
-
-
-/*******************************************************************************************************************
+/***********************************************************************************************************************
                                             J P E G D E C O D E R
-*******************************************************************************************************************/
-
-
+***********************************************************************************************************************/
 
 // JPEGDecoder thx to Bodmer https://github.com/Bodmer/JPEGDecoder
 JPEGDecoder::JPEGDecoder(){ // @suppress("Class members should be properly initialized")
@@ -2715,27 +2757,32 @@ JPEGDecoder::~JPEGDecoder(){
     if (pImage) delete pImage;
     pImage = NULL;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t *pBytes_actually_read, void *pCallback_data) {
-    JPEGDecoder *thisPtr = JpegDec.thisPtr ;
+uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read,
+                                    void* pCallback_data) {
+    JPEGDecoder* thisPtr = JpegDec.thisPtr;
     thisPtr->pjpeg_need_bytes_callback(pBuf, buf_size, pBytes_actually_read, pCallback_data);
     return 0;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t *pBytes_actually_read, void *pCallback_data) {
+uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read,
+                                               void* pCallback_data) {
     uint n;
     n = jpg_min(g_nInFileSize - g_nInFileOfs, buf_size);
-    if (jpg_source == JPEG_ARRAY) { // We are handling an array
+    if (jpg_source == JPEG_ARRAY) {  // We are handling an array
         for (int i = 0; i < n; i++) {
             pBuf[i] = pgm_read_byte(jpg_data++);
-            //Serial.println(pBuf[i],HEX);
+            // Serial.println(pBuf[i],HEX);
         }
     }
-    if (jpg_source == JPEG_SD_FILE) g_pInFileSd.read(pBuf,n); // else we are handling a file
+    if (jpg_source == JPEG_SD_FILE) g_pInFileSd.read(pBuf, n);  // else we are handling a file
     *pBytes_actually_read = (uint8_t)(n);
     g_nInFileOfs += n;
     return 0;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::decode_mcu(void) {
     status = JpegDec.pjpeg_decode_mcu();
@@ -2748,6 +2795,7 @@ int JPEGDecoder::decode_mcu(void) {
     }
     return 1;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::read(void){
     int y, x;
@@ -2810,6 +2858,7 @@ int JPEGDecoder::read(void){
     if(decode_mcu()==-1) is_available = 0 ;
     return 1;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::readSwappedBytes(void) {
     int y, x;
@@ -2872,6 +2921,7 @@ int JPEGDecoder::readSwappedBytes(void) {
     if(decode_mcu()==-1) is_available = 0 ;
     return 1;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
     g_pInFileSd = jpgFile;
@@ -2885,6 +2935,7 @@ int JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
 
     return decodeCommon();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
     jpg_source = JPEG_ARRAY; // We are not processing a file, use arrays
@@ -2893,6 +2944,7 @@ int JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
     g_nInFileSize = array_size;
     return decodeCommon();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 int JPEGDecoder::decodeCommon(void) {
     status = JpegDec.pjpeg_decode_init(&image_info, pjpeg_callback, NULL, 0);
@@ -2926,6 +2978,7 @@ int JPEGDecoder::decodeCommon(void) {
     MCUHeight = image_info.m_MCUHeight;
     return decode_mcu();
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::abort(void) {
     mcu_x = 0 ;
@@ -2935,6 +2988,7 @@ void JPEGDecoder::abort(void) {
     pImage = NULL;
     if (jpg_source == JPEG_SD_FILE) if (g_pInFileSd) g_pInFileSd.close();
 }
+//----------------------------------------------------------------------------------------------------------------------
 // JPEGDecoder picojpeg
 int16_t JPEGDecoder::replicateSignBit16(int8_t n){
    switch (n){
@@ -2958,20 +3012,21 @@ int16_t JPEGDecoder::replicateSignBit16(int8_t n){
    }
 }
 
-//------------------------------------------------------------------------------
-void JPEGDecoder::fillInBuf(void){
-   unsigned char status;
-   // Reserve a few bytes at the beginning of the buffer for putting back ("stuffing") chars.
-   gInBufOfs = 4;
-   gInBufLeft = 0;
-   status = (*g_pNeedBytesCallback)(gInBuf + gInBufOfs, PJPG_MAX_IN_BUF_SIZE - gInBufOfs, &gInBufLeft, g_pCallback_data);
-   if (status){
-      // The user provided need bytes callback has indicated an error, so record the error and continue trying to decode.
-      // The highest level pjpeg entrypoints will catch the error and return the non-zero status.
-      gCallbackStatus = status;
-   }
+//----------------------------------------------------------------------------------------------------------------------
+void JPEGDecoder::fillInBuf(void) {
+    unsigned char status;
+    // Reserve a few bytes at the beginning of the buffer for putting back ("stuffing") chars.
+    gInBufOfs = 4;
+    gInBufLeft = 0;
+    status =
+        (*g_pNeedBytesCallback)(gInBuf + gInBufOfs, PJPG_MAX_IN_BUF_SIZE - gInBufOfs, &gInBufLeft, g_pCallback_data);
+    if (status) {
+        // The user provided need bytes callback has indicated an error, so record the error and continue trying to
+        // decode. The highest level pjpeg entrypoints will catch the error and return the non-zero status.
+        gCallbackStatus = status;
+    }
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint16_t JPEGDecoder::getBits(uint8_t numBits, uint8_t FFCheck){
    uint8_t origBits = numBits;
@@ -2995,7 +3050,7 @@ uint16_t JPEGDecoder::getBits(uint8_t numBits, uint8_t FFCheck){
    }
    return ret >> (16 - origBits);
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 uint16_t JPEGDecoder::getExtendTest(uint8_t i){
    switch (i){
@@ -3018,7 +3073,7 @@ uint16_t JPEGDecoder::getExtendTest(uint8_t i){
       default: return 0;
    }
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 int16_t JPEGDecoder::getExtendOffset(uint8_t i){
 
     #pragma GCC diagnostic push
@@ -3046,7 +3101,7 @@ int16_t JPEGDecoder::getExtendOffset(uint8_t i){
 
    #pragma GCC diagnostic pop
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::huffCreate(const uint8_t* pBits, HuffTable* pHuffTable){
    uint8_t  i = 0, j=0;
@@ -3071,7 +3126,8 @@ void JPEGDecoder::huffCreate(const uint8_t* pBits, HuffTable* pHuffTable){
       if (i > 15) break;
    }
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 JPEGDecoder::HuffTable* JPEGDecoder::getHuffTable(uint8_t index){
     // 0-1 = DC
     // 2-3 = AC
@@ -3083,7 +3139,8 @@ JPEGDecoder::HuffTable* JPEGDecoder::getHuffTable(uint8_t index){
         default: return 0;
     }
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t* JPEGDecoder::getHuffVal(uint8_t index){
     // 0-1 = DC
     // 2-3 = AC
@@ -3095,8 +3152,8 @@ uint8_t* JPEGDecoder::getHuffVal(uint8_t index){
         default: return 0;
     }
 }
-//------------------------------------------------------------------------------
-uint8_t JPEGDecoder::readDHTMarker(void){
+//----------------------------------------------------------------------------------------------------------------------
+
     uint8_t bits[16];
     uint16_t left = getBits1(16);
     if (left < 2) return PJPG_BAD_DHT_MARKER;
@@ -3129,7 +3186,7 @@ uint8_t JPEGDecoder::readDHTMarker(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 //void JPEGDecoder::createWinogradQuant(int16_t* pQuant);
 uint8_t JPEGDecoder::readDQTMarker(void){
     uint16_t left = getBits1(16);
@@ -3160,7 +3217,7 @@ uint8_t JPEGDecoder::readDQTMarker(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::readSOFMarker(void){
     uint8_t i;
     uint16_t left = getBits1(16);
@@ -3182,7 +3239,7 @@ uint8_t JPEGDecoder::readSOFMarker(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Used to skip unrecognized markers.
 uint8_t JPEGDecoder::skipVariableMarker(void){
     uint16_t left = getBits1(16);
@@ -3191,14 +3248,14 @@ uint8_t JPEGDecoder::skipVariableMarker(void){
     while(left){getBits1(8); left--;}
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Read a define restart interval (DRI) marker.
 uint8_t JPEGDecoder::readDRIMarker(void){
     if (getBits1(16) != 4) return PJPG_BAD_DRI_LENGTH;
     gRestartInterval = getBits1(16);
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Read a start of scan (SOS) marker.
 uint8_t JPEGDecoder::readSOSMarker(void){
     uint8_t i;
@@ -3231,7 +3288,8 @@ uint8_t JPEGDecoder::readSOSMarker(void){
     return 0;
 
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::nextMarker(void){
    uint8_t c;
    uint8_t bytes = 0;
@@ -3249,7 +3307,7 @@ uint8_t JPEGDecoder::nextMarker(void){
    // If bytes > 0 here, there where extra bytes before the marker (not good).
    return c;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Process markers. Returns when an SOFx, SOI, EOI, or SOS marker is
 // encountered.
 uint8_t JPEGDecoder::processMarkers(uint8_t* pMarker){
@@ -3299,31 +3357,33 @@ uint8_t JPEGDecoder::processMarkers(uint8_t* pMarker){
    }
    return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Finds the start of image (SOI) marker.
-uint8_t JPEGDecoder::locateSOIMarker(void){
-   uint16_t bytesleft;
-   uint8_t lastchar = (uint8_t)getBits1(8);
-   uint8_t thischar = (uint8_t)getBits1(8);
-   /* ok if it's a normal JPEG file without a special header */
-   if ((lastchar == 0xFF) && (thischar == M_SOI)) return 0;
-   bytesleft = 4096; //512;
-   for( ; ; ){
-       if (--bytesleft == 0) return PJPG_NOT_JPEG;
-       lastchar = thischar;
-       thischar = (uint8_t)getBits1(8);
-       if(lastchar == 0xFF){
-           if(thischar == M_SOI) break;
-           else if (thischar == M_EOI) return PJPG_NOT_JPEG; //getBits1 will keep returning M_EOI if we read past the end
-       }
-   }
-   /* Check the next character after marker: if it's not 0xFF, it can't
-   be the start of the next marker, so the file is bad */
-   thischar = (uint8_t)((gBitBuf >> 8) & 0xFF);
-   if (thischar != 0xFF) return PJPG_NOT_JPEG;
-   return 0;
+uint8_t JPEGDecoder::locateSOIMarker(void) {
+    uint16_t bytesleft;
+    uint8_t lastchar = (uint8_t)getBits1(8);
+    uint8_t thischar = (uint8_t)getBits1(8);
+    /* ok if it's a normal JPEG file without a special header */
+    if ((lastchar == 0xFF) && (thischar == M_SOI)) return 0;
+    bytesleft = 4096;  // 512;
+    for (;;) {
+        if (--bytesleft == 0) return PJPG_NOT_JPEG;
+        lastchar = thischar;
+        thischar = (uint8_t)getBits1(8);
+        if (lastchar == 0xFF) {
+            if (thischar == M_SOI)
+                break;
+            else if (thischar == M_EOI)
+                return PJPG_NOT_JPEG;  // getBits1 will keep returning M_EOI if we read past the end
+        }
+    }
+    /* Check the next character after marker: if it's not 0xFF, it can't
+    be the start of the next marker, so the file is bad */
+    thischar = (uint8_t)((gBitBuf >> 8) & 0xFF);
+    if (thischar != 0xFF) return PJPG_NOT_JPEG;
+    return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Find a start of frame (SOF) marker.
 uint8_t JPEGDecoder::locateSOFMarker(void){
     uint8_t c;
@@ -3350,7 +3410,7 @@ uint8_t JPEGDecoder::locateSOFMarker(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Find a start of scan (SOS) marker.
 uint8_t JPEGDecoder::locateSOSMarker(uint8_t* pFoundEOI){
     uint8_t c;
@@ -3366,7 +3426,8 @@ uint8_t JPEGDecoder::locateSOSMarker(uint8_t* pFoundEOI){
     else if (c != M_SOS) return PJPG_UNEXPECTED_MARKER;
     return readSOSMarker();
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::init(void){
     gImageXSize = 0;
     gImageYSize = 0;
@@ -3386,7 +3447,7 @@ uint8_t JPEGDecoder::init(void){
 
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // This method throws back into the stream any bytes that where read
 // into the bit buffer during initial marker scanning.
 void JPEGDecoder::fixInBuffer(void){
@@ -3397,7 +3458,7 @@ void JPEGDecoder::fixInBuffer(void){
     getBits2(8);
     getBits2(8);
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // Restart interval processing.
 uint8_t JPEGDecoder::processRestart(void){
     // Let's scan a little bit to find the marker, but not _too_ far.
@@ -3422,7 +3483,7 @@ uint8_t JPEGDecoder::processRestart(void){
     getBits2(8);
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
 // FIXME: findEOI() is not actually called at the end of the image
 // (it's optional, and probably not needed on embedded devices)
 uint8_t JPEGDecoder::findEOI(void){
@@ -3441,7 +3502,8 @@ uint8_t JPEGDecoder::findEOI(void){
     if(c!=M_EOI) return PJPG_UNEXPECTED_MARKER;
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::checkHuffTables(void){
     uint8_t i;
     for(i = 0; i < gCompsInScan; i++){
@@ -3452,7 +3514,8 @@ uint8_t JPEGDecoder::checkHuffTables(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::checkQuantTables(void){
     uint8_t i;
     for(i=0; i<gCompsInScan; i++){
@@ -3461,7 +3524,8 @@ uint8_t JPEGDecoder::checkQuantTables(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::initScan(void){
     uint8_t foundEOI;
     uint8_t status = locateSOSMarker(&foundEOI);
@@ -3481,7 +3545,8 @@ uint8_t JPEGDecoder::initScan(void){
     fixInBuffer();
     return 0;
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 uint8_t JPEGDecoder::initFrame(void){
     if (gCompsInFrame==1){
         if((gCompHSamp[0]!=1)||(gCompVSamp[0]!=1)) return PJPG_UNSUPPORTED_SAMP_FACTORS;
@@ -3543,12 +3608,13 @@ uint8_t JPEGDecoder::initFrame(void){
     gNumMCUSRemaining = gMaxMCUSPerRow * gMaxMCUSPerCol;
     return 0;
 }
-//----------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 // Winograd IDCT: 5 multiplies per row/col, up to 80 muls for the 2D IDCT
 #define PJPG_DCT_SCALE (1U << PJPG_DCT_SCALE_BITS)
 //#define PJPG_DESCALE(x) PJPG_ARITH_SHIFT_RIGHT_N_16(((x) + (1U << (PJPG_DCT_SCALE_BITS - 1))), PJPG_DCT_SCALE_BITS)
 #define PJPG_WFIX(x) ((x) * PJPG_DCT_SCALE + 0.5f)
-
+//----------------------------------------------------------------------------------------------------------------------
 // Multiply quantization matrix by the Winograd IDCT scale factors
 void JPEGDecoder::createWinogradQuant(int16_t* pQuant){
     uint8_t i;
@@ -3558,6 +3624,8 @@ void JPEGDecoder::createWinogradQuant(int16_t* pQuant){
         pQuant[i]=(int16_t)((x+(1<<(PJPG_WINOGRAD_QUANT_SCALE_BITS-PJPG_DCT_SCALE_BITS-1)))>>(PJPG_WINOGRAD_QUANT_SCALE_BITS-PJPG_DCT_SCALE_BITS));
     }
 }
+
+//----------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::idctRows(void){
     uint8_t i;
@@ -3617,6 +3685,7 @@ void JPEGDecoder::idctRows(void){
         pSrc += 8;
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::idctCols(void){
     uint8_t i;
@@ -3677,9 +3746,9 @@ void JPEGDecoder::idctCols(void){
         pSrc++;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cb upsample and accumulate, 4x4 to 8x8
-void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs){   // Cb upsample and accumulate, 4x4 to 8x8
     // Cb - affects G and B
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3707,9 +3776,10 @@ void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs){
         pDstB = pDstB - 8 + 16;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cb upsample and accumulate, 4x8 to 8x8
-void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs){
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample and accumulate, 4x8 to 8x8
     // Cb - affects G and B
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3731,9 +3801,9 @@ void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs){
         pSrc = pSrc - 4 + 8;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cb upsample and accumulate, 8x4 to 8x8
-void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample and accumulate, 8x4 to 8x8
     // Cb - affects G and B
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3756,9 +3826,9 @@ void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs){
         pDstB = pDstB - 8 + 16;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cr upsample and accumulate, 4x4 to 8x8
-void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs){   // Cr upsample and accumulate, 4x4 to 8x8
     // Cr - affects R and G
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3786,9 +3856,9 @@ void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs){
         pDstG = pDstG - 8 + 16;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cr upsample and accumulate, 4x8 to 8x8
-void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample and accumulate, 4x8 to 8x8
     // Cr - affects R and G
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3810,9 +3880,9 @@ void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs){
         pSrc = pSrc - 4 + 8;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cr upsample and accumulate, 8x4 to 8x8
-void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample and accumulate, 8x4 to 8x8
     // Cr - affects R and G
     uint8_t x, y;
     int16_t* pSrc = gCoeffBuf + srcOfs;
@@ -3835,9 +3905,10 @@ void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs){
         pDstG = pDstG - 8 + 16;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Convert Y to RGB
-void JPEGDecoder::copyY(uint8_t dstOfs){
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::copyY(uint8_t dstOfs){    // Convert Y to RGB
     uint8_t i;
     uint8_t* pRDst = gMCUBufR + dstOfs;
     uint8_t* pGDst = gMCUBufG + dstOfs;
@@ -3850,9 +3921,9 @@ void JPEGDecoder::copyY(uint8_t dstOfs){
         *pBDst++ = c;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cb convert to RGB and accumulate
-void JPEGDecoder::convertCb(uint8_t dstOfs){
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::convertCb(uint8_t dstOfs){    // Cb convert to RGB and accumulate
     uint8_t i;
     uint8_t* pDstG = gMCUBufG + dstOfs;
     uint8_t* pDstB = gMCUBufB + dstOfs;
@@ -3868,9 +3939,10 @@ void JPEGDecoder::convertCb(uint8_t dstOfs){
         ++pDstB;
     }
 }
-/*----------------------------------------------------------------------------*/
-// Cr convert to RGB and accumulate
-void JPEGDecoder::convertCr(uint8_t dstOfs){
+
+//----------------------------------------------------------------------------------------------------------------------
+
+void JPEGDecoder::convertCr(uint8_t dstOfs){    // Cr convert to RGB and accumulate
     uint8_t i;
     uint8_t* pDstR = gMCUBufR + dstOfs;
     uint8_t* pDstG = gMCUBufG + dstOfs;
@@ -3886,7 +3958,8 @@ void JPEGDecoder::convertCr(uint8_t dstOfs){
         ++pDstG;
     }
 }
-/*----------------------------------------------------------------------------*/
+
+//----------------------------------------------------------------------------------------------------------------------
 void JPEGDecoder::transformBlock(uint8_t mcuBlock){
     idctRows();
     idctCols();
@@ -3927,7 +4000,8 @@ void JPEGDecoder::transformBlock(uint8_t mcuBlock){
         }
     }
 }
-//------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------
+
 void JPEGDecoder::transformBlockReduce(uint8_t mcuBlock){
     uint8_t c = clamp(PJPG_DESCALE(gCoeffBuf[0]) + 128);
     int16_t cbG, cbB, crR, crG;
@@ -4020,30 +4094,34 @@ void JPEGDecoder::transformBlockReduce(uint8_t mcuBlock){
         }
     }
 }
-//------------------------------------------------------------------------------
-uint8_t JPEGDecoder::huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuffVal){
-     uint8_t i = 0; uint8_t j; uint16_t code = getBit();
 
-     // This func only reads a bit at a time, which on modern CPU's is not terribly efficient.
-     // But on microcontrollers without strong integer shifting support this seems like a
-     // more reasonable approach.
-     for ( ; ; ){
-         uint16_t maxCode;
-         if (i == 16) return 0;
+//----------------------------------------------------------------------------------------------------------------------
+uint8_t JPEGDecoder::huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuffVal) {
+    uint8_t i = 0;
+    uint8_t j;
+    uint16_t code = getBit();
 
-         maxCode = pHuffTable->mMaxCode[i];
-         if ((code <= maxCode) && (maxCode != 0xFFFF)) break;
+    // This func only reads a bit at a time, which on modern CPU's is not terribly efficient.
+    // But on microcontrollers without strong integer shifting support this seems like a
+    // more reasonable approach.
+    for (;;) {
+        uint16_t maxCode;
+        if (i == 16) return 0;
 
-         i++;
-         code <<= 1;
-         code |= getBit();
-     }
+        maxCode = pHuffTable->mMaxCode[i];
+        if ((code <= maxCode) && (maxCode != 0xFFFF)) break;
 
-     j = pHuffTable->mValPtr[i];
-     j = (uint8_t)(j + (code - pHuffTable->mMinCode[i]));
-     return pHuffVal[j];
- }
-//------------------------------------------------------------------------------
+        i++;
+        code <<= 1;
+        code |= getBit();
+    }
+
+    j = pHuffTable->mValPtr[i];
+    j = (uint8_t)(j + (code - pHuffTable->mMinCode[i]));
+    return pHuffVal[j];
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::decodeNextMCU(void){
     uint8_t status;
     uint8_t mcuBlock;
@@ -4129,283 +4207,305 @@ uint8_t JPEGDecoder::decodeNextMCU(void){
     }
     return 0;
 }
-//------------------------------------------------------------------------------
-uint8_t JPEGDecoder::pjpeg_decode_mcu(){
+
+//----------------------------------------------------------------------------------------------------------------------
+uint8_t JPEGDecoder::pjpeg_decode_mcu() {
     uint8_t status;
-    if(gCallbackStatus) return gCallbackStatus;
-    if(!gNumMCUSRemaining) return PJPG_NO_MORE_BLOCKS;
-    status=decodeNextMCU();
-    if((status)||(gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
+    if (gCallbackStatus) return gCallbackStatus;
+    if (!gNumMCUSRemaining) return PJPG_NO_MORE_BLOCKS;
+    status = decodeNextMCU();
+    if ((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
     gNumMCUSRemaining--;
     return 0;
 }
-//------------------------------------------------------------------------------
-uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback, void *pCallback_data, unsigned char reduce){
+
+//----------------------------------------------------------------------------------------------------------------------
+
+uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback,
+                                       void* pCallback_data, unsigned char reduce) {
     uint8_t status;
-    pInfo->m_width = 0; pInfo->m_height = 0; pInfo->m_comps = 0;
-    pInfo->m_MCUSPerRow = 0; pInfo->m_MCUSPerCol = 0;
+    pInfo->m_width = 0;
+    pInfo->m_height = 0;
+    pInfo->m_comps = 0;
+    pInfo->m_MCUSPerRow = 0;
+    pInfo->m_MCUSPerCol = 0;
     pInfo->m_scanType = PJPG_GRAYSCALE;
-    pInfo->m_MCUWidth = 0; pInfo->m_MCUHeight = 0;
-    pInfo->m_pMCUBufR = (unsigned char*)0; pInfo->m_pMCUBufG = (unsigned char*)0; pInfo->m_pMCUBufB = (unsigned char*)0;
+    pInfo->m_MCUWidth = 0;
+    pInfo->m_MCUHeight = 0;
+    pInfo->m_pMCUBufR = (unsigned char*)0;
+    pInfo->m_pMCUBufG = (unsigned char*)0;
+    pInfo->m_pMCUBufB = (unsigned char*)0;
     g_pNeedBytesCallback = pNeed_bytes_callback;
     g_pCallback_data = pCallback_data;
     gCallbackStatus = 0;
     gReduce = reduce;
     status = init();
-    if((status)||(gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
+    if ((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
     status = locateSOFMarker();
-    if((status)||(gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
+    if ((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
     status = initFrame();
-    if((status)||(gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
+    if ((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
     status = initScan();
-    if((status)||(gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    pInfo->m_width = gImageXSize; pInfo->m_height = gImageYSize; pInfo->m_comps = gCompsInFrame;
+    if ((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
+    pInfo->m_width = gImageXSize;
+    pInfo->m_height = gImageYSize;
+    pInfo->m_comps = gCompsInFrame;
     pInfo->m_scanType = gScanType;
-    pInfo->m_MCUSPerRow = gMaxMCUSPerRow; pInfo->m_MCUSPerCol = gMaxMCUSPerCol;
-    pInfo->m_MCUWidth = gMaxMCUXSize; pInfo->m_MCUHeight = gMaxMCUYSize;
-    pInfo->m_pMCUBufR = gMCUBufR; pInfo->m_pMCUBufG = gMCUBufG; pInfo->m_pMCUBufB = gMCUBufB;
+    pInfo->m_MCUSPerRow = gMaxMCUSPerRow;
+    pInfo->m_MCUSPerCol = gMaxMCUSPerCol;
+    pInfo->m_MCUWidth = gMaxMCUXSize;
+    pInfo->m_MCUHeight = gMaxMCUYSize;
+    pInfo->m_pMCUBufR = gMCUBufR;
+    pInfo->m_pMCUBufG = gMCUBufG;
+    pInfo->m_pMCUBufB = gMCUBufB;
     return 0;
 }
 
+/***********************************************************************************************************************
+                                            T O U C H P A D
+***********************************************************************************************************************/
 
-
-
-
-
-
-/*******************************************************************************/
-
-  // Code für Touchpad mit XPT2046
-TP::TP(uint8_t CS, uint8_t IRQ){
-    //log_i("TP init CS = %i, IRQ = %i", CS, IRQ);
-    TP_CS=CS;
-    TP_IRQ=IRQ;
+// Code für Touchpad mit XPT2046
+TP::TP(uint8_t CS, uint8_t IRQ) {
+    // log_i("TP init CS = %i, IRQ = %i", CS, IRQ);
+    TP_CS = CS;
+    TP_IRQ = IRQ;
     pinMode(TP_CS, OUTPUT);
     digitalWrite(TP_CS, HIGH);
     pinMode(TP_IRQ, INPUT);
-    TP_SPI=SPISettings(400000, MSBFIRST, SPI_MODE0); //slower speed
-    _rotation=0;
-    SPIClass *x = TFT::spi_TFT;
+    TP_SPI = SPISettings(400000, MSBFIRST, SPI_MODE0);  // slower speed
+    _rotation = 0;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-uint16_t TP::TP_Send(uint8_t set_val){
+uint16_t TP::TP_Send(uint8_t set_val) {
     uint16_t get_val;
-    TFT::spi_TFT->beginTransaction(TP_SPI);       // Prevent other SPI users
-    digitalWrite(TP_CS, 0);
+    TFT::spi_TFT->beginTransaction(TP_SPI);  // Prevent other SPI users
+        digitalWrite(TP_CS, 0);
         TFT::spi_TFT->write(set_val);
         get_val = TFT::spi_TFT->transfer16(0);
-    digitalWrite(TP_CS, 1);
-    TFT::spi_TFT->endTransaction();               // Allow other SPI users
-    return get_val>>4;
+        digitalWrite(TP_CS, 1);
+    TFT::spi_TFT->endTransaction();  // Allow other SPI users
+    return get_val >> 4;
 }
 
-void TP::loop(){
-    if(!digitalRead(TP_IRQ)){
-        read_TP(x,y); // skip first measurement
-        if(f_loop){
-            f_loop=false;
-            if(read_TP(x, y)) {if(tp_pressed) tp_pressed(x, y);}  // read second measurement
+//----------------------------------------------------------------------------------------------------------------------
+
+void TP::loop() {
+    if (!digitalRead(TP_IRQ)) {
+        read_TP(x, y);  // skip first measurement
+        if (f_loop) {
+            f_loop = false;
+            if (read_TP(x, y)) {
+                if (tp_pressed) tp_pressed(x, y);
+            }  // read second measurement
         }
     } else {
-        if(f_loop==false){if(tp_released) tp_released();}
-        f_loop=true;
+        if (f_loop == false) {
+            if (tp_released) tp_released();
+        }
+        f_loop = true;
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
+
 void TP::setRotation(uint8_t m){
     _rotation=m;
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-void TP::setVersion(uint8_t v){
-    if(v == 0) TP_vers = 0;
-    if(v == 1) TP_vers = 1;
-    if(v == 2) TP_vers = 2;
-    if(v == 3) TP_vers = 3;
-    if(v == 4) TP_vers = 4;
+void TP::setVersion(uint8_t v) {
+    if (v == 0) TP_vers = 0;
+    if (v == 1) TP_vers = 1;
+    if (v == 2) TP_vers = 2;
+    if (v == 3) TP_vers = 3;
+    if (v == 4) TP_vers = 4;
 
-    if(TP_vers == 0){   // ILI9341 display
-        Xmax=1913;      // Values Calibration
-        Xmin=150;
-        Ymax=1944;
-        Ymin=220;
+    if (TP_vers == 0) {  // ILI9341 display
+        Xmax = 1913;     // Values Calibration
+        Xmin = 150;
+        Ymax = 1944;
+        Ymin = 220;
         xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
     }
-    if(TP_vers == 1){   // ILI9341 display for RaspberryPI  #70
-        Xmax=1940;
-        Xmin=90;
-        Ymax=1864;
-        Ymin=105;
+    if (TP_vers == 1) {  // ILI9341 display for RaspberryPI  #70
+        Xmax = 1940;
+        Xmin = 90;
+        Ymax = 1864;
+        Ymin = 105;
         xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
     }
-    if(TP_vers == 2){   // Waveshare HX8347D display
-        Xmax=1850;
-        Xmin=170;
-        Ymax=1880;
-        Ymin=140;
+    if (TP_vers == 2) {  // Waveshare HX8347D display
+        Xmax = 1850;
+        Xmin = 170;
+        Ymax = 1880;
+        Ymin = 140;
         xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
         yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
     }
-    if(TP_vers == 3){   // ILI9486 display for RaspberryPI
-        Xmax=1922;
-        Xmin=140;
-        Ymax=1930;
-        Ymin=125;
+    if (TP_vers == 3) {  // ILI9486 display for RaspberryPI
+        Xmax = 1922;
+        Xmin = 140;
+        Ymax = 1930;
+        Ymin = 125;
         xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
     }
-    if(TP_vers == 4){   // ILI9488 display for RaspberryPI
-        Xmax=1922;
-        Xmin=140;
-        Ymax=1930;
-        Ymin=125;
+    if (TP_vers == 4) {  // ILI9488 display for RaspberryPI
+        Xmax = 1922;
+        Xmin = 140;
+        Ymax = 1930;
+        Ymin = 125;
         xFaktor = float(Xmax - Xmin) / ILI9488_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9488_HEIGHT;
     }
 }
+//----------------------------------------------------------------------------------------------------------------------
 
-bool TP::read_TP(uint16_t& x, uint16_t& y){
+bool TP::read_TP(uint16_t& x, uint16_t& y) {
     uint16_t _y[3];
     uint16_t _x[3];
     uint16_t tmpxy;
     uint8_t i;
     if (digitalRead(TP_IRQ)) return false;
-    for(i = 0; i < 3; i++){
-        x = TP_Send(0xD0);  //x
-        //log_i("TP X=%i",x);
-        if((x < Xmin) || (x > Xmax)) return false;  //outside the display
-         x = Xmax-x;
+    for (i = 0; i < 3; i++) {
+        x = TP_Send(0xD0);  // x
+        // log_i("TP X=%i",x);
+        if ((x < Xmin) || (x > Xmax)) return false;  // outside the display
+        x = Xmax - x;
         _x[i] = x / xFaktor;
 
-        y = TP_Send(0x90); //y
-        //log_i("TP y=%i",y);
-        if((y<Ymin) || (y>Ymax)) return false;  //outside the display
+        y = TP_Send(0x90);  // y
+        // log_i("TP y=%i",y);
+        if ((y < Ymin) || (y > Ymax)) return false;  // outside the display
         y = Ymax - y;
         _y[i] = y / yFaktor;
-
     }
-    x = (_x[0] + _x[1] + _x[2]) / 3; // take the mean
+    x = (_x[0] + _x[1] + _x[2]) / 3;  // take the mean
     y = (_y[0] + _y[1] + _y[2]) / 3;
-
-    if(TP_vers == 0){       // 320px x 240px
-        if(_rotation == 0) {
+    //-------------------------------------------------------------
+    if (TP_vers == 0) {  // 320px x 240px
+        if (_rotation == 0) {
             y = ILI9341_HEIGHT - y;
         }
-        if(_rotation == 1) {
-            tmpxy = x; x = y;
-            y = tmpxy; y = ILI9341_WIDTH - y;
+        if (_rotation == 1) {
+            tmpxy = x;
+            x = y;
+            y = tmpxy;
+            y = ILI9341_WIDTH - y;
             x = ILI9341_HEIGHT - x;
         }
-        if(_rotation == 2) {
+        if (_rotation == 2) {
             x = ILI9341_WIDTH - x;
         }
-        if(_rotation == 3) {
+        if (_rotation == 3) {
             tmpxy = x;
             x = y;
             y = tmpxy;
         }
     }
-
-   if(TP_vers == 1){       // 320px x 240px
-        if(_rotation == 0) {
-	    y=ILI9341_HEIGHT-y;
-	    x=ILI9341_WIDTH-x;
+    //-------------------------------------------------------------
+    if (TP_vers == 1) {  // 320px x 240px
+        if (_rotation == 0) {
+            y = ILI9341_HEIGHT - y;
+            x = ILI9341_WIDTH - x;
         }
-        if(_rotation == 1) {
-	    tmpxy=x;
-            x=y;
-            y=tmpxy;
-            x=ILI9341_HEIGHT-x;
+        if (_rotation == 1) {
+            tmpxy = x;
+            x = y;
+            y = tmpxy;
+            x = ILI9341_HEIGHT - x;
         }
-        if(_rotation == 2) {
-	    ;
+        if (_rotation == 2) {
+            ;
         }
-        if(_rotation == 3) {
-	    tmpxy=x;
-            x=y;
-            y=tmpxy;
-            y=ILI9341_WIDTH-y;
+        if (_rotation == 3) {
+            tmpxy = x;
+            x = y;
+            y = tmpxy;
+            y = ILI9341_WIDTH - y;
         }
     }
-
-    if(TP_vers == 2){       // 320px x 240px
-        if(_rotation == 0) {
-            ; // do nothing
+    //-------------------------------------------------------------
+    if (TP_vers == 2) {  // 320px x 240px
+        if (_rotation == 0) {
+            ;  // do nothing
         }
-        if(_rotation == 1) {
+        if (_rotation == 1) {
             tmpxy = x;
             x = y;
             y = HX8347D_WIDTH - tmpxy;
-            if(x > HX8347D_HEIGHT - 1) x = 0;
-            if(y > HX8347D_WIDTH - 1)  y = 0;
+            if (x > HX8347D_HEIGHT - 1) x = 0;
+            if (y > HX8347D_WIDTH - 1) y = 0;
         }
-        if(_rotation == 2) {
+        if (_rotation == 2) {
             x = HX8347D_WIDTH - x;
             y = HX8347D_HEIGHT - y;
-            if(x > HX8347D_WIDTH - 1) x = 0;
-            if(y > HX8347D_HEIGHT - 1) y = 0;
+            if (x > HX8347D_WIDTH - 1) x = 0;
+            if (y > HX8347D_HEIGHT - 1) y = 0;
         }
-        if(_rotation == 3) {
+        if (_rotation == 3) {
             tmpxy = y;
             y = x;
             x = HX8347D_HEIGHT - tmpxy;
-            if(x > HX8347D_HEIGHT - 1) x = 0;
-            if(y > HX8347D_WIDTH - 1) y = 0;
+            if (x > HX8347D_HEIGHT - 1) x = 0;
+            if (y > HX8347D_WIDTH - 1) y = 0;
         }
     }
-
-    if(TP_vers == 3){       // 480px x 320px
-        if(_rotation == 0) {
-            ; // do nothing
+    //-------------------------------------------------------------
+    if (TP_vers == 3) {  // 480px x 320px
+        if (_rotation == 0) {
+            ;  // do nothing
         }
-        if(_rotation == 1) {
+        if (_rotation == 1) {
             tmpxy = x;
             x = y;
-            y = ILI9486_WIDTH-tmpxy;
-            if(x > ILI9486_HEIGHT -1) x = 0;
-            if(y > ILI9486_WIDTH  -1) y = 0;
+            y = ILI9486_WIDTH - tmpxy;
+            if (x > ILI9486_HEIGHT - 1) x = 0;
+            if (y > ILI9486_WIDTH - 1) y = 0;
         }
-        if(_rotation == 2) {
-            x = ILI9486_WIDTH-x;
-            y = ILI9486_HEIGHT-y;
-            if(x > ILI9486_WIDTH  -1) x = 0;
-            if(y > ILI9486_HEIGHT -1) y = 0;
+        if (_rotation == 2) {
+            x = ILI9486_WIDTH - x;
+            y = ILI9486_HEIGHT - y;
+            if (x > ILI9486_WIDTH - 1) x = 0;
+            if (y > ILI9486_HEIGHT - 1) y = 0;
         }
-        if(_rotation == 3) {
+        if (_rotation == 3) {
             tmpxy = y;
             y = x;
-            x = ILI9486_HEIGHT-tmpxy;
-            if(x > ILI9486_HEIGHT -1) x = 0;
-            if(y > ILI9486_WIDTH  -1) y = 0;
+            x = ILI9486_HEIGHT - tmpxy;
+            if (x > ILI9486_HEIGHT - 1) x = 0;
+            if (y > ILI9486_WIDTH - 1) y = 0;
         }
     }
-
-    if(TP_vers == 4){       // ILI 9488 Display V1.0 480px x 320px
-        if(_rotation == 0) {
+    //-------------------------------------------------------------
+    if (TP_vers == 4) {  // ILI 9488 Display V1.0 480px x 320px
+        if (_rotation == 0) {
             x = ILI9488_WIDTH - x;
         }
-        if(_rotation == 1) {                   // landscape
+        if (_rotation == 1) {  // landscape
             tmpxy = x;
             x = y;
             y = tmpxy;
-            if(x > ILI9488_HEIGHT -1) x = 0;
-            if(y > ILI9488_WIDTH  -1) y = 0;
+            if (x > ILI9488_HEIGHT - 1) x = 0;
+            if (y > ILI9488_WIDTH - 1) y = 0;
         }
-        if(_rotation == 2) {                    // portrait + 180 degree
-            y = ILI9488_HEIGHT-y;
-            if(x > ILI9488_WIDTH  -1) x = 0;
-            if(y > ILI9488_HEIGHT -1) y = 0;
+        if (_rotation == 2) {  // portrait + 180 degree
+            y = ILI9488_HEIGHT - y;
+            if (x > ILI9488_WIDTH - 1) x = 0;
+            if (y > ILI9488_HEIGHT - 1) y = 0;
         }
-        if(_rotation == 3) {                   // landscape + 180 degree
+        if (_rotation == 3) {  // landscape + 180 degree
             tmpxy = x;
             x = ILI9488_HEIGHT - y;
             y = ILI9488_WIDTH - tmpxy;
-            if(x > ILI9488_HEIGHT -1) x = 0;
-            if(y > ILI9488_WIDTH  -1) y = 0;
+            if (x > ILI9488_HEIGHT - 1) x = 0;
+            if (y > ILI9488_WIDTH - 1) y = 0;
         }
     }
-    //log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
+    // log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
     return true;
 }
-
-
+//----------------------------------------------------------------------------------------------------------------------
