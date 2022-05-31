@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 13.05.2022
+// updated: 31.05.2022
 
 #pragma once
 
@@ -7,7 +7,7 @@
 #define _PW                 "myWiFiPassword"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
+#define TFT_CONTROLLER      2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 1 or 3 (landscape)
@@ -49,9 +49,9 @@
     #define SD_MMC_CLK    14  // cannot be changed
     #define SD_MMC_CMD    15  // cannot be changed
     #define IR_PIN        35
-    #define SPI_MOSI      23  // TFT and TP (VSPI)
-    #define SPI_MISO      19  // TFT and TP (VSPI)
-    #define SPI_SCK       18  // TFT and TP (VSPI)
+    #define TFT_MOSI      23  // TFT and TP (VSPI)
+    #define TFT_MISO      19  // TFT and TP (VSPI)
+    #define TFT_SCK       18  // TFT and TP (VSPI)
 #if DECODER == 0
     #define VS1053_CS     33
     #define VS1053_DCS     4
@@ -153,7 +153,7 @@ void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void stopSong();
 void IRAM_ATTR headphoneDetect();
 
-// //prototypes (audiotask.cpp)
+//prototypes (audiotask.cpp)
 void audioInit();
 void audioSetVolume(uint8_t vol);
 uint8_t audioGetVolume();
@@ -164,3 +164,33 @@ void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0
 uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
 boolean audioIsRunning();
+
+
+
+
+
+
+
+
+// PINS for ESP32S3 (suggestion)
+
+// // Digital I/O used
+//     #define TFT_CS         7
+//     #define TFT_DC        12
+//     #define TFT_BL         6  // at -1 the brightness menu is not displayed
+//     #define TP_IRQ        39
+//     #define TP_CS         15
+//     #define SD_MMC_D0     11
+//     #define SD_MMC_CLK    13
+//     #define SD_MMC_CMD    14
+//     #define IR_PIN        35
+//     #define SPI_MOSI      18  // TFT and TP (FSPI)
+//     #define SPI_MISO       2  // TFT and TP (FSPI)
+//     #define SPI_SCK       17  // TFT and TP (FSPI)
+
+
+//     #define I2S_DOUT       9
+//     #define I2S_DIN       -1  // pin not used
+//     #define I2S_BCLK       3
+//     #define I2S_LRC        1
+//     #define I2S_MCLK       0  // mostly not used

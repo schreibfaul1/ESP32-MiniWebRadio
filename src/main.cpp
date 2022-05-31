@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.3b, May 19/2022
+    Version 2.3b, May 31/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -980,7 +980,6 @@ void setup(){
     Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
 
     Serial.print("\n\n");
-    SPI.begin(SPI_SCK, SPI_MISO, SPI_MOSI); // VSPI
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("");
@@ -1006,8 +1005,12 @@ void setup(){
     pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
 
+    #if CONFIG_IDF_TARGET_ESP32
+        tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);    // Init TFT interface ESP32
+    #else
+        tft.begin(TFT_CS, TFT_DC, FSPI, TFT_MOSI, TFT_MISO, TFT_SCK);    // Init TFT interface ESP32S3
+    #endif
 
-    tft.begin(TFT_CS, TFT_DC, VSPI);    // Init TFT interface
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tp.setVersion(TP_VERSION);

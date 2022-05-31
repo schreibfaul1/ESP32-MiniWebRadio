@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 09 2022
+// updated on May 31 2022
 
 
 #pragma once
@@ -201,7 +201,9 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint8_t _TFTcontroller = ILI9341;
 
         SPISettings     TFT_SPI;                     // SPI settings for this slave
-        SPIClass*       spi_TFT = NULL;
+    public:
+        SPIClass*       spi_TFT = NULL;             // use in class TP
+    private:
         uint32_t  _freq;
         uint16_t  _height;
         uint16_t  _width;
@@ -682,7 +684,7 @@ private:
 
 
 
-class TP {
+class TP : public TFT {
     public:
 
         TP(uint8_t TP_CS, uint8_t TP_IRQ);

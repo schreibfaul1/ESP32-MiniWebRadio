@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 09 2022
+// updated on May 31 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -4185,16 +4185,17 @@ TP::TP(uint8_t CS, uint8_t IRQ){
     pinMode(TP_IRQ, INPUT);
     TP_SPI=SPISettings(400000, MSBFIRST, SPI_MODE0); //slower speed
     _rotation=0;
+    SPIClass *x = TFT::spi_TFT;
 }
 
 uint16_t TP::TP_Send(uint8_t set_val){
     uint16_t get_val;
-    SPI.beginTransaction(TP_SPI);       // Prevent other SPI users
+    TFT::spi_TFT->beginTransaction(TP_SPI);       // Prevent other SPI users
     digitalWrite(TP_CS, 0);
-        SPI.write(set_val);
-        get_val=SPI.transfer16(0);
+        TFT::spi_TFT->write(set_val);
+        get_val = TFT::spi_TFT->transfer16(0);
     digitalWrite(TP_CS, 1);
-    SPI.endTransaction();               // Allow other SPI users
+    TFT::spi_TFT->endTransaction();               // Allow other SPI users
     return get_val>>4;
 }
 
