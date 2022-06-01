@@ -65,7 +65,7 @@ void audioTask(void *parameter) {
     SerialPrintfln("VS1053 chipID = " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", version = "
                                       ANSI_ESC_CYAN "%d", chipID, vs1053.printVersion());
 
-    vs1053.setConnectionTimeout(300, 3400);
+    vs1053.setConnectionTimeout(1000, 4000);
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
@@ -268,7 +268,7 @@ void audioTask(void *parameter) {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     if(I2S_MCLK != -1) audio.i2s_mclk_pin_select(I2S_MCLK);
     audio.setVolume(5); // 0...21
-    audio.setConnectionTimeout(300, 3400);
+    audio.setConnectionTimeout(1000, 4000);
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
