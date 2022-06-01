@@ -503,22 +503,10 @@ uint8_t TFT::getRotation(void) const{
 
 void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) {
 
-    // default is VSPI (VSPI_MISO 19, VSPI_MOSI 23, VSPI_SCLK 18)
-    //            HSPI (HSPI_MISO 12, HSPI_MOSI 13, HSPI_SCLK 14)
+    spi_TFT = new SPIClass(spi);
+    spi_TFT->begin(sclk, miso, mosi, -1);
+    spi_TFT->setFrequency(_freq);
 
-    if(spi == VSPI){
-        spi_TFT = &SPI;
-        spi_TFT->begin(sclk, miso, mosi, -1);
-        spi_TFT->setFrequency(_freq);
-    }
-    else if(spi == HSPI){
-        spi_TFT = new SPIClass(HSPI);
-        spi_TFT->begin(sclk, miso, mosi, -1);
-        spi_TFT->setFrequency(_freq);
-    }
-    else{
-        log_e("unknown SPI authority");
-    }
     TFT_SPI = SPISettings(_freq, MSBFIRST, SPI_MODE0);
 
 

@@ -1018,6 +1018,9 @@ void setup(){
 
     SerialPrintfln("setup: ....  Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
+    #ifdef CONFIG_IDF_TARGET_ESP32S3
+        SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
+    #endif
     if(!SD_MMC.begin("/sdcard", true)){
         clearAll();
         tft.setFont(_fonts[5]);

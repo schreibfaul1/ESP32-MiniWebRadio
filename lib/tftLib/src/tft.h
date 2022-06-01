@@ -88,14 +88,14 @@ extern __attribute__((weak)) void tp_released();
 #define TFT_WHITE           0xFFFF // 255, 255, 255
 #define TFT_YELLOW          0xFFE0 // 255, 255,   0
 
+
 class TFT : public Print {
     protected:
     File gif_file;
     public:
         TFT(uint8_t TFT_id = 0, uint8_t dispInv = 0);
         virtual ~TFT(){}
-
-        void begin(uint8_t CS, uint8_t DC, uint8_t spi = VSPI, uint8_t mosi = 23, uint8_t miso = 19, uint8_t sclk = 18);
+        void begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk);
         void      setFrequency(uint32_t f);
         void      setRotation(uint8_t r);
         bool      setCursor(uint16_t x, uint16_t y);
