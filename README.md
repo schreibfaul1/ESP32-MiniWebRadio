@@ -42,7 +42,8 @@ New in V2:
 <li>supports AC101 and ES8388</li>
 <li>WM8978 support (TTGO audioT board)</li>
 <li>Entry of username and password if the server expects access data, "URL|user|pwd"</li>
- <li>Can process local playlists in m3u format</li>
+<li>Can process local playlists in m3u format</li>
+<li>The ESP32 or the ESP32-S3 can be used</li>
 <br>
 <br>
  
