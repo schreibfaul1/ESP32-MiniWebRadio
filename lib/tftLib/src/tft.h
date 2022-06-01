@@ -201,7 +201,6 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint8_t _TFTcontroller = ILI9341;
 
         SPISettings     TFT_SPI;                     // SPI settings for this slave
-    public:
         SPIClass*       spi_TFT = NULL;             // use in class TP
     private:
         uint32_t  _freq;

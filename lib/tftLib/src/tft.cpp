@@ -6,6 +6,7 @@
 #include "pins_arduino.h"
 
 JPEGDecoder JpegDec;
+SPIClass*   SPItransfer;
 
 #define TFT_MAX_PIXELS_AT_ONCE  32
 
@@ -506,6 +507,7 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
     spi_TFT = new SPIClass(spi);
     spi_TFT->begin(sclk, miso, mosi, -1);
     spi_TFT->setFrequency(_freq);
+    SPItransfer = spi_TFT;
 
     TFT_SPI = SPISettings(_freq, MSBFIRST, SPI_MODE0);
 
@@ -4268,12 +4270,12 @@ TP::TP(uint8_t CS, uint8_t IRQ) {
 
 uint16_t TP::TP_Send(uint8_t set_val) {
     uint16_t get_val;
-    TFT::spi_TFT->beginTransaction(TP_SPI);  // Prevent other SPI users
+    SPItransfer->beginTransaction(TP_SPI);  // Prevent other SPI users
         digitalWrite(TP_CS, 0);
-        TFT::spi_TFT->write(set_val);
-        get_val = TFT::spi_TFT->transfer16(0);
+        SPItransfer->write(set_val);
+        get_val = SPItransfer->transfer16(0);
         digitalWrite(TP_CS, 1);
-    TFT::spi_TFT->endTransaction();  // Allow other SPI users
+    SPItransfer->endTransaction();  // Allow other SPI users
     return get_val >> 4;
 }
 
