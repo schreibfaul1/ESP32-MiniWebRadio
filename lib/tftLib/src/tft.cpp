@@ -520,7 +520,6 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
     pinMode(TFT_CS, OUTPUT);
     digitalWrite(TFT_CS, HIGH);
 
-    pinMode(16, OUTPUT); digitalWrite(16, HIGH); //GPIO TP_CS
     // log_i("DC=%d, CS=%d, MISO=%d, MOSI=%d, SCK=%d", TFT_DC, TFT_CS, TFT_MISO, TFT_MOSI, TFT_SCK);
     spi_TFT->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
 
