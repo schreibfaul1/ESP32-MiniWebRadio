@@ -910,9 +910,11 @@ bool connectToWiFi(){
         }
         file.close();
     }
-    SerialPrintfln("WiFI_info:   Connecting WiFi...");
-    vTaskDelay(100);
-    if(wifiMulti.run() == WL_CONNECTED){
+
+    wifiMulti.run();
+
+    if(WiFi.isConnected()){
+        SerialPrintfln("WiFI_info:   Connecting WiFi...");
         WiFi.setSleep(false);
         return true;
     }else{
