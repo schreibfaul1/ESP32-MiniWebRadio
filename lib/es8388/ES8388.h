@@ -18,6 +18,9 @@ public:
         ES_OUT2  // this is the additional gain for OUT2
     };
 
+    void SetVolumeSpeaker(uint8_t vol);
+    void SetVolumeHeadphone(uint8_t vol);
+
     void mute(const ES8388_OUT out, const bool muted);
     void volume(const ES8388_OUT out, const uint8_t vol);
 };
