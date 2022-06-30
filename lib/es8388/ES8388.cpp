@@ -267,3 +267,4 @@ bool ES8388::identify(int sda, int scl, uint32_t frequency)
     Wire.beginTransmission(ES8388_ADDR);
     return Wire.endTransmission() == 0;
 }
+
