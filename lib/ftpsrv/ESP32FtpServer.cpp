@@ -3,7 +3,7 @@
  * based on FTP Server for Arduino Due and Ethernet shield (W5100) or WIZ820io (W5200)
  * based on Jean-Michel Gallego's work
  * modified to work with esp8266 SPIFFS by David Paiva david@nailbuster.com
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -444,14 +444,14 @@ boolean FtpServer::processCommand() {
                     file = dir.openNextFile();
 #else
                     String fn, fs;
-             
+
                     if(ESP_ARDUINO_VERSION_MAJOR < 2){
                         fn = file.name();
                     }
                     else{
                         fn = file.path();
                     }
-                    
+
                     fn.remove(0, strlen(cwdName));
                     if(fn[0] == '/') fn.remove(0, 1);
                     fs = String(file.size());
@@ -467,7 +467,7 @@ boolean FtpServer::processCommand() {
                     nm++;
                     file = dir.openNextFile();
 #endif
-                
+
                 }
                 client.println("226-options: -a -l");
                 client.println("226 " + String(nm) + " matches total");
@@ -503,7 +503,7 @@ boolean FtpServer::processCommand() {
                         if(ftp_debug) ftp_debug(chbuf);
                     }
 #endif
-                    
+
                     nm++;
                     file = dir.openNextFile();
                 }

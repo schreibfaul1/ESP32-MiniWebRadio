@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 31 2022
+// updated on Jul 02 2022
 
 #include "Arduino.h"
 #include "tft.h"
@@ -741,6 +741,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    
     startWrite();
     if(_TFTcontroller == ILI9341){ //ILI9341
         writeCommand(ILI9341_MADCTL);
@@ -756,18 +757,18 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     }
     if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(ILI9486_MADCTL);
-        if(_rotation==0){SPI.write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_ML | ILI9486_MADCTL_BGR);}
-        if(_rotation==1){SPI.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MV | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
-        if(_rotation==2){SPI.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_BGR);}
-        if(_rotation==3){SPI.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);}
+        if(_rotation==0){spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_ML | ILI9486_MADCTL_BGR);}
+        if(_rotation==1){spi_TFT->write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MV | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
+        if(_rotation==2){spi_TFT->write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_BGR);}
+        if(_rotation==3){spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);}
         writeCommand(ILI9486_RAMWR);
     }
     if(_TFTcontroller == ILI9488){
         writeCommand(ILI9488_MADCTL);
-        if(_rotation==0){SPI.write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_ML | ILI9488_MADCTL_BGR);}
-        if(_rotation==1){SPI.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MV | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
-        if(_rotation==2){SPI.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_BGR);}
-        if(_rotation==3){SPI.write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);}
+        if(_rotation==0){spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_ML | ILI9488_MADCTL_BGR);}
+        if(_rotation==1){spi_TFT->write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MV | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
+        if(_rotation==2){spi_TFT->write(ILI9488_MADCTL_MH | ILI9488_MADCTL_BGR);}
+        if(_rotation==3){spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);}
         writeCommand(ILI9488_RAMWR);
     }
     endWrite();
@@ -804,17 +805,17 @@ void TFT::startJpeg() {
     }
     if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
         writeCommand(ILI9486_MADCTL);
-        if(_rotation==0){SPI.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
-        if(_rotation==1){SPI.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);}
-        if(_rotation==2){SPI.write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);}
-        if(_rotation==3){SPI.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
+        if(_rotation==0){spi_TFT->write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
+        if(_rotation==1){spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);}
+        if(_rotation==2){spi_TFT->write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);}
+        if(_rotation==3){spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);}
     }
     if(_TFTcontroller == ILI9488){
         writeCommand(ILI9488_MADCTL);
-        if(_rotation==0){SPI.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
-        if(_rotation==1){SPI.write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);}
-        if(_rotation==2){SPI.write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);}
-        if(_rotation==3){SPI.write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
+        if(_rotation==0){spi_TFT->write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
+        if(_rotation==1){spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);}
+        if(_rotation==2){spi_TFT->write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);}
+        if(_rotation==3){spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);}
     }
     endWrite();
 }

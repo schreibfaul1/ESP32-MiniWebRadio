@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.3b, May 31/2022
+    Version 2.3c, Jul 04/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -45,11 +45,16 @@ char           _myIP[25];
 char           _afn[256];                // audioFileName
 char           _path[128];
 char           _prefix[5]      = "/s";
+char           _commercial[25];
+char           _icyDescription[512] = {};
+char           _streamTitle[512]    = {};
 char*          _lastconnectedfile = nullptr;
 char*          _lastconnectedhost = nullptr;
-char*          _stationURL = nullptr;
+char*          _stationURL        = nullptr;
+
 const char*    _pressBtn[5];
 const char*    _releaseBtn[5];
+
 boolean        _f_rtc  = false;             // true if time from ntp is received
 boolean        _f_1sec = false;
 boolean        _f_1min = false;
@@ -64,12 +69,12 @@ boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
 boolean        _f_newStreamTitle = false;
+boolean        _f_newCommercial = false;
 boolean        _f_volBarVisible = false;
 boolean        _f_switchToClock = false;  // jump into CLOCK mode at the next opportunity
 boolean        _f_hpChanged = false; // true, if HeadPhone is plugged or unplugged
 boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _cur_volume)
 boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
-boolean        _f_showStreamTitle = false;
 boolean        _f_timeAnnouncement = false; // time announcement every full hour
 boolean        _f_playlistEnabled = false;
 
@@ -77,9 +82,7 @@ String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
 String         _homepage = "";
-String         _streamTitle = "";
 String         _filename = "";
-String         _icydescription = "";
 
 char _hl_item[10][40]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
@@ -568,11 +571,11 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
                                          ", str=" ANSI_ESC_CYAN "%s", winHeight, strlen(str), ch_written, str);
     }
 }
-void showStreamTitle(){
+void showStreamTitle(const char* streamtitle){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
-    String ST = _streamTitle;
+    String ST = streamtitle;
+
     ST.trim();  // remove all leading or trailing whitespaces
-    if(ST.length() == 0 && _icydescription.length() != 0) ST = _icydescription;
     ST.replace(" | ", "\n");   // some stations use pipe as \n or
     ST.replace("| ", "\n");    // or
     ST.replace("|", "\n");
@@ -1286,12 +1289,11 @@ void setStation(uint16_t sta){
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
     if(_f_isWebConnected && sta == _cur_station && _state == RADIO){ // Station is already selected
-        showStreamTitle();
+        _f_newStreamTitle = true;
     }
     else{
-        _streamTitle = "";
-        _icydescription = "";
-        _f_newIcyDescription = true;
+        _streamTitle[0] = '\0';
+        _icyDescription[0] = '\0';
         _f_newStreamTitle = true;
         connecttohost(_stationURL);
     }
@@ -1494,16 +1496,19 @@ void changeState(int state){
         case RADIO:{
             showHeadlineItem(RADIO);
             if(_state == RADIOico || _state == RADIOmenue){
-                showStreamTitle();
+                // showStreamTitle(_streamTitle);
+                _f_newStreamTitle = true;
             }
             else if(_state == PLAYER  || _state == PLAYERico){
                 setStation(_cur_station);
                 showLogoAndStationName();
-                showStreamTitle();
+                //showStreamTitle(_streamTitle);
+                _f_newStreamTitle = true;
             }
             else if(_state == CLOCKico){
                 showLogoAndStationName();
-                showStreamTitle();
+                //showStreamTitle(_streamTitle);
+                _f_newStreamTitle = true;
             }
             else if(_state == SLEEP){
                 clearFName();
@@ -1515,7 +1520,7 @@ void changeState(int state){
             }
             else{
                 showLogoAndStationName();
-                showStreamTitle();
+                showStreamTitle(_streamTitle);
             }
             break;
         }
@@ -1770,13 +1775,20 @@ void loop() {
             _commercial_dur--;
             if((_commercial_dur == 2) && (_state == RADIO)) clearTitle();// end of commercial? clear streamtitle
         }
-        if(_f_newIcyDescription){
+        if(_f_newIcyDescription && !_timeCounter){
+            if(_state == RADIO) if(strlen(_streamTitle) == 0) showStreamTitle(_icyDescription);
+            webSrv.send((String)"icy_description=" + _icyDescription);
             _f_newIcyDescription = false;
-            webSrv.send("icy_description=" +_icydescription);
         }
-        if(_f_newStreamTitle){
+        if(_f_newStreamTitle && !_timeCounter) {
+            if(_state == RADIO) if(strlen(_streamTitle)) showStreamTitle(_streamTitle);
+            webSrv.send((String) "streamtitle=" + _streamTitle);
             _f_newStreamTitle = false;
-            webSrv.send("streamtitle=" + _streamTitle);
+        }
+        if(_f_newCommercial && !_timeCounter){
+            if(_state == RADIO) showStreamTitle(_commercial);
+            webSrv.send((String)"streamtitle=" + _commercial);
+            _f_newCommercial = false;
         }
     }
     if(_f_1min == true){
@@ -1793,20 +1805,24 @@ void loop() {
 ***********************************************************************************************************************/
 //Events from vs1053_ext or audioI2S library
 void vs1053_info(const char *info){
-    if(startsWith(info, "Request"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
-    if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
-    if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)
-                                      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
+    if(startsWith(info, "Request"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "FLAC"))                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(endsWith(info,   "Stream lost"))             {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "authent"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+//  if(startsWith(info, "content-type"))            {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW"%s", info); return;}
+    if(startsWith(info, "HTTP/") && info[9] > '3')  {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
+                                                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
 }
 void audio_info(const char *info){
-    if(startsWith(info, "Request"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
-    if(startsWith(info, "FLAC"))      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(endsWith(info, "Stream lost")) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
-    if(startsWith(info, "authent"))   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)
-                                      {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}  // all other
+    if(startsWith(info, "Request"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "FLAC"))                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+    if(endsWith(info,   "Stream lost"))             {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(startsWith(info, "authent"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
+//  if(startsWith(info, "content-type"))            {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW"%s", info); return;}
+    if(startsWith(info, "HTTP/") && info[9] > '3')  {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
+                                                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstation(const char *info){
@@ -1820,37 +1836,28 @@ void audio_showstation(const char *info){
     if(!_cur_station) showLogoAndStationName();
 }
 //----------------------------------------------------------------------------------------
-void vs1053_showstreamtitle(const char *info){
-    if(_f_irNumberSeen) return; // discard streamtitle
-    _streamTitle = info;
-    if(_state == RADIO) showStreamTitle();
-    if(strlen(info)) SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
-    if(strlen(info)){
-        _f_newStreamTitle = true;
-    }
+void vs1053_showstreamtitle(const char *info) {
+    strcpy(_streamTitle, info);
+    if(!_f_irNumberSeen) _f_newStreamTitle = true;
+    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
-void audio_showstreamtitle(const char *info){
-    if(_f_irNumberSeen) return; // discard streamtitle
-    _streamTitle = info;
-    if(_state == RADIO) showStreamTitle();
-    if(strlen(info)) SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
-    if(strlen(info)){
-        _f_newStreamTitle = true;
-    }
+void  audio_showstreamtitle(const char *info) {
+    strcpy(_streamTitle, info);
+    if(!_f_irNumberSeen) _f_newStreamTitle = true;
+    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
 //----------------------------------------------------------------------------------------
-void vs1053_commercial(const char *info){
+void show_ST_commercial(const char* info){
     _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
-    _streamTitle = "Advertising: " + (String) _commercial_dur + "s";
-    showStreamTitle();
+    if(_f_newCommercial) return;
+    strcpy(_commercial, "Advertising: ");
+    strcat(_commercial, info);
+    strcat(_commercial, "s");
+    _f_newCommercial = true;
     SerialPrintfln("StreamTitle: %s", info);
 }
-void audio_commercial(const char *info){
-    _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
-    _streamTitle = "Advertising: " + (String) _commercial_dur + "s";
-    showStreamTitle();
-    SerialPrintfln("StreamTitle: %s", info);
-}
+void vs1053_commercial(const char *info) {show_ST_commercial(info);}
+void audio_commercial(const char *info)  {show_ST_commercial(info);}
 //----------------------------------------------------------------------------------------
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
@@ -1906,30 +1913,15 @@ void audio_id3data(const char *info){
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icydescription(const char *info){
-    _icydescription = String(info);
-    if(_streamTitle.length() == 0){
-        _streamTitle = String(info);
-        if(_state == RADIO){
-            showStreamTitle();
-        }
-    }
-    if(strlen(info)){
-        _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr:   %s", info);
-    }
+    strcpy(_icyDescription, info);
+    _f_newIcyDescription = true;
+    SerialPrintfln("icy-descr:   %s", info);
 }
+
 void audio_icydescription(const char *info){
-    _icydescription = String(info);
-    if(_streamTitle.length() == 0){
-        _streamTitle = String(info);
-        if(_state == RADIO){
-            showStreamTitle();
-        }
-    }
-    if(strlen(info)){
-        _f_newIcyDescription = true;
-        SerialPrintfln("icy-descr:   %s", info);
-    }
+    strcpy(_icyDescription, info);
+    _f_newIcyDescription = true;
+    SerialPrintfln("icy-descr:   %s", info);
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
@@ -2213,7 +2205,7 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN){
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -2237,7 +2229,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setmute"){           mute();
                                     return;}
 
-    if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle.c_str());
+    if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle);
                                     return;}
 
     if(cmd == "toneha"){            pref.putUShort("toneha",(param.toInt()));                             // vs1053 tone
@@ -2354,7 +2346,7 @@ void WEBSRV_onInfo(const char* info){
     if(!strcmp("to_listen", info)) return;          // suppress to_isten
     if(startsWith(info, "Command client"))return;   // suppress Command client available
 
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "%s", info);    // infos for debug
     }
 }

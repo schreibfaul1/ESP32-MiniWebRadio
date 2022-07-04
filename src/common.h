@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 31.05.2022
+// updated: 04.07.2022
 
 #pragma once
 
@@ -7,11 +7,11 @@
 #define _PW                 "myWiFiPassword"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      2                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
+#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 1 or 3 (landscape)
-#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
+#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
 #define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
@@ -148,7 +148,7 @@ void showVolumeBar();
 void showBrightnessBar();
 void showFooter();
 void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight);
-void showStreamTitle();
+void showStreamTitle(const char* streamTitle);
 void showLogoAndStationName();
 void showFileName(const char* fname);
 void display_time(boolean showall = false);
@@ -210,7 +210,7 @@ boolean audioIsRunning();
 
 
 // PINS for ESP32S3 (suggestion)
-                 
+
 // // Digital I/O used
 //     #define TFT_CS         7
 //     #define TFT_DC        12

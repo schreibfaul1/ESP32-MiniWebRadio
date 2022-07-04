@@ -240,6 +240,18 @@ void ES8388::volume(const ES8388_OUT out, const uint8_t vol)
     write_reg(ES8388_ADDR, rreg, vol_val);
 }
 
+void ES8388::SetVolumeSpeaker(uint8_t vol) {
+    vol = vol * 1.6;
+    volume(ES_OUT1, vol);
+    volume(ES_MAIN, 100);
+}
+
+void ES8388::SetVolumeHeadphone(uint8_t vol){
+    vol = vol * 1.6;
+    volume(ES_OUT2, vol);
+    volume(ES_MAIN, 100);    
+}
+
 /**
  * @brief Test if device with I2C address for ES8388 is connected to the I2C bus 
  * 
