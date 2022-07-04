@@ -24,3 +24,4 @@ public:
     void mute(const ES8388_OUT out, const bool muted);
     void volume(const ES8388_OUT out, const uint8_t vol);
 };
+
