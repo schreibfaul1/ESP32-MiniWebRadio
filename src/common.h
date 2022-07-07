@@ -49,7 +49,7 @@
         #define SD_MMC_D0      2  // cannot be changed
         #define SD_MMC_CLK    14  // cannot be changed
         #define SD_MMC_CMD    15  // cannot be changed
-        #define IR_PIN        35
+        #define IR_PIN        -1
         #define TFT_MOSI      23  // TFT and TP (VSPI)
         #define TFT_MISO      19  // TFT and TP (VSPI)
         #define TFT_SCK       18  // TFT and TP (VSPI)
