@@ -1295,6 +1295,7 @@ void setStation(uint16_t sta){
         _streamTitle[0] = '\0';
         _icyDescription[0] = '\0';
         _f_newStreamTitle = true;
+        _f_newIcyDescription = true;
         connecttohost(_stationURL);
     }
     _cur_station = sta;
@@ -1723,6 +1724,7 @@ void loop() {
             time_s = rtc.gettime_s();
             xSemaphoreGive(mutex_rtc);
             if(_f_eof && (_state == RADIO || _f_eof_alarm)){
+log_e("0");
                 _f_eof = false;
                 if(_f_eof_alarm){
                     _f_eof_alarm = false;
@@ -1730,7 +1732,7 @@ void loop() {
                         mute(); // mute off
                     }
                 }
-                connecttohost(_lastconnectedhost);
+                if(_lastconnectedhost != nullptr) connecttohost(_lastconnectedhost);
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -1746,7 +1748,6 @@ void loop() {
                     else{
                         SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", h);
                     }
-
                 }
             }
 
@@ -1775,16 +1776,24 @@ void loop() {
             _commercial_dur--;
             if((_commercial_dur == 2) && (_state == RADIO)) clearTitle();// end of commercial? clear streamtitle
         }
-        if(_f_newIcyDescription && !_timeCounter){
-            if(_state == RADIO) if(strlen(_streamTitle) == 0) showStreamTitle(_icyDescription);
-            webSrv.send((String)"icy_description=" + _icyDescription);
-            _f_newIcyDescription = false;
-        }
+
         if(_f_newStreamTitle && !_timeCounter) {
-            if(_state == RADIO) if(strlen(_streamTitle)) showStreamTitle(_streamTitle);
+            if(_state == RADIO) {
+                if(!strlen(_streamTitle) && strlen(_icyDescription)) {;}
+                else showStreamTitle(_streamTitle);
+            }
             webSrv.send((String) "streamtitle=" + _streamTitle);
             _f_newStreamTitle = false;
         }
+
+        if(_f_newIcyDescription && !_timeCounter){
+            if(_state == RADIO) {
+                if(!strlen(_streamTitle)) showStreamTitle(_icyDescription);
+            }
+            webSrv.send((String)"icy_description=" + _icyDescription);
+            _f_newIcyDescription = false;
+        }
+
         if(_f_newCommercial && !_timeCounter){
             if(_state == RADIO) showStreamTitle(_commercial);
             webSrv.send((String)"streamtitle=" + _commercial);
@@ -1849,9 +1858,10 @@ void  audio_showstreamtitle(const char *info) {
 //----------------------------------------------------------------------------------------
 void show_ST_commercial(const char* info){
     _commercial_dur = atoi(info) / 1000;                // info is the duration of advertising in ms
+    char cdur[10]; itoa(_commercial_dur, cdur, 10);
     if(_f_newCommercial) return;
     strcpy(_commercial, "Advertising: ");
-    strcat(_commercial, info);
+    strcat(_commercial, cdur);
     strcat(_commercial, "s");
     _f_newCommercial = true;
     SerialPrintfln("StreamTitle: %s", info);
@@ -1915,13 +1925,13 @@ void audio_id3data(const char *info){
 void vs1053_icydescription(const char *info){
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
-    SerialPrintfln("icy-descr:   %s", info);
+    if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
 
 void audio_icydescription(const char *info){
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
-    SerialPrintfln("icy-descr:   %s", info);
+    if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
