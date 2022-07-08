@@ -6,7 +6,7 @@
 #define _SSID               "WiFimodem-ABBE"                        // Your WiFi credentials here
 #define _PW                 "e2n2qmzyjn"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
+#define DECODER             0                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
 #define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
