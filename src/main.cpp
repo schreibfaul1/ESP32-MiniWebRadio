@@ -2215,7 +2215,7 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_VERBOSE){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
