@@ -1,26 +1,21 @@
 {
     "build": {
       "arduino":{
-        "ldscript": "esp32s3_out.ld",
-        "partitions": "default_8MB.csv"
+        "ldscript": "esp32s3_out.ld"
       },
       "core": "esp32",
       "extra_flags": [
-        "-DARDUINO_TINYS3",
+        "-DARDUINO_ESP32S3_12K",
+        "-DBOARD_HAS_PSRAM",
+        "-DARDUINO_USB_CDC_ON_BOOT=0",
         "-DARDUINO_RUNNING_CORE=1",
         "-DARDUINO_EVENT_RUNNING_CORE=1"
       ],
       "f_cpu": "240000000L",
       "f_flash": "80000000L",
       "flash_mode": "qio",
-      "hwids": [
-        [
-          "0X303A",
-          "0x80D0"
-        ]
-      ],
       "mcu": "esp32s3",
-      "variant": "um_tinys3"
+      "variant": "esp32s3"
     },
     "connectivity": [
       "wifi"
@@ -29,9 +24,10 @@
       "openocd_target": "esp32s3.cfg"
     },
     "frameworks": [
-      "arduino"
+      "arduino",
+      "espidf"
     ],
-    "name": "Unexpected Maker TinyS3",
+    "name": "AI Thinker",
     "upload": {
       "flash_size": "8MB",
       "maximum_ram_size": 327680,
@@ -41,7 +37,6 @@
       "require_upload_port": true,
       "speed": 460800
     },
-    "url": "https://unexpectedmaker.com/shop/ttinys3-esp32s3",
-    "vendor": "Unexpected Maker"
+    "url": "https://docs.ai-thinker.com/_media/esp32/docs/esp-s3-12k_v1.0.0.pdf",
+    "vendor": "AI Thinker"
   }
-  
