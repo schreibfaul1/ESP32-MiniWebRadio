@@ -203,32 +203,3 @@ uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
 boolean audioIsRunning();
 
-
-
-
-
-
-
-
-// PINS for ESP32S3 (suggestion)
-
-// // Digital I/O used
-//     #define TFT_CS         7
-//     #define TFT_DC        12
-//     #define TFT_BL         6  // at -1 the brightness menu is not displayed
-//     #define TP_IRQ        39
-//     #define TP_CS         15
-//     #define SD_MMC_D0     11
-//     #define SD_MMC_CLK    13
-//     #define SD_MMC_CMD    14
-//     #define IR_PIN        35
-//     #define TFT_MOSI      18  // TFT and TP (FSPI)
-//     #define TFT_MISO       2  // TFT and TP (FSPI)
-//     #define TFT_SCK       17  // TFT and TP (FSPI)
-
-
-//     #define I2S_DOUT       9
-//     #define I2S_DIN       -1  // pin not used
-//     #define I2S_BCLK       3
-//     #define I2S_LRC        1
-//     #define I2S_MCLK       0  // mostly not used
