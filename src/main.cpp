@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.3c, Jul 04/2022
+    Version 2.4, Jul 15/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -165,7 +165,9 @@ SemaphoreHandle_t  mutex_display;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
     struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
     struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-    struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w = 120; uint16_t h = 20; } const _winSleep;
+    struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winSleep;
+    struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
+    struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winUnusedArea;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
     struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
@@ -222,9 +224,11 @@ SemaphoreHandle_t  mutex_display;
     struct w_m {uint16_t x = 390; uint16_t y = 0;   uint16_t w =  90; uint16_t h = 30; } const _winTime;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 280; uint16_t h = 30; } const _winItem;
     struct w_v {uint16_t x = 280; uint16_t y = 0;   uint16_t w = 110; uint16_t h = 30; } const _winVolume;
+    struct w_s {uint16_t x = 0;   uint16_t y = 290; uint16_t w =  90; uint16_t h = 30; } const _winStaNr;
+    struct w_p {uint16_t x = 90;  uint16_t y = 290; uint16_t w =  80; uint16_t h = 30; } const _winSleep;
+    struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h = 30; } const _winRSSID;
+    struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h = 30; } const _winUnusedArea;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
-    struct w_s {uint16_t x = 0;   uint16_t y = 290; uint16_t w = 100; uint16_t h = 30; } const _winStaNr;
-    struct w_p {uint16_t x = 100; uint16_t y = 290; uint16_t w = 160; uint16_t h = 30; } const _winSleep;
     struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 30; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 190; uint16_t w =  96; uint16_t h = 96; } const _winButton;
     uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
@@ -511,6 +515,33 @@ void showFooterStaNr(){
     tft.printf("%03d", _cur_station);
     xSemaphoreGive(mutex_display);
 }
+void showFooterRSSI(){
+    static int old_rssi = -1;
+    int new_rssi = -1;
+    int rssi = WiFi.RSSI(); // Received Signal Strength Indicator
+    if(rssi <  -1) new_rssi = 4;
+    if(rssi < -50) new_rssi = 3;
+    if(rssi < -65) new_rssi = 2;
+    if(rssi < -75) new_rssi = 1;
+    if(rssi < -85) new_rssi = 0;
+
+    if(new_rssi != old_rssi){
+        old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
+        if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO){
+            SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi);
+        }
+        switch(new_rssi){
+            case 4: {drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y); break;}
+            case 3: {drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y); break;}
+            case 2: {drawImage("/common/RSSI2.bmp", _winRSSID.x, _winRSSID.y); break;}
+            case 1: {drawImage("/common/RSSI1.bmp", _winRSSID.x, _winRSSID.y); break;}
+            case 0: {drawImage("/common/RSSI0.bmp", _winRSSID.x, _winRSSID.y); break;}
+        }
+    }
+}
+void showFooterUnusedArea(){ // unused yet, so fill it black
+    tft.fillRect(_winUnusedArea.x, _winUnusedArea.y, _winUnusedArea.w, _winUnusedArea.h, TFT_BLACK);
+}
 void updateSleepTime(boolean noDecrement){  // decrement and show new value in footer
     if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
@@ -519,12 +550,12 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
     if(_state != ALARM){
         char Slt[15];
-        sprintf(Slt,"S  %d:%02d", _sleeptime / 60, _sleeptime % 60);
+        sprintf(Slt,"S %d:%02d", _sleeptime / 60, _sleeptime % 60);
         tft.setFont(_fonts[1]);
         if(!_sleeptime) tft.setTextColor(TFT_DEEPSKYBLUE);
         else tft.setTextColor(TFT_RED);
         clearSleep();
-        tft.setCursor(_winSleep.x + 25 , _winSleep.y + 2);
+        tft.setCursor(_winSleep.x + 12 , _winSleep.y + 2);
         tft.print(Slt);
     }
     if(sleep){ // fall asleep
@@ -555,6 +586,8 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     showFooterStaNr();
     updateSleepTime();
     showFooterIPaddr();
+    showFooterRSSI();
+    showFooterUnusedArea();
 }
 void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight){
     tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
@@ -1503,12 +1536,11 @@ void changeState(int state){
             else if(_state == PLAYER  || _state == PLAYERico){
                 setStation(_cur_station);
                 showLogoAndStationName();
-                //showStreamTitle(_streamTitle);
                 _f_newStreamTitle = true;
             }
             else if(_state == CLOCKico){
                 showLogoAndStationName();
-                //showStreamTitle(_streamTitle);
+                _timeCounter = 0;
                 _f_newStreamTitle = true;
             }
             else if(_state == SLEEP){
@@ -1521,7 +1553,7 @@ void changeState(int state){
             }
             else{
                 showLogoAndStationName();
-                showStreamTitle(_streamTitle);
+                _f_newStreamTitle = true;
             }
             break;
         }
@@ -1558,7 +1590,7 @@ void changeState(int state){
                 pref.putUInt("alarm_time", _alarmtime);
                 pref.putUShort("alarm_weekday", _alarmdays);
                 SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%2d:%2d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
-                               "%s\n", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays));
+                               "%s", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays));
                 clearHeader();
             }
             _state = CLOCK;
@@ -1704,7 +1736,7 @@ void loop() {
 
     if(_f_1sec){
          _f_1sec = false;
-        if(_state != ALARM && !_f_sleeping) showHeadlineTime();
+        if(_state != ALARM && !_f_sleeping) {showHeadlineTime(); showFooterRSSI();}
         if(_state == CLOCK || _state == CLOCKico) display_time();
 
         if(_timeCounter){
@@ -1724,7 +1756,6 @@ void loop() {
             time_s = rtc.gettime_s();
             xSemaphoreGive(mutex_rtc);
             if(_f_eof && (_state == RADIO || _f_eof_alarm)){
-log_e("0");
                 _f_eof = false;
                 if(_f_eof_alarm){
                     _f_eof_alarm = false;
