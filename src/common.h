@@ -3,10 +3,10 @@
 
 #pragma once
 
-#define _SSID               "mySSID"                        // Your WiFi credentials here
-#define _PW                 "myWiFiPassword"
+#define _SSID               "Fibernet-IA01860661"                        // Your WiFi credentials here
+#define _PW                 "Ud2zCc16"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
+#define DECODER             3                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
 #define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
@@ -43,16 +43,16 @@
     // Digital I/O used
         #define TFT_CS        22
         #define TFT_DC        21
-        #define TFT_BL        32  // at -1 the brightness menu is not displayed
+        #define TFT_BL        -1  // at -1 the brightness menu is not displayed
         #define TP_IRQ        39  // VN
-        #define TP_CS          5
+        #define TP_CS         32
         #define SD_MMC_D0      2  // cannot be changed
         #define SD_MMC_CLK    14  // cannot be changed
         #define SD_MMC_CMD    15  // cannot be changed
         #define IR_PIN        35
-        #define TFT_MOSI      23  // TFT and TP (VSPI)
-        #define TFT_MISO      19  // TFT and TP (VSPI)
-        #define TFT_SCK       18  // TFT and TP (VSPI)
+        #define TFT_MOSI      -1  // TFT and TP (VSPI)
+        #define TFT_MISO      -1  // TFT and TP (VSPI)
+        #define TFT_SCK       27  // TFT and TP (VSPI)
     #if DECODER == 0
         #define VS1053_CS     33
         #define VS1053_DCS     4
@@ -61,14 +61,14 @@
         #define VS1053_MISO   34  // VS1053     (HSPI)
         #define VS1053_SCK    12  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
     #else
-        #define I2S_DOUT      25
-        #define I2S_DIN       -1  // pin not used
-        #define I2S_BCLK      27
-        #define I2S_LRC       26
+        #define I2S_DOUT      26
+        #define I2S_DIN       35  // pin not used
+        #define I2S_BCLK      5
+        #define I2S_LRC       25
         #define I2S_MCLK       0  // mostly not used
     #endif
-        #define I2C_DATA      -1  // some DACs are controlled via I2C
-        #define I2C_CLK       -1
+        #define I2C_DATA      18  // some DACs are controlled via I2C
+        #define I2C_CLK       23
         #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
         #define HP_DETECT     -1
         #define AMP_ENABLED   -1
