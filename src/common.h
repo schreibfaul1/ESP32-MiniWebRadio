@@ -1,17 +1,17 @@
 // created: 10.02.2022
-// updated: 04.07.2022
+// updated: 15.07.2022
 
 #pragma once
 
-#define _SSID               "WiFimodem-ABBE"                        // Your WiFi credentials here
-#define _PW                 "e2n2qmzyjn"
+#define _SSID               "mySSID"                        // Your WiFi credentials here
+#define _PW                 "myWiFiPassword"
 #define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
-#define DECODER             0                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
+#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
+#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_FREQUENCY       27000000                        // 27000000, 40000000, 80000000
+#define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 1 or 3 (landscape)
-#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
+#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
 #define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
@@ -49,7 +49,7 @@
         #define SD_MMC_D0      2  // cannot be changed
         #define SD_MMC_CLK    14  // cannot be changed
         #define SD_MMC_CMD    15  // cannot be changed
-        #define IR_PIN        -1
+        #define IR_PIN        35
         #define TFT_MOSI      23  // TFT and TP (VSPI)
         #define TFT_MISO      19  // TFT and TP (VSPI)
         #define TFT_SCK       18  // TFT and TP (VSPI)
@@ -143,6 +143,7 @@ void showHeadlineTime();
 void showHeadlineItem(uint8_t idx);
 void showFooterIPaddr();
 void showFooterStaNr();
+void showFooterRSSI();
 void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();
@@ -202,32 +203,3 @@ uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
 boolean audioIsRunning();
 
-
-
-
-
-
-
-
-// PINS for ESP32S3 (suggestion)
-
-// // Digital I/O used
-//     #define TFT_CS         7
-//     #define TFT_DC        12
-//     #define TFT_BL         6  // at -1 the brightness menu is not displayed
-//     #define TP_IRQ        39
-//     #define TP_CS         15
-//     #define SD_MMC_D0     11
-//     #define SD_MMC_CLK    13
-//     #define SD_MMC_CMD    14
-//     #define IR_PIN        35
-//     #define TFT_MOSI      18  // TFT and TP (FSPI)
-//     #define TFT_MISO       2  // TFT and TP (FSPI)
-//     #define TFT_SCK       17  // TFT and TP (FSPI)
-
-
-//     #define I2S_DOUT       9
-//     #define I2S_DIN       -1  // pin not used
-//     #define I2S_BCLK       3
-//     #define I2S_LRC        1
-//     #define I2S_MCLK       0  // mostly not used
