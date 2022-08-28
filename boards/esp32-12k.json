@@ -1,7 +1,8 @@
 {
     "build": {
       "arduino":{
-        "ldscript": "esp32s3_out.ld"
+        "ldscript": "esp32s3_out.ld",
+        "memory_type": "qio_qspi"
       },
       "core": "esp32",
       "extra_flags": [
@@ -14,6 +15,7 @@
       "f_cpu": "240000000L",
       "f_flash": "80000000L",
       "flash_mode": "qio",
+      "boot_freq": "120000000L",
       "mcu": "esp32s3",
       "variant": "esp32s3"
     },
@@ -21,6 +23,10 @@
       "wifi"
     ],
     "debug": {
+      "default_tool": "esp-builtin",
+      "onboard_tools": [
+        "esp-builtin"
+      ],
       "openocd_target": "esp32s3.cfg"
     },
     "frameworks": [

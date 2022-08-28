@@ -26,7 +26,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 #if DECODER == 0
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING};
+                 ISRUNNING, HIGHWATERMARK};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -123,6 +123,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == ISRUNNING){
                 audioTxTaskMessage.cmd = ISRUNNING;
                 audioTxTaskMessage.ret = vs1053.isRunning();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
+                audioTxTaskMessage.cmd = HIGHWATERMARK;
+                audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -226,6 +231,12 @@ boolean audioIsRunning(){
     return RX.ret;
 }
 
+uint32_t audioGetStackHighWatermark(){
+    audioTxMessage.cmd = HIGHWATERMARK;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 #endif // DECODER == 0
 
 /***********************************************************************************************************************
@@ -235,7 +246,7 @@ boolean audioIsRunning(){
 #if DECODER >= 1
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING};
+                 ISRUNNING, HIGHWATERMARK};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -324,6 +335,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == ISRUNNING){
                 audioTxTaskMessage.cmd = ISRUNNING;
                 audioTxTaskMessage.ret = audio.isRunning();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
+                audioTxTaskMessage.cmd = HIGHWATERMARK;
+                audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -422,6 +438,12 @@ uint32_t audioInbuffFree(){
 
 boolean audioIsRunning(){
     audioTxMessage.cmd = ISRUNNING;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioGetStackHighWatermark(){
+    audioTxMessage.cmd = HIGHWATERMARK;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

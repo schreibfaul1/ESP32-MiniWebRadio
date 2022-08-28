@@ -202,4 +202,5 @@ void audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3 = 0
 uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
 boolean audioIsRunning();
+uint32_t audioGetStackHighWatermark();
 

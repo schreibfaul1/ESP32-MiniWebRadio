@@ -917,6 +917,7 @@ bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
     WiFi.setHostname("MiniWebRadio");
+    WiFi.useStaticBuffers(true);
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file){                                         // try to read from SD_MMC
         String str = "";
@@ -1017,6 +1018,11 @@ void setup(){
     uint8_t avPatch  = ESP_ARDUINO_VERSION_PATCH;
     Serial.printf("ESP32 Chip: %s\n", chipModel);
     Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
+    uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
+    uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
+    uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
+    Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
+    Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
 
     Serial.print("\n\n");
     mutex_rtc     = xSemaphoreCreateMutex();
@@ -2022,6 +2028,7 @@ void ir_key(const char* key){
                             updateSleepTime(true); changeState(RADIO); break;}
                         if(_state == RADIO){changeState(CLOCK); break;}
                         if(_state == CLOCK){changeState(RADIO); break;}
+                        break;
         case 'r':       upvolume();                                                             // right
                         break;
         case 'l':       downvolume();                                                           // left
@@ -2030,6 +2037,7 @@ void ir_key(const char* key){
                         if(_state == CLOCK){nextStation(); changeState(RADIO);
                                             _timeCounter = 5; _f_switchToClock = true; break;}
                         if(_state == SLEEP){display_sleeptime(1); break;}
+                        break;
         case 'd':       if(_state == RADIO){prevStation(); break;}                              // down
                         if(_state == CLOCK){prevStation(); changeState(RADIO);
                                             _timeCounter = 5; _f_switchToClock = true; break;}
@@ -2364,9 +2372,12 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     if(   param == "false") _f_timeAnnouncement = false;
                                     pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;}
 
-    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u\n",
+    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
-                                    webSrv.reply(_chbuf); return;}
+                                    webSrv.reply(_chbuf);
+                                    SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark());
+                                    SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL));
+                                    return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }
