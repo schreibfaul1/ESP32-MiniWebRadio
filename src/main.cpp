@@ -917,7 +917,7 @@ bool connectToWiFi(){
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
     WiFi.setHostname("MiniWebRadio");
-    WiFi.useStaticBuffers(true);
+    if(psramFound()) WiFi.useStaticBuffers(true);
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file){                                         // try to read from SD_MMC
         String str = "";
