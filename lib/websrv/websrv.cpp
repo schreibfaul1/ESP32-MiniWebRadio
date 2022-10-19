@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 05.05.2022
+ *  updated on: 19.10.2022
  *      Author: Wolle
  */
 
@@ -271,7 +271,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    sprintf(buff, "File: %s written, FileSize: ", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize: %d", path, contentLength);
     //log_i(buff);
     if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return true;
@@ -305,7 +305,7 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    sprintf(buff, "File: %s written, FileSize: ", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
     return true;
 }

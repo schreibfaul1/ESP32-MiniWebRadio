@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.4, Jul 15/2022
+    Version 2.4a, Oct 19/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -677,13 +677,12 @@ void display_time(boolean showall){ //show current time on the TFT Display
     static String t, oldt = "";
     static boolean k = false;
     uint8_t  i = 0, yOffset = 0;
-    uint16_t x, y, space, imgHeigh, imgWidth_l, imgWidth_s;
+    uint16_t x, y, space, imgWidth_l, imgWidth_s;
     if(TFT_CONTROLLER < 2){
         x = 0;
         y = _winFName.y +33;
         yOffset = 8;
         space = 2;
-        imgHeigh = 120;
         imgWidth_s = 24;
         imgWidth_l = 72;
     }
@@ -692,7 +691,6 @@ void display_time(boolean showall){ //show current time on the TFT Display
         y = _winFName.y + 50;
         yOffset = 0;
         space = 10; // 10px between jpgs
-        imgHeigh = 160;
         imgWidth_s = 32;
         imgWidth_l = 96;
     }
@@ -708,7 +706,6 @@ void display_time(boolean showall){ //show current time on the TFT Display
                 else{
                     sprintf(_chbuf,"/digits/%cgn.jpg",t[i]);
                 }
-                //log_i("drawImage %s, x=%i, y=%i", _chbuf, x, y);
                 if(_state == CLOCKico) drawImage(_chbuf, x, _winFName.y);
                 else drawImage(_chbuf, x, y + yOffset);
             }
@@ -738,7 +735,6 @@ void display_alarmDays(uint8_t ad, boolean showall){ // Sun ad=0, Mon ad=1, Tue 
 }
 
 void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
-    uint16_t j[4] = {5, 77, 173, 245};
     static int8_t pos, h, m;
     int8_t updatePos = -1, oldPos = -1;
     uint8_t corrY = 0;
@@ -810,8 +806,6 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall){
 }
 
 void display_sleeptime(int8_t ud){  // set sleeptimer
-    uint8_t xpos[4] = {5,54,71,120};
-
     if(ud == 1){
         switch(_sleeptime){
             case  0 ...  14:  _sleeptime = (_sleeptime /  5) *  5 +  5; break;
@@ -976,7 +970,7 @@ void connecttohost(const char* host){
         return;
     }
     else{ // pipe found
-        int idx2 = indexOf(host, "|", idx1 + 1);
+        idx2 = indexOf(host, "|", idx1 + 1);
         //log_i("idx2 = %i", idx2);
         if(idx2 == -1){ // second pipe not found
             _f_isWebConnected = audioConnecttohost(host);
@@ -1027,13 +1021,13 @@ void setup(){
     Serial.print("\n\n");
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
-    SerialPrintfln("");
+    SerialPrintfln("   ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
     SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V2     *    ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln("");
-    if(startsWith(chipModel, "ESP32-D")); // ESP32-D    ...  okay
-    if(startsWith(chipModel, "ESP32-P")); // ESP32-PICO ...  okay
+    SerialPrintfln("   ");
+    if(startsWith(chipModel, "ESP32-D")){;} // ESP32-D    ...  okay
+    if(startsWith(chipModel, "ESP32-P")){;} // ESP32-PICO ...  okay
     if(startsWith(chipModel, "ESP32-S2")){
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-S2");
         while(true){;}
@@ -1042,7 +1036,7 @@ void setup(){
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-C3");
         while(true){;}
     }
-    if(startsWith(chipModel, "ESP32-S3")); // ESP32-S3  ...  okay
+    if(startsWith(chipModel, "ESP32-S3")){;} // ESP32-S3  ...  okay
 
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
@@ -1752,7 +1746,7 @@ void loop() {
                 else if(_state == RADIOmenue)                 changeState(RADIO);
                 else if(_state == CLOCKico)                   changeState(CLOCK);
                 else if(_state == RADIO && _f_switchToClock) {changeState(CLOCK); _f_switchToClock = false;}
-                else ;  // all other, do nothing
+                else {;}  // all other, do nothing
             }
         }
         if(_f_rtc==true){ // true -> rtc has the current time

@@ -103,7 +103,7 @@ private:
 
     boolean  dataPassiveConn = false;;
     uint16_t dataPort = 0;
-    char     chbuf[256];                    // stores debug infos
+    char     chbuf[280];                    // stores debug infos
     char     *buf = NULL;
     char     *cmdLine = NULL;               // where to store incoming char from client
     char     *cwdName = NULL;               // name of current directory

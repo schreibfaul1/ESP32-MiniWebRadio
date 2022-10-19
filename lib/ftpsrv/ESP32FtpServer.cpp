@@ -230,7 +230,6 @@ boolean FtpServer::processCommand() {
     // ACCESS CONTROL COMMANDS
 
     if(!strcmp(command, "CDUP")) {       //  CDUP - Change to Parent Directory
-        int todo;
         client.println("250 Ok. Current directory is \"" + String(cwdName) + "\"");
         sprintf(chbuf, "\"%s\" is your current directory", cwdName);
         if(ftp_debug) ftp_debug(chbuf);
@@ -711,11 +710,11 @@ boolean FtpServer::doRetrieve() {
 //----------------------------------------------------------------------------------------------------------------------
 boolean FtpServer::doStore() {
     if(data.connected()) {
-        unsigned long ms0 = millis();
         int32_t nb;
         nb = data.readBytes((uint8_t*) buf, FTP_BUF_SIZE);
         if(nb > 0) {
             size_t written = file.write((uint8_t*) buf, nb);
+            (void) written;
             bytesTransfered += nb;
         }
         else {
