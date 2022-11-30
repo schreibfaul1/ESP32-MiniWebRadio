@@ -1064,7 +1064,7 @@ void setup(){
     #ifdef CONFIG_IDF_TARGET_ESP32S3
         SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     #endif
-    int sdmmc_frequency = (uint16_t)SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
+    int sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)){
         clearAll();
         tft.setFont(_fonts[5]);
