@@ -15,6 +15,7 @@
 #define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
+#define SDMMC_FREQUENCY     20000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
 

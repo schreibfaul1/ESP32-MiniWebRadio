@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.4a, Oct 19/2022
+    Version 2.4b, Nov 30/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -528,7 +528,11 @@ void showFooterRSSI(){
     if(new_rssi != old_rssi){
         old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
         if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO){
-            SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi);
+            static int tmp_rssi = 0;
+            if((abs(rssi - tmp_rssi) > 2)){
+                SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi);
+            }
+            tmp_rssi = rssi;
         }
         switch(new_rssi){
             case 4: {drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y); break;}
@@ -1060,7 +1064,8 @@ void setup(){
     #ifdef CONFIG_IDF_TARGET_ESP32S3
         SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     #endif
-    if(!SD_MMC.begin("/sdcard", true)){
+    int sdmmc_frequency = (uint16_t)SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
+    if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)){
         clearAll();
         tft.setFont(_fonts[5]);
         tft.setTextColor(TFT_YELLOW);
