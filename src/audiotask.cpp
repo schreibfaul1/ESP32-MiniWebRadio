@@ -142,7 +142,7 @@ void audioInit() {
     xTaskCreatePinnedToCore(
         audioTask,             /* Function to implement the task */
         "audioplay",           /* Name of the task */
-        6500,                  /* Stack size in words */
+        8000,                  /* Stack size in words */
         NULL,                  /* Task input parameter */
         AUDIOTASK_PRIO,        /* Priority of the task */
         NULL,                  /* Task handle. */
@@ -354,7 +354,7 @@ void audioInit() {
     xTaskCreatePinnedToCore(
         audioTask,              /* Function to implement the task */
         "audioplay",            /* Name of the task */
-        6500,                   /* Stack size in words */
+        8000,                   /* Stack size in words */
         NULL,                   /* Task input parameter */
         AUDIOTASK_PRIO,         /* Priority of the task */
         NULL,                   /* Task handle. */
