@@ -1102,7 +1102,7 @@ function trackreq (presctrl) { // Audio Player: select audio title from track li
 }
 
 function getAudioFileList(val){
-  console.log(val)
+  content =JSON.parse(val)
   var select = document.getElementById('seltrack')
   select.options.length = 0;
   var fileNames = val.split(",")
@@ -1113,9 +1113,9 @@ function getAudioFileList(val){
       opt.text =  "select a file here"
     }
     else{
-      console.log(fileNames[i])
-      opt.value = fileNames[i]
-      opt.text =  fileNames[i]
+      console.log(content[i].name)
+      opt.value = content[i].name
+      opt.text =  content[i].name
     }
     select.add(opt)
   }

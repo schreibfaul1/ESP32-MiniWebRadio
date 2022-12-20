@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 15.07.2022
+// updated: 20.12.2022
 
 #pragma once
 
@@ -39,6 +39,8 @@
 #include "AC101.h"
 #include "ES8388.h"
 #include "WM8978.h"
+#include "SoapESP32.h"
+#include "Arduino_JSON.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -140,7 +142,7 @@ void setTFTbrightness(uint8_t duty);
 const char* UTF8toASCII(const char* str);
 const char* ASCIItoUTF8(const char* str);
 void showHeadlineVolume();
-void showHeadlineTime();
+void showHeadlineTime(bool complete = true);
 void showHeadlineItem(uint8_t idx);
 void showFooterIPaddr();
 void showFooterStaNr();

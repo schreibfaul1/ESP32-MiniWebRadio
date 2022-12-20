@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.4b, Nov 30/2022
+    Version 2.4c, Dec 12/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -474,14 +474,37 @@ void showHeadlineVolume(){
     tft.print(_chbuf);
     xSemaphoreGive(mutex_display);
 }
-void showHeadlineTime(){
+void showHeadlineTime(bool complete){
+    static char oldtime[8]; //hhmmss
+    char newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
+    uint8_t pos_s[8] = {0,  9, 17, 21, 30, 38, 41, 50}; // display 320x240
+    uint8_t pos_m[8] = {0, 13, 26, 32, 45, 58, 64, 77}; // display 480x320
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
-    clearTime();
-    if(!_f_rtc) {xSemaphoreGive(mutex_display); return;} // has rtc the correct time? no -> return
-    tft.setCursor(_winTime.x + 2, _winTime.y + 2);
-    tft.print(rtc.gettime_s());
+    if(!_f_rtc) {xSemaphoreGive(mutex_display); clearTime(); return;} // has rtc the correct time? no -> return
+    memcpy(newtime, rtc.gettime_s(), 8);
+    if(complete == true){
+        clearTime();
+        for(uint8_t i =0; i <8; i++){ oldtime[i] = 255;}
+    }
+    for(uint8_t i = 0; i < 8; i++){
+        if(oldtime[i] != newtime[i]){
+            char ch[2] = {0, 0};
+            ch[0] = newtime[i];
+            if(TFT_CONTROLLER < 2){  // 320x240
+                tft.fillRect(_winTime.x + pos_s[i], _winTime.y, 9, _winTime.h, TFT_BLACK);
+                tft.setCursor(_winTime.x + pos_s[i], _winTime.y + 2);
+            }
+            else{ // 480x320
+                tft.fillRect(_winTime.x + pos_m[i], _winTime.y, 13, _winTime.h, TFT_BLACK);
+                tft.setCursor(_winTime.x + pos_m[i], _winTime.y + 2);
+            }
+            tft.print(ch);
+            oldtime[i] = newtime[i];
+        }
+    }
+
     xSemaphoreGive(mutex_display);
 }
 void showHeadlineItem(uint8_t idx){
@@ -895,17 +918,16 @@ const char* listAudioFile(){
 bool sendAudioList2Web(const char* audioDir){
     if(!setAudioFolder(audioDir)) return false;
     const char* FileName = NULL;
-    String str = "AudioFileList=";
+    JSONVar jObject;
     uint8_t i = 0;
     while(true){
         FileName = listAudioFile();
         if(!FileName) break;
-        if(i) str += ",";
-        str += (String)FileName;
+        jObject[i]["name"] = (String)FileName;
         i++;
     }
-    SerialPrintfln("Audiofiles:  " ANSI_ESC_GREEN "%s", str.c_str() + 14);
-    webSrv.send((const char*)str.c_str());
+    String msg = "AudioFileList=" + JSON.stringify(jObject);
+    webSrv.send(msg);
     return true;
 }
 /***********************************************************************************************************************
@@ -1466,9 +1488,9 @@ void processPlaylist(boolean first){
     _playlistTime = millis();
     while(playlistFile.available() > 0){
         f = playlistFile.readStringUntil('\n');
+        if(f.length() < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
         if(f.startsWith("#")) SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", f.c_str());
         f.trim();
-        if(f.length() < 5) continue;
         if(first){
             if(f.startsWith("#EXTM3U")){
                 first = false;
@@ -1477,6 +1499,7 @@ void processPlaylist(boolean first){
             }
             else{
                 SerialPrintfln("Playlist:    " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", _afn);
+                playlistFile.close();
                 return;
             }
         }
@@ -1741,7 +1764,7 @@ void loop() {
 
     if(_f_1sec){
          _f_1sec = false;
-        if(_state != ALARM && !_f_sleeping) {showHeadlineTime(); showFooterRSSI();}
+        if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
         if(_state == CLOCK || _state == CLOCKico) display_time();
 
         if(_timeCounter){
