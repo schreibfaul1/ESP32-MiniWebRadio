@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.4c, Dec 12/2022
+    Version 2.4d, Mar 13/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -901,11 +901,13 @@ const char* listAudioFile(){
         audioFile.close();
         return nullptr;
     }
-    while(file){
+    else{
+        if(file.isDirectory()) return "dir";
         strcpy(_chbuf, file.name());
         if(endsWith(_chbuf, ".mp3") || endsWith(_chbuf, ".aac") || endsWith(_chbuf, ".m4a") ||
                                        endsWith(_chbuf, ".wav") || endsWith(_chbuf, ".flac")||
-                                       endsWith(_chbuf, ".m3u")){
+                                       endsWith(_chbuf, ".m3u") || endsWith(_chbuf, ".opus")){
+
             return _chbuf;
         }
         else{
@@ -923,6 +925,7 @@ bool sendAudioList2Web(const char* audioDir){
     while(true){
         FileName = listAudioFile();
         if(!FileName) break;
+        if(strcmp(FileName, "dir") == 0) continue;
         jObject[i]["name"] = (String)FileName;
         i++;
     }
@@ -2120,7 +2123,7 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 3){_releaseNr =  3; } // station--
                             if(btnNr == 4){_releaseNr =  4; } // station++
                             changeBtn_pressed(btnNr); break;
-        case RADIOmenue_1:  if(btnNr == 0){_releaseNr = 10; audioStopSong(); listAudioFile();} // AudioPlayer
+        case RADIOmenue_1:  if(btnNr == 0){_releaseNr = 10; audioStopSong();} // AudioPlayer
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
