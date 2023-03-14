@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.4d, Mar 13/2022
+    Version 2.5, Mar 14/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -371,60 +371,41 @@ inline uint8_t getBrightness(){
     return pref.getUShort("brightness");
 }
 /***********************************************************************************************************************
-*                                                     A S C I I                                                        *
+*                                              U R L d e c o d e                                                       *
 ***********************************************************************************************************************/
-const char* UTF8toASCII(const char* str){
-    uint16_t i = 0, j = 0;
-    char tab[96] = {
-          96, 173, 155, 156,  32, 157,  32,  32,  32,  32, 166, 174, 170,  32,  32,  32, 248, 241, 253,  32,
-          32, 230,  32, 250,  32,  32, 167, 175, 172, 171,  32, 168,  32,  32,  32,  32, 142, 143, 146, 128,
-          32, 144,  32,  32,  32,  32,  32,  32,  32, 165,  32,  32,  32,  32, 153,  32,  32,  32,  32,  32,
-         154,  32,  32, 225, 133, 160, 131,  32, 132, 134, 145, 135, 138, 130, 136, 137, 141, 161, 140, 139,
-          32, 164, 149, 162, 147,  32, 148, 246,  32, 151, 163, 150, 129,  32,  32, 152
-       };
-      while((str[i] != 0) && (j < 1020)){
-        _chbuf[j] = str[i];
-        if(str[i] == 0xC2){ // compute unicode from utf8
-            i++;
-            if((str[i] > 159) && (str[i] < 192)) _chbuf[j] = tab[str[i] - 160];
-            else _chbuf[j] = 32;
-        }
-        else if(str[i] == 0xC3){
-            i++;
-            if((str[i] > 127) && (str[i] < 192)) _chbuf[j] = tab[str[i] - 96];
-            else _chbuf[j] = 32;
-        }
-        i++; j++;
-    }
-    _chbuf[j] = 0;
-    return (_chbuf);
-}
-const char* ASCIItoUTF8(const char* str){
-    uint16_t i = 0, j = 0, uni = 0;
-    uint16_t tab[128] = {
-         199,  252,  233,  226,  228,  224,  229,  231,  234,  235,  232,  239,  238,  236,  196,  197,
-         201,  230,  198,  244,  246,  242,  251,  249,  255,  214,  220,  162,  163,  165, 8359,  402,
-         225,  237,  243,  250,  241,  209,  170,  186,  191, 8976,  172,  189,  188,  161,  171,  187,
-        9617, 9618, 9619, 9474, 9508, 9569, 9570, 9558, 9557, 9571, 9553, 9559, 9565, 9564, 9563, 9488,
-        9492, 9524, 9516, 9500, 9472, 9532, 9566, 9567, 9562, 9556, 9577, 9574, 9568, 9552, 9580, 9575,
-        9576, 9572, 9573, 9561, 9560, 9554, 9555, 9579, 9578, 9496, 9484, 9608, 9604, 9612, 9616, 9600,
-         945,  223,  915,  960,  931,  963,  181,  964,  934,  920,  937,  948, 8734,  966,  949, 8745,
-        8801,  177, 8805, 8804, 8992, 8993,  247, 8776,  176, 8729,  183, 8730, 8319,  178, 9632,  160
-    };
-    while((str[i] != 0) && (j < 1020)){
-        uni = str[i];
-        if(uni >= 128){uni -= 128; uni = tab[uni];}
-//            uni=UTF8fromASCII(str[i]);
-            switch(uni){
-                case   0 ... 127:{_chbuf[j] = str[i]; i++; j++; break;}
-                case 160 ... 191:{_chbuf[j] = 0xC2; _chbuf[j+1] = uni; j += 2; i++; break;}
-                case 192 ... 255:{_chbuf[j] = 0xC3; _chbuf[j+1] = uni - 64; j += 2; i++; break;}
-                default:{_chbuf[j] = ' '; i++; j++; break;} // ignore all other
+// In m3u playlists, file names can be URL encoded.
+// Since UTF-8 is always shorter than URI, the same memory is used for decoding
+// e.g. Born%20On%20The%20B.mp3 --> Born On The B.mp3
+// e.g. %D0%B8%D1%81%D0%BF%D1%8B%D1%82%D0%B0%D0%BD%D0%B8%D0%B5.mp3 --> испытание.mp3
+void urldecode(char *str){
+    uint16_t p1 = 0, p2 = 0;
+    char a, b;
+    while (str[p1]) {
+            if ((str[p1] == '%') && ((a = str[p1 + 1]) && (b = str[p1 + 2])) && (isxdigit(a) && isxdigit(b))) {
+                    if (a >= 'a')
+                            a -= 'a'-'A';
+                    if (a >= 'A')
+                            a -= ('A' - 10);
+                    else
+                            a -= '0';
+                    if (b >= 'a')
+                            b -= 'a'-'A';
+                    if (b >= 'A')
+                            b -= ('A' - 10);
+                    else
+                            b -= '0';
+                    str[p2++] = 16*a+b;
+                    p1+=3;
+            } else if (str[p1] == '+') {
+                    str[p2++] = ' ';
+                    p1++;
+            } else {
+                    str[p2++] = str[p1++];
             }
     }
-    _chbuf[j] = 0;
-    return _chbuf;
+    str[p2++] = '\0';
 }
+
 /***********************************************************************************************************************
 *                                                     T I M E R                                                        *
 ***********************************************************************************************************************/
@@ -681,7 +662,7 @@ void showLogoAndStationName(){
     }
     display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, _winName.h);
 
-    String logo = "/logo/" + String(UTF8toASCII(SN_ascii.c_str())) +".jpg";
+    String logo = "/logo/" + (String) SN_ascii.c_str() +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
         drawImage("/common/unknown.jpg", 0, _winName.y + 2);  // if no draw unknown
     }
@@ -1209,6 +1190,23 @@ const char* byte_to_binary(int8_t x){
     }
     return b;
 }
+void trim(char *s) {
+//fb   trim in place
+    char *pe;
+    char *p = s;
+    while ( isspace(*p) ) p++; //left
+    pe = p; //right
+    while ( *pe != '\0' ) pe++;
+    do {
+        pe--;
+    } while ( (pe > p) && isspace(*pe) );
+    if (p == s) {
+        *++pe = '\0';
+    } else {  //move
+        while ( p <= pe ) *s++ = *p++;
+        *s = '\0';
+    }
+}
 bool startsWith (const char* base, const char* str) {
     char c;
     while ( (c = *str++) != '\0' )
@@ -1263,7 +1261,7 @@ void SerialPrintflnCut(const char* item, const char* color, const char* str){
 
 const char* scaleImage(const char* path){
     if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))){ // not a image
-        return UTF8toASCII(path);
+        return path;
     }
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
@@ -1280,7 +1278,7 @@ const char* scaleImage(const char* path){
         else                   strcat(pathBuff, _prefix); // medium pic, 480x320px
         strcat(pathBuff, path);
     }
-    return UTF8toASCII(pathBuff);
+    return pathBuff;
 }
 inline uint8_t getvolume(){
     return pref.getUShort("volume");
@@ -1414,7 +1412,7 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         strcat(fn, _prefix);
         if(!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
-        if(webSrv.uploadB64image(SD_MMC, UTF8toASCII(fn), contentLength)){
+        if(webSrv.uploadB64image(SD_MMC, fn, contentLength)){
             SerialPrintfln("save image " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.reply("OK");
         }
@@ -1428,7 +1426,7 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         else{
             strcpy(fn, fileName);
         }
-        if(webSrv.uploadfile(SD_MMC, UTF8toASCII(fn), contentLength)){
+        if(webSrv.uploadfile(SD_MMC, fn, contentLength)){
             SerialPrintfln("save file " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.reply("OK");
         }
@@ -1486,16 +1484,16 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
 }
 
 void processPlaylist(boolean first){
-    String f = "";
     String t = "";
     _playlistTime = millis();
     while(playlistFile.available() > 0){
-        f = playlistFile.readStringUntil('\n');
-        if(f.length() < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
-        if(f.startsWith("#")) SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", f.c_str());
-        f.trim();
+        size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
+        _chbuf[bytesRead] = '\0';
+        if(bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
+        if(startsWith(_chbuf, "#"))SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
+        trim(_chbuf);
         if(first){
-            if(f.startsWith("#EXTM3U")){
+            if(startsWith(_chbuf, "#EXTM3U")){
                 first = false;
                 _f_playlistEnabled = true;
                 continue;
@@ -1506,17 +1504,17 @@ void processPlaylist(boolean first){
                 return;
             }
         }
-        if(f.startsWith("#EXTINF")){
-            int8_t idx = f.indexOf(",");
+        if(startsWith(_chbuf, "#EXTINF")){
+            int8_t idx = indexOf(",", _chbuf, 0);
             if(idx > 8){
-                t = f.substring(idx + 1);
+                t = _chbuf[idx + 1];
                 t.trim();
             }
             continue;
         }
-        if(!f.startsWith("#")){
-            if(f.startsWith("http")){
-                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, f.c_str());
+        if(!startsWith(_chbuf, "#")){
+            if(startsWith(_chbuf, "http")){
+                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
                 clearFName();
                 showVolumeBar();
                 if(t.length() > 0){
@@ -1524,16 +1522,17 @@ void processPlaylist(boolean first){
                     webSrv.send("audiotrack=" + t);
                 }
                 else{
-                    showFileName(f.c_str());
-                    webSrv.send("audiotrack=" + f);
+                    showFileName(_chbuf);
+                    webSrv.send((String)"audiotrack=" + _chbuf);
                 }
                 changeState(PLAYERico);
-                audioConnecttohost(f.c_str());
+                audioConnecttohost(_chbuf);
             }
             else{
-                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", f.c_str());
-                webSrv.send("audiotrack=" + f);
-                audiotrack(f.c_str());
+                urldecode(_chbuf);
+                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
+                webSrv.send((String)"audiotrack=" + _chbuf);
+                audiotrack(_chbuf);
             }
             return;
         }
@@ -2374,7 +2373,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "change_state"){      changeState(param.toInt()); return;}
 
-    if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped"); return;}
+    if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped");
+                                    if(playlistFile) playlistFile.close(); return;}
 
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=nothing to resume");
                                     else {audiotrack(_lastconnectedfile, _resumeFilePos);

@@ -1,5 +1,5 @@
-// created: 10.02.2022
-// updated: 20.12.2022
+// created: 10.Feb.2022
+// updated: 14.Mar.2023
 
 #pragma once
 
@@ -138,9 +138,8 @@
 // //prototypes (main.cpp)
 boolean defaultsettings();
 boolean saveStationsToNVS();
+void urldecode(char *str);
 void setTFTbrightness(uint8_t duty);
-const char* UTF8toASCII(const char* str);
-const char* ASCIItoUTF8(const char* str);
 void showHeadlineVolume();
 void showHeadlineTime(bool complete = true);
 void showHeadlineItem(uint8_t idx);
@@ -165,6 +164,7 @@ const char* listAudioFile();
 bool sendAudioList2Web(const char* audioDir);
 bool connectToWiFi();
 const char* byte_to_binary(int8_t x);
+void trim(char *s);
 bool startsWith (const char* base, const char* str);
 bool endsWith (const char* base, const char* str);
 int indexOf (const char* base, const char* str, int startIndex);
