@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 05.05.2022
+ *  Updated on: 24.03.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -378,6 +378,19 @@ function connect() {
                               if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
                               break
 
+      case "DLNA_Names":      showServer(val)
+                              break
+      case "Level1":          show_DLNA_Content(val, 1)
+                              break
+      case "Level2":          show_DLNA_Content(val, 2)
+                              break
+      case "Level3":          show_DLNA_Content(val, 3)
+                              break
+      case "Level4":          show_DLNA_Content(val, 4)
+                              break
+      case "Level5":          show_DLNA_Content(val, 5)
+                              break
+
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -464,8 +477,14 @@ function showTab3 () {
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
   document.getElementById('btn4').src = 'SD/png/Search_Green.png'
   document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('level1').options.length = 0
+  document.getElementById('level2').options.length = 0
+  document.getElementById('level3').options.length = 0
+  document.getElementById('level4').options.length = 0
+  document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
+  socket.send('DLNA_getServer')
 }
 
 function showTab4 () {
@@ -511,6 +530,103 @@ function uploadTextFile (fileName, content) {
   }
   xhr.send(fd) // send
 }
+
+// ----------------------------------- DLNA ------------------------------------
+function showServer(val){
+    console.log(val)
+    var select = document.getElementById('server')
+    select.options.length = 0;
+    var server = val.split(",")
+    for (i = -1; i < (server.length); i++) {
+        opt = document.createElement('OPTION')
+        if(i == -1){
+          opt.value = ""
+          opt.text =  "Select a DLNA Server here"
+        }
+        else{
+          console.log(server[i])
+          opt.value = server[i]
+          opt.text =  server[i]
+        }
+        select.add(opt)
+    }
+}
+function show_DLNA_Content(val, level){
+    var select
+    if(level == 1) select = document.getElementById('level1')
+    if(level == 2) select = document.getElementById('level2')
+    if(level == 3) select = document.getElementById('level3')
+    if(level == 4) select = document.getElementById('level4')
+    if(level == 5) select = document.getElementById('level5')
+    content =JSON.parse(val)
+    //console.log(ct[1].name)
+    select.options.length = 0;
+    for (i = -1; i < (content.length); i++) {
+        opt = document.createElement('OPTION')
+        if(i == -1){
+            opt.value = ""
+            opt.text =  "Select level " + level.toString()
+        }
+        else{
+            var n
+            var c
+            if(content[i].isDir == true){
+                n = content[i].name.concat('\xa0\xa0', '<DIR>'); // more than one space
+                c = 'D=' + content[i].id // is directory
+            }
+            else{
+                n = content[i].name + '\xa0\xa0' + content[i].size;
+                c = 'F=' + content[i].id // is file
+            }
+            opt.value = c
+            opt.text  = n
+        }
+        select.add(opt)
+    }
+}
+function selectserver (presctrl) { // preset, select a server, root, level0
+    socket.send('DLNA_getContent0=' + presctrl.value)
+    select = document.getElementById('level1'); select.options.length = 0; // clear next level
+    select = document.getElementById('level2'); select.options.length = 0;
+    select = document.getElementById('level3'); select.options.length = 0;
+    select = document.getElementById('level4'); select.options.length = 0;
+    select = document.getElementById('level5'); select.options.length = 0;
+    console.log('DLNA_getContent0=' + presctrl.value)
+}
+function select_l1 (presctrl) { // preset, select root
+    socket.send('DLNA_getContent1=' + presctrl.value)
+    select = document.getElementById('level2'); select.options.length = 0; // clear next level
+    select = document.getElementById('level3'); select.options.length = 0;
+    select = document.getElementById('level4'); select.options.length = 0;
+    select = document.getElementById('level5'); select.options.length = 0;
+    console.log('DLNA_getContent1=' + presctrl.value)
+}
+function select_l2 (presctrl) { // preset, select level 1
+    socket.send('DLNA_getContent2=' + presctrl.value)
+    select = document.getElementById('level3'); select.options.length = 0;
+    select = document.getElementById('level4'); select.options.length = 0;
+    select = document.getElementById('level5'); select.options.length = 0;
+    console.log('DLNA_getContent2=' + presctrl.value)
+}
+function select_l3 (presctrl) { // preset, select level 2
+    socket.send('DLNA_getContent3=' + presctrl.value)
+    select = document.getElementById('level4'); select.options.length = 0;
+    select = document.getElementById('level5'); select.options.length = 0;
+    console.log('DLNA_getContent3=' + presctrl.value)
+ }
+ function select_l4 (presctrl) { // preset, select level 3
+    socket.send('DLNA_getContent4=' + presctrl.value)
+    select = document.getElementById('level5'); select.options.length = 0;
+    console.log('DLNA_getContent4=' + presctrl.value)
+ }
+ function select_l5 (presctrl) { // preset, select level 4
+    socket.send('DLNA_getContent5=' + presctrl.value)
+    console.log('DLNA_getContent5=' + presctrl.value)
+ }
+
+
+
+
 
 // ----------------------------------- TAB RADIO ------------------------------------
 
@@ -1609,9 +1725,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
       </center>
   </div>
   <!--==============================================================================================-->
- <div id="tab-content3">
+  <div id="tab-content3">
       <center>
-      <br>
       <label for="seltrack"><big>Audio files on SD card:</big></label>
       <br>
       <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
@@ -1620,9 +1735,40 @@ function getnetworks () { // tab Config: load the connected WiFi network
       <br><br>
       <button class="button" onclick="socket.send('stopfile')">STOP</button>
       <button class="button" onclick="socket.send('resumefile')">RESUME</button>
-      <br><br>
+      <br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-      <br><br>
+      <br>
+      <hr>
+      <br>
+
+        <div style="flex: 0 0 calc(100% - 0px);">
+            <select class="boxstyle" style="width: 100%;" onchange="selectserver(this)" id="server">
+                <option value="-1">Select a DLNA Server here</option>
+            </select>
+            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l1(this)" id="level1">
+                 <option value="-1"> </option>
+            </select>
+            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l2(this)" id="level2">
+                <option value="-1"> </option>
+            </select>
+            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l3(this)" id="level3">
+                <option value="-1"> </option>
+            </select>
+            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l4(this)" id="level4">
+                <option value="-1"> </option>
+            </select>
+            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
+                <option value="-1"> </option>
+            </select>
+        </div>
+
+
+
+
+
+
+
+
       </center>
   </div>
   <!--==============================================================================================-->

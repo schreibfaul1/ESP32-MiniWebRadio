@@ -1,7 +1,8 @@
 // created: 10.Feb.2022
-// updated: 14.Mar.2023
+// updated: 23.Mar.2023
 
 #pragma once
+#pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"
@@ -193,6 +194,11 @@ void connecttohost(const char* host);
 void connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void stopSong();
 void IRAM_ATTR headphoneDetect();
+int DLNA_setCurrentServer(String serverName);
+void DLNA_showServer();
+void DLNA_browseServer(String objectId, uint8_t level);
+void DLNA_getFileItems(String uri);
+void DLNA_showContent(String objectId, uint8_t level);
 
 //prototypes (audiotask.cpp)
 void audioInit();

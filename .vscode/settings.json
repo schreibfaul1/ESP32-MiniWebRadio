@@ -306,5 +306,6 @@
     "cinttypes": "cpp",
     "typeinfo": "cpp"
   },
-  "C_Cpp_Runner.useMsvc": false
+  "C_Cpp_Runner.useMsvc": false,
+  "C_Cpp_Runner.useAddressSanitizer": false
 }
