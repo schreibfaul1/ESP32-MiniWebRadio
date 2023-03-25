@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.6, Mar 23/2022
+    Version 2.6.1, Mar 25/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1742,13 +1742,13 @@ void DLNA_showServer(){ // Show connection details of all discovered, usable med
     names.clear();
     for(int i = 0; i < numServers; i++){
         soap.getServerInfo(i, &srv);
-        Serial.printf("Server[%d]: IP address: %s port: %d name: %s -> controlURL: %s\n",
+        SerialPrintfln("DLNA:        " ANSI_ESC_GREEN "Server[%d]: IP address: %s port: %d name: %s -> controlURL: %s",
            i, srv.ip.toString().c_str(), srv.port, srv.friendlyName.c_str(), srv.controlURL.c_str());
         msg += srv.friendlyName;
         if(i < numServers - 1) msg += ',';
         names.push_back(srv.friendlyName);
     }
-    log_i("msg %s", msg.c_str());
+    // log_i("msg %s", msg.c_str());
     webSrv.send(msg);
 }
 void DLNA_browseServer(String objectId, uint8_t level){
@@ -1800,7 +1800,7 @@ void DLNA_getFileItems(String uri){
     log_v("downloadIP: %s", media_downloadIP.c_str());
     log_v("downloadport: %d", media_downloadPort);
     String URL = "http://" + media_downloadIP + ":" + media_downloadPort + "/" + uri;
-    log_i("URL=%s", URL.c_str());
+    log_v("URL=%s", URL.c_str());
     audioConnecttohost(URL.c_str());
 }
 void DLNA_showContent(String objectId, uint8_t level){
@@ -2537,4 +2537,18 @@ void WEBSRV_onInfo(const char* info){
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "%s", info);    // infos for debug
     }
+}
+
+// Events from DLNA
+void dlna_info(const char* info){
+    SerialPrintfln("DLNA_info:   " ANSI_ESC_WHITE "%s", info);    // infos
+}
+void dlna_server(const char* info, const char* server){
+    SerialPrintfln("DLNA_server: " ANSI_ESC_WHITE "%s"  ANSI_ESC_BLUE "%s", info, server);    // server connected
+}
+void dlna_folder(const char* info){
+    SerialPrintfln("DLNA_folder: " ANSI_ESC_ORANGE "%s", info);    // list folders
+}
+void dlna_file(const char* info){
+    SerialPrintfln("DLNA_file:   " ANSI_ESC_ORANGE "%s", info);    // list files
 }
