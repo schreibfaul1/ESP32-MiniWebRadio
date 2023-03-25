@@ -1,0 +1,1163 @@
+01:47:21.170 > Connecting to WiFi network ......
+01:47:23.760 > Connected successfully. IP address: 192.168.1.37
+01:47:23.765 >
+01:47:23.765 > ----> server content follows:
+01:47:23.767 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "0"
+01:47:24.194 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.203 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.220 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bilder" (id: "3", childCount: 7) added to list
+01:47:24.236 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Musik" (id: "1", childCount: 10) added to list
+01:47:24.252 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videos" (id: "2", childCount: 8) added to list
+01:47:24.265 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Wiedergabelisten" (id: "12", childCount: 2) added to list
+01:47:24.275 > [I][SoapESP32.cpp:975] browseServer(): found 4 folders and 0 files
+01:47:24.281 > Bilder/
+01:47:24.282 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "3"
+01:47:24.302 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.312 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.320 > [I][SoapESP32.cpp:667] soapScanContainer(): container "D" child count=0
+01:47:24.327 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alben" (id: "D", childCount: 0) added to list
+01:47:24.335 > [I][SoapESP32.cpp:667] soapScanContainer(): container "B" child count=0
+01:47:24.341 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Bilder" (id: "B", childCount: 0) added to list
+01:47:24.352 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bewertung" (id: "300", childCount: 6) added to list
+01:47:24.360 > [I][SoapESP32.cpp:667] soapScanContainer(): container "C" child count=0
+01:47:24.366 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bilder aufgenommen am" (id: "C", childCount: 0) added to list
+01:47:24.377 > [I][SoapESP32.cpp:667] soapScanContainer(): container "11" child count=0
+01:47:24.383 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bilderwiedergabelisten" (id: "11", childCount: 0) added to list
+01:47:24.394 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ordner" (id: "16", childCount: 1) added to list
+01:47:24.402 > [I][SoapESP32.cpp:667] soapScanContainer(): container "D2" child count=0
+01:47:24.409 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Schlüsselwörter" (id: "D2", childCount: 0) added to list
+01:47:24.418 > [I][SoapESP32.cpp:975] browseServer(): found 7 folders and 0 files
+01:47:24.424 >   Alben/
+01:47:24.424 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "D"
+01:47:24.442 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.450 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.456 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:24.464 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files       
+01:47:24.470 >   Alle Bilder/
+01:47:24.471 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "B"
+01:47:24.487 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.496 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.501 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:24.507 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:24.514 >   Bewertung/
+01:47:24.515 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "300"
+01:47:24.534 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.543 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.550 > [I][SoapESP32.cpp:667] soapScanContainer(): container "301" child count=0
+01:47:24.557 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "1 oder mehr Sterne" (id: "301", childCount: 0) added to list
+01:47:24.567 > [I][SoapESP32.cpp:667] soapScanContainer(): container "302" child count=0
+01:47:24.574 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "2 oder mehr Sterne" (id: "302", childCount: 0) added to list
+01:47:24.583 > [I][SoapESP32.cpp:667] soapScanContainer(): container "303" child count=0
+01:47:24.590 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "3 oder mehr Sterne" (id: "303", childCount: 0) added to list
+01:47:24.600 > [I][SoapESP32.cpp:667] soapScanContainer(): container "304" child count=0
+01:47:24.605 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "4 oder mehr Sterne" (id: "304", childCount: 0) added to list
+01:47:24.615 > [I][SoapESP32.cpp:667] soapScanContainer(): container "305" child count=0
+01:47:24.622 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "5 oder mehr Sterne" (id: "305", childCount: 0) added to list
+01:47:24.632 > [I][SoapESP32.cpp:667] soapScanContainer(): container "306" child count=0
+01:47:24.638 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ohne Bewertung" (id: "306", childCount: 0) added to list
+01:47:24.648 > [I][SoapESP32.cpp:975] browseServer(): found 6 folders and 0 files
+01:47:24.654 >     1 oder mehr Sterne/
+01:47:24.656 >     2 oder mehr Sterne/
+01:47:24.658 >     3 oder mehr Sterne/
+01:47:24.660 >     4 oder mehr Sterne/
+01:47:24.662 >     5 oder mehr Sterne/
+01:47:24.664 >     Ohne Bewertung/
+01:47:24.666 >   Bilder aufgenommen am/
+01:47:24.669 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "C"
+01:47:24.697 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.706 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.712 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:24.719 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:24.725 >   Bilderwiedergabelisten/
+01:47:24.727 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "11"
+01:47:24.748 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.757 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.763 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:24.770 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:24.776 >   Ordner/
+01:47:24.776 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "16"
+01:47:24.792 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.800 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.809 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bilder" (id: "16_3691cab", childCount: 2) added to list
+01:47:24.819 > [I][SoapESP32.cpp:975] browseServer(): found 1 folders and 0 files
+01:47:24.825 >     Bilder/
+01:47:24.826 >   Schlüsselwörter/
+01:47:24.828 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "D2"
+01:47:24.852 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.861 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.867 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:24.873 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:24.879 > Musik/
+01:47:24.880 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "1"
+01:47:24.969 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:24.977 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:24.988 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alben" (id: "7", childCount: 9) added to list
+01:47:24.998 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Albuminterpreten" (id: "107", childCount: 95) added to list
+01:47:25.009 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Interpreten" (id: "6", childCount: 95) added to list
+01:47:25.019 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Musikdateien" (id: "4", childCount: 114) added to list
+01:47:25.029 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bewertung" (id: "101", childCount: 5) added to list
+01:47:25.038 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genre" (id: "5", childCount: 18) added to list
+01:47:25.047 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Komponisten" (id: "108", childCount: 10) added to list
+01:47:25.056 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Mitwirkende Interpreten" (id: "100", childCount: 95) added to list
+01:47:25.067 > [I][SoapESP32.cpp:667] soapScanContainer(): container "F" child count=0
+01:47:25.073 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Musikwiedergabelisten" (id: "F", childCount: 0) added to list
+01:47:25.084 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ordner" (id: "14", childCount: 2) added to list
+01:47:25.093 > [I][SoapESP32.cpp:975] browseServer(): found 10 folders and 0 files
+01:47:25.099 >   Alben/
+01:47:25.099 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "7"
+01:47:25.270 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:25.279 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:25.296 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekanntes Album]" (id: "7_3d9b2946", childCount: 2) added to list
+01:47:25.306 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 1" (id: "7_ce3c7714", childCount: 18) added to list
+01:47:25.317 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 2" (id: "7_d13c7bcd", childCount: 18) added to list
+01:47:25.330 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 3" (id: "7_d03c7a3a", childCount: 17) added to list
+01:47:25.342 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 4" (id: "7_cb3c725b", childCount: 17) added to list
+01:47:25.353 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 5" (id: "7_ca3c70c8", childCount: 19) added to list
+01:47:25.365 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Car-CD 6" (id: "7_cd3c7581", childCount: 14) added to list
+01:47:25.377 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Deutsch Pop" (id: "7_8e0d67f0", childCount: 8) added to list
+01:47:25.389 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Eagles Best Of" (id: "7_d66bf3da", childCount: 1) added to list
+01:47:25.399 > [I][SoapESP32.cpp:975] browseServer(): found 9 folders and 0 files
+01:47:25.405 >     [Unbekanntes Album]/
+01:47:25.407 >     Car-CD 1/
+01:47:25.409 >     Car-CD 2/
+01:47:25.410 >     Car-CD 3/
+01:47:25.411 >     Car-CD 4/
+01:47:25.413 >     Car-CD 5/
+01:47:25.414 >     Car-CD 6/
+01:47:25.415 >     Deutsch Pop/
+01:47:25.417 >     The Eagles Best Of/
+01:47:25.419 >   Albuminterpreten/
+01:47:25.421 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "107"
+01:47:26.605 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:26.614 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:26.629 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannter Interpret]" (id: "107_712e45d9", childCount: 1) added to list
+01:47:26.641 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adel Tawil" (id: "107_72764934", childCount: 1) added to list
+01:47:26.653 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adele" (id: "107_dddb1102", childCount: 1) added to list
+01:47:26.669 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Agnes Obel" (id: "107_d2a248b7", childCount: 2) added to list
+01:47:26.682 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alanis Morissette" (id: "107_97f6ff5a", childCount: 1) added to list
+01:47:26.695 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alice Boman" (id: "107_4a570cbe", childCount: 1) added to list
+01:47:26.708 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Farben" (id: "107_e89ad745", childCount: 1) added to list
+01:47:26.723 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alphaville" (id: "107_2d21abc3", childCount: 2) added to list
+01:47:26.736 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Amy Macdonald" (id: "107_ad811f3b", childCount: 1) added to list
+01:47:26.748 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Anastacia" (id: "107_231eb1bc", childCount: 1) added to list
+01:47:26.760 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Andreas Bourani" (id: "107_d69df0c7", childCount: 1) added to list
+01:47:26.773 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Annett Louisan" (id: "107_8cc6fac0", childCount: 1) added to list
+01:47:26.786 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Antony and the Johnsons" (id: "107_2b3eaffc", childCount: 1) added to list
+01:47:26.801 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Austra" (id: "107_5c1b0015", childCount: 2) added to list
+01:47:26.814 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ben Harper" (id: "107_df0ba95e", childCount: 1) added to list
+01:47:26.829 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bing Austria & The Flippin' Soul Stompers" (id: "107_8d1b0f54", childCount: 1) added to list
+01:47:26.844 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bobo in White Wooden Houses" (id: "107_d8d51000", childCount: 1) added to list
+01:47:26.857 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Hornsby" (id: "107_2270bb4d", childCount: 1) added to list
+01:47:26.870 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Springsteen" (id: "107_87e41e7c", childCount: 1) added to list
+01:47:26.883 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Carla Bruni" (id: "107_9d4637c8", childCount: 1) added to list
+01:47:26.895 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Celine Dion" (id: "107_939a49d1", childCount: 1) added to list
+01:47:26.909 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Chris Isaac" (id: "107_874eade7", childCount: 1) added to list
+01:47:26.919 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso" (id: "107_8050094", childCount: 1) added to list
+01:47:26.934 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso, Kat Frankie" (id: "107_23096e96", childCount: 1) added to list
+01:47:26.946 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Coldplay" (id: "107_ec559325", childCount: 1) added to list
+01:47:26.959 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Connells" (id: "107_66fffd47", childCount: 1) added to list
+01:47:26.973 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Culture Club" (id: "107_3fc1e151", childCount: 1) added to list
+01:47:26.985 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "David Bowie" (id: "107_ff1d9c95", childCount: 1) added to list
+01:47:26.996 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Disturbed" (id: "107_9dbbc9c3", childCount: 1) added to list
+01:47:27.009 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Eilen Jewell" (id: "107_38aecd23", childCount: 1) added to list
+01:47:27.022 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ellie Goulding" (id: "107_b9591dd1", childCount: 1) added to list
+01:47:27.035 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Escobar & Heather Nova" (id: "107_ced330e9", childCount: 1) added to list
+01:47:27.051 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Falco" (id: "107_4ec26258", childCount: 1) added to list
+01:47:27.062 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Father John Misty" (id: "107_d122914e", childCount: 1) added to list
+01:47:27.075 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Feargal Sharkey" (id: "107_ab1c9056", childCount: 1) added to list
+01:47:27.088 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Frazey Ford" (id: "107_88582641", childCount: 1) added to list
+01:47:27.101 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Gabriella Cilmi" (id: "107_37b2e692", childCount: 1) added to list
+01:47:27.114 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genesis" (id: "107_46c19a15", childCount: 1) added to list
+01:47:27.125 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Grace Carter" (id: "107_81fe4e4a", childCount: 1) added to list
+01:47:27.142 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Harry Styles" (id: "107_29b2f1f9", childCount: 2) added to list
+01:47:27.155 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Heather Nova" (id: "107_2cca7fca", childCount: 1) added to list
+01:47:27.166 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Helden" (id: "107_dcecd3f3", childCount: 1) added to list
+01:47:27.180 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Herman's Hermits" (id: "107_8d3d2f36", childCount: 1) added to list
+01:47:27.193 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Hooters" (id: "107_3fd4230d", childCount: 1) added to list
+01:47:27.205 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Jake Bugg" (id: "107_fce10caf", childCount: 1) added to list
+01:47:27.217 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "James Brown" (id: "107_98efd0d3", childCount: 1) added to list
+01:47:27.230 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "John Legend" (id: "107_65948897", childCount: 1) added to list
+01:47:27.245 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lana Del Rey" (id: "107_bf9b7c72", childCount: 2) added to list
+01:47:27.259 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Laurie Anderson" (id: "107_106eb595", childCount: 1) added to list
+01:47:27.272 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lovin' Spoonful" (id: "107_addd8418", childCount: 1) added to list
+01:47:27.286 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Luke Winslow-King" (id: "107_fcdbcdf3", childCount: 1) added to list
+01:47:27.299 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lynyrd Skynyrd" (id: "107_e33eea51", childCount: 1) added to list
+01:47:27.312 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madness" (id: "107_69a76274", childCount: 1) added to list
+01:47:27.327 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madrugada" (id: "107_a28ee269", childCount: 1) added to list
+01:47:27.341 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Maria Mena" (id: "107_3239417a", childCount: 2) added to list
+01:47:27.355 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Marillion" (id: "107_53dc0978", childCount: 1) added to list
+01:47:27.367 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Men at Work" (id: "107_cd592567", childCount: 1) added to list
+01:47:27.380 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Murray Head" (id: "107_79cffb8d", childCount: 1) added to list
+01:47:27.391 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nazareth" (id: "107_e2f9f168", childCount: 1) added to list
+01:47:27.405 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nelly Furtado" (id: "107_23794056", childCount: 1) added to list
+01:47:27.418 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nits" (id: "107_50ee2795", childCount: 1) added to list
+01:47:27.431 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Omega" (id: "107_db24a59a", childCount: 1) added to list
+01:47:27.446 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Passenger" (id: "107_4c60b457", childCount: 2) added to list
+01:47:27.459 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Patrick Hernandez" (id: "107_8135e404", childCount: 1) added to list
+01:47:27.475 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Pet Shop Boys" (id: "107_9358c237", childCount: 1) added to list
+01:47:27.488 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Peter Schilling" (id: "107_4ce27388", childCount: 1) added to list
+01:47:27.501 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Phil Carmen" (id: "107_1a70171c", childCount: 1) added to list
+01:47:27.514 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Police" (id: "107_19c59c59", childCount: 1) added to list
+01:47:27.527 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rainbirds" (id: "107_468ceb3f", childCount: 1) added to list
+01:47:27.538 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ralph Mctell" (id: "107_919dbc5", childCount: 1) added to list
+01:47:27.551 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Reamonn" (id: "107_ddcebff1", childCount: 1) added to list
+01:47:27.565 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rihanna Feat Mikky Ekko" (id: "107_84ebcd27", childCount: 1) added to list
+01:47:27.577 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rory Gallagher" (id: "107_2093e8c2", childCount: 1) added to list
+01:47:27.590 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxette" (id: "107_7706669e", childCount: 1) added to list
+01:47:27.603 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxy Music" (id: "107_e27ad99e", childCount: 1) added to list
+01:47:27.615 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roy Orbison" (id: "107_846630e5", childCount: 1) added to list
+01:47:27.627 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Scott Mc Kenzie" (id: "107_25d42e98", childCount: 1) added to list
+01:47:27.639 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Shakira" (id: "107_d9067824", childCount: 1) added to list
+01:47:27.654 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Sinéad O'Connor" (id: "107_64522b92", childCount: 1) added to list
+01:47:27.666 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Status Quo" (id: "107_7e1eeba8", childCount: 1) added to list
+01:47:27.678 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Steve Miller Band" (id: "107_bd3eee64", childCount: 1) added to list
+01:47:27.693 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Stranglers" (id: "107_5fbf7f7e", childCount: 1) added to list
+01:47:27.706 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Suzanne Vega" (id: "107_a37434f6", childCount: 1) added to list
+01:47:27.719 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ten Thousand Maniacs" (id: "107_45fe128c", childCount: 1) added to list
+01:47:27.732 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Eagles" (id: "107_5f36bbb5", childCount: 1) added to list
+01:47:27.745 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Hooters" (id: "107_d9a2ff52", childCount: 1) added to list
+01:47:27.757 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Parakit feat Alden Jacob" (id: "107_f990d9a1", childCount: 1) added to list
+01:47:27.770 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tom Odell" (id: "107_50de2e2d", childCount: 1) added to list
+01:47:27.782 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tony Carey" (id: "107_a9b35f25", childCount: 1) added to list
+01:47:27.795 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tracy Chapman" (id: "107_22df8d3e", childCount: 1) added to list
+01:47:27.808 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Travis" (id: "107_dc36114", childCount: 1) added to list
+01:47:27.820 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Triggerfinger" (id: "107_425363aa", childCount: 1) added to list
+01:47:27.832 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "U2" (id: "107_ea5628b8", childCount: 1) added to list
+01:47:27.845 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Uriah Heep" (id: "107_7402eee0", childCount: 1) added to list
+01:47:27.856 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Zucchero" (id: "107_6bf07b60", childCount: 1) added to list
+01:47:27.867 > [I][SoapESP32.cpp:975] browseServer(): found 95 folders and 0 files
+01:47:27.873 >     [Unbekannter Interpret]/
+01:47:27.875 >     Adel Tawil/
+01:47:27.877 >     Adele/
+01:47:27.878 >     Agnes Obel/
+01:47:27.879 >     Alanis Morissette/
+01:47:27.881 >     Alice Boman/
+01:47:27.883 >     Alle Farben/
+01:47:27.884 >     Alphaville/
+01:47:27.886 >     Amy Macdonald/
+01:47:27.888 >     Anastacia/
+01:47:27.889 >     Andreas Bourani/
+01:47:27.891 >     Annett Louisan/
+01:47:27.893 >     Antony and the Johnsons/
+01:47:27.895 >     Austra/
+01:47:27.896 >     Ben Harper/
+01:47:27.898 >     Bing Austria & The Flippin' Soul Stompers/
+01:47:27.902 >     Bobo in White Wooden Houses/
+01:47:27.905 >     Bruce Hornsby/
+01:47:27.907 >     Bruce Springsteen/
+01:47:27.909 >     Carla Bruni/
+01:47:27.910 >     Celine Dion/
+01:47:27.912 >     Chris Isaac/
+01:47:27.914 >     Clueso/
+01:47:27.915 >     Clueso, Kat Frankie/
+01:47:27.917 >     Coldplay/
+01:47:27.918 >     Connells/
+01:47:27.920 >     Culture Club/
+01:47:27.921 >     David Bowie/
+01:47:27.923 >     Disturbed/
+01:47:27.924 >     Eilen Jewell/
+01:47:27.926 >     Ellie Goulding/
+01:47:27.928 >     Escobar & Heather Nova/
+01:47:27.930 >     Falco/
+01:47:27.931 >     Father John Misty/
+01:47:27.933 >     Feargal Sharkey/
+01:47:27.935 >     Frazey Ford/
+01:47:27.937 >     Gabriella Cilmi/
+01:47:27.939 >     Genesis/
+01:47:27.940 >     Grace Carter/
+01:47:27.942 >     Harry Styles/
+01:47:27.943 >     Heather Nova/
+01:47:27.945 >     Helden/
+01:47:27.946 >     Herman's Hermits/
+01:47:27.948 >     Hooters/
+01:47:27.949 >     Jake Bugg/
+01:47:27.951 >     James Brown/
+01:47:27.952 >     John Legend/
+01:47:27.954 >     Lana Del Rey/
+01:47:27.955 >     Laurie Anderson/
+01:47:27.957 >     Lovin' Spoonful/
+01:47:27.959 >     Luke Winslow-King/
+01:47:27.961 >     Lynyrd Skynyrd/
+01:47:27.963 >     Madness/
+01:47:27.964 >     Madrugada/
+01:47:27.966 >     Maria Mena/
+01:47:27.967 >     Marillion/
+01:47:27.969 >     Men at Work/
+01:47:27.970 >     Murray Head/
+01:47:27.972 >     Nazareth/
+01:47:27.973 >     Nelly Furtado/
+01:47:27.975 >     Nits/
+01:47:27.976 >     Omega/
+01:47:27.977 >     Passenger/
+01:47:27.978 >     Patrick Hernandez/
+01:47:27.980 >     Pet Shop Boys/
+01:47:27.982 >     Peter Schilling/
+01:47:27.984 >     Phil Carmen/
+01:47:27.984 >     Police/
+01:47:27.986 >     Rainbirds/
+01:47:27.987 >     Ralph Mctell/
+01:47:27.989 >     Reamonn/
+01:47:27.990 >     Rihanna Feat Mikky Ekko/
+01:47:27.992 >     Rory Gallagher/
+01:47:27.994 >     Roxette/
+01:47:27.996 >     Roxy Music/
+01:47:27.998 >     Roy Orbison/
+01:47:28.000 >     Scott Mc Kenzie/
+01:47:28.001 >     Shakira/
+01:47:28.003 >     Sinéad O'Connor/
+01:47:28.005 >     Status Quo/
+01:47:28.006 >     Steve Miller Band/
+01:47:28.008 >     Stranglers/
+01:47:28.010 >     Suzanne Vega/
+01:47:28.011 >     Ten Thousand Maniacs/
+01:47:28.013 >     The Eagles/
+01:47:28.014 >     The Hooters/
+01:47:28.016 >     The Parakit feat Alden Jacob/
+01:47:28.019 >     Tom Odell/
+01:47:28.020 >     Tony Carey/
+01:47:28.022 >     Tracy Chapman/
+01:47:28.023 >     Travis/
+01:47:28.024 >     Triggerfinger/
+01:47:28.026 >     U2/
+01:47:28.027 >     Uriah Heep/
+01:47:28.028 >     Zucchero/
+01:47:28.030 >   Alle Interpreten/
+01:47:28.033 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "6"
+01:47:29.470 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:29.480 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:29.496 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannter Interpret]" (id: "6_712e45d9", childCount: 1) added to list
+01:47:29.509 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adel Tawil" (id: "6_72764934", childCount: 1) added to list
+01:47:29.522 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adele" (id: "6_dddb1102", childCount: 1) added to list
+01:47:29.537 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Agnes Obel" (id: "6_d2a248b7", childCount: 2) added to list
+01:47:29.550 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alanis Morissette" (id: "6_97f6ff5a", childCount: 1) added to list
+01:47:29.562 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alice Boman" (id: "6_4a570cbe", childCount: 1) added to list
+01:47:29.576 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Farben" (id: "6_e89ad745", childCount: 1) added to list
+01:47:29.589 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alphaville" (id: "6_2d21abc3", childCount: 2) added to list
+01:47:29.604 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Amy Macdonald" (id: "6_ad811f3b", childCount: 1) added to list
+01:47:29.615 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Anastacia" (id: "6_231eb1bc", childCount: 1) added to list
+01:47:29.627 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Andreas Bourani" (id: "6_d69df0c7", childCount: 1) added to list
+01:47:29.639 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Annett Louisan" (id: "6_8cc6fac0", childCount: 1) added to list
+01:47:29.653 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Antony and the Johnsons" (id: "6_2b3eaffc", childCount: 1) added to list
+01:47:29.667 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Austra" (id: "6_5c1b0015", childCount: 2) added to list
+01:47:29.680 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ben Harper" (id: "6_df0ba95e", childCount: 1) added to list
+01:47:29.694 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bing Austria & The Flippin' Soul Stompers" (id: "6_8d1b0f54", childCount: 1) added to list
+01:47:29.708 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bobo in White Wooden Houses" (id: "6_d8d51000", childCount: 1) added to list
+01:47:29.721 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Hornsby" (id: "6_2270bb4d", childCount: 1) added to list
+01:47:29.735 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Springsteen" (id: "6_87e41e7c", childCount: 1) added to list
+01:47:29.747 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Carla Bruni" (id: "6_9d4637c8", childCount: 1) added to list
+01:47:29.760 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Celine Dion" (id: "6_939a49d1", childCount: 1) added to list
+01:47:29.775 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Chris Isaac" (id: "6_874eade7", childCount: 1) added to list
+01:47:29.787 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso" (id: "6_8050094", childCount: 1) added to list
+01:47:29.800 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso, Kat Frankie" (id: "6_23096e96", childCount: 1) added to list
+01:47:29.812 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Coldplay" (id: "6_ec559325", childCount: 1) added to list
+01:47:29.825 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Connells" (id: "6_66fffd47", childCount: 1) added to list
+01:47:29.838 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Culture Club" (id: "6_3fc1e151", childCount: 1) added to list
+01:47:29.849 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "David Bowie" (id: "6_ff1d9c95", childCount: 1) added to list
+01:47:29.862 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Disturbed" (id: "6_9dbbc9c3", childCount: 1) added to list
+01:47:29.877 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Eilen Jewell" (id: "6_38aecd23", childCount: 1) added to list
+01:47:29.890 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ellie Goulding" (id: "6_b9591dd1", childCount: 1) added to list
+01:47:29.903 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Escobar & Heather Nova" (id: "6_ced330e9", childCount: 1) added to list
+01:47:29.916 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Falco" (id: "6_4ec26258", childCount: 1) added to list
+01:47:29.929 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Father John Misty" (id: "6_d122914e", childCount: 1) added to list
+01:47:29.942 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Feargal Sharkey" (id: "6_ab1c9056", childCount: 1) added to list
+01:47:29.955 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Frazey Ford" (id: "6_88582641", childCount: 1) added to list
+01:47:29.969 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Gabriella Cilmi" (id: "6_37b2e692", childCount: 1) added to list
+01:47:29.981 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genesis" (id: "6_46c19a15", childCount: 1) added to list
+01:47:29.993 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Grace Carter" (id: "6_81fe4e4a", childCount: 1) added to list
+01:47:30.008 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Harry Styles" (id: "6_29b2f1f9", childCount: 2) added to list
+01:47:30.022 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Heather Nova" (id: "6_2cca7fca", childCount: 1) added to list
+01:47:30.034 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Helden" (id: "6_dcecd3f3", childCount: 1) added to list
+01:47:30.047 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Herman's Hermits" (id: "6_8d3d2f36", childCount: 1) added to list
+01:47:30.062 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Hooters" (id: "6_3fd4230d", childCount: 2) added to list
+01:47:30.075 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Jake Bugg" (id: "6_fce10caf", childCount: 1) added to list
+01:47:30.088 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "James Brown" (id: "6_98efd0d3", childCount: 1) added to list
+01:47:30.099 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "John Legend" (id: "6_65948897", childCount: 1) added to list
+01:47:30.115 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lana Del Rey" (id: "6_bf9b7c72", childCount: 2) added to list
+01:47:30.128 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Laurie Anderson" (id: "6_106eb595", childCount: 1) added to list
+01:47:30.142 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lovin' Spoonful" (id: "6_addd8418", childCount: 1) added to list
+01:47:30.155 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Luke Winslow-King" (id: "6_fcdbcdf3", childCount: 1) added to list
+01:47:30.167 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lynyrd Skynyrd" (id: "6_e33eea51", childCount: 1) added to list
+01:47:30.180 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madness" (id: "6_69a76274", childCount: 1) added to list
+01:47:30.191 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madrugada" (id: "6_a28ee269", childCount: 1) added to list
+01:47:30.206 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Maria Mena" (id: "6_3239417a", childCount: 2) added to list
+01:47:30.219 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Marillion" (id: "6_53dc0978", childCount: 1) added to list
+01:47:30.232 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Men at Work" (id: "6_cd592567", childCount: 1) added to list
+01:47:30.245 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Murray Head" (id: "6_79cffb8d", childCount: 1) added to list
+01:47:30.257 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nazareth" (id: "6_e2f9f168", childCount: 1) added to list
+01:47:30.269 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nelly Furtado" (id: "6_23794056", childCount: 1) added to list
+01:47:30.281 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nits" (id: "6_50ee2795", childCount: 1) added to list
+01:47:30.294 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Omega" (id: "6_db24a59a", childCount: 1) added to list
+01:47:30.309 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Passenger" (id: "6_4c60b457", childCount: 2) added to list
+01:47:30.321 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Patrick Hernandez" (id: "6_8135e404", childCount: 1) added to list
+01:47:30.338 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Pet Shop Boys" (id: "6_9358c237", childCount: 1) added to list
+01:47:30.350 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Peter Schilling" (id: "6_4ce27388", childCount: 1) added to list
+01:47:30.363 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Phil Carmen" (id: "6_1a70171c", childCount: 1) added to list
+01:47:30.375 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Police" (id: "6_19c59c59", childCount: 1) added to list
+01:47:30.388 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rainbirds" (id: "6_468ceb3f", childCount: 1) added to list
+01:47:30.402 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ralph Mctell" (id: "6_919dbc5", childCount: 1) added to list
+01:47:30.412 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Reamonn" (id: "6_ddcebff1", childCount: 1) added to list
+01:47:30.426 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rihanna Feat Mikky Ekko" (id: "6_84ebcd27", childCount: 1) added to list
+01:47:30.438 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rory Gallagher" (id: "6_2093e8c2", childCount: 1) added to list
+01:47:30.450 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxette" (id: "6_7706669e", childCount: 1) added to list
+01:47:30.462 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxy Music" (id: "6_e27ad99e", childCount: 1) added to list
+01:47:30.474 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roy Orbison" (id: "6_846630e5", childCount: 1) added to list
+01:47:30.487 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Scott Mc Kenzie" (id: "6_25d42e98", childCount: 1) added to list
+01:47:30.500 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Shakira" (id: "6_d9067824", childCount: 1) added to list
+01:47:30.514 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Sinéad O'Connor" (id: "6_64522b92", childCount: 1) added to list
+01:47:30.527 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Status Quo" (id: "6_7e1eeba8", childCount: 1) added to list
+01:47:30.540 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Steve Miller Band" (id: "6_bd3eee64", childCount: 1) added to list
+01:47:30.552 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Stranglers" (id: "6_5fbf7f7e", childCount: 1) added to list
+01:47:30.564 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Suzanne Vega" (id: "6_a37434f6", childCount: 1) added to list
+01:47:30.577 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ten Thousand Maniacs" (id: "6_45fe128c", childCount: 1) added to list
+01:47:30.590 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Eagles" (id: "6_5f36bbb5", childCount: 1) added to list
+01:47:30.603 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Hooters" (id: "6_d9a2ff52", childCount: 1) added to list
+01:47:30.616 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Parakit feat Alden Jacob" (id: "6_f990d9a1", childCount: 1) added to list
+01:47:30.629 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tom Odell" (id: "6_50de2e2d", childCount: 1) added to list
+01:47:30.641 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tony Carey" (id: "6_a9b35f25", childCount: 1) added to list
+01:47:30.654 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tracy Chapman" (id: "6_22df8d3e", childCount: 1) added to list
+01:47:30.666 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Travis" (id: "6_dc36114", childCount: 1) added to list
+01:47:30.679 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Triggerfinger" (id: "6_425363aa", childCount: 1) added to list
+01:47:30.690 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "U2" (id: "6_ea5628b8", childCount: 1) added to list
+01:47:30.704 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Uriah Heep" (id: "6_7402eee0", childCount: 1) added to list
+01:47:30.715 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Zucchero" (id: "6_6bf07b60", childCount: 1) added to list
+01:47:30.725 > [I][SoapESP32.cpp:975] browseServer(): found 95 folders and 0 files
+01:47:30.731 >     [Unbekannter Interpret]/
+01:47:30.734 >     Adel Tawil/
+01:47:30.735 >     Adele/
+01:47:30.736 >     Agnes Obel/
+01:47:30.737 >     Alanis Morissette/
+01:47:30.740 >     Alice Boman/
+01:47:30.742 >     Alle Farben/
+01:47:30.743 >     Alphaville/
+01:47:30.745 >     Amy Macdonald/
+01:47:30.746 >     Anastacia/
+01:47:30.748 >     Andreas Bourani/
+01:47:30.750 >     Annett Louisan/
+01:47:30.751 >     Antony and the Johnsons/
+01:47:30.754 >     Austra/
+01:47:30.755 >     Ben Harper/
+01:47:30.757 >     Bing Austria & The Flippin' Soul Stompers/
+01:47:30.761 >     Bobo in White Wooden Houses/
+01:47:30.764 >     Bruce Hornsby/
+01:47:30.766 >     Bruce Springsteen/
+01:47:30.768 >     Carla Bruni/
+01:47:30.769 >     Celine Dion/
+01:47:30.771 >     Chris Isaac/
+01:47:30.772 >     Clueso/
+01:47:30.773 >     Clueso, Kat Frankie/
+01:47:30.776 >     Coldplay/
+01:47:30.777 >     Connells/
+01:47:30.778 >     Culture Club/
+01:47:30.780 >     David Bowie/
+01:47:30.782 >     Disturbed/
+01:47:30.783 >     Eilen Jewell/
+01:47:30.784 >     Ellie Goulding/
+01:47:30.786 >     Escobar & Heather Nova/
+01:47:30.789 >     Falco/
+01:47:30.790 >     Father John Misty/
+01:47:30.792 >     Feargal Sharkey/
+01:47:30.794 >     Frazey Ford/
+01:47:30.797 >     Gabriella Cilmi/
+01:47:30.798 >     Genesis/
+01:47:30.800 >     Grace Carter/
+01:47:30.801 >     Harry Styles/
+01:47:30.803 >     Heather Nova/
+01:47:30.805 >     Helden/
+01:47:30.806 >     Herman's Hermits/
+01:47:30.807 >     Hooters/
+01:47:30.808 >     Jake Bugg/
+01:47:30.809 >     James Brown/
+01:47:30.812 >     John Legend/
+01:47:30.812 >     Lana Del Rey/
+01:47:30.814 >     Laurie Anderson/
+01:47:30.816 >     Lovin' Spoonful/
+01:47:30.818 >     Luke Winslow-King/
+01:47:30.820 >     Lynyrd Skynyrd/
+01:47:30.822 >     Madness/
+01:47:30.823 >     Madrugada/
+01:47:30.824 >     Maria Mena/
+01:47:30.826 >     Marillion/
+01:47:30.827 >     Men at Work/
+01:47:30.829 >     Murray Head/
+01:47:30.830 >     Nazareth/
+01:47:30.832 >     Nelly Furtado/
+01:47:30.833 >     Nits/
+01:47:30.834 >     Omega/
+01:47:30.835 >     Passenger/
+01:47:30.837 >     Patrick Hernandez/
+01:47:30.839 >     Pet Shop Boys/
+01:47:30.841 >     Peter Schilling/
+01:47:30.843 >     Phil Carmen/
+01:47:30.844 >     Police/
+01:47:30.845 >     Rainbirds/
+01:47:30.847 >     Ralph Mctell/
+01:47:30.848 >     Reamonn/
+01:47:30.850 >     Rihanna Feat Mikky Ekko/
+01:47:30.852 >     Rory Gallagher/
+01:47:30.854 >     Roxette/
+01:47:30.855 >     Roxy Music/
+01:47:30.857 >     Roy Orbison/
+01:47:30.858 >     Scott Mc Kenzie/
+01:47:30.860 >     Shakira/
+01:47:30.862 >     Sinéad O'Connor/
+01:47:30.864 >     Status Quo/
+01:47:30.866 >     Steve Miller Band/
+01:47:30.868 >     Stranglers/
+01:47:30.869 >     Suzanne Vega/
+01:47:30.871 >     Ten Thousand Maniacs/
+01:47:30.873 >     The Eagles/
+01:47:30.875 >     The Hooters/
+01:47:30.876 >     The Parakit feat Alden Jacob/
+01:47:30.879 >     Tom Odell/
+01:47:30.881 >     Tony Carey/
+01:47:30.882 >     Tracy Chapman/
+01:47:30.884 >     Travis/
+01:47:30.885 >     Triggerfinger/
+01:47:30.887 >     U2/
+01:47:30.888 >     Uriah Heep/
+01:47:30.889 >     Zucchero/
+01:47:30.890 >   Alle Musikdateien/
+01:47:30.891 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "4"
+01:47:31.005 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:31.013 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:31.094 > [I][SoapESP32.cpp:855] soapScanItem(): "500 Miles" (id: "4-3339", size: 6359038, sizeMissing: false, type: audio) added to list
+01:47:31.152 > [I][SoapESP32.cpp:855] soapScanItem(): "74-75" (id: "4-3350", size: 6753175, sizeMissing: false, type: audio) added to list
+01:47:31.222 > [I][SoapESP32.cpp:855] soapScanItem(): "A good heart" (id: "4-3373", size: 9195418, sizeMissing: false, type: audio) added to list
+01:47:31.279 > [I][SoapESP32.cpp:855] soapScanItem(): "A million miles away" (id: "4-3335", size: 22771074, sizeMissing: false, type: audio) added to list
+01:47:31.338 > [I][SoapESP32.cpp:855] soapScanItem(): "A New Day Has Come" (id: "4-3326", size: 6251473, sizeMissing: false, type: audio) added to list
+01:47:31.395 > [I][SoapESP32.cpp:855] soapScanItem(): "Abracadabra" (id: "4-3361", size: 12353263, sizeMissing: false, type: audio) added to list
+01:47:31.453 > [I][SoapESP32.cpp:855] soapScanItem(): "Achterbahn" (id: "4-3437", size: 8459921, sizeMissing: false, type: audio) added to list
+01:47:31.510 > [I][SoapESP32.cpp:855] soapScanItem(): "All good things" (id: "4-3327", size: 12455337, sizeMissing: false, type: audio) added to list
+01:47:31.573 > [I][SoapESP32.cpp:855] soapScanItem(): "All Of Me" (id: "4-3401", size: 8668133, sizeMissing: false, type: audio) added to list
+01:47:31.630 > [I][SoapESP32.cpp:855] soapScanItem(): "All This Time" (id: "4-3411", size: 4177264, sizeMissing: false, type: audio) added to list
+01:47:31.692 > [I][SoapESP32.cpp:855] soapScanItem(): "All You Zombies" (id: "4-3419", size: 8620094, sizeMissing: false, type: audio) added to list
+01:47:31.753 > [I][SoapESP32.cpp:855] soapScanItem(): "Always The Sun" (id: "4-3340", size: 9829742, sizeMissing: false, type: audio) added to list
+01:47:31.821 > [I][SoapESP32.cpp:855] soapScanItem(): "Another Love" (id: "4-3421", size: 9929167, sizeMissing: false, type: audio) added to list
+01:47:31.880 > [I][SoapESP32.cpp:855] soapScanItem(): "Auf Anderen Wegen" (id: "4-3432", size: 8025370, sizeMissing: false, type: audio) added to list
+01:47:31.941 > [I][SoapESP32.cpp:855] soapScanItem(): "Auf dich hab ich gewartet" (id: "4-3434", size: 3688200, sizeMissing: false, type: audio) added to list
+01:47:31.999 > [I][SoapESP32.cpp:855] soapScanItem(): "Auf uns" (id: "4-3433", size: 9622794, sizeMissing: false, type: audio) added to list
+01:47:32.057 > [I][SoapESP32.cpp:855] soapScanItem(): "Aurelie" (id: "4-3436", size: 5135931, sizeMissing: false, type: audio) added to list
+01:47:32.115 > [I][SoapESP32.cpp:855] soapScanItem(): "Bad Ideas" (id: "4-3377", size: 6688084, sizeMissing: false, type: audio) added to list
+01:47:32.175 > [I][SoapESP32.cpp:855] soapScanItem(): "Because The Night" (id: "4-3355", size: 8944456, sizeMissing: false, type: audio) added to list
+01:47:32.237 > [I][SoapESP32.cpp:855] soapScanItem(): "Big In Japan" (id: "4-3379", size: 6892958, sizeMissing: false, type: audio) added to list
+01:47:32.296 > [I][SoapESP32.cpp:855] soapScanItem(): "Blue Mesa" (id: "4-3404", size: 9666929, sizeMissing: false, type: audio) added to list
+01:47:32.356 > [I][SoapESP32.cpp:855] soapScanItem(): "Blueprint" (id: "4-3349", size: 7962597, sizeMissing: false, type: audio) added to list
+01:47:32.414 > [I][SoapESP32.cpp:855] soapScanItem(): "Born To Be Alive" (id: "4-3415", size: 6203103, sizeMissing: false, type: audio) added to list
+01:47:32.471 > [I][SoapESP32.cpp:855] soapScanItem(): "Broken" (id: "4-3400", size: 6073871, sizeMissing: false, type: audio) added to list
+01:47:32.527 > [I][SoapESP32.cpp:855] soapScanItem(): "Broken Sleep" (id: "4-3374", size: 7115834, sizeMissing: false, type: audio) added to list
+01:47:32.584 > [I][SoapESP32.cpp:855] soapScanItem(): "Carpet Crawl" (id: "4-3365", size: 12556493, sizeMissing: false, type: audio) added to list
+01:47:32.639 > [I][SoapESP32.cpp:855] soapScanItem(): "China Girl" (id: "4-3329", size: 6706178, sizeMissing: false, type: audio) added to list
+01:47:32.701 > [I][SoapESP32.cpp:855] soapScanItem(): "Clocks" (id: "4-3389", size: 12374596, sizeMissing: false, type: audio) added to list
+01:47:32.763 > [I][SoapESP32.cpp:855] soapScanItem(): "Cripple and the Starfish" (id: "4-3380", size: 6172531, sizeMissing: false, type: audio) added to list
+01:47:32.821 > [I][SoapESP32.cpp:855] soapScanItem(): "Das Spiel" (id: "4-3435", size: 4293819, sizeMissing: false, type: audio) added to list
+01:47:32.883 > [I][SoapESP32.cpp:855] soapScanItem(): "Der Kommissar" (id: "4-3331", size: 7459426, sizeMissing: false, type: audio) added to list
+01:47:32.945 > [I][SoapESP32.cpp:855] soapScanItem(): "Do You Really Want To Hurt Me" (id: "4-3390", size: 10425164, sizeMissing: false, type: audio) added to list
+01:47:33.007 > [I][SoapESP32.cpp:855] soapScanItem(): "Done" (id: "4-3396", size: 6905292, sizeMissing: false, type: audio) added to list
+01:47:33.068 > [I][SoapESP32.cpp:855] soapScanItem(): "Don't Forget About Me" (id: "4-3376", size: 5705448, sizeMissing: false, type: audio) added to list
+01:47:33.128 > [I][SoapESP32.cpp:855] soapScanItem(): "Down To The River" (id: "4-3368", size: 14473215, sizeMissing: false, type: audio) added to list
+01:47:33.183 > [I][SoapESP32.cpp:855] soapScanItem(): "Dutch Mountains" (id: "4-3337", size: 8555384, sizeMissing: false, type: audio) added to list
+01:47:33.244 > [I][SoapESP32.cpp:855] soapScanItem(): "Electric" (id: "4-3406", size: 10179145, sizeMissing: false, type: audio) added to list
+01:47:33.297 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:47:33.304 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:47:33.311 > [I][SoapESP32.cpp:855] soapScanItem(): "Ellie Goulding - Vincent" (id: "4-3444", size: 9102671, sizeMissing: false, type: audio) added to list
+01:47:33.365 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:47:33.372 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:47:33.378 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:47:33.386 > [I][SoapESP32.cpp:855] soapScanItem(): "EmptyAudioFile" (id: "4-3445", size: 0, sizeMissing: true, type: audio) added to list
+01:47:33.441 > [I][SoapESP32.cpp:855] soapScanItem(): "Enjoy the Silence" (id: "4-3388", size: 4628781, sizeMissing: false, type: audio) added to list
+01:47:33.499 > [I][SoapESP32.cpp:855] soapScanItem(): "Excuse me Mr." (id: "4-3324", size: 11870222, sizeMissing: false, type: audio) added to list
+01:47:33.556 > [I][SoapESP32.cpp:855] soapScanItem(): "Excuse me Mr." (id: "4-3440", size: 11797545, sizeMissing: false, type: audio) added to list
+01:47:33.614 > [I][SoapESP32.cpp:855] soapScanItem(): "Forever Young" (id: "4-3322", size: 4556304, sizeMissing: false, type: audio) added to list
+01:47:33.670 > [I][SoapESP32.cpp:855] soapScanItem(): "From the land down under" (id: "4-3341", size: 3542515, sizeMissing: false, type: audio) added to list
+01:47:33.729 > [I][SoapESP32.cpp:855] soapScanItem(): "Go West" (id: "4-3352", size: 4833196, sizeMissing: false, type: audio) added to list
+01:47:33.793 > [I][SoapESP32.cpp:855] soapScanItem(): "Gyöngyhajú lány" (id: "4-3413", size: 10991944, sizeMissing: false, type: audio) added to list
+01:47:33.853 > [I][SoapESP32.cpp:855] soapScanItem(): "Hands Clean" (id: "4-3359", size: 6528589, sizeMissing: false, type: audio) added to list
+01:47:33.916 > [I][SoapESP32.cpp:855] soapScanItem(): "Hell Or High Water" (id: "4-3414", size: 8833381, sizeMissing: false, type: audio) added to list
+01:47:33.977 > [I][SoapESP32.cpp:855] soapScanItem(): "Home" (id: "4-3381", size: 6157651, sizeMissing: false, type: audio) added to list
+01:47:34.033 > [I][SoapESP32.cpp:855] soapScanItem(): "Hotel California" (id: "4-3360", size: 17327932, sizeMissing: false, type: audio) added to list
+01:47:34.091 > [I][SoapESP32.cpp:855] soapScanItem(): "I Feel Good" (id: "4-3347", size: 2701318, sizeMissing: false, type: audio) added to list
+01:47:34.154 > [I][SoapESP32.cpp:855] soapScanItem(): "I Follow Rivers" (id: "4-3424", size: 8581856, sizeMissing: false, type: audio) added to list
+01:47:34.217 > [I][SoapESP32.cpp:855] soapScanItem(): "Incubus Live" (id: "4-3412", size: 9670576, sizeMissing: false, type: audio) added to list
+01:47:34.277 > [I][SoapESP32.cpp:855] soapScanItem(): "Ist da jemand" (id: "4-3426", size: 8967839, sizeMissing: false, type: audio) added to list
+01:47:34.334 > [I][SoapESP32.cpp:855] soapScanItem(): "It's Amazing" (id: "4-3382", size: 6273323, sizeMissing: false, type: audio) added to list
+01:47:34.396 > [I][SoapESP32.cpp:855] soapScanItem(): "Jealous Guy" (id: "4-3417", size: 7192636, sizeMissing: false, type: audio) added to list
+01:47:34.456 > [I][SoapESP32.cpp:855] soapScanItem(): "Just Hold Me" (id: "4-3332", size: 6199684, sizeMissing: false, type: audio) added to list
+01:47:34.521 > [I][SoapESP32.cpp:855] soapScanItem(): "Keep Moving On - Live" (id: "4-3385", size: 12127204, sizeMissing: false, type: audio) added to list
+01:47:34.578 > [I][SoapESP32.cpp:855] soapScanItem(): "Lady In Black" (id: "4-3367", size: 6774204, sizeMissing: false, type: audio) added to list
+01:47:34.640 > [I][SoapESP32.cpp:855] soapScanItem(): "Let Her Go" (id: "4-3371", size: 10143623, sizeMissing: false, type: audio) added to list
+01:47:34.699 > [I][SoapESP32.cpp:855] soapScanItem(): "Lose It" (id: "4-3383", size: 10791332, sizeMissing: false, type: audio) added to list
+01:47:34.757 > [I][SoapESP32.cpp:855] soapScanItem(): "Love Hurts" (id: "4-3370", size: 9284867, sizeMissing: false, type: audio) added to list
+01:47:34.814 > [I][SoapESP32.cpp:855] soapScanItem(): "Madrugada - Vocal (Live in Norway)" (id: "4-3408", size: 10303735, sizeMissing: false, type: audio) added to list
+01:47:34.877 > [I][SoapESP32.cpp:855] soapScanItem(): "Majesty live" (id: "4-3407", size: 14136935, sizeMissing: false, type: audio) added to list
+01:47:34.943 > [I][SoapESP32.cpp:855] soapScanItem(): "Major Tom (German Version)" (id: "4-3330", size: 3855747, sizeMissing: false, type: audio) added to list
+01:47:35.000 > [I][SoapESP32.cpp:855] soapScanItem(): "Material World" (id: "4-3344", size: 7104618, sizeMissing: false, type: audio) added to list
+01:47:35.056 > [I][SoapESP32.cpp:855] soapScanItem(): "My Name Is Luka" (id: "4-3354", size: 7354786, sizeMissing: false, type: audio) added to list
+01:47:35.117 > [I][SoapESP32.cpp:855] soapScanItem(): "No Milk Today" (id: "4-3362", size: 5489679, sizeMissing: false, type: audio) added to list
+01:47:35.175 > [I][SoapESP32.cpp:855] soapScanItem(): "Nothing Compares 2 U" (id: "4-3353", size: 7516934, sizeMissing: false, type: audio) added to list
+01:47:35.232 > [I][SoapESP32.cpp:855] soapScanItem(): "On my way to LA (long)" (id: "4-3338", size: 6695426, sizeMissing: false, type: audio) added to list
+01:47:35.293 > [I][SoapESP32.cpp:855] soapScanItem(): "One" (id: "4-3372", size: 7689152, sizeMissing: false, type: audio) added to list
+01:47:35.351 > [I][SoapESP32.cpp:855] soapScanItem(): "One Night in Bangkok" (id: "4-3342", size: 5003572, sizeMissing: false, type: audio) added to list
+01:47:35.413 > [I][SoapESP32.cpp:855] soapScanItem(): "One Of Us Cannot Be Wrong" (id: "4-3395", size: 14082497, sizeMissing: false, type: audio) added to list
+01:47:35.479 > [I][SoapESP32.cpp:855] soapScanItem(): "Our house" (id: "4-3357", size: 5756679, sizeMissing: false, type: audio) added to list
+01:47:35.536 > [I][SoapESP32.cpp:855] soapScanItem(): "Pure Love" (id: "4-3425", size: 8441184, sizeMissing: false, type: audio) added to list
+01:47:35.595 > [I][SoapESP32.cpp:855] soapScanItem(): "Ride" (id: "4-3348", size: 11630482, sizeMissing: false, type: audio) added to list
+01:47:35.654 > [I][SoapESP32.cpp:855] soapScanItem(): "Riverside" (id: "4-3375", size: 5557406, sizeMissing: false, type: audio) added to list
+01:47:35.715 > [I][SoapESP32.cpp:855] soapScanItem(): "Room With a View" (id: "4-3422", size: 8140545, sizeMissing: false, type: audio) added to list
+01:47:35.784 > [I][SoapESP32.cpp:855] soapScanItem(): "Ruined Heart" (id: "4-3384", size: 10102568, sizeMissing: false, type: audio) added to list
+01:47:35.841 > [I][SoapESP32.cpp:855] soapScanItem(): "San Francisco (Be Sure To Wear Flowers In You Hair)" (id: "4-3369", size: 4341799, sizeMissing: false, type: audio) added to list
+01:47:35.904 > [I][SoapESP32.cpp:855] soapScanItem(): "Save Me" (id: "4-3420", size: 7161591, sizeMissing: false, type: audio) added to list
+01:47:35.969 > [I][SoapESP32.cpp:855] soapScanItem(): "Set Fire to the Rain" (id: "4-3356", size: 9696150, sizeMissing: false, type: audio) added to list
+01:47:36.029 > [I][SoapESP32.cpp:855] soapScanItem(): "She Moves" (id: "4-3378", size: 7784102, sizeMissing: false, type: audio) added to list
+01:47:36.090 > [I][SoapESP32.cpp:855] soapScanItem(): "Sick And Tired" (id: "4-3325", size: 8348435, sizeMissing: false, type: audio) added to list
+01:47:36.152 > [I][SoapESP32.cpp:855] soapScanItem(): "Sick And Tired" (id: "4-3441", size: 8348435, sizeMissing: false, type: audio) added to list
+01:47:36.211 > [I][SoapESP32.cpp:855] soapScanItem(): "Sign of the Times" (id: "4-3398", size: 13667400, sizeMissing: false, type: audio) added to list
+01:47:36.275 > [I][SoapESP32.cpp:855] soapScanItem(): "Simple Man" (id: "4-3405", size: 14386127, sizeMissing: false, type: audio) added to list
+01:47:36.330 > [I][SoapESP32.cpp:855] soapScanItem(): "Sing" (id: "4-3343", size: 5434021, sizeMissing: false, type: audio) added to list
+01:47:36.387 > [I][SoapESP32.cpp:855] soapScanItem(): "Slip Away" (id: "4-3403", size: 8462013, sizeMissing: false, type: audio) added to list
+01:47:36.449 > [I][SoapESP32.cpp:855] soapScanItem(): "Someone new" (id: "4-3351", size: 5096159, sizeMissing: false, type: audio) added to list
+01:47:36.507 > [I][SoapESP32.cpp:855] soapScanItem(): "Sounds Like A Melody" (id: "4-3336", size: 9210144, sizeMissing: false, type: audio) added to list
+01:47:36.568 > [I][SoapESP32.cpp:855] soapScanItem(): "Stars" (id: "4-3345", size: 4746949, sizeMissing: false, type: audio) added to list
+01:47:36.626 > [I][SoapESP32.cpp:855] soapScanItem(): "Stay" (id: "4-3363", size: 9647394, sizeMissing: false, type: audio) added to list
+01:47:36.691 > [I][SoapESP32.cpp:855] soapScanItem(): "Streets Of London" (id: "4-3416", size: 9938320, sizeMissing: false, type: audio) added to list
+01:47:36.755 > [I][SoapESP32.cpp:855] soapScanItem(): "Subcity" (id: "4-3423", size: 9584311, sizeMissing: false, type: audio) added to list
+01:47:36.813 > [I][SoapESP32.cpp:855] soapScanItem(): "Summer In The City" (id: "4-3334", size: 3888715, sizeMissing: false, type: audio) added to list
+01:47:36.877 > [I][SoapESP32.cpp:855] soapScanItem(): "Summertime Sadness" (id: "4-3402", size: 9115457, sizeMissing: false, type: audio) added to list
+01:47:36.935 > [I][SoapESP32.cpp:855] soapScanItem(): "Super Girl" (id: "4-3358", size: 5577366, sizeMissing: false, type: audio) added to list
+01:47:36.994 > [I][SoapESP32.cpp:855] soapScanItem(): "Sweet About Me" (id: "4-3333", size: 5006892, sizeMissing: false, type: audio) added to list
+01:47:37.049 > [I][SoapESP32.cpp:855] soapScanItem(): "Talk To Me" (id: "4-3366", size: 7881646, sizeMissing: false, type: audio) added to list
+01:47:37.061 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 100 files
+01:47:37.067 >     500 Miles   item size: 6359038, audio
+01:47:37.071 >     74-75   item size: 6753175, audio
+01:47:37.074 >     A good heart   item size: 9195418, audio
+01:47:37.078 >     A million miles away   item size: 22771074, audio
+01:47:37.083 >     A New Day Has Come   item size: 6251473, audio
+01:47:37.088 >     Abracadabra   item size: 12353263, audio
+01:47:37.092 >     Achterbahn   item size: 8459921, audio
+01:47:37.095 >     All good things   item size: 12455337, audio
+01:47:37.100 >     All Of Me   item size: 8668133, audio
+01:47:37.104 >     All This Time   item size: 4177264, audio
+01:47:37.108 >     All You Zombies   item size: 8620094, audio
+01:47:37.112 >     Always The Sun   item size: 9829742, audio
+01:47:37.116 >     Another Love   item size: 9929167, audio
+01:47:37.120 >     Auf Anderen Wegen   item size: 8025370, audio
+01:47:37.125 >     Auf dich hab ich gewartet   item size: 3688200, audio
+01:47:37.130 >     Auf uns   item size: 9622794, audio
+01:47:37.133 >     Aurelie   item size: 5135931, audio
+01:47:37.137 >     Bad Ideas   item size: 6688084, audio
+01:47:37.141 >     Because The Night   item size: 8944456, audio
+01:47:37.145 >     Big In Japan   item size: 6892958, audio
+01:47:37.149 >     Blue Mesa   item size: 9666929, audio
+01:47:37.153 >     Blueprint   item size: 7962597, audio
+01:47:37.156 >     Born To Be Alive   item size: 6203103, audio
+01:47:37.161 >     Broken   item size: 6073871, audio
+01:47:37.164 >     Broken Sleep   item size: 7115834, audio
+01:47:37.168 >     Carpet Crawl   item size: 12556493, audio
+01:47:37.172 >     China Girl   item size: 6706178, audio
+01:47:37.176 >     Clocks   item size: 12374596, audio
+01:47:37.180 >     Cripple and the Starfish   item size: 6172531, audio
+01:47:37.185 >     Das Spiel   item size: 4293819, audio
+01:47:37.188 >     Der Kommissar   item size: 7459426, audio
+01:47:37.192 >     Do You Really Want To Hurt Me   item size: 10425164, audio
+01:47:37.198 >     Done   item size: 6905292, audio
+01:47:37.201 >     Don't Forget About Me   item size: 5705448, audio
+01:47:37.206 >     Down To The River   item size: 14473215, audio
+01:47:37.211 >     Dutch Mountains   item size: 8555384, audio
+01:47:37.215 >     Electric   item size: 10179145, audio
+01:47:37.219 >     Ellie Goulding - Vincent   item size: 9102671, audio
+01:47:37.224 >     EmptyAudioFile   item size: missing, audio
+01:47:37.228 >     Enjoy the Silence   item size: 4628781, audio
+01:47:37.232 >     Excuse me Mr.   item size: 11870222, audio
+01:47:37.236 >     Excuse me Mr.   item size: 11797545, audio
+01:47:37.241 >     Forever Young   item size: 4556304, audio
+01:47:37.245 >     From the land down under   item size: 3542515, audio
+01:47:37.250 >     Go West   item size: 4833196, audio
+01:47:37.253 >     Gyöngyhajú lány   item size: 10991944, audio
+01:47:37.258 >     Hands Clean   item size: 6528589, audio
+01:47:37.262 >     Hell Or High Water   item size: 8833381, audio
+01:47:37.266 >     Home   item size: 6157651, audio
+01:47:37.270 >     Hotel California   item size: 17327932, audio
+01:47:37.274 >     I Feel Good   item size: 2701318, audio
+01:47:37.278 >     I Follow Rivers   item size: 8581856, audio
+01:47:37.282 >     Incubus Live   item size: 9670576, audio
+01:47:37.286 >     Ist da jemand   item size: 8967839, audio
+01:47:37.290 >     It's Amazing   item size: 6273323, audio
+01:47:37.294 >     Jealous Guy   item size: 7192636, audio
+01:47:37.298 >     Just Hold Me   item size: 6199684, audio
+01:47:37.302 >     Keep Moving On - Live   item size: 12127204, audio
+01:47:37.307 >     Lady In Black   item size: 6774204, audio
+01:47:37.311 >     Let Her Go   item size: 10143623, audio
+01:47:37.315 >     Lose It   item size: 10791332, audio
+01:47:37.319 >     Love Hurts   item size: 9284867, audio
+01:47:37.322 >     Madrugada - Vocal (Live in Norway)   item size: 10303735, audio
+01:47:37.328 >     Majesty live   item size: 14136935, audio
+01:47:37.333 >     Major Tom (German Version)   item size: 3855747, audio
+01:47:37.338 >     Material World   item size: 7104618, audio
+01:47:37.342 >     My Name Is Luka   item size: 7354786, audio
+01:47:37.346 >     No Milk Today   item size: 5489679, audio
+01:47:37.350 >     Nothing Compares 2 U   item size: 7516934, audio
+01:47:37.355 >     On my way to LA (long)   item size: 6695426, audio
+01:47:37.360 >     One   item size: 7689152, audio
+01:47:37.363 >     One Night in Bangkok   item size: 5003572, audio
+01:47:37.368 >     One Of Us Cannot Be Wrong   item size: 14082497, audio
+01:47:37.373 >     Our house   item size: 5756679, audio
+01:47:37.377 >     Pure Love   item size: 8441184, audio
+01:47:37.380 >     Ride   item size: 11630482, audio
+01:47:37.384 >     Riverside   item size: 5557406, audio
+01:47:37.387 >     Room With a View   item size: 8140545, audio
+01:47:37.392 >     Ruined Heart   item size: 10102568, audio
+01:47:37.396 >     San Francisco (Be Sure To Wear Flowers In You Hair)   item size: 4341799, audio
+01:47:37.403 >     Save Me   item size: 7161591, audio
+01:47:37.407 >     Set Fire to the Rain   item size: 9696150, audio
+01:47:37.412 >     She Moves   item size: 7784102, audio
+01:47:37.415 >     Sick And Tired   item size: 8348435, audio
+01:47:37.419 >     Sick And Tired   item size: 8348435, audio
+01:47:37.424 >     Sign of the Times   item size: 13667400, audio
+01:47:37.428 >     Simple Man   item size: 14386127, audio
+01:47:37.432 >     Sing   item size: 5434021, audio
+01:47:37.435 >     Slip Away   item size: 8462013, audio
+01:47:37.439 >     Someone new   item size: 5096159, audio
+01:47:37.443 >     Sounds Like A Melody   item size: 9210144, audio
+01:47:37.448 >     Stars   item size: 4746949, audio
+01:47:37.451 >     Stay   item size: 9647394, audio
+01:47:37.454 >     Streets Of London   item size: 9938320, audio
+01:47:37.459 >     Subcity   item size: 9584311, audio
+01:47:37.462 >     Summer In The City   item size: 3888715, audio
+01:47:37.467 >     Summertime Sadness   item size: 9115457, audio
+01:47:37.471 >     Super Girl   item size: 5577366, audio
+01:47:37.475 >     Sweet About Me   item size: 5006892, audio
+01:47:37.479 >     Talk To Me   item size: 7881646, audio
+01:47:37.483 >   Bewertung/
+01:47:37.484 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "101"
+01:47:37.527 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:37.536 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:37.545 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "1 oder mehr Sterne" (id: "102", childCount: 1) added to list
+01:47:37.555 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "2 oder mehr Sterne" (id: "103", childCount: 1) added to list
+01:47:37.565 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "3 oder mehr Sterne" (id: "104", childCount: 1) added to list
+01:47:37.575 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "4 oder mehr Sterne" (id: "105", childCount: 1) added to list
+01:47:37.585 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "5 oder mehr Sterne" (id: "106", childCount: 1) added to list
+01:47:37.595 > [I][SoapESP32.cpp:975] browseServer(): found 5 folders and 0 files
+01:47:37.601 >     1 oder mehr Sterne/
+01:47:37.603 >     2 oder mehr Sterne/
+01:47:37.605 >     3 oder mehr Sterne/
+01:47:37.607 >     4 oder mehr Sterne/
+01:47:37.609 >     5 oder mehr Sterne/
+01:47:37.612 >   Genre/
+01:47:37.612 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "5"
+01:47:38.070 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:38.079 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:38.111 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekanntes Genre]" (id: "5_355e99fa", childCount: 51) added to list
+01:47:38.122 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alternative" (id: "5_a8ec1ef8", childCount: 4) added to list
+01:47:38.133 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Blues" (id: "5_e7d4812e", childCount: 1) added to list
+01:47:38.146 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Classic Rock" (id: "5_ebe5066a", childCount: 1) added to list
+01:47:38.158 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Dance" (id: "5_4a790e06", childCount: 1) added to list
+01:47:38.169 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Deutsch Pop" (id: "5_8e0d67f0", childCount: 8) added to list
+01:47:38.180 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Disco + 80" (id: "5_b8b003ba", childCount: 1) added to list
+01:47:38.198 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Folk" (id: "5_1724bd8b", childCount: 7) added to list
+01:47:38.213 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Folk Rock" (id: "5_5a335844", childCount: 2) added to list
+01:47:38.225 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "General Indie Pop" (id: "5_809e4423", childCount: 1) added to list
+01:47:38.241 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Indie" (id: "5_ecfcd538", childCount: 4) added to list
+01:47:38.252 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Industrial" (id: "5_d6c72a18", childCount: 1) added to list
+01:47:38.264 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Italo Rock" (id: "5_ecb74cf7", childCount: 1) added to list
+01:47:38.276 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "NDW" (id: "5_ce6adb56", childCount: 1) added to list
+01:47:38.287 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Oldies" (id: "5_d1f99edd", childCount: 1) added to list
+01:47:38.310 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Pop" (id: "5_57385a28", childCount: 30) added to list
+01:47:38.323 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Pop/Rock" (id: "5_6172e5e", childCount: 1) added to list
+01:47:38.342 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rock" (id: "5_a3d4a48e", childCount: 18) added to list
+01:47:38.352 > [I][SoapESP32.cpp:975] browseServer(): found 18 folders and 0 files
+01:47:38.358 >     [Unbekanntes Genre]/
+01:47:38.360 >     Alternative/
+01:47:38.362 >     Blues/
+01:47:38.363 >     Classic Rock/
+01:47:38.365 >     Dance/
+01:47:38.366 >     Deutsch Pop/
+01:47:38.367 >     Disco + 80/
+01:47:38.369 >     Folk/
+01:47:38.370 >     Folk Rock/
+01:47:38.371 >     General Indie Pop/
+01:47:38.373 >     Indie/
+01:47:38.374 >     Industrial/
+01:47:38.376 >     Italo Rock/
+01:47:38.377 >     NDW/
+01:47:38.378 >     Oldies/
+01:47:38.379 >     Pop/
+01:47:38.380 >     Pop/Rock/
+01:47:38.381 >     Rock/
+01:47:38.382 >   Komponisten/
+01:47:38.384 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "108"
+01:47:38.685 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:38.693 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:38.730 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannter Komponist]" (id: "108_db7c7dfe", childCount: 9) added to list
+01:47:38.744 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Carl "Chas Smash" Smyth" (id: "108_4cd8e7a7", childCount: 1) added to list
+01:47:38.757 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Chris Foreman" (id: "108_b4148890", childCount: 1) added to list
+01:47:38.770 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Derek (fan1alanis219@cs.com)" (id: "108_918452a", childCount: 1) added to list
+01:47:38.783 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Eric Bazilian" (id: "108_bd054bb8", childCount: 1) added to list
+01:47:38.798 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Harry Styles, Jeff Bhasker, Mitch Rowland, Ryan Nasci, Alex Salibian & Tyler Johnson" (id: "108_9a071a6a", childCount: 1) added to list
+01:47:38.817 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lana Del Rey" (id: "108_bf9b7c72", childCount: 1) added to list
+01:47:38.829 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Maria McKee" (id: "108_42bc2fb4", childCount: 1) added to list
+01:47:38.843 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rick Nowels" (id: "108_10b6ed98", childCount: 1) added to list
+01:47:38.855 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rob Hyman" (id: "108_29c2fba1", childCount: 1) added to list
+01:47:38.866 > [I][SoapESP32.cpp:975] browseServer(): found 10 folders and 0 files
+01:47:38.872 >     [Unbekannter Komponist]/
+01:47:38.875 >     Carl "Chas Smash" Smyth/
+01:47:38.877 >     Chris Foreman/
+01:47:38.879 >     Derek (fan1alanis219@cs.com)/
+01:47:38.882 >     Eric Bazilian/
+01:47:38.884 >     Harry Styles, Jeff Bhasker, Mitch Rowland, Ryan Nasci, Alex Salibian & Tyler Johnson/
+01:47:38.892 >     Lana Del Rey/
+01:47:38.893 >     Maria McKee/
+01:47:38.895 >     Rick Nowels/
+01:47:38.896 >     Rob Hyman/
+01:47:38.898 >   Mitwirkende Interpreten/
+01:47:38.900 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "100"
+01:47:40.323 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:40.332 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:40.348 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannter Autor]" (id: "100_1e9fccb", childCount: 1) added to list
+01:47:40.361 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adel Tawil" (id: "100_72764934", childCount: 1) added to list
+01:47:40.372 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Adele" (id: "100_dddb1102", childCount: 1) added to list
+01:47:40.388 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Agnes Obel" (id: "100_d2a248b7", childCount: 2) added to list
+01:47:40.401 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alanis Morissette" (id: "100_97f6ff5a", childCount: 1) added to list
+01:47:40.414 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alice Boman" (id: "100_4a570cbe", childCount: 1) added to list
+01:47:40.428 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Farben" (id: "100_e89ad745", childCount: 1) added to list
+01:47:40.442 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alphaville" (id: "100_2d21abc3", childCount: 2) added to list
+01:47:40.456 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Amy Macdonald" (id: "100_ad811f3b", childCount: 1) added to list
+01:47:40.468 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Anastacia" (id: "100_231eb1bc", childCount: 1) added to list
+01:47:40.480 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Andreas Bourani" (id: "100_d69df0c7", childCount: 1) added to list
+01:47:40.494 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Annett Louisan" (id: "100_8cc6fac0", childCount: 1) added to list
+01:47:40.507 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Antony and the Johnsons" (id: "100_2b3eaffc", childCount: 1) added to list
+01:47:40.521 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Austra" (id: "100_5c1b0015", childCount: 2) added to list
+01:47:40.534 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ben Harper" (id: "100_df0ba95e", childCount: 1) added to list
+01:47:40.548 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bing Austria & The Flippin' Soul Stompers" (id: "100_8d1b0f54", childCount: 1) added to list
+01:47:40.562 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bobo in White Wooden Houses" (id: "100_d8d51000", childCount: 1) added to list
+01:47:40.576 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Hornsby" (id: "100_2270bb4d", childCount: 1) added to list
+01:47:40.588 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bruce Springsteen" (id: "100_87e41e7c", childCount: 1) added to list
+01:47:40.601 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Carla Bruni" (id: "100_9d4637c8", childCount: 1) added to list
+01:47:40.614 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Celine Dion" (id: "100_939a49d1", childCount: 1) added to list
+01:47:40.630 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Chris Isaac" (id: "100_874eade7", childCount: 1) added to list
+01:47:40.641 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso" (id: "100_8050094", childCount: 1) added to list
+01:47:40.653 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Clueso, Kat Frankie" (id: "100_23096e96", childCount: 1) added to list
+01:47:40.666 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Coldplay" (id: "100_ec559325", childCount: 1) added to list
+01:47:40.679 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Connells" (id: "100_66fffd47", childCount: 1) added to list
+01:47:40.692 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Culture Club" (id: "100_3fc1e151", childCount: 1) added to list
+01:47:40.703 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "David Bowie" (id: "100_ff1d9c95", childCount: 1) added to list
+01:47:40.716 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Disturbed" (id: "100_9dbbc9c3", childCount: 1) added to list
+01:47:40.730 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Eilen Jewell" (id: "100_38aecd23", childCount: 1) added to list
+01:47:40.744 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ellie Goulding" (id: "100_b9591dd1", childCount: 1) added to list
+01:47:40.758 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Escobar & Heather Nova" (id: "100_ced330e9", childCount: 1) added to list
+01:47:40.774 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Falco" (id: "100_4ec26258", childCount: 1) added to list
+01:47:40.784 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Father John Misty" (id: "100_d122914e", childCount: 1) added to list
+01:47:40.797 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Feargal Sharkey" (id: "100_ab1c9056", childCount: 1) added to list
+01:47:40.810 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Frazey Ford" (id: "100_88582641", childCount: 1) added to list
+01:47:40.823 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Gabriella Cilmi" (id: "100_37b2e692", childCount: 1) added to list
+01:47:40.836 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genesis" (id: "100_46c19a15", childCount: 1) added to list
+01:47:40.847 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Grace Carter" (id: "100_81fe4e4a", childCount: 1) added to list
+01:47:40.866 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Harry Styles" (id: "100_29b2f1f9", childCount: 2) added to list
+01:47:40.877 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Heather Nova" (id: "100_2cca7fca", childCount: 1) added to list
+01:47:40.890 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Helden" (id: "100_dcecd3f3", childCount: 1) added to list
+01:47:40.903 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Herman's Hermits" (id: "100_8d3d2f36", childCount: 1) added to list
+01:47:40.918 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Hooters" (id: "100_3fd4230d", childCount: 2) added to list
+01:47:40.932 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Jake Bugg" (id: "100_fce10caf", childCount: 1) added to list
+01:47:40.945 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "James Brown" (id: "100_98efd0d3", childCount: 1) added to list
+01:47:40.957 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "John Legend" (id: "100_65948897", childCount: 1) added to list
+01:47:40.973 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lana Del Rey" (id: "100_bf9b7c72", childCount: 2) added to list
+01:47:40.985 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Laurie Anderson" (id: "100_106eb595", childCount: 1) added to list
+01:47:40.997 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lovin' Spoonful" (id: "100_addd8418", childCount: 1) added to list
+01:47:41.011 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Luke Winslow-King" (id: "100_fcdbcdf3", childCount: 1) added to list
+01:47:41.023 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Lynyrd Skynyrd" (id: "100_e33eea51", childCount: 1) added to list
+01:47:41.037 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madness" (id: "100_69a76274", childCount: 1) added to list
+01:47:41.049 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Madrugada" (id: "100_a28ee269", childCount: 1) added to list
+01:47:41.065 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Maria Mena" (id: "100_3239417a", childCount: 2) added to list
+01:47:41.076 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Marillion" (id: "100_53dc0978", childCount: 1) added to list
+01:47:41.089 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Men at Work" (id: "100_cd592567", childCount: 1) added to list
+01:47:41.101 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Murray Head" (id: "100_79cffb8d", childCount: 1) added to list
+01:47:41.114 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nazareth" (id: "100_e2f9f168", childCount: 1) added to list
+01:47:41.128 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nelly Furtado" (id: "100_23794056", childCount: 1) added to list
+01:47:41.139 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Nits" (id: "100_50ee2795", childCount: 1) added to list
+01:47:41.151 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Omega" (id: "100_db24a59a", childCount: 1) added to list
+01:47:41.166 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Passenger" (id: "100_4c60b457", childCount: 2) added to list
+01:47:41.178 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Patrick Hernandez" (id: "100_8135e404", childCount: 1) added to list
+01:47:41.196 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Pet Shop Boys" (id: "100_9358c237", childCount: 1) added to list
+01:47:41.209 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Peter Schilling" (id: "100_4ce27388", childCount: 1) added to list
+01:47:41.221 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Phil Carmen" (id: "100_1a70171c", childCount: 1) added to list
+01:47:41.233 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Police" (id: "100_19c59c59", childCount: 1) added to list
+01:47:41.247 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rainbirds" (id: "100_468ceb3f", childCount: 1) added to list
+01:47:41.259 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ralph Mctell" (id: "100_919dbc5", childCount: 1) added to list
+01:47:41.272 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Reamonn" (id: "100_ddcebff1", childCount: 1) added to list
+01:47:41.284 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rihanna Feat Mikky Ekko" (id: "100_84ebcd27", childCount: 1) added to list
+01:47:41.297 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Rory Gallagher" (id: "100_2093e8c2", childCount: 1) added to list
+01:47:41.310 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxette" (id: "100_7706669e", childCount: 1) added to list
+01:47:41.323 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roxy Music" (id: "100_e27ad99e", childCount: 1) added to list
+01:47:41.336 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Roy Orbison" (id: "100_846630e5", childCount: 1) added to list
+01:47:41.348 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Scott Mc Kenzie" (id: "100_25d42e98", childCount: 1) added to list
+01:47:41.360 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Shakira" (id: "100_d9067824", childCount: 1) added to list
+01:47:41.373 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Sinéad O'Connor" (id: "100_64522b92", childCount: 1) added to list
+01:47:41.386 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Status Quo" (id: "100_7e1eeba8", childCount: 1) added to list
+01:47:41.400 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Steve Miller Band" (id: "100_bd3eee64", childCount: 1) added to list
+01:47:41.412 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Stranglers" (id: "100_5fbf7f7e", childCount: 1) added to list
+01:47:41.424 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Suzanne Vega" (id: "100_a37434f6", childCount: 1) added to list
+01:47:41.437 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ten Thousand Maniacs" (id: "100_45fe128c", childCount: 1) added to list
+01:47:41.449 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Eagles" (id: "100_5f36bbb5", childCount: 1) added to list
+01:47:41.463 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Hooters" (id: "100_d9a2ff52", childCount: 1) added to list
+01:47:41.477 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "The Parakit feat Alden Jacob" (id: "100_f990d9a1", childCount: 1) added to list
+01:47:41.489 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tom Odell" (id: "100_50de2e2d", childCount: 1) added to list
+01:47:41.501 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tony Carey" (id: "100_a9b35f25", childCount: 1) added to list
+01:47:41.513 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Tracy Chapman" (id: "100_22df8d3e", childCount: 1) added to list
+01:47:41.526 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Travis" (id: "100_dc36114", childCount: 1) added to list
+01:47:41.538 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Triggerfinger" (id: "100_425363aa", childCount: 1) added to list
+01:47:41.552 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "U2" (id: "100_ea5628b8", childCount: 1) added to list
+01:47:41.562 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Uriah Heep" (id: "100_7402eee0", childCount: 1) added to list
+01:47:41.574 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Zucchero" (id: "100_6bf07b60", childCount: 1) added to list
+01:47:41.584 > [I][SoapESP32.cpp:975] browseServer(): found 95 folders and 0 files
+01:47:41.590 >     [Unbekannter Autor]/
+01:47:41.593 >     Adel Tawil/
+01:47:41.594 >     Adele/
+01:47:41.595 >     Agnes Obel/
+01:47:41.597 >     Alanis Morissette/
+01:47:41.599 >     Alice Boman/
+01:47:41.600 >     Alle Farben/
+01:47:41.602 >     Alphaville/
+01:47:41.603 >     Amy Macdonald/
+01:47:41.605 >     Anastacia/
+01:47:41.606 >     Andreas Bourani/
+01:47:41.608 >     Annett Louisan/
+01:47:41.610 >     Antony and the Johnsons/
+01:47:41.613 >     Austra/
+01:47:41.614 >     Ben Harper/
+01:47:41.615 >     Bing Austria & The Flippin' Soul Stompers/
+01:47:41.620 >     Bobo in White Wooden Houses/
+01:47:41.622 >     Bruce Hornsby/
+01:47:41.624 >     Bruce Springsteen/
+01:47:41.626 >     Carla Bruni/
+01:47:41.628 >     Celine Dion/
+01:47:41.629 >     Chris Isaac/
+01:47:41.631 >     Clueso/
+01:47:41.632 >     Clueso, Kat Frankie/
+01:47:41.634 >     Coldplay/
+01:47:41.636 >     Connells/
+01:47:41.637 >     Culture Club/
+01:47:41.639 >     David Bowie/
+01:47:41.640 >     Disturbed/
+01:47:41.642 >     Eilen Jewell/
+01:47:41.643 >     Ellie Goulding/
+01:47:41.645 >     Escobar & Heather Nova/
+01:47:41.647 >     Falco/
+01:47:41.649 >     Father John Misty/
+01:47:41.651 >     Feargal Sharkey/
+01:47:41.653 >     Frazey Ford/
+01:47:41.654 >     Gabriella Cilmi/
+01:47:41.656 >     Genesis/
+01:47:41.657 >     Grace Carter/
+01:47:41.659 >     Harry Styles/
+01:47:41.661 >     Heather Nova/
+01:47:41.662 >     Helden/
+01:47:41.663 >     Herman's Hermits/
+01:47:41.665 >     Hooters/
+01:47:41.667 >     Jake Bugg/
+01:47:41.668 >     James Brown/
+01:47:41.669 >     John Legend/
+01:47:41.671 >     Lana Del Rey/
+01:47:41.673 >     Laurie Anderson/
+01:47:41.675 >     Lovin' Spoonful/
+01:47:41.676 >     Luke Winslow-King/
+01:47:41.679 >     Lynyrd Skynyrd/
+01:47:41.680 >     Madness/
+01:47:41.682 >     Madrugada/
+01:47:41.683 >     Maria Mena/
+01:47:41.685 >     Marillion/
+01:47:41.686 >     Men at Work/
+01:47:41.687 >     Murray Head/
+01:47:41.689 >     Nazareth/
+01:47:41.690 >     Nelly Furtado/
+01:47:41.692 >     Nits/
+01:47:41.693 >     Omega/
+01:47:41.694 >     Passenger/
+01:47:41.695 >     Patrick Hernandez/
+01:47:41.698 >     Pet Shop Boys/
+01:47:41.699 >     Peter Schilling/
+01:47:41.701 >     Phil Carmen/
+01:47:41.703 >     Police/
+01:47:41.704 >     Rainbirds/
+01:47:41.705 >     Ralph Mctell/
+01:47:41.707 >     Reamonn/
+01:47:41.708 >     Rihanna Feat Mikky Ekko/
+01:47:41.711 >     Rory Gallagher/
+01:47:41.713 >     Roxette/
+01:47:41.714 >     Roxy Music/
+01:47:41.715 >     Roy Orbison/
+01:47:41.717 >     Scott Mc Kenzie/
+01:47:41.719 >     Shakira/
+01:47:41.720 >     Sinéad O'Connor/
+01:47:41.722 >     Status Quo/
+01:47:41.723 >     Steve Miller Band/
+01:47:41.725 >     Stranglers/
+01:47:41.727 >     Suzanne Vega/
+01:47:41.729 >     Ten Thousand Maniacs/
+01:47:41.731 >     The Eagles/
+01:47:41.732 >     The Hooters/
+01:47:41.734 >     The Parakit feat Alden Jacob/
+01:47:41.736 >     Tom Odell/
+01:47:41.737 >     Tony Carey/
+01:47:41.739 >     Tracy Chapman/
+01:47:41.741 >     Travis/
+01:47:41.742 >     Triggerfinger/
+01:47:41.744 >     U2/
+01:47:41.744 >     Uriah Heep/
+01:47:41.746 >     Zucchero/
+01:47:41.747 >   Musikwiedergabelisten/
+01:47:41.749 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "F"
+01:47:41.778 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:41.787 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:41.793 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:41.799 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:41.805 >   Ordner/
+01:47:41.806 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "14"
+01:47:41.828 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:41.836 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:41.849 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Music" (id: "14_312df9b4", childCount: 104) added to list
+01:47:41.859 > [I][SoapESP32.cpp:667] soapScanContainer(): container "14_2e760b2d" child count=0
+01:47:41.866 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Musik" (id: "14_2e760b2d", childCount: 0) added to list
+01:47:41.876 > [I][SoapESP32.cpp:975] browseServer(): found 2 folders and 0 files
+01:47:41.882 >     Music/
+01:47:41.883 >     Musik/
+01:47:41.884 > Videos/
+01:47:41.885 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "2"
+01:47:41.922 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:41.931 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:41.939 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Videos" (id: "8", childCount: 4) added to list
+01:47:41.950 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bewertung" (id: "200", childCount: 5) added to list
+01:47:41.961 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ordner" (id: "15", childCount: 2) added to list
+01:47:41.972 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Serien" (id: "E", childCount: 3) added to list
+01:47:41.985 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "TV-Aufzeichnung" (id: "18", childCount: 7) added to list
+01:47:41.996 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videogenres" (id: "9", childCount: 2) added to list
+01:47:42.005 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videoschauspieler" (id: "A", childCount: 1) added to list
+01:47:42.015 > [I][SoapESP32.cpp:667] soapScanContainer(): container "10" child count=0
+01:47:42.021 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videowiedergabelisten" (id: "10", childCount: 0) added to list
+01:47:42.031 > [I][SoapESP32.cpp:975] browseServer(): found 8 folders and 0 files
+01:47:42.037 >   Alle Videos/
+01:47:42.039 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "8"
+01:47:42.062 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:42.071 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:42.371 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:47:42.378 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:47:42.385 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:47:42.414 > [I][SoapESP32.cpp:855] soapScanItem(): "EmptyVideoFile" (id: "8-15", size: 0, sizeMissing: true, type: video) added to list
+01:47:42.440 > [I][SoapESP32.cpp:855] soapScanItem(): "VideoNr1" (id: "8-20", size: 4692350543, sizeMissing: false, type: video) added to list
+01:47:42.461 > [I][SoapESP32.cpp:855] soapScanItem(): "VideoNr2" (id: "8-82", size: 7675374555, sizeMissing: false, type: video) added to list
+01:47:42.583 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:47:42.590 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:47:42.596 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:47:42.625 > [I][SoapESP32.cpp:855] soapScanItem(): "WIN_20180613_11_46_09_Pro" (id: "8-187", size: 0, sizeMissing: true, type: video) added to list
+01:47:42.637 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 4 files
+01:47:42.643 >     EmptyVideoFile   item size: missing, video
+01:47:42.647 >     VideoNr1   item size: 4692350543, video
+01:47:42.651 >     VideoNr2   item size: 7675374555, video
+01:47:42.656 >     WIN_20180613_11_46_09_Pro   item size: missing, video
+01:47:42.661 >   Bewertung/
+01:47:42.662 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "200"
+01:47:42.696 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:42.704 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:42.713 > [I][SoapESP32.cpp:667] soapScanContainer(): container "201" child count=0
+01:47:42.720 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "1 oder mehr Sterne" (id: "201", childCount: 0) added to list
+01:47:42.730 > [I][SoapESP32.cpp:667] soapScanContainer(): container "202" child count=0
+01:47:42.737 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "2 oder mehr Sterne" (id: "202", childCount: 0) added to list
+01:47:42.746 > [I][SoapESP32.cpp:667] soapScanContainer(): container "203" child count=0
+01:47:42.753 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "3 oder mehr Sterne" (id: "203", childCount: 0) added to list
+01:47:42.764 > [I][SoapESP32.cpp:667] soapScanContainer(): container "204" child count=0
+01:47:42.770 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "4 oder mehr Sterne" (id: "204", childCount: 0) added to list
+01:47:42.780 > [I][SoapESP32.cpp:667] soapScanContainer(): container "205" child count=0
+01:47:42.787 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "5 oder mehr Sterne" (id: "205", childCount: 0) added to list
+01:47:42.797 > [I][SoapESP32.cpp:975] browseServer(): found 5 folders and 0 files
+01:47:42.803 >     1 oder mehr Sterne/
+01:47:42.805 >     2 oder mehr Sterne/
+01:47:42.807 >     3 oder mehr Sterne/
+01:47:42.809 >     4 oder mehr Sterne/
+01:47:42.811 >     5 oder mehr Sterne/
+01:47:42.813 >   Ordner/
+01:47:42.814 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "15"
+01:47:42.836 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:42.845 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:42.855 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videos" (id: "15_faaae8ed", childCount: 3) added to list
+01:47:42.866 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Videos" (id: "15_ad6f6bc", childCount: 1) added to list
+01:47:42.875 > [I][SoapESP32.cpp:975] browseServer(): found 2 folders and 0 files
+01:47:42.881 >     Videos/
+01:47:42.882 >     Videos/
+01:47:42.883 >   Serien/
+01:47:42.884 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "E"
+01:47:43.194 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.203 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.220 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannte Serie]" (id: "E_63df550a", childCount: 2) added to list
+01:47:43.231 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "VideoNr1" (id: "E_7e5bcb19", childCount: 1) added to list
+01:47:43.240 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "VideoNr2" (id: "E_7b5bc660", childCount: 1) added to list
+01:47:43.250 > [I][SoapESP32.cpp:975] browseServer(): found 3 folders and 0 files
+01:47:43.256 >     [Unbekannte Serie]/
+01:47:43.258 >     VideoNr1/
+01:47:43.259 >     VideoNr2/
+01:47:43.261 >   TV-Aufzeichnung/
+01:47:43.262 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "18"
+01:47:43.287 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.295 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.308 > [I][SoapESP32.cpp:667] soapScanContainer(): container "19" child count=0
+01:47:43.315 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle TV-Aufzeichnungen" (id: "19", childCount: 0) added to list
+01:47:43.325 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Bewertung" (id: "400", childCount: 5) added to list
+01:47:43.335 > [I][SoapESP32.cpp:667] soapScanContainer(): container "1E" child count=0
+01:47:43.342 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ordner" (id: "1E", childCount: 0) added to list
+01:47:43.350 > [I][SoapESP32.cpp:667] soapScanContainer(): container "1C" child count=0
+01:47:43.357 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Serien" (id: "1C", childCount: 0) added to list
+01:47:43.366 > [I][SoapESP32.cpp:667] soapScanContainer(): container "1A" child count=0
+01:47:43.372 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "TV-Genres für Aufzeichnung" (id: "1A", childCount: 0) added to list
+01:47:43.383 > [I][SoapESP32.cpp:667] soapScanContainer(): container "1B" child count=0
+01:47:43.389 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "TV-Schauspieler für Aufzeichnungen" (id: "1B", childCount: 0) added to list
+01:47:43.400 > [I][SoapESP32.cpp:667] soapScanContainer(): container "1D" child count=0
+01:47:43.407 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Wiedergabelisten für TV-Aufzeichnungen" (id: "1D", childCount: 0) added to list
+01:47:43.418 > [I][SoapESP32.cpp:975] browseServer(): found 7 folders and 0 files
+01:47:43.424 >     Alle TV-Aufzeichnungen/
+01:47:43.427 >     Bewertung/
+01:47:43.428 >     Ordner/
+01:47:43.429 >     Serien/
+01:47:43.430 >     TV-Genres für Aufzeichnung/
+01:47:43.433 >     TV-Schauspieler für Aufzeichnungen/
+01:47:43.437 >     Wiedergabelisten für TV-Aufzeichnungen/
+01:47:43.441 >   Videogenres/
+01:47:43.442 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "9"
+01:47:43.496 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.504 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.517 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekanntes Genre]" (id: "9_355e99fa", childCount: 2) added to list
+01:47:43.528 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Whatever" (id: "9_e09ca2eb", childCount: 2) added to list
+01:47:43.537 > [I][SoapESP32.cpp:975] browseServer(): found 2 folders and 0 files
+01:47:43.543 >     [Unbekanntes Genre]/
+01:47:43.546 >     Whatever/
+01:47:43.547 >   Videoschauspieler/
+01:47:43.549 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "A"
+01:47:43.584 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.593 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.610 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "[Unbekannter Autor]" (id: "A_1e9fccb", childCount: 1) added to list
+01:47:43.621 > [I][SoapESP32.cpp:975] browseServer(): found 1 folders and 0 files
+01:47:43.627 >     [Unbekannter Autor]/
+01:47:43.629 >   Videowiedergabelisten/
+01:47:43.631 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "10"
+01:47:43.646 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.655 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.661 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:43.667 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:43.673 > Wiedergabelisten/
+01:47:43.675 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "12"
+01:47:43.691 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.699 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.715 > [I][SoapESP32.cpp:667] soapScanContainer(): container "13" child count=0
+01:47:43.722 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Alle Wiedergabelisten" (id: "13", childCount: 0) added to list
+01:47:43.732 > [I][SoapESP32.cpp:667] soapScanContainer(): container "17" child count=0
+01:47:43.738 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Ordner" (id: "17", childCount: 0) added to list
+01:47:43.747 > [I][SoapESP32.cpp:975] browseServer(): found 2 folders and 0 files
+01:47:43.753 >   Alle Wiedergabelisten/
+01:47:43.755 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "13"
+01:47:43.771 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.779 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.786 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:43.793 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:43.798 >   Ordner/
+01:47:43.799 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "17"
+01:47:43.827 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:2869
+01:47:43.836 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:47:43.842 > [I][SoapESP32.cpp:965] browseServer(): XML scanned, no elements announced
+01:47:43.849 > [I][SoapESP32.cpp:975] browseServer(): found 0 folders and 0 files
+01:47:43.855 >
+01:47:43.855 > Sketch finished.

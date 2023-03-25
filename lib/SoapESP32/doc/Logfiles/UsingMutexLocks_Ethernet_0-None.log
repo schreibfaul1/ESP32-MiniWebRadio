@@ -1,0 +1,58 @@
+23:39:42.911 -> ets Jun  8 2016 00:22:57
+23:39:42.911 -> 
+23:39:42.911 -> rst:0x1 (POWERON_RESET),boot:0x33 (SPI_FAST_FLASH_BOOT)
+23:39:42.911 -> configsip: 0, SPIWP:0xee
+23:39:42.911 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+23:39:42.911 -> mode:DIO, clock div:1
+23:39:42.911 -> load:0x3fff0018,len:4
+23:39:42.911 -> load:0x3fff001c,len:1216
+23:39:42.911 -> ho 0 tail 12 room 4
+23:39:42.911 -> load:0x40078000,len:10944
+23:39:42.911 -> load:0x40080400,len:6388
+23:39:42.959 -> entry 0x400806b4
+23:39:43.052 -> 
+23:39:43.052 -> Initializing Ethernet...DHCP ok.
+23:39:43.753 -> Local IP: 192.168.1.45
+23:39:43.753 -> Additional task started. LED should blink.
+23:39:43.753 -> 
+23:39:43.753 -> Scanning local network for DLNA media servers...
+23:39:48.299 -> Number of discovered servers that deliver content: 6
+23:39:48.299 -> 
+23:39:48.299 -> Server[0]: IP address: 192.168.1.42, port: 5001, name: Universal Media Server
+23:39:48.720 -> Browsing root directory. Number of sub-directories: 3
+23:39:48.767 ->  Music (child count: 1)
+23:39:48.767 ->  Videos (child count: 1)
+23:39:48.767 ->  Web (child count: 2)
+23:39:48.767 -> 
+23:39:48.767 -> Server[1]: IP address: 192.168.1.42, port: 1557, name: Kodi (Virtual-Win10)
+23:39:48.813 -> Browsing root directory. Number of sub-directories: 2
+23:39:48.813 ->  Music Library (child count: missing)
+23:39:48.813 ->  Video Library (child count: missing)
+23:39:48.813 -> 
+23:39:48.813 -> Server[2]: IP address: 192.168.1.42, port: 2869, name: VIRTUAL-WIN10: MediaPlayerVM:
+23:39:50.218 -> Browsing root directory. Number of sub-directories: 4
+23:39:50.218 ->  Bilder (child count: 7)
+23:39:50.218 ->  Musik (child count: 10)
+23:39:50.218 ->  Videos (child count: 8)
+23:39:50.218 ->  Wiedergabelisten (child count: 2)
+23:39:50.218 -> 
+23:39:50.218 -> Server[3]: IP address: 192.168.1.42, port: 8895, name: Serviio (Virtual-Win10)
+23:39:50.265 -> Browsing root directory. Number of sub-directories: 3
+23:39:50.312 ->  Audio (child count: 10)
+23:39:50.312 ->  Image (child count: 5)
+23:39:50.312 ->  Video (child count: 7)
+23:39:50.312 -> 
+23:39:50.312 -> Server[4]: IP address: 192.168.1.42, port: 8096, name: Jellyfin - VIRTUAL-WIN10
+23:39:50.547 -> Browsing root directory. Number of sub-directories: 2
+23:39:50.547 ->  Movies (child count: 6)
+23:39:50.547 ->  Music (child count: 10)
+23:39:50.547 -> 
+23:39:50.547 -> Server[5]: IP address: 192.168.1.11, port: 55247, name: LINKSTATION2 [LinkStation Media Server]
+23:39:51.672 -> Browsing root directory. Number of sub-directories: 4
+23:39:51.672 ->  Video (child count: 8)
+23:39:51.672 ->  Music (child count: 9)
+23:39:51.672 ->  Photos (child count: 7)
+23:39:51.672 ->  Folders (child count: 2)
+23:39:51.672 -> 
+23:39:51.672 -> 
+23:39:51.672 -> Sketch finished.

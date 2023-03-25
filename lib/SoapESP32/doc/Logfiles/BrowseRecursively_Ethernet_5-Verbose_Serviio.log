@@ -1,0 +1,377 @@
+01:22:08.813 > Initializing Ethernet...DHCP ok.
+01:22:12.769 > Local IP: 192.168.1.34
+01:22:12.771 >
+01:22:12.771 > ----> server content follows:
+01:22:12.774 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "0"
+01:22:12.782 > [V][SoapESP32.cpp:1277] soapPost(): send request to server:
+01:22:12.788 > POST /serviceControl HTTP/1.1
+01:22:12.791 > Host: 192.168.1.42:8895
+01:22:12.792 > CACHE-CONTROL: no-cache
+01:22:12.794 > PRAGMA: no-cache
+01:22:12.796 > Connection: close
+01:22:12.797 > Content-Length: 439
+01:22:12.799 > Content-Type: text/xml; charset="utf-8"
+01:22:12.804 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+01:22:12.810 > User-Agent: ESP32/Player/UPNP1.0
+01:22:12.812 >
+01:22:12.812 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+01:22:12.823 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+01:22:12.830 > <ObjectID>0</ObjectID>
+01:22:12.832 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+01:22:12.836 > <Filter>*</Filter>
+01:22:12.837 > <StartingIndex>0</StartingIndex>
+01:22:12.840 > <RequestedCount>100</RequestedCount>
+01:22:12.845 > <SortCriteria></SortCriteria>
+01:22:12.846 > </u:Browse>
+01:22:12.849 > </s:Body>
+01:22:12.849 > </s:Envelope>
+01:22:12.850 >
+01:22:12.850 >
+01:22:12.850 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:8895
+01:22:12.859 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+01:22:12.865 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+01:22:12.870 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Fri, 21 Jan 2022 00:22:13 GMT
+01:22:12.879 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+01:22:12.888 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 1240
+01:22:12.895 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+01:22:12.904 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+01:22:12.911 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+01:22:12.916 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 1240
+01:22:12.926 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:22:12.936 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=65): childCount="10" id="A" parentID="0" restricted="1" searchable="0"
+01:22:12.949 > [V][SoapESP32.cpp:939] browseServer(): container (length=67): <dc:title>Audio</dc:title><upnp:class>object.container</upnp:class>
+01:22:12.959 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: 0
+01:22:12.966 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A"
+01:22:12.970 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="10"
+01:22:12.975 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:12.982 > [I][SoapESP32.cpp:680] soapScanContainer(): "A" attribute searchable=0
+01:22:12.987 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Audio"
+01:22:12.992 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Audio" (id: "A", childCount: 10) added to list
+01:22:13.001 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=64): childCount="5" id="I" parentID="0" restricted="1" searchable="0"
+01:22:13.013 > [V][SoapESP32.cpp:939] browseServer(): container (length=67): <dc:title>Image</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.024 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: 0
+01:22:13.031 > [D][SoapESP32.cpp:643] soapScanContainer(): id="I"
+01:22:13.035 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="5"
+01:22:13.040 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.045 > [I][SoapESP32.cpp:680] soapScanContainer(): "I" attribute searchable=0
+01:22:13.052 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Image"
+01:22:13.057 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Image" (id: "I", childCount: 5) added to list
+01:22:13.065 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=64): childCount="7" id="V" parentID="0" restricted="1" searchable="0"
+01:22:13.077 > [V][SoapESP32.cpp:939] browseServer(): container (length=67): <dc:title>Video</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.090 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: 0
+01:22:13.095 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V"
+01:22:13.100 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="7"
+01:22:13.105 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.110 > [I][SoapESP32.cpp:680] soapScanContainer(): "V" attribute searchable=0
+01:22:13.117 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Video"
+01:22:13.122 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Video" (id: "V", childCount: 7) added to list
+01:22:13.130 > [D][SoapESP32.cpp:959] browseServer(): announced number of folders and/or files: 3
+01:22:13.138 > [I][SoapESP32.cpp:975] browseServer(): found 3 folders and 0 files
+01:22:13.142 > Audio/
+01:22:13.145 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "A"
+01:22:13.153 > [V][SoapESP32.cpp:1277] soapPost(): send request to server:
+01:22:13.158 > POST /serviceControl HTTP/1.1
+01:22:13.160 > Host: 192.168.1.42:8895
+01:22:13.163 > CACHE-CONTROL: no-cache
+01:22:13.165 > PRAGMA: no-cache
+01:22:13.166 > Connection: close
+01:22:13.168 > Content-Length: 439
+01:22:13.170 > Content-Type: text/xml; charset="utf-8"
+01:22:13.173 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+01:22:13.179 > User-Agent: ESP32/Player/UPNP1.0
+01:22:13.183 >
+01:22:13.183 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+01:22:13.193 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+01:22:13.200 > <ObjectID>A</ObjectID>
+01:22:13.202 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+01:22:13.206 > <Filter>*</Filter>
+01:22:13.208 > <StartingIndex>0</StartingIndex>
+01:22:13.211 > <RequestedCount>100</RequestedCount>
+01:22:13.214 > <SortCriteria></SortCriteria>
+01:22:13.217 > </u:Browse>
+01:22:13.218 > </s:Body>
+01:22:13.219 > </s:Envelope>
+01:22:13.220 >
+01:22:13.221 >
+01:22:13.225 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:8895
+01:22:13.233 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+01:22:13.240 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+01:22:13.245 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Fri, 21 Jan 2022 00:22:13 GMT
+01:22:13.253 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+01:22:13.263 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 2038
+01:22:13.270 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+01:22:13.279 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+01:22:13.286 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+01:22:13.291 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 2038
+01:22:13.301 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:22:13.310 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=70): childCount="102" id="A_ALB" parentID="A" restricted="1" searchable="0"
+01:22:13.323 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Albums</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.334 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.341 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_ALB"
+01:22:13.346 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="102"
+01:22:13.351 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.356 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_ALB" attribute searchable=0
+01:22:13.363 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Albums"
+01:22:13.368 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Albums" (id: "A_ALB", childCount: 102) added to list
+01:22:13.377 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="19" id="A_A" parentID="A" restricted="1" searchable="0"
+01:22:13.390 > [V][SoapESP32.cpp:939] browseServer(): container (length=69): <dc:title>Artists</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.402 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.409 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_A"
+01:22:13.414 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="19"
+01:22:13.419 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.424 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_A" attribute searchable=0
+01:22:13.429 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Artists"
+01:22:13.435 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Artists" (id: "A_A", childCount: 19) added to list
+01:22:13.445 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="1" id="A_F" parentID="A" restricted="1" searchable="0"
+01:22:13.457 > [V][SoapESP32.cpp:939] browseServer(): container (length=69): <dc:title>Folders</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.469 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.475 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_F"
+01:22:13.480 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="1"
+01:22:13.485 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.490 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_F" attribute searchable=0
+01:22:13.496 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Folders"
+01:22:13.501 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Folders" (id: "A_F", childCount: 1) added to list
+01:22:13.510 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="19" id="A_G" parentID="A" restricted="1" searchable="0"
+01:22:13.522 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Genres</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.534 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.540 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_G"
+01:22:13.545 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="19"
+01:22:13.550 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.556 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_G" attribute searchable=0
+01:22:13.563 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Genres"
+01:22:13.567 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genres" (id: "A_G", childCount: 19) added to list
+01:22:13.576 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="24" id="A_T" parentID="A" restricted="1" searchable="0"
+01:22:13.588 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Titles</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.600 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.606 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_T"
+01:22:13.611 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="24"
+01:22:13.616 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.621 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_T" attribute searchable=0
+01:22:13.628 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Titles"
+01:22:13.633 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Titles" (id: "A_T", childCount: 24) added to list
+01:22:13.642 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="0" id="A_PL" parentID="A" restricted="1" searchable="0"
+01:22:13.654 > [V][SoapESP32.cpp:939] browseServer(): container (length=71): <dc:title>Playlists</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.666 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.674 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_PL"
+01:22:13.678 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:13.684 > [I][SoapESP32.cpp:667] soapScanContainer(): container "A_PL" child count=0
+01:22:13.690 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.695 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_PL" attribute searchable=0
+01:22:13.702 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Playlists"
+01:22:13.707 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Playlists" (id: "A_PL", childCount: 0) added to list
+01:22:13.716 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="3" id="A_OF" parentID="A" restricted="1" searchable="0"
+01:22:13.729 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Online</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.740 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: A
+01:22:13.747 > [D][SoapESP32.cpp:643] soapScanContainer(): id="A_OF"
+01:22:13.752 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="3"
+01:22:13.757 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:13.762 > [I][SoapESP32.cpp:680] soapScanContainer(): "A_OF" attribute searchable=0
+01:22:13.769 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Online"
+01:22:13.773 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Online" (id: "A_OF", childCount: 3) added to list
+01:22:13.782 > [D][SoapESP32.cpp:959] browseServer(): announced number of folders and/or files: 7
+01:22:13.789 > [I][SoapESP32.cpp:975] browseServer(): found 7 folders and 0 files
+01:22:13.795 >   Albums/
+01:22:13.796 >   Artists/
+01:22:13.797 >   Folders/
+01:22:13.798 >   Genres/
+01:22:13.799 >   Titles/
+01:22:13.800 >   Playlists/
+01:22:13.802 >   Online/
+01:22:13.803 > Image/
+01:22:13.804 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "I"
+01:22:13.812 > [V][SoapESP32.cpp:1277] soapPost(): send request to server:
+01:22:13.817 > POST /serviceControl HTTP/1.1
+01:22:13.820 > Host: 192.168.1.42:8895
+01:22:13.821 > CACHE-CONTROL: no-cache
+01:22:13.823 > PRAGMA: no-cache
+01:22:13.825 > Connection: close
+01:22:13.826 > Content-Length: 439
+01:22:13.828 > Content-Type: text/xml; charset="utf-8"
+01:22:13.832 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+01:22:13.838 > User-Agent: ESP32/Player/UPNP1.0
+01:22:13.841 >
+01:22:13.841 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+01:22:13.853 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+01:22:13.860 > <ObjectID>I</ObjectID>
+01:22:13.862 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+01:22:13.866 > <Filter>*</Filter>
+01:22:13.868 > <StartingIndex>0</StartingIndex>
+01:22:13.871 > <RequestedCount>100</RequestedCount>
+01:22:13.874 > <SortCriteria></SortCriteria>
+01:22:13.876 > </u:Browse>
+01:22:13.878 > </s:Body>
+01:22:13.879 > </s:Envelope>
+01:22:13.880 >
+01:22:13.880 >
+01:22:13.880 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:8895
+01:22:13.888 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+01:22:13.895 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+01:22:13.900 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Fri, 21 Jan 2022 00:22:14 GMT
+01:22:13.909 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+01:22:13.918 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 1442
+01:22:13.924 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+01:22:13.934 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+01:22:13.941 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+01:22:13.946 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 1442
+01:22:13.956 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:22:13.964 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="0" id="I_A" parentID="I" restricted="1" searchable="0"
+01:22:13.977 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Albums</dc:title><upnp:class>object.container</upnp:class>
+01:22:13.988 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: I
+01:22:13.995 > [D][SoapESP32.cpp:643] soapScanContainer(): id="I_A"
+01:22:13.999 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.005 > [I][SoapESP32.cpp:667] soapScanContainer(): container "I_A" child count=0
+01:22:14.011 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.016 > [I][SoapESP32.cpp:680] soapScanContainer(): "I_A" attribute searchable=0
+01:22:14.024 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Albums"
+01:22:14.028 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Albums" (id: "I_A", childCount: 0) added to list
+01:22:14.038 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="0" id="I_F" parentID="I" restricted="1" searchable="0"
+01:22:14.050 > [V][SoapESP32.cpp:939] browseServer(): container (length=69): <dc:title>Folders</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.062 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: I
+01:22:14.068 > [D][SoapESP32.cpp:643] soapScanContainer(): id="I_F"
+01:22:14.073 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.078 > [I][SoapESP32.cpp:667] soapScanContainer(): container "I_F" child count=0
+01:22:14.085 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.090 > [I][SoapESP32.cpp:680] soapScanContainer(): "I_F" attribute searchable=0
+01:22:14.096 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Folders"
+01:22:14.101 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Folders" (id: "I_F", childCount: 0) added to list
+01:22:14.110 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="0" id="I_Y" parentID="I" restricted="1" searchable="0"
+01:22:14.122 > [V][SoapESP32.cpp:939] browseServer(): container (length=66): <dc:title>Year</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.133 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: I
+01:22:14.139 > [D][SoapESP32.cpp:643] soapScanContainer(): id="I_Y"
+01:22:14.144 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.149 > [I][SoapESP32.cpp:667] soapScanContainer(): container "I_Y" child count=0
+01:22:14.157 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.162 > [I][SoapESP32.cpp:680] soapScanContainer(): "I_Y" attribute searchable=0
+01:22:14.168 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Year"
+01:22:14.173 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Year" (id: "I_Y", childCount: 0) added to list
+01:22:14.181 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="0" id="I_OF" parentID="I" restricted="1" searchable="0"
+01:22:14.194 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Online</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.206 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: I
+01:22:14.212 > [D][SoapESP32.cpp:643] soapScanContainer(): id="I_OF"
+01:22:14.217 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.221 > [I][SoapESP32.cpp:667] soapScanContainer(): container "I_OF" child count=0
+01:22:14.228 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.233 > [I][SoapESP32.cpp:680] soapScanContainer(): "I_OF" attribute searchable=0
+01:22:14.240 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Online"
+01:22:14.245 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Online" (id: "I_OF", childCount: 0) added to list
+01:22:14.254 > [D][SoapESP32.cpp:959] browseServer(): announced number of folders and/or files: 4
+01:22:14.261 > [I][SoapESP32.cpp:975] browseServer(): found 4 folders and 0 files
+01:22:14.267 >   Albums/
+01:22:14.268 >   Folders/
+01:22:14.269 >   Year/
+01:22:14.271 >   Online/
+01:22:14.271 > Video/
+01:22:14.272 > [I][SoapESP32.cpp:874] browseServer(): new search on server: "My Media Server", objectId: "V"
+01:22:14.281 > [V][SoapESP32.cpp:1277] soapPost(): send request to server:
+01:22:14.285 > POST /serviceControl HTTP/1.1
+01:22:14.289 > Host: 192.168.1.42:8895
+01:22:14.290 > CACHE-CONTROL: no-cache
+01:22:14.292 > PRAGMA: no-cache
+01:22:14.295 > Connection: close
+01:22:14.296 > Content-Length: 439
+01:22:14.297 > Content-Type: text/xml; charset="utf-8"
+01:22:14.302 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+01:22:14.308 > User-Agent: ESP32/Player/UPNP1.0
+01:22:14.311 >
+01:22:14.311 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+01:22:14.322 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+01:22:14.329 > <ObjectID>V</ObjectID>
+01:22:14.331 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+01:22:14.335 > <Filter>*</Filter>
+01:22:14.337 > <StartingIndex>0</StartingIndex>
+01:22:14.339 > <RequestedCount>100</RequestedCount>
+01:22:14.343 > <SortCriteria></SortCriteria>
+01:22:14.345 > </u:Browse>
+01:22:14.347 > </s:Body>
+01:22:14.348 > </s:Envelope>
+01:22:14.349 >
+01:22:14.349 >
+01:22:14.351 > [I][SoapESP32.cpp:886] browseServer(): connected successfully to server 192.168.1.42:8895
+01:22:14.358 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+01:22:14.365 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+01:22:14.370 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Fri, 21 Jan 2022 00:22:14 GMT
+01:22:14.379 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+01:22:14.388 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 2034
+01:22:14.395 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+01:22:14.404 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+01:22:14.411 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+01:22:14.416 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 2034
+01:22:14.426 > [I][SoapESP32.cpp:909] browseServer(): scan answer from media server:
+01:22:14.435 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="1" id="V_T" parentID="V" restricted="1" searchable="0"
+01:22:14.448 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Titles</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.459 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.466 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_T"
+01:22:14.470 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="1"
+01:22:14.476 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.481 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_T" attribute searchable=0
+01:22:14.487 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Titles"
+01:22:14.493 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Titles" (id: "V_T", childCount: 1) added to list
+01:22:14.502 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="0" id="V_M" parentID="V" restricted="1" searchable="0"
+01:22:14.514 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Movies</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.526 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.532 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_M"
+01:22:14.537 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.542 > [I][SoapESP32.cpp:667] soapScanContainer(): container "V_M" child count=0
+01:22:14.549 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.554 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_M" attribute searchable=0
+01:22:14.560 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Movies"
+01:22:14.566 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Movies" (id: "V_M", childCount: 0) added to list
+01:22:14.575 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="1" id="V_F" parentID="V" restricted="1" searchable="0"
+01:22:14.587 > [V][SoapESP32.cpp:939] browseServer(): container (length=69): <dc:title>Folders</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.598 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.605 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_F"
+01:22:14.610 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="1"
+01:22:14.615 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.620 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_F" attribute searchable=0
+01:22:14.626 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Folders"
+01:22:14.632 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Folders" (id: "V_F", childCount: 1) added to list
+01:22:14.640 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=66): childCount="1" id="V_G" parentID="V" restricted="1" searchable="0"
+01:22:14.652 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Genres</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.663 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.670 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_G"
+01:22:14.674 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="1"
+01:22:14.680 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.686 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_G" attribute searchable=0
+01:22:14.691 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Genres"
+01:22:14.697 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Genres" (id: "V_G", childCount: 1) added to list
+01:22:14.705 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=68): childCount="0" id="V_DUR" parentID="V" restricted="1" searchable="0"
+01:22:14.718 > [V][SoapESP32.cpp:939] browseServer(): container (length=70): <dc:title>Duration</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.729 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.736 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_DUR"
+01:22:14.741 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.746 > [I][SoapESP32.cpp:667] soapScanContainer(): container "V_DUR" child count=0
+01:22:14.753 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.758 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_DUR" attribute searchable=0
+01:22:14.765 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Duration"
+01:22:14.770 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Duration" (id: "V_DUR", childCount: 0) added to list
+01:22:14.779 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="0" id="V_PL" parentID="V" restricted="1" searchable="0"
+01:22:14.792 > [V][SoapESP32.cpp:939] browseServer(): container (length=71): <dc:title>Playlists</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.804 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.811 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_PL"
+01:22:14.815 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.821 > [I][SoapESP32.cpp:667] soapScanContainer(): container "V_PL" child count=0
+01:22:14.827 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.832 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_PL" attribute searchable=0
+01:22:14.839 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Playlists"
+01:22:14.844 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Playlists" (id: "V_PL", childCount: 0) added to list
+01:22:14.854 > [V][SoapESP32.cpp:938] browseServer(): container attribute (length=67): childCount="0" id="V_OF" parentID="V" restricted="1" searchable="0"
+01:22:14.865 > [V][SoapESP32.cpp:939] browseServer(): container (length=68): <dc:title>Online</dc:title><upnp:class>object.container</upnp:class>
+01:22:14.876 > [D][SoapESP32.cpp:639] soapScanContainer(): function entered, parent id: V
+01:22:14.883 > [D][SoapESP32.cpp:643] soapScanContainer(): id="V_OF"
+01:22:14.889 > [D][SoapESP32.cpp:665] soapScanContainer(): childCount="0"
+01:22:14.893 > [I][SoapESP32.cpp:667] soapScanContainer(): container "V_OF" child count=0
+01:22:14.900 > [D][SoapESP32.cpp:677] soapScanContainer(): searchable="0"
+01:22:14.905 > [I][SoapESP32.cpp:680] soapScanContainer(): "V_OF" attribute searchable=0
+01:22:14.911 > [D][SoapESP32.cpp:691] soapScanContainer(): title="Online"
+01:22:14.916 > [I][SoapESP32.cpp:700] soapScanContainer(): folder "Online" (id: "V_OF", childCount: 0) added to list
+01:22:14.925 > [D][SoapESP32.cpp:959] browseServer(): announced number of folders and/or files: 7
+01:22:14.933 > [I][SoapESP32.cpp:975] browseServer(): found 7 folders and 0 files
+01:22:14.939 >   Titles/
+01:22:14.940 >   Movies/
+01:22:14.940 >   Folders/
+01:22:14.941 >   Genres/
+01:22:14.942 >   Duration/
+01:22:14.944 >   Playlists/
+01:22:14.945 >   Online/
+01:22:14.946 >
+01:22:14.946 > Sketch finished.

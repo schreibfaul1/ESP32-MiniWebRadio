@@ -1,0 +1,182 @@
+18:14:01.568 > Connecting to WiFi network ......
+18:14:04.055 > Connected successfully. IP address: 192.168.1.37
+18:14:04.059 >
+18:14:04.060 > Initializing SD card...done. Opening file on SD was successful.
+18:14:04.075 > Scanning local network for DLNA media servers...
+18:14:04.080 > [I][SoapESP32.cpp:472] seekServer(): SSDP search for media servers started
+18:14:08.101 > [I][SoapESP32.cpp:475] seekServer(): SSDP query discovered 5 media servers
+18:14:08.108 > [I][SoapESP32.cpp:478] seekServer(): checking all discovered media servers for service ContentDirectory
+18:14:08.133 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:5001
+18:14:08.147 > [I][SoapESP32.cpp:544] seekServer(): ok, this server delivers media content
+18:14:08.167 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:1557
+18:14:08.182 > [I][SoapESP32.cpp:544] seekServer(): ok, this server delivers media content
+18:14:08.208 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:8895
+18:14:08.220 > [I][SoapESP32.cpp:544] seekServer(): ok, this server delivers media content
+18:14:08.248 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:2869
+18:14:08.265 > [I][SoapESP32.cpp:544] seekServer(): ok, this server delivers media content
+18:14:08.290 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.11:55247
+18:14:08.308 > [I][SoapESP32.cpp:544] seekServer(): ok, this server delivers media content
+18:14:08.315 > Number of discovered servers that deliver content: 5
+18:14:08.320 >
+18:14:08.320 > Please be patient, searching audio file on server: Universal Media Server
+18:14:08.327 > [I][SoapESP32.cpp:861] browseServer(): new search on server: "Universal Media Server", objectId: "0"
+18:14:08.359 > [I][SoapESP32.cpp:873] browseServer(): connected successfully to server 192.168.1.42:5001
+18:14:08.367 > [I][SoapESP32.cpp:896] browseServer(): scan answer from media server:
+18:14:08.390 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "searchable=" missing.
+18:14:08.398 > [W][SoapESP32.cpp:663] soapScanContainer(): attribute "searchable=" is missing, we set it true
+18:14:08.406 > [I][SoapESP32.cpp:690] soapScanContainer(): folder "Music" (id: "1539", childCount: 1) added to list
+18:14:08.424 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "searchable=" missing.
+18:14:08.431 > [W][SoapESP32.cpp:663] soapScanContainer(): attribute "searchable=" is missing, we set it true
+18:14:08.440 > [I][SoapESP32.cpp:690] soapScanContainer(): folder "Videos" (id: "1540", childCount: 1) added to list
+18:14:08.455 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "searchable=" missing.
+18:14:08.462 > [W][SoapESP32.cpp:663] soapScanContainer(): attribute "searchable=" is missing, we set it true
+18:14:08.471 > [I][SoapESP32.cpp:690] soapScanContainer(): folder "Web" (id: "1541", childCount: 2) added to list
+18:14:08.479 > [I][SoapESP32.cpp:962] browseServer(): found 3 folders and 0 files
+18:14:08.485 > [I][SoapESP32.cpp:861] browseServer(): new search on server: "Universal Media Server", objectId: "1539"
+18:14:08.637 > [I][SoapESP32.cpp:873] browseServer(): connected successfully to server 192.168.1.42:5001
+18:14:08.646 > [I][SoapESP32.cpp:896] browseServer(): scan answer from media server:
+18:14:08.673 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "searchable=" missing.
+18:14:08.681 > [W][SoapESP32.cpp:663] soapScanContainer(): attribute "searchable=" is missing, we set it true
+18:14:08.689 > [I][SoapESP32.cpp:690] soapScanContainer(): folder "Car-CD1" (id: "1557", childCount: 1) added to list
+18:14:08.708 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "searchable=" missing.
+18:14:08.715 > [W][SoapESP32.cpp:663] soapScanContainer(): attribute "searchable=" is missing, we set it true
+18:14:08.724 > [I][SoapESP32.cpp:690] soapScanContainer(): folder "Deutsch Pop" (id: "1558", childCount: 1) added to list
+18:14:08.768 > [I][SoapESP32.cpp:842] soapScanItem(): "Forever Young" (id: "1559", size: 4556304, type: audio) added to list
+18:14:08.807 > [I][SoapESP32.cpp:842] soapScanItem(): "This Is The Life" (id: "1560", size: 4688488, type: audio) added to list
+18:14:08.844 > [I][SoapESP32.cpp:842] soapScanItem(): "Excuse me Mr." (id: "1561", size: 11870222, type: audio) added to list
+18:14:08.881 > [I][SoapESP32.cpp:842] soapScanItem(): "Sick And Tired" (id: "1562", size: 8348435, type: audio) added to list
+18:14:08.921 > [I][SoapESP32.cpp:842] soapScanItem(): "A New Day Has Come" (id: "1563", size: 6251473, type: audio) added to list
+18:14:08.960 > [I][SoapESP32.cpp:842] soapScanItem(): "All good things" (id: "1564", size: 12455337, type: audio) added to list
+18:14:08.999 > [I][SoapESP32.cpp:842] soapScanItem(): "Wicked Games" (id: "1565", size: 4644994, type: audio) added to list
+18:14:09.036 > [I][SoapESP32.cpp:842] soapScanItem(): "China Girl" (id: "1566", size: 6706178, type: audio) added to list
+18:14:09.081 > [I][SoapESP32.cpp:842] soapScanItem(): "Major Tom (German Version)" (id: "1567", size: 3855747, type: audio) added to list
+18:14:09.118 > [I][SoapESP32.cpp:842] soapScanItem(): "Der Kommissar" (id: "1568", size: 7459426, type: audio) added to list
+18:14:09.155 > [I][SoapESP32.cpp:842] soapScanItem(): "Just Hold Me" (id: "1569", size: 6199684, type: audio) added to list
+18:14:09.193 > [I][SoapESP32.cpp:842] soapScanItem(): "Sweet About Me" (id: "1570", size: 5006892, type: audio) added to list
+18:14:09.234 > [I][SoapESP32.cpp:842] soapScanItem(): "Summer In The City" (id: "1571", size: 3888715, type: audio) added to list
+18:14:09.276 > [I][SoapESP32.cpp:842] soapScanItem(): "A million miles away" (id: "1572", size: 22771074, type: audio) added to list
+18:14:09.316 > [I][SoapESP32.cpp:842] soapScanItem(): "Sounds Like A Melody" (id: "1573", size: 9210144, type: audio) added to list
+18:14:09.353 > [I][SoapESP32.cpp:842] soapScanItem(): "Dutch Mountains" (id: "1574", size: 8555384, type: audio) added to list
+18:14:09.393 > [I][SoapESP32.cpp:842] soapScanItem(): "On my way to LA (long)" (id: "1575", size: 6695426, type: audio) added to list
+18:14:09.430 > [I][SoapESP32.cpp:842] soapScanItem(): "500 Miles" (id: "1576", size: 6359038, type: audio) added to list
+18:14:09.469 > [I][SoapESP32.cpp:842] soapScanItem(): "Always The Sun" (id: "1577", size: 9829742, type: audio) added to list
+18:14:09.507 > [I][SoapESP32.cpp:842] soapScanItem(): "From the land down under" (id: "1578", size: 3542515, type: audio) added to list
+18:14:09.545 > [I][SoapESP32.cpp:842] soapScanItem(): "One Night in Bangkok" (id: "1579", size: 5003572, type: audio) added to list
+18:14:09.583 > [I][SoapESP32.cpp:842] soapScanItem(): "Sing" (id: "1580", size: 5434021, type: audio) added to list
+18:14:09.620 > [I][SoapESP32.cpp:842] soapScanItem(): "Material World" (id: "1581", size: 7104618, type: audio) added to list
+18:14:09.656 > [I][SoapESP32.cpp:842] soapScanItem(): "Stars" (id: "1582", size: 4746949, type: audio) added to list
+18:14:09.693 > [I][SoapESP32.cpp:842] soapScanItem(): "Whenever, Wherever" (id: "1583", size: 4789962, type: audio) added to list
+18:14:09.731 > [I][SoapESP32.cpp:842] soapScanItem(): "I Feel Good" (id: "1584", size: 2701318, type: audio) added to list
+18:14:09.767 > [I][SoapESP32.cpp:842] soapScanItem(): "Ride" (id: "1585", size: 11630482, type: audio) added to list
+18:14:09.806 > [I][SoapESP32.cpp:842] soapScanItem(): "Blueprint" (id: "1586", size: 7962597, type: audio) added to list
+18:14:09.842 > [I][SoapESP32.cpp:842] soapScanItem(): "74-75" (id: "1587", size: 6753175, type: audio) added to list
+18:14:09.882 > [I][SoapESP32.cpp:842] soapScanItem(): "Someone new" (id: "1588", size: 5096159, type: audio) added to list
+18:14:09.921 > [I][SoapESP32.cpp:842] soapScanItem(): "Go West" (id: "1589", size: 4833196, type: audio) added to list
+18:14:09.962 > [I][SoapESP32.cpp:842] soapScanItem(): "Nothing Compares 2 U" (id: "1590", size: 7516934, type: audio) added to list
+18:14:10.001 > [I][SoapESP32.cpp:842] soapScanItem(): "My Name Is Luka" (id: "1591", size: 7354786, type: audio) added to list
+18:14:10.041 > [I][SoapESP32.cpp:842] soapScanItem(): "Because The Night" (id: "1592", size: 8944456, type: audio) added to list
+18:14:10.081 > [I][SoapESP32.cpp:842] soapScanItem(): "Set Fire to the Rain" (id: "1593", size: 9696150, type: audio) added to list
+18:14:10.118 > [I][SoapESP32.cpp:842] soapScanItem(): "Our house" (id: "1594", size: 5756679, type: audio) added to list
+18:14:10.156 > [I][SoapESP32.cpp:842] soapScanItem(): "Super Girl" (id: "1595", size: 5577366, type: audio) added to list
+18:14:10.194 > [I][SoapESP32.cpp:842] soapScanItem(): "Hands Clean" (id: "1596", size: 6528589, type: audio) added to list
+18:14:10.237 > [I][SoapESP32.cpp:842] soapScanItem(): "Hotel California" (id: "1597", size: 17327932, type: audio) added to list
+18:14:10.275 > [I][SoapESP32.cpp:842] soapScanItem(): "Abracadabra" (id: "1598", size: 12353263, type: audio) added to list
+18:14:10.314 > [I][SoapESP32.cpp:842] soapScanItem(): "No Milk Today" (id: "1599", size: 5489679, type: audio) added to list
+18:14:10.351 > [I][SoapESP32.cpp:842] soapScanItem(): "Stay" (id: "1600", size: 9647394, type: audio) added to list
+18:14:10.388 > [I][SoapESP32.cpp:842] soapScanItem(): "You Got it" (id: "1601", size: 5152689, type: audio) added to list
+18:14:10.425 > [I][SoapESP32.cpp:842] soapScanItem(): "Carpet Crawl" (id: "1602", size: 12556493, type: audio) added to list
+18:14:10.462 > [I][SoapESP32.cpp:842] soapScanItem(): "Talk To Me" (id: "1603", size: 7881646, type: audio) added to list
+18:14:10.499 > [I][SoapESP32.cpp:842] soapScanItem(): "Lady In Black" (id: "1604", size: 6774204, type: audio) added to list
+18:14:10.540 > [I][SoapESP32.cpp:842] soapScanItem(): "Down To The River" (id: "1605", size: 14473215, type: audio) added to list
+18:14:10.580 > [I][SoapESP32.cpp:842] soapScanItem(): "San Francisco (Be Sure To Wear Flowers In You Hair)" (id: "1606", size: 4341799, type: audio) added to list
+18:14:10.619 > [I][SoapESP32.cpp:842] soapScanItem(): "Love Hurts" (id: "1607", size: 9284867, type: audio) added to list
+18:14:10.656 > [I][SoapESP32.cpp:842] soapScanItem(): "Let Her Go" (id: "1608", size: 10143623, type: audio) added to list
+18:14:10.692 > [I][SoapESP32.cpp:842] soapScanItem(): "One" (id: "1609", size: 7689152, type: audio) added to list
+18:14:10.732 > [I][SoapESP32.cpp:842] soapScanItem(): "A good heart" (id: "1610", size: 9195418, type: audio) added to list
+18:14:10.769 > [I][SoapESP32.cpp:842] soapScanItem(): "Broken Sleep" (id: "1611", size: 7115834, type: audio) added to list
+18:14:10.807 > [I][SoapESP32.cpp:842] soapScanItem(): "Riverside" (id: "1612", size: 5557406, type: audio) added to list
+18:14:10.845 > [I][SoapESP32.cpp:842] soapScanItem(): "Don't Forget About Me" (id: "1613", size: 5705448, type: audio) added to list
+18:14:10.883 > [I][SoapESP32.cpp:842] soapScanItem(): "Bad Ideas" (id: "1614", size: 6688084, type: audio) added to list
+18:14:10.924 > [I][SoapESP32.cpp:842] soapScanItem(): "She Moves" (id: "1615", size: 7784102, type: audio) added to list
+18:14:10.960 > [I][SoapESP32.cpp:842] soapScanItem(): "Big In Japan" (id: "1616", size: 6892958, type: audio) added to list
+18:14:11.001 > [I][SoapESP32.cpp:842] soapScanItem(): "Cripple and the Starfish" (id: "1617", size: 6172531, type: audio) added to list
+18:14:11.038 > [I][SoapESP32.cpp:842] soapScanItem(): "Home" (id: "1618", size: 6157651, type: audio) added to list
+18:14:11.074 > [I][SoapESP32.cpp:842] soapScanItem(): "It's Amazing" (id: "1619", size: 6273323, type: audio) added to list
+18:14:11.112 > [I][SoapESP32.cpp:842] soapScanItem(): "Lose It" (id: "1620", size: 10791332, type: audio) added to list
+18:14:11.159 > [I][SoapESP32.cpp:842] soapScanItem(): "Ruined Heart" (id: "1621", size: 10102568, type: audio) added to list
+18:14:11.200 > [I][SoapESP32.cpp:842] soapScanItem(): "Keep Moving On - Live" (id: "1622", size: 12127204, type: audio) added to list
+18:14:11.239 > [I][SoapESP32.cpp:842] soapScanItem(): "The Way It Is" (id: "1623", size: 11945276, type: audio) added to list
+18:14:11.276 > [I][SoapESP32.cpp:842] soapScanItem(): "Enjoy the Silence" (id: "1624", size: 4628781, type: audio) added to list
+18:14:11.314 > [I][SoapESP32.cpp:842] soapScanItem(): "Clocks" (id: "1625", size: 12374596, type: audio) added to list
+18:14:11.353 > [I][SoapESP32.cpp:842] soapScanItem(): "Do You Really Want To Hurt Me" (id: "1626", size: 10425164, type: audio) added to list
+18:14:11.390 > [I][SoapESP32.cpp:842] soapScanItem(): "The Sound Of Silence [Official Music Video]" (id: "1627", size: 8332259, type: audio) added to list
+18:14:11.434 > [I][SoapESP32.cpp:842] soapScanItem(): "Working Hard For Your Love" (id: "1628", size: 7438165, type: audio) added to list
+18:14:11.470 > [I][SoapESP32.cpp:842] soapScanItem(): "Vincent" (id: "1629", size: 8967826, type: audio) added to list
+18:14:11.512 > [I][SoapESP32.cpp:842] soapScanItem(): "One Of Us Cannot Be Wrong" (id: "1630", size: 14082497, type: audio) added to list
+18:14:11.548 > [I][SoapESP32.cpp:842] soapScanItem(): "Done" (id: "1631", size: 6905292, type: audio) added to list
+18:14:11.586 > [I][SoapESP32.cpp:842] soapScanItem(): "Why Her Not Me" (id: "1632", size: 9367318, type: audio) added to list
+18:14:11.626 > [I][SoapESP32.cpp:842] soapScanItem(): "Sign of the Times" (id: "1633", size: 13667400, type: audio) added to list
+18:14:11.665 > [I][SoapESP32.cpp:842] soapScanItem(): "Watermelon Sugar" (id: "1634", size: 4405070, type: audio) added to list
+18:14:11.704 > [I][SoapESP32.cpp:842] soapScanItem(): "The Hooters - All You Zombies" (id: "1635", size: 8620094, type: audio) added to list
+18:14:11.741 > [I][SoapESP32.cpp:842] soapScanItem(): "Broken" (id: "1636", size: 6073871, type: audio) added to list
+18:14:11.779 > [I][SoapESP32.cpp:842] soapScanItem(): "All Of Me" (id: "1637", size: 8668133, type: audio) added to list
+18:14:11.819 > [I][SoapESP32.cpp:842] soapScanItem(): "Summertime Sadness" (id: "1638", size: 9115457, type: audio) added to list
+18:14:11.856 > [I][SoapESP32.cpp:842] soapScanItem(): "Slip Away" (id: "1639", size: 8462013, type: audio) added to list
+18:14:11.892 > [I][SoapESP32.cpp:842] soapScanItem(): "Blue Mesa" (id: "1640", size: 9666929, type: audio) added to list
+18:14:11.930 > [I][SoapESP32.cpp:842] soapScanItem(): "Simple Man" (id: "1641", size: 14386127, type: audio) added to list
+18:14:11.968 > [I][SoapESP32.cpp:842] soapScanItem(): "Electric" (id: "1642", size: 10179145, type: audio) added to list
+18:14:12.005 > [I][SoapESP32.cpp:842] soapScanItem(): "Majesty live" (id: "1643", size: 14136935, type: audio) added to list
+18:14:12.042 > [I][SoapESP32.cpp:842] soapScanItem(): "Vocal" (id: "1644", size: 11521263, type: audio) added to list
+18:14:12.080 > [I][SoapESP32.cpp:842] soapScanItem(): "Madrugada - Vocal (Live in Norway)" (id: "1645", size: 10303735, type: audio) added to list
+18:14:12.119 > [I][SoapESP32.cpp:842] soapScanItem(): "What's On Your Mind?" (id: "1646", size: 5861481, type: audio) added to list
+18:14:12.155 > [I][SoapESP32.cpp:842] soapScanItem(): "All This Time" (id: "1647", size: 4177264, type: audio) added to list
+18:14:12.194 > [I][SoapESP32.cpp:842] soapScanItem(): "Incubus Live" (id: "1648", size: 9670576, type: audio) added to list
+18:14:12.232 > [I][SoapESP32.cpp:842] soapScanItem(): "Gyöngyhajú lány" (id: "1649", size: 10991944, type: audio) added to list
+18:14:12.269 > [I][SoapESP32.cpp:842] soapScanItem(): "Save Me" (id: "1650", size: 7161591, type: audio) added to list
+18:14:12.307 > [I][SoapESP32.cpp:842] soapScanItem(): "Hell Or High Water" (id: "1651", size: 8833381, type: audio) added to list
+18:14:12.347 > [I][SoapESP32.cpp:842] soapScanItem(): "Born To Be Alive" (id: "1652", size: 6203103, type: audio) added to list
+18:14:12.387 > [I][SoapESP32.cpp:842] soapScanItem(): "Streets Of London" (id: "1653", size: 9938320, type: audio) added to list
+18:14:12.426 > [I][SoapESP32.cpp:842] soapScanItem(): "Jealous Guy" (id: "1654", size: 7192636, type: audio) added to list
+18:14:12.464 > [I][SoapESP32.cpp:842] soapScanItem(): "Youre In The Army" (id: "1655", size: 11258315, type: audio) added to list
+18:14:12.499 > [I][SoapESP32.cpp:842] soapScanItem(): "Another Love" (id: "1656", size: 9929167, type: audio) added to list
+18:14:12.509 > [I][SoapESP32.cpp:962] browseServer(): found 2 folders and 98 files
+18:14:12.515 > [I][SoapESP32.cpp:861] browseServer(): new search on server: "Universal Media Server", objectId: "1557"
+18:14:12.733 > [I][SoapESP32.cpp:873] browseServer(): connected successfully to server 192.168.1.42:5001
+18:14:12.741 > [I][SoapESP32.cpp:896] browseServer(): scan answer from media server:
+18:14:12.795 > [I][SoapESP32.cpp:842] soapScanItem(): "Excuse me Mr." (id: "1670", size: 11797545, type: audio) added to list
+18:14:12.837 > [I][SoapESP32.cpp:842] soapScanItem(): "Sick And Tired" (id: "1671", size: 8348435, type: audio) added to list
+18:14:12.850 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+18:14:12.858 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+18:14:12.864 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+18:14:12.872 > [I][SoapESP32.cpp:842] soapScanItem(): "Car-CD.jpg" (id: "1672", size: 0, type: picture) added to list
+18:14:12.907 > [I][SoapESP32.cpp:842] soapScanItem(): "Vincent" (id: "1673", size: 9102671, type: audio) added to list
+18:14:12.918 > [I][SoapESP32.cpp:962] browseServer(): found 0 folders and 4 files
+18:14:12.924 > [I][SoapESP32.cpp:861] browseServer(): new search on server: "Universal Media Server", objectId: "1558"
+18:14:13.142 > [I][SoapESP32.cpp:873] browseServer(): connected successfully to server 192.168.1.42:5001
+18:14:13.151 > [I][SoapESP32.cpp:896] browseServer(): scan answer from media server:
+18:14:13.204 > [I][SoapESP32.cpp:842] soapScanItem(): "Ist da jemand" (id: "1683", size: 8967839, type: audio) added to list
+18:14:13.243 > [I][SoapESP32.cpp:842] soapScanItem(): "Auf Anderen Wegen" (id: "1684", size: 8025370, type: audio) added to list
+18:14:13.283 > [I][SoapESP32.cpp:842] soapScanItem(): "Auf uns" (id: "1685", size: 9622794, type: audio) added to list
+18:14:13.326 > [I][SoapESP32.cpp:842] soapScanItem(): "Auf dich hab ich gewartet" (id: "1686", size: 3688200, type: audio) added to list
+18:14:13.365 > [I][SoapESP32.cpp:842] soapScanItem(): "Das Spiel" (id: "1687", size: 4293819, type: audio) added to list
+18:14:13.402 > [I][SoapESP32.cpp:842] soapScanItem(): "Aurelie" (id: "1688", size: 5135931, type: audio) added to list
+18:14:13.439 > [I][SoapESP32.cpp:842] soapScanItem(): "Achterbahn" (id: "1689", size: 8459921, type: audio) added to list
+18:14:13.477 > [I][SoapESP32.cpp:842] soapScanItem(): "Wenn Du Liebst" (id: "1690", size: 8597527, type: audio) added to list
+18:14:13.487 > [I][SoapESP32.cpp:962] browseServer(): found 0 folders and 8 files
+18:14:13.493 > Audio file was found:
+18:14:13.496 >  name: "Auf dich hab ich gewartet", id: 1686, size: 3688200
+18:14:13.500 >  URI: get/1686/Annett+Louisan+-+Auf+dich+hab+ich+gewartet.mp3
+18:14:13.506 > [I][SoapESP32.cpp:985] readStart(): server ip: 192.168.1.42, port: 5001, uri: "get/1686/Annett+Louisan+-+Auf+dich+hab+ich+gewartet.mp3"
+18:14:13.661 > Download request granted from server, announced file size: 3688200
+18:14:13.668 > Start copying file from server to SD, please wait.
+18:14:13.694 > ...................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+18:14:38.542 >
+18:14:38.543 > File download was successful.
+18:14:38.545 > Closing file on SD.
+18:14:38.715 > 
+18:14:38.716 > Some ESP32 memory stats after running this sketch:
+18:14:38.720 >  1) minimum ever free memory of all regions [in bytes]: 198684
+18:14:38.726 >  2) minimum ever free heap size [in bytes]:             130036
+18:14:38.732 >  3) minimum ever stack size of this task [in bytes]:    2904
+18:14:38.737 >
+18:14:38.737 > Sketch finished.

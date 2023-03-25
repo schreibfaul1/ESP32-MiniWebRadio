@@ -1,0 +1,51 @@
+14:52:29.395 > ets Jun  8 2016 00:22:57
+14:52:29.398 >
+14:52:29.398 > rst:0x1 (POWERON_RESET),boot:0x33 (SPI_FAST_FLASH_BOOT)
+14:52:29.402 > configsip: 0, SPIWP:0xee
+14:52:29.405 > clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:52:29.411 > mode:DIO, clock div:2
+14:52:29.413 > load:0x3fff0018,len:4
+14:52:29.415 > load:0x3fff001c,len:1044 
+14:52:29.417 > load:0x40078000,len:10124
+14:52:29.419 > load:0x40080400,len:5828 
+14:52:29.421 > entry 0x400806a8
+14:52:29.575 > 
+14:52:29.575 > Initializing Ethernet...DHCP ok.
+14:52:30.262 > Local IP: 192.168.1.45
+14:52:30.264 >
+14:52:30.265 > Scanning local network for DLNA media servers...
+14:52:35.618 > Number of discovered servers that deliver content: 5
+14:52:35.623 >
+14:52:35.623 > Server[0]: IP address: 192.168.1.42, port: 5001, name: Universal Media Server
+14:52:35.776 > Browsing root directory. Number of sub-directories: 3
+14:52:35.780 >  Music (child count: 1)
+14:52:35.784 >  Videos (child count: 1)
+14:52:35.785 >  Web (child count: 2)
+14:52:35.787 >
+14:52:35.787 > Server[1]: IP address: 192.168.1.42, port: 1557, name: Kodi (Virtual-Win10)
+14:52:35.827 > Browsing root directory. Number of sub-directories: 2
+14:52:35.832 >  Music Library (child count: missing)
+14:52:35.835 >  Video Library (child count: missing)
+14:52:35.838 >
+14:52:35.838 > Server[2]: IP address: 192.168.1.42, port: 8895, name: Serviio (Virtual-Win10)
+14:52:35.883 > Browsing root directory. Number of sub-directories: 3
+14:52:35.888 >  Audio (child count: 10)
+14:52:35.890 >  Image (child count: 5)
+14:52:35.892 >  Video (child count: 7)
+14:52:35.894 >
+14:52:35.894 > Server[3]: IP address: 192.168.1.42, port: 2869, name: VIRTUAL-WIN10: MediaPlayerVM:
+14:52:36.037 > Browsing root directory. Number of sub-directories: 4
+14:52:36.042 >  Bilder (child count: 7)
+14:52:36.044 >  Musik (child count: 10)
+14:52:36.046 >  Videos (child count: 8)
+14:52:36.048 >  Wiedergabelisten (child count: 2)
+14:52:36.051 >
+14:52:36.051 > Server[4]: IP address: 192.168.1.11, port: 55247, name: LINKSTATION2 [LinkStation Media Server]
+14:52:37.132 > Browsing root directory. Number of sub-directories: 4
+14:52:37.136 >  Video (child count: 8)
+14:52:37.139 >  Music (child count: 9)
+14:52:37.141 >  Photos (child count: 7)
+14:52:37.143 >  Folders (child count: 2)
+14:52:37.145 >
+14:52:37.145 >
+14:52:37.147 > Sketch finished.

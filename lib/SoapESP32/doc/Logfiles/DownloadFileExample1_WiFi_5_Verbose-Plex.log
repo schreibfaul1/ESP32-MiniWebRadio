@@ -1,0 +1,28 @@
+22:11:17.562 > Connecting to WiFi network [D][WiFiGeneric.cpp:374] _eventCallback(): Event: 0 - WIFI_READY
+22:11:17.562 > [D][WiFiGeneric.cpp:374] _eventCallback(): Event: 2 - STA_START
+22:11:17.562 > .....[D][WiFiGeneric.cpp:374] _eventCallback(): Event: 4 - STA_CONNECTED
+22:11:19.581 > .[D][WiFiGeneric.cpp:374] _eventCallback(): Event: 7 - STA_GOT_IP
+22:11:20.004 > [D][WiFiGeneric.cpp:419] _eventCallback(): STA IP: 192.168.1.37, MASK: 255.255.255.0, GW: 192.168.1.1
+22:11:20.081 > 
+22:11:20.081 > Connected successfully. IP address: 192.168.1.37
+22:11:20.086 >
+22:11:20.086 > Initializing SD card...done. Creating file on SD was successful.
+22:11:20.098 > [I][SoapESP32.cpp:1002] readStart(): server ip: 192.168.1.42, port: 32469, uri: "object/a63c9494d72ca9e73bc8/file.mp3"
+22:11:20.557 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK        
+22:11:20.564 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Content-Length: 6892958
+22:11:20.571 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Content-Type: audio/mpeg
+22:11:20.578 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Date: Fri, 21 Jan 2022 21:11:20 GMT
+22:11:20.586 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Accept-Ranges: bytes
+22:11:20.593 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Connection: close
+22:11:20.601 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line: Server: UPnP/1.0 DLNADOC/1.50 Platinum/1.0.5.13
+22:11:20.610 > [V][SoapESP32.cpp:327] soapReadHttpHeader(): header line:
+22:11:20.614 > [D][SoapESP32.cpp:349] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 6892958
+22:11:20.626 > Download request granted from server, announced file size: 6892958
+22:11:20.632 > Start copying file from server to SD, please wait.
+22:11:21.246 > .....................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................................
+22:11:54.146 > [D][SoapESP32.cpp:1110] readStop(): client data connection to media server closed
+22:11:54.154 >
+22:11:54.155 > File download was successful.
+22:11:54.247 > File on SD closed.
+22:11:54.249 >
+22:11:54.249 > Sketch finished.

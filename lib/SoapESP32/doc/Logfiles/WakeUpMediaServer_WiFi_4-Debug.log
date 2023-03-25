@@ -1,0 +1,78 @@
+16:49:32.814 -> 
+16:49:32.814 -> Connecting to WiFi network [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 0 - WIFI_READY
+16:49:32.914 -> [D][WiFiGeneric.cpp:337] _eventCallback(): Event: 2 - STA_START
+16:49:32.914 -> .[D][WiFiGeneric.cpp:337] _eventCallback(): Event: 4 - STA_CONNECTED
+16:49:33.415 -> .....[D][WiFiGeneric.cpp:337] _eventCallback(): Event: 7 - STA_GOT_IP
+16:49:35.922 -> [D][WiFiGeneric.cpp:381] _eventCallback(): STA IP: 192.168.1.30, MASK: 255.255.255.0, GW: 192.168.1.1
+16:49:35.922 -> 
+16:49:35.922 -> Connected successfully.
+16:49:35.922 -> IP address: 192.168.1.30
+16:49:35.922 -> 
+16:49:35.922 -> Scanning local network for DLNA media servers...
+16:49:35.922 -> [I][SoapESP32.cpp:443] seekServer(): SSDP search for media server started
+16:49:37.578 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 1650 ms: packet size: 332
+16:49:37.578 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:49:37.626 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 1680 ms: packet size: 332
+16:49:37.626 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:49:39.952 -> [I][SoapESP32.cpp:446] seekServer(): SSDP query discovered 1 media server
+16:49:39.952 -> [I][SoapESP32.cpp:449] seekServer(): checking all discovered media server for service: ContentDirectory
+16:49:39.952 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.11:55247
+16:49:39.952 -> [D][SoapESP32.cpp:325] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:49:40.006 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:49:40.006 -> [D][SoapESP32.cpp:492] seekServer(): scanned friendly name: LINKSTATION2 [LinkStation Media Server]
+16:49:40.006 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:49:40.006 -> [D][SoapESP32.cpp:502] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:49:40.006 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:49:40.006 -> [D][SoapESP32.cpp:514] seekServer(): assigned controlURL: dms/control/ContentDirectory
+16:49:40.006 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+16:49:40.053 -> Number of discovered servers that deliver content: 1
+16:49:40.053 -> 
+16:49:40.053 -> Server[1]: IP address: 192.168.1.11, port: 55247, name: LINKSTATION2 [LinkStation Media Server]
+16:49:40.053 ->   -> controlURL: dms/control/ContentDirectory
+16:49:40.053 -> 
+16:49:40.053 -> Send WOL message to device with MAC: 10:6f:3F:21:EE:23
+16:49:40.053 -> Now waiting a few seconds before scanning local network again.
+16:49:41.055 -> ........................................................................................................................
+16:51:40.055 -> Scanning local network for DLNA media servers...
+16:51:40.055 -> [I][SoapESP32.cpp:443] seekServer(): SSDP search for media server started
+16:51:40.055 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 25 ms: packet size: 332
+16:51:40.102 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:51:40.155 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 105 ms: packet size: 390
+16:51:40.155 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:40.202 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 137 ms: packet size: 390
+16:51:40.202 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:40.202 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 169 ms: packet size: 390
+16:51:40.202 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:40.656 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 626 ms: packet size: 390
+16:51:40.703 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:40.757 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 708 ms: packet size: 390
+16:51:40.757 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:40.804 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 740 ms: packet size: 390
+16:51:40.804 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:51:41.790 -> [D][SoapESP32.cpp:229] soapSSDPquery(): received SSDP packet within 1747 ms: packet size: 332
+16:51:41.790 -> [D][SoapESP32.cpp:253] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:51:44.066 -> [I][SoapESP32.cpp:446] seekServer(): SSDP query discovered 2 media server
+16:51:44.066 -> [I][SoapESP32.cpp:449] seekServer(): checking all discovered media server for service: ContentDirectory
+16:51:44.066 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.11:55247
+16:51:44.066 -> [D][SoapESP32.cpp:325] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:51:44.066 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:51:44.113 -> [D][SoapESP32.cpp:492] seekServer(): scanned friendly name: LINKSTATION2 [LinkStation Media Server]
+16:51:44.113 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:51:44.113 -> [D][SoapESP32.cpp:502] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:51:44.113 -> [D][SoapESP32.cpp:368] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:51:44.113 -> [D][SoapESP32.cpp:514] seekServer(): assigned controlURL: dms/control/ContentDirectory
+16:51:44.113 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+16:51:44.166 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.50:9050
+16:51:44.166 -> [D][SoapESP32.cpp:326] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 3240
+16:51:44.166 -> [D][SoapESP32.cpp:492] seekServer(): scanned friendly name: LINKSTATION2b: LinkStation
+16:51:44.166 -> [D][SoapESP32.cpp:502] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:51:44.166 -> [D][SoapESP32.cpp:514] seekServer(): assigned controlURL: TMSContentDirectory/Control
+16:51:44.166 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+16:51:44.166 -> Number of discovered servers that deliver content: 2
+16:51:44.213 -> 
+16:51:44.213 -> Server[1]: IP address: 192.168.1.11, port: 55247, name: LINKSTATION2 [LinkStation Media Server]
+16:51:44.213 ->   -> controlURL: dms/control/ContentDirectory
+16:51:44.213 -> Server[2]: IP address: 192.168.1.50, port: 9050, name: LINKSTATION2b: LinkStation
+16:51:44.213 ->   -> controlURL: TMSContentDirectory/Control
+16:51:44.213 -> 
+16:51:44.213 -> Sketch finished.

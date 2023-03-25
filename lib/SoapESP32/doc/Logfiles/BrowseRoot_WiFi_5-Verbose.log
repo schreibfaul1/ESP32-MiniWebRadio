@@ -1,0 +1,969 @@
+16:14:59.842 > Connecting to WiFi network [D][WiFiGeneric.cpp:374] _eventCallback(): Event: 0 - WIFI_READY
+16:14:59.842 > [D][WiFiGeneric.cpp:374] _eventCallback(): Event: 2 - STA_START
+16:14:59.842 > .....[D][WiFiGeneric.cpp:374] _eventCallback(): Event: 4 - STA_CONNECTED
+16:15:01.923 > .[D][WiFiGeneric.cpp:374] _eventCallback(): Event: 7 - STA_GOT_IP
+16:15:02.349 > [D][WiFiGeneric.cpp:419] _eventCallback(): STA IP: 192.168.1.37, MASK: 255.255.255.0, GW: 192.168.1.1
+16:15:02.423 > 
+16:15:02.424 > Connected successfully. IP address: 192.168.1.37
+16:15:02.428 >
+16:15:02.428 > Scanning local network for DLNA media servers...
+16:15:02.432 > [I][SoapESP32.cpp:472] seekServer(): SSDP search for media servers started
+16:15:02.460 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 26 ms: packet size: 370
+16:15:02.469 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.475 > HTTP/1.1 200 OK
+16:15:02.476 > CACHE-CONTROL: max-age=1800
+16:15:02.479 > DATE: Sat, 15 Jan 2022 15:15:02 GMT
+16:15:02.482 > LOCATION: http://192.168.1.42:5001/description/fetch
+16:15:02.486 > SERVER: Windows_10-amd64-10.0, UPnP/1.0 DLNADOC/1.50, UMS/10.14.1
+16:15:02.492 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.496 > EXT:
+16:15:02.497 > USN: uuid:6056683d-9fdb-46ea-9ea6-5cfd0bf72c27::urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.505 > Content-Length: 0
+16:15:02.506 >
+16:15:02.507 >
+16:15:02.507 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=5001, location=description/fetch
+16:15:02.530 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 96 ms: packet size: 369
+16:15:02.539 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.544 > HTTP/1.1 200 OK
+16:15:02.546 > Location: http://192.168.1.42:1557/DeviceDescription.xml    
+16:15:02.551 > Cache-Control: max-age=1800
+16:15:02.553 > Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:02.556 > EXT:
+16:15:02.557 > BOOTID.UPNP.ORG: 0
+16:15:02.559 > CONFIGID.UPNP.ORG: 1711
+16:15:02.561 > USN: uuid:1960b02b-2618-c8eb-e6aa-2367704dac98::urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.569 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.573 > Date: Sat, 15 Jan 2022 15:15:02 GMT
+16:15:02.576 >
+16:15:02.576 >
+16:15:02.576 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=1557, location=DeviceDescription.xml
+16:15:02.600 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 166 ms: packet size: 390
+16:15:02.609 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.614 > HTTP/1.1 200 OK
+16:15:02.616 > CACHE-CONTROL: max-age=1810
+16:15:02.618 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:02.621 > EXT:
+16:15:02.622 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:02.627 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:02.634 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.638 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.647 > Content-Length: 0
+16:15:02.649 >
+16:15:02.649 >
+16:15:02.649 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:02.822 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 388 ms: packet size: 390
+16:15:02.831 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.836 > HTTP/1.1 200 OK
+16:15:02.838 > CACHE-CONTROL: max-age=1810
+16:15:02.840 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:02.843 > EXT:
+16:15:02.844 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:02.850 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:02.856 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.861 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.869 > Content-Length: 0
+16:15:02.871 >
+16:15:02.871 >
+16:15:02.871 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:02.894 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 460 ms: packet size: 489
+16:15:02.903 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.909 > HTTP/1.1 200 OK
+16:15:02.911 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.914 > USN: uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:02.923 > Location: http://192.168.1.42:2869/upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:02.932 > OPT:"http://schemas.upnp.org/upnp/1/0/"; ns=01
+16:15:02.935 > 01-NLS: 5dfd0deb24d999005f691b458d12b76b
+16:15:02.939 > Cache-Control: max-age=900
+16:15:02.941 > Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0
+16:15:02.947 > Ext:
+16:15:02.947 > Date: Sat, 15 Jan 2022 15:02:05 GMT
+16:15:02.950 >
+16:15:02.951 >
+16:15:02.951 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=2869, location=upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3    
+16:15:02.977 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 544 ms: packet size: 390
+16:15:02.987 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:02.992 > HTTP/1.1 200 OK
+16:15:02.995 > CACHE-CONTROL: max-age=1810
+16:15:02.996 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.000 > EXT:
+16:15:03.001 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:03.006 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:03.013 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.016 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.025 > Content-Length: 0
+16:15:03.027 >
+16:15:03.027 >
+16:15:03.027 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:03.051 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 616 ms: packet size: 390
+16:15:03.060 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.065 > HTTP/1.1 200 OK
+16:15:03.067 > CACHE-CONTROL: max-age=1810
+16:15:03.069 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.072 > EXT:
+16:15:03.073 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:03.078 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:03.085 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.089 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.097 > Content-Length: 0
+16:15:03.099 >
+16:15:03.099 >
+16:15:03.099 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:03.122 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 688 ms: packet size: 390
+16:15:03.131 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.136 > HTTP/1.1 200 OK
+16:15:03.138 > CACHE-CONTROL: max-age=1810
+16:15:03.140 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.143 > EXT:
+16:15:03.144 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:03.149 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:03.156 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.160 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.168 > Content-Length: 0
+16:15:03.170 >
+16:15:03.170 >
+16:15:03.170 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:03.194 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 760 ms: packet size: 390
+16:15:03.203 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.208 > HTTP/1.1 200 OK
+16:15:03.210 > CACHE-CONTROL: max-age=1810
+16:15:03.212 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.215 > EXT:
+16:15:03.216 > LOCATION: http://192.168.1.50:9050/TMSDeviceDescription.xml
+16:15:03.221 > SERVER: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:03.228 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.232 > USN: uuid:55076f6e-6b79-4d65-64b7-106f3f21ee23::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.240 > Content-Length: 0
+16:15:03.242 >
+16:15:03.242 >
+16:15:03.242 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.50, port=9050, location=TMSDeviceDescription.xml
+16:15:03.441 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1007 ms: packet size: 489
+16:15:03.450 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.455 > HTTP/1.1 200 OK
+16:15:03.457 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.461 > USN: uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.470 > Location: http://192.168.1.42:2869/upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:03.479 > OPT:"http://schemas.upnp.org/upnp/1/0/"; ns=01
+16:15:03.483 > 01-NLS: 5dfd0deb24d999005f691b458d12b76b
+16:15:03.487 > Cache-Control: max-age=900
+16:15:03.489 > Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0
+16:15:03.495 > Ext:
+16:15:03.495 > Date: Sat, 15 Jan 2022 15:02:05 GMT
+16:15:03.499 >
+16:15:03.499 >
+16:15:03.499 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=2869, location=upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:03.526 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1091 ms: packet size: 489
+16:15:03.535 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.540 > HTTP/1.1 200 OK
+16:15:03.542 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.545 > USN: uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.554 > Location: http://192.168.1.42:2869/upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:03.563 > OPT:"http://schemas.upnp.org/upnp/1/0/"; ns=01
+16:15:03.566 > 01-NLS: 5dfd0deb24d999005f691b458d12b76b
+16:15:03.570 > Cache-Control: max-age=900
+16:15:03.572 > Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0
+16:15:03.578 > Ext:
+16:15:03.578 > Date: Sat, 15 Jan 2022 15:02:05 GMT
+16:15:03.582 >
+16:15:03.582 >
+16:15:03.582 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=2869, location=upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3    
+16:15:03.609 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1175 ms: packet size: 332
+16:15:03.618 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.623 > HTTP/1.1 200 OK
+16:15:03.625 > Cache-Control: max-age=1800
+16:15:03.627 > EXT: 
+16:15:03.628 > Location: http://192.168.1.11:55247/dms/
+16:15:03.632 > Server: Linux/3.10.24-rtk-nas-g0be9683+ UPnP/1.0 DiXiM/5.0
+16:15:03.637 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.641 > USN: uuid:e4f5b546-75e8-11ec-9380-18c2bf1c6fdf::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.649 > Date: Sat, 15 Jan 2022 15:15:04 GMT
+16:15:03.652 >
+16:15:03.652 >
+16:15:03.652 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:15:03.674 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1240 ms: packet size: 369
+16:15:03.683 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.688 > HTTP/1.1 200 OK
+16:15:03.690 > Location: http://192.168.1.42:1557/DeviceDescription.xml
+16:15:03.696 > Cache-Control: max-age=1800
+16:15:03.698 > Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:03.701 > EXT:
+16:15:03.702 > BOOTID.UPNP.ORG: 0
+16:15:03.704 > CONFIGID.UPNP.ORG: 1711
+16:15:03.706 > USN: uuid:1960b02b-2618-c8eb-e6aa-2367704dac98::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.713 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.717 > Date: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.720 >
+16:15:03.720 >
+16:15:03.720 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=1557, location=DeviceDescription.xml
+16:15:03.745 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1310 ms: packet size: 369
+16:15:03.754 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.758 > HTTP/1.1 200 OK
+16:15:03.760 > Location: http://192.168.1.42:1557/DeviceDescription.xml
+16:15:03.765 > Cache-Control: max-age=1800
+16:15:03.767 > Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:03.770 > EXT:
+16:15:03.771 > BOOTID.UPNP.ORG: 0
+16:15:03.773 > CONFIGID.UPNP.ORG: 1711
+16:15:03.775 > USN: uuid:1960b02b-2618-c8eb-e6aa-2367704dac98::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.784 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.788 > Date: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.790 >
+16:15:03.790 >
+16:15:03.790 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=1557, location=DeviceDescription.xml
+16:15:03.814 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1380 ms: packet size: 336
+16:15:03.823 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.828 > HTTP/1.1 200 OK
+16:15:03.830 > EXT:
+16:15:03.830 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.834 > CACHE-CONTROL: max-age = 1800
+16:15:03.836 > ST: upnp:rootdevice
+16:15:03.838 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:03.844 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e::upnp:rootdevice
+16:15:03.849 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:03.857 >
+16:15:03.857 >
+16:15:03.871 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1437 ms: packet size: 341
+16:15:03.880 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.885 > HTTP/1.1 200 OK
+16:15:03.887 > EXT:
+16:15:03.887 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.890 > CACHE-CONTROL: max-age = 1800
+16:15:03.893 > ST: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:03.898 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:03.904 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:03.908 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:03.916 >
+16:15:03.916 >
+16:15:03.930 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1495 ms: packet size: 388
+16:15:03.939 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:03.944 > HTTP/1.1 200 OK
+16:15:03.945 > EXT:
+16:15:03.945 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:03.950 > CACHE-CONTROL: max-age = 1800
+16:15:03.952 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.956 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:03.962 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e::urn:schemas-upnp-org:device:MediaServer:1
+16:15:03.969 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:03.977 >
+16:15:03.977 >
+16:15:03.977 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=8096, location=dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.003 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1569 ms: packet size: 341
+16:15:04.012 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.017 > HTTP/1.1 200 OK
+16:15:04.019 > EXT:
+16:15:04.019 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:04.023 > CACHE-CONTROL: max-age = 1800
+16:15:04.025 > ST: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:04.029 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:04.035 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:04.039 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.047 >
+16:15:04.047 >
+16:15:04.061 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1627 ms: packet size: 336
+16:15:04.070 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.075 > HTTP/1.1 200 OK
+16:15:04.077 > EXT:
+16:15:04.077 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:04.081 > CACHE-CONTROL: max-age = 1800
+16:15:04.083 > ST: upnp:rootdevice
+16:15:04.085 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:04.091 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e::upnp:rootdevice
+16:15:04.096 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.104 >
+16:15:04.104 >
+16:15:04.118 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1684 ms: packet size: 388
+16:15:04.127 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.132 > HTTP/1.1 200 OK
+16:15:04.134 > EXT:
+16:15:04.134 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:04.137 > CACHE-CONTROL: max-age = 1800
+16:15:04.140 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.144 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:04.151 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.158 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.166 >
+16:15:04.166 >
+16:15:04.166 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=8096, location=dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.193 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1758 ms: packet size: 489
+16:15:04.201 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.206 > HTTP/1.1 200 OK
+16:15:04.208 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.212 > USN: uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.220 > Location: http://192.168.1.42:2869/upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:04.229 > OPT:"http://schemas.upnp.org/upnp/1/0/"; ns=01
+16:15:04.233 > 01-NLS: 5dfd0deb24d999005f691b458d12b76b
+16:15:04.237 > Cache-Control: max-age=900
+16:15:04.239 > Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0
+16:15:04.245 > Ext:
+16:15:04.245 > Date: Sat, 15 Jan 2022 15:02:05 GMT
+16:15:04.249 >
+16:15:04.249 >
+16:15:04.249 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=2869, location=upnphost/udhisapi.dll?content=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3
+16:15:04.276 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1842 ms: packet size: 341
+16:15:04.285 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.290 > HTTP/1.1 200 OK
+16:15:04.292 > EXT:
+16:15:04.292 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:04.296 > CACHE-CONTROL: max-age = 1800
+16:15:04.298 > ST: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:04.302 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:04.308 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e
+16:15:04.312 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.320 >
+16:15:04.320 >
+16:15:04.334 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1900 ms: packet size: 336
+16:15:04.343 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.348 > HTTP/1.1 200 OK
+16:15:04.350 > EXT:
+16:15:04.350 > DATE: Sat, 15 Jan 2022 15:15:03 GMT
+16:15:04.354 > CACHE-CONTROL: max-age = 1800
+16:15:04.356 > ST: upnp:rootdevice
+16:15:04.358 > SERVER: Windows/Microsoft Windows NT 10.0.19044.0 UPnP/1.0 RSSDP/1.0
+16:15:04.364 > USN: uuid:5737229bc09f48d88c7d1bd4881c073e::upnp:rootdevice
+16:15:04.369 > LOCATION: http://192.168.1.42:8096/dlna/5737229bc09f48d88c7d1bd4881c073e/description.xml
+16:15:04.377 >
+16:15:04.377 >
+16:15:04.391 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 1957 ms: packet size: 379
+16:15:04.400 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.405 > HTTP/1.1 200 OK
+16:15:04.407 > CACHE-CONTROL: max-age = 1800
+16:15:04.409 > LOCATION: http://192.168.1.42:8895/deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:04.417 > EXT:
+16:15:04.418 > DATE: Sat, 15 Jan 2022 15:15:02 GMT
+16:15:04.421 > SERVER: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+16:15:04.426 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.430 > USN: uuid:f7e83734-b58d-342d-ab20-3dd0802b9dc3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.438 >
+16:15:04.438 >
+16:15:04.438 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=8895, location=deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:04.464 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 2030 ms: packet size: 379
+16:15:04.473 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.478 > HTTP/1.1 200 OK
+16:15:04.480 > CACHE-CONTROL: max-age = 1800
+16:15:04.482 > LOCATION: http://192.168.1.42:8895/deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:04.490 > EXT:
+16:15:04.491 > DATE: Sat, 15 Jan 2022 15:15:02 GMT
+16:15:04.494 > SERVER: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+16:15:04.499 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.504 > USN: uuid:f7e83734-b58d-342d-ab20-3dd0802b9dc3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.511 >
+16:15:04.511 >
+16:15:04.511 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=8895, location=deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:04.538 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 2103 ms: packet size: 369
+16:15:04.546 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.551 > HTTP/1.1 200 OK
+16:15:04.553 > Location: http://192.168.1.42:1557/DeviceDescription.xml
+16:15:04.558 > Cache-Control: max-age=1800
+16:15:04.560 > Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:04.563 > EXT:
+16:15:04.564 > BOOTID.UPNP.ORG: 0
+16:15:04.566 > CONFIGID.UPNP.ORG: 1711
+16:15:04.568 > USN: uuid:1960b02b-2618-c8eb-e6aa-2367704dac98::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.576 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.580 > Date: Sat, 15 Jan 2022 15:15:04 GMT
+16:15:04.583 >
+16:15:04.583 >
+16:15:04.583 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=1557, location=DeviceDescription.xml
+16:15:04.607 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 2173 ms: packet size: 332
+16:15:04.616 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.621 > HTTP/1.1 200 OK
+16:15:04.623 > Cache-Control: max-age=1800
+16:15:04.624 > EXT:
+16:15:04.626 > Location: http://192.168.1.11:55247/dms/
+16:15:04.629 > Server: Linux/3.10.24-rtk-nas-g0be9683+ UPnP/1.0 DiXiM/5.0
+16:15:04.635 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.639 > USN: uuid:e4f5b546-75e8-11ec-9380-18c2bf1c6fdf::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.647 > Date: Sat, 15 Jan 2022 15:15:05 GMT
+16:15:04.650 >
+16:15:04.650 >
+16:15:04.650 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.11, port=55247, location=dms/
+16:15:04.673 > [D][SoapESP32.cpp:241] soapSSDPquery(): received SSDP packet within 2238 ms: packet size: 379
+16:15:04.681 > [V][SoapESP32.cpp:247] soapSSDPquery(): SSDP packet content:
+16:15:04.686 > HTTP/1.1 200 OK
+16:15:04.689 > CACHE-CONTROL: max-age = 1800
+16:15:04.691 > LOCATION: http://192.168.1.42:8895/deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:04.699 > EXT:
+16:15:04.699 > DATE: Sat, 15 Jan 2022 15:15:02 GMT
+16:15:04.702 > SERVER: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+16:15:04.707 > ST: urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.711 > USN: uuid:f7e83734-b58d-342d-ab20-3dd0802b9dc3::urn:schemas-upnp-org:device:MediaServer:1
+16:15:04.719 >
+16:15:04.719 >
+16:15:04.719 > [D][SoapESP32.cpp:267] soapSSDPquery(): scanned ip=192.168.1.42, port=8895, location=deviceDescription/f7e83734-b58d-342d-ab20-3dd0802b9dc3
+16:15:06.450 > [I][SoapESP32.cpp:475] seekServer(): SSDP query discovered 7 media servers
+16:15:06.457 > [I][SoapESP32.cpp:478] seekServer(): checking all discovered media servers for service ContentDirectory
+16:15:06.480 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:5001
+16:15:06.488 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:06.495 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:06.504 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Cache-Control: no-cache
+16:15:06.511 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Expires: 0
+16:15:06.518 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Accept-Ranges: bytes
+16:15:06.525 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: keep-alive
+16:15:06.531 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10-amd64-10.0, UPnP/1.0 DLNADOC/1.50, UMS/10.14.1
+16:15:06.542 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 3510
+16:15:06.549 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:06.554 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 3510
+16:15:06.564 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: Universal Media Server
+16:15:06.571 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:06.581 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: upnp/control/content_directory
+16:15:06.589 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:06.619 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:1557
+16:15:06.626 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:06.633 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:06 GMT
+16:15:06.641 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 3449
+16:15:06.648 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:06.657 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:06.663 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:06.672 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:06.677 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 3449
+16:15:06.687 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: Kodi (Virtual-Win10)
+16:15:06.694 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:06.703 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: ContentDirectory/1960b02b-2618-c8eb-e6aa-2367704dac98/control.xml
+16:15:06.714 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:06.755 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.50:9050
+16:15:06.763 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:06.769 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:06.778 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 3240
+16:15:06.785 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:07 GMT
+16:15:06.793 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Pragma: no-cache
+16:15:06.800 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Cache-control: no-cache
+16:15:06.808 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:06.814 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+16:15:06.819 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:06.831 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:06.836 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 3240
+16:15:06.846 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: LINKSTATION2b: LinkStation
+16:15:06.854 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:06.863 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: TMSContentDirectory/Control
+16:15:06.871 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:06.896 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:2869
+16:15:06.904 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:06.911 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 4153
+16:15:06.918 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:06.927 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0 Microsoft-HTTPAPI/2.0
+16:15:06.939 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:06 GMT
+16:15:06.947 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:06.953 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:06.959 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 4153
+16:15:06.969 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: VIRTUAL-WIN10: MediaPlayerVM:
+16:15:06.977 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:06.986 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: upnphost/udhisapi.dll?control=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3+urn:upnp-org:serviceId:ContentDirectory
+16:15:07.001 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:07.028 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.11:55247
+16:15:07.036 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:07.043 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Linux/3.10.24-rtk-nas-g0be9683+ UPnP/1.0 DiXiM/5.0
+16:15:07.054 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:07 GMT
+16:15:07.062 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:07.069 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:07.076 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Transfer-Encoding: chunked
+16:15:07.084 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:07.089 > [D][SoapESP32.cpp:342] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:15:07.098 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:15:07.105 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: LINKSTATION2 [LinkStation Media Server]
+16:15:07.114 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:15:07.120 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:07.129 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x4b0, 1200
+16:15:07.136 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: dms/control/ContentDirectory
+16:15:07.143 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:07.163 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:8096
+16:15:07.170 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:07.178 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:07.184 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:07 GMT
+16:15:07.193 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset=utf-8
+16:15:07.200 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Kestrel
+16:15:07.208 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Transfer-Encoding: chunked
+16:15:07.215 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: X-Response-Time-ms: 0
+16:15:07.221 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:07.227 > [D][SoapESP32.cpp:342] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:15:07.237 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0xc6c, 3180
+16:15:07.242 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: Jellyfin - VIRTUAL-WIN10
+16:15:07.250 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:07.259 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: dlna/5737229bc09f48d88c7d1bd4881c073e/contentdirectory/control
+16:15:07.271 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:07.286 > [I][SoapESP32.cpp:492] seekServer(): connected successfully to server 192.168.1.42:8895
+16:15:07.294 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:07.302 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: DATE: Sat, 15 Jan 2022 15:15:07 GMT
+16:15:07.309 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+16:15:07.319 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 2485
+16:15:07.327 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml
+16:15:07.333 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:07.339 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: 
+16:15:07.345 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 2485
+16:15:07.355 > [D][SoapESP32.cpp:521] seekServer(): scanned friendly name: Serviio (Virtual-Win10)
+16:15:07.362 > [D][SoapESP32.cpp:531] seekServer(): server offers service: urn:schemas-upnp-org:service:ContentDirectory:1
+16:15:07.373 > [D][SoapESP32.cpp:548] seekServer(): assigned controlURL: serviceControl
+16:15:07.378 > [I][SoapESP32.cpp:549] seekServer(): ok, this server delivers media content
+16:15:07.385 > Number of discovered servers that deliver content: 7
+16:15:07.389 >
+16:15:07.390 > Server[0]: IP address: 192.168.1.42, port: 5001, name: Universal Media Server
+16:15:07.396 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "Universal Media Server", objectId: "0"
+16:15:07.405 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:07.411 > POST /upnp/control/content_directory HTTP/1.1
+16:15:07.415 > Host: 192.168.1.42:5001
+16:15:07.417 > CACHE-CONTROL: no-cache
+16:15:07.419 > PRAGMA: no-cache
+16:15:07.421 > Connection: close
+16:15:07.422 > Content-Length: 439
+16:15:07.424 > Content-Type: text/xml; charset="utf-8"
+16:15:07.428 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:07.434 > User-Agent: ESP32/Player/UPNP1.0
+16:15:07.437 >
+16:15:07.437 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:07.448 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:07.454 > <ObjectID>0</ObjectID>
+16:15:07.457 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:07.461 > <Filter>*</Filter>
+16:15:07.462 > <StartingIndex>0</StartingIndex>
+16:15:07.465 > <RequestedCount>100</RequestedCount>
+16:15:07.469 > <SortCriteria></SortCriteria>
+16:15:07.471 > </u:Browse>
+16:15:07.472 > </s:Body>
+16:15:07.474 > </s:Envelope>
+16:15:07.476 >
+16:15:07.476 >
+16:15:07.830 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.42:5001
+16:15:07.839 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:07.846 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:07.854 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10-amd64-10.0, UPnP/1.0 DLNADOC/1.50, UMS/10.14.1
+16:15:07.865 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 6403
+16:15:07.872 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:07.877 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 6403
+16:15:07.887 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:07.909 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=51): id="210" childCount="1" parentID="0" restricted="1"
+16:15:07.921 > [V][SoapESP32.cpp:931] browseServer(): container (length=1713): <dc:title>Music</dc:title><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/210/thumbnail0000JPEG_SM_Music.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/210/thumbnail0000JPEG_TN_Music.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_LRG;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/210/thumbnail0000PNG_LRG_Music.png</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/210/thumbnail0000PNG_TN_Music.png</res><upnp:albumArtURI dlna:profileID="JPEG_SM" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/210/thumbnail0000JPEG_SM_Music.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="JPEG_TN" 
+xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/210/thumbnail0000JPEG_TN_Music.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_LRG" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/210/thumbnail0000PNG_LRG_Music.png</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_TN" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/210/thumbnail0000PNG_TN_Music.png</upnp:albumArtURI><dc:date>2022-01-13T20:07:35</dc:date><upnp:class>object.container.storageFolder</upnp:class>
+16:15:08.075 > [D][SoapESP32.cpp:641] soapScanContainer(): id="210"
+16:15:08.080 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="1"
+16:15:08.085 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "searchable=" missing.
+16:15:08.092 > [W][SoapESP32.cpp:668] soapScanContainer(): attribute "searchable=" is missing, we set it true
+16:15:08.100 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Music"
+16:15:08.105 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Music" (id: "210", childCount: 1) added to list
+16:15:08.126 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=51): id="211" childCount="1" parentID="0" restricted="1"
+16:15:08.137 > [V][SoapESP32.cpp:931] browseServer(): container (length=1722): <dc:title>Videos</dc:title><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/211/thumbnail0000JPEG_SM_Videos.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/211/thumbnail0000JPEG_TN_Videos.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_LRG;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/211/thumbnail0000PNG_LRG_Videos.png</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/211/thumbnail0000PNG_TN_Videos.png</res><upnp:albumArtURI dlna:profileID="JPEG_SM" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/211/thumbnail0000JPEG_SM_Videos.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="JPEG_TN" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/211/thumbnail0000JPEG_TN_Videos.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_LRG" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/211/thumbnail0000PNG_LRG_Videos.png</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_TN" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/211/thumbnail0000PNG_TN_Videos.png</upnp:albumArtURI><dc:date>2022-01-13T20:05:26</dc:date><upnp:class>object.container.storageFolder</upnp:class>
+16:15:08.293 > [D][SoapESP32.cpp:641] soapScanContainer(): id="211"
+16:15:08.297 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="1"
+16:15:08.302 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "searchable=" missing.
+16:15:08.309 > [W][SoapESP32.cpp:668] soapScanContainer(): attribute "searchable=" is missing, we set it true
+16:15:08.317 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Videos"
+16:15:08.322 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Videos" (id: "211", childCount: 1) added to list
+16:15:08.338 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=51): id="212" childCount="2" parentID="0" restricted="1"
+16:15:08.350 > [V][SoapESP32.cpp:931] browseServer(): container (length=1657): <dc:title>Web</dc:title><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/212/thumbnail0000JPEG_SM_Web.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/212/thumbnail0000JPEG_TN_Web.jpg</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_LRG;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/212/thumbnail0000PNG_LRG_Web.png</res><res xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/" protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_TN;DLNA.ORG_FLAGS=00900000000000000000000000000000">http://192.168.1.42:5001/get/212/thumbnail0000PNG_TN_Web.png</res><upnp:albumArtURI dlna:profileID="JPEG_SM" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/212/thumbnail0000JPEG_SM_Web.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="JPEG_TN" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/212/thumbnail0000JPEG_TN_Web.jpg</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_LRG" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/212/thumbnail0000PNG_LRG_Web.png</upnp:albumArtURI><upnp:albumArtURI dlna:profileID="PNG_TN" xmlns:dlna="urn:schemas-dlna-org:metadata-1-0/">http://192.168.1.42:5001/get/212/thumbnail0000PNG_TN_Web.png</upnp:albumArtURI><upnp:class>object.container.storageFolder</upnp:class>
+16:15:08.499 > [D][SoapESP32.cpp:641] soapScanContainer(): id="212"
+16:15:08.504 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="2"
+16:15:08.509 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "searchable=" missing.
+16:15:08.516 > [W][SoapESP32.cpp:668] soapScanContainer(): attribute "searchable=" is missing, we set it true
+16:15:08.524 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Web"
+16:15:08.529 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Web" (id: "212", childCount: 2) added to list
+16:15:08.538 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 3
+16:15:08.545 > [I][SoapESP32.cpp:967] browseServer(): found 3 folders and 0 files
+16:15:08.551 > Browsing root directory. Number of sub-directories: 3
+16:15:08.556 >  Music (child count: 1)
+16:15:08.558 >  Videos (child count: 1)
+16:15:08.560 >  Web (child count: 2)
+16:15:08.562 >
+16:15:08.562 > Server[1]: IP address: 192.168.1.42, port: 1557, name: Kodi (Virtual-Win10)
+16:15:08.569 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "Kodi (Virtual-Win10)", objectId: "0"
+16:15:08.579 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:08.583 > POST /ContentDirectory/1960b02b-2618-c8eb-e6aa-2367704dac98/control.xml HTTP/1.1
+16:15:08.590 > Host: 192.168.1.42:1557
+16:15:08.592 > CACHE-CONTROL: no-cache
+16:15:08.594 > PRAGMA: no-cache
+16:15:08.596 > Connection: close
+16:15:08.598 > Content-Length: 439
+16:15:08.599 > Content-Type: text/xml; charset="utf-8"
+16:15:08.603 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:08.609 > User-Agent: ESP32/Player/UPNP1.0
+16:15:08.612 >
+16:15:08.612 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:08.623 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:08.630 > <ObjectID>0</ObjectID>
+16:15:08.632 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:08.636 > <Filter>*</Filter>
+16:15:08.638 > <StartingIndex>0</StartingIndex>
+16:15:08.641 > <RequestedCount>100</RequestedCount>
+16:15:08.644 > <SortCriteria></SortCriteria>
+16:15:08.647 > </u:Browse>
+16:15:08.648 > </s:Body>
+16:15:08.649 > </s:Envelope>
+16:15:08.650 >
+16:15:08.650 >
+16:15:08.659 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.42:1557
+16:15:08.667 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:08.674 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Ext:
+16:15:08.679 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:08 GMT
+16:15:08.687 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 1659
+16:15:08.694 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:08.703 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:08.710 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: UPnP/1.0 DLNADOC/1.50 Kodi
+16:15:08.718 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:08.723 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 1659
+16:15:08.733 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:08.740 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=58): id="musicdb://" parentID="0" restricted="1" searchable="0"
+16:15:08.751 > [V][SoapESP32.cpp:931] browseServer(): container (length=283): <dc:title>Music Library</dc:title><dc:creator>Unknown</dc:creator><dc:publisher>Unknown</dc:publisher><upnp:genre>Unknown</upnp:genre><upnp:episodeSeason>0</upnp:episodeSeason><xbmc:rating>0.0</xbmc:rating><xbmc:userrating>0</xbmc:userrating><upnp:class>object.container</upnp:class>
+16:15:08.782 > [D][SoapESP32.cpp:641] soapScanContainer(): id="musicdb://"
+16:15:08.787 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "childCount=" missing.
+16:15:08.794 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="0"
+16:15:08.799 > [I][SoapESP32.cpp:675] soapScanContainer(): "musicdb://" attribute searchable=0
+16:15:08.806 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Music Library"
+16:15:08.812 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Music Library" (id: "musicdb://", childCount: 0) added to list
+16:15:08.822 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=64): id="library://video/" parentID="0" restricted="1" searchable="0"
+16:15:08.834 > [V][SoapESP32.cpp:931] browseServer(): container (length=283): <dc:title>Video Library</dc:title><dc:creator>Unknown</dc:creator><dc:publisher>Unknown</dc:publisher><upnp:genre>Unknown</upnp:genre><upnp:episodeSeason>0</upnp:episodeSeason><xbmc:rating>0.0</xbmc:rating><xbmc:userrating>0</xbmc:userrating><upnp:class>object.container</upnp:class>
+16:15:08.864 > [D][SoapESP32.cpp:641] soapScanContainer(): id="library://video/"
+16:15:08.870 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "childCount=" missing.
+16:15:08.876 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="0"
+16:15:08.882 > [I][SoapESP32.cpp:675] soapScanContainer(): "library://video/" attribute searchable=0
+16:15:08.890 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Video Library"
+16:15:08.895 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Video Library" (id: "library://video/", childCount: 0) added to list
+16:15:08.906 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 2
+16:15:08.914 > [I][SoapESP32.cpp:967] browseServer(): found 2 folders and 0 files
+16:15:08.919 > Browsing root directory. Number of sub-directories: 2
+16:15:08.924 >  Music Library (child count: missing)
+16:15:08.927 >  Video Library (child count: missing)
+16:15:08.931 >
+16:15:08.931 > Server[2]: IP address: 192.168.1.50, port: 9050, name: LINKSTATION2b: LinkStation
+16:15:08.938 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "LINKSTATION2b: LinkStation", objectId: "0"
+16:15:08.947 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:08.953 > POST /TMSContentDirectory/Control HTTP/1.1
+16:15:08.956 > Host: 192.168.1.50:9050
+16:15:08.959 > CACHE-CONTROL: no-cache
+16:15:08.961 > PRAGMA: no-cache
+16:15:08.962 > Connection: close
+16:15:08.964 > Content-Length: 439
+16:15:08.966 > Content-Type: text/xml; charset="utf-8"
+16:15:08.969 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:08.975 > User-Agent: ESP32/Player/UPNP1.0
+16:15:08.978 >
+16:15:08.979 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:08.989 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:08.996 > <ObjectID>0</ObjectID>
+16:15:08.998 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:09.002 > <Filter>*</Filter>
+16:15:09.004 > <StartingIndex>0</StartingIndex>
+16:15:09.007 > <RequestedCount>100</RequestedCount>
+16:15:09.010 > <SortCriteria></SortCriteria>
+16:15:09.013 > </u:Browse>
+16:15:09.014 > </s:Body>
+16:15:09.015 > </s:Envelope>
+16:15:09.016 >
+16:15:09.017 >
+16:15:09.042 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.50:9050
+16:15:09.051 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:09.058 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:09.066 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 1535
+16:15:09.073 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:09 GMT
+16:15:09.081 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Pragma: no-cache
+16:15:09.088 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Cache-control: no-cache
+16:15:09.095 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:09.102 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+16:15:09.108 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Linux/2.x.x, UPnP/1.0, pvConnect UPnP SDK/1.0, TwonkyMedia UPnP SDK/1.1
+16:15:09.120 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: 
+16:15:09.125 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 1535
+16:15:09.135 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:09.141 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=67): id="0$1" parentID="0" restricted="1" childCount="11" searchable="1"
+16:15:09.154 > [V][SoapESP32.cpp:931] browseServer(): container (length=120): <dc:title>Music</dc:title><pv:modificationTime>1642257790</pv:modificationTime><upnp:class>object.container</upnp:class>
+16:15:09.169 > [D][SoapESP32.cpp:641] soapScanContainer(): id="0$1"
+16:15:09.174 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="11"
+16:15:09.179 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.185 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Music"
+16:15:09.190 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Music" (id: "0$1", childCount: 11) added to list
+16:15:09.198 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=66): id="0$2" parentID="0" restricted="1" childCount="8" searchable="1"
+16:15:09.211 > [V][SoapESP32.cpp:931] browseServer(): container (length=121): <dc:title>Photos</dc:title><pv:modificationTime>1642257791</pv:modificationTime><upnp:class>object.container</upnp:class>
+16:15:09.227 > [D][SoapESP32.cpp:641] soapScanContainer(): id="0$2"
+16:15:09.231 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="8"
+16:15:09.237 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.242 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Photos"
+16:15:09.247 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Photos" (id: "0$2", childCount: 8) added to list
+16:15:09.256 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=66): id="0$3" parentID="0" restricted="1" childCount="7" searchable="1"
+16:15:09.268 > [V][SoapESP32.cpp:931] browseServer(): container (length=121): <dc:title>Videos</dc:title><pv:modificationTime>1642257849</pv:modificationTime><upnp:class>object.container</upnp:class>
+16:15:09.284 > [D][SoapESP32.cpp:641] soapScanContainer(): id="0$3"
+16:15:09.289 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="7"
+16:15:09.294 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.299 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Videos"
+16:15:09.305 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Videos" (id: "0$3", childCount: 7) added to list
+16:15:09.313 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 3
+16:15:09.321 > [I][SoapESP32.cpp:967] browseServer(): found 3 folders and 0 files
+16:15:09.327 > Browsing root directory. Number of sub-directories: 3
+16:15:09.331 >  Music (child count: 11)
+16:15:09.334 >  Photos (child count: 8)
+16:15:09.336 >  Videos (child count: 7)
+16:15:09.338 >
+16:15:09.338 > Server[3]: IP address: 192.168.1.42, port: 2869, name: VIRTUAL-WIN10: MediaPlayerVM:
+16:15:09.346 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "VIRTUAL-WIN10: MediaPlayerVM:", objectId: "0"
+16:15:09.358 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:09.363 > POST /upnphost/udhisapi.dll?control=uuid:5f8237e2-e279-46e6-91a1-16662dae9ac3+urn:upnp-org:serviceId:ContentDirectory HTTP/1.1
+16:15:09.374 > Host: 192.168.1.42:2869
+16:15:09.377 > CACHE-CONTROL: no-cache
+16:15:09.379 > PRAGMA: no-cache
+16:15:09.380 > Connection: close
+16:15:09.382 > Content-Length: 439
+16:15:09.384 > Content-Type: text/xml; charset="utf-8"
+16:15:09.387 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:09.393 > User-Agent: ESP32/Player/UPNP1.0
+16:15:09.396 >
+16:15:09.396 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:09.407 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:09.414 > <ObjectID>0</ObjectID>
+16:15:09.416 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:09.420 > <Filter>*</Filter>
+16:15:09.422 > <StartingIndex>0</StartingIndex>
+16:15:09.425 > <RequestedCount>100</RequestedCount>
+16:15:09.427 > <SortCriteria></SortCriteria>
+16:15:09.430 > </u:Browse>
+16:15:09.432 > </s:Body>
+16:15:09.433 > </s:Envelope>
+16:15:09.435 >
+16:15:09.435 >
+16:15:09.440 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.42:2869
+16:15:09.448 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:09.454 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 6215
+16:15:09.461 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:09.470 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Microsoft-Windows/10.0 UPnP/1.0 UPnP-Device-Host/1.0 Microsoft-HTTPAPI/2.0
+16:15:09.482 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+16:15:09.488 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:08 GMT
+16:15:09.495 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:09.502 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:09.507 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 6215
+16:15:09.518 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:09.534 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=64): id="3" restricted="1" parentID="0" childCount="7" searchable="1"
+16:15:09.546 > [V][SoapESP32.cpp:931] browseServer(): container (length=815): <dc:title>Bilder</dc:title><upnp:class name="object.container">object.container</upnp:class><upnp:writeStatus>NOT_WRITABLE</upnp:writeStatus><upnp:searchClass includeDerived="0">object.container.playlistContainer</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.imageItem.photo</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.album.photoAlbum</upnp:searchClass><upnp:searchClass includeDerived="0">object.container</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.storageFolder</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.album.photoAlbum.dateTaken</upnp:searchClass><upnp:searchClass includeDerived="1">object.container.album</upnp:searchClass><upnp:searchClass includeDerived="1">object.item.imageItem</upnp:searchClass>
+16:15:09.622 > [D][SoapESP32.cpp:641] soapScanContainer(): id="3"
+16:15:09.627 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="7"
+16:15:09.632 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.637 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Bilder"
+16:15:09.642 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Bilder" (id: "3", childCount: 7) added to list
+16:15:09.655 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=65): id="1" restricted="1" parentID="0" childCount="10" searchable="1"
+16:15:09.668 > [V][SoapESP32.cpp:931] browseServer(): container (length=1065): <dc:title>Musik</dc:title><upnp:class name="object.container">object.container</upnp:class><upnp:writeStatus>NOT_WRITABLE</upnp:writeStatus><upnp:searchClass includeDerived="1">object.item.audioItem</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.playlistContainer</upnp:searchClass><upnp:searchClass includeDerived="0">object.container</upnp:searchClass><upnp:searchClass includeDerived="1">object.container.genre</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.storageFolder</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.genre.musicGenre</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.audioItem.musicTrack</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.album.musicAlbum</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.audioItem.audioBook</upnp:searchClass><upnp:searchClass includeDerived="1">object.container.album</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.person.musicArtist</upnp:searchClass>
+16:15:09.767 > [D][SoapESP32.cpp:641] soapScanContainer(): id="1"
+16:15:09.771 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="10"
+16:15:09.776 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.782 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Musik"
+16:15:09.787 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Musik" (id: "1", childCount: 10) added to list
+16:15:09.800 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=64): id="2" restricted="1" parentID="0" childCount="8" searchable="1"
+16:15:09.813 > [V][SoapESP32.cpp:931] browseServer(): container (length=1157): <dc:title>Videos</dc:title><upnp:class name="object.container">object.container</upnp:class><upnp:writeStatus>NOT_WRITABLE</upnp:writeStatus><upnp:searchClass includeDerived="0">object.container.album.videoAlbum</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem.musicVideoClip</upnp:searchClass><upnp:searchClass includeDerived="0">object.container</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem.videoBroadcast</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.person.movieActor</upnp:searchClass><upnp:searchClass includeDerived="1">object.container.album</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem.movie</upnp:searchClass><upnp:searchClass includeDerived="1">object.container.genre</upnp:searchClass><upnp:searchClass includeDerived="1">object.item.videoItem</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.playlistContainer</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.genre.movieGenre</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.storageFolder</upnp:searchClass>
+16:15:09.919 > [D][SoapESP32.cpp:641] soapScanContainer(): id="2"
+16:15:09.924 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="8"
+16:15:09.929 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:09.934 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Videos"
+16:15:09.939 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Videos" (id: "2", childCount: 8) added to list
+16:15:09.950 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=65): id="12" restricted="1" parentID="0" childCount="2" searchable="1"
+16:15:09.962 > [V][SoapESP32.cpp:931] browseServer(): container (length=1155): <dc:title>Wiedergabelisten</dc:title><upnp:class name="object.container">object.container</upnp:class><upnp:writeStatus>NOT_WRITABLE</upnp:writeStatus><upnp:searchClass includeDerived="0">object.item.videoItem.musicVideoClip</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.audioItem.musicTrack</upnp:searchClass><upnp:searchClass includeDerived="0">object.container</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.imageItem.photo</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem.videoBroadcast</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.audioItem.audioBook</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem.movie</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.videoItem</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.playlistContainer</upnp:searchClass><upnp:searchClass includeDerived="0">object.container.storageFolder</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.imageItem</upnp:searchClass><upnp:searchClass includeDerived="0">object.item.audioItem</upnp:searchClass>
+16:15:10.068 > [D][SoapESP32.cpp:641] soapScanContainer(): id="12"
+16:15:10.073 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="2"
+16:15:10.078 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:10.083 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Wiedergabelisten"
+16:15:10.089 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Wiedergabelisten" (id: "12", childCount: 2) added to list
+16:15:10.099 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 4
+16:15:10.106 > [I][SoapESP32.cpp:967] browseServer(): found 4 folders and 0 files
+16:15:10.112 > Browsing root directory. Number of sub-directories: 4
+16:15:10.117 >  Bilder (child count: 7)
+16:15:10.119 >  Musik (child count: 10)
+16:15:10.122 >  Videos (child count: 8)
+16:15:10.124 >  Wiedergabelisten (child count: 2)
+16:15:10.127 >
+16:15:10.127 > Server[4]: IP address: 192.168.1.11, port: 55247, name: LINKSTATION2 [LinkStation Media Server]
+16:15:10.136 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "LINKSTATION2 [LinkStation Media Server]", objectId: "0"
+16:15:10.146 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:10.151 > POST /dms/control/ContentDirectory HTTP/1.1
+16:15:10.155 > Host: 192.168.1.11:55247
+16:15:10.157 > CACHE-CONTROL: no-cache
+16:15:10.160 > PRAGMA: no-cache
+16:15:10.161 > Connection: close
+16:15:10.163 > Content-Length: 439
+16:15:10.165 > Content-Type: text/xml; charset="utf-8"
+16:15:10.168 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:10.174 > User-Agent: ESP32/Player/UPNP1.0
+16:15:10.177 >
+16:15:10.177 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:10.187 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:10.195 > <ObjectID>0</ObjectID>
+16:15:10.197 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:10.201 > <Filter>*</Filter>
+16:15:10.203 > <StartingIndex>0</StartingIndex>
+16:15:10.206 > <RequestedCount>100</RequestedCount>
+16:15:10.209 > <SortCriteria></SortCriteria>
+16:15:10.212 > </u:Browse>
+16:15:10.213 > </s:Body>
+16:15:10.214 > </s:Envelope>
+16:15:10.215 >
+16:15:10.215 >
+16:15:10.233 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.11:55247
+16:15:10.241 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:10.248 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Linux/3.10.24-rtk-nas-g0be9683+ UPnP/1.0 DiXiM/5.0
+16:15:10.258 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:10 GMT
+16:15:10.266 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:10.273 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+16:15:10.279 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:10.287 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Transfer-Encoding: chunked
+16:15:10.295 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: 
+16:15:10.300 > [D][SoapESP32.cpp:342] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:15:10.309 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:10.316 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0xdf, 223
+16:15:10.322 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x6a0, 1696
+16:15:10.328 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=72): id="CAT-VIDEO" parentID="0" restricted="1" childCount="8" searchable="1"
+16:15:10.342 > [V][SoapESP32.cpp:931] browseServer(): container (length=69): <dc:title>Video</dc:title>
+16:15:10.349 > <upnp:class>object.container</upnp:class>
+16:15:10.352 > [D][SoapESP32.cpp:641] soapScanContainer(): id="CAT-VIDEO"
+16:15:10.358 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="8"
+16:15:10.362 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:10.368 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Video"
+16:15:10.373 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Video" (id: "CAT-VIDEO", childCount: 8) added to list
+16:15:10.382 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=72): id="CAT-AUDIO" parentID="0" restricted="1" childCount="9" searchable="1"
+16:15:10.396 > [V][SoapESP32.cpp:931] browseServer(): container (length=69): <dc:title>Music</dc:title>
+16:15:10.403 > <upnp:class>object.container</upnp:class>
+16:15:10.407 > [D][SoapESP32.cpp:641] soapScanContainer(): id="CAT-AUDIO"
+16:15:10.412 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="9"
+16:15:10.417 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:10.422 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Music"
+16:15:10.427 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Music" (id: "CAT-AUDIO", childCount: 9) added to list
+16:15:10.437 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=72): id="CAT-IMAGE" parentID="0" restricted="1" childCount="7" searchable="1"
+16:15:10.448 > [V][SoapESP32.cpp:931] browseServer(): container (length=70): <dc:title>Photos</dc:title>
+16:15:10.456 > <upnp:class>object.container</upnp:class>
+16:15:10.461 > [D][SoapESP32.cpp:641] soapScanContainer(): id="CAT-IMAGE"
+16:15:10.466 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="7"
+16:15:10.471 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:10.477 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Photos"
+16:15:10.482 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Photos" (id: "CAT-IMAGE", childCount: 7) added to list
+16:15:10.491 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=72): id="FS-Folder" parentID="0" restricted="1" childCount="2" searchable="1"
+16:15:10.504 > [V][SoapESP32.cpp:931] browseServer(): container (length=71): <dc:title>Folders</dc:title>
+16:15:10.512 > <upnp:class>object.container</upnp:class>
+16:15:10.516 > [D][SoapESP32.cpp:641] soapScanContainer(): id="FS-Folder"
+16:15:10.521 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="2"
+16:15:10.526 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:10.531 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Folders"
+16:15:10.536 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Folders" (id: "FS-Folder", childCount: 2) added to list
+16:15:10.546 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x9b, 155
+16:15:10.552 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 4
+16:15:10.559 > [I][SoapESP32.cpp:967] browseServer(): found 4 folders and 0 files
+16:15:10.565 > Browsing root directory. Number of sub-directories: 4
+16:15:10.570 >  Video (child count: 8)
+16:15:10.572 >  Music (child count: 9)
+16:15:10.574 >  Photos (child count: 7)
+16:15:10.577 >  Folders (child count: 2)
+16:15:10.579 >
+16:15:10.579 > Server[5]: IP address: 192.168.1.42, port: 8096, name: Jellyfin - VIRTUAL-WIN10
+16:15:10.586 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "Jellyfin - VIRTUAL-WIN10", objectId: "0"
+16:15:10.609 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:10.615 > POST /dlna/5737229bc09f48d88c7d1bd4881c073e/contentdirectory/control HTTP/1.1
+16:15:10.622 > Host: 192.168.1.42:8096
+16:15:10.624 > CACHE-CONTROL: no-cache
+16:15:10.626 > PRAGMA: no-cache
+16:15:10.628 > Connection: close
+16:15:10.629 > Content-Length: 439
+16:15:10.631 > Content-Type: text/xml; charset="utf-8"
+16:15:10.635 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:10.641 > User-Agent: ESP32/Player/UPNP1.0
+16:15:10.644 >
+16:15:10.644 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:10.655 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:10.661 > <ObjectID>0</ObjectID>
+16:15:10.664 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:10.668 > <Filter>*</Filter>
+16:15:10.669 > <StartingIndex>0</StartingIndex>
+16:15:10.672 > <RequestedCount>100</RequestedCount>
+16:15:10.676 > <SortCriteria></SortCriteria>
+16:15:10.678 > </u:Browse>
+16:15:10.679 > </s:Body>
+16:15:10.680 > </s:Envelope>
+16:15:10.682 >
+16:15:10.682 >
+16:15:10.684 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.42:8096
+16:15:10.692 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:10.698 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:10.705 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:10 GMT
+16:15:10.713 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset=utf-8
+16:15:10.721 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Kestrel
+16:15:10.728 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Transfer-Encoding: chunked
+16:15:10.735 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: X-Response-Time-ms: 2
+16:15:10.743 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:10.748 > [D][SoapESP32.cpp:342] soapReadHttpHeader(): HTTP-Header ok, trailing content is chunked, no size announced
+16:15:10.757 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:10.763 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0xf43, 3907
+16:15:10.796 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=126): restricted="1" searchable="1" childCount="6" id="f137a2dd21bbc1b99aa5c0f6bf02a805" parentID="e9d5075a555c1cbc394eec4cef295274"
+16:15:10.814 > [V][SoapESP32.cpp:931] browseServer(): container (length=2195): <dc:title>Movies</dc:title><upnp:class>object.container.storageFolder</upnp:class><upnp:albumArtURI dlna:profileID="JPEG_SM">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/480/480/0/0</upnp:albumArtURI><upnp:icon>http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/48/48/0/0</upnp:icon><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="960x540">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/4096/4096/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="960x540">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/1024/768/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="640x360">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/640/480/0/0</res><res protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_LRG;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="960x540">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/png/4096/4096/0/0</res><res protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_TN;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="160x90">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/png/160/160/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="160x90">http://192.168.1.42:8096/Items/f137a2dd21bbc1b99aa5c0f6bf02a805/Images/Primary/0/82c951330ab3f44c25ff6fb2a8300b32/jpg/160/160/0/0</res>
+16:15:11.010 > [D][SoapESP32.cpp:641] soapScanContainer(): id="f137a2dd21bbc1b99aa5c0f6bf02a805"
+16:15:11.018 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="6"
+16:15:11.024 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:11.029 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Movies"
+16:15:11.033 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Movies" (id: "f137a2dd21bbc1b99aa5c0f6bf02a805", childCount: 6) added to list
+16:15:11.044 > [D][SoapESP32.cpp:392] soapReadXML(): announced chunk size: 0x6c6, 1734
+16:15:11.061 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=127): restricted="1" searchable="1" childCount="10" id="7e64e319657a9516ec78490da03edccb" parentID="e9d5075a555c1cbc394eec4cef295274"
+16:15:11.078 > [V][SoapESP32.cpp:931] browseServer(): container (length=2196): <dc:title>Music</dc:title><upnp:class>object.container.storageFolder</upnp:class><upnp:albumArtURI dlna:profileID="JPEG_SM">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/480/480/0/0</upnp:albumArtURI><upnp:icon>http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/48/48/0/0</upnp:icon><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_LRG;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="200x200">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/4096/4096/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="200x200">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/1024/768/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_SM;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="200x200">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/640/480/0/0</res><res protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_LRG;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="200x200">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/png/4096/4096/0/0</res><res protocolInfo="http-get:*:image/png:DLNA.ORG_PN=PNG_TN;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="160x160">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/png/160/160/0/0</res><res protocolInfo="http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_OP=00;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=00D00000000000000000000000000000" resolution="160x160">http://192.168.1.42:8096/Items/7e64e319657a9516ec78490da03edccb/Images/Primary/0/e05274ea9c6231af597a0c7a6129e1c2/jpg/160/160/0/0</res>16:15:11.275 > [D][SoapESP32.cpp:641] soapScanContainer(): id="7e64e319657a9516ec78490da03edccb"
+16:15:11.282 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="10"
+16:15:11.287 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="1"
+16:15:11.292 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Music"
+16:15:11.296 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Music" (id: "7e64e319657a9516ec78490da03edccb", childCount: 10) added to list
+16:15:11.308 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 2
+16:15:11.315 > [I][SoapESP32.cpp:967] browseServer(): found 2 folders and 0 files
+16:15:11.321 > Browsing root directory. Number of sub-directories: 2
+16:15:11.327 >  Movies (child count: 6)
+16:15:11.329 >  Music (child count: 10)
+16:15:11.331 >
+16:15:11.331 > Server[6]: IP address: 192.168.1.42, port: 8895, name: Serviio (Virtual-Win10)
+16:15:11.338 > [I][SoapESP32.cpp:866] browseServer(): new search on server: "Serviio (Virtual-Win10)", objectId: "0"
+16:15:11.347 > [V][SoapESP32.cpp:1261] soapPost(): send request to server:
+16:15:11.353 > POST /serviceControl HTTP/1.1
+16:15:11.355 > Host: 192.168.1.42:8895
+16:15:11.357 > CACHE-CONTROL: no-cache
+16:15:11.360 > PRAGMA: no-cache
+16:15:11.361 > Connection: close
+16:15:11.362 > Content-Length: 439
+16:15:11.365 > Content-Type: text/xml; charset="utf-8"
+16:15:11.368 > SOAPAction: "urn:schemas-upnp-org:service:ContentDirectory:1#Browse"
+16:15:11.374 > User-Agent: ESP32/Player/UPNP1.0
+16:15:11.376 >
+16:15:11.376 > <s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+16:15:11.388 > <s:Body><u:Browse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+16:15:11.395 > <ObjectID>0</ObjectID>
+16:15:11.397 > <BrowseFlag>BrowseDirectChildren</BrowseFlag>
+16:15:11.401 > <Filter>*</Filter>
+16:15:11.403 > <StartingIndex>0</StartingIndex>
+16:15:11.406 > <RequestedCount>100</RequestedCount>
+16:15:11.409 > <SortCriteria></SortCriteria>
+16:15:11.411 > </u:Browse>
+16:15:11.412 > </s:Body>
+16:15:11.413 > </s:Envelope>
+16:15:11.414 >
+16:15:11.415 >
+16:15:11.428 > [I][SoapESP32.cpp:878] browseServer(): connected successfully to server 192.168.1.42:8895
+16:15:11.438 > [V][SoapESP32.cpp:310] soapReadHttpHeader(): header line: HTTP/1.1 200 OK
+16:15:11.444 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: EXT:
+16:15:11.450 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Date: Sat, 15 Jan 2022 15:15:11 GMT
+16:15:11.458 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Server: Windows_10 UPnP/1.0 DLNADOC/1.50 Serviio/2.2.1
+16:15:11.467 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Length: 1240
+16:15:11.474 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Content-Type: text/xml; charset="utf-8"
+16:15:11.483 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line: Connection: close
+16:15:11.490 > [V][SoapESP32.cpp:323] soapReadHttpHeader(): header line:
+16:15:11.495 > [D][SoapESP32.cpp:345] soapReadHttpHeader(): HTTP-Header ok, trailing content is not chunked, announced size: 1240
+16:15:11.505 > [I][SoapESP32.cpp:901] browseServer(): scan answer from media server:
+16:15:11.511 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=65): childCount="10" id="A" parentID="0" restricted="1" searchable="0"
+16:15:11.524 > [V][SoapESP32.cpp:931] browseServer(): container (length=67): <dc:title>Audio</dc:title><upnp:class>object.container</upnp:class>
+16:15:11.535 > [D][SoapESP32.cpp:641] soapScanContainer(): id="A"
+16:15:11.539 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="10"
+16:15:11.545 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="0"
+16:15:11.550 > [I][SoapESP32.cpp:675] soapScanContainer(): "A" attribute searchable=0
+16:15:11.556 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Audio"
+16:15:11.561 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Audio" (id: "A", childCount: 10) added to list
+16:15:11.570 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=64): childCount="5" id="I" parentID="0" restricted="1" searchable="0"
+16:15:11.582 > [V][SoapESP32.cpp:931] browseServer(): container (length=67): <dc:title>Image</dc:title><upnp:class>object.container</upnp:class>
+16:15:11.593 > [D][SoapESP32.cpp:641] soapScanContainer(): id="I"
+16:15:11.598 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="5"
+16:15:11.603 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="0"
+16:15:11.608 > [I][SoapESP32.cpp:675] soapScanContainer(): "I" attribute searchable=0
+16:15:11.615 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Image"
+16:15:11.620 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Image" (id: "I", childCount: 5) added to list
+16:15:11.628 > [V][SoapESP32.cpp:930] browseServer(): container attribute (length=64): childCount="7" id="V" parentID="0" restricted="1" searchable="0"
+16:15:11.640 > [V][SoapESP32.cpp:931] browseServer(): container (length=67): <dc:title>Video</dc:title><upnp:class>object.container</upnp:class>
+16:15:11.651 > [D][SoapESP32.cpp:641] soapScanContainer(): id="V"
+16:15:11.656 > [D][SoapESP32.cpp:660] soapScanContainer(): childCount="7"
+16:15:11.661 > [D][SoapESP32.cpp:672] soapScanContainer(): searchable="0"
+16:15:11.666 > [I][SoapESP32.cpp:675] soapScanContainer(): "V" attribute searchable=0
+16:15:11.672 > [D][SoapESP32.cpp:686] soapScanContainer(): title="Video"
+16:15:11.678 > [I][SoapESP32.cpp:695] soapScanContainer(): folder "Video" (id: "V", childCount: 7) added to list
+16:15:11.686 > [D][SoapESP32.cpp:951] browseServer(): announced number of folders and/or files: 3
+16:15:11.694 > [I][SoapESP32.cpp:967] browseServer(): found 3 folders and 0 files
+16:15:11.700 > Browsing root directory. Number of sub-directories: 3
+16:15:11.704 >  Audio (child count: 10)
+16:15:11.707 >  Image (child count: 5)
+16:15:11.709 >  Video (child count: 7)
+16:15:11.711 >
+16:15:11.711 >
+16:15:11.711 > Sketch finished.

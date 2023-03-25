@@ -1,0 +1,318 @@
+01:27:26.729 > Initializing Ethernet...DHCP ok.
+01:27:26.729 > Local IP: 192.168.1.45
+01:27:26.729 >
+01:27:26.729 > ----> server content follows:
+01:27:26.729 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "0"
+01:27:27.801 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:27.809 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:27.825 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.  
+01:27:27.833 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://" attribute searchable=0
+01:27:27.840 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Music Library" (id: "musicdb://", childCount: 0) added to list
+01:27:27.851 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:27.858 > [I][SoapESP32.cpp:669] soapScanContainer(): "library://video/" attribute searchable=0
+01:27:27.865 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Video Library" (id: "library://video/", childCount: 0) added to list
+01:27:27.876 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:27.882 > Music Library/
+01:27:27.883 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://"
+01:27:27.906 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:27.915 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:27.937 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:27.945 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://genres/" attribute searchable=0
+01:27:27.952 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Genres" (id: "musicdb://genres/", childCount: 0) added to list
+01:27:27.967 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:27.975 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://artists/" attribute searchable=0
+01:27:27.982 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Artists" (id: "musicdb://artists/", childCount: 0) added to list
+01:27:27.998 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.005 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://albums/" attribute searchable=0
+01:27:28.012 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Albums" (id: "musicdb://albums/", childCount: 0) added to list
+01:27:28.028 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.        
+01:27:28.035 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://songs/" attribute searchable=0
+01:27:28.043 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Songs" (id: "musicdb://songs/", childCount: 0) added to list
+01:27:28.057 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.064 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://years/" attribute searchable=0  
+01:27:28.073 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Years" (id: "musicdb://years/", childCount: 0) added to list
+01:27:28.088 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.096 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://top100/" attribute searchable=0
+01:27:28.103 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Top 100" (id: "musicdb://top100/", childCount: 0) added to list
+01:27:28.119 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.127 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://recentlyaddedalbums/" attribute searchable=0
+01:27:28.135 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Recently added albums" (id: "musicdb://recentlyaddedalbums/", childCount: 0) added to list
+01:27:28.154 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.161 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://recentlyplayedalbums/" attribute searchable=0
+01:27:28.170 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Recently played albums" (id: "musicdb://recentlyplayedalbums/", childCount: 0) added to list
+01:27:28.188 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.        
+01:27:28.195 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://roles/" attribute searchable=0
+01:27:28.203 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Role" (id: "musicdb://roles/", childCount: 0) added to list
+01:27:28.218 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.226 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://sources/" attribute searchable=0
+01:27:28.233 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Sources" (id: "musicdb://sources/", childCount: 0) added to list
+01:27:28.244 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.251 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://discs/" attribute searchable=0
+01:27:28.258 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Discs" (id: "musicdb://discs/", childCount: 0) added to list
+01:27:28.273 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.281 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://originalyears/" attribute searchable=0
+01:27:28.289 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Original year" (id: "musicdb://originalyears/", childCount: 0) added to list
+01:27:28.300 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.307 > [I][SoapESP32.cpp:669] soapScanContainer(): "special://musicplaylists/" attribute searchable=0
+01:27:28.315 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Playlists" (id: "special://musicplaylists/", childCount: 0) added to list
+01:27:28.327 > [I][SoapESP32.cpp:961] browseServer(): found 13 folders and 0 files
+01:27:28.332 >   Genres/
+01:27:28.332 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://genres/"
+01:27:28.343 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:28.350 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:28.357 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:28.365 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:28.371 >   Artists/
+01:27:28.372 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://artists/"
+01:27:28.580 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:28.589 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:28.615 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.622 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://artists/2/?albumartistsonly=false" attribute searchable=0
+01:27:28.632 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Anastacia" (id: "musicdb://artists/2/?albumartistsonly=false", childCount: 0) added to list
+01:27:28.654 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.661 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://artists/3/?albumartistsonly=false" attribute searchable=0
+01:27:28.671 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Ben Harper" (id: "musicdb://artists/3/?albumartistsonly=false", childCount: 0) added to list
+01:27:28.684 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:28.690 >     Anastacia/
+01:27:28.691 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://artists/2/?albumartistsonly=false"
+01:27:28.703 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:28.711 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:28.752 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.758 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://artists/2/1/?albumartistsonly=false&artistid=2" attribute searchable=0
+01:27:28.769 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://artists/2/1/?albumartistsonly=false&artistid=2", childCount: 0) added to list
+01:27:28.784 > [I][SoapESP32.cpp:961] browseServer(): found 1 folders and 0 files
+01:27:28.790 >       Car-CD 1/
+01:27:28.791 >     Ben Harper/
+01:27:28.793 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://artists/3/?albumartistsonly=false"
+01:27:28.805 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:28.813 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:28.853 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.861 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://artists/3/2/?albumartistsonly=false&artistid=3" attribute searchable=0
+01:27:28.872 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://artists/3/2/?albumartistsonly=false&artistid=3", childCount: 0) added to list
+01:27:28.885 > [I][SoapESP32.cpp:961] browseServer(): found 1 folders and 0 files
+01:27:28.891 >       Car-CD 1/
+01:27:28.893 >   Albums/
+01:27:28.893 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://albums/"
+01:27:28.903 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:28.912 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:28.951 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:28.958 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://albums/1/" attribute searchable=0
+01:27:28.966 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://albums/1/", childCount: 0) added to list
+01:27:28.997 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:29.005 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://albums/2/" attribute searchable=0
+01:27:29.013 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://albums/2/", childCount: 0) added to list
+01:27:29.023 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:29.029 >     Car-CD 1/
+01:27:29.030 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://albums/1/"
+01:27:29.040 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.047 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.103 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:29.109 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:29.117 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:29.124 > [I][SoapESP32.cpp:841] soapScanItem(): "Sick And Tired" (id: "musicdb://albums/1/-2/1.mp3?albumid=1", size: 0, type: audio) added to list
+01:27:29.136 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 1 files
+01:27:29.142 >       Sick And Tired   item size: missing, audio
+01:27:29.147 >     Car-CD 1/
+01:27:29.148 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://albums/2/"
+01:27:29.158 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.165 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.221 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:29.228 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:29.233 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:29.242 > [I][SoapESP32.cpp:841] soapScanItem(): "Excuse me Mr." (id: "musicdb://albums/2/-2/2.mp3?albumid=2", size: 0, type: audio) added to list
+01:27:29.254 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 1 files
+01:27:29.260 >       Excuse me Mr.   item size: missing, audio
+01:27:29.264 >   Songs/
+01:27:29.265 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://songs/"
+01:27:29.274 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.282 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.336 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:29.343 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:29.350 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:29.357 > [I][SoapESP32.cpp:841] soapScanItem(): "Sick And Tired" (id: "musicdb://songs/1.mp3", size: 0, type: audio) added to list
+01:27:29.401 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:29.408 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:29.415 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:29.422 > [I][SoapESP32.cpp:841] soapScanItem(): "Excuse me Mr." (id: "musicdb://songs/2.mp3", size: 0, type: audio) added to list
+01:27:29.433 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 2 files
+01:27:29.439 >     Sick And Tired   item size: missing, audio
+01:27:29.443 >     Excuse me Mr.   item size: missing, audio
+01:27:29.447 >   Years/
+01:27:29.448 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://years/"
+01:27:29.457 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.465 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.472 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:29.478 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:29.485 >   Top 100/
+01:27:29.486 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://top100/"
+01:27:29.495 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.504 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.527 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:29.534 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://top100/songs/" attribute searchable=0
+01:27:29.542 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Top 100 songs" (id: "musicdb://top100/songs/", childCount: 0) added to list
+01:27:29.559 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:29.567 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://top100/albums/" attribute searchable=0
+01:27:29.576 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Top 100 albums" (id: "musicdb://top100/albums/", childCount: 0) added to list
+01:27:29.586 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:29.593 >     Top 100 songs/
+01:27:29.594 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://top100/songs/"
+01:27:29.605 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.613 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.620 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:29.627 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:29.632 >     Top 100 albums/
+01:27:29.634 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://top100/albums/"
+01:27:29.645 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.652 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.660 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:29.666 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:29.672 >   Recently added albums/
+01:27:29.675 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://recentlyaddedalbums/"
+01:27:29.685 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.693 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.726 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:29.734 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://recentlyaddedalbums/2/" attribute searchable=0
+01:27:29.743 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://recentlyaddedalbums/2/", childCount: 0) added to list
+01:27:29.770 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:29.778 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://recentlyaddedalbums/1/" attribute searchable=0
+01:27:29.787 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD 1" (id: "musicdb://recentlyaddedalbums/1/", childCount: 0) added to list
+01:27:29.798 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:29.804 >     Car-CD 1/
+01:27:29.805 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://recentlyaddedalbums/2/"
+01:27:29.816 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.823 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:29.880 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:29.887 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:29.893 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:29.901 > [I][SoapESP32.cpp:841] soapScanItem(): "Excuse me Mr." (id: "musicdb://recentlyaddedalbums/2/-2/2.mp3?albumid=2", size: 0, type: audio) added to list        
+01:27:29.913 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 1 files
+01:27:29.919 >       Excuse me Mr.   item size: missing, audio
+01:27:29.923 >     Car-CD 1/
+01:27:29.924 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://recentlyaddedalbums/1/"
+01:27:29.937 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:29.944 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.000 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:30.006 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:30.013 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:30.020 > [I][SoapESP32.cpp:841] soapScanItem(): "Sick And Tired" (id: "musicdb://recentlyaddedalbums/1/-2/1.mp3?albumid=1", size: 0, type: audio) added to list
+01:27:30.034 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 1 files
+01:27:30.039 >       Sick And Tired   item size: missing, audio
+01:27:30.044 >   Recently played albums/
+01:27:30.046 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://recentlyplayedalbums/"
+01:27:30.058 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.066 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.073 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:30.079 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:30.084 >   Role/
+01:27:30.084 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://roles/"
+01:27:30.096 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.104 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.126 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.134 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://roles/1/?roleid=1" attribute searchable=0
+01:27:30.143 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Artist" (id: "musicdb://roles/1/?roleid=1", childCount: 0) added to list
+01:27:30.154 > [I][SoapESP32.cpp:961] browseServer(): found 1 folders and 0 files
+01:27:30.159 >     Artist/
+01:27:30.160 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://roles/1/?roleid=1"
+01:27:30.170 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.179 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.205 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.213 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://roles/1/2/?albumartistsonly=false&roleid=1" attribute searchable=0
+01:27:30.224 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Anastacia" (id: "musicdb://roles/1/2/?albumartistsonly=false&roleid=1", childCount: 0) added to list
+01:27:30.247 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.254 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://roles/1/3/?albumartistsonly=false&roleid=1" attribute searchable=0
+01:27:30.265 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Ben Harper" (id: "musicdb://roles/1/3/?albumartistsonly=false&roleid=1", childCount: 0) added to list
+01:27:30.278 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:30.284 >       Anastacia/
+01:27:30.285 >       Ben Harper/
+01:27:30.288 >   Sources/
+01:27:30.289 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://sources/"
+01:27:30.298 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.307 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.329 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.337 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://sources/1/?sourceid=1" attribute searchable=0
+01:27:30.345 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Car-CD1" (id: "musicdb://sources/1/?sourceid=1", childCount: 0) added to list
+01:27:30.357 > [I][SoapESP32.cpp:961] browseServer(): found 1 folders and 0 files
+01:27:30.363 >     Car-CD1/
+01:27:30.363 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://sources/1/?sourceid=1"
+01:27:30.375 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.382 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.410 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.417 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://sources/1/2/?albumartistsonly=false&sourceid=1" attribute searchable=0
+01:27:30.428 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Anastacia" (id: "musicdb://sources/1/2/?albumartistsonly=false&sourceid=1", childCount: 0) added to list
+01:27:30.451 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.458 > [I][SoapESP32.cpp:669] soapScanContainer(): "musicdb://sources/1/3/?albumartistsonly=false&sourceid=1" attribute searchable=0
+01:27:30.470 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Ben Harper" (id: "musicdb://sources/1/3/?albumartistsonly=false&sourceid=1", childCount: 0) added to list01:27:30.484 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:30.490 >       Anastacia/
+01:27:30.491 >       Ben Harper/
+01:27:30.493 >   Discs/
+01:27:30.494 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://discs/"
+01:27:30.503 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.511 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.566 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:30.573 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:30.580 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:30.587 > [I][SoapESP32.cpp:841] soapScanItem(): "Sick And Tired" (id: "musicdb://discs/-2/1.mp3", size: 0, type: audio) added to list
+01:27:30.631 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:30.638 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:30.645 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:30.653 > [I][SoapESP32.cpp:841] soapScanItem(): "Excuse me Mr." (id: "musicdb://discs/-2/2.mp3", size: 0, type: audio) added to list
+01:27:30.664 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 2 files
+01:27:30.670 >     Sick And Tired   item size: missing, audio
+01:27:30.674 >     Excuse me Mr.   item size: missing, audio
+01:27:30.678 >   Original year/
+01:27:30.679 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "musicdb://originalyears/"
+01:27:30.690 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.698 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.704 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:30.711 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:30.716 >   Playlists/
+01:27:30.719 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "special://musicplaylists/"
+01:27:30.729 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.737 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.743 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:30.751 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:30.757 > Video Library/
+01:27:30.758 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "library://video/"
+01:27:30.769 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.778 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.800 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.808 > [I][SoapESP32.cpp:669] soapScanContainer(): "library://video/files.xml/" attribute searchable=0
+01:27:30.815 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Files" (id: "library://video/files.xml/", childCount: 0) added to list
+01:27:30.832 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.839 > [I][SoapESP32.cpp:669] soapScanContainer(): "library://video/playlists.xml/" attribute searchable=0
+01:27:30.849 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Playlists" (id: "library://video/playlists.xml/", childCount: 0) added to list
+01:27:30.860 > [I][SoapESP32.cpp:961] browseServer(): found 2 folders and 0 files
+01:27:30.866 >   Files/
+01:27:30.867 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "library://video/files.xml/"
+01:27:30.878 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.885 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.908 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "childCount=" missing.
+01:27:30.915 > [I][SoapESP32.cpp:669] soapScanContainer(): "D:\Media\Videos\" attribute searchable=0
+01:27:30.923 > [I][SoapESP32.cpp:689] soapScanContainer(): folder "Videos" (id: "D:\Media\Videos\", childCount: 0) added to list
+01:27:30.933 > [I][SoapESP32.cpp:961] browseServer(): found 1 folders and 0 files
+01:27:30.939 >     Videos/
+01:27:30.940 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "D:\Media\Videos\"
+01:27:30.949 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:30.957 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:30.982 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "size=" missing.
+01:27:30.989 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:30.996 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:31.003 > [I][SoapESP32.cpp:841] soapScanItem(): "EmptyVideoFile" (id: "D:\Media\Videos\EmptyVideoFile.mp4", size: 0, type: video) added to list
+01:27:31.023 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:31.031 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:31.039 > [I][SoapESP32.cpp:841] soapScanItem(): "VideoNr1" (id: "D:\Media\Videos\VideoNr1.mp4", size: 4692350543, type: video) added to list
+01:27:31.058 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "bitrate=" missing.
+01:27:31.065 > [W][SoapESP32.cpp:617] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:27:31.073 > [I][SoapESP32.cpp:841] soapScanItem(): "VideoNr2" (id: "D:\Media\Videos\VideoNr2.mp4", size: 7675374555, type: video) added to list
+01:27:31.083 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 3 files
+01:27:31.089 >       EmptyVideoFile   item size: missing, video
+01:27:31.094 >       VideoNr1   item size: 4692350543, video
+01:27:31.098 >       VideoNr2   item size: 7675374555, video
+01:27:31.102 >   Playlists/
+01:27:31.104 > [I][SoapESP32.cpp:860] browseServer(): new search on server: "My Media Server", objectId: "library://video/playlists.xml/"
+01:27:31.114 > [I][SoapESP32.cpp:872] browseServer(): connected successfully to server 192.168.1.42:1557
+01:27:31.122 > [I][SoapESP32.cpp:895] browseServer(): scan answer from media server:
+01:27:31.129 > [I][SoapESP32.cpp:951] browseServer(): XML scanned, no elements announced
+01:27:31.136 > [I][SoapESP32.cpp:961] browseServer(): found 0 folders and 0 files
+01:27:31.142 >
+01:27:31.142 > Sketch finished.

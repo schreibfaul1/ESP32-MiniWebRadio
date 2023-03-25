@@ -1,0 +1,387 @@
+17:39:36.017 > Connecting to WiFi network ......
+17:39:38.592 > Connected successfully. IP address: 192.168.1.37
+17:39:38.595 >
+17:39:38.595 > ----> server content follows:
+17:39:38.753 > Movies/
+17:39:39.128 >   Continue Watching/
+17:39:39.161 >   Latest/
+17:39:39.288 >     EmptyVideoFile   item size: missing, video
+17:39:39.292 >     VideoNr2   item size: 7675374592, video   
+17:39:39.296 >     VideoNr1   item size: 4692350464, video   
+17:39:39.300 >   Movies/
+17:39:39.416 >     EmptyVideoFile   item size: missing, video
+17:39:39.420 >     VideoNr1   item size: 4692350464, video   
+17:39:39.424 >     VideoNr2   item size: 7675374592, video
+17:39:39.429 >   Collections/
+17:39:39.446 >   Favorites/
+17:39:39.486 >   Genres/
+17:39:39.574 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "f137a2dd21bbc1b99aa5c0f6bf02a805" != requested parent id "genres_f137a2dd21bbc1b99aa5c0f6bf02a805"
+17:39:39.588 > Music/
+17:39:40.194 >   Latest/
+17:39:40.306 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "latest_7e64e319657a9516ec78490da03edccb"
+17:39:41.997 >     Major Tom (German Version)   item size: 3855747, audio
+17:39:42.004 >     China Girl   item size: 6706178, audio
+17:39:42.007 >     Wicked Games   item size: 4644994, audio
+17:39:42.011 >     All good things   item size: 12455337, audio
+17:39:42.015 >     A New Day Has Come   item size: 6251473, audio
+17:39:42.020 >     Sick And Tired   item size: 8348435, audio    
+17:39:42.024 >     Excuse me Mr.   item size: 11870222, audio    
+17:39:42.028 >     This Is The Life   item size: 4688488, audio  
+17:39:42.032 >     Forever Young   item size: 4556304, audio  
+17:39:42.036 >     Pure Love   item size: 8441184, audio      
+17:39:42.040 >     I Follow Rivers   item size: 8581856, audio
+17:39:42.044 >     Subcity   item size: 9584311, audio        
+17:39:42.048 >     Room With a View   item size: 8140545, audio
+17:39:42.052 >     Another Love   item size: 9929167, audio    
+17:39:42.057 >     Save Me   item size: 7161591, audio
+17:39:42.061 >     All You Zombies   item size: 8620094, audio   
+17:39:42.065 >     Youre In The Army   item size: 11258315, audio
+17:39:42.068 >     Jealous Guy   item size: 7192636, audio       
+17:39:42.072 >     Hell Or High Water   item size: 8833381, audio
+17:39:42.077 >     Born To Be Alive   item size: 6203103, audio
+17:39:42.081 >     Streets Of London   item size: 9938320, audio
+17:39:42.086 >     Gyöngyhajú lány   item size: 10991944, audio
+17:39:42.090 >     Incubus Live   item size: 9670576, audio
+17:39:42.094 >     All This Time   item size: 4177264, audio
+17:39:42.098 >     What's On Your Mind?   item size: 5861481, audio
+17:39:42.103 >     Vocal   item size: 11521263, audio
+17:39:42.107 >     Madrugada - Vocal (Live in Norway)   item size: 10303735, audio
+17:39:42.113 >     Majesty live   item size: 14136935, audio
+17:39:42.117 >     Electric   item size: 10179145, audio
+17:39:42.120 >     Slip Away   item size: 8462013, audio
+17:39:42.124 >     Blue Mesa   item size: 9666929, audio
+17:39:42.128 >     Simple Man   item size: 14386127, audio
+17:39:42.132 >     All Of Me   item size: 8668133, audio
+17:39:42.136 >     Summertime Sadness   item size: 9115457, audio
+17:39:42.141 >     Broken   item size: 6073871, audio
+17:39:42.144 >     Watermelon Sugar   item size: 4405070, audio
+17:39:42.149 >     Sign of the Times   item size: 13667400, audio
+17:39:42.153 >     Why Her Not Me   item size: 9367318, audio
+17:39:42.157 >     Done   item size: 6905292, audio
+17:39:42.161 >     One Of Us Cannot Be Wrong   item size: 14082497, audio
+17:39:42.165 >     Vincent   item size: 8967826, audio
+17:39:42.168 >     The Sound Of Silence [Official Music Video]   item size: 8332259, audio
+17:39:42.175 >     Working Hard For Your Love   item size: 7438165, audio
+17:39:42.180 >     Do You Really Want To Hurt Me   item size: 10425164, audio
+17:39:42.187 >     Clocks   item size: 12374596, audio
+17:39:42.190 >     Enjoy the Silence   item size: 4628781, audio
+17:39:42.195 >     The Way It Is   item size: 11945276, audio
+17:39:42.198 >     Keep Moving On - Live   item size: 12127204, audio
+17:39:42.203 >     Ruined Heart   item size: 10102568, audio
+17:39:42.207 >   Playlists/
+17:39:42.232 >   Albums/
+17:39:42.341 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albums_7e64e319657a9516ec78490da03edccb"
+17:39:42.423 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albums_7e64e319657a9516ec78490da03edccb"
+17:39:42.438 >   Album Artists/
+17:39:42.553 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.613 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.673 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.733 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.748 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.808 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.870 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.929 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:42.988 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.050 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.111 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.173 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.232 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.293 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.308 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.322 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.383 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.442 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.504 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.565 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.622 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.684 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.743 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.804 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.862 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.922 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.983 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:43.999 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.058 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.117 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.131 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.191 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.251 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.312 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.373 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.431 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.491 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.506 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.566 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.626 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.641 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.702 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.761 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.821 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.881 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:44.941 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.003 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.061 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.124 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.185 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.246 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.307 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.366 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.427 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.489 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.550 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.609 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.670 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.731 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.792 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.851 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.911 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.926 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:45.941 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.000 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.060 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.120 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.181 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.195 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.257 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.316 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.377 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.392 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.453 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.515 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.577 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.636 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.696 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.758 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.819 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.877 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.938 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:46.998 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.060 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.118 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.180 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.239 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.301 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.359 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.419 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.481 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.541 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.556 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.613 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "albumartists_7e64e319657a9516ec78490da03edccb"
+17:39:47.629 >   Artists/
+17:39:47.741 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:47.800 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:47.859 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:47.920 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:47.934 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:47.995 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.055 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.116 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.174 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.235 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.298 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.359 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.418 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.478 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.493 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.506 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.564 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.628 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.688 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.748 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.806 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.866 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.880 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.940 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:48.999 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.058 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.116 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.176 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.190 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.249 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.311 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.325 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.384 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.443 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.504 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.566 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.628 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.685 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.699 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.757 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.817 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.832 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.891 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:49.953 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.016 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.074 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.134 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.193 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.256 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.314 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.375 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.436 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.497 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.559 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.616 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.677 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.738 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.797 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.856 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.915 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:50.977 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.039 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.097 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.112 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.126 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.186 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.244 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.306 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.366 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.381 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.440 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.500 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.559 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.573 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.632 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.694 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.755 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.815 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.874 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.931 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:51.993 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.054 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.111 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.172 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.232 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.294 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.351 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.412 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.473 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.532 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.592 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.652 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.711 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.769 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "artists_7e64e319657a9516ec78490da03edccb"
+17:39:52.783 >   Songs/
+17:39:56.263 >     Let Her Go   item size: 10143623, audio
+17:39:56.268 >     Vincent   item size: 9102671, audio
+17:39:56.272 >     Ride   item size: 11630482, audio
+17:39:56.275 >     All You Zombies   item size: 8620094, audio
+17:39:56.279 >     500 Miles   item size: 6359038, audio
+17:39:56.283 >     74-75   item size: 6753175, audio
+17:39:56.286 >     A New Day Has Come   item size: 6251473, audio
+17:39:56.291 >     A good heart   item size: 9195418, audio
+17:39:56.295 >     A million miles away   item size: 22771074, audio
+17:39:56.300 >     Abracadabra   item size: 12353263, audio
+17:39:56.304 >     Achterbahn   item size: 8459921, audio
+17:39:56.308 >     All Of Me   item size: 8668133, audio
+17:39:56.311 >     All This Time   item size: 4177264, audio
+17:39:56.315 >     All good things   item size: 12455337, audio
+17:39:56.320 >     Always The Sun   item size: 9829742, audio
+17:39:56.324 >     Another Love   item size: 9929167, audio
+17:39:56.328 >     Auf Anderen Wegen   item size: 8025370, audio
+17:39:56.332 >     Auf dich hab ich gewartet   item size: 3688200, audio
+17:39:56.337 >     Auf uns   item size: 9622794, audio
+17:39:56.341 >     Aurelie   item size: 5135931, audio
+17:39:56.345 >     Bad Ideas   item size: 6688084, audio
+17:39:56.348 >     Because The Night   item size: 8944456, audio
+17:39:56.353 >     Big In Japan   item size: 6892958, audio
+17:39:56.357 >     Blue Mesa   item size: 9666929, audio
+17:39:56.360 >     Blueprint   item size: 7962597, audio
+17:39:56.364 >     Born To Be Alive   item size: 6203103, audio
+17:39:56.369 >     Broken   item size: 6073871, audio
+17:39:56.372 >     Broken Sleep   item size: 7115834, audio
+17:39:56.376 >     Carpet Crawl   item size: 12556493, audio
+17:39:56.380 >     China Girl   item size: 6706178, audio
+17:39:56.384 >     Clocks   item size: 12374596, audio
+17:39:56.388 >     Cripple and the Starfish   item size: 6172531, audio
+17:39:56.393 >     Das Spiel   item size: 4293819, audio
+17:39:56.396 >     Der Kommissar   item size: 7459426, audio
+17:39:56.400 >     Do You Really Want To Hurt Me   item size: 10425164, audio
+17:39:56.406 >     Don't Forget About Me   item size: 5705448, audio
+17:39:56.410 >     Done   item size: 6905292, audio
+17:39:56.414 >     Down To The River   item size: 14473215, audio
+17:39:56.417 >     Dutch Mountains   item size: 8555384, audio
+17:39:56.423 >     Electric   item size: 10179145, audio
+17:39:56.426 >     EmptyAudioFile   item size: missing, audio
+17:39:56.431 >     Enjoy the Silence   item size: 4628781, audio
+17:39:56.435 >     Excuse me Mr.   item size: 11870222, audio
+17:39:56.439 >     Excuse me Mr.   item size: 11797545, audio
+17:39:56.443 >     Forever Young   item size: 4556304, audio
+17:39:56.447 >     From the land down under   item size: 3542515, audio
+17:39:56.452 >     Go West   item size: 4833196, audio
+17:39:56.456 >     Gyöngyhajú lány   item size: 10991944, audio
+17:39:56.461 >     Hands Clean   item size: 6528589, audio
+17:39:56.465 >     Hell Or High Water   item size: 8833381, audio
+17:39:56.469 >     Home   item size: 6157651, audio
+17:39:56.472 >     Hotel California   item size: 17327932, audio
+17:39:56.477 >     I Feel Good   item size: 2701318, audio
+17:39:56.481 >     I Follow Rivers   item size: 8581856, audio
+17:39:56.486 >     Incubus Live   item size: 9670576, audio
+17:39:56.489 >     Ist da jemand   item size: 8967839, audio
+17:39:56.493 >     It's Amazing   item size: 6273323, audio
+17:39:56.497 >     Jealous Guy   item size: 7192636, audio
+17:39:56.501 >     Just Hold Me   item size: 6199684, audio
+17:39:56.505 >     Keep Moving On - Live   item size: 12127204, audio
+17:39:56.510 >     Lady In Black   item size: 6774204, audio
+17:39:56.514 >     Lose It   item size: 10791332, audio
+17:39:56.517 >     Love Hurts   item size: 9284867, audio
+17:39:56.521 >     Madrugada - Vocal (Live in Norway)   item size: 10303735, audio
+17:39:56.527 >     Majesty live   item size: 14136935, audio
+17:39:56.531 >     Major Tom (German Version)   item size: 3855747, audio
+17:39:56.537 >     Material World   item size: 7104618, audio
+17:39:56.541 >     My Name Is Luka   item size: 7354786, audio
+17:39:56.545 >     No Milk Today   item size: 5489679, audio
+17:39:56.549 >     Nothing Compares 2 U   item size: 7516934, audio
+17:39:56.554 >     On my way to LA (long)   item size: 6695426, audio
+17:39:56.559 >     One   item size: 7689152, audio
+17:39:56.562 >     One Night in Bangkok   item size: 5003572, audio
+17:39:56.567 >     One Of Us Cannot Be Wrong   item size: 14082497, audio
+17:39:56.572 >     Our house   item size: 5756679, audio
+17:39:56.575 >     Pure Love   item size: 8441184, audio
+17:39:56.580 >     Riverside   item size: 5557406, audio
+17:39:56.583 >     Room With a View   item size: 8140545, audio
+17:39:56.587 >     Ruined Heart   item size: 10102568, audio
+17:39:56.591 >     San Francisco (Be Sure To Wear Flowers In You Hair)   item size: 4341799, audio
+17:39:56.599 >     Save Me   item size: 7161591, audio
+17:39:56.602 >     Set Fire to the Rain   item size: 9696150, audio
+17:39:56.607 >     She Moves   item size: 7784102, audio
+17:39:56.611 >     Sick And Tired   item size: 8348435, audio
+17:39:56.615 >     Sick And Tired   item size: 8348435, audio
+17:39:56.619 >     Sign of the Times   item size: 13667400, audio
+17:39:56.624 >     Simple Man   item size: 14386127, audio
+17:39:56.627 >     Sing   item size: 5434021, audio
+17:39:56.631 >     Slip Away   item size: 8462013, audio
+17:39:56.634 >     Someone new   item size: 5096159, audio
+17:39:56.638 >     Sounds Like A Melody   item size: 9210144, audio
+17:39:56.643 >     Stars   item size: 4746949, audio
+17:39:56.646 >     Stay   item size: 9647394, audio
+17:39:56.650 >     Streets Of London   item size: 9938320, audio
+17:39:56.654 >     Subcity   item size: 9584311, audio
+17:39:56.658 >     Summer In The City   item size: 3888715, audio
+17:39:56.662 >     Summertime Sadness   item size: 9115457, audio
+17:39:56.667 >     Super Girl   item size: 5577366, audio
+17:39:56.671 >     Sweet About Me   item size: 5006892, audio
+17:39:56.675 >     Talk To Me   item size: 7881646, audio
+17:39:56.679 >   Genres/
+17:39:56.772 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:56.830 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:56.889 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:56.950 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.011 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.068 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.129 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.190 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.250 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.307 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.366 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.426 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.488 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.546 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.605 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.661 > [E][SoapESP32.cpp:648] soapScanContainer(): scanned parent id "7e64e319657a9516ec78490da03edccb" != requested parent id "genres_7e64e319657a9516ec78490da03edccb"
+17:39:57.676 >   Favorite Artists/
+17:39:57.704 >   Favorite Albums/
+17:39:57.734 >   Favorite Songs/
+17:39:57.765 > 
+17:39:57.766 > Sketch finished.

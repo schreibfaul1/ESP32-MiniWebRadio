@@ -1,0 +1,413 @@
+14:31:45.833 -> 
+14:31:45.833 -> rst:0x1 (POWERON_RESET),boot:0x13 (SPI_FAST_FLASH_BOOT)
+14:31:45.833 -> configsip: 0, SPIWP:0xee
+14:31:45.833 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+14:31:45.880 -> mode:DIO, clock div:2
+14:31:45.880 -> load:0x3fff0018,len:4
+14:31:45.880 -> load:0x3fff001c,len:1044
+14:31:45.880 -> load:0x40078000,len:8896
+14:31:45.880 -> load:0x40080400,len:5828
+14:31:45.880 -> entry 0x400806ac
+14:31:46.334 -> 
+14:31:46.334 -> D: Starting ESP32-radio running on CPU 1 at 240 MHz.  Version 26 Nov 2020 00:53.  Free memory 232312
+14:31:46.334 -> D: Partition nvs found, 20480 bytes
+14:31:46.334 -> D: Read 62 keys from NVS
+14:31:46.334 -> D: pin_enc_clk set to 25
+14:31:46.381 -> D: pin_enc_dt set to 26
+14:31:46.381 -> D: pin_enc_sw set to 27
+14:31:46.381 -> D: pin_tft_cs set to 15
+14:31:46.381 -> D: pin_tft_dc set to 2
+14:31:46.381 -> D: pin_sd_cs set to 17
+14:31:46.381 -> D: pin_vs_cs set to 5
+14:31:46.381 -> D: pin_vs_dcs set to 16
+14:31:46.381 -> D: pin_vs_dreq set to 4
+14:31:46.381 -> D: pin_shutdown set to -1
+14:31:46.381 -> D: pin_spi_sck set to 18
+14:31:46.381 -> D: pin_spi_miso set to 19
+14:31:46.381 -> D: pin_spi_mosi set to 23
+14:31:46.381 -> D: Start display
+14:31:47.305 -> D: Found SD-Card. Update file on SD-Card ???
+14:31:47.305 -> [E][vfs_api.cpp:64] open(): /sd/firmware.bin does not exist
+14:31:47.358 -> D: No update file on SD card.
+14:31:47.358 -> D: Search for local IP in preferences
+14:31:47.358 -> D: Prefs: ip = 192.168.1.99
+14:31:47.358 -> D: Prefs: ip_dns = 192.168.1.1
+14:31:47.358 -> D: Prefs: ip_gateway = 192.168.1.1
+14:31:47.358 -> D: Prefs: ip_subnet = 255.255.255.0
+14:31:47.358 -> D: initEthernet(true)
+14:31:48.006 -> D: Ethernet link status: up
+14:31:48.106 -> D: Local IP = 192.168.1.99
+14:31:48.106 -> D: Gateway = 192.168.1.1, Subnet Mask = 255.255.255.0, DNS = 192.168.1.1
+14:31:48.106 -> D: Command: clk_server with parameter ptbtime1.ptb.de
+14:31:48.106 -> D: Command: clk_tzstring with parameter CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00
+14:31:48.106 -> D: Command: ip with parameter 192.168.1.99
+14:31:48.160 -> D: Command: ip_dns with parameter 192.168.1.1
+14:31:48.160 -> D: Command: ip_gateway with parameter 192.168.1.1
+14:31:48.160 -> D: Command: ip_subnet with parameter 255.255.255.0
+14:31:48.160 -> D: Command: ir_02fd with parameter repeat
+14:31:48.160 -> D: Command: ir_10ef with parameter preset = 4
+14:31:48.160 -> D: Command: ir_18e7 with parameter preset = 2
+14:31:48.160 -> D: Command: ir_22dd with parameter mode
+14:31:48.160 -> D: Command: ir_30cf with parameter preset = 1
+14:31:48.160 -> D: Command: ir_38c7 with parameter preset = 5
+14:31:48.160 -> D: Command: ir_42bd with parameter preset = 7
+14:31:48.160 -> D: Command: ir_4ab5 with parameter preset = 8
+14:31:48.160 -> D: Command: ir_52ad with parameter preset = 9
+14:31:48.160 -> D: Command: ir_5aa5 with parameter preset = 6
+14:31:48.207 -> D: Command: ir_629d with parameter stop
+14:31:48.207 -> D: Command: ir_6897 with parameter downvolume = 2
+14:31:48.207 -> D: Command: ir_7a85 with parameter preset = 3
+14:31:48.207 -> D: Command: ir_906f with parameter pause
+14:31:48.207 -> D: Command: ir_9867 with parameter upvolume = 2
+14:31:48.207 -> D: Command: ir_a857 with parameter next
+14:31:48.207 -> D: Command: ir_b04f with parameter preset = 0
+14:31:48.207 -> D: Command: ir_e01f with parameter previous
+14:31:48.207 -> D: Command: ir_e21d with parameter mute
+14:31:48.207 -> D: Command: preset with parameter 17
+14:31:48.207 -> D: Command: preset_00 with parameter mp3channels.webradio.antenne.de:80/antenne
+14:31:48.260 -> D: Command: preset_01 with parameter mp3channels.webradio.antenne.de:80/oldies-but-goldies
+14:31:48.260 -> D: Command: preset_02 with parameter mp3channels.webradio.antenne.de:80/chillout
+14:31:48.260 -> D: Command: preset_03 with parameter mp3channels.webradio.antenne.de:80/lovesongs
+14:31:48.260 -> D: Command: preset_04 with parameter mp3channels.webradio.antenne.de/90er-hits
+14:31:48.260 -> D: Command: preset_05 with parameter scast.regenbogen.de/live
+14:31:48.260 -> D: Command: preset_06 with parameter scast.regenbogen.de/dpop-128-mp3
+14:31:48.260 -> D: Command: preset_07 with parameter scast.regenbogen.de/oldies-128-mp3
+14:31:48.260 -> D: Command: preset_08 with parameter scast.regenbogen.de/crock-128-mp3
+14:31:48.307 -> D: Command: preset_09 with parameter scast.regenbogen.de/live5
+14:31:48.307 -> D: Command: preset_10 with parameter swr-swr3-live.cast.addradio.de/swr/swr3/live/mp3/128/stream.mp3
+14:31:48.307 -> D: Command: preset_11 with parameter stream.rtlradio.de/rtl-de-national/mp3-192
+14:31:48.307 -> D: Command: preset_12 with parameter stream.rtlradio.de/rtl-de-beste-hits/mp3-192
+14:31:48.307 -> D: Command: preset_13 with parameter rbb-radioeins-live.cast.addradio.de/rbb/radioeins/live/mp3/128/stream.mp3
+14:31:48.307 -> D: Command: preset_14 with parameter stream.srg-ssr.ch/m/drs3/mp3_128
+14:31:48.307 -> D: Command: preset_15 with parameter stream.srg-ssr.ch/m/rsp/mp3_128
+14:31:48.360 -> D: Command: preset_16 with parameter radiopilatus.ice.infomaniak.ch/pilatus192.mp3
+14:31:48.360 -> D: Command: preset_17 with parameter sunshineradio.ice.infomaniak.ch/sunshineradio-128.mp3
+14:31:48.360 -> D: Command: preset_18 with parameter 184.152.16.121:8098/
+14:31:48.360 -> D: Command: preset_19 with parameter legacy.scahw.com.au/2classicrock_32
+14:31:48.360 -> D: Command: preset_20 with parameter legacy.scahw.com.au/6classicrock_32
+14:31:48.360 -> D: Command: preset_21 with parameter ihr/WAQXFM
+14:31:48.360 -> D: Command: preset_22 with parameter ihr/WLAVFM
+14:31:48.360 -> D: Command: preset_23 with parameter ihr/WHTSFM
+14:31:48.360 -> D: Command: preset_24 with parameter ihr/WIXXFM
+14:31:48.407 -> D: Command: srv_controlurl with parameter TMSContentDirectory/Control
+14:31:48.407 -> D: Command: srv_ip with parameter 192.168.1.50
+14:31:48.407 -> D: Command: srv_mac with parameter 18:C2:BF:1C:6F:DF
+14:31:48.407 -> D: Command: srv_port with parameter 9050
+14:31:48.407 -> D: Command: toneha with parameter 0
+14:31:48.407 -> D: Command: tonehf with parameter 1
+14:31:48.407 -> D: Command: tonela with parameter 0
+14:31:48.407 -> D: Command: tonelf with parameter 11
+14:31:48.407 -> D: Command: volume with parameter 92
+14:31:48.407 -> D: Media server settings: mac="18:C2:BF:1C:6F:DF", ip=192.168.1.50, port=9050, controlUrl="TMSContentDirectory/Control"
+14:31:48.460 -> D: findHighestPreset(): erg = 24
+14:31:48.561 -> D: Slow SPI, Testing VS1053 read/write registers...
+14:31:48.793 -> D: VS1053B loading patch V2.7
+14:31:49.680 -> D: Fast SPI, Testing VS1053 read/write registers again...
+14:31:50.882 -> D: VS1053B endFillByte is 0
+14:31:50.882 -> D: VS1053B Status Register = 0x0040
+14:31:50.882 -> D: VS1053B setting SS_REFERENCE_SEL bit(s) [see VS1053-patches.pdf, Chapter 1.1]
+14:31:50.882 -> D: VS1053B Status Register now = 0x0141
+14:31:50.882 -> D: VS1053B setting VU-Meter bit [see VS1053-patches.pdf, Chapter 1.2]
+14:31:50.882 -> D: VS1053B Status Register now = 0x0341
+14:31:50.882 -> D: VS1053B I2S interface enabled: MCLK active, Sample Rate = 48kHz
+14:31:50.882 -> D: TOSLINK optical output ok.
+14:31:51.014 -> D: Start server for commands on port 80
+14:31:54.028 -> D: Rotary encoder is enabled (clk:25,dt:26,sw:27)
+14:31:54.028 -> D: Sync TOD
+14:31:54.175 -> D: NTP server response after 100 ms from ptbtime1.ptb.de
+14:31:54.175 -> D: Posix time zone string: "CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00"
+14:31:54.175 -> D: TZ applied -> Date: 1.2.2021 Time: 14:31
+14:31:54.175 -> D: Sync TOD successful, new value is 14:31
+14:31:54.175 -> D: mp3loop: ini_block.newpreset[17] != currentPreset[-1]
+14:31:54.175 -> D: mp3loop: New preset/file requested (17/0) from sunshineradio.ice.infomaniak.ch/sunshineradio-128.mp3
+14:31:54.229 -> D: mp3loop: hostreq=true
+14:31:54.329 -> D: Connect to host sunshineradio.ice.infomaniak.ch/sunshineradio-128.mp3
+14:31:54.329 -> D: Server sunshineradio.ice.infomaniak.ch, port 80, extension /sunshineradio-128.mp3
+14:31:54.430 -> D: Successfully connected to server
+14:31:55.195 -> D: Switch to HEADER
+14:31:55.195 -> D: Headerline: icy-br: 128
+14:31:55.232 -> D: Headerline: icy-pub: 1
+14:31:55.232 -> D: utf8ascii() ---> Special Char: 0xFC, return: 0x75
+14:31:55.232 -> D: Headerline: icy-description: News & Hits fur Zentralschwiiz
+14:31:55.232 -> D: Headerline: icy-audio-info: ice-samplerate=44100;ice-bitrate=128;ice-channels=2
+14:31:55.232 -> D: Headerline: icy-url: http://www.sunshine.ch
+14:31:55.232 -> D: Headerline: Instance-id: e7441b0d5c7e7c273c1a236480dd0f9e
+14:31:55.232 -> D: Headerline: Cache-Control: no-cache
+14:31:55.232 -> D: Headerline: Server: AIS aise10.infomaniak.ch Streaming Server 8.5.6
+14:31:55.280 -> D: Headerline: icy-genre: Top40
+14:31:55.280 -> D: Headerline: Expires: Mon, 26 Jul 1997 05:00:00 GMT
+14:31:55.280 -> D: Headerline: icy-metaint: 16000
+14:31:55.280 -> D: Headerline: Pragma: no-cache
+14:31:55.280 -> D: Headerline: icy-name: Sunshine Radio
+14:31:55.280 -> D: Headerline: Connection: close
+14:31:55.280 -> D: Headerline: Content-Type: audio/mpeg
+14:31:55.280 -> D: Headerline: Set-Cookie: AISSessionId=5f9941bbf7a73ca9_8306973_eTmSpSLY_MTg1Ljc0LjcwLjEy_0000002vWAR; Path=/; Domain=sunshineradio.ice.infomaniak.ch; Max-Age=6000; Expires=Mon, 01 Feb 2021 15:11:54 GMT
+14:31:55.280 -> D: Switch to DATA, bitrate is 128kbps, metaint is 16000
+14:31:55.648 -> D: StreamTitle='AVA MAX - WHO'S LAUGHING NOW';StreamUrl='';
+14:32:06.712 -> D: FM+AM Buttons pressed at once
+14:32:06.712 -> D: Mediaserver mode requested
+14:32:06.712 -> D: STOP (buttonMediaserver)
+14:32:06.712 -> D: stopMp3client(): mp3client still connected. Try to disconnect.
+14:32:08.175 -> D: Search in media server container "0" (Root)
+14:32:08.175 -> [I][SoapESP32.cpp:820] browseServer(): server: "Media Server", objectId: "0"
+14:32:08.221 -> [I][SoapESP32.cpp:838] browseServer(): connected successfully to server 192.168.1.50:9050
+14:32:08.221 -> [I][SoapESP32.cpp:861] browseServer(): scan answer from media server:
+14:32:08.221 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Music" (id: "0$1", childCount: 11) added to list
+14:32:08.221 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Photos" (id: "0$2", childCount: 8) added to list
+14:32:08.275 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Videos" (id: "0$3", childCount: 7) added to list
+14:32:08.275 -> [I][SoapESP32.cpp:921] browseServer(): found 3 folders and 0 files
+14:32:08.275 -> D: Encoder mode set to SELECT
+14:32:08.275 -> D: Total minimum free memory of all regions: 179444 Bytes, FreeHeap: 154308 Bytes, minEverFreeHeap: 153852, minStack: 5948 Bytes
+14:32:08.275 -> 
+14:32:08.275 -> D: mp3loop: STOP requested
+14:32:09.409 -> D: rotationcount: 1
+14:32:09.726 -> D: rotationcount: 1
+14:32:10.460 -> D: rotationcount: -1
+14:32:10.829 -> D: rotationcount: -1
+14:32:12.606 -> D: Single click
+14:32:12.606 -> D: Search in media server container "Music" (child count: 11)
+14:32:12.606 -> [I][SoapESP32.cpp:820] browseServer(): server: "Media Server", objectId: "0$1"
+14:32:12.785 -> [I][SoapESP32.cpp:838] browseServer(): connected successfully to server 192.168.1.50:9050
+14:32:12.785 -> [I][SoapESP32.cpp:861] browseServer(): scan answer from media server:
+14:32:12.785 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Album" (id: "0$1$12", childCount: 340) added to list
+14:32:12.785 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "All Tracks" (id: "0$1$8", childCount: 2633) added to list
+14:32:12.822 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Artist" (id: "0$1$11", childCount: 266) added to list
+14:32:12.822 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Artist Index" (id: "0$1$15", childCount: 8) added to list
+14:32:12.822 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Artist/Album" (id: "0$1$16", childCount: 266) added to list
+14:32:12.822 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "By Folder" (id: "0$1$13", childCount: 1) added to list
+14:32:12.870 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Genre/Album" (id: "0$1$17", childCount: 66) added to list
+14:32:12.870 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Genre/Artist" (id: "0$1$18", childCount: 67) added to list
+14:32:12.870 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Genre/Song" (id: "0$1$10", childCount: 66) added to list
+14:32:12.870 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Personal rating" (id: "0$1$14", childCount: 2) added to list
+14:32:12.870 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Playlists" (id: "0$1$9", childCount: 4) added to list
+14:32:12.917 -> [I][SoapESP32.cpp:921] browseServer(): found 11 folders and 0 files
+14:32:12.917 -> Total minimum free memory of all regions: 177080 Bytes, FreeHeap: 152744 Bytes, minEverFreeHeap: 151488, minStack: 5900 Bytes
+14:32:13.802 -> D: rotationcount: 1
+14:32:14.125 -> D: rotationcount: 1
+14:32:14.442 -> D: rotationcount: 1
+14:32:14.726 -> D: rotationcount: 1
+14:32:14.990 -> D: rotationcount: 1
+14:32:15.315 -> D: rotationcount: 1
+14:32:15.663 -> D: rotationcount: 1
+14:32:16.065 -> D: rotationcount: 1
+14:32:16.519 -> D: rotationcount: 1
+14:32:16.947 -> D: rotationcount: 1
+14:32:17.922 -> D: rotationcount: 1
+14:32:17.922 -> D: no more items in this directory "Music" to come - end of list
+14:32:18.539 -> D: rotationcount: -1
+14:32:18.771 -> D: rotationcount: -1
+14:32:19.025 -> D: rotationcount: -1
+14:32:19.326 -> D: rotationcount: -1
+14:32:19.627 -> D: rotationcount: -1
+14:32:20.276 -> D: rotationcount: -1
+14:32:20.310 -> D: rotationcount: -1
+14:32:20.629 -> D: rotationcount: 1
+14:32:20.729 -> D: rotationcount: -1
+14:32:22.559 -> D: rotationcount: -1
+14:32:24.731 -> D: Single click
+14:32:24.731 -> D: Search in media server container "Artist" (child count: 266)
+14:32:24.731 -> [I][SoapESP32.cpp:820] browseServer(): server: "Media Server", objectId: "0$1$11"
+14:32:24.831 -> [I][SoapESP32.cpp:838] browseServer(): connected successfully to server 192.168.1.50:9050
+14:32:24.831 -> [I][SoapESP32.cpp:861] browseServer(): scan answer from media server:
+14:32:24.831 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "- ALL -" (id: "0$1$11$41", childCount: 2633) added to list
+14:32:24.878 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "A-ha" (id: "0$1$11$5007", childCount: 16) added to list
+14:32:24.878 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "ABBA" (id: "0$1$11$5793", childCount: 19) added to list
+14:32:24.878 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Adele" (id: "0$1$11$6691", childCount: 1) added to list
+14:32:24.878 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Agnes Obel" (id: "0$1$11$7398", childCount: 1) added to list
+14:32:24.932 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Alanis Morissette" (id: "0$1$11$6474", childCount: 1) added to list
+14:32:24.932 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Alle Farben" (id: "0$1$11$6994", childCount: 2) added to list
+14:32:24.932 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Alphaville" (id: "0$1$11$6760", childCount: 3) added to list
+14:32:24.932 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Amy Macdonald" (id: "0$1$11$6520", childCount: 1) added to list
+14:32:24.979 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Anastacia" (id: "0$1$11$6314", childCount: 1) added to list
+14:32:24.979 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Ane Brun" (id: "0$1$11$4693", childCount: 8) added to list
+14:32:24.979 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Asaf Avidan & The Mojos" (id: "0$1$11$7445", childCount: 1) added to list
+14:32:24.979 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Austra" (id: "0$1$11$7307", childCount: 3) added to list
+14:32:25.032 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Barclay James Harvest" (id: "0$1$11$4905", childCount: 9) added to list
+14:32:25.032 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Ben Harper" (id: "0$1$11$5310", childCount: 15) added to list
+14:32:25.032 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Ben Harper & The Innocent Criminals" (id: "0$1$11$5330", childCount: 25) added to list
+14:32:25.032 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Bing Austria & The Flippin' Soul Stompers" (id: "0$1$11$7353", childCount: 1) added to list
+14:32:25.079 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Blondie" (id: "0$1$11$5358", childCount: 15) added to list
+14:32:25.079 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Bob Dylan" (id: "0$1$11$5196", childCount: 58) added to list
+14:32:25.079 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Bob Marley & The Wailers" (id: "0$1$11$5642", childCount: 13) added to list
+14:32:25.079 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Bruce Hornsby" (id: "0$1$11$7116", childCount: 1) added to list
+14:32:25.132 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Bruce Springsteen" (id: "0$1$11$4970", childCount: 25) added to list
+14:32:25.132 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Carla Bruni" (id: "0$1$11$7260", childCount: 1) added to list
+14:32:25.132 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Cat Stevens" (id: "0$1$11$4950", childCount: 18) added to list
+14:32:25.132 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Celine Dion" (id: "0$1$11$6778", childCount: 1) added to list
+14:32:25.179 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye D'En-Calcat" (id: "0$1$11$4270", childCount: 2) added to list
+14:32:25.179 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye De Citeaux" (id: "0$1$11$4296", childCount: 1) added to list
+14:32:25.179 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye De Ligugé" (id: "0$1$11$4152", childCount: 4) added to list
+14:32:25.233 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye De Saint-Wandrille" (id: "0$1$11$4244", childCount: 1) added to list
+14:32:25.233 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye De Sept-Fons" (id: "0$1$11$4309", childCount: 1) added to list
+14:32:25.233 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye De Timadeuc" (id: "0$1$11$4231", childCount: 1) added to list
+14:32:25.280 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Des Moines De L'Abbaye Saint-Pierre De Solesmes" (id: "0$1$11$4283", childCount: 1) added to list
+14:32:25.280 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choeur Grégorien De Paris" (id: "0$1$11$4166", childCount: 1) added to list
+14:32:25.280 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Choralschola und Stiftschor des Klosters Einsiedeln" (id: "0$1$11$4348", childCount: 29) added to list
+14:32:25.333 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Chris de Burgh" (id: "0$1$11$4930", childCount: 15) added to list
+14:32:25.333 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Chris Isaac" (id: "0$1$11$6552", childCount: 1) added to list
+14:32:25.333 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Coldplay" (id: "0$1$11$7103", childCount: 1) added to list
+14:32:25.333 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Connells" (id: "0$1$11$6425", childCount: 1) added to list
+14:32:25.333 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Crash Test Dummies" (id: "0$1$11$5470", childCount: 12) added to list
+14:32:25.380 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Crowded House" (id: "0$1$11$5490", childCount: 19) added to list
+14:32:25.380 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Culture Club" (id: "0$1$11$7206", childCount: 1) added to list
+14:32:25.380 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D. Alberto Lizzio; O: Musici de San Marco" (id: "0$1$11$780", childCount: 12) added to list
+14:32:25.433 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Alberto Lizzio; O: Camerata Romana" (id: "0$1$11$1273", childCount: 3) added to list
+14:32:25.433 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Alfred Scholz; O: Philharmonia Slavonica" (id: "0$1$11$1128", childCount: 4) added to list
+14:32:25.433 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Alfred Scholz; O: Süddeutsche Philharmonie" (id: "0$1$11$1196", childCount: 16) added to list
+14:32:25.433 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Anton Nanut; O: Rundfunk-Sinfonie-Orchester Ljubljana" (id: "0$1$11$3353", childCount: 5) added to list
+14:32:25.480 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Arturo Toscanini" (id: "0$1$11$3265", childCount: 7) added to list
+14:32:25.480 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Arturo Toscanini; O: NBC Symphony Orchestra; Westminster Choir" (id: "0$1$11$3307", childCount: 1) added to list
+14:32:25.518 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: August Wenzinger; O: Schola Cantorum Basiliensis" (id: "0$1$11$4099", childCount: 1) added to list
+14:32:25.518 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Bernard Haitink - O:Concertgebouw Orchestra" (id: "0$1$11$3572", childCount: 22) added to list
+14:32:25.518 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Bernhard Klee, O: Staatskapelle Dresden" (id: "0$1$11$1475", childCount: 1) added to list
+14:32:25.565 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Carlos Kleiber; O: Bayerisches Staatsorchester" (id: "0$1$11$3241", childCount: 38) added to list
+14:32:25.565 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Charles Dutoit - O: Orchestre symphonique de Montréal" (id: "0$1$11$3171", childCount: 5) added to list
+14:32:25.565 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Christopher Hogwood, O: The Academy of Ancient Music" (id: "0$1$11$1086", childCount: 4) added to list
+14:32:25.612 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Christopher Hogwood; O:The Academy of Ancient Music" (id: "0$1$11$752", childCount: 12) added to list
+14:32:25.612 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Claudio Abbado - O: London Symphony Orchestra" (id: "0$1$11$2469", childCount: 49) added to list
+14:32:25.650 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Claudio Abbado, O: London Symphony Orchestra" (id: "0$1$11$3394", childCount: 13) added to list
+14:32:25.650 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Clauio Abbado; O: Chicago Symphony Orchestra" (id: "0$1$11$3373", childCount: 4) added to list
+14:32:25.696 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Dmitri Kitajenko; O: Philharmonic Orchestra" (id: "0$1$11$2965", childCount: 19) added to list
+14:32:25.696 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Ettore Gracis, O: Solisti dell' Orchestra 'Scarlatti'-Napoli" (id: "0$1$11$4005", childCount: 1) added to list
+14:32:25.696 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Frans Brüggen; O: Orchestra of the 18th Century" (id: "0$1$11$1175", childCount: 8) added to list
+14:32:25.734 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Franz Welser-Möst" (id: "0$1$11$3709", childCount: 28) added to list
+14:32:25.734 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Georg Solti; O: Wiener Philharmoniker" (id: "0$1$11$2438", childCount: 6) added to list
+14:32:25.734 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Günther Arendt; O: Günther-Arndt-Chor" (id: "0$1$11$4060", childCount: 1) added to list
+14:32:25.781 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Günther Arndt; O: Berliner Händel-Chor" (id: "0$1$11$4019", childCount: 1) added to list
+14:32:25.781 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Horst Stein; O: L'Orchestre de la Suisse Romande" (id: "0$1$11$3522", childCount: 3) added to list
+14:32:25.834 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: John Eliot Gardiner; O English Barock Solists" (id: "0$1$11$1513", childCount: 15) added to list
+14:32:25.834 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Karl Böhm, O: Berliner Philharmoniker" (id: "0$1$11$1421", childCount: 7) added to list
+14:32:25.834 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Karl Böhm, O: Wiener Philharmoniker" (id: "0$1$11$1370", childCount: 4) added to list
+14:32:25.834 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Karl Böhm; O: Wiener Philharmoniker" (id: "0$1$11$1391", childCount: 4) added to list
+14:32:25.881 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Karl Richter; O: Münchener Bach-Orchester" (id: "0$1$11$3992", childCount: 1) added to list
+14:32:25.881 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Karl Richter; O: Münchener Bach-Orchester, Münchener Bach-Chor" (id: "0$1$11$3979", childCount: 1) added to list
+14:32:25.935 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Kurt Masur; O: Gewandhausorchester Leipzig" (id: "0$1$11$2495", childCount: 21) added to list
+14:32:25.935 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Leonard Bernstein, O: Wiener Philharmoniker" (id: "0$1$11$1915", childCount: 16) added to list
+14:32:25.935 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Leonard Bernstein; O: Concertgebouworkest Amsterdam" (id: "0$1$11$2413", childCount: 4) added to list
+14:32:25.935 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Leonard Berstein, O: Israel Philharmonic Orchestra" (id: "0$1$11$2036", childCount: 7) added to list
+14:32:25.982 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Lorin Maazel; O: Wiener Philharmoniker" (id: "0$1$11$3501", childCount: 3) added to list
+14:32:25.982 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Marko Munih, O: Radio Symphony Orchestra" (id: "0$1$11$4468", childCount: 6) added to list
+14:32:26.035 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Neville Marriner, O: Academy of St Martin in the Fields" (id: "0$1$11$3145", childCount: 12) added to list
+14:32:26.035 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Neville Marriner; O: Philharmonia Orchestra" (id: "0$1$11$2909", childCount: 11) added to list
+14:32:26.035 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Rafael Kubeli, O: Symphonieorchester des Bayerischen Rundfunks" (id: "0$1$11$3099", childCount: 6) added to list
+14:32:26.082 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Rafael Kubelik, O: Berliner Philharmoniker" (id: "0$1$11$342", childCount: 24) added to list
+14:32:26.082 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Rafael Kubelik, O: Symphonie-Orchester des Bayerischen Rundfunks" (id: "0$1$11$1447", childCount: 12) added to list
+14:32:26.082 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Rafael Kubelik; O: Boston Symphony Orchestra" (id: "0$1$11$3070", childCount: 1) added to list
+14:32:26.135 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Rafael Kubelik; O: Chor und Symphonie-Orchester des Bayerischen Rundfunks" (id: "0$1$11$4033", childCount: 1) added to list
+14:32:26.135 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Ricardo Muti; O: Orchestra e coro del Maggio Musicale Fliorentino" (id: "0$1$11$2392", childCount: 10) added to list
+14:32:26.135 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Riccardo Muti; O: Philharmonia Orchestra" (id: "0$1$11$3286", childCount: 41) added to list
+14:32:26.182 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Roger Norrington; O: The London Classical Players" (id: "0$1$11$2363", childCount: 7) added to list
+14:32:26.182 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Seiji Ozawa; O: Boston Symphony Orchestra" (id: "0$1$11$3418", childCount: 1) added to list
+14:32:26.182 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Simone Pittau; O: London Symphony Orchestra" (id: "0$1$11$3613", childCount: 8) added to list
+14:32:26.235 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Sir Georg Solti - O: Wiener Philharmoniker" (id: "0$1$11$1979", childCount: 36) added to list
+14:32:26.235 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Sir Neville Marriner -  O: Academy of St Martin-in-the-Fields" (id: "0$1$11$1065", childCount: 4) added to list
+14:32:26.235 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Sir Neville Marriner - O: Academy of St Martin-in-the-Fields" (id: "0$1$11$1037", childCount: 4) added to list
+14:32:26.282 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Sir Neville Marriner, O: London Symphony Orchestra" (id: "0$1$11$3738", childCount: 15) added to list
+14:32:26.282 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Solti; O: Chicago Symphony Orchestra" (id: "0$1$11$2938", childCount: 16) added to list
+14:32:26.282 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Suomi Sävelin" (id: "0$1$11$3472", childCount: 26) added to list
+14:32:26.336 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Trevor Pinnock; O: The English Concert" (id: "0$1$11$91", childCount: 43) added to list
+14:32:26.336 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "D: Vladimir Petroschoff; O: Philharmonic Festival Orchestra" (id: "0$1$11$3328", childCount: 4) added to list
+14:32:26.336 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "David Bowie" (id: "0$1$11$5773", childCount: 21) added to list
+14:32:26.382 -> [I][SoapESP32.cpp:658] soapScanContainer(): folder "Deep Purple" (id: "0$1$11$5708", childCount: 5) added to list
+14:32:26.382 -> [I][SoapESP32.cpp:921] browseServer(): found 100 folders and 0 files
+14:32:26.382 -> Total minimum free memory of all regions: 148524 Bytes, FreeHeap: 131988 Bytes, minEverFreeHeap: 122932, minStack: 5852 Bytes
+14:32:27.168 -> D: rotationcount: 1
+14:32:27.516 -> D: rotationcount: 1
+14:32:27.839 -> D: rotationcount: 1
+14:32:28.086 -> D: rotationcount: 1
+14:32:28.418 -> D: rotationcount: 1
+14:32:28.788 -> D: rotationcount: 1
+14:32:29.205 -> D: rotationcount: 1
+14:32:29.784 -> D: rotationcount: 1
+14:32:30.045 -> D: rotationcount: 1
+14:32:30.346 -> D: rotationcount: 1
+14:32:30.832 -> D: rotationcount: -1
+14:32:31.151 -> D: rotationcount: -1
+14:32:31.637 -> D: rotationcount: -1
+14:32:33.516 -> D: Single click
+14:32:33.516 -> D: Search in media server container "Alphaville" (child count: 3)
+14:32:33.516 -> [I][SoapESP32.cpp:820] browseServer(): server: "Media Server", objectId: "0$1$11$6760"
+14:32:33.516 -> [I][SoapESP32.cpp:838] browseServer(): connected successfully to server 192.168.1.50:9050
+14:32:33.516 -> [I][SoapESP32.cpp:861] browseServer(): scan answer from media server:
+14:32:33.563 -> [W][SoapESP32.cpp:592] soapScanAttribute(): attribute: "sampleFrequency=" not found.
+14:32:33.616 -> [I][SoapESP32.cpp:797] soapScanItem(): file "Big In Japan" (id: "0$1$11$6760R5805066", size: 6958721, type: audio) added to list
+14:32:33.616 -> [W][SoapESP32.cpp:592] soapScanAttribute(): attribute: "sampleFrequency=" not found.
+14:32:33.616 -> [I][SoapESP32.cpp:797] soapScanItem(): file "Forever Young" (id: "0$1$11$6760R5795850", size: 4613637, type: audio) added to list
+14:32:33.663 -> [W][SoapESP32.cpp:592] soapScanAttribute(): attribute: "sampleFrequency=" not found.
+14:32:33.663 -> [I][SoapESP32.cpp:797] soapScanItem(): file "Sounds Like A Melody" (id: "0$1$11$6760R5797130", size: 9267454, type: audio) added to list
+14:32:33.717 -> [I][SoapESP32.cpp:921] browseServer(): found 0 folders and 3 files
+14:32:33.717 -> Total minimum free memory of all regions: 148524 Bytes, FreeHeap: 139972 Bytes, minEverFreeHeap: 122932, minStack: 5612 Bytes
+14:32:34.920 -> D: rotationcount: 1
+14:32:35.679 -> D: rotationcount: 1
+14:32:37.437 -> D: Single click
+14:32:37.437 -> D: Selected host=soap/disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5797130.mp3
+14:32:37.437 -> Total minimum free memory of all regions: 148524 Bytes, FreeHeap: 139796 Bytes, minEverFreeHeap: 122932, minStack: 5612 Bytes
+14:32:37.437 -> D: mp3loop: hostreq=true
+14:32:37.437 -> [I][SoapESP32.cpp:940] readStart(): server ip: 192.168.1.50, port: 9050, uri: "disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5797130.mp3"
+14:32:37.537 -> D: readStart("disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5797130.mp3") successful
+14:32:37.584 -> D: handleID3: Looking for ID3 tags in soap/disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5797130.mp3
+14:32:37.584 -> D: SOAP TPE1 = Alphaville
+14:32:37.584 -> D: SOAP TIT2 = Sounds Like A Melody
+14:32:37.584 -> D: SOAP TALB = Car-CD 3
+14:32:37.584 -> D: mp3loop: handleID3() returns ok, dataMode=DATA
+14:32:51.067 -> D: FM Mode Button pressed
+14:32:51.067 -> D: Command: next with parameter 0
+14:32:51.067 -> D: nextSoapFileIndex: soapList.size=3 inx=2 delta=1 return=0
+14:32:51.067 -> D: Next playing: "Big In Japan"
+14:32:51.067 -> D: STOP (command: next file in soap list)
+14:32:51.067 -> D: mp3loop: STOP requested
+14:32:52.046 -> D: mp3loop: media server data connection closed
+14:32:52.046 -> D: mp3loop: hostreq=true
+14:32:52.046 -> [I][SoapESP32.cpp:940] readStart(): server ip: 192.168.1.50, port: 9050, uri: "disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5805066.mp3"
+14:32:52.226 -> D: readStart("disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5805066.mp3") successful
+14:32:52.226 -> D: handleID3: Looking for ID3 tags in soap/disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5805066.mp3
+14:32:52.226 -> D: SOAP TPE1 = Alphaville
+14:32:52.226 -> D: SOAP TIT2 = Big In Japan
+14:32:52.226 -> D: SOAP TALB = Car-CD 5
+14:32:52.226 -> D: mp3loop: handleID3() returns ok, dataMode=DATA
+14:33:03.570 -> D: FM Mode Button pressed
+14:33:03.623 -> D: Command: next with parameter 0
+14:33:03.623 -> D: nextSoapFileIndex: soapList.size=3 inx=0 delta=1 return=1
+14:33:03.623 -> D: Next playing: "Forever Young"
+14:33:03.623 -> D: STOP (command: next file in soap list)
+14:33:03.623 -> D: mp3loop: STOP requested
+14:33:04.626 -> D: mp3loop: media server data connection closed
+14:33:04.626 -> D: mp3loop: hostreq=true
+14:33:04.626 -> [I][SoapESP32.cpp:940] readStart(): server ip: 192.168.1.50, port: 9050, uri: "disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5795850.mp3"
+14:33:04.727 -> D: readStart("disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5795850.mp3") successful
+14:33:04.774 -> D: handleID3: Looking for ID3 tags in soap/disk/DLNA-PNMP3-OP01-FLAGS01700000/O0$1$8I5795850.mp3
+14:33:04.774 -> D: SOAP TPE1 = Alphaville
+14:33:04.774 -> D: SOAP TIT2 = Forever Young
+14:33:04.774 -> D: SOAP TALB = Car-CD 3
+14:33:04.774 -> D: mp3loop: handleID3() returns ok, dataMode=DATA
+14:33:22.114 -> D: AM Button pressed
+14:33:22.158 -> D: Station mode requested
+14:33:22.158 -> D: STOP (buttonStation)
+14:33:22.158 -> D: mp3loop: STOP requested
+14:33:23.160 -> D: mp3loop: media server data connection closed
+14:33:23.160 -> D: mp3loop: ini_block.newpreset[17] != currentPreset[-1]
+14:33:23.160 -> D: mp3loop: New preset/file requested (17/0) from sunshineradio.ice.infomaniak.ch/sunshineradio-128.mp3
+14:33:23.160 -> D: mp3loop: hostreq=true
+14:33:23.317 -> D: Connect to host sunshineradio.ice.infomaniak.ch/sunshineradio-128.mp3
+14:33:23.317 -> D: Server sunshineradio.ice.infomaniak.ch, port 80, extension /sunshineradio-128.mp3
+14:33:23.417 -> D: Successfully connected to server
+14:33:24.066 -> D: Switch to HEADER
+14:33:24.066 -> D: Headerline: icy-br: 128
+14:33:24.066 -> D: Headerline: icy-pub: 1
+14:33:24.066 -> D: utf8ascii() ---> Special Char: 0xFC, return: 0x75
+14:33:24.066 -> D: Headerline: icy-description: News & Hits fur Zentralschwiiz
+14:33:24.066 -> D: Headerline: icy-audio-info: ice-samplerate=44100;ice-bitrate=128;ice-channels=2
+14:33:24.066 -> D: Headerline: icy-url: http://www.sunshine.ch
+14:33:24.066 -> D: Headerline: Instance-id: c31aada7e71187f2d2c696812d8650ca
+14:33:24.066 -> D: Headerline: Cache-Control: no-cache
+14:33:24.066 -> D: Headerline: Server: AIS aise1.infomaniak.ch Streaming Server 8.5.6
+14:33:24.066 -> D: Headerline: icy-genre: Top40
+14:33:24.120 -> D: Headerline: Expires: Mon, 26 Jul 1997 05:00:00 GMT
+14:33:24.120 -> D: Headerline: icy-metaint: 16000
+14:33:24.120 -> D: Headerline: Pragma: no-cache
+14:33:24.120 -> D: Headerline: icy-name: Sunshine Radio
+14:33:24.120 -> D: Headerline: Connection: close
+14:33:24.120 -> D: Headerline: Content-Type: audio/mpeg
+14:33:24.120 -> D: Headerline: Set-Cookie: AISSessionId=5f9a68f4d09655e3_8231470_1w1SF4hz_MTg1Ljc0LjcwLjM!_0000001f0EB; Path=/; Domain=sunshineradio.ice.infomaniak.ch; Max-Age=6000; Expires=Mon, 01 Feb 2021 15:13:23 GMT
+14:33:24.120 -> D: Switch to DATA, bitrate is 128kbps, metaint is 16000
+14:33:24.521 -> D: StreamTitle='AMY WINEHOUSE - REHAB';StreamUrl='';

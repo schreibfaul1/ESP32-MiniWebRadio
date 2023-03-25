@@ -1,0 +1,758 @@
+18:35:54.283 -> ets Jun  8 2016 00:22:57
+18:35:54.283 -> 
+18:35:54.283 -> rst:0x1 (POWERON_RESET),boot:0x33 (SPI_FAST_FLASH_BOOT)
+18:35:54.283 -> configsip: 0, SPIWP:0xee
+18:35:54.283 -> clk_drv:0x00,q_drv:0x00,d_drv:0x00,cs0_drv:0x00,hd_drv:0x00,wp_drv:0x00
+18:35:54.283 -> mode:DIO, clock div:1
+18:35:54.283 -> load:0x3fff0018,len:4
+18:35:54.318 -> load:0x3fff001c,len:1216
+18:35:54.318 -> ho 0 tail 12 room 4
+18:35:54.318 -> load:0x40078000,len:9720
+18:35:54.318 -> ho 0 tail 12 room 4
+18:35:54.318 -> load:0x40080400,len:6352
+18:35:54.318 -> entry 0x400806b8
+18:35:54.564 -> 
+18:35:54.564 -> Connecting to WiFi network ........
+18:35:58.660 -> Connected successfully. IP address: 192.168.1.44
+18:35:58.660 -> 
+18:35:58.660 -> Scanning local network for DLNA media servers...
+18:35:58.660 -> [I][SoapESP32.cpp:443] seekServer(): SSDP search for media server started
+18:36:02.686 -> [I][SoapESP32.cpp:446] seekServer(): SSDP query discovered 4 media server
+18:36:02.686 -> [I][SoapESP32.cpp:449] seekServer(): checking all discovered media server for service: ContentDirectory
+18:36:02.686 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.50:9050
+18:36:02.721 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+18:36:02.721 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.11:55247
+18:36:02.721 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+18:36:02.754 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.35:2869
+18:36:02.754 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+18:36:02.789 -> [I][SoapESP32.cpp:463] seekServer(): connected successfully to server 192.168.1.6:2869
+18:36:02.789 -> [I][SoapESP32.cpp:515] seekServer(): ok, this server delivers media content
+18:36:02.789 -> Number of discovered servers that deliver content: 4
+18:36:02.789 -> 
+18:36:02.789 -> Searching big directory on server: LINKSTATION2b: LinkStation
+18:36:02.789 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0"
+18:36:02.825 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:02.825 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:02.825 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Music" (id: "0$1", childCount: 11) added to list
+18:36:02.825 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Photos" (id: "0$2", childCount: 8) added to list
+18:36:02.860 -> [I][SoapESP32.cpp:913] browseServer(): found 2 folders and 0 files
+18:36:02.860 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0$1"
+18:36:03.035 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:03.035 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:03.035 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Album" (id: "0$1$12", childCount: 341) added to list
+18:36:03.035 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "All Tracks" (id: "0$1$8", childCount: 2645) added to list
+18:36:03.070 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Artist" (id: "0$1$11", childCount: 267) added to list
+18:36:03.070 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Artist Index" (id: "0$1$15", childCount: 8) added to list
+18:36:03.070 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Artist/Album" (id: "0$1$16", childCount: 267) added to list
+18:36:03.070 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "By Folder" (id: "0$1$13", childCount: 1) added to list
+18:36:03.106 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Genre/Album" (id: "0$1$17", childCount: 66) added to list
+18:36:03.106 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Genre/Artist" (id: "0$1$18", childCount: 67) added to list
+18:36:03.106 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Genre/Song" (id: "0$1$10", childCount: 66) added to list
+18:36:03.106 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Personal rating" (id: "0$1$14", childCount: 2) added to list
+18:36:03.141 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Playlists" (id: "0$1$9", childCount: 4) added to list
+18:36:03.141 -> [I][SoapESP32.cpp:913] browseServer(): found 11 folders and 0 files
+18:36:03.141 -> Big directory found, name: Album, id: 0$1$12, size: 341
+18:36:03.141 -> ------> Browse directory with starting index: 0
+18:36:03.141 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0$1$12"
+18:36:03.423 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:03.423 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:03.423 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "A Night At The Opera" (id: "0$1$12$6087", childCount: 12) added to list
+18:36:03.458 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "ABBA Greatest Hits" (id: "0$1$12$5827", childCount: 19) added to list
+18:36:03.458 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Aha - Best Of" (id: "0$1$12$5043", childCount: 16) added to list
+18:36:03.458 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "All The Best" (id: "0$1$12$5069", childCount: 18) added to list
+18:36:03.493 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "American III - Solitary Man" (id: "0$1$12$5125", childCount: 19) added to list
+18:36:03.493 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "American IV: The Man Comes Around" (id: "0$1$12$5114", childCount: 15) added to list
+18:36:03.493 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Amnesiac" (id: "0$1$12$4606", childCount: 1) added to list
+18:36:03.493 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "An Ancient Muse" (id: "0$1$12$6266", childCount: 9) added to list
+18:36:03.528 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Andrea Bocelli: Aria - The Opera Album" (id: "0$1$12$4459", childCount: 17) added to list
+18:36:03.528 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ane Brun Mix" (id: "0$1$12$4715", childCount: 8) added to list
+18:36:03.528 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Aqualung [remastered 1996]" (id: "0$1$12$4800", childCount: 12) added to list
+18:36:03.564 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Autobahn" (id: "0$1$12$5723", childCount: 5) added to list
+18:36:03.564 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Avalon" (id: "0$1$12$6139", childCount: 10) added to list
+18:36:03.564 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ave Maria" (id: "0$1$12$3976", childCount: 13) added to list
+18:36:03.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Bach in Einsiedeln - Orgelwerke" (id: "0$1$12$70", childCount: 11) added to list
+18:36:03.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 1 BWV 1046" (id: "0$1$12$114", childCount: 4) added to list
+18:36:03.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 2 BWV 1047" (id: "0$1$12$128", childCount: 3) added to list
+18:36:03.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 3 BWV 1048" (id: "0$1$12$140", childCount: 3) added to list
+18:36:03.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 4 BWV 1049" (id: "0$1$12$152", childCount: 3) added to list
+18:36:03.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 5 BWV 1050" (id: "0$1$12$164", childCount: 3) added to list
+18:36:03.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Brandenburgisches Konzert Nr 6 BWV 1051" (id: "0$1$12$176", childCount: 3) added to list
+18:36:03.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Das Musikalische Opfer BWV 1079" (id: "0$1$12$288", childCount: 16) added to list
+18:36:03.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Flötensonata Es-Dur BWV 1031" (id: "0$1$12$216", childCount: 3) added to list
+18:36:03.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Flötensonate A-Dur BWV 1032" (id: "0$1$12$202", childCount: 3) added to list
+18:36:03.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Flötensonate g-Moll BWV 1020" (id: "0$1$12$228", childCount: 3) added to list
+18:36:03.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Flötensonate h-Moll BWV 1030" (id: "0$1$12$240", childCount: 3) added to list
+18:36:03.742 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Inventions & Sinfonias (The Two and Three Part Inventions) BWV 772 - 801" (id: "0$1$12$266", childCount: 30) added to list
+18:36:03.742 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Ouverture Nr 1 BWV 1066" (id: "0$1$12$300", childCount: 7) added to list
+18:36:03.777 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Ouverture Nr 2 BWV 1067" (id: "0$1$12$314", childCount: 7) added to list
+18:36:03.777 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Ouverture Nr 3 BWV 1068" (id: "0$1$12$326", childCount: 5) added to list
+18:36:03.777 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bach: Ouverture Nr 4 BWV 1069" (id: "0$1$12$338", childCount: 5) added to list
+18:36:03.777 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven:  Konzert für Klavier und Orchester Nr 2 B-dur op 19" (id: "0$1$12$992", childCount: 3) added to list
+18:36:03.810 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Konzert für Klavier und Orchester No 5 Es-dur op 73, 'Emperor'" (id: "0$1$12$1021", childCount: 3) added to list
+18:36:03.810 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Konzert für Klavier und Orchester Nr 4 G-dur op 58" (id: "0$1$12$1033", childCount: 3) added to list
+18:36:03.847 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Sinfonie Nr 5 c-moll op 67" (id: "0$1$12$1059", childCount: 4) added to list
+18:36:03.847 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Sinfonie Nr 8 F-dur op 93" (id: "0$1$12$1082", childCount: 4) added to list
+18:36:03.847 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Sinfonie Nr 9 d-Moll op 125" (id: "0$1$12$1103", childCount: 4) added to list
+18:36:03.881 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Beethoven: Violinkonzert" (id: "0$1$12$1124", childCount: 3) added to list
+18:36:03.881 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bellini: Trompetenkonzert Es-dur (Transkription des Oboenkonzerts)" (id: "0$1$12$2084", childCount: 3) added to list
+18:36:03.916 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Berühmte Opernchöre" (id: "0$1$12$4486", childCount: 6) added to list
+18:36:03.916 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Best Of" (id: "0$1$12$5186", childCount: 16) added to list
+18:36:03.916 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bizet: Carmen" (id: "0$1$12$2487", childCount: 49) added to list
+18:36:03.916 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Blow" (id: "0$1$12$5929", childCount: 9) added to list
+18:36:03.950 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bob Dylan Greatest Hits" (id: "0$1$12$5273", childCount: 10) added to list
+18:36:03.950 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Boccherini: Concerteo No 1 in Es-Dur G 474" (id: "0$1$12$918", childCount: 3) added to list
+18:36:03.950 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Boccherini: Concerteo No 2 in A-Dur G 475" (id: "0$1$12$941", childCount: 3) added to list
+18:36:03.986 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Boccherini: Concerteo No 3 in D-Dur G 476" (id: "0$1$12$953", childCount: 3) added to list
+18:36:03.986 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Boccherini: Concerteo No 8 in C-Dur G 481" (id: "0$1$12$965", childCount: 3) added to list
+18:36:03.986 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Brahms: Ungarische_Tänze" (id: "0$1$12$2513", childCount: 21) added to list
+18:36:04.021 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Brothers In Arms" (id: "0$1$12$5312", childCount: 9) added to list
+18:36:04.021 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Bury The Hatchet" (id: "0$1$12$5443", childCount: 14) added to list
+18:36:04.021 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 1" (id: "0$1$12$6323", childCount: 16) added to list
+18:36:04.056 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 2" (id: "0$1$12$6556", childCount: 18) added to list
+18:36:04.056 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 3" (id: "0$1$12$6796", childCount: 17) added to list
+18:36:04.056 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 4" (id: "0$1$12$7030", childCount: 17) added to list
+18:36:04.091 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 5" (id: "0$1$12$7223", childCount: 19) added to list
+18:36:04.091 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Car-CD 6" (id: "0$1$12$7462", childCount: 7) added to list
+18:36:04.091 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Carmina Burana" (id: "0$1$12$3732", childCount: 28) added to list
+18:36:04.091 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Catfish Rising" (id: "0$1$12$4790", childCount: 13) added to list
+18:36:04.127 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chant Gregorien: Le chant du silence" (id: "0$1$12$4150", childCount: 19) added to list
+18:36:04.127 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Andante und Polonaise" (id: "0$1$12$2570", childCount: 1) added to list
+18:36:04.127 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Fantasie in f-moll op. 49" (id: "0$1$12$2651", childCount: 1) added to list
+18:36:04.163 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Grosse Fantasie" (id: "0$1$12$2579", childCount: 1) added to list
+18:36:04.163 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Impromptus" (id: "0$1$12$2537", childCount: 3) added to list
+18:36:04.163 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Klavierkonzert No 2 f-moll, op 21" (id: "0$1$12$2778", childCount: 3) added to list
+18:36:04.198 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Klavierkonzert Nr 1 e-moll, op 11" (id: "0$1$12$2752", childCount: 3) added to list
+18:36:04.198 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Klavierkonzert Nr 2 f-moll op 21" (id: "0$1$12$2766", childCount: 3) added to list
+18:36:04.198 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Konzertrondo" (id: "0$1$12$2561", childCount: 1) added to list
+18:36:04.232 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in a-moll op. 68 No 2" (id: "0$1$12$2687", childCount: 1) added to list
+18:36:04.232 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in As-Dur op. 41 No 4" (id: "0$1$12$2705", childCount: 1) added to list
+18:36:04.232 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in Des-Dur op. 30 No 3" (id: "0$1$12$2723", childCount: 1) added to list
+18:36:04.266 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in f-moll op. 68 No 4" (id: "0$1$12$2696", childCount: 1) added to list
+18:36:04.266 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in g-moll op. 67 No 2" (id: "0$1$12$2732", childCount: 1) added to list
+18:36:04.266 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in gis-moll op. 33 No 1" (id: "0$1$12$2714", childCount: 1) added to list
+18:36:04.301 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Mazurka in h-moll op. 33 No 4" (id: "0$1$12$2741", childCount: 1) added to list
+18:36:04.301 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Polonaise in fis-moll op 44" (id: "0$1$12$2599", childCount: 1) added to list
+18:36:04.337 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Préludes op 28" (id: "0$1$12$2620", childCount: 24) added to list
+18:36:04.337 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Scherzo No 1 in h-moll op. 20" (id: "0$1$12$2641", childCount: 1) added to list
+18:36:04.337 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Variationen über ''La ci darem la mano''" (id: "0$1$12$2551", childCount: 1) added to list
+18:36:04.372 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Walter in a-moll op. 34 No 2" (id: "0$1$12$2660", childCount: 1) added to list
+18:36:04.372 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Walzer in As-Dur Op. 34 No 1" (id: "0$1$12$2669", childCount: 1) added to list
+18:36:04.372 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Chopin: Walzer in As-Dur Op. 69 No 1" (id: "0$1$12$2678", childCount: 1) added to list
+18:36:04.405 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Cieli di Toscana" (id: "0$1$12$4444", childCount: 14) added to list
+18:36:04.405 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Concerto for Group and Orchestra" (id: "0$1$12$5742", childCount: 5) added to list
+18:36:04.405 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Concerto Nr 5 für King Ferdinand IV von Neabel" (id: "0$1$12$1290", childCount: 3) added to list
+18:36:04.441 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Creep" (id: "0$1$12$4615", childCount: 1) added to list
+18:36:04.441 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Damals hinterm Mond" (id: "0$1$12$6036", childCount: 11) added to list
+18:36:04.441 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Die Mensch-Maschine" (id: "0$1$12$5712", childCount: 6) added to list
+18:36:04.477 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Die schönen Rosen" (id: "0$1$12$6048", childCount: 11) added to list
+18:36:04.477 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Double Concerto" (id: "0$1$12$3607", childCount: 2) added to list
+18:36:04.477 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Dvorák: Romance, op. 11" (id: "0$1$12$2028", childCount: 1) added to list
+18:36:04.477 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Dvorák: Sinfonie Nr 9 e-moll op. 95 'Aus der Neuen Welt'" (id: "0$1$12$2072", childCount: 4) added to list
+18:36:04.511 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Dvorak: Slawische Tänze op. 46" (id: "0$1$12$2058", childCount: 3) added to list
+18:36:04.511 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Elements - Best Of" (id: "0$1$12$4922", childCount: 16) added to list
+18:36:04.511 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Fight For Your Mind" (id: "0$1$12$5344", childCount: 14) added to list
+18:36:04.546 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "God Shuffled His Feet" (id: "0$1$12$5504", childCount: 12) added to list
+18:36:04.546 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Good As I Been To You" (id: "0$1$12$5241", childCount: 13) added to list
+18:36:04.546 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Graceland" (id: "0$1$12$6067", childCount: 11) added to list
+18:36:04.581 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Grieg: Klavierkonzert a-moll, Op 16" (id: "0$1$12$2828", childCount: 3) added to list
+18:36:04.581 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Grieg: Klavierkonzert a-moll, op. 16" (id: "0$1$12$2849", childCount: 3) added to list
+18:36:04.581 -> [I][SoapESP32.cpp:913] browseServer(): found 100 folders and 0 files
+18:36:04.616 -> 0: A Night At The Opera/
+18:36:04.616 -> 1: ABBA Greatest Hits/
+18:36:04.616 -> 2: Aha - Best Of/
+18:36:04.616 -> 3: All The Best/
+18:36:04.616 -> 4: American III - Solitary Man/
+18:36:04.616 -> 5: American IV: The Man Comes Around/
+18:36:04.616 -> 6: Amnesiac/
+18:36:04.616 -> 7: An Ancient Muse/
+18:36:04.616 -> 8: Andrea Bocelli: Aria - The Opera Album/
+18:36:04.616 -> 9: Ane Brun Mix/
+18:36:04.616 -> 10: Aqualung [remastered 1996]/
+18:36:04.616 -> 11: Autobahn/
+18:36:04.616 -> 12: Avalon/
+18:36:04.616 -> 13: Ave Maria/
+18:36:04.616 -> 14: Bach: Bach in Einsiedeln - Orgelwerke/
+18:36:04.616 -> 15: Bach: Brandenburgisches Konzert Nr 1 BWV 1046/
+18:36:04.653 -> 16: Bach: Brandenburgisches Konzert Nr 2 BWV 1047/
+18:36:04.653 -> 17: Bach: Brandenburgisches Konzert Nr 3 BWV 1048/
+18:36:04.653 -> 18: Bach: Brandenburgisches Konzert Nr 4 BWV 1049/
+18:36:04.653 -> 19: Bach: Brandenburgisches Konzert Nr 5 BWV 1050/
+18:36:04.653 -> 20: Bach: Brandenburgisches Konzert Nr 6 BWV 1051/
+18:36:04.653 -> 21: Bach: Das Musikalische Opfer BWV 1079/
+18:36:04.653 -> 22: Bach: Flötensonata Es-Dur BWV 1031/
+18:36:04.653 -> 23: Bach: Flötensonate A-Dur BWV 1032/
+18:36:04.688 -> 24: Bach: Flötensonate g-Moll BWV 1020/
+18:36:04.688 -> 25: Bach: Flötensonate h-Moll BWV 1030/
+18:36:04.688 -> 26: Bach: Inventions & Sinfonias (The Two and Three Part Inventions) BWV 772 - 801/
+18:36:04.688 -> 27: Bach: Ouverture Nr 1 BWV 1066/
+18:36:04.688 -> 28: Bach: Ouverture Nr 2 BWV 1067/
+18:36:04.688 -> 29: Bach: Ouverture Nr 3 BWV 1068/
+18:36:04.688 -> 30: Bach: Ouverture Nr 4 BWV 1069/
+18:36:04.688 -> 31: Beethoven:  Konzert für Klavier und Orchester Nr 2 B-dur op 19/
+18:36:04.688 -> 32: Beethoven: Konzert für Klavier und Orchester No 5 Es-dur op 73, 'Emperor'/
+18:36:04.722 -> 33: Beethoven: Konzert für Klavier und Orchester Nr 4 G-dur op 58/
+18:36:04.722 -> 34: Beethoven: Sinfonie Nr 5 c-moll op 67/
+18:36:04.722 -> 35: Beethoven: Sinfonie Nr 8 F-dur op 93/
+18:36:04.722 -> 36: Beethoven: Sinfonie Nr 9 d-Moll op 125/
+18:36:04.722 -> 37: Beethoven: Violinkonzert/
+18:36:04.722 -> 38: Bellini: Trompetenkonzert Es-dur (Transkription des Oboenkonzerts)/
+18:36:04.722 -> 39: Berühmte Opernchöre/
+18:36:04.757 -> 40: Best Of/
+18:36:04.757 -> 41: Bizet: Carmen/
+18:36:04.757 -> 42: Blow/
+18:36:04.757 -> 43: Bob Dylan Greatest Hits/
+18:36:04.757 -> 44: Boccherini: Concerteo No 1 in Es-Dur G 474/
+18:36:04.757 -> 45: Boccherini: Concerteo No 2 in A-Dur G 475/
+18:36:04.757 -> 46: Boccherini: Concerteo No 3 in D-Dur G 476/
+18:36:04.757 -> 47: Boccherini: Concerteo No 8 in C-Dur G 481/
+18:36:04.757 -> 48: Brahms: Ungarische_Tänze/
+18:36:04.757 -> 49: Brothers In Arms/
+18:36:04.757 -> 50: Bury The Hatchet/
+18:36:04.757 -> 51: Car-CD 1/
+18:36:04.757 -> 52: Car-CD 2/
+18:36:04.757 -> 53: Car-CD 3/
+18:36:04.757 -> 54: Car-CD 4/
+18:36:04.794 -> 55: Car-CD 5/
+18:36:04.794 -> 56: Car-CD 6/
+18:36:04.794 -> 57: Carmina Burana/
+18:36:04.794 -> 58: Catfish Rising/
+18:36:04.794 -> 59: Chant Gregorien: Le chant du silence/
+18:36:04.794 -> 60: Chopin: Andante und Polonaise/
+18:36:04.794 -> 61: Chopin: Fantasie in f-moll op. 49/
+18:36:04.794 -> 62: Chopin: Grosse Fantasie/
+18:36:04.794 -> 63: Chopin: Impromptus/
+18:36:04.794 -> 64: Chopin: Klavierkonzert No 2 f-moll, op 21/
+18:36:04.794 -> 65: Chopin: Klavierkonzert Nr 1 e-moll, op 11/
+18:36:04.794 -> 66: Chopin: Klavierkonzert Nr 2 f-moll op 21/
+18:36:04.794 -> 67: Chopin: Konzertrondo/
+18:36:04.794 -> 68: Chopin: Mazurka in a-moll op. 68 No 2/
+18:36:04.830 -> 69: Chopin: Mazurka in As-Dur op. 41 No 4/
+18:36:04.830 -> 70: Chopin: Mazurka in Des-Dur op. 30 No 3/
+18:36:04.830 -> 71: Chopin: Mazurka in f-moll op. 68 No 4/
+18:36:04.830 -> 72: Chopin: Mazurka in g-moll op. 67 No 2/
+18:36:04.830 -> 73: Chopin: Mazurka in gis-moll op. 33 No 1/
+18:36:04.830 -> 74: Chopin: Mazurka in h-moll op. 33 No 4/
+18:36:04.830 -> 75: Chopin: Polonaise in fis-moll op 44/
+18:36:04.830 -> 76: Chopin: Préludes op 28/
+18:36:04.830 -> 77: Chopin: Scherzo No 1 in h-moll op. 20/
+18:36:04.865 -> 78: Chopin: Variationen über ''La ci darem la mano''/
+18:36:04.865 -> 79: Chopin: Walter in a-moll op. 34 No 2/
+18:36:04.865 -> 80: Chopin: Walzer in As-Dur Op. 34 No 1/
+18:36:04.865 -> 81: Chopin: Walzer in As-Dur Op. 69 No 1/
+18:36:04.865 -> 82: Cieli di Toscana/
+18:36:04.865 -> 83: Concerto for Group and Orchestra/
+18:36:04.865 -> 84: Concerto Nr 5 für King Ferdinand IV von Neabel/
+18:36:04.865 -> 85: Creep/
+18:36:04.865 -> 86: Damals hinterm Mond/
+18:36:04.865 -> 87: Die Mensch-Maschine/
+18:36:04.865 -> 88: Die schönen Rosen/
+18:36:04.865 -> 89: Double Concerto/
+18:36:04.899 -> 90: Dvorák: Romance, op. 11/
+18:36:04.899 -> 91: Dvorák: Sinfonie Nr 9 e-moll op. 95 'Aus der Neuen Welt'/
+18:36:04.899 -> 92: Dvorak: Slawische Tänze op. 46/
+18:36:04.899 -> 93: Elements - Best Of/
+18:36:04.899 -> 94: Fight For Your Mind/
+18:36:04.899 -> 95: God Shuffled His Feet/
+18:36:04.899 -> 96: Good As I Been To You/
+18:36:04.899 -> 97: Graceland/
+18:36:04.899 -> 98: Grieg: Klavierkonzert a-moll, Op 16/
+18:36:04.899 -> 99: Grieg: Klavierkonzert a-moll, op. 16/
+18:36:04.899 -> ------> Browse directory with starting index: 100
+18:36:04.934 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0$1$12"
+18:36:05.143 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:05.180 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:05.180 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Grieg: Peer Gynt" (id: "0$1$12$2805", childCount: 18) added to list
+18:36:05.180 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Griffes: Roman Sketches, Op. 7" (id: "0$1$12$3631", childCount: 4) added to list
+18:36:05.215 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Händel: Feuerwerksmusik" (id: "0$1$12$365", childCount: 6) added to list
+18:36:05.215 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Händel: Konzert Nr 10 g-moll (HHA: Concerto I)" (id: "0$1$12$407", childCount: 4) added to list
+18:36:05.215 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Händel: Konzert Nr 8 B-dur (HHA: Concderto II)" (id: "0$1$12$393", childCount: 4) added to list
+18:36:05.250 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Händel: Wassermusik" (id: "0$1$12$419", childCount: 18) added to list
+18:36:05.250 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Harvest" (id: "0$1$12$5089", childCount: 10) added to list
+18:36:05.250 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Sinfonie Nr 100 G-Dur 'Militär'" (id: "0$1$12$1192", childCount: 4) added to list
+18:36:05.283 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Sinfonie Nr 101 D mamor 'clock'" (id: "0$1$12$1213", childCount: 4) added to list
+18:36:05.283 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Sinfonie Nr 104 D-dur 'Salomon' oder 'London'" (id: "0$1$12$1225", childCount: 4) added to list
+18:36:05.283 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Sinfonie Nr 94 G major 'Surprise'" (id: "0$1$12$1146", childCount: 4) added to list
+18:36:05.317 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Sinphonie Nr 99 E flat major" (id: "0$1$12$1171", childCount: 4) added to list
+18:36:05.317 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Haydn: Trompetenkonzert D-dur (Transkription des Oboenkonzerts C-Dur)" (id: "0$1$12$1246", childCount: 3) added to list
+18:36:05.352 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "High on Emotion - Live from Dublin" (id: "0$1$12$4966", childCount: 15) added to list
+18:36:05.352 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Hummel: Concertino für Oboe F-Dur" (id: "0$1$12$2132", childCount: 1) added to list
+18:36:05.352 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Hummel: Introduktion, Thema und Variationen (komponiert ursprünglich für Oboe)" (id: "0$1$12$2175", childCount: 7) added to list
+18:36:05.388 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Hummel: Oktett-arthia Es-Dur" (id: "0$1$12$2114", childCount: 3) added to list
+18:36:05.388 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Hummel: Serenade für Bläseroktett Es-Dur" (id: "0$1$12$2144", childCount: 4) added to list
+18:36:05.388 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Hummel: Sextett für Bläser F-Dur" (id: "0$1$12$2156", childCount: 4) added to list
+18:36:05.422 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ibert: Flötenkonzert" (id: "0$1$12$3656", childCount: 3) added to list
+18:36:05.422 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ibert: Pièce pour flûte seule" (id: "0$1$12$3676", childCount: 1) added to list
+18:36:05.422 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "In Rainbows" (id: "0$1$12$4579", childCount: 1) added to list
+18:36:05.459 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Islands" (id: "0$1$12$4912", childCount: 7) added to list
+18:36:05.459 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "James Galway: Dances For Flute" (id: "0$1$12$3839", childCount: 22) added to list
+18:36:05.459 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Joe Cocker Ultimate Collection" (id: "0$1$12$5998", childCount: 15) added to list
+18:36:05.494 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Joseph Haydn: Konzert für Trompete und Orchester Es-dur Hob. VIIe: 1" (id: "0$1$12$1269", childCount: 3) added to list
+18:36:05.494 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Katie Melua - Best Of" (id: "0$1$12$4554", childCount: 17) added to list
+18:36:05.494 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Khatchaturian: Flötenkonzert (Violin Concerto, arr. for flute by Jean-Pierre Rampal)" (id: "0$1$12$3689", childCount: 3) added to list
+18:36:05.529 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Korngold: Symphonic Serenade, Op. 39" (id: "0$1$12$3705", childCount: 4) added to list
+18:36:05.529 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Lang Lang: Dreams of China" (id: "0$1$12$4408", childCount: 17) added to list
+18:36:05.529 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Leclair: Oboenkonzert C-Dur" (id: "0$1$12$446", childCount: 3) added to list
+18:36:05.565 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Led Zeppelin Remasters CD1" (id: "0$1$12$6285", childCount: 15) added to list
+18:36:05.565 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Led Zeppelin Remasters CD2" (id: "0$1$12$6297", childCount: 11) added to list
+18:36:05.565 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Legend" (id: "0$1$12$5676", childCount: 13) added to list
+18:36:05.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Leonhard Cohen Greatest Hits" (id: "0$1$12$5412", childCount: 12) added to list
+18:36:05.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Leonhard Cohen Greatest Hits II" (id: "0$1$12$4687", childCount: 11) added to list
+18:36:05.601 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Liszt: 3 Etudes de concert" (id: "0$1$12$2871", childCount: 3) added to list
+18:36:05.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Liszt: Klavierkonzert No 1 in Es-dur" (id: "0$1$12$2894", childCount: 4) added to list
+18:36:05.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Liszt: Klavierkonzert No 2 in A-dur" (id: "0$1$12$2906", childCount: 4) added to list
+18:36:05.636 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Live From Mars (CD1)" (id: "0$1$12$5364", childCount: 12) added to list
+18:36:05.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Live From Mars (CD2)" (id: "0$1$12$5374", childCount: 13) added to list
+18:36:05.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Live in Paris" (id: "0$1$12$5465", childCount: 21) added to list
+18:36:05.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "London Grammar Mix" (id: "0$1$12$4734", childCount: 12) added to list
+18:36:05.671 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Love And Theft" (id: "0$1$12$5263", childCount: 12) added to list
+18:36:05.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Made In Heaven" (id: "0$1$12$6120", childCount: 11) added to list
+18:36:05.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mahler: Sinfonie Nr 1 D-dur" (id: "0$1$12$3390", childCount: 4) added to list
+18:36:05.707 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mahler: Sinfonie Nr 1 D-dur 'Der Titan'" (id: "0$1$12$3346", childCount: 4) added to list
+18:36:05.743 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Maler: Sinfonie Nr 5 C-sharp minor" (id: "0$1$12$3370", childCount: 5) added to list
+18:36:05.743 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Marcello: Concerto d-moll für Blockflöte (orig. Oboe), Streicher und Continuo" (id: "0$1$12$475", childCount: 3) added to list
+18:36:05.743 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Marcello: Oboenkonzert d-moll" (id: "0$1$12$489", childCount: 3) added to list
+18:36:05.779 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Meaty Beaty Big & Bouncy" (id: "0$1$12$6179", childCount: 11) added to list
+18:36:05.779 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mendelssohn: Ein Sommernachtstraum" (id: "0$1$12$2932", childCount: 11) added to list
+18:36:05.779 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Michael Haydn: Konzert für Trompete, Streicher und Cembalo D-dur" (id: "0$1$12$1312", childCount: 2) added to list
+18:36:05.814 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mirrorball" (id: "0$1$12$5948", childCount: 14) added to list
+18:36:05.814 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Moazart: Divertimento KV 136" (id: "0$1$12$1342", childCount: 3) added to list
+18:36:05.814 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Adagio und Fuge KV 546" (id: "0$1$12$1326", childCount: 1) added to list
+18:36:05.849 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Andante für Flöte in C-Dur, KV 315/285e" (id: "0$1$12$1788", childCount: 1) added to list
+18:36:05.849 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Die Zauberflöte" (id: "0$1$12$2001", childCount: 36) added to list
+18:36:05.849 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Divertimento KV 137" (id: "0$1$12$1354", childCount: 3) added to list
+18:36:05.886 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Divertimento KV 138" (id: "0$1$12$1366", childCount: 3) added to list
+18:36:05.886 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Doppelkonzert für Flöte und Harfe in C-Dur, KV 299/297c" (id: "0$1$12$1816", childCount: 3) added to list
+18:36:05.922 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Eine kleine Nachtmusik G-dur KV 525" (id: "0$1$12$1387", childCount: 4) added to list
+18:36:05.922 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Eine Kleine Nachtmusik, G-Dur, KV 525" (id: "0$1$12$1408", childCount: 1) added to list
+18:36:05.922 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Exsultante, Jubilate KV 165 (158a)" (id: "0$1$12$1497", childCount: 1) added to list
+18:36:05.959 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Fagottkonzert in B-Dur, KV 191/186e" (id: "0$1$12$1842", childCount: 3) added to list
+18:36:05.959 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Flötenkonzert in G-Dur, KV 313/285c" (id: "0$1$12$1854", childCount: 3) added to list
+18:36:05.959 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klarinettenkonzert in A-dur KV 622" (id: "0$1$12$1880", childCount: 3) added to list
+18:36:05.995 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert No 20 D-moll KV 466" (id: "0$1$12$1702", childCount: 3) added to list
+18:36:05.995 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 15 B-dur KV 450" (id: "0$1$12$1669", childCount: 3) added to list
+18:36:05.995 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 17 G-dur, KV 453" (id: "0$1$12$1690", childCount: 3) added to list
+18:36:06.028 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 21 C-dur, KV 467" (id: "0$1$12$1714", childCount: 3) added to list
+18:36:06.028 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 22 Es-dur KV 482" (id: "0$1$12$1726", childCount: 3) added to list
+18:36:06.028 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 24 c-moll, KV 491" (id: "0$1$12$1738", childCount: 3) added to list
+18:36:06.063 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr 27 B-dur, KV 595" (id: "0$1$12$1762", childCount: 3) added to list
+18:36:06.063 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Klavierkonzert Nr. 26 D-dur, KV 537 'Krönungskonzert'" (id: "0$1$12$1750", childCount: 3) added to list
+18:36:06.099 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Konzert für zwei Klaviere und orchester Nr 10 Es-dur KV 365 (316a)" (id: "0$1$12$1587", childCount: 3) added to list
+18:36:06.099 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Krönungsmesse + Spatzenmesse" (id: "0$1$12$1469", childCount: 1) added to list
+18:36:06.099 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Kyrie in d-moll KV 341" (id: "0$1$12$1535", childCount: 1) added to list
+18:36:06.134 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Messe C-dur KV 317 'Krönungsmesse'" (id: "0$1$12$1509", childCount: 5) added to list
+18:36:06.134 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Missa brevis C-dur KV 220 (196b) 'Spatzenmesse'" (id: "0$1$12$1566", childCount: 6) added to list
+18:36:06.134 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Oboenkonzert in C-dur KV 314/285d" (id: "0$1$12$1901", childCount: 3) added to list
+18:36:06.170 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Requiem" (id: "0$1$12$1554", childCount: 14) added to list
+18:36:06.170 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Serenade D-dur KV 320 'Posthorn-Serenade'" (id: "0$1$12$1443", childCount: 7) added to list
+18:36:06.170 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sinfonie Nr 35 D-dur KV 385 'Haffner'" (id: "0$1$12$1932", childCount: 4) added to list
+18:36:06.205 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sinfonie Nr 39 Es-dur KV 543" (id: "0$1$12$1946", childCount: 4) added to list
+18:36:06.205 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sinfonie Nr 40 g-moll KV 550" (id: "0$1$12$1963", childCount: 4) added to list
+18:36:06.241 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sinfonie Nr 41 C-dur KV 551 'Jupiter'" (id: "0$1$12$1975", childCount: 4) added to list
+18:36:06.241 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sonate No 18 in G-Dur KV 301" (id: "0$1$12$1610", childCount: 2) added to list
+18:36:06.241 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sonate No 21 in e-moll KV 304" (id: "0$1$12$1624", childCount: 2) added to list
+18:36:06.274 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sonate No 24 in F-dur KV 376" (id: "0$1$12$1636", childCount: 3) added to list
+18:36:06.274 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Sonate No 26 in B-dur KV 378" (id: "0$1$12$1648", childCount: 3) added to list
+18:36:06.274 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mozart: Trompetenkonzert As-dur (Transkription des Oboenkonzerts C-dur)" (id: "0$1$12$1912", childCount: 3) added to list
+18:36:06.312 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "MTV Unplugged [Live]" (id: "0$1$12$5230", childCount: 12) added to list
+18:36:06.312 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Murder ballads" (id: "0$1$12$5149", childCount: 10) added to list
+18:36:06.312 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Musique Intime pour Guitare" (id: "0$1$12$3908", childCount: 19) added to list
+18:36:06.348 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Mussorgsky: Bilder einer Ausstellung (orch. Ravel)" (id: "0$1$12$2956", childCount: 11) added to list
+18:36:06.348 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Nachte in spanischen Garten" (id: "0$1$12$3936", childCount: 19) added to list
+18:36:06.348 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Nakariakov: Virtuose Trompete" (id: "0$1$12$3872", childCount: 16) added to list
+18:36:06.381 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Naudet: Concerto G-dur für Blockflöte, Streicher und Continuo, op. 17/5" (id: "0$1$12$501", childCount: 3) added to list
+18:36:06.381 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "No Need To Argue" (id: "0$1$12$5432", childCount: 14) added to list
+18:36:06.381 -> [I][SoapESP32.cpp:913] browseServer(): found 100 folders and 0 files
+18:36:06.417 -> 100: Grieg: Peer Gynt/
+18:36:06.417 -> 101: Griffes: Roman Sketches, Op. 7/
+18:36:06.417 -> 102: Händel: Feuerwerksmusik/
+18:36:06.417 -> 103: Händel: Konzert Nr 10 g-moll (HHA: Concerto I)/
+18:36:06.417 -> 104: Händel: Konzert Nr 8 B-dur (HHA: Concderto II)/
+18:36:06.417 -> 105: Händel: Wassermusik/
+18:36:06.417 -> 106: Harvest/
+18:36:06.417 -> 107: Haydn: Sinfonie Nr 100 G-Dur 'Militär'/
+18:36:06.417 -> 108: Haydn: Sinfonie Nr 101 D mamor 'clock'/
+18:36:06.417 -> 109: Haydn: Sinfonie Nr 104 D-dur 'Salomon' oder 'London'/
+18:36:06.452 -> 110: Haydn: Sinfonie Nr 94 G major 'Surprise'/
+18:36:06.452 -> 111: Haydn: Sinphonie Nr 99 E flat major/
+18:36:06.452 -> 112: Haydn: Trompetenkonzert D-dur (Transkription des Oboenkonzerts C-Dur)/
+18:36:06.452 -> 113: High on Emotion - Live from Dublin/
+18:36:06.452 -> 114: Hummel: Concertino für Oboe F-Dur/
+18:36:06.452 -> 115: Hummel: Introduktion, Thema und Variationen (komponiert ursprünglich für Oboe)/
+18:36:06.452 -> 116: Hummel: Oktett-arthia Es-Dur/
+18:36:06.452 -> 117: Hummel: Serenade für Bläseroktett Es-Dur/
+18:36:06.487 -> 118: Hummel: Sextett für Bläser F-Dur/
+18:36:06.487 -> 119: Ibert: Flötenkonzert/
+18:36:06.487 -> 120: Ibert: Pièce pour flûte seule/
+18:36:06.487 -> 121: In Rainbows/
+18:36:06.487 -> 122: Islands/
+18:36:06.487 -> 123: James Galway: Dances For Flute/
+18:36:06.487 -> 124: Joe Cocker Ultimate Collection/
+18:36:06.487 -> 125: Joseph Haydn: Konzert für Trompete und Orchester Es-dur Hob. VIIe: 1/
+18:36:06.487 -> 126: Katie Melua - Best Of/
+18:36:06.487 -> 127: Khatchaturian: Flötenkonzert (Violin Concerto, arr. for flute by Jean-Pierre Rampal)/
+18:36:06.520 -> 128: Korngold: Symphonic Serenade, Op. 39/
+18:36:06.520 -> 129: Lang Lang: Dreams of China/
+18:36:06.520 -> 130: Leclair: Oboenkonzert C-Dur/
+18:36:06.520 -> 131: Led Zeppelin Remasters CD1/
+18:36:06.520 -> 132: Led Zeppelin Remasters CD2/
+18:36:06.520 -> 133: Legend/
+18:36:06.520 -> 134: Leonhard Cohen Greatest Hits/
+18:36:06.520 -> 135: Leonhard Cohen Greatest Hits II/
+18:36:06.520 -> 136: Liszt: 3 Etudes de concert/
+18:36:06.520 -> 137: Liszt: Klavierkonzert No 1 in Es-dur/
+18:36:06.555 -> 138: Liszt: Klavierkonzert No 2 in A-dur/
+18:36:06.555 -> 139: Live From Mars (CD1)/
+18:36:06.555 -> 140: Live From Mars (CD2)/
+18:36:06.555 -> 141: Live in Paris/
+18:36:06.555 -> 142: London Grammar Mix/
+18:36:06.555 -> 143: Love And Theft/
+18:36:06.555 -> 144: Made In Heaven/
+18:36:06.555 -> 145: Mahler: Sinfonie Nr 1 D-dur/
+18:36:06.555 -> 146: Mahler: Sinfonie Nr 1 D-dur 'Der Titan'/
+18:36:06.555 -> 147: Maler: Sinfonie Nr 5 C-sharp minor/
+18:36:06.555 -> 148: Marcello: Concerto d-moll für Blockflöte (orig. Oboe), Streicher und Continuo/
+18:36:06.591 -> 149: Marcello: Oboenkonzert d-moll/
+18:36:06.591 -> 150: Meaty Beaty Big & Bouncy/
+18:36:06.591 -> 151: Mendelssohn: Ein Sommernachtstraum/
+18:36:06.591 -> 152: Michael Haydn: Konzert für Trompete, Streicher und Cembalo D-dur/
+18:36:06.591 -> 153: Mirrorball/
+18:36:06.591 -> 154: Moazart: Divertimento KV 136/
+18:36:06.591 -> 155: Mozart: Adagio und Fuge KV 546/
+18:36:06.591 -> 156: Mozart: Andante für Flöte in C-Dur, KV 315/285e/
+18:36:06.591 -> 157: Mozart: Die Zauberflöte/
+18:36:06.591 -> 158: Mozart: Divertimento KV 137/
+18:36:06.626 -> 159: Mozart: Divertimento KV 138/
+18:36:06.626 -> 160: Mozart: Doppelkonzert für Flöte und Harfe in C-Dur, KV 299/297c/
+18:36:06.626 -> 161: Mozart: Eine kleine Nachtmusik G-dur KV 525/
+18:36:06.626 -> 162: Mozart: Eine Kleine Nachtmusik, G-Dur, KV 525/
+18:36:06.626 -> 163: Mozart: Exsultante, Jubilate KV 165 (158a)/
+18:36:06.626 -> 164: Mozart: Fagottkonzert in B-Dur, KV 191/186e/
+18:36:06.626 -> 165: Mozart: Flötenkonzert in G-Dur, KV 313/285c/
+18:36:06.626 -> 166: Mozart: Klarinettenkonzert in A-dur KV 622/
+18:36:06.662 -> 167: Mozart: Klavierkonzert No 20 D-moll KV 466/
+18:36:06.662 -> 168: Mozart: Klavierkonzert Nr 15 B-dur KV 450/
+18:36:06.662 -> 169: Mozart: Klavierkonzert Nr 17 G-dur, KV 453/
+18:36:06.662 -> 170: Mozart: Klavierkonzert Nr 21 C-dur, KV 467/
+18:36:06.662 -> 171: Mozart: Klavierkonzert Nr 22 Es-dur KV 482/
+18:36:06.662 -> 172: Mozart: Klavierkonzert Nr 24 c-moll, KV 491/
+18:36:06.662 -> 173: Mozart: Klavierkonzert Nr 27 B-dur, KV 595/
+18:36:06.662 -> 174: Mozart: Klavierkonzert Nr. 26 D-dur, KV 537 'Krönungskonzert'/
+18:36:06.697 -> 175: Mozart: Konzert für zwei Klaviere und orchester Nr 10 Es-dur KV 365 (316a)/
+18:36:06.697 -> 176: Mozart: Krönungsmesse + Spatzenmesse/
+18:36:06.697 -> 177: Mozart: Kyrie in d-moll KV 341/
+18:36:06.697 -> 178: Mozart: Messe C-dur KV 317 'Krönungsmesse'/
+18:36:06.697 -> 179: Mozart: Missa brevis C-dur KV 220 (196b) 'Spatzenmesse'/
+18:36:06.697 -> 180: Mozart: Oboenkonzert in C-dur KV 314/285d/
+18:36:06.697 -> 181: Mozart: Requiem/
+18:36:06.697 -> 182: Mozart: Serenade D-dur KV 320 'Posthorn-Serenade'/
+18:36:06.732 -> 183: Mozart: Sinfonie Nr 35 D-dur KV 385 'Haffner'/
+18:36:06.732 -> 184: Mozart: Sinfonie Nr 39 Es-dur KV 543/
+18:36:06.732 -> 185: Mozart: Sinfonie Nr 40 g-moll KV 550/
+18:36:06.732 -> 186: Mozart: Sinfonie Nr 41 C-dur KV 551 'Jupiter'/
+18:36:06.732 -> 187: Mozart: Sonate No 18 in G-Dur KV 301/
+18:36:06.732 -> 188: Mozart: Sonate No 21 in e-moll KV 304/
+18:36:06.732 -> 189: Mozart: Sonate No 24 in F-dur KV 376/
+18:36:06.732 -> 190: Mozart: Sonate No 26 in B-dur KV 378/
+18:36:06.732 -> 191: Mozart: Trompetenkonzert As-dur (Transkription des Oboenkonzerts C-dur)/
+18:36:06.767 -> 192: MTV Unplugged [Live]/
+18:36:06.767 -> 193: Murder ballads/
+18:36:06.767 -> 194: Musique Intime pour Guitare/
+18:36:06.767 -> 195: Mussorgsky: Bilder einer Ausstellung (orch. Ravel)/
+18:36:06.767 -> 196: Nachte in spanischen Garten/
+18:36:06.767 -> 197: Nakariakov: Virtuose Trompete/
+18:36:06.767 -> 198: Naudet: Concerto G-dur für Blockflöte, Streicher und Continuo, op. 17/5/
+18:36:06.767 -> 199: No Need To Argue/
+18:36:06.767 -> ------> Browse directory with starting index: 200
+18:36:06.802 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0$1$12"
+18:36:07.012 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:07.012 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:07.012 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "OK Computer" (id: "0$1$12$5687", childCount: 12) added to list
+18:36:07.012 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ommadawn (2000 Remaster)" (id: "0$1$12$4892", childCount: 2) added to list
+18:36:07.047 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Orgelstücke - Die Schusterorgel In Torgau" (id: "0$1$12$4339", childCount: 9) added to list
+18:36:07.047 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Original Masters" (id: "0$1$12$4778", childCount: 12) added to list
+18:36:07.047 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Oyster" (id: "0$1$12$5908", childCount: 11) added to list
+18:36:07.083 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "P.U.L.S.E Disc 2" (id: "0$1$12$5576", childCount: 13) added to list
+18:36:07.083 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. 1 a-moll" (id: "0$1$12$2278", childCount: 2) added to list
+18:36:07.083 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. II D-Dur" (id: "0$1$12$2218", childCount: 2) added to list
+18:36:07.117 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. III C-Dur" (id: "0$1$12$2230", childCount: 2) added to list
+18:36:07.117 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. IV-A-Dur" (id: "0$1$12$2242", childCount: 2) added to list
+18:36:07.152 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. V E-Dur" (id: "0$1$12$2254", childCount: 2) added to list
+18:36:07.152 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Centone dis Sonate Nr. VI-A-Dur" (id: "0$1$12$2266", childCount: 2) added to list
+18:36:07.152 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 1 op. 6 in D-dur" (id: "0$1$12$2299", childCount: 3) added to list
+18:36:07.187 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 2 op. 7 in h-moll" (id: "0$1$12$2359", childCount: 3) added to list
+18:36:07.187 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 3 in E-Dur" (id: "0$1$12$2347", childCount: 3) added to list
+18:36:07.187 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 4 in d-moll" (id: "0$1$12$2335", childCount: 3) added to list
+18:36:07.223 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 5 in a-moll" (id: "0$1$12$2323", childCount: 3) added to list
+18:36:07.223 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Konzert Nr 6 op post in e-moll" (id: "0$1$12$2311", childCount: 3) added to list
+18:36:07.223 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Paganini: Sonata concertata für Violine & Gitarre A-Dur" (id: "0$1$12$2202", childCount: 3) added to list
+18:36:07.258 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Pearl" (id: "0$1$12$6159", childCount: 10) added to list
+18:36:07.258 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Pieces Of You" (id: "0$1$12$5210", childCount: 15) added to list
+18:36:07.258 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Platinum" (id: "0$1$12$4861", childCount: 8) added to list
+18:36:07.258 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Populäre Ouvertüren" (id: "0$1$12$4502", childCount: 12) added to list
+18:36:07.297 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Prokofiev: Sinfonie Nr 1 D-Dur 'Classical' op 25" (id: "0$1$12$3803", childCount: 4) added to list
+18:36:07.297 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Prokofiev: Sinfonie Nr 1 D-dur 'Klassische Sinphinie' op 25" (id: "0$1$12$3789", childCount: 4) added to list
+18:36:07.297 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Prokofjew: Die Liebe zu den drei Orangen op 33 bis" (id: "0$1$12$3761", childCount: 6) added to list
+18:36:07.330 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Prokofjew: Lietenant Kijé op 60" (id: "0$1$12$3775", childCount: 5) added to list
+18:36:07.330 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Pulse Disc 1" (id: "0$1$12$5565", childCount: 11) added to list
+18:36:07.366 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "QE2" (id: "0$1$12$4872", childCount: 9) added to list
+18:36:07.366 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Queen Greatest Hits" (id: "0$1$12$6110", childCount: 17) added to list
+18:36:07.366 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Queen Greatest Hits II" (id: "0$1$12$6100", childCount: 14) added to list
+18:36:07.366 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rachmaninov: Klavierkonzert No 2 c-moll, op 18" (id: "0$1$12$3816", childCount: 3) added to list
+18:36:07.402 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ravel: Bolero" (id: "0$1$12$3412", childCount: 2) added to list
+18:36:07.402 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ravel: Bolero / Mozart: Eine kleine Nachtmusik / Smetana: Moldau / Albinoni: Adagio / Grieg: Peer Gynt: Morgenstimmung" (id: "0$1$12$1418", childCount: 3) added to list
+18:36:07.437 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ravel: Ma Mère L'Oye" (id: "0$1$12$3444", childCount: 7) added to list
+18:36:07.437 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ravel: Pavane pour une Infante Défunte" (id: "0$1$12$3456", childCount: 1) added to list
+18:36:07.437 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ravel: Rapsodie Espagnole" (id: "0$1$12$3468", childCount: 4) added to list
+18:36:07.472 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Recurring Dream: The Very Best of Crowded House (Special Edition)" (id: "0$1$12$5524", childCount: 19) added to list
+18:36:07.472 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Revolver" (id: "0$1$12$5979", childCount: 14) added to list
+18:36:07.472 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Captricio Espagnol op 34" (id: "0$1$12$2983", childCount: 5) added to list
+18:36:07.507 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Russian Easter Ouverture" (id: "0$1$12$2999", childCount: 1) added to list
+18:36:07.507 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Sadko" (id: "0$1$12$3013", childCount: 1) added to list
+18:36:07.507 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Sinfonie Nr 1 e-Moll op 1" (id: "0$1$12$3027", childCount: 4) added to list
+18:36:07.542 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Sinfonie Nr 2 'Antar' op 9" (id: "0$1$12$3051", childCount: 4) added to list
+18:36:07.542 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rimsky-Korsakow: Smyponie Nr 3 C-Dur op 32" (id: "0$1$12$3039", childCount: 4) added to list
+18:36:07.542 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Ring of Changes" (id: "0$1$12$4946", childCount: 9) added to list
+18:36:07.578 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rossini: Ouvertüren" (id: "0$1$12$2386", childCount: 7) added to list
+18:36:07.578 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Rossini: Stabat Mater" (id: "0$1$12$2409", childCount: 10) added to list
+18:36:07.578 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sailing To Philadelphia" (id: "0$1$12$5636", childCount: 13) added to list
+18:36:07.578 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Salve Regina - Vesper zum Fest Mariä Himmelfahrt" (id: "0$1$12$4366", childCount: 29) added to list
+18:36:07.613 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Schubert: Sinfonie Nr 5 B-Dur D485" (id: "0$1$12$2466", childCount: 4) added to list
+18:36:07.613 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Schubert: Sinfonie Nr 8 h-Moll D759 'Unvollendete'" (id: "0$1$12$2455", childCount: 2) added to list
+18:36:07.649 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Schubert: Sinfonie Nr. 9 C-dur D944" (id: "0$1$12$2431", childCount: 4) added to list
+18:36:07.649 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Schumann: Klaviertkonzert a-moll, op 54" (id: "0$1$12$3064", childCount: 3) added to list
+18:36:07.649 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Serious Hits...Live!" (id: "0$1$12$5484", childCount: 15) added to list
+18:36:07.682 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sgt. Pepper's Lonely Hearts Club Band" (id: "0$1$12$5968", childCount: 13) added to list
+18:36:07.682 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Shepherd Moons" (id: "0$1$12$5778", childCount: 12) added to list
+18:36:07.682 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius - Beautiful Songs for Choir" (id: "0$1$12$3495", childCount: 26) added to list
+18:36:07.718 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius: Concerto in D Minor, op 47" (id: "0$1$12$3569", childCount: 3) added to list
+18:36:07.718 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius: En Saga, Op 9" (id: "0$1$12$3558", childCount: 1) added to list
+18:36:07.718 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius: Finlandia, op 26 No 7" (id: "0$1$12$3539", childCount: 1) added to list
+18:36:07.754 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius: Karelia Suite Op. 11" (id: "0$1$12$3518", childCount: 3) added to list
+18:36:07.754 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sibelius: The Swan of Tuonela, Op 22 No 3" (id: "0$1$12$3549", childCount: 1) added to list
+18:36:07.754 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Smetana: Má Vlast" (id: "0$1$12$3116", childCount: 6) added to list
+18:36:07.789 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Smetana: Mein Vaterland - Die Moldau" (id: "0$1$12$3093", childCount: 1) added to list
+18:36:07.789 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sounds Of Silence" (id: "0$1$12$5595", childCount: 11) added to list
+18:36:07.789 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "South" (id: "0$1$12$5919", childCount: 13) added to list
+18:36:07.824 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Stars - The Best Of 1992-2002" (id: "0$1$12$5453", childCount: 20) added to list
+18:36:07.824 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Stay Gold" (id: "0$1$12$4650", childCount: 10) added to list
+18:36:07.824 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Stormwatch" (id: "0$1$12$4810", childCount: 14) added to list
+18:36:07.824 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Strauss: Eine Alpensinfonie op. 64" (id: "0$1$12$3590", childCount: 22) added to list
+18:36:07.860 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sultans of Swing: The Very Best of Dire Straits" (id: "0$1$12$5325", childCount: 16) added to list
+18:36:07.860 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Sutras" (id: "0$1$12$5867", childCount: 15) added to list
+18:36:07.860 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tales From New York - Disc 1" (id: "0$1$12$5606", childCount: 20) added to list
+18:36:07.895 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tales From New York - Disc 2" (id: "0$1$12$5617", childCount: 20) added to list
+18:36:07.895 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Concerto F-dur für Blockflöte, Streicher und Continuo" (id: "0$1$12$515", childCount: 4) added to list
+18:36:07.932 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Fantasien für Cembalo" (id: "0$1$12$542", childCount: 12) added to list
+18:36:07.932 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert für Oboe, Streicher und Basso Continuo in D-dur" (id: "0$1$12$589", childCount: 4) added to list
+18:36:07.932 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert für Oboe, Streicher und Basso Continuo in d-moll" (id: "0$1$12$601", childCount: 4) added to list
+18:36:07.969 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert für Oboe, Streicher und Basso Continuo in e-moll" (id: "0$1$12$613", childCount: 4) added to list
+18:36:07.969 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert für Oboe, Streicher und Basso Continuo in f-moll" (id: "0$1$12$625", childCount: 3) added to list
+18:36:07.969 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert für Oboie, Streicher und Basso Continuo in e-moll" (id: "0$1$12$563", childCount: 4) added to list
+18:36:08.003 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Konzert-Sonate für Trompete, Streicher und Cembalo D-dur" (id: "0$1$12$646", childCount: 3) added to list
+18:36:08.003 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Telemann: Oboenkonzert c-moll" (id: "0$1$12$577", childCount: 4) added to list
+18:36:08.037 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Bends" (id: "0$1$12$4632", childCount: 1) added to list
+18:36:08.037 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Best Of" (id: "0$1$12$4589", childCount: 1) added to list
+18:36:08.037 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Best Of Blondie" (id: "0$1$12$5392", childCount: 15) added to list
+18:36:08.072 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Boatman's Call" (id: "0$1$12$5174", childCount: 12) added to list
+18:36:08.072 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Book Of Secrets" (id: "0$1$12$6256", childCount: 8) added to list
+18:36:08.072 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Celts" (id: "0$1$12$5788", childCount: 15) added to list
+18:36:08.072 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Dark Side of the Moon" (id: "0$1$12$5544", childCount: 9) added to list
+18:36:08.107 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Doors Greatest Hits" (id: "0$1$12$5292", childCount: 12) added to list
+18:36:08.107 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Eagles Best Of" (id: "0$1$12$4753", childCount: 9) added to list
+18:36:08.107 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Ghost Of Tom Joad" (id: "0$1$12$5024", childCount: 12) added to list
+18:36:08.141 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Glenn Gould Edition: Byrd, Gibbons, Sweelinck" (id: "0$1$12$4383", childCount: 9) added to list
+18:36:08.141 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Lamb Lies Down On Broadway CD1" (id: "0$1$12$6199", childCount: 11) added to list
+18:36:08.141 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Lamb Lies Down On Broadway CD2" (id: "0$1$12$6211", childCount: 12) added to list
+18:36:08.176 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Lion's Roar" (id: "0$1$12$4668", childCount: 10) added to list
+18:36:08.176 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Mask and Mirror" (id: "0$1$12$6246", childCount: 8) added to list
+18:36:08.176 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Platinum Collection (1969-1974)" (id: "0$1$12$5807", childCount: 20) added to list
+18:36:08.211 -> [I][SoapESP32.cpp:913] browseServer(): found 100 folders and 0 files
+18:36:08.211 -> 200: OK Computer/
+18:36:08.211 -> 201: Ommadawn (2000 Remaster)/
+18:36:08.211 -> 202: Orgelstücke - Die Schusterorgel In Torgau/
+18:36:08.211 -> 203: Original Masters/
+18:36:08.211 -> 204: Oyster/
+18:36:08.211 -> 205: P.U.L.S.E Disc 2/
+18:36:08.211 -> 206: Paganini: Centone dis Sonate Nr. 1 a-moll/
+18:36:08.211 -> 207: Paganini: Centone dis Sonate Nr. II D-Dur/
+18:36:08.246 -> 208: Paganini: Centone dis Sonate Nr. III C-Dur/
+18:36:08.246 -> 209: Paganini: Centone dis Sonate Nr. IV-A-Dur/
+18:36:08.246 -> 210: Paganini: Centone dis Sonate Nr. V E-Dur/
+18:36:08.246 -> 211: Paganini: Centone dis Sonate Nr. VI-A-Dur/
+18:36:08.246 -> 212: Paganini: Konzert Nr 1 op. 6 in D-dur/
+18:36:08.246 -> 213: Paganini: Konzert Nr 2 op. 7 in h-moll/
+18:36:08.246 -> 214: Paganini: Konzert Nr 3 in E-Dur/
+18:36:08.246 -> 215: Paganini: Konzert Nr 4 in d-moll/
+18:36:08.246 -> 216: Paganini: Konzert Nr 5 in a-moll/
+18:36:08.281 -> 217: Paganini: Konzert Nr 6 op post in e-moll/
+18:36:08.281 -> 218: Paganini: Sonata concertata für Violine & Gitarre A-Dur/
+18:36:08.281 -> 219: Pearl/
+18:36:08.281 -> 220: Pieces Of You/
+18:36:08.281 -> 221: Platinum/
+18:36:08.281 -> 222: Populäre Ouvertüren/
+18:36:08.281 -> 223: Prokofiev: Sinfonie Nr 1 D-Dur 'Classical' op 25/
+18:36:08.281 -> 224: Prokofiev: Sinfonie Nr 1 D-dur 'Klassische Sinphinie' op 25/
+18:36:08.281 -> 225: Prokofjew: Die Liebe zu den drei Orangen op 33 bis/
+18:36:08.281 -> 226: Prokofjew: Lietenant Kijé op 60/
+18:36:08.316 -> 227: Pulse Disc 1/
+18:36:08.316 -> 228: QE2/
+18:36:08.316 -> 229: Queen Greatest Hits/
+18:36:08.316 -> 230: Queen Greatest Hits II/
+18:36:08.316 -> 231: Rachmaninov: Klavierkonzert No 2 c-moll, op 18/
+18:36:08.316 -> 232: Ravel: Bolero/
+18:36:08.316 -> 233: Ravel: Bolero / Mozart: Eine kleine Nachtmusik / Smetana: Moldau / Albinoni: Adagio / Grieg: Peer Gynt: Morgenstimmung/
+18:36:08.316 -> 234: Ravel: Ma Mère L'Oye/
+18:36:08.316 -> 235: Ravel: Pavane pour une Infante Défunte/
+18:36:08.316 -> 236: Ravel: Rapsodie Espagnole/
+18:36:08.351 -> 237: Recurring Dream: The Very Best of Crowded House (Special Edition)/
+18:36:08.351 -> 238: Revolver/
+18:36:08.351 -> 239: Rimsky-Korsakow: Captricio Espagnol op 34/
+18:36:08.351 -> 240: Rimsky-Korsakow: Russian Easter Ouverture/
+18:36:08.351 -> 241: Rimsky-Korsakow: Sadko/
+18:36:08.351 -> 242: Rimsky-Korsakow: Sinfonie Nr 1 e-Moll op 1/
+18:36:08.351 -> 243: Rimsky-Korsakow: Sinfonie Nr 2 'Antar' op 9/
+18:36:08.351 -> 244: Rimsky-Korsakow: Smyponie Nr 3 C-Dur op 32/
+18:36:08.351 -> 245: Ring of Changes/
+18:36:08.386 -> 246: Rossini: Ouvertüren/
+18:36:08.386 -> 247: Rossini: Stabat Mater/
+18:36:08.386 -> 248: Sailing To Philadelphia/
+18:36:08.386 -> 249: Salve Regina - Vesper zum Fest Mariä Himmelfahrt/
+18:36:08.386 -> 250: Schubert: Sinfonie Nr 5 B-Dur D485/
+18:36:08.386 -> 251: Schubert: Sinfonie Nr 8 h-Moll D759 'Unvollendete'/
+18:36:08.386 -> 252: Schubert: Sinfonie Nr. 9 C-dur D944/
+18:36:08.386 -> 253: Schumann: Klaviertkonzert a-moll, op 54/
+18:36:08.386 -> 254: Serious Hits...Live!/
+18:36:08.386 -> 255: Sgt. Pepper's Lonely Hearts Club Band/
+18:36:08.422 -> 256: Shepherd Moons/
+18:36:08.422 -> 257: Sibelius - Beautiful Songs for Choir/
+18:36:08.422 -> 258: Sibelius: Concerto in D Minor, op 47/
+18:36:08.422 -> 259: Sibelius: En Saga, Op 9/
+18:36:08.422 -> 260: Sibelius: Finlandia, op 26 No 7/
+18:36:08.422 -> 261: Sibelius: Karelia Suite Op. 11/
+18:36:08.422 -> 262: Sibelius: The Swan of Tuonela, Op 22 No 3/
+18:36:08.422 -> 263: Smetana: Má Vlast/
+18:36:08.422 -> 264: Smetana: Mein Vaterland - Die Moldau/
+18:36:08.422 -> 265: Sounds Of Silence/
+18:36:08.422 -> 266: South/
+18:36:08.422 -> 267: Stars - The Best Of 1992-2002/
+18:36:08.456 -> 268: Stay Gold/
+18:36:08.456 -> 269: Stormwatch/
+18:36:08.456 -> 270: Strauss: Eine Alpensinfonie op. 64/
+18:36:08.456 -> 271: Sultans of Swing: The Very Best of Dire Straits/
+18:36:08.456 -> 272: Sutras/
+18:36:08.456 -> 273: Tales From New York - Disc 1/
+18:36:08.456 -> 274: Tales From New York - Disc 2/
+18:36:08.456 -> 275: Telemann: Concerto F-dur für Blockflöte, Streicher und Continuo/
+18:36:08.456 -> 276: Telemann: Fantasien für Cembalo/
+18:36:08.456 -> 277: Telemann: Konzert für Oboe, Streicher und Basso Continuo in D-dur/
+18:36:08.491 -> 278: Telemann: Konzert für Oboe, Streicher und Basso Continuo in d-moll/
+18:36:08.491 -> 279: Telemann: Konzert für Oboe, Streicher und Basso Continuo in e-moll/
+18:36:08.491 -> 280: Telemann: Konzert für Oboe, Streicher und Basso Continuo in f-moll/
+18:36:08.491 -> 281: Telemann: Konzert für Oboie, Streicher und Basso Continuo in e-moll/
+18:36:08.491 -> 282: Telemann: Konzert-Sonate für Trompete, Streicher und Cembalo D-dur/
+18:36:08.491 -> 283: Telemann: Oboenkonzert c-moll/
+18:36:08.527 -> 284: The Bends/
+18:36:08.527 -> 285: The Best Of/
+18:36:08.527 -> 286: The Best Of Blondie/
+18:36:08.527 -> 287: The Boatman's Call/
+18:36:08.527 -> 288: The Book Of Secrets/
+18:36:08.527 -> 289: The Celts/
+18:36:08.527 -> 290: The Dark Side of the Moon/
+18:36:08.527 -> 291: The Doors Greatest Hits/
+18:36:08.527 -> 292: The Eagles Best Of/
+18:36:08.527 -> 293: The Ghost Of Tom Joad/
+18:36:08.527 -> 294: The Glenn Gould Edition: Byrd, Gibbons, Sweelinck/
+18:36:08.527 -> 295: The Lamb Lies Down On Broadway CD1/
+18:36:08.527 -> 296: The Lamb Lies Down On Broadway CD2/
+18:36:08.562 -> 297: The Lion's Roar/
+18:36:08.562 -> 298: The Mask and Mirror/
+18:36:08.562 -> 299: The Platinum Collection (1969-1974)/
+18:36:08.562 -> ------> Browse directory with starting index: 300
+18:36:08.562 -> [I][SoapESP32.cpp:812] browseServer(): server: "LINKSTATION2b: LinkStation", objectId: "0$1$12"
+18:36:09.682 -> [I][SoapESP32.cpp:830] browseServer(): connected successfully to server 192.168.1.50:9050
+18:36:09.682 -> [I][SoapESP32.cpp:853] browseServer(): scan answer from media server:
+18:36:09.682 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Stamping Ground" (id: "0$1$12$5656", childCount: 12) added to list
+18:36:09.682 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Very Best Of" (id: "0$1$12$4986", childCount: 18) added to list
+18:36:09.717 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "The Visit" (id: "0$1$12$6235", childCount: 9) added to list
+18:36:09.717 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Thick as a brick" (id: "0$1$12$4820", childCount: 2) added to list
+18:36:09.717 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Time Out Of Mind" (id: "0$1$12$5253", childCount: 11) added to list
+18:36:09.717 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Troubadour: The Definitive Collection 1964-1976 CD1" (id: "0$1$12$5880", childCount: 11) added to list
+18:36:09.752 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Troubadour: The Definitive Collection 1964-1976 CD2" (id: "0$1$12$5890", childCount: 10) added to list
+18:36:09.752 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: 1812 Ouverüre" (id: "0$1$12$3200", childCount: 1) added to list
+18:36:09.787 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: Der Nussknacker, Suite Op 71a" (id: "0$1$12$3167", childCount: 8) added to list
+18:36:09.787 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: Klavierkonzert No 1 b-moll op. 23" (id: "0$1$12$3139", childCount: 3) added to list
+18:36:09.787 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: Romeo & Juliet" (id: "0$1$12$3188", childCount: 1) added to list
+18:36:09.821 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: Serenade C-dur für Streichorchester op. 48" (id: "0$1$12$3210", childCount: 4) added to list
+18:36:09.821 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tschaikowski: Violinkonzert in D, op 35" (id: "0$1$12$3224", childCount: 3) added to list
+18:36:09.821 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tswchaikowski: Sinfonie Nr 6 h-moll 'Pathétique' op 74" (id: "0$1$12$3237", childCount: 4) added to list
+18:36:09.856 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tubular Bells" (id: "0$1$12$4882", childCount: 2) added to list
+18:36:09.856 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tubular Bells II" (id: "0$1$12$4902", childCount: 14) added to list
+18:36:09.856 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Tunnel Of Love" (id: "0$1$12$5006", childCount: 12) added to list
+18:36:09.891 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Unknown" (id: "0$1$12$4840", childCount: 22) added to list
+18:36:09.891 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vanessa-Mae: The Violin Player" (id: "0$1$12$4526", childCount: 10) added to list
+18:36:09.891 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Verdi: La Traviata" (id: "0$1$12$3259", childCount: 38) added to list
+18:36:09.926 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Verdi: Messa da Requiem" (id: "0$1$12$3282", childCount: 7) added to list
+18:36:09.926 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Verdi: Nabucco" (id: "0$1$12$3303", childCount: 41) added to list
+18:36:09.926 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Verdi: Te Deum - Quattro Pezzi Sacri" (id: "0$1$12$3324", childCount: 1) added to list
+18:36:09.963 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto a-moll PFV 83 für Sopranino" (id: "0$1$12$829", childCount: 3) added to list
+18:36:09.963 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto C-dur für Blockflöte, Streicher und Continuo, RV 444" (id: "0$1$12$659", childCount: 3) added to list
+18:36:09.963 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto C-Dur PFV 78 für Sopranino" (id: "0$1$12$843", childCount: 3) added to list
+18:36:09.997 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto C-Dur PFV 79 für Sopranino" (id: "0$1$12$855", childCount: 3) added to list
+18:36:09.997 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto C-Dur PV 75 für zwei Trompeten" (id: "0$1$12$713", childCount: 3) added to list
+18:36:09.997 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto c-moll PFV 440 für Altblockflöte" (id: "0$1$12$867", childCount: 3) added to list
+18:36:10.030 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto G-Dur PV 133 für zwei Mandolinen" (id: "0$1$12$701", childCount: 3) added to list
+18:36:10.030 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto g-moll PV 366 für zwei Violinen" (id: "0$1$12$748", childCount: 4) added to list
+18:36:10.066 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Concerto g-moll PV 411 für zwei Celli" (id: "0$1$12$687", childCount: 3) added to list
+18:36:10.066 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Die vier Jahreszeiten" (id: "0$1$12$797", childCount: 12) added to list
+18:36:10.066 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Konzert für 2 Trompeten, Streicher und Cembalo C-dur, RV 537" (id: "0$1$12$736", childCount: 3) added to list
+18:36:10.101 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Le Quattro Stagioni" (id: "0$1$12$774", childCount: 12) added to list
+18:36:10.101 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Vivaldi: Oboenkonzert a-moll" (id: "0$1$12$809", childCount: 3) added to list
+18:36:10.101 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Viviani: Sonata für Trompete und Orgel C-dur" (id: "0$1$12$889", childCount: 5) added to list
+18:36:10.137 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Watermark" (id: "0$1$12$5767", childCount: 12) added to list
+18:36:10.137 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Weisses Papier" (id: "0$1$12$6023", childCount: 11) added to list
+18:36:10.137 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "White Lilies Island" (id: "0$1$12$5847", childCount: 12) added to list
+18:36:10.173 -> [I][SoapESP32.cpp:651] soapScanContainer(): folder "Wish You Were Here" (id: "0$1$12$5555", childCount: 5) added to list
+18:36:10.173 -> [I][SoapESP32.cpp:913] browseServer(): found 41 folders and 0 files
+18:36:10.173 -> 300: The Stamping Ground/
+18:36:10.173 -> 301: The Very Best Of/
+18:36:10.173 -> 302: The Visit/
+18:36:10.173 -> 303: Thick as a brick/
+18:36:10.173 -> 304: Time Out Of Mind/
+18:36:10.173 -> 305: Troubadour: The Definitive Collection 1964-1976 CD1/
+18:36:10.208 -> 306: Troubadour: The Definitive Collection 1964-1976 CD2/
+18:36:10.208 -> 307: Tschaikowski: 1812 Ouverüre/
+18:36:10.208 -> 308: Tschaikowski: Der Nussknacker, Suite Op 71a/
+18:36:10.208 -> 309: Tschaikowski: Klavierkonzert No 1 b-moll op. 23/
+18:36:10.208 -> 310: Tschaikowski: Romeo & Juliet/
+18:36:10.208 -> 311: Tschaikowski: Serenade C-dur für Streichorchester op. 48/
+18:36:10.208 -> 312: Tschaikowski: Violinkonzert in D, op 35/
+18:36:10.208 -> 313: Tswchaikowski: Sinfonie Nr 6 h-moll 'Pathétique' op 74/
+18:36:10.243 -> 314: Tubular Bells/
+18:36:10.243 -> 315: Tubular Bells II/
+18:36:10.243 -> 316: Tunnel Of Love/
+18:36:10.243 -> 317: Unknown/
+18:36:10.243 -> 318: Vanessa-Mae: The Violin Player/
+18:36:10.243 -> 319: Verdi: La Traviata/
+18:36:10.243 -> 320: Verdi: Messa da Requiem/
+18:36:10.243 -> 321: Verdi: Nabucco/
+18:36:10.243 -> 322: Verdi: Te Deum - Quattro Pezzi Sacri/
+18:36:10.243 -> 323: Vivaldi: Concerto a-moll PFV 83 für Sopranino/
+18:36:10.243 -> 324: Vivaldi: Concerto C-dur für Blockflöte, Streicher und Continuo, RV 444/
+18:36:10.243 -> 325: Vivaldi: Concerto C-Dur PFV 78 für Sopranino/
+18:36:10.278 -> 326: Vivaldi: Concerto C-Dur PFV 79 für Sopranino/
+18:36:10.278 -> 327: Vivaldi: Concerto C-Dur PV 75 für zwei Trompeten/
+18:36:10.278 -> 328: Vivaldi: Concerto c-moll PFV 440 für Altblockflöte/
+18:36:10.278 -> 329: Vivaldi: Concerto G-Dur PV 133 für zwei Mandolinen/
+18:36:10.278 -> 330: Vivaldi: Concerto g-moll PV 366 für zwei Violinen/
+18:36:10.278 -> 331: Vivaldi: Concerto g-moll PV 411 für zwei Celli/
+18:36:10.278 -> 332: Vivaldi: Die vier Jahreszeiten/
+18:36:10.312 -> 333: Vivaldi: Konzert für 2 Trompeten, Streicher und Cembalo C-dur, RV 537/
+18:36:10.312 -> 334: Vivaldi: Le Quattro Stagioni/
+18:36:10.312 -> 335: Vivaldi: Oboenkonzert a-moll/
+18:36:10.312 -> 336: Viviani: Sonata für Trompete und Orgel C-dur/
+18:36:10.312 -> 337: Watermark/
+18:36:10.312 -> 338: Weisses Papier/
+18:36:10.312 -> 339: White Lilies Island/
+18:36:10.312 -> 340: Wish You Were Here/
+18:36:10.312 -> 
+18:36:10.312 -> Sketch finished.

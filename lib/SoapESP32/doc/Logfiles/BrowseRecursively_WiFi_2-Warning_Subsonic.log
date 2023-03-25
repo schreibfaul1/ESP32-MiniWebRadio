@@ -1,0 +1,518 @@
+01:42:07.017 > Connecting to WiFi network ......
+01:42:09.444 > Connected successfully. IP address: 192.168.1.37
+01:42:09.449 >
+01:42:09.449 > ----> server content follows:
+01:42:09.504 > Music/
+01:42:09.570 > [W][SoapESP32.cpp:653] soapScanContainer(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.580 > [W][SoapESP32.cpp:653] soapScanContainer(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.588 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.597 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.603 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.        
+01:42:09.610 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.616 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.625 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.631 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.        
+01:42:09.638 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.645 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.654 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.660 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.667 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.674 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.681 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.   
+01:42:09.688 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.694 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.703 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.711 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.      
+01:42:09.717 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.   
+01:42:09.724 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.731 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.739 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.746 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.        
+01:42:09.752 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.760 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.768 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.774 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.        
+01:42:09.781 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.787 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.796 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.803 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.        
+01:42:09.809 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.817 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.825 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.831 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.838 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.845 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.854 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.860 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.867 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.874 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.882 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.889 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.895 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.902 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.911 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.917 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.924 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.931 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.939 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.946 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.952 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.960 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.968 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:09.973 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:09.981 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:09.988 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:09.996 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.003 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.009 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.017 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.025 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.031 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.038 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.045 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.054 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.060 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.067 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.074 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.082 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.088 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.095 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.102 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.110 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.116 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.123 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.130 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.138 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.146 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.152 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.159 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.168 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.174 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.181 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.188 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.196 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.203 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.209 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.217 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.225 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.231 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.238 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.245 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.253 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.260 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.266 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.274 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.282 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.288 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.295 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.302 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.311 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.317 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.323 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.331 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.339 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.345 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.352 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.359 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.368 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.374 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.381 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.387 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.395 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.402 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.409 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.417 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.425 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.431 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.438 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.445 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.453 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.460 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.466 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.474 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.482 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.488 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.495 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.502 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.510 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.517 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.523 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.531 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.539 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.545 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.552 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.559 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.568 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.574 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.581 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.588 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.596 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.603 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.609 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.616 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.625 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.631 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.638 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.645 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.653 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.660 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.666 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.674 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.682 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.688 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.695 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.702 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.710 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.717 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.723 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.731 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.739 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.745 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.752 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.759 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.768 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.774 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.780 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.787 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.795 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.801 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.809 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.815 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.824 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.830 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.837 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.845 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.853 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.860 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.865 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.872 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.881 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.887 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.895 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.902 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.910 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.917 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.923 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.930 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.939 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.945 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.952 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.959 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.967 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:10.974 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:10.980 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:10.988 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:10.996 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.002 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.009 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.016 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.025 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.031 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.037 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.045 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.053 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.059 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.066 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.073 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.082 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.088 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.095 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.102 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.109 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.116 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.122 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.129 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.138 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.145 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.152 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.159 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.167 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.174 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.180 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.187 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.196 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.202 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.209 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.216 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.223 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.230 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.236 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.245 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.253 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.259 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.266 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.273 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.282 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.288 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.295 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.302 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.310 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.316 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.323 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.330 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.339 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.345 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.352 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.359 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.367 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.374 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.380 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.388 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.398 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.404 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.410 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.418 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.426 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.432 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.439 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.446 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.455 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.461 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.468 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.475 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.483 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.490 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.496 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.503 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.512 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.518 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.525 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.532 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.540 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.547 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.553 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.561 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.569 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.575 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.582 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.588 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.596 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.603 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.610 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.618 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.626 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.632 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.639 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.646 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.655 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.661 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.668 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.675 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.683 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.689 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.696 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.703 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.712 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.718 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.725 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.732 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.740 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.747 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.753 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.760 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.769 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.775 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.782 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.789 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.797 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.804 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.810 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.818 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.826 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.832 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.839 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.846 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.854 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.861 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.867 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.875 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.883 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.889 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.896 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.903 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.912 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.918 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.925 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.932 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.940 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.946 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.953 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.960 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.969 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:11.975 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:11.982 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:11.989 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:11.997 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.004 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.010 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.017 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.025 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.031 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.038 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.046 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.054 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.061 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.067 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.075 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.083 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.089 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.096 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.103 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.112 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.118 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.124 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.132 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.140 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.146 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.153 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.160 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.169 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.175 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.182 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.189 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.197 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.204 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.210 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.217 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.226 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.232 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.239 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.246 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.254 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.261 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.267 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.275 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.283 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.289 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.296 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.303 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.311 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.318 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.324 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.332 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.340 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.346 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.353 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.360 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "1" != requested parent id "folder-1"
+01:42:12.369 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.375 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.381 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.389 >   Deutsch Pop/
+01:42:12.390 >   Car-CD1/
+01:42:12.391 >   Forever Young   item size: missing, audio
+01:42:12.395 >   This Is The Life   item size: missing, audio
+01:42:12.399 >   Excuse me Mr.   item size: missing, audio
+01:42:12.403 >   Sick And Tired   item size: missing, audio
+01:42:12.407 >   A New Day Has Come   item size: missing, audio
+01:42:12.412 >   All good things   item size: missing, audio
+01:42:12.416 >   Wicked Games   item size: missing, audio
+01:42:12.419 >   China Girl   item size: missing, audio
+01:42:12.423 >   Major Tom (German Version)   item size: missing, audio
+01:42:12.428 >   Der Kommissar   item size: missing, audio
+01:42:12.432 >   Just Hold Me   item size: missing, audio
+01:42:12.436 >   Sweet About Me   item size: missing, audio
+01:42:12.440 >   Summer In The City   item size: missing, audio
+01:42:12.444 >   A million miles away   item size: missing, audio
+01:42:12.449 >   Sounds Like A Melody   item size: missing, audio
+01:42:12.453 >   Dutch Mountains   item size: missing, audio
+01:42:12.457 >   On my way to LA (long)   item size: missing, audio
+01:42:12.462 >   500 Miles   item size: missing, audio
+01:42:12.466 >   Always The Sun   item size: missing, audio
+01:42:12.470 >   From the land down under   item size: missing, audio
+01:42:12.474 >   One Night in Bangkok   item size: missing, audio
+01:42:12.479 >   Sing   item size: missing, audio
+01:42:12.482 >   Material World   item size: missing, audio
+01:42:12.486 >   Stars   item size: missing, audio
+01:42:12.489 >   Whenever, Wherever   item size: missing, audio
+01:42:12.494 >   I Feel Good   item size: missing, audio
+01:42:12.497 >   Ride   item size: missing, audio
+01:42:12.500 >   Blueprint   item size: missing, audio
+01:42:12.504 >   74-75   item size: missing, audio
+01:42:12.507 >   Someone new   item size: missing, audio
+01:42:12.511 >   Go West   item size: missing, audio
+01:42:12.514 >   Nothing Compares 2 U   item size: missing, audio
+01:42:12.519 >   My Name Is Luka   item size: missing, audio
+01:42:12.523 >   Because The Night   item size: missing, audio
+01:42:12.527 >   Set Fire to the Rain   item size: missing, audio
+01:42:12.532 >   Our house   item size: missing, audio
+01:42:12.535 >   Super Girl   item size: missing, audio
+01:42:12.539 >   Hands Clean   item size: missing, audio
+01:42:12.543 >   Hotel California   item size: missing, audio
+01:42:12.547 >   Abracadabra   item size: missing, audio
+01:42:12.550 >   No Milk Today   item size: missing, audio
+01:42:12.554 >   Stay   item size: missing, audio
+01:42:12.558 >   You Got it   item size: missing, audio
+01:42:12.561 >   Carpet Crawl   item size: missing, audio
+01:42:12.565 >   Talk To Me   item size: missing, audio
+01:42:12.569 >   Lady In Black   item size: missing, audio
+01:42:12.573 >   Down To The River   item size: missing, audio
+01:42:12.577 >   San Francisco (Be Sure To Wear Flowers In You Hair)   item size: missing, audio
+01:42:12.584 >   Love Hurts   item size: missing, audio
+01:42:12.588 >   Let Her Go   item size: missing, audio
+01:42:12.591 >   One   item size: missing, audio
+01:42:12.594 >   A good heart   item size: missing, audio
+01:42:12.598 >   Broken Sleep   item size: missing, audio
+01:42:12.602 >   Riverside   item size: missing, audio
+01:42:12.606 >   Don't Forget About Me   item size: missing, audio
+01:42:12.610 >   Bad Ideas   item size: missing, audio
+01:42:12.614 >   She Moves   item size: missing, audio
+01:42:12.617 >   Big In Japan   item size: missing, audio
+01:42:12.621 >   Cripple and the Starfish   item size: missing, audio
+01:42:12.626 >   Home   item size: missing, audio
+01:42:12.629 >   It's Amazing   item size: missing, audio
+01:42:12.633 >   Lose It   item size: missing, audio
+01:42:12.636 >   Ruined Heart   item size: missing, audio
+01:42:12.640 >   Keep Moving On - Live   item size: missing, audio
+01:42:12.645 >   The Way It Is   item size: missing, audio
+01:42:12.649 >   Enjoy the Silence   item size: missing, audio
+01:42:12.653 >   Clocks   item size: missing, audio
+01:42:12.656 >   Do You Really Want To Hurt Me   item size: missing, audio
+01:42:12.661 >   The Sound Of Silence [Official Music Video]   item size: missing, audio
+01:42:12.668 >   Working Hard For Your Love   item size: missing, audio
+01:42:12.673 >   Vincent   item size: missing, audio
+01:42:12.676 >   One Of Us Cannot Be Wrong   item size: missing, audio
+01:42:12.681 >   Done   item size: missing, audio
+01:42:12.684 >   Why Her Not Me   item size: missing, audio
+01:42:12.688 >   Sign of the Times   item size: missing, audio
+01:42:12.692 >   Watermelon Sugar   item size: missing, audio
+01:42:12.696 >   Broken   item size: missing, audio
+01:42:12.699 >   All Of Me   item size: missing, audio
+01:42:12.703 >   Summertime Sadness   item size: missing, audio
+01:42:12.707 >   Slip Away   item size: missing, audio
+01:42:12.711 >   Blue Mesa   item size: missing, audio
+01:42:12.714 >   Simple Man   item size: missing, audio
+01:42:12.718 >   Electric   item size: missing, audio
+01:42:12.721 >   Majesty live   item size: missing, audio
+01:42:12.726 >   Madrugada - Vocal (Live in Norway)   item size: missing, audio
+01:42:12.732 >   Vocal   item size: missing, audio
+01:42:12.735 >   What's On Your Mind?   item size: missing, audio
+01:42:12.739 >   All This Time   item size: missing, audio
+01:42:12.743 >   Incubus Live   item size: missing, audio
+01:42:12.747 >   Gyöngyhajú lány   item size: missing, audio
+01:42:12.752 >   Hell Or High Water   item size: missing, audio
+01:42:12.756 >   Born To Be Alive   item size: missing, audio
+01:42:12.760 >   Streets Of London   item size: missing, audio
+01:42:12.764 >   Jealous Guy   item size: missing, audio
+01:42:12.768 >   Youre In The Army   item size: missing, audio
+01:42:12.772 >   All You Zombies   item size: missing, audio
+01:42:12.776 >   Save Me   item size: missing, audio
+01:42:12.780 >   Another Love   item size: missing, audio
+01:42:12.784 > Videos/
+01:42:12.811 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "2" != requested parent id "folder-2"
+01:42:12.820 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.826 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.833 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.840 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "2" != requested parent id "folder-2"
+01:42:12.849 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.855 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.862 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.869 > [W][SoapESP32.cpp:733] soapScanItem(): scanned parent id "2" != requested parent id "folder-2"
+01:42:12.877 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "size=" missing.
+01:42:12.883 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "bitrate=" missing.
+01:42:12.890 > [W][SoapESP32.cpp:622] soapScanAttribute(): attribute: "sampleFrequency=" missing.
+01:42:12.897 >   EmptyVideoFile   item size: missing, audio
+01:42:12.901 >   VideoNr1   item size: missing, audio
+01:42:12.905 >   VideoNr2   item size: missing, audio
+01:42:12.908 > Playlists/
+01:42:12.933 > 
+01:42:12.934 > Sketch finished.
