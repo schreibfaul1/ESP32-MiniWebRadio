@@ -2438,7 +2438,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "change_state"){      changeState(param.toInt()); return;}
 
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped");
-                                    if(playlistFile) playlistFile.close(); return;}
+                                    if(playlistFile) playlistFile.close();
+                                    return;}
 
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=nothing to resume");
                                     else {audiotrack(_lastconnectedfile, _resumeFilePos);

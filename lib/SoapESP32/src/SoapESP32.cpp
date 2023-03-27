@@ -283,7 +283,11 @@ bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int msWait) {
                 if(i < result->size()) continue;
 
                 // new server found: add it to list
-                soapServer_t srv = {.ip = ip, .port = (uint16_t)port, .location = location};
+                soapServer_t srv = {.ip = ip,
+                                    .port = (uint16_t)port,
+                                    .location = location,
+                                    .friendlyName = "",
+                                    .controlURL = "" };
                 result->push_back(srv);
             }
         }
@@ -488,7 +492,12 @@ uint8_t SoapESP32::seekServer() {
         }
 
         // ok, connection established
-        srv = {.ip = rcvd[j].ip, .port = rcvd[j].port, .location = rcvd[j].location, .friendlyName = ""};
+        srv = {.ip = rcvd[j].ip,
+               .port = rcvd[j].port,
+               .location = rcvd[j].location,
+               .friendlyName = "",
+               .controlURL = "" };
+
         gotFriendlyName = false;
         gotServiceType = false;
 
