@@ -112,7 +112,7 @@
 #define SOAP_DEFAULT_BROWSE_FLAG           "BrowseDirectChildren"
 #define SOAP_DEFAULT_BROWSE_FILTER         "*"
 #define SOAP_DEFAULT_BROWSE_STARTING_INDEX 0
-#define SOAP_DEFAULT_BROWSE_MAX_COUNT      100  // arbitrary value to limit memory usage
+#define SOAP_DEFAULT_BROWSE_MAX_COUNT      300
 #define SOAP_DEFAULT_BROWSE_SORT_CRITERIA  ""
 
 // selected DIDL attributes for scanning
@@ -217,7 +217,6 @@ class SoapESP32 {
     bool             m_clientDataConOpen;    // marker: socket open for reading file
     size_t           m_clientDataAvailable;  // file read count
     soapServerVect_t m_server;               // list of usable media servers in local network
-    soapObjectVect_t m_browseResult;
     int              m_xmlChunkCount;    // nr of bytes left of chunk (0 = end of chunk, next line delivers chunk size)
     eXmlReplaceState m_xmlReplaceState;  // state machine for replacing XML entities
     uint8_t          m_xmlReplaceOffset;
@@ -253,10 +252,8 @@ class SoapESP32 {
     bool soapReadHttpHeader(uint64_t *contentLength, bool *chunked = NULL);
     int  soapReadXML(bool chunked = false, bool replace = false);
     bool soapScanAttribute(const String *attributes, String *result, const char *searchFor);
-    bool soapScanContainer(const String *parentId, const String *attributes, const String *container,
-                           soapObjectVect_t *browseResult);
-    bool soapScanItem(const String *parentId, const String *attributes, const String *item,
-                      soapObjectVect_t *browseResult);
+    bool soapScanContainer(const String *parentId, const String *attributes, const String *container);
+    bool soapScanItem(const String *parentId, const String *attributes, const String *item);
     bool allocate_MiniXPath();
     void release_MiniXPath();
 public:

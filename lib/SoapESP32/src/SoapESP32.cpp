@@ -624,8 +624,7 @@ bool SoapESP32::soapScanAttribute(const String *attributes, String *result, cons
 //
 // scan <container> content in SOAP answer
 //
-bool SoapESP32::soapScanContainer(const String *parentId, const String *attributes, const String *container,
-                                  soapObjectVect_t *browseResult) {
+bool SoapESP32::soapScanContainer(const String *parentId, const String *attributes, const String *container) {
     int          i = 0;
     soapObject_t info;
     String       str((char *)0);
@@ -695,7 +694,6 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
 
     // add valid container to result list
     info.isDirectory = true;
-    browseResult->push_back(info);
 
     if(dlna_folder) dlna_folder(info.name, info.id, info.size);
 
@@ -705,8 +703,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
 //
 // scan <item> content in SOAP answer
 //
-bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, const String *item,
-                             soapObjectVect_t *browseResult) {
+bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, const String *item) {
     soapObject_t info;
     int          i = 0, port;
     char         address[20];
@@ -836,7 +833,6 @@ bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, c
 
     // add valid file to result list
     info.isDirectory = false;
-    browseResult->push_back(info);
     m_downloadPort = info.downloadPort;
     if(dlna_file) dlna_file(info.name, info.id, info.size, info.uri, info.fileType == fileTypeAudio);
 
@@ -908,9 +904,6 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
         }
         log_v("scan answer from media server:");
 
-        // time to clean result list
-        m_browseResult.clear();
-
         // HTTP header ok, now scan XML/SOAP reply
         m_xPathContainer->setPath(xmlParserPaths[xpBrowseContainer].tagNames, xmlParserPaths[xpBrowseContainer].num);
         m_xPathContainerAlt1->setPath(xmlParserPaths[xpBrowseContainerAlt1].tagNames,
@@ -945,7 +938,7 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
            m_xPathContainerAlt2->getValue((char)ret, &str, &strAttribute, true)) {
             log_v("container attribute (length=%d): %s", strAttribute.length(), strAttribute.c_str());
             log_v("container (length=%d): %s", str.length(), str.c_str());
-            if(soapScanContainer(&m_objectId, &strAttribute, &str, &m_browseResult)) countContainer++;
+            if(soapScanContainer(&m_objectId, &strAttribute, &str)) countContainer++;
             // TEST
             delay(1);  // resets task switcher watchdog, just in case it's needed
         }
@@ -954,7 +947,7 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
            m_xPathItemAlt2->getValue((char)ret, &str, &strAttribute, true)) {
             log_v("item attribute (length=%d): %s", strAttribute.length(), strAttribute.c_str());
             log_v("item (length=%d): %s", str.length(), str.c_str());
-            if(soapScanItem(&m_objectId, &strAttribute, &str, &m_browseResult)) countItem++;
+            if(soapScanItem(&m_objectId, &strAttribute, &str)) countItem++;
             // TEST
             delay(1);  // resets task switcher watchdog, just in case it's needed
         }
