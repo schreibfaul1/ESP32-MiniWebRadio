@@ -15,19 +15,23 @@ MiniXPath::MiniXPath()
   reset();
 }
 
+MiniXPath::~MiniXPath(){
+  ;
+}
+
 void MiniXPath::reset()
 {
   state = XML_PARSER_UNINITIATED;
   level = 0;
   position = 0;
   treeFlag = false;
-  matchCount = 0;       
+  matchCount = 0;
   matchLevel = 0;       // Current level we have reached after scanning path tags
-#ifdef MINIXPATH_DEBUG	
-  Serial.printf("reset: pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d path=%s\n", 
+#ifdef MINIXPATH_DEBUG
+  Serial.printf("reset: pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d path=%s\n",
                   pathSize, state, level, matchCount, matchLevel, pathSize == 0 ? "" : path[pathSize-1]);
   Serial.flush();
-#endif									
+#endif
 }
 
 void MiniXPath::setPath(const char *path[], size_t pathSize)
@@ -40,11 +44,11 @@ void MiniXPath::setPath(const char *path[], size_t pathSize)
   this->matchLevel = newMatchLevel;
   this->path = path;
   this->pathSize = pathSize;
-#ifdef MINIXPATH_DEBUG	
-  Serial.printf("setPath: pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d path=%s\n", 
+#ifdef MINIXPATH_DEBUG
+  Serial.printf("setPath: pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d path=%s\n",
                  pathSize, state, level, matchCount, matchLevel, pathSize == 0 ? "" : path[pathSize-1]);
   Serial.flush();
-#endif									
+#endif
 }
 
 bool MiniXPath::findValue(char charToParse, bool subTree)
@@ -52,17 +56,17 @@ bool MiniXPath::findValue(char charToParse, bool subTree)
   return find(charToParse, subTree) && state == XML_PARSER_ELEMENT_CONTENT;
 }
 
-bool MiniXPath::getValue(char charToParse, String *result, String *attrib, bool subTree) 
+bool MiniXPath::getValue(char charToParse, String *result, String *attrib, bool subTree)
 {
   if (find(charToParse, subTree)) {
     if (subTree) {
       if (treeFlag) {
-        *result += charToParse;    
+        *result += charToParse;
         if (state == XML_PARSER_END_TAG && level == matchLevel) {
           if (result->endsWith("</")) result->remove(result->length() - 2);
           result->trim();
           return true;
-        }    
+        }
       }
     }
     // Ignore sub elements
@@ -83,10 +87,10 @@ bool MiniXPath::getValue(char charToParse, String *result, String *attrib, bool 
              (state == XML_PARSER_ATTRIBUTES || state == XML_PARSER_ATTRIBUTE_VALUE)) {
       if (charToParse == '\t' || charToParse == '\r' || charToParse == '\n') {
         *attrib += ' ';
-      }  
+      }
       else {
         *attrib += charToParse;
-      }  
+      }
     }
   }
   else {
@@ -134,7 +138,7 @@ bool MiniXPath::find(char charToParse, bool subTree)
           else {
             //state = XML_PARSER_COMPLETE;
             state = XML_PARSER_ROOT;
-          }  
+          }
         }
         else if (level == 0 && state == XML_PARSER_PROLOG_END) {
           state = XML_PARSER_ROOT;
@@ -183,7 +187,7 @@ bool MiniXPath::find(char charToParse, bool subTree)
             break;
         }
         break;
-      // Attribute start character and end character        
+      // Attribute start character and end character
       case '"':
       case '\'':
         if (level < pathSize) treeFlag = false;
@@ -212,10 +216,10 @@ bool MiniXPath::find(char charToParse, bool subTree)
         break;
       // All other characters
       default:
-        if (level < pathSize || 
+        if (level < pathSize ||
             (subTree && state == XML_PARSER_END_TAG && level == matchLevel)) {
           treeFlag = false;
-        }  
+        }
         if (state == XML_PARSER_START_TAG) state = XML_PARSER_START_TAG_NAME;
         if (state == XML_PARSER_PROLOG_TAG) state = XML_PARSER_PROLOG_TAG_NAME;
         if (state == XML_PARSER_START_TAG_NAME) {
@@ -231,14 +235,14 @@ bool MiniXPath::find(char charToParse, bool subTree)
         break;
     }
   }
-#ifdef MINIXPATH_DEBUG	
+#ifdef MINIXPATH_DEBUG
   // TEST
   //if (pathSize == 1 && (*(path[0]) == 'c' || *(path[0]) == 'i')) {
   char charTP = (charToParse < 0x20) ? '.' : charToParse;
-  Serial.printf("'%c' pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d pos=%d treeFlg=%d ret=%d\n", 
-                  charTP, pathSize, state, level, matchCount, matchLevel, position, treeFlag, matchLevel == pathSize);  
-  //}                
-#endif									
+  Serial.printf("'%c' pathsiz=%d stat=%02d lev=%d matchcnt=%d matchlev=%d pos=%d treeFlg=%d ret=%d\n",
+                  charTP, pathSize, state, level, matchCount, matchLevel, position, treeFlag, matchLevel == pathSize);
+  //}
+#endif
   return matchLevel == pathSize;
 }
 

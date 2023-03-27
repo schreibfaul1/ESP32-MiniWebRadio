@@ -31,16 +31,17 @@
 #define XML_PROLOG "xml"
 
 struct xPathParser_t
-{ 
-  const uint8_t num; 
+{
+  const uint8_t num;
   const char *tagNames[10];   // should be adjusted to fit highest level
 };
 
 class MiniXPath {
   public:
     uint8_t state;
-    
+
     MiniXPath();
+    ~MiniXPath();
 
     void reset();
     void setPath(const char *path[], size_t pathSize);

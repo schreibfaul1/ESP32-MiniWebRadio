@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.6.1, Mar 25/2022
+    Version 2.6.2, Mar 27/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -84,11 +84,12 @@ String         _stationName_air = "";
 String         _homepage = "";
 String         _filename = "";
 
-uint           numServers = 0;
-int            currentServer = -1;
-uint32_t       media_downloadPort = 0;
-String         media_downloadIP = "";
-vector<String> names{};
+uint           _numServers = 0;
+uint8_t        _level = 0;
+int            _currentServer = -1;
+uint32_t       _media_downloadPort = 0;
+String         _media_downloadIP = "";
+vector<String> _names{};
 
 char _hl_item[10][40]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
@@ -953,7 +954,7 @@ bool connectToWiFi(){
                     q = i;
                 }
             }
-            //log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
+            // log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
             if(s_ssid == "") continue;
             if(s_password == "") continue;
             wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
@@ -1186,7 +1187,7 @@ void setup(){
     else             setI2STone(); // SW Decoder
     showFooter();
     soap.seekServer();
-    numServers = soap.getServerCount();
+    _numServers = soap.getServerCount();
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -1730,80 +1731,39 @@ void changeState(int state){
 ***********************************************************************************************************************/
 int DLNA_setCurrentServer(String serverName){
     int serverNum = -1;
-    for(int i = 0; i < names.size(); i++){
-        if(names[i] == serverName) serverNum = i;
+    for(int i = 0; i < _names.size(); i++){
+        if(_names[i] == serverName) serverNum = i;
     }
-    currentServer = serverNum;
+    _currentServer = serverNum;
     return serverNum;
 }
-void DLNA_showServer(){ // Show connection details of all discovered, usable media servers
-    String msg = "DLNA_Names=";
-    soapServer_t srv;
-    names.clear();
-    for(int i = 0; i < numServers; i++){
-        soap.getServerInfo(i, &srv);
-        SerialPrintfln("DLNA:        " ANSI_ESC_GREEN "Server[%d]: IP address: %s port: %d name: %s -> controlURL: %s",
-           i, srv.ip.toString().c_str(), srv.port, srv.friendlyName.c_str(), srv.controlURL.c_str());
-        msg += srv.friendlyName;
-        if(i < numServers - 1) msg += ',';
-        names.push_back(srv.friendlyName);
-    }
-    // log_i("msg %s", msg.c_str());
-    webSrv.send(msg);
-}
-void DLNA_browseServer(String objectId, uint8_t level){
-    JSONVar myObject;
-    soapObjectVect_t browseResult;
-    soapObject_t object;
 
+void DLNA_showServer(){ // Show connection details of all discovered, usable media servers
+    webSrv.send("clearDLNA"); // delete server list
+    soap.listServer();
+}
+
+void DLNA_browseServer(String objectId, uint8_t level){
     // Here the user selects the DLNA server whose content he wants to see, level 0 is root
     if(level == 0){
-        if(DLNA_setCurrentServer(objectId) < 0) {log_e("DLNA Server not found"); return;}
-        objectId = "0";
+        _currentServer = objectId.toInt();
     }
-
-    soap.browseServer(currentServer, objectId.c_str(), &browseResult);
-    if(browseResult.size() == 0){
-        log_i("no content!"); // then the directory is empty
-        return;
-    }
-    log_v("objectID: %s", objectId.c_str());
-    for (int i = 0; i < browseResult.size(); i++){
-        object = browseResult[i];
-        myObject[i]["name"]= object.name;
-        myObject[i]["isDir"] = object.isDirectory;
-        if(object.isDirectory){
-            myObject[i]["id"]  = object.id;
-        }
-        else {
-            myObject[i]["id"]  = object.uri;
-            media_downloadPort = object.downloadPort;
-            media_downloadIP   = object.downloadIp.toString();
-        }
-        myObject[i]["size"] = (uint32_t)object.size;
-        myObject[i]["uri"]  = object.id;
-        log_v("objectName %s", browseResult[i].name.c_str());
-        log_v("objectId %s", browseResult[i].artist.c_str());
-    }
-    level++;
-    String msg = "Level" + String(level,10) + "=" + JSON.stringify(myObject);
-
-    log_v("msg = %s", msg.c_str());
-    webSrv.send(msg);
-    browseResult.clear();
+    soap.browseServer(_currentServer, objectId.c_str());
 }
 
 void DLNA_getFileItems(String uri){
-    soapObjectVect_t browseResult;
+    String   _media_downloadIP   = soap.getMediaDownloadIP();
+    uint16_t _media_downloadPort = soap.getMediaDownloadPort();
 
     log_v("uri: %s", uri.c_str());
-    log_v("downloadIP: %s", media_downloadIP.c_str());
-    log_v("downloadport: %d", media_downloadPort);
-    String URL = "http://" + media_downloadIP + ":" + media_downloadPort + "/" + uri;
-    log_v("URL=%s", URL.c_str());
+    log_v("downloadIP: %s", _media_downloadIP.c_str());
+    log_v("downloadport: %d", _media_downloadPort);
+    String URL = "http://" + _media_downloadIP + ":" + _media_downloadPort + "/" + uri;
+    log_i("URL=%s", URL.c_str());
     audioConnecttohost(URL.c_str());
 }
 void DLNA_showContent(String objectId, uint8_t level){
+    audioStopSong();
     log_v("obkId=%s", objectId.c_str());
     if(level == 0){
         DLNA_browseServer(objectId, level);
@@ -1825,6 +1785,7 @@ void loop() {
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
+    soap.loop();
 
     if(_f_muteDecrement){
         if(_mute_volume > 0){
@@ -2500,13 +2461,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     if(   param == "false") _f_timeAnnouncement = false;
                                     pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;}
 
-    if(cmd == "DLNA_getServer")     {DLNA_showServer(); return;}
-    if(cmd == "DLNA_getContent0")   {DLNA_showContent(param, 0); return;}
-    if(cmd == "DLNA_getContent1")   {DLNA_showContent(param, 1); return;} // search for level 1 content
-    if(cmd == "DLNA_getContent2")   {DLNA_showContent(param, 2); return;} // search for level 2 content
-    if(cmd == "DLNA_getContent3")   {DLNA_showContent(param, 3); return;} // search for level 3 content
-    if(cmd == "DLNA_getContent4")   {DLNA_showContent(param, 4); return;} // search for level 4 content
-    if(cmd == "DLNA_getContent5")   {DLNA_showContent(param, 5); return;} // search for level 5 content
+    if(cmd == "DLNA_getServer")  {  DLNA_showServer(); return;}
+    if(cmd == "DLNA_getContent0"){  _level = 0; DLNA_showContent(param, 0); return;}
+    if(cmd == "DLNA_getContent1"){  _level = 1; DLNA_showContent(param, 1); return;} // search for level 1 content
+    if(cmd == "DLNA_getContent2"){  _level = 2; DLNA_showContent(param, 2); return;} // search for level 2 content
+    if(cmd == "DLNA_getContent3"){  _level = 3; DLNA_showContent(param, 3); return;} // search for level 3 content
+    if(cmd == "DLNA_getContent4"){  _level = 4; DLNA_showContent(param, 4); return;} // search for level 4 content
+    if(cmd == "DLNA_getContent5"){  _level = 5; DLNA_showContent(param, 5); return;} // search for level 5 content
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
@@ -2543,12 +2504,35 @@ void WEBSRV_onInfo(const char* info){
 void dlna_info(const char* info){
     SerialPrintfln("DLNA_info:   " ANSI_ESC_WHITE "%s", info);    // infos
 }
-void dlna_server(const char* info, const char* server){
-    SerialPrintfln("DLNA_server: " ANSI_ESC_WHITE "%s"  ANSI_ESC_BLUE "%s", info, server);    // server connected
+
+void dlna_server(uint8_t serverId, String IP_addr, uint16_t port, String friendlyName, String controlURL){
+    SerialPrintfln("DLNA_server: [%d] %s : %d %s -> %s", serverId, IP_addr.c_str(), port, friendlyName.c_str(), controlURL.c_str());
+    char id[4]; itoa(serverId, id, 10);
+    String msg = "DLNA_Names=" + friendlyName + "," + id;
+    webSrv.send(msg);
 }
-void dlna_folder(const char* info){
-    SerialPrintfln("DLNA_folder: " ANSI_ESC_ORANGE "%s", info);    // list folders
+
+void dlna_folder(String name, String id, size_t childCount){  // list folders
+    SerialPrintfln("DLNA_folder: " ANSI_ESC_ORANGE "\"%s\", id: \"%s\", childCount: %d" , name.c_str(), id.c_str(), childCount);
+    JSONVar myObject;
+    myObject[0]["name"] = name.c_str();
+    myObject[0]["isDir"] = 1;
+    myObject[0]["id"]  = id.c_str();
+    myObject[0]["size"] = childCount;
+    myObject[0]["isAudio"] = true;
+    String msg = "Level" + String(_level + 1,10) + "=" + JSON.stringify(myObject);
+    webSrv.send(msg);
 }
-void dlna_file(const char* info){
-    SerialPrintfln("DLNA_file:   " ANSI_ESC_ORANGE "%s", info);    // list files
+
+void dlna_file(String name, String id, size_t size, String uri, bool isAudio){ // list files
+    if(isAudio) {SerialPrintfln("DLNA_file:   " ANSI_ESC_GREEN "\"%s\"", name.c_str());}
+    else        {SerialPrintfln("DLNA_file:   " ANSI_ESC_ORANGE "\"%s\"", name.c_str());}
+    JSONVar myObject;
+    myObject[0]["name"] = name.c_str();
+    myObject[0]["isDir"] = 0;
+    myObject[0]["id"]  = uri.c_str();
+    myObject[0]["size"] = size;
+    myObject[0]["isAudio"] = isAudio;
+    String msg = "Level" + String(_level + 1,10) + "=" + JSON.stringify(myObject);
+    webSrv.send(msg);
 }

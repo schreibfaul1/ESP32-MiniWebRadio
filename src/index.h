@@ -378,7 +378,10 @@ function connect() {
                               if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
                               break
 
-      case "DLNA_Names":      showServer(val)
+      case "clearDLNA":       clearDLNAServerList()
+                              break
+
+      case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
                               break
       case "Level1":          show_DLNA_Content(val, 1)
                               break
@@ -532,24 +535,32 @@ function uploadTextFile (fileName, content) {
 }
 
 // ----------------------------------- DLNA ------------------------------------
-function showServer(val){
-    console.log(val)
-    var select = document.getElementById('server')
+function clearDLNAServerList(){
+    console.log('clear DLNA server list')
+    var select
+    select = document.getElementById('server')
     select.options.length = 0;
+    var option = new Option("Select a DLNA server here")
+    select.appendChild(option);
+
+    select = document.getElementById('level1')
+    select.options.length = 0;
+    select = document.getElementById('level2')
+    select.options.length = 0;
+    select = document.getElementById('level3')
+    select.options.length = 0;
+    select = document.getElementById('level4')
+    select.options.length = 0;
+    select = document.getElementById('level5')
+    select.options.length = 0;
+}
+
+function addDLNAServer(val){
     var server = val.split(",")
-    for (i = -1; i < (server.length); i++) {
-        opt = document.createElement('OPTION')
-        if(i == -1){
-          opt.value = ""
-          opt.text =  "Select a DLNA Server here"
-        }
-        else{
-          console.log(server[i])
-          opt.value = server[i]
-          opt.text =  server[i]
-        }
-        select.add(opt)
-    }
+    var select = document.getElementById('server')
+    var option = new Option(server[0], server[1]); // e.g. "Wolles-FRITZBOX Mediaserver,1"  (friendlyName, ServerIdx)
+    console.log(server[0], server[1]);
+    select.appendChild(option);
 }
 function show_DLNA_Content(val, level){
     var select
@@ -558,31 +569,32 @@ function show_DLNA_Content(val, level){
     if(level == 3) select = document.getElementById('level3')
     if(level == 4) select = document.getElementById('level4')
     if(level == 5) select = document.getElementById('level5')
-    content =JSON.parse(val)
-    //console.log(ct[1].name)
-    select.options.length = 0;
-    for (i = -1; i < (content.length); i++) {
-        opt = document.createElement('OPTION')
-        if(i == -1){
-            opt.value = ""
-            opt.text =  "Select level " + level.toString()
-        }
-        else{
-            var n
-            var c
-            if(content[i].isDir == true){
-                n = content[i].name.concat('\xa0\xa0', '<DIR>'); // more than one space
-                c = 'D=' + content[i].id // is directory
-            }
-            else{
-                n = content[i].name + '\xa0\xa0' + content[i].size;
-                c = 'F=' + content[i].id // is file
-            }
-            opt.value = c
-            opt.text  = n
-        }
-        select.add(opt)
+    if(select.options.length == 0){
+        var option = new Option("Select level " + level.toString())
+        select.appendChild(option);
     }
+    content = JSON.parse(val)
+    var isDir = content[0].isDir
+    var n
+    var c
+    if(isDir){
+        n = content[0].name.concat('\xa0\xa0', '\(' + content[0].size + '\)'); // more than one space
+        c = 'D=' + content[0].id // is directory
+    }
+    else{
+        n = content[0].name + '\xa0\xa0' + content[0].size;
+        c = 'F=' + content[0].id // is file, id is uri
+    }
+    if(content[0].isAudio){
+        var option = new Option(n, c); // e.g.
+        option.style.color = "black"
+    }
+    else{
+        var option = new Option(n); // e.g.
+        option.style.color = "red"
+    }
+    console.log(n, c);
+    select.appendChild(option);
 }
 function selectserver (presctrl) { // preset, select a server, root, level0
     socket.send('DLNA_getContent0=' + presctrl.value)

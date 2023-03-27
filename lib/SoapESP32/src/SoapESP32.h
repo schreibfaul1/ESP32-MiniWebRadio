@@ -27,6 +27,7 @@
 #define SoapESP32_h
 
 #include <Arduino.h>
+#include "MiniXPath.h"
 #include <vector>
 
 // Please uncomment if you use an Ethernet board/shield instead of builtin WiFi
@@ -47,8 +48,8 @@
 #define TMP_BUFFER_SIZE_1000 1000
 
 // network communication timeouts
-#define SERVER_RESPONSE_TIMEOUT 3000  // ms
-#define SERVER_READ_TIMEOUT     3000  // ms
+#define SERVER_RESPONSE_TIMEOUT 4000  // ms
+#define SERVER_READ_TIMEOUT     4000  // ms
 
 // SSDP UDP - seeking media servers
 #define SSDP_MULTICAST_IP         239, 255, 255, 250
@@ -124,9 +125,10 @@
 #define DIDL_ATTR_SAMPLEFREQU "sampleFrequency="
 
 extern __attribute__((weak)) void dlna_info(const char *);
-extern __attribute__((weak)) void dlna_server(const char* info, const char* server);
-extern __attribute__((weak)) void dlna_folder(const char *);
-extern __attribute__((weak)) void dlna_file(const char *);
+extern __attribute__((weak)) void dlna_server(uint8_t serverId, String IP_addr, uint16_t port,
+                                              String friendlyName, String controlURL);
+extern __attribute__((weak)) void dlna_folder(String name, String id, size_t childCount);
+extern __attribute__((weak)) void dlna_file(String name, String id, size_t size, String uri, bool isAudio);
 
 // for replacing predefined XML entities in server reply
 enum eXmlReplaceState
@@ -181,9 +183,6 @@ typedef std::vector<soapServer_t> soapServerVect_t;
 // SoapESP32 class
 class SoapESP32 {
 
-  private:
-    char m_chbuf[512];
-
   public:
 #ifdef USE_ETHERNET
     SoapESP32(EthernetClient *client, EthernetUDP *udp = NULL, SemaphoreHandle_t *sem = NULL);
@@ -196,9 +195,6 @@ class SoapESP32 {
     uint8_t     seekServer(void);
     uint8_t     getServerCount(void);
     bool        getServerInfo(uint8_t srv, soapServer_t *serverInfo);
-    bool        browseServer(const uint8_t srv, const char *objectId, soapObjectVect_t *browseResult,
-                             const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX,
-                             const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);
     bool        readStart(soapObject_t *object, size_t *size);
     int         read(uint8_t *buf, size_t size, uint32_t timeout = SERVER_READ_TIMEOUT);
     int         read(void);
@@ -215,14 +211,39 @@ class SoapESP32 {
     WiFiClient *m_client;  // pointer to WiFiClient object
     WiFiUDP    *m_udp;     // pointer to WiFiUDP object
 #endif
+
+    enum : int{IDLE = 0, GET_SERVER_INFO = 1, BROWSE_SERVER = 2};
+
     bool             m_clientDataConOpen;    // marker: socket open for reading file
     size_t           m_clientDataAvailable;  // file read count
     soapServerVect_t m_server;               // list of usable media servers in local network
+    soapObjectVect_t m_browseResult;
     int              m_xmlChunkCount;    // nr of bytes left of chunk (0 = end of chunk, next line delivers chunk size)
     eXmlReplaceState m_xmlReplaceState;  // state machine for replacing XML entities
     uint8_t          m_xmlReplaceOffset;
     char             m_xmlReplaceBuffer[15];  // Fits longest string in replaceWith[] array
+    uint8_t          m_status = IDLE;
+    uint8_t          m_idx = 0; // universal counter
+    char             m_chbuf[512]; //universal use
+    uint8_t          m_currentServer = 0;
+    String           m_objectId = "";
+    bool             m_firstCall = false;
+    uint16_t         m_downloadPort = 0;
 
+
+    MiniXPath* m_xPathContainer;
+    MiniXPath* m_xPathContainerAlt1;
+    MiniXPath* m_xPathContainerAlt2;
+    MiniXPath* m_xPathItem;
+    MiniXPath* m_xPathItemAlt1;
+    MiniXPath* m_xPathItemAlt2;
+    MiniXPath* m_xPathNumberReturned;
+    MiniXPath* m_xPathNumberReturnedAlt1;
+    MiniXPath* m_xPathNumberReturnedAlt2;
+
+
+    bool browseServer1(const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX,
+                       const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);
     int  soapClientTimedRead(void);
     bool soapUDPmulticast(uint8_t repeats = 0);
     bool soapSSDPquery(std::vector<soapServer_t> *rcvd, int msWait = SSDP_MAX_REPLY_TIMEOUT);
@@ -236,6 +257,14 @@ class SoapESP32 {
                            soapObjectVect_t *browseResult);
     bool soapScanItem(const String *parentId, const String *attributes, const String *item,
                       soapObjectVect_t *browseResult);
+    bool allocate_MiniXPath();
+    void release_MiniXPath();
+public:
+    void loop();
+    bool listServer();
+    bool browseServer(const uint8_t srv, const char *objectId);
+    uint16_t getMediaDownloadPort();
+    String getMediaDownloadIP();
 };
 
 #endif
