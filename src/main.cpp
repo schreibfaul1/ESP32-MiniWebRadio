@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.6.2, Mar 27/2022
+    Version 2.6.3, Mar 27/2022
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -46,6 +46,7 @@ char           _afn[256];                // audioFileName
 char           _path[128];
 char           _prefix[5]      = "/s";
 char           _commercial[25];
+char           _bitRate[10] = {};
 char           _icyDescription[512] = {};
 char           _streamTitle[512]    = {};
 char*          _lastconnectedfile = nullptr;
@@ -177,7 +178,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
     struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winSleep;
     struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
-    struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winUnusedArea;
+    struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winBitRate;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
     struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
@@ -237,7 +238,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_s {uint16_t x = 0;   uint16_t y = 290; uint16_t w =  90; uint16_t h = 30; } const _winStaNr;
     struct w_p {uint16_t x = 90;  uint16_t y = 290; uint16_t w =  80; uint16_t h = 30; } const _winSleep;
     struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h = 30; } const _winRSSID;
-    struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h = 30; } const _winUnusedArea;
+    struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h = 30; } const _winBitRate;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h = 30; } const _winIPaddr;
     struct w_b {uint16_t x = 0;   uint16_t y = 160; uint16_t w = 480; uint16_t h = 30; } const _winVolBar;
     struct w_o {uint16_t x = 0;   uint16_t y = 190; uint16_t w =  96; uint16_t h = 96; } const _winButton;
@@ -439,6 +440,7 @@ inline void clearTime()   {tft.fillRect(_winTime.x,   _winTime.y,   _winTime.w, 
 inline void clearItem()   {tft.fillRect(_winItem.x,   _winItem.y,   _winItem.w,   _winTime.h,   TFT_BLACK);}
 inline void clearVolume() {tft.fillRect(_winVolume.x, _winVolume.y, _winVolume.w, _winVolume.h, TFT_BLACK);}
 inline void clearIPaddr() {tft.fillRect(_winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_BLACK);}
+inline void clearBitRate(){tft.fillRect(_winBitRate.x,_winBitRate.y,_winBitRate.w,_winBitRate.h,TFT_BLACK);}
 inline void clearStaNr()  {tft.fillRect(_winStaNr.x,  _winStaNr.y,  _winStaNr.w,  _winStaNr.h,  TFT_BLACK);}
 inline void clearSleep()  {tft.fillRect(_winSleep.x,  _winSleep.y,  _winSleep.w,  _winSleep.h,  TFT_BLACK);}
 inline void clearVolBar() {tft.fillRect(_winVolBar.x, _winVolBar.y, _winVolBar.w, _winVolBar.h, TFT_BLACK);}
@@ -498,7 +500,7 @@ void showHeadlineTime(bool complete){
 
     xSemaphoreGive(mutex_display);
 }
-void showHeadlineItem(uint8_t idx){
+void showHeadlineItem(uint8_t idx){ //radio, clock, audioplayer...
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
@@ -557,9 +559,20 @@ void showFooterRSSI(){
         }
     }
 }
-void showFooterUnusedArea(){ // unused yet, so fill it black
-    tft.fillRect(_winUnusedArea.x, _winUnusedArea.y, _winUnusedArea.w, _winUnusedArea.h, TFT_BLACK);
+void showFooterBitRate(const char* br){
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    if(strlen(br) > 4) return;
+    clearBitRate();
+    if(strlen(br) > 4) return;
+    tft.setFont(_fonts[1]);
+    tft.setTextColor(TFT_LAVENDER);
+    uint8_t space = 6;
+    if(strlen(br) < 4) space += 5;
+    tft.setCursor(_winBitRate.x + space , _winBitRate.y + 2);
+    tft.print(br);
+    xSemaphoreGive(mutex_display);
 }
+
 void updateSleepTime(boolean noDecrement){  // decrement and show new value in footer
     if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
@@ -605,7 +618,7 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     updateSleepTime();
     showFooterIPaddr();
     showFooterRSSI();
-    showFooterUnusedArea();
+    showFooterBitRate(_bitRate);
 }
 void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight){
     tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
@@ -644,7 +657,6 @@ void showStreamTitle(const char* streamtitle){
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearFName();
-    clearTitle();
     String  SN_utf8 = "";
     String  SN_ascii = "";
     if(_cur_station){
@@ -983,9 +995,11 @@ void connecttohost(const char* host){
     char* url  = nullptr;
     char* user = nullptr;
     char* pwd  = nullptr;
+
+    clearBitRate();
+
     idx1 = indexOf(host, "|", 0);
     //log_i("idx1 = %i", idx1);
-
     if(idx1 == -1){ // no pipe found
         _f_isWebConnected = audioConnecttohost(host);
         _f_isFSConnected = false;
@@ -1013,6 +1027,7 @@ void connecttohost(const char* host){
     }
 }
 void connecttoFS(const char* filename, uint32_t resumeFilePos){
+    clearBitRate();
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
     _f_isWebConnected = false;
 }
@@ -1203,6 +1218,19 @@ const char* byte_to_binary(int8_t x){
         strcat(b, ((x & z) == z) ? "1" : "0");
     }
     return b;
+}
+int str2int(const char* str){
+    int len = strlen(str);
+    if(len > 0){
+        for(int i = 0; i< len; i++){
+            if(!isdigit(str[i])) {
+                log_e("NaN");
+                return 0;
+            }
+        }
+        return stoi(str);
+    }
+    return 0;
 }
 void trim(char *s) {
 //fb   trim in place
@@ -1415,7 +1443,9 @@ void changeBtn_released(uint8_t btnNr){
         else         _releaseBtn[2] = "/btn/Button_Mute_Green.jpg";
     }
     if(_state == ALARM) drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _dispHeight - _winButton.h);
-    else                drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _winButton.y);
+    else{
+        drawImage(_releaseBtn[btnNr], btnNr * _winButton.w , _winButton.y);
+    }
 }
 
 void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfile on SD_MMC
@@ -2062,6 +2092,25 @@ void audio_icydescription(const char *info){
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
     if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
+}
+//----------------------------------------------------------------------------------------
+void audio_bitrate(const char* info){
+    int br = str2int(info) / 1000;
+    itoa(br, _bitRate, 10); strcat(_bitRate, "K");
+    if(strlen(info)){
+        SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%sbit/s", _bitRate);
+        showFooterBitRate(_bitRate);
+    }
+    else clearBitRate();
+}
+void vs1053_bitrate(const char* info){
+    int br = str2int(info) / 1000;
+    itoa(br, _bitRate, 10); strcat(_bitRate, "K");
+    if(strlen(info)){
+        SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%sbit/s", _bitRate);
+        showFooterBitRate(_bitRate);
+    }
+    else clearBitRate();
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
