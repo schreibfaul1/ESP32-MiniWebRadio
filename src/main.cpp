@@ -644,6 +644,7 @@ void showStreamTitle(const char* streamtitle){
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearFName();
+    clearTitle();
     String  SN_utf8 = "";
     String  SN_ascii = "";
     if(_cur_station){
@@ -897,7 +898,8 @@ const char* listAudioFile(){
         strcpy(_chbuf, file.name());
         if(endsWith(_chbuf, ".mp3") || endsWith(_chbuf, ".aac") || endsWith(_chbuf, ".m4a") ||
                                        endsWith(_chbuf, ".wav") || endsWith(_chbuf, ".flac")||
-                                       endsWith(_chbuf, ".m3u") || endsWith(_chbuf, ".opus")){
+                                       endsWith(_chbuf, ".m3u") || endsWith(_chbuf, ".opus")||
+                                       endsWith(_chbuf, ".ogg")){
 
             return _chbuf;
         }
@@ -1781,10 +1783,13 @@ void DLNA_showContent(String objectId, uint8_t level){
 *                                                      L O O P                                                         *
 ***********************************************************************************************************************/
 void loop() {
+    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     if(webSrv.loop()) return; // if true: ignore all other for faster response to web
+    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
+    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     soap.loop();
 
     if(_f_muteDecrement){
@@ -1829,7 +1834,7 @@ void loop() {
     }
 
     if(_f_1sec){
-         _f_1sec = false;
+        _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
         if(_state == CLOCK || _state == CLOCKico) display_time();
 
