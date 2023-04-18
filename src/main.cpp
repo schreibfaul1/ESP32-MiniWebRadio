@@ -78,6 +78,7 @@ boolean        _f_muteIncrement = false; // if set increase Volume (from 0 to _c
 boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_volume to 0)
 boolean        _f_timeAnnouncement = false; // time announcement every full hour
 boolean        _f_playlistEnabled = false;
+boolean        _f_playlistNextFile = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -1263,13 +1264,13 @@ bool endsWith (const char* base, const char* str) {
     if (p < base) return false;
     return (strncmp(p, str, slen) == 0);
 }
-int indexOf (const char* base, const char* str, int startIndex) {
-    const char *p = base;
+int indexOf (const char* haystack, const char* needle, int startIndex) {
+    const char *p = haystack;
     for (; startIndex > 0; startIndex--)
         if (*p++ == '\0') return -1;
-    char* pos = strstr(p, str);
+    char* pos = strstr(p, needle);
     if (pos == nullptr) return -1;
-    return pos - base;
+    return pos - haystack;
 }
 boolean strCompare(char* str1, char* str2){
     return strCompare((const char*) str1, str2);
@@ -1529,7 +1530,6 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
 
 void processPlaylist(boolean first){
     String t = "";
-    _playlistTime = millis();
     while(playlistFile.available() > 0){
         size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
         _chbuf[bytesRead] = '\0';
@@ -1537,6 +1537,7 @@ void processPlaylist(boolean first){
         if(startsWith(_chbuf, "#"))SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
         trim(_chbuf);
         if(first){
+            _playlistTime = millis();
             if(startsWith(_chbuf, "#EXTM3U")){
                 first = false;
                 _f_playlistEnabled = true;
@@ -1549,13 +1550,22 @@ void processPlaylist(boolean first){
             }
         }
         if(startsWith(_chbuf, "#EXTINF")){
-            int8_t idx = indexOf(",", _chbuf, 0);
-            if(idx > 8){
-                t = _chbuf[idx + 1];
+            int8_t idx1 = indexOf(_chbuf, ":",  0) + 1;
+            int8_t idx2 = indexOf(_chbuf, ",",  0);
+            int8_t len = idx2 -idx1;
+            if(len > 0 && len < 6){ // song playtime
+                char tmp[7];
+                memcpy(tmp, _chbuf + idx1, len);
+                tmp[len] = '\0';
+                SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
+            }
+            if(idx2 > 8){
+                t = _chbuf[idx2 + 1];
                 t.trim();
             }
             continue;
         }
+        _f_playlistNextFile = false;
         if(!startsWith(_chbuf, "#")){
             if(startsWith(_chbuf, "http")){
                 SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
@@ -1964,10 +1974,19 @@ void loop() {
         updateSleepTime();
         _f_1min = false;
     }
-    if(_f_playlistEnabled &&  (_playlistTime + 5000 < millis()) && !audioIsRunning()){
-        processPlaylist(false); // something went wrong
+    if(_f_playlistEnabled){
+        if(!_f_playlistNextFile){
+            if(!audioIsRunning()){
+                SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN  "next playlist file");
+                processPlaylist(false);
+                _playlistTime = millis();
+                _f_playlistNextFile = true;
+            }
+        }
+        else{
+            if(_playlistTime + 5000 < millis()) _f_playlistNextFile = false;
+        }
     }
-
 }
 /***********************************************************************************************************************
 *                                                    E V E N T S                                                       *
