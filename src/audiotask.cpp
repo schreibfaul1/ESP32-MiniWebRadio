@@ -26,7 +26,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 #if DECODER == 0
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING, HIGHWATERMARK};
+                 ISRUNNING, HIGHWATERMARK, GET_BITRATE};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -91,6 +91,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
                 audioTxTaskMessage.cmd = GET_VOLUME;
                 audioTxTaskMessage.ret = vs1053.getVolume();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_BITRATE){
+                audioTxTaskMessage.cmd = GET_BITRATE;
+                audioTxTaskMessage.ret = vs1053.getBitRate();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == STOPSONG){
@@ -177,6 +182,12 @@ uint8_t audioGetVolume(){
     return RX.ret;
 }
 
+uint32_t audioGetBitRate(){
+    audioTxMessage.cmd = GET_BITRATE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 boolean audioConnecttohost(const char* host, const char* user, const char* pwd){
     audioTxMessage.cmd = CONNECTTOHOST;
     audioTxMessage.txt1 = host;
@@ -245,7 +256,7 @@ uint32_t audioGetStackHighWatermark(){
 
 #if DECODER >= 1
 
-enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
+enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
                  ISRUNNING, HIGHWATERMARK};
 
 struct audioMessage{
@@ -305,6 +316,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
                 audioTxTaskMessage.cmd = GET_VOLUME;
                 audioTxTaskMessage.ret = audio.getVolume();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_BITRATE){
+                audioTxTaskMessage.cmd = GET_BITRATE;
+                audioTxTaskMessage.ret = audio.getBitRate(true);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == STOPSONG){
@@ -385,6 +401,12 @@ void audioSetVolume(uint8_t vol){
 
 uint8_t audioGetVolume(){
     audioTxMessage.cmd = GET_VOLUME;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioGetBitRate(){
+    audioTxMessage.cmd = GET_BITRATE;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

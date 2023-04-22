@@ -46,7 +46,6 @@ char           _afn[256];                // audioFileName
 char           _path[128];
 char           _prefix[5]      = "/s";
 char           _commercial[25];
-char           _bitRate[10] = {};
 char           _icyDescription[512] = {};
 char           _streamTitle[512]    = {};
 char*          _lastconnectedfile = nullptr;
@@ -56,10 +55,11 @@ char*          _stationURL        = nullptr;
 const char*    _pressBtn[5];
 const char*    _releaseBtn[5];
 
-boolean        _f_rtc  = false;             // true if time from ntp is received
-boolean        _f_1sec = false;
-boolean        _f_1min = false;
-boolean        _f_mute = false;
+boolean        _f_rtc   = false;             // true if time from ntp is received
+boolean        _f_1sec  = false;
+boolean        _f_10sec = false;
+boolean        _f_1min  = false;
+boolean        _f_mute  = false;
 boolean        _f_sleeping = false;
 boolean        _f_isWebConnected = false;
 boolean        _f_isFSConnected = false;
@@ -89,6 +89,8 @@ String         _filename = "";
 uint           _numServers = 0;
 uint8_t        _level = 0;
 int            _currentServer = -1;
+uint16_t       _icyBitRate = 0;                 // from http response header via event
+uint16_t       _avrBitRate = 0;                 // from decoder via getBitRate(true)
 uint32_t       _media_downloadPort = 0;
 String         _media_downloadIP = "";
 vector<String> _names{};
@@ -425,6 +427,7 @@ void timer1sec() {
     static volatile uint8_t sec=0;
     _f_1sec = true;
     sec++;
+    if(!(sec % 10)) _f_10sec = true;
     //SerialPrintfln("sec=%i", sec);
     if(sec==60){sec=0; _f_1min = true;}
 }
@@ -560,17 +563,26 @@ void showFooterRSSI(){
         }
     }
 }
-void showFooterBitRate(const char* br){
+void showFooterBitRate(uint16_t br){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
-    if(strlen(br) > 4) return;
     clearBitRate();
-    if(strlen(br) > 4) return;
+    char sbr[10];
+    itoa(br, sbr,  10);
+    if(br < 1000){
+        strcat(sbr, "K");
+    }
+    else{
+        sbr[2] = sbr[1];
+        sbr[1] = '.';
+        sbr[3] = 'M';
+        sbr[4] = '\0';
+    }
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_LAVENDER);
     uint8_t space = 6;
-    if(strlen(br) < 4) space += 5;
+    if(strlen(sbr) < 4) space += 5;
     tft.setCursor(_winBitRate.x + space , _winBitRate.y + 2);
-    tft.print(br);
+    tft.print(sbr);
     xSemaphoreGive(mutex_display);
 }
 
@@ -619,7 +631,7 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     updateSleepTime();
     showFooterIPaddr();
     showFooterRSSI();
-    showFooterBitRate(_bitRate);
+    showFooterBitRate(_icyBitRate);
 }
 void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight){
     tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
@@ -998,6 +1010,9 @@ void connecttohost(const char* host){
     char* pwd  = nullptr;
 
     clearBitRate();
+    clearTitle();
+    _icyBitRate = 0;
+    _avrBitRate = 0;
 
     idx1 = indexOf(host, "|", 0);
     //log_i("idx1 = %i", idx1);
@@ -1029,6 +1044,8 @@ void connecttohost(const char* host){
 }
 void connecttoFS(const char* filename, uint32_t resumeFilePos){
     clearBitRate();
+    _icyBitRate = 0;
+    _avrBitRate = 0;
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
     _f_isWebConnected = false;
 }
@@ -1970,9 +1987,21 @@ void loop() {
             _f_newCommercial = false;
         }
     }
+
+    if(_f_10sec == true){
+        _f_10sec = false;
+        if(_state == RADIO && !_icyBitRate){
+            uint32_t ibr = audioGetBitRate() / 1000;
+            if(ibr > 0){
+                if(ibr != _avrBitRate) {_avrBitRate = ibr;  showFooterBitRate(_avrBitRate);}
+            }
+        }
+    }
+
     if(_f_1min == true){
-        updateSleepTime();
         _f_1min = false;
+        updateSleepTime();
+
     }
     if(_f_playlistEnabled){
         if(!_f_playlistNextFile){
@@ -2114,22 +2143,16 @@ void audio_icydescription(const char *info){
 }
 //----------------------------------------------------------------------------------------
 void audio_bitrate(const char* info){
-    int br = str2int(info) / 1000;
-    itoa(br, _bitRate, 10); strcat(_bitRate, "K");
-    if(strlen(info)){
-        SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%sbit/s", _bitRate);
-        showFooterBitRate(_bitRate);
-    }
-    else clearBitRate();
+    if(!strlen(info)) return;  // guard
+    _icyBitRate = str2int(info) / 1000;
+    SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
+    showFooterBitRate(_icyBitRate);
 }
 void vs1053_bitrate(const char* info){
-    int br = str2int(info) / 1000;
-    itoa(br, _bitRate, 10); strcat(_bitRate, "K");
-    if(strlen(info)){
-        SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%sbit/s", _bitRate);
-        showFooterBitRate(_bitRate);
-    }
-    else clearBitRate();
+    if(!strlen(info)) return;  // guard
+    _icyBitRate = str2int(info) / 1000;
+    SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
+    showFooterBitRate(_icyBitRate);
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
