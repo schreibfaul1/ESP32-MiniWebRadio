@@ -204,6 +204,7 @@ void DLNA_showContent(String objectId, uint8_t level);
 void audioInit();
 void audioSetVolume(uint8_t vol);
 uint8_t audioGetVolume();
+uint32_t audioGetBitRate();
 boolean audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
 boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 uint32_t audioStopSong();
