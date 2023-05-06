@@ -29,7 +29,7 @@ Control is exclusively via the touchscreen or the webpage, no additional compone
 <br>
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/MiniWebRadio%20V2%20Layout.pdf">Display (Layout)</a>
 
-<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/MiniWebRadio-V2/additional_info/How%20to%20install.pdf">How to install:</a>
+<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/run-Arduino-as--a-component/additional_info/How%20to%20install.pdf">How to install:</a>
 PlatformIO is definitely recommended as an IDE
 
 New in V2:
