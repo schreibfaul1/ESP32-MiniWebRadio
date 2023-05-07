@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.6.3, Mar 27/2022
+    Version 2.7.1, May 07/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -70,6 +70,8 @@ boolean        _f_alarm = false;
 boolean        _f_irNumberSeen = false;
 boolean        _f_newIcyDescription = false;
 boolean        _f_newStreamTitle = false;
+boolean        _f_newBitRate = false;
+boolean        _f_newLogoAndStation = false;
 boolean        _f_newCommercial = false;
 boolean        _f_volBarVisible = false;
 boolean        _f_switchToClock = false;  // jump into CLOCK mode at the next opportunity
@@ -1890,6 +1892,16 @@ void loop() {
         }
     }
 
+    if(_f_newBitRate){
+        showFooterBitRate(_icyBitRate);
+        _f_newBitRate = false;
+    }
+
+    if(_f_newLogoAndStation){
+        showLogoAndStationName();
+        _f_newLogoAndStation = false;
+    }    
+
     if(_f_1sec){
         _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
@@ -1972,7 +1984,6 @@ void loop() {
             webSrv.send((String) "streamtitle=" + _streamTitle);
             _f_newStreamTitle = false;
         }
-
         if(_f_newIcyDescription && !_timeCounter){
             if(_state == RADIO) {
                 if(!strlen(_streamTitle)) showStreamTitle(_icyDescription);
@@ -2045,12 +2056,12 @@ void audio_info(const char *info){
 void vs1053_showstation(const char *info){
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) showLogoAndStationName();
+    if(!_cur_station) _f_newLogoAndStation = true;
 }
 void audio_showstation(const char *info){
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) showLogoAndStationName();
+    if(!_cur_station) _f_newLogoAndStation = true;
 }
 //----------------------------------------------------------------------------------------
 void vs1053_showstreamtitle(const char *info) {
@@ -2145,14 +2156,14 @@ void audio_icydescription(const char *info){
 void audio_bitrate(const char* info){
     if(!strlen(info)) return;  // guard
     _icyBitRate = str2int(info) / 1000;
+    _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
-    showFooterBitRate(_icyBitRate);
 }
 void vs1053_bitrate(const char* info){
     if(!strlen(info)) return;  // guard
     _icyBitRate = str2int(info) / 1000;
+    _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
-    showFooterBitRate(_icyBitRate);
 }
 //----------------------------------------------------------------------------------------
 void ftp_debug(const char* info) {
