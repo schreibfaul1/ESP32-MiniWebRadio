@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.1, May 07/2023
+    Version 2.7.2, May 11/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -436,21 +436,21 @@ void timer1sec() {
 /***********************************************************************************************************************
 *                                                   D I S P L A Y                                                      *
 ***********************************************************************************************************************/
-inline void clearHeader() {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
-inline void clearLogo()   {tft.fillRect(_winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   TFT_BLACK);}
-inline void clearStation(){tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
-inline void clearFName()  {tft.fillRect(_winFName.x,  _winFName.y,  _winFName.w,  _winFName.h,  TFT_BLACK);}
-inline void clearTitle()  {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
-inline void clearFooter() {tft.fillRect(_winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h, TFT_BLACK);}
-inline void clearTime()   {tft.fillRect(_winTime.x,   _winTime.y,   _winTime.w,   _winTime.h,   TFT_BLACK);}
-inline void clearItem()   {tft.fillRect(_winItem.x,   _winItem.y,   _winItem.w,   _winTime.h,   TFT_BLACK);}
-inline void clearVolume() {tft.fillRect(_winVolume.x, _winVolume.y, _winVolume.w, _winVolume.h, TFT_BLACK);}
-inline void clearIPaddr() {tft.fillRect(_winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_BLACK);}
-inline void clearBitRate(){tft.fillRect(_winBitRate.x,_winBitRate.y,_winBitRate.w,_winBitRate.h,TFT_BLACK);}
-inline void clearStaNr()  {tft.fillRect(_winStaNr.x,  _winStaNr.y,  _winStaNr.w,  _winStaNr.h,  TFT_BLACK);}
-inline void clearSleep()  {tft.fillRect(_winSleep.x,  _winSleep.y,  _winSleep.w,  _winSleep.h,  TFT_BLACK);}
-inline void clearVolBar() {tft.fillRect(_winVolBar.x, _winVolBar.y, _winVolBar.w, _winVolBar.h, TFT_BLACK);}
-inline void clearAll()    {tft.fillScreen(TFT_BLACK);}                      // y   0...239
+inline void clearHeader()             {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
+inline void clearLogo()               {tft.fillRect(_winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   TFT_BLACK);}
+inline void clearStationNane()        {tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
+inline void clearLogoAndStationname() {tft.fillRect(_winFName.x,  _winFName.y,  _winFName.w,  _winFName.h,  TFT_BLACK);}
+inline void clearStreamTitle()        {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
+inline void clearFooter()             {tft.fillRect(_winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h, TFT_BLACK);}
+inline void clearTime()               {tft.fillRect(_winTime.x,   _winTime.y,   _winTime.w,   _winTime.h,   TFT_BLACK);}
+inline void clearItem()               {tft.fillRect(_winItem.x,   _winItem.y,   _winItem.w,   _winTime.h,   TFT_BLACK);}
+inline void clearVolume()             {tft.fillRect(_winVolume.x, _winVolume.y, _winVolume.w, _winVolume.h, TFT_BLACK);}
+inline void clearIPaddr()             {tft.fillRect(_winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_BLACK);}
+inline void clearBitRate()            {tft.fillRect(_winBitRate.x,_winBitRate.y,_winBitRate.w,_winBitRate.h,TFT_BLACK);}
+inline void clearStaNr()              {tft.fillRect(_winStaNr.x,  _winStaNr.y,  _winStaNr.w,  _winStaNr.h,  TFT_BLACK);}
+inline void clearSleep()              {tft.fillRect(_winSleep.x,  _winSleep.y,  _winSleep.w,  _winSleep.h,  TFT_BLACK);}
+inline void clearVolBar()             {tft.fillRect(_winVolBar.x, _winVolBar.y, _winVolBar.w, _winVolBar.h, TFT_BLACK);}
+inline void clearAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
 
 inline uint16_t txtlen(String str) {uint16_t len=0; for(int i=0; i<str.length(); i++) if(str[i]<=0xC2) len++; return len;}
 
@@ -671,7 +671,7 @@ void showStreamTitle(const char* streamtitle){
 }
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearFName();
+    clearLogoAndStationname();
     String  SN_utf8 = "";
     String  SN_ascii = "";
     if(_cur_station){
@@ -1012,7 +1012,7 @@ void connecttohost(const char* host){
     char* pwd  = nullptr;
 
     clearBitRate();
-    clearTitle();
+    if(_state != RADIOico) clearStreamTitle();
     _icyBitRate = 0;
     _avrBitRate = 0;
 
@@ -1407,7 +1407,7 @@ void setStation(uint16_t sta){
     free(_stationURL);
     _stationURL = strdup(content.c_str());
     _homepage = "";
-    if(_state != RADIOico) clearTitle();
+    if(_state != RADIOico) clearStreamTitle();
 
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
@@ -1534,7 +1534,7 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
         if(path) free(path);
         return;
     }
-    clearFName();
+    clearLogoAndStationname();
     showVolumeBar();
     showFileName(fileName);
     changeState(PLAYERico);
@@ -1588,7 +1588,7 @@ void processPlaylist(boolean first){
         if(!startsWith(_chbuf, "#")){
             if(startsWith(_chbuf, "http")){
                 SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
-                clearFName();
+                clearLogoAndStationname();
                 showVolumeBar();
                 if(t.length() > 0){
                     showFileName(t.c_str());
@@ -1614,7 +1614,7 @@ void processPlaylist(boolean first){
     webSrv.send("audiotrack=end of playlist");
     playlistFile.close();
     _f_playlistEnabled = false;
-    clearFName();
+    clearLogoAndStationname();
     showFileName(_afn);
     changeState(PLAYER);
 }
@@ -1647,8 +1647,8 @@ void changeState(int state){
                 _f_newStreamTitle = true;
             }
             else if(_state == SLEEP){
-                clearFName();
-                clearTitle();
+                clearLogoAndStationname();
+                clearStreamTitle();
                 connecttohost(_lastconnectedhost);
                 showLogoAndStationName();
                 showFooter();
@@ -1667,7 +1667,7 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
             _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
             _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
-            clearTitle();
+//            clearStreamTitle();
             showVolumeBar();
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
@@ -1701,16 +1701,16 @@ void changeState(int state){
             showHeadlineVolume();
             showHeadlineTime();
             showFooter();
-            clearFName();
-            clearTitle();
+            clearLogoAndStationname();
+            clearStreamTitle();
             display_time(true);
             break;
         }
         case CLOCKico:{
             _state = CLOCKico;
             showHeadlineItem(CLOCKico);
-            clearFName();
-            clearTitle();
+            clearLogoAndStationname();
+            clearStreamTitle();
             display_time(true);
             _pressBtn[0] = "/btn/Bell_Yellow.jpg";               _releaseBtn[0] = "/btn/Bell_Green.jpg";
             _pressBtn[1] = "/btn/Radio_Yellow.jpg";              _releaseBtn[1] = "/btn/Radio_Green.jpg";
@@ -1734,8 +1734,8 @@ void changeState(int state){
         }
         case PLAYER:{
             if(_state == RADIO){
-                clearFName();
-                clearTitle();
+                clearLogoAndStationname();
+                clearStreamTitle();
             }
             showHeadlineItem(PLAYER);
             _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
@@ -1762,8 +1762,8 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Up_Yellow.jpg";          _releaseBtn[2] = "/btn/Button_Up_Blue.jpg";
             _pressBtn[3] = "/btn/Button_Down_Yellow.jpg";        _releaseBtn[3] = "/btn/Button_Down_Blue.jpg";
             _pressBtn[4] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[4] = "/btn/Button_Ready_Blue.jpg";
-            clearFName();
-            clearTitle();
+            clearLogoAndStationname();
+            clearStreamTitle();
             display_alarmtime(0, 0, true);
             display_alarmDays(0, true);
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w,  _dispHeight - _winButton.h);}
@@ -1776,8 +1776,8 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
             _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
             _pressBtn[4] = "/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4] = "/btn/Button_Cancel_Blue.jpg";
-            clearFName();
-            clearTitle();
+            clearLogoAndStationname();
+            clearStreamTitle();
             display_sleeptime();
             if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
             else                   drawImage("/common/Night_Gown.bmp", 280, 45);
@@ -1973,7 +1973,7 @@ void loop() {
         }
         if(_commercial_dur > 0){
             _commercial_dur--;
-            if((_commercial_dur == 2) && (_state == RADIO)) clearTitle();// end of commercial? clear streamtitle
+            if((_commercial_dur == 2) && (_state == RADIO)) clearStreamTitle();// end of commercial? clear streamtitle
         }
 
         if(_f_newStreamTitle && !_timeCounter) {
