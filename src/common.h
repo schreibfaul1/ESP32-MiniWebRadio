@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 23.Mar.2023
+// updated: 16.May.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -165,6 +165,7 @@ const char* listAudioFile();
 bool sendAudioList2Web(const char* audioDir);
 bool connectToWiFi();
 const char* byte_to_binary(int8_t x);
+uint32_t simpleHash(const char* str);
 void trim(char *s);
 bool startsWith (const char* base, const char* str);
 bool endsWith (const char* base, const char* str);

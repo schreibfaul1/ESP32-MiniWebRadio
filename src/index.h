@@ -313,6 +313,7 @@ function connect() {
 
     switch(msg) {
       case "pong":            clearTimeout(tm)
+                              console.log("pong")
                               toastr.clear()
                               break
       case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'

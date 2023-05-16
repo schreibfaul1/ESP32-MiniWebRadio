@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.2a, May 11/2023
+    Version 2.7.3, May 16/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -31,14 +31,24 @@ uint16_t       _cur_station    = 0;      // current station(nr), will be set lat
 uint16_t       _sleeptime      = 0;      // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations   = 0;
 uint8_t        _cur_volume     = 0;      // will be set from stored preferences
+uint8_t        _ringvolume     = _max_volume;
 uint8_t        _mute_volume    = 0;      // decrement to 0 or increment to _cur_volume
+uint8_t        _brightness     = 0;
 uint8_t        _state          = 0;      // statemaschine
 uint8_t        _timeCounter    = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
-uint16_t       _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
+int16_t        _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
+int16_t        _toneha         = 0;      // BassFreq 0...15        VS1053
+int16_t        _tonehf         = 0;      // TrebleGain 0...14      VS1053
+int16_t        _tonela         = 0;      // BassGain 0...15        VS1053
+int16_t        _tonelf         = 0;      // BassFreq 0...13        VS1053
+int16_t        _toneLP         = 0;      // -40 ... +6 (dB)        audioI2S
+int16_t        _toneBP         = 0;      // -40 ... +6 (dB)        audioI2S
+int16_t        _toneHP         = 0;      // -40 ... +6 (dB)        audioI2S
 int8_t         _releaseNr      = -1;
 uint32_t       _resumeFilePos  = 0;
 uint32_t       _playlistTime   = 0;      // playlist start time millis() for timeout
+uint32_t       _settingsHash   = 0;
 char           _chbuf[512];
 char           _fName[256];
 char           _myIP[25];
@@ -49,7 +59,6 @@ char           _commercial[25];
 char           _icyDescription[512] = {};
 char           _streamTitle[512]    = {};
 char*          _lastconnectedfile = nullptr;
-char*          _lastconnectedhost = nullptr;
 char*          _stationURL        = nullptr;
 
 const char*    _pressBtn[5];
@@ -87,6 +96,7 @@ String         _stationName_nvs = "";
 String         _stationName_air = "";
 String         _homepage = "";
 String         _filename = "";
+String         _lastconnectedhost = "";
 
 uint           _numServers = 0;
 uint8_t        _level = 0;
@@ -268,35 +278,55 @@ SemaphoreHandle_t  mutex_display;
 *                                        D E F A U L T S E T T I N G S                                                 *
 ***********************************************************************************************************************/
 boolean defaultsettings(){
-    if(pref.getUInt("default", 0) != 1200){
-        SerialPrintfln("first init, set defaults");
-		if(!saveStationsToNVS()) return false;
-        pref.clear();
-        //
-        pref.putUShort("alarm_weekday",0); // for alarmclock
-        pref.putUInt("alarm_time", 0);
-        pref.putUShort("ringvolume",21);
-        pref.putBool("timeAnnouncing", 1); // Time announcement every full hour
-        //
-        pref.putUShort("volume",12); // 0...21
-        pref.putUShort("mute",   0); // no mute
-
-        pref.putUShort("brightness", 100); // 0...100
-        pref.putUInt("sleeptime", 0);
-
-        pref.putUShort("toneha", 0); // BassFreq 0...15        VS1053
-        pref.putUShort("tonehf", 0); // TrebleGain 0...14      VS1053
-        pref.putUShort("tonela", 0); // BassGain 0...15        VS1053
-        pref.putUShort("tonelf", 0); // BassFreq 0...13        VS1053
-
-        pref.putShort("toneLP", 0); // -40 ... +6 (dB)         audioI2S
-        pref.putShort("toneBP", 0); // -40 ... +6 (dB)         audioI2S
-        pref.putShort("toneHP", 0); // -40 ... +6 (dB)         audioI2S
-        //
-        pref.putUInt("station", 1);
-        //
-        pref.putUInt("default", 1200);
+    if(!SD_MMC.exists("/settings.json")){
+        File file = SD_MMC.open("/settings.json","w", true);
+        JSONVar jObject;
+        jObject["volume"]            = (uint8_t)  12; // 0...21
+        jObject["ringvolume"]        = (uint8_t)  21;
+        jObject["alarmtime"]         = (uint16_t) 0;
+        jObject["alarm_weekdays"]    = (uint8_t)  0;
+        jObject["timeAnnouncing"]    = (bool)     true;
+        jObject["mute"]              = (bool)     false; // no mute
+        jObject["brightness"]        = (uint8_t)  100;  // 0...100
+        jObject["sleeptime"]         = (uint16_t) 0;
+        jObject["lastconnectedhost"] = (String)   "";
+        jObject["station"]           = (uint16_t) 1;
+        jObject["sumstations"]       = (uint16_t) 0;
+        jObject["toneha"]            = (int16_t)  0; // BassFreq 0...15        VS1053
+        jObject["tonehf"]            = (int16_t)  8; // TrebleGain 0...14      VS1053
+        jObject["tonela"]            = (int16_t)  8; // BassGain 0...15        VS1053
+        jObject["tonelf"]            = (int16_t)  9; // BassFreq 0...13        VS1053
+        jObject["toneLP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
+        jObject["toneBP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
+        jObject["toneHP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
+        String jO = JSON.stringify(jObject);
+        file.print(jO);
     }
+
+    File file = SD_MMC.open("/settings.json","r", false);
+    String jO = file.readString();
+    _settingsHash = simpleHash(jO.c_str());
+    JSONVar jV = JSON.parse(jO);
+    _cur_volume         = (uint8_t)     jV["volume"];
+    _ringvolume         = (uint8_t)     jV["ringvolume"];
+    _alarmtime          = (uint16_t)    jV["alarmtime"];
+    _alarmdays          = (uint8_t)     jV["alarm_weekdays"];
+    _f_timeAnnouncement = (bool)        jV["timeAnnouncing"];
+    _f_mute             = (bool)        jV["mute"];
+    _brightness         = (uint8_t)     jV["brightness"];
+    _sleeptime          = (uint16_t)    jV["sleeptime"];
+    _lastconnectedhost  = (const char*) jV["lastconnectedhost"];
+    _cur_station        = (uint16_t)    jV["station"];
+    _sum_stations       = (uint16_t)    jV["sumstations"];
+    _toneha             = (int16_t)     jV["toneha"];
+    _tonehf             = (int16_t)     jV["tonehf"];
+    _tonela             = (int16_t)     jV["tonela"];
+    _tonelf             = (int16_t)     jV["tonelf"];
+    _toneLP             = (int16_t)     jV["toneLP"];
+    _toneBP             = (int16_t)     jV["toneBP"];
+    _toneHP             = (int16_t)     jV["toneHP"];
+
+    if(_sum_stations == 0) saveStationsToNVS(); // first init
 	return true;
 }
 
@@ -345,13 +375,42 @@ boolean saveStationsToNVS(){
         _sum_stations = cnt;
         stations.putLong("stations.size", file.size());
         file.close();
-        stations.putUInt("sumstations", cnt);
         SerialPrintfln("stationlist internally loaded");
         SerialPrintfln("number of stations: " ANSI_ESC_CYAN "%i", cnt);
         return true;
     }
     else return false;
 }
+
+void updateSettings(){
+    JSONVar jObject;
+    jObject["volume"]            = (uint8_t)  _cur_volume;
+    jObject["ringvolume"]        = (uint8_t)  _ringvolume;
+    jObject["alarmtime"]         = (uint16_t) _alarmtime;
+    jObject["alarm_weekdays"]    = (uint8_t)  _alarmdays;
+    jObject["timeAnnouncing"]    = (bool)     _f_timeAnnouncement;
+    jObject["mute"]              = (bool)     _f_mute;
+    jObject["brightness"]        = (uint8_t)  _brightness;
+    jObject["sleeptime"]         = (uint16_t) _sleeptime;
+    jObject["lastconnectedhost"] = (String)   _lastconnectedhost;
+    jObject["station"]           = (uint16_t) _cur_station;
+    jObject["sumstations"]       = (uint16_t) _sum_stations;
+    jObject["toneha"]            = (int16_t)  _toneha; // BassFreq 0...15        VS1053
+    jObject["tonehf"]            = (int16_t)  _tonehf; // TrebleGain 0...14      VS1053
+    jObject["tonela"]            = (int16_t)  _tonela; // BassGain 0...15        VS1053
+    jObject["tonelf"]            = (int16_t)  _tonelf; // BassFreq 0...13        VS1053
+    jObject["toneLP"]            = (int16_t)  _toneLP; // -40 ... +6 (dB)        audioI2S
+    jObject["toneBP"]            = (int16_t)  _toneBP; // -40 ... +6 (dB)        audioI2S
+    jObject["toneHP"]            = (int16_t)  _toneHP; // -40 ... +6 (dB)        audioI2S
+    String jO = JSON.stringify(jObject);
+    if(_settingsHash != simpleHash(jO.c_str())){
+        File file = SD_MMC.open("/settings.json","w", false);
+        if(!file) {log_e("file \"settings.json\" not found"); return;}
+        file.print(jO);
+        _settingsHash = simpleHash(jO.c_str());
+    }
+}
+
 /***********************************************************************************************************************
 *                                        T F T   B R I G H T N E S S                                                   *
 ***********************************************************************************************************************/
@@ -365,26 +424,22 @@ inline uint32_t getTFTbrightness(){
     return ledcRead(1);
 }
 inline uint8_t downBrightness(){
-    uint8_t br; br = pref.getUShort("brightness");
-    if(br>5) {
-        br-=5;
-        pref.putUShort("brightness", br);
-        setTFTbrightness(br);
+    if(_brightness > 5) {
+        _brightness -= 5;
+        setTFTbrightness(_brightness);
         showBrightnessBar();
-    } return br;
+    } return _brightness;
 }
 inline uint8_t upBrightness(){
-    uint8_t br; br = pref.getUShort("brightness");
-    if(br < 100){
-        br += 5;
-        pref.putUShort("brightness", br);
-        setTFTbrightness(br);
+    if(_brightness < 100){
+        _brightness += 5;
+        setTFTbrightness(_brightness);
         showBrightnessBar();
     }
-    return br;
+    return _brightness;
 }
 inline uint8_t getBrightness(){
-    return pref.getUShort("brightness");
+    return _brightness;
 }
 /***********************************************************************************************************************
 *                                              U R L d e c o d e                                                       *
@@ -1098,7 +1153,6 @@ void setup(){
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
-    pref.begin("MiniWebRadio", false);  // instance of preferences for defaults (tone, volume ...)
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
 
     #if CONFIG_IDF_TARGET_ESP32
@@ -1149,7 +1203,7 @@ void setup(){
     }
     file.close();
     SerialPrintfln("setup: ....  stations.csv found");
-
+    updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         clearAll();
@@ -1181,16 +1235,14 @@ void setup(){
 
     audioInit();
 
-    _sum_stations = stations.getUInt("sumstations", 0);
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
-    _cur_station =  pref.getUInt("station", 1);
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
-    _cur_volume = getvolume();
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
+    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
 
-    _alarmdays = pref.getUShort("alarm_weekday");
-    _alarmtime = pref.getUInt("alarm_time");
-    _f_timeAnnouncement = pref.getBool("timeAnnouncing");
+    // _alarmdays = pref.getUShort("alarm_weekday");
+    // _alarmtime = pref.getUInt("alarm_time");
+    // _f_timeAnnouncement = pref.getBool("timeAnnouncing");
     _state = RADIO;
 
      ir.begin();  // Init InfraredDecoder
@@ -1208,7 +1260,6 @@ void setup(){
     }
 
     tft.fillScreen(TFT_BLACK); // Clear screen
-    _f_mute = pref.getUShort("mute", 0);
     if(_f_mute) {
         SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume);
         audioSetVolume(0);
@@ -1219,7 +1270,10 @@ void setup(){
         _mute_volume = _cur_volume;
     }
     showHeadlineItem(RADIO);
-    setStation(_cur_station);
+    if(_cur_station > 0) setStation(_cur_station);
+    else{setStationViaURL(_lastconnectedhost.c_str());}
+
+
     if(DECODER == 0) setTone();    // HW Decoder
     else             setI2STone(); // SW Decoder
     showFooter();
@@ -1238,6 +1292,15 @@ const char* byte_to_binary(int8_t x){
         strcat(b, ((x & z) == z) ? "1" : "0");
     }
     return b;
+}
+uint32_t simpleHash(const char* str){
+    if(str == NULL) return 0;
+    uint32_t hash = 0;
+    for(int i=0; i<strlen(str); i++){
+	    if(str[i] < 32) continue; // ignore control sign
+	    hash += (str[i] - 31) * i * 32;
+    }
+    return hash;
 }
 int str2int(const char* str){
     int len = strlen(str);
@@ -1343,10 +1406,9 @@ const char* scaleImage(const char* path){
     return pathBuff;
 }
 inline uint8_t getvolume(){
-    return pref.getUShort("volume");
+    return _cur_volume;
 }
 void setVolume(uint8_t vol){
-    pref.putUShort("volume", vol);
     if(_f_mute==false){
         audioSetVolume(vol);
         showHeadlineVolume();
@@ -1397,6 +1459,7 @@ inline void mute(){
 
 void setStation(uint16_t sta){
     //SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
+    if(sta == 0) return;
     if(sta > _sum_stations) sta = _cur_station;
     sprintf (_chbuf, "station_%03d", sta);
     String content = stations.getString(_chbuf);
@@ -1422,7 +1485,6 @@ void setStation(uint16_t sta){
         connecttohost(_stationURL);
     }
     _cur_station = sta;
-    pref.putUInt("station", sta);
     StationsItems();
     if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
     showFooterStaNr();
@@ -1437,9 +1499,16 @@ void prevStation(){
 }
 
 void StationsItems(){
-    webSrv.send("stationName=" + _stationName_nvs);
-    webSrv.send("stationNr=" + String(pref.getUInt("station")));
-    webSrv.send("stationURL=" + String(_stationURL));
+    if(_cur_station > 0){
+        webSrv.send("stationName=" + _stationName_nvs);
+        webSrv.send("stationNr=" + String(_cur_station));
+        webSrv.send("stationURL=" + String(_stationURL));
+    }
+    else{
+        webSrv.send("stationName=" + _stationName_air);
+        webSrv.send("stationNr=" + String(_cur_station));
+        webSrv.send("stationURL=" + _lastconnectedhost);
+    }
 }
 
 void setStationViaURL(const char* url){
@@ -1447,6 +1516,9 @@ void setStationViaURL(const char* url){
     _stationName_nvs = "";
     _cur_station = 0;
     connecttohost(url);
+    StationsItems();
+    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
+    showFooterStaNr(); // set to '000'
 }
 
 void changeBtn_pressed(uint8_t btnNr){
@@ -1499,10 +1571,10 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
     }
 }
 String setTone(){ // vs1053
-    uint8_t ha =pref.getUShort("toneha");
-    uint8_t hf =pref.getUShort("tonehf");
-    uint8_t la =pref.getUShort("tonela");
-    uint8_t lf =pref.getUShort("tonelf");
+    uint8_t ha = _toneha;
+    uint8_t hf = _tonehf;
+    uint8_t la = _tonela;
+    uint8_t lf = _tonelf;
     audioSetTone(ha, hf, la, lf);
     sprintf(_chbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n", ha, hf, la, lf);
     String tone = String(_chbuf);
@@ -1510,9 +1582,9 @@ String setTone(){ // vs1053
 }
 
 String setI2STone(){
-    int8_t LP = pref.getShort("toneLP");
-    int8_t BP = pref.getShort("toneBP");
-    int8_t HP = pref.getShort("toneHP");
+    int8_t LP = _toneLP;
+    int8_t BP = _toneBP;
+    int8_t HP = _toneHP;
     audioSetTone(LP, BP, HP);
     sprintf(_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\n", LP, BP, HP);
     String tone = String(_chbuf);
@@ -1649,7 +1721,7 @@ void changeState(int state){
             else if(_state == SLEEP){
                 clearLogoAndStationname();
                 clearStreamTitle();
-                connecttohost(_lastconnectedhost);
+                connecttohost(_lastconnectedhost.c_str());
                 showLogoAndStationName();
                 showFooter();
                 showHeadlineVolume();
@@ -1690,8 +1762,7 @@ void changeState(int state){
         }
         case CLOCK:{
             if(_state == ALARM){
-                pref.putUInt("alarm_time", _alarmtime);
-                pref.putUShort("alarm_weekday", _alarmdays);
+                updateSettings();
                 SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%2d:%2d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
                                "%s", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays));
                 clearHeader();
@@ -1862,7 +1933,6 @@ void loop() {
             _f_muteDecrement = false;
             _f_mute = true;
             webSrv.send("mute=1");
-            pref.putUShort("mute", _f_mute);
             if(_state == RADIOico || _state == PLAYERico){
                 drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y);
             }
@@ -1882,7 +1952,6 @@ void loop() {
             _f_muteIncrement = false;
             _f_mute = false;
             webSrv.send("mute=0");
-            pref.putUShort("mute", _f_mute);
             if(_state == RADIOico || _state == PLAYERico){
                 drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y);
             }
@@ -1900,7 +1969,7 @@ void loop() {
     if(_f_newLogoAndStation){
         showLogoAndStationName();
         _f_newLogoAndStation = false;
-    }    
+    }
 
     if(_f_1sec){
         _f_1sec = false;
@@ -1931,7 +2000,7 @@ void loop() {
                         mute(); // mute off
                     }
                 }
-                if(_lastconnectedhost != nullptr) connecttohost(_lastconnectedhost);
+                connecttohost(_lastconnectedhost.c_str());
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -2012,7 +2081,7 @@ void loop() {
     if(_f_1min == true){
         _f_1min = false;
         updateSleepTime();
-
+        updateSettings();
     }
     if(_f_playlistEnabled){
         if(!_f_playlistNextFile){
@@ -2108,15 +2177,13 @@ void audio_eof_stream(const char *info){
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
-    free(_lastconnectedhost);
-    _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost);
+    _lastconnectedhost = info;
+    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
 }
 void audio_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
-    free(_lastconnectedhost);
-    _lastconnectedhost = strdup(info);
-    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost);
+    _lastconnectedhost = info;
+    SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
@@ -2208,9 +2275,9 @@ void ir_key(const char* key){
     if(_f_sleeping == true && key[0] == 'k'){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
-        setTFTbrightness(pref.getUShort("brightness"));
+        setTFTbrightness(_brightness);
         changeState(RADIO);
-        connecttohost(_lastconnectedhost);
+        connecttohost(_lastconnectedhost.c_str());
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
@@ -2351,9 +2418,9 @@ void tp_released(){
     if(_f_sleeping == true){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
-        setTFTbrightness(pref.getUShort("brightness"));
+        setTFTbrightness(_brightness);
         changeState(RADIO);
-        connecttohost(_lastconnectedhost);
+        connecttohost(_lastconnectedhost.c_str());
         showLogoAndStationName();
         showFooter();
         showHeadlineItem(RADIO);
@@ -2476,31 +2543,31 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle);
                                     return;}
 
-    if(cmd == "toneha"){            pref.putUShort("toneha",(param.toInt()));                             // vs1053 tone
+    if(cmd == "toneha"){            _toneha = param.toInt();                           // vs1053 tone
                                     webSrv.reply("Treble Gain set");
                                     setTone(); return;}
 
-    if(cmd == "tonehf"){            pref.putUShort("tonehf",(param.toInt()));                             // vs1053 tone
+    if(cmd == "tonehf"){            _tonehf = param.toInt();                           // vs1053 tone
                                     webSrv.reply("Treble Freq set");
                                     setTone(); return;}
 
-    if(cmd == "tonela"){            pref.putUShort("tonela",(param.toInt()));                             // vs1053 tone
+    if(cmd == "tonela"){            _tonela = param.toInt();                           // vs1053 tone
                                     webSrv.reply("Bass Gain set");
                                     setTone(); return;}
 
-    if(cmd == "tonelf"){            pref.putUShort("tonelf",(param.toInt()));                             // vs1053 tone
+    if(cmd == "tonelf"){            _tonelf = param.toInt();                           // vs1053 tone
                                     webSrv.reply("Bass Freq set");
                                     setTone(); return;}
 
-    if(cmd == "LowPass"){           pref.putShort("toneLP", (param.toInt()));                           // audioI2S tone
+    if(cmd == "LowPass"){           _toneLP = param.toInt();                           // audioI2S tone
                                     char lp[25] = "Lowpass set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
                                     webSrv.reply(lp); setI2STone(); return;}
 
-    if(cmd == "BandPass"){          pref.putShort("toneBP", (param.toInt()));                           // audioI2S tone
+    if(cmd == "BandPass"){          _toneBP = param.toInt();                           // audioI2S tone
                                     char bp[25] = "Bandpass set to "; strcat(bp, param.c_str()); strcat(bp, "dB");
                                     webSrv.reply(bp); setI2STone(); return;}
 
-    if(cmd == "HighPass"){          pref.putShort("toneHP", (param.toInt()));                           // audioI2S tone
+    if(cmd == "HighPass"){          _toneHP = param.toInt();                           // audioI2S tone
                                     char hp[25] = "Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
                                     webSrv.reply(hp); setI2STone(); return;}
 
@@ -2555,19 +2622,18 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "get_alarmdays"){     webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;}
 
-    if(cmd == "set_alarmdays"){     _alarmdays = param.toInt(); pref.putUShort("alarm_weekday", _alarmdays); return;}
+    if(cmd == "set_alarmdays"){     _alarmdays = param.toInt(); updateSettings(); return;}
 
     if(cmd == "get_alarmtime"){     webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;}
 
-    if(cmd == "set_alarmtime"){    _alarmtime = param.toInt(); pref.putUInt("alarm_time", _alarmtime); return;}
+    if(cmd == "set_alarmtime"){    _alarmtime = param.toInt(); updateSettings(); return;}
 
     if(cmd == "get_timeAnnouncement"){ if(_f_timeAnnouncement) webSrv.send("timeAnnouncement=1");
                                     if(  !_f_timeAnnouncement) webSrv.send("timeAnnouncement=0");
                                     return;}
 
     if(cmd == "set_timeAnnouncement"){ if(param == "true" ) _f_timeAnnouncement = true;
-                                    if(   param == "false") _f_timeAnnouncement = false;
-                                    pref.putBool("timeAnnouncing", _f_timeAnnouncement); return;}
+                                    if(   param == "false") _f_timeAnnouncement = false;}
 
     if(cmd == "DLNA_getServer")  {  DLNA_showServer(); return;}
     if(cmd == "DLNA_getContent0"){  _level = 0; DLNA_showContent(param, 0); return;}
