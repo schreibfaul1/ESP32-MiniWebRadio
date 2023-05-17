@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3, May 16/2023
+    Version 2.7.3a, May 17/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1507,7 +1507,7 @@ void StationsItems(){
     else{
         webSrv.send("stationName=" + _stationName_air);
         webSrv.send("stationNr=" + String(_cur_station));
-        webSrv.send("stationURL=" + _lastconnectedhost);
+    //    webSrv.send("stationURL=" + _lastconnectedhost);
     }
 }
 
@@ -2179,11 +2179,13 @@ void vs1053_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
+    webSrv.send("stationURL=" + _lastconnectedhost);
 }
 void audio_lasthost(const char *info){                 // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
+    webSrv.send("stationURL=" + _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------
 void vs1053_icyurl(const char *info){                   // if the Radio has a homepage, this event is calling
