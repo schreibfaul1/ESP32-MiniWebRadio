@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3a, May 17/2023
+    Version 2.7.3c, May 19/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1705,7 +1705,6 @@ void changeState(int state){
         case RADIO:{
             showHeadlineItem(RADIO);
             if(_state == RADIOico || _state == RADIOmenue){
-                // showStreamTitle(_streamTitle);
                 _f_newStreamTitle = true;
             }
             else if(_state == PLAYER  || _state == PLAYERico){
@@ -2046,12 +2045,17 @@ void loop() {
         }
 
         if(_f_newStreamTitle && !_timeCounter) {
+            _f_newStreamTitle = false;
             if(_state == RADIO) {
-                if(!strlen(_streamTitle) && strlen(_icyDescription)) {;}
-                else showStreamTitle(_streamTitle);
+                if(strlen(_streamTitle))showStreamTitle(_streamTitle);
+                else if(strlen(_icyDescription)){
+                    showStreamTitle(_icyDescription);
+                    _f_newIcyDescription = false;
+                    webSrv.send((String)"icy_description=" + _icyDescription);
+                }
+                else clearStreamTitle();
             }
             webSrv.send((String) "streamtitle=" + _streamTitle);
-            _f_newStreamTitle = false;
         }
         if(_f_newIcyDescription && !_timeCounter){
             if(_state == RADIO) {
