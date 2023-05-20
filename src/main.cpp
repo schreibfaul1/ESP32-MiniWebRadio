@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3c, May 19/2023
+    Version 2.7.3d, May 20/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -37,6 +37,7 @@ uint8_t        _brightness     = 0;
 uint8_t        _state          = 0;      // statemaschine
 uint8_t        _timeCounter    = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
+uint8_t        _cur_Codec      = 0;
 int16_t        _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha         = 0;      // BassFreq 0...15        VS1053
 int16_t        _tonehf         = 0;      // TrebleGain 0...14      VS1053
@@ -120,10 +121,10 @@ char _hl_item[10][40]{                          // Title in headline
                 "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
 };
 
-enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2,
-            CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5,
-            PLAYER= 6, PLAYERico= 7,
-            ALARM = 8, SLEEP    = 9};
+enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2, CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5, PLAYER= 6, PLAYERico= 7,
+            ALARM = 8, SLEEP = 9};
+
+const char *codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
 
 Preferences pref;
@@ -1067,6 +1068,7 @@ void connecttohost(const char* host){
     char* pwd  = nullptr;
 
     clearBitRate();
+    _cur_Codec = 0;
     if(_state != RADIOico) clearStreamTitle();
     _icyBitRate = 0;
     _avrBitRate = 0;
@@ -1103,6 +1105,7 @@ void connecttoFS(const char* filename, uint32_t resumeFilePos){
     clearBitRate();
     _icyBitRate = 0;
     _avrBitRate = 0;
+    _cur_Codec  = 0;
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
     _f_isWebConnected = false;
 }
@@ -1671,6 +1674,7 @@ void processPlaylist(boolean first){
                     webSrv.send((String)"audiotrack=" + _chbuf);
                 }
                 changeState(PLAYERico);
+                _cur_Codec = 0;
                 audioConnecttohost(_chbuf);
             }
             else{
@@ -1891,6 +1895,7 @@ void DLNA_getFileItems(String uri){
     log_v("downloadport: %d", _media_downloadPort);
     String URL = "http://" + _media_downloadIP + ":" + _media_downloadPort + "/" + uri;
     log_i("URL=%s", URL.c_str());
+    _cur_Codec = 0;
     audioConnecttohost(URL.c_str());
 }
 void DLNA_showContent(String objectId, uint8_t level){
@@ -2069,6 +2074,14 @@ void loop() {
             if(_state == RADIO) showStreamTitle(_commercial);
             webSrv.send((String)"streamtitle=" + _commercial);
             _f_newCommercial = false;
+        }
+
+        if(_cur_Codec == 0){
+            uint8_t c = audioGetCodec();
+            if(c != 0 && c != 8){ // unknown or OGG
+                _cur_Codec = c;
+                SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
+            }
         }
     }
 

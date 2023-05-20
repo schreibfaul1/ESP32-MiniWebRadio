@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 16.May.2023
+// updated: 20.May.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -13,7 +13,7 @@
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        3                               // 1 or 3 (landscape)
 #define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
-#define TP_ROTATION         3                               // 1 or 3 (landscape)
+#define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define SDMMC_FREQUENCY     20000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
@@ -214,4 +214,4 @@ uint32_t audioInbuffFilled();
 uint32_t audioInbuffFree();
 boolean audioIsRunning();
 uint32_t audioGetStackHighWatermark();
-
+uint32_t audioGetCodec();
