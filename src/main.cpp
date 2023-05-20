@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3d, May 20/2023
+    Version 2.7.3e, May 20/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -91,6 +91,7 @@ boolean        _f_muteDecrement = false; // if set decrease Volume (from _cur_vo
 boolean        _f_timeAnnouncement = false; // time announcement every full hour
 boolean        _f_playlistEnabled = false;
 boolean        _f_playlistNextFile = false;
+boolean        _f_logoUnknown = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -494,7 +495,7 @@ void timer1sec() {
 ***********************************************************************************************************************/
 inline void clearHeader()             {tft.fillRect(_winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, TFT_BLACK);}
 inline void clearLogo()               {tft.fillRect(_winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   TFT_BLACK);}
-inline void clearStationNane()        {tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
+inline void clearStationName()        {tft.fillRect(_winName.x,   _winName.y,   _winName.w,   _winName.h,   TFT_BLACK);}
 inline void clearLogoAndStationname() {tft.fillRect(_winFName.x,  _winFName.y,  _winFName.w,  _winFName.h,  TFT_BLACK);}
 inline void clearStreamTitle()        {tft.fillRect(_winTitle.x,  _winTitle.y,  _winTitle.w,  _winTitle.h,  TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h, TFT_BLACK);}
@@ -759,20 +760,39 @@ void showLogoAndStationName(){
     String logo = "/logo/" + (String) SN_ascii.c_str() +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
         drawImage("/common/unknown.jpg", 0, _winName.y + 2);  // if no draw unknown
+        _f_logoUnknown = true;
     }
     xSemaphoreGive(mutex_display);
 }
 
+void showFileLogo(){
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    String logo;
+    if(_state == RADIO){
+        if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String)"M3U8" + ".jpg";
+        else logo = "/common/" + (String) codecname[_cur_Codec] +".jpg";
+    }
+    else{ // _state PLAYER or PLAYERico
+        logo = "/common/" + (String) codecname[_cur_Codec] +".jpg";
+    }
+    if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
+        drawImage("/common/unknown.jpg", 0, _winName.y + 2);  // if no draw unknown
+    }
+    xSemaphoreGive(mutex_display);
+}
+
+
 void showFileName(const char* fname){
+    clearLogo();
     switch(strlen(fname)){
-        case   0 ... 25:  tft.setFont(_fonts[5]); break;
-        case  26 ... 42:  tft.setFont(_fonts[4]); break;
-        case  43 ... 90:  tft.setFont(_fonts[3]); break;
-        case  91 ... 120: tft.setFont(_fonts[2]); break;
-        case 121 ... 150: tft.setFont(_fonts[1]); break;
+        case   0 ... 15:  tft.setFont(_fonts[5]); break;
+        case  16 ... 30:  tft.setFont(_fonts[4]); break;
+        case  31 ... 50:  tft.setFont(_fonts[3]); break;
+        case  51 ... 100: tft.setFont(_fonts[2]); break;
+        case 101 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(fname, _winFName.x, _winFName.y, TFT_CYAN, 0, _winFName.h);
+    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.h);
 }
 
 void display_time(boolean showall){ //show current time on the TFT Display
@@ -1518,6 +1538,8 @@ void setStationViaURL(const char* url){
     _stationName_air = "";
     _stationName_nvs = "";
     _cur_station = 0;
+    free(_stationURL);
+    _stationURL = strdup(url);
     connecttohost(url);
     StationsItems();
     if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
@@ -2081,6 +2103,8 @@ void loop() {
             if(c != 0 && c != 8){ // unknown or OGG
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
+                if(_state == PLAYER || _state == PLAYERico) showFileLogo();
+                if(_state == RADIO && _f_logoUnknown == true) {_f_logoUnknown = false; showFileLogo();}
             }
         }
     }
@@ -2178,18 +2202,22 @@ void vs1053_eof_mp3(const char *info){                  // end of mp3 file (file
     _f_eof = true;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
+    if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 void audio_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
+    if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 //----------------------------------------------------------------------------------------
 void vs1053_eof_stream(const char *info){
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
+    if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 void audio_eof_stream(const char *info){
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
+    if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char *info){                 // really connected URL
