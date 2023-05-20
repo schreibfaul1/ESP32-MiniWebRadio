@@ -1,6 +1,6 @@
 # ESP32-MiniWebRadio V2
 
-![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/run-Arduino-as--a-component/additional_info/MiniWebRadio.jpg)
+![Display](https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio.jpg)
 
 Features:
 <ul>
