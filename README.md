@@ -47,5 +47,16 @@ New in V2:
 <br>
 <br>
  
+Codec\Decoder| VS1053B        | PCM5102A, AC101, ES8388, WM8978 |
+|----------|----------|----------|
+| mp3 | y| y |
+| aac | y | y |
+| aacp (HLS) | y  | mono |
+| wav | y | y  |
+| flac | with plugin | blocksize max 8192 bytes |
+| vorbis | y  | y (<=196Kbit/s)  |
+| m4a | y  | y |
+| opus | n  | y (celt)  |
+
 
 
