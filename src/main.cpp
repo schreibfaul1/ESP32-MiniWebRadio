@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3e, May 20/2023
+    Version 2.7.3f, May 21/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -775,9 +775,8 @@ void showFileLogo(){
     else{ // _state PLAYER or PLAYERico
         logo = "/common/" + (String) codecname[_cur_Codec] +".jpg";
     }
-    if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
-        drawImage("/common/unknown.jpg", 0, _winName.y + 2);  // if no draw unknown
-    }
+    if   (drawImage(logo.c_str(), 0, _winName.y + 2) == true)  {webSrv.send("stationLogo=" + logo);}
+    else{(drawImage("/common/unknown.jpg", 0, _winName.y + 2)); webSrv.send("stationLogo=");}
     xSemaphoreGive(mutex_display);
 }
 
@@ -785,10 +784,10 @@ void showFileLogo(){
 void showFileName(const char* fname){
     clearLogo();
     switch(strlen(fname)){
-        case   0 ... 15:  tft.setFont(_fonts[5]); break;
-        case  16 ... 30:  tft.setFont(_fonts[4]); break;
-        case  31 ... 50:  tft.setFont(_fonts[3]); break;
-        case  51 ... 100: tft.setFont(_fonts[2]); break;
+        case   0 ... 25:  tft.setFont(_fonts[5]); break;
+        case  26 ... 50:  tft.setFont(_fonts[4]); break;
+        case  51 ... 80:  tft.setFont(_fonts[3]); break;
+        case  81 ... 100: tft.setFont(_fonts[2]); break;
         case 101 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
@@ -1523,12 +1522,12 @@ void prevStation(){
 
 void StationsItems(){
     if(_cur_station > 0){
-        webSrv.send("stationName=" + _stationName_nvs);
+        webSrv.send("stationLogo=/logo/" + _stationName_nvs + ".jpg");
         webSrv.send("stationNr=" + String(_cur_station));
         webSrv.send("stationURL=" + String(_stationURL));
     }
     else{
-        webSrv.send("stationName=" + _stationName_air);
+        webSrv.send("stationLogo=/logo/" + _stationName_air + ".jpg");
         webSrv.send("stationNr=" + String(_cur_station));
     //    webSrv.send("stationURL=" + _lastconnectedhost);
     }
@@ -1616,7 +1615,7 @@ String setI2STone(){
     return tone;
 }
 
-void audiotrack(const char* fileName, uint32_t resumeFilePos){
+void audiotrack(const char* fileName, uint32_t resumeFilePos, bool showFN){
     char* path = (char*)malloc(strlen(fileName) + 20);
     strcpy(path, "/audiofiles/");
     strcat(path, fileName);
@@ -1631,9 +1630,9 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
         if(path) free(path);
         return;
     }
-    clearLogoAndStationname();
     showVolumeBar();
-    showFileName(fileName);
+//    clearLogoAndStationname();
+    if(showFN) showFileName(fileName);
     changeState(PLAYERico);
     connecttoFS((const char*) path, resumeFilePos);
     if(_f_isFSConnected){
@@ -1645,7 +1644,7 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos){
 }
 
 void processPlaylist(boolean first){
-    String t = "";
+    static bool f_has_EXTINF = false;
     while(playlistFile.available() > 0){
         size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
         _chbuf[bytesRead] = '\0';
@@ -1668,6 +1667,9 @@ void processPlaylist(boolean first){
         if(startsWith(_chbuf, "#EXTINF")){
             int8_t idx1 = indexOf(_chbuf, ":",  0) + 1;
             int8_t idx2 = indexOf(_chbuf, ",",  0);
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
+            showFileName(_chbuf + idx2 + 1);
+            f_has_EXTINF = true;
             int8_t len = idx2 -idx1;
             if(len > 0 && len < 6){ // song playtime
                 char tmp[7];
@@ -1675,26 +1677,16 @@ void processPlaylist(boolean first){
                 tmp[len] = '\0';
                 SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
             }
-            if(idx2 > 8){
-                t = _chbuf[idx2 + 1];
-                t.trim();
-            }
             continue;
         }
         _f_playlistNextFile = false;
         if(!startsWith(_chbuf, "#")){
             if(startsWith(_chbuf, "http")){
                 SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
-                clearLogoAndStationname();
                 showVolumeBar();
-                if(t.length() > 0){
-                    showFileName(t.c_str());
-                    webSrv.send("audiotrack=" + t);
-                }
-                else{
-                    showFileName(_chbuf);
-                    webSrv.send((String)"audiotrack=" + _chbuf);
-                }
+                if(!f_has_EXTINF) clearLogoAndStationname();
+                f_has_EXTINF = false;
+                webSrv.send((String)"audiotrack=" + _chbuf);
                 changeState(PLAYERico);
                 _cur_Codec = 0;
                 audioConnecttohost(_chbuf);
@@ -1703,7 +1695,8 @@ void processPlaylist(boolean first){
                 urldecode(_chbuf);
                 SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
                 webSrv.send((String)"audiotrack=" + _chbuf);
-                audiotrack(_chbuf);
+                if(!f_has_EXTINF) audiotrack(_chbuf);
+                else {f_has_EXTINF = false; audiotrack(_chbuf, 0, false);}
             }
             return;
         }

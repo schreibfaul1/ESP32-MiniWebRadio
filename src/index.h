@@ -327,8 +327,8 @@ function connect() {
                               break
       case "stationURL":      station.value = val
                               break
-      case "stationName":     if(tft_size == 0) showLabel('label-logo-s', val)
-                              if(tft_size == 1) showLabel('label-logo-m', val)
+      case "stationLogo":     if(tft_size == 0) showLogo('label-logo-s', val)
+                              if(tft_size == 1) showLogo('label-logo-m', val)
                               break
       case "streamtitle":     cmd.value = val
                               break
@@ -643,48 +643,18 @@ function select_l3 (presctrl) { // preset, select level 2
 
 // ----------------------------------- TAB RADIO ------------------------------------
 
-function showLabel (id, src) { // get the bitmap from SD, convert to URL first
+function showLogo(id, src) { // get the bitmap from SD, convert to URL first
   src = src.replace(/%/g, '%25') // % must be the first
   src = src.replace(/\s/g, '%20') // URLs never can have blanks
-  // src=src.replace(/!/g  , '%21')  // not necessary to replace
-  // src=src.replace(/\'/g , '%22')  // not allowed in Windows filenames
-  // src=src.replace(/#/g  , '%23')  // can not be used, is separator in list
-  // src=src.replace(/\$/g , '%24')  // not necessary to replace
-  // src=src.replace(/&/g  , '%26')  // not necessary to replace
   src = src.replace(/'/g, '%27') // must be replace
   src = src.replace(/\(/g, '%28') // must be replace
   src = src.replace(/\)/g, '%29') // must be replace
-  // src=src.replace(/\*/g , '%2A')  // not allowed in Windows filenames
   src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
-  // src=src.replace(/,/g  , '%2C')  // commas are later replaced in dots
-  // src=src.replace(/\-/g , '%2D')  // not necessary to replace
-  // src=src.replace(/\./g , '%2E')  // not necessary to replace
-  // src=src.replace('/'   , '%2F')  // is separator, not usable
-  // src=src.replace(/:/g  , '%3A')  // not allowed in Windows filenames
-  // src=src.replace(/;/g  , '%3B')  // not necessary to replace
-  // src=src.replace(/</g  , '%3C')  // not allowed in Windows filenames
-  // src=src.replace(/\=/g , '%3D')  // can't be used in selectboxes
-  // src=src.replace(/>/g  , '%3E')  // not allowed in Windows filenames
-  // src=src.replace(/\?/g , '%3F')  // not allowed in Windows filenames
-  // src=src.replace(/@/g  , '%40')  // not necessary to replace
-  // src=src.replace(/\[/g , '%5B')  // not necessary to replace
-  // src=src.replace('\'   , '%5C')  // not necessary to replace
-  // src=src.replace(/\]/g , '%5D')  // not necessary to replace
-  // src=src.replace(/\{/g , '%7B')  // not necessary to replace
-  // src=src.replace(/\|/g , '%7C')  // not allowed in filenames
-  // src=src.replace(/\}/g , '%7D')  // not necessary to replace
-
   var timestamp = new Date().getTime()
   var file
-  if(src == '' || src === 'unknown'){
-    file = 'url(SD/unknown.jpg?t=' + timestamp + ')'
-    document.getElementById(id).style.backgroundImage = file
-    return
-  }
-  var idx = src.indexOf('|')
-  if(idx > 0) src = src.substring(idx+1); // all after pipe
-  file = 'url(SD/logo/' + src + '.jpg?t=' + timestamp + ')'
-  console.log("showLabel id=", id, "file=", file)
+  if(src == '') file = 'url(SD/unknown.jpg?t=' + timestamp + ')'
+  else file = 'url(SD' + src + '?t=' + timestamp + ')'
+  console.log("showLogo id=", id, "file=", file)
   document.getElementById(id).style.backgroundImage = file
 }
 

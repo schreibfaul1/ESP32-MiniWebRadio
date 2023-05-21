@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 20.May.2023
+// updated: 21.May.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -189,7 +189,7 @@ void changeBtn_released(uint8_t btnNr);
 void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
 String setI2STone();
-void audiotrack(const char* fileName, uint32_t resumeFilePos = 0);
+void audiotrack(const char* fileName, uint32_t resumeFilePos = 0, bool showFN = true);
 void processPlaylist(boolean first = false);
 void changeState(int state);
 void connecttohost(const char* host);
