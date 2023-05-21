@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Jul 02 2022
+// updated on May 21 2023
 
 #include "Arduino.h"
 #include "tft.h"
@@ -1389,6 +1389,7 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
     int16_t sWidth =  width();
 
     uint16_t len=0;
+    uint16_t ch_count = 0;
     while(str[len]!=0)len++;  // determine length of text
 
     static int16_t xC=64;
@@ -1474,12 +1475,12 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
             if(font_char==0) space=font_height/4; else space=0; //correct spacewidth is 1
             if(_textorientation==0) {
                 if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
-                if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
+                if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
             }
             else {
                 if((Ypos+char_width+space)>sHeight){Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                if((Xpos-font_height)<0){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                if((Xpos-font_height)<0){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
             }
             uint16_t char_bytes = (char_width - 1) / 8 + 1; //number of bytes for a character
             uint32_t font_offset;
@@ -1531,23 +1532,24 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
             if(font_char==10){
                 if(_textorientation==0){
                     {Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
-                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
+                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
                 }
                 else{
                     {Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
-                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return i;}
+                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
+                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
                 }
             }
         }
         i++;
+        ch_count++;
     } // end while
     tmp_curX=Xpos;
     tmp_curY=Ypos;
 
     endWrite();
-    return i;
+    return ch_count;
 }
 //----------------------------------------------------------------------------------------------------------------------
 

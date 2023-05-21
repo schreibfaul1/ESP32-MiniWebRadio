@@ -173,6 +173,7 @@ bool endsWith (const char* base, const char* str);
 int indexOf (const char* base, const char* str, int startIndex);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
+int16_t strlenUTF8(const char* str);
 void SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char* scaleImage(const char* path);
 void setVolume(uint8_t vol);

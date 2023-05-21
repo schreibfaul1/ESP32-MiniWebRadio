@@ -698,13 +698,13 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
     tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
     // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
     uint16_t ch_written = tft.writeText((const uint8_t*) str, winHeight); // todo winHeight
-    if(ch_written < strlen(str)){
+    if(ch_written < strlenUTF8(str)){
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
         SerialPrintfln("txt overflow, winHeight=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
                                       ", strlen=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
                                      ", written=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE
-                                         ", str=" ANSI_ESC_CYAN "%s", winHeight, strlen(str), ch_written, str);
+                                         ", str=" ANSI_ESC_CYAN "%s", winHeight, strlenUTF8(str), ch_written, str);
     }
 }
 void showStreamTitle(const char* streamtitle){
@@ -715,7 +715,7 @@ void showStreamTitle(const char* streamtitle){
     ST.replace(" | ", "\n");   // some stations use pipe as \n or
     ST.replace("| ", "\n");    // or
     ST.replace("|", "\n");
-    switch(ST.length()){
+    switch(strlenUTF8(ST.c_str())){
         case   0 ... 30:  tft.setFont(_fonts[5]); break;
         case  31 ... 43:  tft.setFont(_fonts[4]); break;
         case  44 ... 65:  tft.setFont(_fonts[3]); break;
@@ -747,7 +747,7 @@ void showLogoAndStationName(){
     SN_ascii.trim();
     SN_utf8.trim();
 
-    switch(SN_utf8.length()){
+    switch(strlenUTF8(SN_utf8.c_str())){
         case   0 ... 20:  tft.setFont(_fonts[5]); break;
         case  21 ... 32:  tft.setFont(_fonts[4]); break;
         case  33 ... 45:  tft.setFont(_fonts[3]); break;
@@ -783,11 +783,11 @@ void showFileLogo(){
 
 void showFileName(const char* fname){
     clearLogo();
-    switch(strlen(fname)){
-        case   0 ... 25:  tft.setFont(_fonts[5]); break;
-        case  26 ... 50:  tft.setFont(_fonts[4]); break;
-        case  51 ... 80:  tft.setFont(_fonts[3]); break;
-        case  81 ... 100: tft.setFont(_fonts[2]); break;
+    switch(strlenUTF8(fname)){
+        case   0 ... 15:  tft.setFont(_fonts[5]); break;
+        case  16 ... 30:  tft.setFont(_fonts[4]); break;
+        case  31 ... 70:  tft.setFont(_fonts[3]); break;
+        case  71 ... 100: tft.setFont(_fonts[2]); break;
         case 101 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
@@ -1391,6 +1391,20 @@ boolean strCompare(const char* str1, char* str2){ // returns true if str1 == str
     }
     return f;
 }
+
+int16_t strlenUTF8(const char* str){ // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
+    if(str == NULL) return -1;
+    uint16_t idx = 0;
+    uint16_t cnt = 0;
+    while(*(str + idx) != '\0'){
+        if((*(str + idx) < 0xC0)  && (*(str + idx)      > 0x1F)) cnt++;
+        if((*(str + idx) == 0xE2) && (*(str + idx + 1) == 0x80)) cnt++; // general punctuation
+        idx++;
+
+    }
+    return cnt;
+}
+
 
 void SerialPrintflnCut(const char* item, const char* color, const char* str){
     if(strlen(str) > 75){
