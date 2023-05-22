@@ -11,9 +11,9 @@
 #define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
-#define TFT_ROTATION        1                               // 1 or 3 (landscape)
+#define TFT_ROTATION        3                               // 1 or 3 (landscape)
 #define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define SDMMC_FREQUENCY     20000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
