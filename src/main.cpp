@@ -113,12 +113,12 @@ char _hl_item[10][40]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
                 "** Internet Radio **",
-                "** Uhr **",                    // Clock "** часы́ **"  "** ρολόι **"
-                "** Uhr **",
-                "** Helligkeit **",             // Brightness яркость λάμψη
+                "** Clock **",                  // Clock "** часы́ **"  "** ρολόι **"
+                "** Clock **",
+                "** Brightness **",             // Brightness яркость λάμψη
                 "** Audioplayer **",            // "** цифрово́й плеер **"
                 "** Audioplayer **",
-                "" ,                            // Alarm should be empty
+                "** Alarm **",                  // Alarm
                 "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
 };
 
@@ -941,7 +941,7 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
     const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)){
-        if(indexOf(scImg, "/.", 0)) return false; // empty filename
+    //    if(indexOf(scImg, "/.", 0)) return false; // empty filename
         SerialPrintfln(ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
@@ -952,6 +952,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     if(endsWith(scImg, "jpg")){
         return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp nor a jpj graphic", scImg);
     return false; // neither jpg nor bmp
 }
 /***********************************************************************************************************************
@@ -1108,6 +1109,7 @@ void stopSong(){
     audioStopSong();
     _f_isFSConnected = false;
     _f_isWebConnected = false;
+    _f_playlistEnabled = false;
 }
 
 /***********************************************************************************************************************
@@ -1714,6 +1716,7 @@ void changeState(int state){
             }
             else if(_state == PLAYER  || _state == PLAYERico){
                 setStation(_cur_station);
+                clearStreamTitle();
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
             }
@@ -1841,15 +1844,15 @@ void changeState(int state){
                 clearStreamTitle();
             }
             showHeadlineItem(PLAYER);
-            _pressBtn[0] = "/btn/Radio_Yellow.bmp";              _releaseBtn[0] = "/btn/Radio_Green.bmp";
-            _pressBtn[1] = "/btn/Button_First_Yellow.bmp";       _releaseBtn[1] = "/btn/Button_First_Blue.bmp";
-            _pressBtn[2] = "/btn/Button_Right_Yellow.bmp";       _releaseBtn[2] = "/btn/Button_Right_Blue.bmp";
-            _pressBtn[3] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[3] = "/btn/Button_Ready_Blue.bmp";
+            _pressBtn[0] = "/btn/Button_First_Yellow.bmp";       _releaseBtn[0] = "/btn/Button_First_Blue.bmp";
+            _pressBtn[1] = "/btn/Button_Right_Yellow.bmp";       _releaseBtn[1] = "/btn/Button_Right_Blue.bmp";
+            _pressBtn[2] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2] = "/btn/Button_Ready_Blue.bmp";
+            _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
             _pressBtn[4] = "/btn/Black.bmp";                     _releaseBtn[4] = "/btn/Black.bmp";
             _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
             _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
-            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            _pressBtn[7] = "/btn/Radio_Yellow.bmp";              _releaseBtn[7] = "/btn/Radio_Green.bmp";
+            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case PLAYERico:{
@@ -1857,15 +1860,16 @@ void changeState(int state){
             _pressBtn[0] = "/btn/Button_Mute_Yellow.bmp";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.bmp":"/btn/Button_Mute_Green.bmp";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.bmp";
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.bmp";
-            _pressBtn[3] = "/btn/MP3_Yellow.bmp";                _releaseBtn[3] = "/btn/MP3_Green.bmp";
-            _pressBtn[4] = "/btn/Radio_Yellow.bmp";              _releaseBtn[4] = "/btn/Radio_Green.bmp";
+            _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
+            _pressBtn[4] = "/btn/Button_Cancel_Yellow.bmp";      _releaseBtn[4] = "/btn/Button_Cancel_Red.bmp";
             _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
             _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
-            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            _pressBtn[7] = "/btn/Radio_Yellow.bmp";              _releaseBtn[7] = "/btn/Radio_Green.bmp";
+            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case ALARM:{
+            showHeadlineItem(ALARM);
             _pressBtn[0] = "/btn/Button_Left_Yellow.bmp";        _releaseBtn[0] = "/btn/Button_Left_Blue.bmp";
             _pressBtn[1] = "/btn/Button_Right_Yellow.bmp";       _releaseBtn[1] = "/btn/Button_Right_Blue.bmp";
             _pressBtn[2] = "/btn/Button_Up_Yellow.bmp";          _releaseBtn[2] = "/btn/Button_Up_Blue.bmp";
@@ -2483,16 +2487,23 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 3){_releaseNr = 33;} // down
                             if(btnNr == 4){_releaseNr = 34;} // ready (return to CLOCK)
                             changeBtn_pressed(btnNr); break;
-        case PLAYER_1:      if(btnNr == 0){_releaseNr = 40;} // RADIO
-                            if(btnNr == 1){_releaseNr = 41;} // first audiofile
-                            if(btnNr == 2){_releaseNr = 42;} // next audiofile
-                            if(btnNr == 3){_releaseNr = 43;} // ready
+        case PLAYER_1:      if(btnNr == 0){_releaseNr = 40;} // first audiofile
+                            if(btnNr == 1){_releaseNr = 41;} // next audiofile
+                            if(btnNr == 2){_releaseNr = 42;} // ready
+                            if(btnNr == 3){_releaseNr = 43;} // unused
+                            if(btnNr == 4){_releaseNr = 44;} // unused
+                            if(btnNr == 5){_releaseNr = 45;} // unused
+                            if(btnNr == 6){_releaseNr = 46;} // unused
+                            if(btnNr == 7){_releaseNr = 47;} // RADIO
                             changeBtn_pressed(btnNr); break;
         case PLAYERico_1:   if(btnNr == 0){_releaseNr = 50; mute();}
-                            if(btnNr == 1){_releaseNr = 51; } // Vol-
-                            if(btnNr == 2){_releaseNr = 52; } // Vol+
-                            if(btnNr == 3){_releaseNr = 53;} // PLAYER
-                            if(btnNr == 4){_releaseNr = 54;} // RADIO
+                            if(btnNr == 1){_releaseNr = 51;} // Vol-
+                            if(btnNr == 2){_releaseNr = 52;} // Vol+
+                            if(btnNr == 3){_releaseNr = 53;} // unused
+                            if(btnNr == 4){_releaseNr = 54;} // cancel
+                            if(btnNr == 5){_releaseNr = 55;} // unused
+                            if(btnNr == 6){_releaseNr = 56;} // unused
+                            if(btnNr == 7){_releaseNr = 57;} // RADIO
                             changeBtn_pressed(btnNr); break;
         case ALARM_1:       if(btnNr == 0){_releaseNr = 60;} // mon
                             if(btnNr == 1){_releaseNr = 61;} // tue
@@ -2564,29 +2575,35 @@ void tp_released(){
         case 34:    changeState(CLOCK); break;
 
         /* AUDIOPLAYER ******************************/
-        case 40:    changeBtn_released(0); changeState(RADIO); break; // RADIO
-        case 41:    changeBtn_released(1); // first audiofile
+        case 40:    changeBtn_released(1); // first audiofile
                     if(setAudioFolder("/audiofiles")) chptr = listAudioFile();
                     if(chptr) strcpy(_afn, chptr);
                     showFileName(_afn); break;
-        case 42:    changeBtn_released(2); // next audiofile
+        case 41:    changeBtn_released(2); // next audiofile
                     chptr = listAudioFile();
                     if(chptr) strcpy(_afn ,chptr);
                     showFileName(_afn); break;
-        case 43:    changeState(PLAYERico); showVolumeBar(); // ready
+        case 42:    changeState(PLAYERico); showVolumeBar(); // ready
                     audiotrack(_afn);
                     if(_f_isFSConnected){
                         free(_lastconnectedfile);
                         _lastconnectedfile = strdup(path);
                     } break;
-        case 44:    break;
+        case 43:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 44:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 45:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 46:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 47:    changeBtn_released(0); changeState(RADIO); break; // RADIO
 
         /* AUDIOPLAYERico ******************************/
         case 50:    changeBtn_released(0); break; // Mute
         case 51:    changeBtn_released(1); downvolume(); showVolumeBar(); break; // Vol-
         case 52:    changeBtn_released(2); upvolume();   showVolumeBar(); break; // Vol+
-        case 53:    changeState(PLAYER);   showFileName(_afn); break;
-        case 54:    changeState(RADIO); break;
+        case 53:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 54:    stopSong(); changeState(PLAYER);  break;
+        case 55:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 56:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 57:    stopSong(); changeState(RADIO); break;
 
         /* ALARM (weekdays) ******************************/
         case 60:    display_alarmDays(0); break;  // sun
