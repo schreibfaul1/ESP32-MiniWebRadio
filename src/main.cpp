@@ -62,8 +62,8 @@ char           _streamTitle[512]    = {};
 char*          _lastconnectedfile = nullptr;
 char*          _stationURL        = nullptr;
 
-const char*    _pressBtn[5];
-const char*    _releaseBtn[5];
+const char*    _pressBtn[8];
+const char*    _releaseBtn[8];
 
 boolean        _f_rtc   = false;             // true if time from ntp is received
 boolean        _f_1sec  = false;
@@ -197,10 +197,12 @@ SemaphoreHandle_t  mutex_display;
     struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
     struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winBitRate;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
-    struct w_b {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 14; } const _winVolBar;
-    struct w_o {uint16_t x = 0;   uint16_t y = 154; uint16_t w =  64; uint16_t h = 64; } const _winButton;
+    struct w_b {uint16_t x = 0;   uint16_t y = 166; uint16_t w = 320; uint16_t h =  6; } const _winVolBar;
+    struct w_o {uint16_t x = 0;   uint16_t y = 180; uint16_t w =  40; uint16_t h = 40; } const _winButton;
+    struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 480; uint16_t h = 120;} const _winDigits;
+    struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
     uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
-    uint16_t _alarmtimeXPos[5] = {2, 75, 173, 246, 148}; // last is colon
+    uint16_t _alarmtimeXPos[5] = {2, 75, 148, 173, 246};
     uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
     uint8_t  _alarmdays_w = 44 + 4;
     uint8_t  _alarmdays_h = 40;
@@ -257,7 +259,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
     struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h =  30;} const _winBitRate;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
-    struct w_b {uint16_t x =   0; uint16_t y = 200; uint16_t w = 480; uint16_t h =  30;} const _winVolBar;
+    struct w_b {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
     struct w_o {uint16_t x =   0; uint16_t y = 230; uint16_t w =  60; uint16_t h =  60;} const _winButton;
     struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
     struct w_y {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
@@ -679,17 +681,17 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
 
 }
 void showVolumeBar(){
-    uint16_t vol = tft.width() * getvolume()/21;
+    uint16_t val = tft.width() * getvolume()/21;
     clearVolBar();
-    tft.fillRect(_winVolBar.x, _winVolBar.y + 14, vol, 8, TFT_RED);
-    tft.fillRect(vol+1, _winVolBar.y + 14, tft.width()-vol+1, 8, TFT_GREEN);
+    tft.fillRect(_winVolBar.x, _winVolBar.y + 1, val, _winVolBar.h - 2, TFT_RED);
+    tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
 }
 void showBrightnessBar(){
-    uint16_t vol = tft.width() * getBrightness()/100;
+    uint16_t val = tft.width() * getBrightness()/100;
     clearVolBar();
-    tft.fillRect(_winVolBar.x, _winVolBar.y + 14, vol, 8, TFT_RED);
-    tft.fillRect(vol+1, _winVolBar.y + 14, tft.width()-vol+1, 8, TFT_GREEN);
+    tft.fillRect(_winVolBar.x, _winVolBar.y + 1, val, _winVolBar.h - 2, TFT_RED);
+    tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
 }
 void showFooter(){  // stationnumber, sleeptime, IPaddress
@@ -1062,7 +1064,7 @@ void connecttohost(const char* host){
 
     clearBitRate();
     _cur_Codec = 0;
-    if(_state != RADIOico) clearStreamTitle();
+//    if(_state == RADIO) clearStreamTitle();
     _icyBitRate = 0;
     _avrBitRate = 0;
 
@@ -1480,7 +1482,7 @@ void setStation(uint16_t sta){
     free(_stationURL);
     _stationURL = strdup(content.c_str());
     _homepage = "";
-    if(_state != RADIOico) clearStreamTitle();
+    if(_state == RADIO) clearStreamTitle();
 
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
@@ -1728,6 +1730,11 @@ void changeState(int state){
                 showFooter();
                 showHeadlineVolume();
             }
+            else if(_state == BRIGHTNESS){
+                showLogoAndStationName();
+                _f_newStreamTitle = true;
+                clearStreamTitle();
+            }
             else{
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -1741,6 +1748,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.bmp";
             _pressBtn[3] = "/btn/Button_Previous_Yellow.bmp";    _releaseBtn[3] = "/btn/Button_Previous_Green.bmp";
             _pressBtn[4] = "/btn/Button_Next_Yellow.bmp";        _releaseBtn[4] = "/btn/Button_Next_Green.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             clearStreamTitle();
             showVolumeBar();
             //for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
@@ -1760,6 +1770,9 @@ void changeState(int state){
             else{
                 _pressBtn[4]="/btn/Black.bmp";                 _releaseBtn[4]="/btn/Black.bmp";
             }
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             clearVolBar();
             break;
@@ -1777,7 +1790,7 @@ void changeState(int state){
                 if(l > 1) wd[l - 2] = '\0'; // remove last space and comma
                 else strcat(wd, "no day of the week activated");
 
-                SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%2d:%2d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
+                SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%02d:%02d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
                                "%s -> %s", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays), wd);
             }
             if(_state != CLOCKico) clearDigits();
@@ -1801,6 +1814,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Mute_Yellow.bmp";        _releaseBtn[2] = _f_mute? "/btn/Button_Mute_Red.bmp":"/btn/Button_Mute_Green.bmp";
             _pressBtn[3] = "/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Volume_Down_Blue.bmp";
             _pressBtn[4] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[4] = "/btn/Button_Volume_Up_Blue.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1811,7 +1827,10 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2] = "/btn/Button_Ready_Blue.bmp";
             _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
             _pressBtn[4] = "/btn/Black.bmp";                     _releaseBtn[4] = "/btn/Black.bmp";
-            drawImage("/common/Brightness.bmp", 0, _winName.y);
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
+            drawImage("/common/Brightness.jpg", 0, _winName.y);
             showBrightnessBar();
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
@@ -1827,6 +1846,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Right_Yellow.bmp";       _releaseBtn[2] = "/btn/Button_Right_Blue.bmp";
             _pressBtn[3] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[3] = "/btn/Button_Ready_Blue.bmp";
             _pressBtn[4] = "/btn/Black.bmp";                     _releaseBtn[4] = "/btn/Black.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1837,6 +1859,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.bmp";
             _pressBtn[3] = "/btn/MP3_Yellow.bmp";                _releaseBtn[3] = "/btn/MP3_Green.bmp";
             _pressBtn[4] = "/btn/Radio_Yellow.bmp";              _releaseBtn[4] = "/btn/Radio_Green.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -1846,6 +1871,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Up_Yellow.bmp";          _releaseBtn[2] = "/btn/Button_Up_Blue.bmp";
             _pressBtn[3] = "/btn/Button_Down_Yellow.bmp";        _releaseBtn[3] = "/btn/Button_Down_Blue.bmp";
             _pressBtn[4] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[4] = "/btn/Button_Ready_Blue.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             clearDigits();
             display_alarmtime(0, 0, true);
             display_alarmDays(0, true);
@@ -1859,6 +1887,9 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Ready_Yellow.bmp";       _releaseBtn[2] = "/btn/Button_Ready_Blue.bmp";
             _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
             _pressBtn[4] = "/btn/Button_Cancel_Yellow.bmp";      _releaseBtn[4] = "/btn/Button_Cancel_Blue.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             clearLogoAndStationname();
             clearStreamTitle();
             display_sleeptime();
@@ -2681,7 +2712,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
 
-    if(cmd == "change_state"){      changeState(param.toInt()); return;}
+    if(cmd == "change_state"){      if(_state != CLOCK) changeState(param.toInt()); return;}
 
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped");
                                     if(playlistFile) playlistFile.close();
