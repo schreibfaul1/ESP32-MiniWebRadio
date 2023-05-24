@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 19.05.2022
+// updated: 24.05.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -26,7 +26,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 #if DECODER == 0
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC};
+                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC, PAUSERESUME};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -138,6 +138,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
                 audioTxTaskMessage.cmd = HIGHWATERMARK;
                 audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == PAUSERESUME){
+                audioTxTaskMessage.cmd = PAUSERESUME;
+                audioTxTaskMessage.ret = vs1053.pauseResume();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -258,6 +263,11 @@ uint32_t audioGetStackHighWatermark(){
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
+boolean audioPauseResume(){
+    audioTxMessage.cmd = PAUSERESUME;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
 
 #endif // DECODER == 0
 
@@ -268,7 +278,7 @@ uint32_t audioGetStackHighWatermark(){
 #if DECODER >= 1
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
-                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC};
+                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -372,6 +382,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
                 audioTxTaskMessage.cmd = HIGHWATERMARK;
                 audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == PAUSERESUME){
+                audioTxTaskMessage.cmd = PAUSERESUME;
+                audioTxTaskMessage.ret = audio.pauseResume();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -488,6 +503,12 @@ boolean audioIsRunning(){
 
 uint32_t audioGetStackHighWatermark(){
     audioTxMessage.cmd = HIGHWATERMARK;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+boolean audioPauseResume(){
+    audioTxMessage.cmd = PAUSERESUME;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

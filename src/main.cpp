@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3f, May 21/2023
+    Version 2.7.3g, May 24/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -92,6 +92,7 @@ boolean        _f_timeAnnouncement = false; // time announcement every full hour
 boolean        _f_playlistEnabled = false;
 boolean        _f_playlistNextFile = false;
 boolean        _f_logoUnknown = false;
+boolean        _f_pauseResume = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -259,7 +260,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
     struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h =  30;} const _winBitRate;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
-    struct w_b {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
+    struct w_b {uint16_t x =   0; uint16_t y = 218; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
     struct w_o {uint16_t x =   0; uint16_t y = 230; uint16_t w =  60; uint16_t h =  60;} const _winButton;
     struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
     struct w_y {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
@@ -1110,6 +1111,7 @@ void stopSong(){
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     _f_playlistEnabled = false;
+    _f_pauseResume = false;
 }
 
 /***********************************************************************************************************************
@@ -1860,7 +1862,7 @@ void changeState(int state){
             _pressBtn[0] = "/btn/Button_Mute_Yellow.bmp";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.bmp":"/btn/Button_Mute_Green.bmp";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.bmp";
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.bmp";
-            _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
+            _pressBtn[3] = "/btn/Button_Pause_Yellow.bmp";       _releaseBtn[3] = "/btn/Button_Pause_Blue.bmp";
             _pressBtn[4] = "/btn/Button_Cancel_Yellow.bmp";      _releaseBtn[4] = "/btn/Button_Cancel_Red.bmp";
             _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
             _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
@@ -2499,7 +2501,7 @@ void tp_pressed(uint16_t x, uint16_t y){
         case PLAYERico_1:   if(btnNr == 0){_releaseNr = 50; mute();}
                             if(btnNr == 1){_releaseNr = 51;} // Vol-
                             if(btnNr == 2){_releaseNr = 52;} // Vol+
-                            if(btnNr == 3){_releaseNr = 53;} // unused
+                            if(btnNr == 3){_releaseNr = 53;} // pause/resume
                             if(btnNr == 4){_releaseNr = 54;} // cancel
                             if(btnNr == 5){_releaseNr = 55;} // unused
                             if(btnNr == 6){_releaseNr = 56;} // unused
@@ -2575,11 +2577,11 @@ void tp_released(){
         case 34:    changeState(CLOCK); break;
 
         /* AUDIOPLAYER ******************************/
-        case 40:    changeBtn_released(1); // first audiofile
+        case 40:    changeBtn_released(0); // first audiofile
                     if(setAudioFolder("/audiofiles")) chptr = listAudioFile();
                     if(chptr) strcpy(_afn, chptr);
                     showFileName(_afn); break;
-        case 41:    changeBtn_released(2); // next audiofile
+        case 41:    changeBtn_released(1); // next audiofile
                     chptr = listAudioFile();
                     if(chptr) strcpy(_afn ,chptr);
                     showFileName(_afn); break;
@@ -2599,7 +2601,13 @@ void tp_released(){
         case 50:    changeBtn_released(0); break; // Mute
         case 51:    changeBtn_released(1); downvolume(); showVolumeBar(); break; // Vol-
         case 52:    changeBtn_released(2); upvolume();   showVolumeBar(); break; // Vol+
-        case 53:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+        case 53:    if(!_f_pauseResume){_f_pauseResume = true; // toggle pause/resume an set the flag
+                        _pressBtn[3] = "/btn/Button_Right_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Right_Blue.bmp";}
+                    else {_f_pauseResume = false;
+                        _pressBtn[3] = "/btn/Button_Pause_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Pause_Blue.bmp";}
+                    drawImage(_releaseBtn[3], 3 * _winButton.w,  _winButton.y);
+                    audioPauseResume();
+                    break;
         case 54:    stopSong(); changeState(PLAYER);  break;
         case 55:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 56:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
@@ -2736,9 +2744,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=nothing to resume");
-                                    else {audiotrack(_lastconnectedfile, _resumeFilePos);
-                                          webSrv.send("resumefile=audiofile resumed");}
-                                    return;}
+									else {
+										audiotrack(_lastconnectedfile, _resumeFilePos);
+										webSrv.send("resumefile=audiofile resumed");
+									}
+									return;}
 
     if(cmd == "get_alarmdays"){     webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;}
 

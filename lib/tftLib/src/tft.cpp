@@ -4345,7 +4345,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
     }
-    if (TP_vers == 4) {  // ILI9488 display for RaspberryPI
+    if (TP_vers == 4) {  // ILI9488 display
         Xmax = 1922;
         Xmin = 140;
         Ymax = 1930;
@@ -4497,7 +4497,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
             if (y > ILI9488_WIDTH - 1) y = 0;
         }
     }
-    // log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
+//    log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------

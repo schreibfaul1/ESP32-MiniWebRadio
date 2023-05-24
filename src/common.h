@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 21.May.2023
+// updated: 24.May.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -217,3 +217,4 @@ uint32_t audioInbuffFree();
 boolean audioIsRunning();
 uint32_t audioGetStackHighWatermark();
 uint32_t audioGetCodec();
+boolean audioPauseResume();
