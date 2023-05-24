@@ -2150,7 +2150,7 @@ void loop() {
     }
     if(_f_playlistEnabled){
         if(!_f_playlistNextFile){
-            if(!audioIsRunning()){
+            if(!audioIsRunning() && !_f_pauseResume){
                 SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN  "next playlist file");
                 processPlaylist(false);
                 _playlistTime = millis();
@@ -2224,22 +2224,26 @@ void audio_commercial(const char *info)  {show_ST_commercial(info);}
 //----------------------------------------------------------------------------------------
 void vs1053_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
+    _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 void audio_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
+    _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 //----------------------------------------------------------------------------------------
 void vs1053_eof_stream(const char *info){
+    _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
 void audio_eof_stream(const char *info){
+    _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
 }
@@ -2601,12 +2605,20 @@ void tp_released(){
         case 50:    changeBtn_released(0); break; // Mute
         case 51:    changeBtn_released(1); downvolume(); showVolumeBar(); break; // Vol-
         case 52:    changeBtn_released(2); upvolume();   showVolumeBar(); break; // Vol+
-        case 53:    if(!_f_pauseResume){_f_pauseResume = true; // toggle pause/resume an set the flag
-                        _pressBtn[3] = "/btn/Button_Right_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Right_Blue.bmp";}
-                    else {_f_pauseResume = false;
-                        _pressBtn[3] = "/btn/Button_Pause_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Pause_Blue.bmp";}
-                    drawImage(_releaseBtn[3], 3 * _winButton.w,  _winButton.y);
-                    audioPauseResume();
+        case 53:    if(_f_isFSConnected){
+                        if(!_f_pauseResume){_f_pauseResume = true; // toggle pause/resume an set the flag
+                            _pressBtn[3] = "/btn/Button_Right_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Right_Blue.bmp";
+                            SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Audio file is paused");}
+                        else {_f_pauseResume = false;
+                            _pressBtn[3] = "/btn/Button_Pause_Yellow.bmp"; _releaseBtn[3] = "/btn/Button_Pause_Blue.bmp";
+                            SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Audio file is resumed");}
+                        drawImage(_releaseBtn[3], 3 * _winButton.w,  _winButton.y);
+                        audioPauseResume();
+                    }
+                    else{
+                        changeBtn_released(3);
+                        SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Web files can't be paused");
+                    }
                     break;
         case 54:    stopSong(); changeState(PLAYER);  break;
         case 55:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
