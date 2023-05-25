@@ -19,6 +19,8 @@
 #define SDMMC_FREQUENCY     20000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
+#define CONN_TIMEOUT        250                             // unencrypted connection timeout in ms (http://...)
+#define CONN_TIMEOUT_SSL    2000                            // encrypted connection timeout in ms (https://...)
 
 /**********************************************************************************************************************/
 
@@ -218,3 +220,4 @@ boolean audioIsRunning();
 uint32_t audioGetStackHighWatermark();
 uint32_t audioGetCodec();
 boolean audioPauseResume();
+void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);

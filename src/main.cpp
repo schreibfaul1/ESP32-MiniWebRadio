@@ -1169,6 +1169,7 @@ void setup(){
     tp.setRotation(TP_ROTATION);
 
     SerialPrintfln("setup: ....  Init SD card");
+    pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     pinMode(SD_MMC_D0, INPUT_PULLUP);
     #ifdef CONFIG_IDF_TARGET_ESP32S3
         SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
@@ -1237,17 +1238,18 @@ void setup(){
 
     audioInit();
 
+    audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
+
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
+    SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
+    SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
 
-    // _alarmdays = pref.getUShort("alarm_weekday");
-    // _alarmtime = pref.getUInt("alarm_time");
-    // _f_timeAnnouncement = pref.getBool("timeAnnouncing");
     _state = RADIO;
 
-     ir.begin();  // Init InfraredDecoder
+    ir.begin();  // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
@@ -1271,6 +1273,7 @@ void setup(){
         setVolume(_cur_volume);
         _mute_volume = _cur_volume;
     }
+
     showHeadlineItem(RADIO);
     if(_cur_station > 0) setStation(_cur_station);
     else{setStationViaURL(_lastconnectedhost.c_str());}

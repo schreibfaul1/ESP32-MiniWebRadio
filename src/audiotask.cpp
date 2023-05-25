@@ -26,7 +26,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 #if DECODER == 0
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC, PAUSERESUME};
+                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -64,8 +64,6 @@ void audioTask(void *parameter) {
     }
     SerialPrintfln("VS1053 chipID = " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", version = "
                                       ANSI_ESC_CYAN "%d", chipID, vs1053.printVersion());
-
-    vs1053.setConnectionTimeout(1000, 4000);
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
@@ -143,6 +141,14 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == PAUSERESUME){
                 audioTxTaskMessage.cmd = PAUSERESUME;
                 audioTxTaskMessage.ret = vs1053.pauseResume();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == CONNECTION_TIMEOUT){
+                audioTxTaskMessage.cmd = CONNECTION_TIMEOUT;
+                uint32_t to = audioRxTaskMessage.value1;
+                uint32_t to_ssl = audioRxTaskMessage.value2;
+                vs1053.setConnectionTimeout(to, to_ssl);
+                audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -268,6 +274,12 @@ boolean audioPauseResume(){
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
+void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
+    audioTxMessage.value1 = timeout_ms;
+    audioTxMessage.value2 = timeout_ms_ssl;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
+}
 
 #endif // DECODER == 0
 
@@ -278,7 +290,7 @@ boolean audioPauseResume(){
 #if DECODER >= 1
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
-                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME};
+                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -311,7 +323,6 @@ void audioTask(void *parameter) {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
     if(I2S_MCLK != -1) audio.i2s_mclk_pin_select(I2S_MCLK);
     audio.setVolume(5); // 0...21
-    audio.setConnectionTimeout(1000, 4000);
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
@@ -387,6 +398,14 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == PAUSERESUME){
                 audioTxTaskMessage.cmd = PAUSERESUME;
                 audioTxTaskMessage.ret = audio.pauseResume();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == CONNECTION_TIMEOUT){
+                audioTxTaskMessage.cmd = CONNECTION_TIMEOUT;
+                uint32_t to = audioRxTaskMessage.value1;
+                uint32_t to_ssl = audioRxTaskMessage.value2;
+                audio.setConnectionTimeout(to, to_ssl);
+                audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -511,6 +530,12 @@ boolean audioPauseResume(){
     audioTxMessage.cmd = PAUSERESUME;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
+}
+void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
+    audioTxMessage.value1 = timeout_ms;
+    audioTxMessage.value2 = timeout_ms_ssl;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
 }
 //
 #endif // DECODER >= 1
