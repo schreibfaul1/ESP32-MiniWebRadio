@@ -50,6 +50,7 @@ int8_t         _releaseNr      = -1;
 uint32_t       _resumeFilePos  = 0;
 uint32_t       _playlistTime   = 0;      // playlist start time millis() for timeout
 uint32_t       _settingsHash   = 0;
+uint32_t       _audioFileSize  = 0;
 char           _chbuf[512];
 char           _fName[256];
 char           _myIP[25];
@@ -218,7 +219,7 @@ SemaphoreHandle_t  mutex_display;
 #endif //TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5
     //
     //  Display 480x320
     //  +-------------------------------------------+ _yHeader=0
@@ -277,7 +278,7 @@ SemaphoreHandle_t  mutex_display;
     //
     TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
     //
-#endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4
+#endif  // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5
 
 
 
@@ -1105,6 +1106,8 @@ void connecttoFS(const char* filename, uint32_t resumeFilePos){
     _cur_Codec  = 0;
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
     _f_isWebConnected = false;
+//    log_w("Filesize %d", audioGetFileSize());
+//    log_w("FilePos %d", audioGetFilePosition());
 }
 void stopSong(){
     audioStopSong();
@@ -1190,7 +1193,7 @@ void setup(){
     defaultsettings();  // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else                     setTFTbrightness(5);
-    if(TFT_CONTROLLER > 4) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 5) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
     File file=SD_MMC.open("/stations.csv");
@@ -1627,8 +1630,8 @@ void audiotrack(const char* fileName, uint32_t resumeFilePos, bool showFN){
 //    clearLogoAndStationname();
     if(showFN) showFileName(fileName);
     changeState(PLAYERico);
-    connecttoFS((const char*) path, resumeFilePos);
-    if(_f_isFSConnected){
+	connecttoFS((const char*)path, resumeFilePos);
+	if(_f_isFSConnected){
         free(_lastconnectedfile);
         _lastconnectedfile = strdup(fileName);
         _resumeFilePos = 0;
@@ -2133,6 +2136,14 @@ void loop() {
                 if(_state == PLAYER || _state == PLAYERico) showFileLogo();
                 if(_state == RADIO && _f_logoUnknown == true) {_f_logoUnknown = false; showFileLogo();}
             }
+        }
+
+        if(_f_isFSConnected){
+            uint32_t t = 0;
+            uint32_t fs = audioGetFileSize();
+            uint32_t br = audioGetBitRate();
+            if(br) t = (fs * 8)/ br;
+        //    log_w("Br %d, Dur %ds", br, t);
         }
     }
 

@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 24.05.2022
+// updated: 28.05.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -26,7 +26,8 @@ extern SemaphoreHandle_t  mutex_rtc;
 #if DECODER == 0
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED, INBUFF_FREE,
-                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT};
+                 ISRUNNING, HIGHWATERMARK, GET_BITRATE, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
+                 GET_FILEPOSITION};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -149,6 +150,16 @@ void audioTask(void *parameter) {
                 uint32_t to_ssl = audioRxTaskMessage.value2;
                 vs1053.setConnectionTimeout(to, to_ssl);
                 audioTxTaskMessage.ret = 0;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_FILESIZE){
+                audioTxTaskMessage.cmd = GET_FILESIZE;
+                audioTxTaskMessage.ret = vs1053.getFileSize();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_FILEPOSITION){
+                audioTxTaskMessage.cmd = GET_FILEPOSITION;
+                audioTxTaskMessage.ret = vs1053.getFilePos();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -281,6 +292,18 @@ void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
     (void)RX;
 }
 
+uint32_t audioGetFileSize(){
+    audioTxMessage.cmd = GET_FILESIZE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioGetFilePosition(){
+    audioTxMessage.cmd = GET_FILEPOSITION;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 #endif // DECODER == 0
 
 /***********************************************************************************************************************
@@ -290,7 +313,8 @@ void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
 #if DECODER >= 1
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
-                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT};
+                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
+                 GET_FILEPOSITION};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -406,6 +430,16 @@ void audioTask(void *parameter) {
                 uint32_t to_ssl = audioRxTaskMessage.value2;
                 audio.setConnectionTimeout(to, to_ssl);
                 audioTxTaskMessage.ret = 0;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_FILESIZE){
+                audioTxTaskMessage.cmd = GET_FILESIZE;
+                audioTxTaskMessage.ret = audio.getFileSize();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_FILEPOSITION){
+                audioTxTaskMessage.cmd = GET_FILEPOSITION;
+                audioTxTaskMessage.ret = audio.getFilePos();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -536,6 +570,18 @@ void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
     audioTxMessage.value2 = timeout_ms_ssl;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
+}
+
+uint32_t audioGetFileSize(){
+    audioTxMessage.cmd = GET_FILESIZE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioGetFilePosition(){
+    audioTxMessage.cmd = GET_FILEPOSITION;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
 }
 //
 #endif // DECODER >= 1
