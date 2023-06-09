@@ -909,46 +909,46 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(0x09); spi_TFT->write((y+h-1) & 0xFF);  //Row End
     }
     if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
-        writeCommand(ILI9486_CASET);    // Column addr set
+        writeCommand(ILI9486_CASET);        // Column addr set
         spi_TFT->write16(x >> 8);
-        spi_TFT->write16(x & 0xFF);          // XSTART
+        spi_TFT->write16(x & 0xFF);         // XSTART
         w=x+w-1;
         spi_TFT->write16(w >> 8);
-        spi_TFT->write16(w & 0xFF);          // XEND
-        writeCommand(ILI9486_PASET);    // Row addr set
+        spi_TFT->write16(w & 0xFF);         // XEND
+        writeCommand(ILI9486_PASET);        // Row addr set
         spi_TFT->write16(y >> 8);
-        spi_TFT->write16(y & 0xFF);          // YSTART
+        spi_TFT->write16(y & 0xFF);         // YSTART
         h=y+h-1;
         spi_TFT->write16(h >> 8);
-        spi_TFT->write16(h & 0xFF);          // YEND
+        spi_TFT->write16(h & 0xFF);         // YEND
     }
     if(_TFTcontroller == ILI9488){
-        writeCommand(ILI9488_CASET);    // Column addr set
+        writeCommand(ILI9488_CASET);        // Column addr set
         spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF);          // XSTART
+        spi_TFT->write(x & 0xFF);           // XSTART
         w=x+w-1;
         spi_TFT->write(w >> 8);
-        spi_TFT->write(w & 0xFF);          // XEND
-        writeCommand(ILI9488_PASET);    // Row addr set
+        spi_TFT->write(w & 0xFF);           // XEND
+        writeCommand(ILI9488_PASET);        // Row addr set
         spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF);          // YSTART
+        spi_TFT->write(y & 0xFF);           // YSTART
         h=y+h-1;
         spi_TFT->write(h >> 8);
-        spi_TFT->write(h & 0xFF);          // YEND
+        spi_TFT->write(h & 0xFF);           // YEND
     }
     if(_TFTcontroller == ST7796){
-        writeCommand(ST7796_CASET);    // Column addr set
+        writeCommand(ST7796_CASET);         // Column addr set
         spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF);          // XSTART
+        spi_TFT->write(x & 0xFF);           // XSTART
         w=x+w-1;
         spi_TFT->write(w >> 8);
-        spi_TFT->write(w & 0xFF);          // XEND
-        writeCommand(ST7796_RASET);    // Row addr set
+        spi_TFT->write(w & 0xFF);           // XEND
+        writeCommand(ST7796_RASET);         // Row addr set
         spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF);          // YSTART
+        spi_TFT->write(y & 0xFF);           // YSTART
         h=y+h-1;
         spi_TFT->write(h >> 8);
-        spi_TFT->write(h & 0xFF);          // YEND
+        spi_TFT->write(h & 0xFF);           // YEND
     }
 }
 //----------------------------------------------------------------------------------------------------------------------
