@@ -71,7 +71,7 @@ const char index_html[] PROGMEM = R"=====(
             display: none;
         }
         #content {
-            min-height : 540px;
+            min-height : 550px;
             min-width : 725px;
             overflow : hidden;
             background-color : lightskyblue;
