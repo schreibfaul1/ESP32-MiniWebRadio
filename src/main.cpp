@@ -2155,13 +2155,14 @@ void loop() {
                 if(ibr != _avrBitRate) {_avrBitRate = ibr;  showFooterBitRate(_avrBitRate);}
             }
         }
+        updateSettings();
     }
 
     if(_f_1min == true){
         _f_1min = false;
         updateSleepTime();
-        updateSettings();
     }
+    
     if(_f_playlistEnabled){
         if(!_f_playlistNextFile){
             if(!audioIsRunning() && !_f_pauseResume){
@@ -2568,7 +2569,7 @@ void tp_released(){
 
     switch(_releaseNr){
         /* RADIOico ******************************/
-        case  0:    changeBtn_released(0); break; // Mute
+        case  0:    /*changeBtn_released(0);*/ break; // Mute
         case  1:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
         case  2:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
         case  3:    prevStation(); showFooterStaNr(); changeBtn_released(3); break;  // previousstation
