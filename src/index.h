@@ -908,14 +908,14 @@ function saveGridFileToSD () { // save to SD
   select = document.getElementById('preset') // Radio: show stationlist
   select.options.length = 1
   var j = 1
-  txt = 'X\tCy\tStationName\tStreamURL\n'
+  txt = 'Hide\tCy\tStationName\tStreamURL\n'
   for (var i = 0; i < wsData.length; i++) {
     c = ''
-    if (objJSON[i].X) {
-      c = objJSON[i].X
+    if (objJSON[i].Hide) {
+      c = objJSON[i].Hide
       txt += c+ '\t'
     } else txt += '\t'
-    if (objJSON[i].X !== '*') {
+    if (objJSON[i].Hide !== '*') {
       if (j < 1000) {
         opt = document.createElement('OPTION')
         opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
@@ -981,7 +981,7 @@ function saveExcel () { // save xlsx to PC
   wb.SheetNames.push('Stations')
   var wsData = $('#jsGrid').jsGrid('option', 'data')
   var wscols = [{
-    wch: 3
+    wch: 4
   }, // 'characters'
   {
     wch: 5
@@ -994,7 +994,7 @@ function saveExcel () { // save xlsx to PC
   }  // 'characters'
   ]
   var ws = XLSX.utils.json_to_sheet(wsData, {
-    header: ['X', 'Cy', 'StationName', 'StreamURL']
+    header: ['Hide', 'Cy', 'StationName', 'StreamURL']
   })
   ws['!cols'] = wscols
   wb.Sheets.Stations = ws
@@ -1021,7 +1021,7 @@ function saveExcel () { // save xlsx to PC
 
 var clients = [ // testdata
   {
-    X: '*',
+    Hide: '*',
     Cy: 'D',
     StationName: 'Station',
     StreamURL: 'URL'
@@ -1054,7 +1054,7 @@ function showExcelGrid () {
     },
     data: clients,
     fields: [{
-      name: 'X',
+      name: 'Hide',
       type: 'text',
       width: 20,
       align: 'center'
@@ -1095,7 +1095,8 @@ function showExcelGrid () {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 var showDetailsDialog = function (dialogType, client) { // popUp window
-  $('#txtX').val(client.X)
+  if(client.Hide === '*') $("#chkHide").prop("checked", true)
+  else                    $("#chkHide").prop("checked", false)
   $('#txtCy').val(client.Cy)
   $('#txtStationName').val(client.StationName)
   $('#txtStreamURL').val(client.StreamURL)
@@ -1108,7 +1109,8 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
     modal: false,
     buttons: {
       OK: function () {
-        client.X = $('#txtX').val()
+        if($('#chkHide').is(':checked')) client.Hide = '*'
+        else                             client.Hide = ''
         client.Cy = $('#txtCy').val()
         client.StationName = $('#txtStationName').val()
         client.StreamURL = $('#txtStreamURL').val()
@@ -1124,7 +1126,7 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
 
 var includeStation = function (client, isNew) {
   $.extend(client, {
-    X: $('#txX').val(),
+    Hide: $('#txHide').val(),
     Cy: $('#txtCy').val(),
     StationName: $('#txtStationName').val(),
     StreamURL: $('#txtStreamURL').val()
@@ -1181,7 +1183,7 @@ function updateStationlist () { // select in tab Radio
   select.options.length = 1
   var j = 1
   for (var i = 0; i < wsData.length; i++) {
-    if (objJSON[i].X !== '*') {
+    if (objJSON[i].Hide !== '*') {
       if (j < 1000) {
         opt = document.createElement('OPTION')
         opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
@@ -1473,8 +1475,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
   <div id="dialog">
     <table>
       <tr>
-        <td> x </td>
-        <td> <input type="text" id="txtX" size="100"/></td>
+        <td> Hide </td>
+        <td> <input type="checkbox" id="chkHide" /></td>
       </tr>
       <tr>
         <td>  Cy  </td>
