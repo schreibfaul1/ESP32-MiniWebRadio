@@ -46,8 +46,8 @@ extern __attribute__((weak)) void tp_released();
 #define ILI9486_HEIGHT 480
 #define ILI9488_WIDTH  320
 #define ILI9488_HEIGHT 480
-#define ST7789_WIDTH   320
-#define ST7789_HEIGHT  480
+#define ST7796_WIDTH   320
+#define ST7796_HEIGHT  480
 
 // RGB565 Color definitions
 #define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
@@ -199,7 +199,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
     private:
 
-        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7789 = 5};
+        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5};
         uint8_t _TFTcontroller = ILI9341;
 
         SPISettings     TFT_SPI;                     // SPI settings for this slave

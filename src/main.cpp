@@ -2139,10 +2139,10 @@ void loop() {
         }
 
         if(_f_isFSConnected){
-            uint32_t t = 0;
-            uint32_t fs = audioGetFileSize();
-            uint32_t br = audioGetBitRate();
-            if(br) t = (fs * 8)/ br;
+        //    uint32_t t = 0;
+        //    uint32_t fs = audioGetFileSize();
+        //    uint32_t br = audioGetBitRate();
+        //    if(br) t = (fs * 8)/ br;
         //    log_w("Br %d, Dur %ds", br, t);
         }
     }
@@ -2404,6 +2404,7 @@ void ir_key(const char* key){
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
     //SerialPrintfln("tp_pressed, state is: %i", _state);
+    SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     _timeCounter = 5;
     enum : int8_t{none = -1, RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1,
                              PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1,
@@ -2419,25 +2420,25 @@ void tp_pressed(uint16_t x, uint16_t y){
 						break;
 		case RADIOico:
 						if(y <= _winTitle.y) { yPos = RADIOico_1; }
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+ 						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = RADIOico_2;
 											btnNr = x / _winButton.w;
 						}
 						break;
 		case RADIOmenue:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = RADIOmenue_1;
 											btnNr = x / _winButton.w;
 						}
 						break;
 		case PLAYER:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = PLAYER_1;
 											btnNr = x / _winButton.w;
 						}
 						break;
 		case PLAYERico:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = PLAYERico_1;
 											btnNr = x / _winButton.w;
 						}
@@ -2446,7 +2447,7 @@ void tp_pressed(uint16_t x, uint16_t y){
 						if(_winDigits.y <= y && y <= _winDigits.y + _winDigits.h) { yPos = CLOCK_1; }
 						break;
 		case CLOCKico:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = CLOCKico_1;
 											btnNr = x / _winButton.w;
 						}
@@ -2456,19 +2457,19 @@ void tp_pressed(uint16_t x, uint16_t y){
 											yPos = ALARM_1;
 											btnNr = (x - 2) / _alarmdays_w;
 						}  // weekdays
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = ALARM_2;
 											btnNr = x / _winButton.w;
 						}
 						break;
 		case SLEEP:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = SLEEP_1;
 											btnNr = x / _winButton.w;
 						}
 						break;
 		case BRIGHTNESS:
-						if(_winButton.y <= y && y <= _winButton.y + _winButton.h) {
+						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
 											yPos = BRIGHTNESS_1;
 											btnNr = x / _winButton.w;
 						}
@@ -2481,12 +2482,14 @@ void tp_pressed(uint16_t x, uint16_t y){
         case RADIO_1:       changeState(RADIOico); break;
         case RADIOico_1:    changeState(RADIOmenue); break;
         case CLOCK_1:       changeState(CLOCKico);   break;
-        case RADIOico_2:    if(btnNr == 0){_releaseNr =  0; mute();}
-                            if(btnNr == 1){_releaseNr =  1; } // Vol-
-                            if(btnNr == 2){_releaseNr =  2; } // Vol+
-                            if(btnNr == 3){_releaseNr =  3; } // station--
-                            if(btnNr == 4){_releaseNr =  4; } // station++
-                            changeBtn_pressed(btnNr); break;
+        case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; mute();}
+                            else if(btnNr == 1){_releaseNr =  1; } // Vol-
+                            else if(btnNr == 2){_releaseNr =  2; } // Vol+
+                            else if(btnNr == 3){_releaseNr =  3; } // station--
+                            else if(btnNr == 4){_releaseNr =  4; } // station++
+                            else   {SerialPrintfln(ANSI_ESC_YELLOW "invalid button nr: %i", btnNr); break;}
+                            changeBtn_pressed(btnNr);
+                            break;
         case RADIOmenue_1:  if(btnNr == 0){_releaseNr = 10; audioStopSong();} // AudioPlayer
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Radio
@@ -2543,6 +2546,7 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 81;} // brighter
                             if(btnNr == 2){_releaseNr = 82;} // okay
                             changeBtn_pressed(btnNr); break;
+        default:            break;
     }
 }
 void tp_released(){
