@@ -1704,7 +1704,10 @@ function getnetworks () { // tab Config: load the connected WiFi network
               onclick="javascript:document.getElementById('file').click();"
               title="Load from PC">load xlsx
       </button>
-      <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img"
+
+      <!-- <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img" onchange="loadDataExcel(this.files);"/>    -->
+
+      <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden; width: 0px;"  name="img"
           onchange="loadDataExcel(this.files);"/>
       <br>
       </center>
