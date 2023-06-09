@@ -4531,8 +4531,8 @@ uint16_t TP::TP_Send(uint8_t set_val) {
 
 void TP::loop() {
     if (!digitalRead(TP_IRQ)) {
-        read_TP(x, y);  // skip first measurement
         if (f_loop) {
+            read_TP(x, y);  // skip first measurement
             if (read_TP(x, y)) {
                 f_loop = false;
                 log_i("tp_pressed");
