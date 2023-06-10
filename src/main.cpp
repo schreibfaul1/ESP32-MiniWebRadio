@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.7.3g, May 24/2023
+    Version 2.7.3h, Jun 10/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -194,8 +194,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
     struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-    struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-    struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winSleep;
+    struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  45; uint16_t h = 20; } const _winStaNr;
+    struct w_p {uint16_t x = 45;  uint16_t y = 220; uint16_t w =  75; uint16_t h = 20; } const _winSleep;
     struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
     struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winBitRate;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
@@ -256,8 +256,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
     struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
     struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 110; uint16_t h =  30;} const _winVolume;
-    struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  90; uint16_t h =  30;} const _winStaNr;
-    struct w_p {uint16_t x =  90; uint16_t y = 290; uint16_t w =  80; uint16_t h =  30;} const _winSleep;
+    struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  65; uint16_t h =  30;} const _winStaNr;
+    struct w_p {uint16_t x =  65; uint16_t y = 290; uint16_t w = 105; uint16_t h =  30;} const _winSleep;
     struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
     struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h =  30;} const _winBitRate;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
@@ -598,7 +598,7 @@ void showFooterStaNr(){
     tft.setFont(_fonts[1]);
     tft.setCursor(_winStaNr.x + 6 , _winStaNr.y + 2);
     tft.setTextColor(TFT_GREENYELLOW);
-    tft.print("STA:");
+    tft.print("#");
     tft.setTextColor(TFT_LAVENDER);
     tft.printf("%03d", _cur_station);
     xSemaphoreGive(mutex_display);
@@ -662,12 +662,12 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
     if(_state != ALARM){
         char Slt[15];
-        sprintf(Slt,"S %d:%02d", _sleeptime / 60, _sleeptime % 60);
+        sprintf(Slt,"Slp %d:%02d", _sleeptime / 60, _sleeptime % 60);
         tft.setFont(_fonts[1]);
         if(!_sleeptime) tft.setTextColor(TFT_DEEPSKYBLUE);
         else tft.setTextColor(TFT_RED);
         clearSleep();
-        tft.setCursor(_winSleep.x + 12 , _winSleep.y + 2);
+        tft.setCursor(_winSleep.x + 6 , _winSleep.y + 2);
         tft.print(Slt);
     }
     if(sleep){ // fall asleep
@@ -2162,7 +2162,7 @@ void loop() {
         _f_1min = false;
         updateSleepTime();
     }
-    
+
     if(_f_playlistEnabled){
         if(!_f_playlistNextFile){
             if(!audioIsRunning() && !_f_pauseResume){
