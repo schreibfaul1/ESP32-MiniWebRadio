@@ -4532,16 +4532,16 @@ uint16_t TP::TP_Send(uint8_t set_val) {
 void TP::loop() {
     if (!digitalRead(TP_IRQ)) {
         if (f_loop) {
-            read_TP(x, y);  // skip first measurement
+            // read_TP(x, y);  // skip first measurement
             if (read_TP(x, y)) {
                 f_loop = false;
-                log_i("tp_pressed");
+                // log_i("tp_pressed x=%d, y=%d", x, y);
                 if (tp_pressed) tp_pressed(x, y);
-            }  // read second measurement
+            }
         }
     } else {
         if (f_loop == false) {
-            log_i("tp_released");
+            // log_i("tp_released");
             if (tp_released) tp_released();
             f_loop = true;
         }
@@ -4614,12 +4614,12 @@ void TP::setVersion(uint8_t v) {
 //----------------------------------------------------------------------------------------------------------------------
 
 bool TP::read_TP(uint16_t& x, uint16_t& y) {
-    uint16_t _y[3];
-    uint16_t _x[3];
+    uint16_t _y[5];
+    uint16_t _x[5];
     uint16_t tmpxy;
     uint8_t i;
     if (digitalRead(TP_IRQ)) return false;
-    for (i = 0; i < 3; i++) {
+    for (i = 0; i < 5; i++) {
         x = TP_Send(0xD0);  // x
 
         if ((x < Xmin) || (x > Xmax)) return false;  // outside the display
@@ -4632,12 +4632,8 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         y = Ymax - y;
         _y[i] = y / yFaktor;
     }
-    if(abs(_x[0] - _x[1]) > 5) return false;
-    if(abs(_x[0] - _x[2]) > 5) return false;
-    if(abs(_y[0] - _y[1]) > 5) return false;
-    if(abs(_y[0] - _y[2]) > 5) return false;
-    x = (_x[0] + _x[1] + _x[2]) / 3;  // take the mean
-    y = (_y[0] + _y[1] + _y[2]) / 3;
+    x = (_x[0] + _x[1] + _x[2] + _x[3] + _x[4]) / 5;  // take the mean
+    y = (_y[0] + _y[1] + _y[2] + _y[3] + _y[4]) / 5;
     //-------------------------------------------------------------
     if (TP_vers == 0) {  // 320px x 240px
         if (_rotation == 0) {
