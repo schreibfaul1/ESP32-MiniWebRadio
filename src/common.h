@@ -34,6 +34,7 @@
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
 #include "index.h"
+#include "accesspoint.h"
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
@@ -167,6 +168,7 @@ bool setAudioFolder(const char* audioDir);
 const char* listAudioFile();
 bool sendAudioList2Web(const char* audioDir);
 bool connectToWiFi();
+void openAccessPoint();
 const char* byte_to_binary(int8_t x);
 uint32_t simpleHash(const char* str);
 void trim(char *s);

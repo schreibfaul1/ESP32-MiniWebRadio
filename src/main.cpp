@@ -94,6 +94,7 @@ boolean        _f_playlistEnabled = false;
 boolean        _f_playlistNextFile = false;
 boolean        _f_logoUnknown = false;
 boolean        _f_pauseResume = false;
+boolean        _f_accessPoint = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -101,6 +102,7 @@ String         _stationName_air = "";
 String         _homepage = "";
 String         _filename = "";
 String         _lastconnectedhost = "";
+String         _scannedNetworks = "";
 
 uint           _numServers = 0;
 uint8_t        _level = 0;
@@ -339,7 +341,7 @@ boolean defaultsettings(){
 }
 
 boolean saveStationsToNVS(){
-    String X="", Cy="", StationName="", StreamURL="", currentLine="", tmp="";
+    String X="", Hide="", StationName="", StreamURL="", currentLine="", tmp="";
     uint16_t cnt = 0;
     // StationList
 	if(!SD_MMC.exists("/stations.csv")){
@@ -354,11 +356,11 @@ boolean saveStationsToNVS(){
         while(file.available()){
             currentLine = file.readStringUntil('\n');         // read the line
             uint p = 0, q = 0;
-            X=""; Cy=""; StationName=""; StreamURL="";
+            X=""; Hide=""; StationName=""; StreamURL="";
             for(int i = 0; i < currentLine.length() + 1; i++){
                 if(currentLine[i] == '\t' || i == currentLine.length()){
                     if(p == 0) X            = currentLine.substring(q, i);
-                    if(p == 1) Cy           = currentLine.substring(q, i);
+                    if(p == 1) Hide         = currentLine.substring(q, i);
                     if(p == 2) StationName  = currentLine.substring(q, i);
                     if(p == 3) StreamURL    = currentLine.substring(q, i);
                     p++;
@@ -369,7 +371,7 @@ boolean saveStationsToNVS(){
             if(X == "*") continue;
             if(StationName == "") continue; // is empty
             if(StreamURL   == "") continue; // is empty
-            //SerialPrintfln("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
+            SerialPrintfln("Hide=%s, StationName=%s, StreamURL=%s",Hide.c_str(), StationName.c_str(), StreamURL.c_str());
             cnt++;
             if(cnt ==_max_stations){
                 SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
@@ -1008,22 +1010,28 @@ bool sendAudioList2Web(const char* audioDir){
     return true;
 }
 /***********************************************************************************************************************
-*                                         C O N N E C T   TO   W I F I                                                 *
+*               C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                           *
 ***********************************************************************************************************************/
 bool connectToWiFi(){
+
     String s_ssid = "", s_password = "", s_info = "";
-    wifiMulti.addAP(_SSID, _PW);                // SSID and PW in code
+    wifiMulti.addAP(_SSID, _PW);                            // SSID and PW in code
+    if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")){       // exists?
+        String ap_ssid = pref.getString("ap_ssid", "");     // credentials from accesspoint
+        String ap_pw =   pref.getString("ap_pw", "");
+        if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
+    }
     WiFi.setHostname("MiniWebRadio");
     if(psramFound()) WiFi.useStaticBuffers(true);
-    File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
-    if(file){                                         // try to read from SD_MMC
+    File file = SD_MMC.open("/networks.csv");               // try credentials given in "/networks.txt"
+    if(file){                                               // try to read from SD_MMC
         String str = "";
         while(file.available()){
-            str = file.readStringUntil('\n');         // read the line
-            if(str[0] == '*' ) continue;              // ignore this, goto next line
-            if(str[0] == '\n') continue;              // empty line
-            if(str[0] == ' ')  continue;              // space as first char
-            if(str.indexOf('\t') < 0) continue;       // no tab
+            str = file.readStringUntil('\n');               // read the line
+            if(str[0] == '*' ) continue;                    // ignore this, goto next line
+            if(str[0] == '\n') continue;                    // empty line
+            if(str[0] == ' ')  continue;                    // space as first char
+            if(str.indexOf('\t') < 0) continue;             // no tab
             str += "\t";
             uint p = 0, q = 0;
             s_ssid = "", s_password = "", s_info = "";
@@ -1052,10 +1060,42 @@ bool connectToWiFi(){
         WiFi.setSleep(false);
         return true;
     }else{
-        SerialPrintfln(ANSI_ESC_RED "WiFi credentials are not correct\n");
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false;  // can't connect to any network
     }
 }
+
+void openAccessPoint(){ // if credentials are not correct open AP at 192.168.4.1
+    clearAll();
+    tft.setFont(_fonts[4]);
+    tft.setTextColor(TFT_YELLOW);
+    tft.setCursor(25,80);
+    setTFTbrightness(80);
+    _f_accessPoint = true;
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
+    WiFi.softAP("MiniWebRadio");
+    IPAddress myIP = WiFi.softAPIP();
+    String AccesspointIP = myIP.toString();
+    tft.printf("WiFi credentials are not correct\nAccesspoint IP: %s", AccesspointIP.c_str());
+    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
+    int n = WiFi.scanNetworks();
+    if (n == 0) {
+        SerialPrintfln("setup: ....  no WiFi networks found");
+        while(true){;}
+    }
+    else {
+        SerialPrintfln("setup: ....  %d WiFi networks found", n);
+        for (int i = 0; i < n; ++i) {
+            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+            _scannedNetworks += WiFi.SSID(i) + '\n';
+        }
+    }
+    webSrv.begin(80, 81); // HTTP port, WebSocket port
+    return;
+}
+
+
 /***********************************************************************************************************************
 *                                                    A U D I O                                                        *
 ***********************************************************************************************************************/
@@ -1159,6 +1199,7 @@ void setup(){
     if(TFT_CONTROLLER < 2)  strcpy(_prefix, "/s");
     else                    strcpy(_prefix, "/m");
     stations.begin("Stations", false);  // instance of preferences for stations (name, url ...)
+    pref.begin("Pref", false);          // instance of preferences from AccessPoint (SSID, PW ...)
 
     #if CONFIG_IDF_TARGET_ESP32
         tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK);    // Init TFT interface ESP32
@@ -1212,14 +1253,8 @@ void setup(){
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
-        clearAll();
-        tft.setFont(_fonts[5]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.setCursor(50,100);
-        tft.print("WiFi credentials are not correct");
-        setTFTbrightness(80);
-        SerialPrintfln(ANSI_ESC_RED "WiFi credentials are not correct");
-        while(1){};
+        openAccessPoint();
+        return;
     }
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE
@@ -2405,7 +2440,7 @@ void ir_key(const char* key){
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
     //SerialPrintfln("tp_pressed, state is: %i", _state);
-    SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
+    // SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     _timeCounter = 5;
     enum : int8_t{none = -1, RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1,
                              PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1,
@@ -2755,7 +2790,12 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "ping"){              webSrv.send("pong"); return;}
 
-    if(cmd == "index.html"){        webSrv.show(index_html); return;}
+    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");
+                                                        webSrv.show(accesspoint_html);}
+                                    else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
+                                                        webSrv.show(index_html);      }
+                                    return;}
+
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
@@ -2810,6 +2850,17 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark());
                                     SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL));
                                     return;}
+
+    if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
+
+    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
+                                    String AP_PW =   param.substring(param.indexOf("\n") + 1);
+                                    log_i("SSID %s, PW %s", AP_SSID.c_str(), AP_PW.c_str());
+                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s"
+                                                                                                                  , AP_SSID.c_str(), AP_PW.c_str());
+                                    pref.putString("ap_ssid", AP_SSID);
+                                    pref.putString("ap_pw", AP_PW);
+                                    ESP.restart();}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }
