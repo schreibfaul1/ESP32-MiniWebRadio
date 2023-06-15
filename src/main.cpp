@@ -424,11 +424,12 @@ void updateSettings(){
 /***********************************************************************************************************************
 *                                        T F T   B R I G H T N E S S                                                   *
 ***********************************************************************************************************************/
-void setTFTbrightness(uint8_t duty){ //duty 0...100 (min...max)
+void setTFTbrightness(uint8_t duty){        // duty 0...100 (min...max)
     if(TFT_BL == -1) return;
-    ledcAttachPin(TFT_BL, 1);        //Configure variable led, TFT_BL pin to channel 1
-    ledcSetup(1, 12000, 8);          // 12 kHz PWM and 8 bit resolution
-    ledcWrite(1, duty * 2.55);
+    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
+    ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
+    uint8_t d = round((double)duty * 2.55); // #186
+    ledcWrite(0, d);
 }
 inline uint32_t getTFTbrightness(){
     return ledcRead(1);
@@ -438,6 +439,7 @@ inline uint8_t downBrightness(){
         _brightness -= 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
+        log_i("br %i", _brightness);
     } return _brightness;
 }
 inline uint8_t upBrightness(){
@@ -445,6 +447,7 @@ inline uint8_t upBrightness(){
         _brightness += 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
+        log_i("br %i", _brightness);
     }
     return _brightness;
 }

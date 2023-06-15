@@ -5,6 +5,9 @@
  *  Updated on: 12.06.2023
  *      Author: Wolle
  *
+ * If it is not possible to connect to WiFi, set up an access point.
+ * A valid network name (SSID) and a PW can then be entered using a smartphone or tablet.
+ *
  */
 
 #ifndef ACCESSPOINT_H_
