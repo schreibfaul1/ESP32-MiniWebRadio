@@ -431,9 +431,6 @@ void setTFTbrightness(uint8_t duty){        // duty 0...100 (min...max)
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
 }
-inline uint32_t getTFTbrightness(){
-    return ledcRead(1);
-}
 inline uint8_t downBrightness(){
     if(_brightness > 5) {
         _brightness -= 5;
@@ -2224,7 +2221,7 @@ void vs1053_info(const char *info){
     if(startsWith(info, "FLAC"))                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
     if(endsWith(info,   "Stream lost"))             {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(startsWith(info, "authent"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-//  if(startsWith(info, "content-type"))            {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW"%s", info); return;}
+    if(startsWith(info, "StreamTitle="))            {                                                           return;}
     if(startsWith(info, "HTTP/") && info[9] > '3')  {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
                                                     {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
@@ -2234,7 +2231,7 @@ void audio_info(const char *info){
     if(startsWith(info, "FLAC"))                    {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
     if(endsWith(info,   "Stream lost"))             {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(startsWith(info, "authent"))                 {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
-//  if(startsWith(info, "content-type"))            {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW"%s", info); return;}
+    if(startsWith(info, "StreamTitle="))            {                                                           return;}
     if(startsWith(info, "HTTP/") && info[9] > '3')  {SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED   "%s", info); return;}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
                                                     {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info); return;}
