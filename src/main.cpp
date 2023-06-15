@@ -341,7 +341,7 @@ boolean defaultsettings(){
 }
 
 boolean saveStationsToNVS(){
-    String X="", Hide="", StationName="", StreamURL="", currentLine="", tmp="";
+    String Hide="", Cy="", StationName="", StreamURL="", currentLine="", tmp="";
     uint16_t cnt = 0;
     // StationList
 	if(!SD_MMC.exists("/stations.csv")){
@@ -356,11 +356,11 @@ boolean saveStationsToNVS(){
         while(file.available()){
             currentLine = file.readStringUntil('\n');         // read the line
             uint p = 0, q = 0;
-            X=""; Hide=""; StationName=""; StreamURL="";
+            Hide=""; Cy=""; StationName=""; StreamURL="";
             for(int i = 0; i < currentLine.length() + 1; i++){
                 if(currentLine[i] == '\t' || i == currentLine.length()){
-                    if(p == 0) X            = currentLine.substring(q, i);
-                    if(p == 1) Hide         = currentLine.substring(q, i);
+                    if(p == 0) Hide         = currentLine.substring(q, i);
+                    if(p == 1) Cy           = currentLine.substring(q, i);
                     if(p == 2) StationName  = currentLine.substring(q, i);
                     if(p == 3) StreamURL    = currentLine.substring(q, i);
                     p++;
@@ -368,10 +368,10 @@ boolean saveStationsToNVS(){
                     q = i;
                 }
             }
-            if(X == "*") continue;
+            if(Hide == "*") continue;
             if(StationName == "") continue; // is empty
             if(StreamURL   == "") continue; // is empty
-            SerialPrintfln("Hide=%s, StationName=%s, StreamURL=%s",Hide.c_str(), StationName.c_str(), StreamURL.c_str());
+            SerialPrintfln("Cy=%s, StationName=%s, StreamURL=%s",Cy.c_str(), StationName.c_str(), StreamURL.c_str());
             cnt++;
             if(cnt ==_max_stations){
                 SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
