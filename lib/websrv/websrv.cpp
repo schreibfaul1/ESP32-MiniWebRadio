@@ -352,7 +352,6 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
     String ct;                              // contentType
     uint32_t contentLength = 0;                        // contentLength
     uint8_t count = 0;
-
     if (!cmdclient.connected()){
         log_e("cmdclient schould be connected but is not!");
         return false;
@@ -363,7 +362,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             return false;
         }
         currentLine = cmdclient.readStringUntil('\n');
-//        log_i("currLine %s", currentLine.c_str());
+        // log_i("currLine %s", currentLine.c_str());
         // If the current line is blank, you got two newline characters in a row.
         // that's the end of the client HTTP request, so send a response:
         if (currentLine.length() == 1) { // contains '\n' only
