@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 10.06.2023
+ *  Updated on: 17.06.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -723,6 +723,12 @@ function handletone (tonectrl) { // Radio: treble, bass, freq
 
 function setstation () { // Radio: button play - Enter a streamURL here....
   var theUrl = '/stationURL?' + station.value + '&version=' + Math.random()
+  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+  theUrl = theUrl.replace(/%21/g, '!') //
+  theUrl = theUrl.replace(/%22/g, '"') //
+  theUrl = theUrl.replace(/%23/g, '#') //
+  theUrl = theUrl.replace(/%3f/g, '?') //
+  theUrl = theUrl.replace(/%40/g, '@') //
   var sel = document.getElementById('preset')
   sel.selectedIndex = 0
   cmd.value = ''
@@ -1310,6 +1316,12 @@ function selectstation () { // select a station
 
 function teststreamurl () { // Search: button play - enter a url to play from
   var theUrl = '/stationURL?' + streamurl.value + '&version=' + Math.random()
+  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+  theUrl = theUrl.replace(/%21/g, '!') //
+  theUrl = theUrl.replace(/%22/g, '"') //
+  theUrl = theUrl.replace(/%23/g, '#') //
+  theUrl = theUrl.replace(/%3f/g, '?') //
+  theUrl = theUrl.replace(/%40/g, '@') //
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {}
