@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 24.03.2023
+ *  Updated on: 17.06.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -71,7 +71,7 @@ const char index_html[] PROGMEM = R"=====(
             display: none;
         }
         #content {
-            min-height : 540px;
+            min-height : 550px;
             min-width : 725px;
             overflow : hidden;
             background-color : lightskyblue;
@@ -723,6 +723,12 @@ function handletone (tonectrl) { // Radio: treble, bass, freq
 
 function setstation () { // Radio: button play - Enter a streamURL here....
   var theUrl = '/stationURL?' + station.value + '&version=' + Math.random()
+  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+  theUrl = theUrl.replace(/%21/g, '!') //
+  theUrl = theUrl.replace(/%22/g, '"') //
+  theUrl = theUrl.replace(/%23/g, '#') //
+  theUrl = theUrl.replace(/%3f/g, '?') //
+  theUrl = theUrl.replace(/%40/g, '@') //
   var sel = document.getElementById('preset')
   sel.selectedIndex = 0
   cmd.value = ''
@@ -908,14 +914,14 @@ function saveGridFileToSD () { // save to SD
   select = document.getElementById('preset') // Radio: show stationlist
   select.options.length = 1
   var j = 1
-  txt = 'X\tCy\tStationName\tStreamURL\n'
+  txt = 'Hide\tCy\tStationName\tStreamURL\n'
   for (var i = 0; i < wsData.length; i++) {
     c = ''
-    if (objJSON[i].X) {
-      c = objJSON[i].X
+    if (objJSON[i].Hide) {
+      c = objJSON[i].Hide
       txt += c+ '\t'
     } else txt += '\t'
-    if (objJSON[i].X !== '*') {
+    if (objJSON[i].Hide !== '*') {
       if (j < 1000) {
         opt = document.createElement('OPTION')
         opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
@@ -981,7 +987,7 @@ function saveExcel () { // save xlsx to PC
   wb.SheetNames.push('Stations')
   var wsData = $('#jsGrid').jsGrid('option', 'data')
   var wscols = [{
-    wch: 3
+    wch: 4
   }, // 'characters'
   {
     wch: 5
@@ -994,7 +1000,7 @@ function saveExcel () { // save xlsx to PC
   }  // 'characters'
   ]
   var ws = XLSX.utils.json_to_sheet(wsData, {
-    header: ['X', 'Cy', 'StationName', 'StreamURL']
+    header: ['Hide', 'Cy', 'StationName', 'StreamURL']
   })
   ws['!cols'] = wscols
   wb.Sheets.Stations = ws
@@ -1021,7 +1027,7 @@ function saveExcel () { // save xlsx to PC
 
 var clients = [ // testdata
   {
-    X: '*',
+    Hide: '*',
     Cy: 'D',
     StationName: 'Station',
     StreamURL: 'URL'
@@ -1054,7 +1060,7 @@ function showExcelGrid () {
     },
     data: clients,
     fields: [{
-      name: 'X',
+      name: 'Hide',
       type: 'text',
       width: 20,
       align: 'center'
@@ -1095,7 +1101,8 @@ function showExcelGrid () {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 var showDetailsDialog = function (dialogType, client) { // popUp window
-  $('#txtX').val(client.X)
+  if(client.Hide === '*') $("#chkHide").prop("checked", true)
+  else                    $("#chkHide").prop("checked", false)
   $('#txtCy').val(client.Cy)
   $('#txtStationName').val(client.StationName)
   $('#txtStreamURL').val(client.StreamURL)
@@ -1108,7 +1115,8 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
     modal: false,
     buttons: {
       OK: function () {
-        client.X = $('#txtX').val()
+        if($('#chkHide').is(':checked')) client.Hide = '*'
+        else                             client.Hide = ''
         client.Cy = $('#txtCy').val()
         client.StationName = $('#txtStationName').val()
         client.StreamURL = $('#txtStreamURL').val()
@@ -1124,7 +1132,7 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
 
 var includeStation = function (client, isNew) {
   $.extend(client, {
-    X: $('#txX').val(),
+    Hide: $('#txHide').val(),
     Cy: $('#txtCy').val(),
     StationName: $('#txtStationName').val(),
     StreamURL: $('#txtStreamURL').val()
@@ -1181,7 +1189,7 @@ function updateStationlist () { // select in tab Radio
   select.options.length = 1
   var j = 1
   for (var i = 0; i < wsData.length; i++) {
-    if (objJSON[i].X !== '*') {
+    if (objJSON[i].Hide !== '*') {
       if (j < 1000) {
         opt = document.createElement('OPTION')
         opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
@@ -1308,6 +1316,12 @@ function selectstation () { // select a station
 
 function teststreamurl () { // Search: button play - enter a url to play from
   var theUrl = '/stationURL?' + streamurl.value + '&version=' + Math.random()
+  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+  theUrl = theUrl.replace(/%21/g, '!') //
+  theUrl = theUrl.replace(/%22/g, '"') //
+  theUrl = theUrl.replace(/%23/g, '#') //
+  theUrl = theUrl.replace(/%3f/g, '?') //
+  theUrl = theUrl.replace(/%40/g, '@') //
   var xhr = new XMLHttpRequest()
   xhr.onreadystatechange = function () {
     if (xhr.readyState === XMLHttpRequest.DONE) {}
@@ -1473,8 +1487,8 @@ function getnetworks () { // tab Config: load the connected WiFi network
   <div id="dialog">
     <table>
       <tr>
-        <td> x </td>
-        <td> <input type="text" id="txtX" size="100"/></td>
+        <td> Hide </td>
+        <td> <input type="checkbox" id="chkHide" /></td>
       </tr>
       <tr>
         <td>  Cy  </td>
@@ -1702,7 +1716,10 @@ function getnetworks () { // tab Config: load the connected WiFi network
               onclick="javascript:document.getElementById('file').click();"
               title="Load from PC">load xlsx
       </button>
-      <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img"
+
+      <!-- <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img" onchange="loadDataExcel(this.files);"/>    -->
+
+      <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden; width: 0px;"  name="img"
           onchange="loadDataExcel(this.files);"/>
       <br>
       </center>
