@@ -192,6 +192,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_n {uint16_t x = 100; uint16_t y = 20;  uint16_t w = 220; uint16_t h = 100;} const _winName;
     struct w_e {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winFName;
     struct w_t {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
+    struct w_c {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
+    struct w_g {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winLevelBar;
     struct w_f {uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
@@ -505,7 +507,8 @@ inline void clearHeader()             {tft.fillRect(_winHeader.x,    _winHeader.
 inline void clearLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
 inline void clearStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
 inline void clearLogoAndStationname() {tft.fillRect(_winFName.x,     _winFName.y,     _winFName.w,     _winFName.h,    TFT_BLACK);}
-inline void clearStreamTitle()        {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);}
+inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);}
+inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
 inline void clearTime()               {tft.fillRect(_winTime.x,      _winTime.y,      _winTime.w,      _winTime.h,     TFT_BLACK);}
 inline void clearItem()               {tft.fillRect(_winItem.x,      _winItem.y,      _winItem.w,      _winTime.h,     TFT_BLACK);}
@@ -705,12 +708,12 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     showFooterRSSI();
     showFooterBitRate(_icyBitRate);
 }
-void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight){
-    tft.fillRect(xPos, yPos, tft.width() - xPos, winHeight, TFT_BLACK);  // Clear the space for new info
+void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winWidth, uint16_t winHeight){
+    tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK);  // Clear the space for new info
     tft.setTextColor(color);                                // Set the requested color
     tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
     // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
-    uint16_t ch_written = tft.writeText((const uint8_t*) str, winHeight); // todo winHeight
+    uint16_t ch_written = tft.writeText((const uint8_t*) str, winWidth, winHeight);
     if(ch_written < strlenUTF8(str)){
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
@@ -736,9 +739,13 @@ void showStreamTitle(const char* streamtitle){
         case 131 ... 200: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(ST.c_str(), _winTitle.x, _winTitle.y, TFT_CORNSILK, 5, _winTitle.h);
+    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
 }
+void showLevelBar(int L, int R){
+   drawImage("/common/level_bar.bmp", _winLevelBar.x, _winLevelBar.y);
+}
+
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearLogoAndStationname();
@@ -768,7 +775,7 @@ void showLogoAndStationName(){
         case  61 ... 90:  tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, _winName.h);
+    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, _winName.w, _winName.h);
 
     String logo = "/logo/" + (String) SN_ascii.c_str() +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
@@ -793,7 +800,6 @@ void showFileLogo(){
     xSemaphoreGive(mutex_display);
 }
 
-
 void showFileName(const char* fname){
     clearLogo();
     switch(strlenUTF8(fname)){
@@ -804,7 +810,7 @@ void showFileName(const char* fname){
         case 101 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.h);
+    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.w,_winName.h);
 }
 
 void display_time(boolean showall){ //show current time on the TFT Display
@@ -1320,6 +1326,7 @@ void setup(){
     if(DECODER == 0) setTone();    // HW Decoder
     else             setI2STone(); // SW Decoder
     showFooter();
+    showLevelBar();
     soap.seekServer();
     _numServers = soap.getServerCount();
 }
@@ -1770,7 +1777,7 @@ void changeState(int state){
             }
             else if(_state == SLEEP){
                 clearLogoAndStationname();
-                clearStreamTitle();
+                clearTitle();
                 connecttohost(_lastconnectedhost.c_str());
                 showLogoAndStationName();
                 showFooter();
@@ -1779,7 +1786,7 @@ void changeState(int state){
             else if(_state == BRIGHTNESS){
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
-                clearStreamTitle();
+                clearTitle();
             }
             else{
                 showLogoAndStationName();
@@ -1797,7 +1804,7 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
             _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
             _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
-            clearStreamTitle();
+            clearTitle();
             showVolumeBar();
             //for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             if(!_f_mute) drawImage("/btn/RADIOico1.jpg", _winButton.x, _winButton.y);
@@ -1938,7 +1945,7 @@ void changeState(int state){
             _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
             _pressBtn[7] = "/btn/Black.bmp";                     _releaseBtn[7] = "/btn/Black.bmp";
             clearLogoAndStationname();
-            clearStreamTitle();
+            clearTitle();
             display_sleeptime();
             if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
             else                   drawImage("/common/Night_Gown.bmp", 280, 45);
@@ -2147,18 +2154,20 @@ void loop() {
                 }
                 else clearStreamTitle();
             }
+            showLevelBar();
             webSrv.send((String) "streamtitle=" + _streamTitle);
         }
         if(_f_newIcyDescription && !_timeCounter){
             if(_state == RADIO) {
                 if(!strlen(_streamTitle)) showStreamTitle(_icyDescription);
+                showLevelBar();
             }
             webSrv.send((String)"icy_description=" + _icyDescription);
             _f_newIcyDescription = false;
         }
 
         if(_f_newCommercial && !_timeCounter){
-            if(_state == RADIO) showStreamTitle(_commercial);
+            if(_state == RADIO) {showStreamTitle(_commercial); showLevelBar();}
             webSrv.send((String)"streamtitle=" + _commercial);
             _f_newCommercial = false;
         }

@@ -1793,7 +1793,7 @@ bool TFT::setCursor(uint16_t x, uint16_t y) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer to string
+size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight) {    // a pointer to string
 
     int16_t sHeight = height();
     int16_t sWidth =  width();
@@ -1811,6 +1811,8 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
     int16_t mHeight = maxHeight + _curY;
     if(maxHeight < 1) mHeight = 1000; // unused, set it larger than display size
 
+    int16_t mWidth  = maxWidth + _curX;
+    if(maxWidth < 1)  mWidth  = 1000; // unused, set it larger than display size
 
     boolean  f_wrap=false;
     uint16_t color=_textcolor;
@@ -1854,6 +1856,7 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
             }
             if(_textorientation == 0) {
                 if((Xpos + strw) >= sWidth) f_wrap = true;
+                if((Xpos + strw) >= mWidth) f_wrap = true;
             }
             else{
                 if((Ypos+strw) >= sHeight) f_wrap=true;
@@ -1885,6 +1888,7 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxHeight) {    // a pointer t
             if(font_char==0) space=font_height/4; else space=0; //correct spacewidth is 1
             if(_textorientation==0) {
                 if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
+                if((Xpos+char_width+space)>=mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
                 if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
                 if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
             }

@@ -97,7 +97,7 @@ class TFT : public Print {
     public:
         TFT(uint8_t TFT_id = 0, uint8_t dispInv = 0);
         virtual ~TFT(){}
-        void begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk);
+        void      begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk);
         void      setFrequency(uint32_t f);
         void      setRotation(uint8_t r);
         bool      setCursor(uint16_t x, uint16_t y);
@@ -125,7 +125,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         boolean   drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
         boolean   drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         uint16_t  color565(uint8_t r, uint8_t g, uint8_t b);
-        size_t    writeText(const uint8_t *str, int16_t maxHeight = -1);
+        size_t    writeText(const uint8_t *str, int16_t maxWidth = -1, int16_t maxHeight = -1);
 
         inline void setTextColor(uint16_t  color){_textcolor=color;}
         inline void setFont(const uint16_t* font){_font=font;
