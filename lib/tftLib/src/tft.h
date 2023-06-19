@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 31 2022
+// updated on June 19 2023
 
 
 #pragma once
@@ -199,7 +199,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
     private:
 
-        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5};
+        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6};
         uint8_t _TFTcontroller = ILI9341;
 
         SPISettings     TFT_SPI;                     // SPI settings for this slave
