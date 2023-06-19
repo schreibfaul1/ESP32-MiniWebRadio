@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1 Jun 19/2023
+    Version 2.8.0 Jun 17/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -619,7 +619,7 @@ void showFooterRSSI(){
         old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
         if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO){
             static int tmp_rssi = 0;
-            if((abs(rssi - tmp_rssi) > 2)){
+            if((abs(rssi - tmp_rssi) > 3)){
                 SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi);
             }
             tmp_rssi = rssi;
@@ -945,8 +945,8 @@ void display_sleeptime(int8_t ud){  // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth , uint16_t maxHeigth){
     const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)){
-    //    if(indexOf(scImg, "/.", 0)) return false; // empty filename
-        SerialPrintfln(ANSI_ESC_RED "file \"%s\" not found", scImg);
+        if(indexOf(scImg, "/.", 0) > 0) return false; // empty filename
+        SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
     if(endsWith(scImg, "bmp")){
