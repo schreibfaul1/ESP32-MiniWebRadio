@@ -763,7 +763,7 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
     tft.setTextColor(color);                                // Set the requested color
     tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
     // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
-    uint16_t ch_written = tft.writeText((const uint8_t*) str, winWidth, winHeight);
+    uint16_t ch_written = tft.writeText((const uint8_t*) str, winWidth - 5, winHeight);
     if(ch_written < strlenUTF8(str)){
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
