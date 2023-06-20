@@ -38,6 +38,8 @@ uint8_t        _state          = 0;      // statemaschine
 uint8_t        _timeCounter    = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
 uint8_t        _cur_Codec      = 0;
+uint8_t        _VUleftCh = 0;        // VU meter left channel
+uint8_t        _VUrightCh = 0;       // VU meter right channel
 int16_t        _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha         = 0;      // BassFreq 0...15        VS1053
 int16_t        _tonehf         = 0;      // TrebleGain 0...14      VS1053
@@ -95,6 +97,7 @@ boolean        _f_playlistNextFile = false;
 boolean        _f_logoUnknown = false;
 boolean        _f_pauseResume = false;
 boolean        _f_accessPoint = false;
+boolean        _f_state_isChanging = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -137,7 +140,8 @@ Preferences stations;
 WebSrv webSrv;
 WiFiMulti wifiMulti;
 RTIME rtc;
-Ticker ticker;
+Ticker ticker1s;
+Ticker ticker100ms;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 File audioFile;
@@ -193,7 +197,7 @@ SemaphoreHandle_t  mutex_display;
     struct w_e {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winFName;
     struct w_t {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
     struct w_c {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
-    struct w_g {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winLevelBar;
+    struct w_g {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
     struct w_f {uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
@@ -256,6 +260,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_n {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 130;} const _winName;
     struct w_e {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 130;} const _winFName;
     struct w_t {uint16_t x =   0; uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
+    struct w_c {uint16_t x =   0; uint16_t y = 160; uint16_t w = 448; uint16_t h = 130;} const _winSTitle;
+    struct w_g {uint16_t x = 448; uint16_t y = 160; uint16_t w =  32; uint16_t h = 130;} const _winVUmeter;
     struct w_f {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
     struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
     struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
@@ -694,6 +700,48 @@ void showVolumeBar(){
     tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
 }
+
+void updateVUmeter() {
+    if(_state != RADIO) return;
+    if(_f_state_isChanging) return;
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    uint8_t width = 0, height = 0, xOffs = 0, yOffs = 0, xStart = 0, yStart = 0;
+    #if TFT_CONTROLLER < 2  // 320 x 240px
+        width = 9; height = 7; xOffs = 11; yOffs = 8; xStart = 2; yStart = 90;
+    #else  // 480 x 320px
+        width = 12;    height = 8;    xOffs = 16;    yOffs = 10;    xStart = 2;    yStart = 115;
+    #endif
+
+    // c99 has no inner functions, lambdas are only allowed from c11, please don't use ancient compiler
+    auto drawRect = [&](uint8_t pos, uint8_t ch, bool br) {  // lambda, inner function
+        uint16_t color = 0, xPos = _winVUmeter.x + xStart + ch * xOffs, yPos = _winVUmeter.y + yStart - pos * yOffs;
+        switch(pos) {
+            case 0 ... 6:  // green
+                br ? color = TFT_GREEN : color = TFT_DARKGREEN;    break;
+            case 7 ... 9:  // yellow
+                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW; break;
+            case 10 ... 11:  // red
+                br ? color = TFT_RED : color = TFT_DARKRED;    break;
+        }
+        tft.fillRect(xPos, yPos, width, height, color);
+    };
+
+    uint16_t vum = audioGetVUlevel();
+
+    uint8_t left  = map(vum >> 8,     0, 127, 0, 11);
+    uint8_t right = map(vum & 0x00FF, 0, 127, 0, 11);
+
+    if(left > _VUleftCh)   {for(int i = _VUleftCh; i < left; i++) { drawRect(i, 0, 1); }}
+    if(left < _VUleftCh)   {for(int i = left; i < _VUleftCh; i++) { drawRect(i, 0, 0); }}
+    _VUleftCh = left;
+
+    if(right > _VUrightCh) {for(int i = _VUrightCh; i < right; i++) { drawRect(i, 1, 1); }}
+    if(right < _VUrightCh) {for(int i = right; i < _VUrightCh; i++) { drawRect(i, 1, 0); }}
+    _VUrightCh = right;
+    xSemaphoreGive(mutex_display);
+}
+
+
 void showBrightnessBar(){
     uint16_t val = tft.width() * getBrightness()/100;
     clearVolBar();
@@ -742,8 +790,12 @@ void showStreamTitle(const char* streamtitle){
     display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
 }
-void showLevelBar(int L, int R){
-   drawImage("/common/level_bar.bmp", _winLevelBar.x, _winLevelBar.y);
+void showVUmeter() {
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    drawImage("/common/level_bar.bmp", _winVUmeter.x, _winVUmeter.y);
+    _VUrightCh = 0;
+    _VUleftCh = 0;
+    xSemaphoreGive(mutex_display);
 }
 
 void showLogoAndStationName(){
@@ -1297,7 +1349,6 @@ void setup(){
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    ticker.attach(1, timer1sec);
     if(HP_DETECT != -1){
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
@@ -1326,9 +1377,11 @@ void setup(){
     if(DECODER == 0) setTone();    // HW Decoder
     else             setI2STone(); // SW Decoder
     showFooter();
-    showLevelBar();
     soap.seekServer();
     _numServers = soap.getServerCount();
+    showVUmeter();
+    ticker100ms.attach(0.1, updateVUmeter);
+    ticker1s.attach(1, timer1sec);
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -1757,6 +1810,7 @@ void IRAM_ATTR headphoneDetect(){ // called via interrupt
 ***********************************************************************************************************************/
 void changeState(int state){
     if(state == _state) return;  //nothing todo
+    _f_state_isChanging = true;
     _f_volBarVisible = false;
     switch(state) {
         case RADIO:{
@@ -1766,7 +1820,7 @@ void changeState(int state){
             }
             else if(_state == PLAYER  || _state == PLAYERico){
                 setStation(_cur_station);
-                clearStreamTitle();
+                clearTitle();
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
             }
@@ -1792,6 +1846,7 @@ void changeState(int state){
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
             }
+            showVUmeter();
             break;
         }
         case RADIOico:{
@@ -1891,7 +1946,7 @@ void changeState(int state){
         case PLAYER:{
             if(_state == RADIO){
                 clearLogoAndStationname();
-                clearStreamTitle();
+                clearTitle();
             }
             showHeadlineItem(PLAYER);
             _pressBtn[0] = "/btn/Button_First_Yellow.bmp";       _releaseBtn[0] = "/btn/Button_First_Blue.bmp";
@@ -1954,6 +2009,7 @@ void changeState(int state){
         }
     }
     _state = state;
+    _f_state_isChanging = false;
 }
 /***********************************************************************************************************************
 *                                                      D L N A                                                         *
@@ -2154,20 +2210,18 @@ void loop() {
                 }
                 else clearStreamTitle();
             }
-            showLevelBar();
             webSrv.send((String) "streamtitle=" + _streamTitle);
         }
         if(_f_newIcyDescription && !_timeCounter){
             if(_state == RADIO) {
                 if(!strlen(_streamTitle)) showStreamTitle(_icyDescription);
-                showLevelBar();
             }
             webSrv.send((String)"icy_description=" + _icyDescription);
             _f_newIcyDescription = false;
         }
 
         if(_f_newCommercial && !_timeCounter){
-            if(_state == RADIO) {showStreamTitle(_commercial); showLevelBar();}
+            if(_state == RADIO) {showStreamTitle(_commercial);}
             webSrv.send((String)"streamtitle=" + _commercial);
             _f_newCommercial = false;
         }

@@ -58,12 +58,14 @@ extern __attribute__((weak)) void tp_released();
 #define TFT_CHOCOLATE       0xD343 // 210, 105,  30
 #define TFT_CORNSILK        0xFFDB // 255, 248, 220
 #define TFT_CYAN            0x07FF //   0, 255, 255
-#define TFT_DARKGREEN       0x0320 //   0, 100,   0
+#define TFT_DARKGREEN       0x0320 //   0, 101,   0
 #define TFT_DARKGREY        0xAD55 // 169, 169, 169
 #define TFT_DARKCYAN        0x0451 //   0, 139, 139
+#define TFT_DARKRED         0x5800 //  90,   0,   0
+#define TFT_DARKYELLOW      0x6B60 // 110, 110,   0
 #define TFT_DEEPSKYBLUE     0x05FF //   0, 191, 255
 #define TFT_GRAY            0x8410 // 128, 128, 128
-#define TFT_GREEN           0x0400 //   0, 128,   0
+#define TFT_GREEN           0x07E0 //   0, 255,   0
 #define TFT_GREENYELLOW     0xAFE5 // 173, 255,  47
 #define TFT_GOLD            0xFEA0 // 255, 215,   0
 #define TFT_HOTPINK         0xFB56 // 255, 105, 180
