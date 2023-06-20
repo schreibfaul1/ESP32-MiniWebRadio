@@ -69,6 +69,7 @@ const char*    _pressBtn[8];
 const char*    _releaseBtn[8];
 
 boolean        _f_rtc   = false;             // true if time from ntp is received
+boolean        _f_100ms = false;
 boolean        _f_1sec  = false;
 boolean        _f_10sec = false;
 boolean        _f_1min  = false;
@@ -140,7 +141,6 @@ Preferences stations;
 WebSrv webSrv;
 WiFiMulti wifiMulti;
 RTIME rtc;
-Ticker ticker1s;
 Ticker ticker100ms;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
@@ -498,14 +498,16 @@ void urldecode(char *str){
 /***********************************************************************************************************************
 *                                                     T I M E R                                                        *
 ***********************************************************************************************************************/
-void timer1sec() {
-    static volatile uint8_t sec=0;
-    _f_1sec = true;
-    sec++;
-    if(!(sec % 10)) _f_10sec = true;
-    //SerialPrintfln("sec=%i", sec);
-    if(sec==60){sec=0; _f_1min = true;}
+void timer100ms(){
+    static volatile uint8_t ms100 = 0;
+    _f_100ms = true;
+    ms100 ++;
+    if(!(ms100 % 10))  _f_1sec  = true;
+    if(!(ms100 % 100)) _f_10sec = true;
+    if(ms100 == 600) {ms100 = 0; _f_1min = true;}
+
 }
+
 /**********************************************************************************************************************************
 *                                                        D I S P L A Y                                                            *
 **********************************************************************************************************************************/
@@ -1380,8 +1382,7 @@ void setup(){
     soap.seekServer();
     _numServers = soap.getServerCount();
     showVUmeter();
-    ticker100ms.attach(0.1, updateVUmeter);
-    ticker1s.attach(1, timer1sec);
+    ticker100ms.attach(0.1, timer100ms);
 }
 /***********************************************************************************************************************
 *                                                  C O M M O N                                                         *
@@ -2123,6 +2124,11 @@ void loop() {
     if(_f_newLogoAndStation){
         showLogoAndStationName();
         _f_newLogoAndStation = false;
+    }
+
+    if(_f_100ms){
+        _f_100ms = false;
+        updateVUmeter();
     }
 
     if(_f_1sec){
