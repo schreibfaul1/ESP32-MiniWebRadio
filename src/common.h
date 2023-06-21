@@ -12,6 +12,8 @@
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
+#define DISPLAY_INVERSION   0                               // (0) off (1) on
+#define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
 #define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
@@ -154,8 +156,10 @@ void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();
 void showFooter();
-void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winHeight);
+void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winWidth, uint16_t winHeight);
 void showStreamTitle(const char* streamTitle);
+void showVUmeter();
+void updateVUmeter();
 void showLogoAndStationName();
 void showFileLogo();
 void showFileName(const char* fname);
@@ -225,3 +229,4 @@ boolean audioPauseResume();
 void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
 uint32_t audioGetFileSize();
 uint32_t audioGetFilePosition();
+uint16_t audioGetVUlevel();
