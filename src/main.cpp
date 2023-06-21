@@ -1222,7 +1222,7 @@ void stopSong(){
 ***********************************************************************************************************************/
 void setup(){
     Serial.begin(115200);
-
+    Serial.print("\n\n");
     const char* chipModel  = ESP.getChipModel();
     uint8_t avMajor  = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t avMinor  = ESP_ARDUINO_VERSION_MINOR;
@@ -1234,7 +1234,7 @@ void setup(){
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
     Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
     Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-
+    if(psramInit()) Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
     Serial.print("\n\n");
     mutex_rtc     = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();

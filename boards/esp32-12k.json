@@ -32,7 +32,7 @@
       "arduino",
       "espidf"
     ],
-    "name": "AI Thinker",
+    "name": "AI Thinker (4MB QD FLASH, 8MD QD PSRAM)",
     "upload": {
       "flash_size": "8MB",
       "maximum_ram_size": 327680,
