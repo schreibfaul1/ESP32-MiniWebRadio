@@ -717,6 +717,7 @@ void updateVUmeter() {
     // c99 has no inner functions, lambdas are only allowed from c11, please don't use ancient compiler
     auto drawRect = [&](uint8_t pos, uint8_t ch, bool br) {  // lambda, inner function
         uint16_t color = 0, xPos = _winVUmeter.x + xStart + ch * xOffs, yPos = _winVUmeter.y + yStart - pos * yOffs;
+        if(pos > 11) return;
         switch(pos) {
             case 0 ... 6:  // green
                 br ? color = TFT_GREEN : color = TFT_DARKGREEN;    break;
