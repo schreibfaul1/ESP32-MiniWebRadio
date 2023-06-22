@@ -1,0 +1,168 @@
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /usr/bin/clang++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/usr/bin/ld: -lstdc++ kann nicht gefunden werden: Datei oder Verzeichnis nicht gefunden
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Detecting CXX compiler ABI info failed to compile with the following output:
+Change Dir: /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_4608c/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_4608c.dir/build.make CMakeFiles/cmTC_4608c.dir/build
+gmake[1]: Entering directory '/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/clang++   -v -MD -MT CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+Ubuntu clang version 14.0.0-1ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ (in-process)
+ "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=gdb -v -fcoverage-compilation-dir=/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++ -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/x86_64-linux-gnu -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdeprecated-macro -fdebug-compilation-dir=/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+clang -cc1 version 14.0.0 based upon LLVM 14.0.0 default target x86_64-pc-linux-gnu
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/x86_64-linux-gnu"
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/backward"
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../x86_64-linux-gnu/include"
+ignoring nonexistent directory "/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++
+ /usr/lib/llvm-14/lib/clang/14.0.0/include
+ /usr/local/include
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+Linking CXX executable cmTC_4608c
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4608c.dir/link.txt --verbose=1
+/usr/bin/clang++  -v CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_4608c 
+Ubuntu clang version 14.0.0-1ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ "/usr/bin/ld" -pie --hash-style=both --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_4608c /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/12/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/12 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_4608c.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/12/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+/usr/bin/ld: cannot find -lstdc++: No such file or directory
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_4608c.dir/build.make:100: cmTC_4608c] Error 1
+gmake[1]: Leaving directory '/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_4608c/fast] Error 2
+
+
+
+
+Determining if the CXX compiler works failed with the following output:
+Change Dir: /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b388a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b388a.dir/build.make CMakeFiles/cmTC_b388a.dir/build
+gmake[1]: Verzeichnis „/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp“ wird betreten
+Building CXX object CMakeFiles/cmTC_b388a.dir/testCXXCompiler.cxx.o
+/usr/bin/clang++    -MD -MT CMakeFiles/cmTC_b388a.dir/testCXXCompiler.cxx.o -MF CMakeFiles/cmTC_b388a.dir/testCXXCompiler.cxx.o.d -o CMakeFiles/cmTC_b388a.dir/testCXXCompiler.cxx.o -c /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_b388a
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b388a.dir/link.txt --verbose=1
+/usr/bin/clang++ CMakeFiles/cmTC_b388a.dir/testCXXCompiler.cxx.o -o cmTC_b388a 
+/usr/bin/ld: -lstdc++ kann nicht gefunden werden: Datei oder Verzeichnis nicht gefunden
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_b388a.dir/build.make:100: cmTC_b388a] Fehler 1
+gmake[1]: Verzeichnis „/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp“ wird verlassen
+gmake: *** [Makefile:127: cmTC_b388a/fast] Fehler 2
+
+
+
+Compiling the CXX compiler identification source file "CMakeCXXCompilerId.cpp" failed.
+Compiler: /usr/bin/clang++ 
+Build flags: 
+Id flags:  
+
+The output was:
+1
+/usr/bin/ld: -lstdc++ kann nicht gefunden werden: Datei oder Verzeichnis nicht gefunden
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+
+Detecting CXX compiler ABI info failed to compile with the following output:
+Change Dir: /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_91031/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_91031.dir/build.make CMakeFiles/cmTC_91031.dir/build
+gmake[1]: Entering directory '/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/clang++   -v -MD -MT CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -MF CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o.d -o CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+Ubuntu clang version 14.0.0-1ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ (in-process)
+ "/usr/lib/llvm-14/bin/clang" -cc1 -triple x86_64-pc-linux-gnu -emit-obj -mrelax-all --mrelax-relocations -disable-free -clear-ast-before-backend -disable-llvm-verifier -discard-value-names -main-file-name CMakeCXXCompilerABI.cpp -mrelocation-model pic -pic-level 2 -pic-is-pie -mframe-pointer=all -fmath-errno -ffp-contract=on -fno-rounding-math -mconstructor-aliases -funwind-tables=2 -target-cpu x86-64 -tune-cpu generic -mllvm -treat-scalable-fixed-error-as-warning -debugger-tuning=gdb -v -fcoverage-compilation-dir=/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp -resource-dir /usr/lib/llvm-14/lib/clang/14.0.0 -dependency-file CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o.d -MT CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -sys-header-deps -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++ -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/x86_64-linux-gnu -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/backward -internal-isystem /usr/lib/llvm-14/lib/clang/14.0.0/include -internal-isystem /usr/local/include -internal-isystem /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../x86_64-linux-gnu/include -internal-externc-isystem /usr/include/x86_64-linux-gnu -internal-externc-isystem /include -internal-externc-isystem /usr/include -fdeprecated-macro -fdebug-compilation-dir=/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp -ferror-limit 19 -fgnuc-version=4.2.1 -fcxx-exceptions -fexceptions -faddrsig -D__GCC_HAVE_DWARF2_CFI_ASM=1 -o CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -x c++ /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+clang -cc1 version 14.0.0 based upon LLVM 14.0.0 default target x86_64-pc-linux-gnu
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/x86_64-linux-gnu"
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++/backward"
+ignoring nonexistent directory "/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../x86_64-linux-gnu/include"
+ignoring nonexistent directory "/include"
+#include "..." search starts here:
+#include <...> search starts here:
+ /usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../include/c++
+ /usr/lib/llvm-14/lib/clang/14.0.0/include
+ /usr/local/include
+ /usr/include/x86_64-linux-gnu
+ /usr/include
+End of search list.
+Linking CXX executable cmTC_91031
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_91031.dir/link.txt --verbose=1
+/usr/bin/clang++  -v CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_91031 
+Ubuntu clang version 14.0.0-1ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/11
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Found candidate GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/9
+Selected GCC installation: /usr/bin/../lib/gcc/x86_64-linux-gnu/12
+Candidate multilib: .;@m64
+Selected multilib: .;@m64
+ "/usr/bin/ld" -pie --hash-style=both --build-id --eh-frame-hdr -m elf_x86_64 -dynamic-linker /lib64/ld-linux-x86-64.so.2 -o cmTC_91031 /lib/x86_64-linux-gnu/Scrt1.o /lib/x86_64-linux-gnu/crti.o /usr/bin/../lib/gcc/x86_64-linux-gnu/12/crtbeginS.o -L/usr/bin/../lib/gcc/x86_64-linux-gnu/12 -L/usr/bin/../lib/gcc/x86_64-linux-gnu/12/../../../../lib64 -L/lib/x86_64-linux-gnu -L/lib/../lib64 -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib64 -L/usr/lib/llvm-14/bin/../lib -L/lib -L/usr/lib CMakeFiles/cmTC_91031.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/bin/../lib/gcc/x86_64-linux-gnu/12/crtendS.o /lib/x86_64-linux-gnu/crtn.o
+/usr/bin/ld: cannot find -lstdc++: No such file or directory
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_91031.dir/build.make:100: cmTC_91031] Error 1
+gmake[1]: Leaving directory '/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_91031/fast] Error 2
+
+
+
+
+Determining if the CXX compiler works failed with the following output:
+Change Dir: /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_2d064/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_2d064.dir/build.make CMakeFiles/cmTC_2d064.dir/build
+gmake[1]: Verzeichnis „/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp“ wird betreten
+Building CXX object CMakeFiles/cmTC_2d064.dir/testCXXCompiler.cxx.o
+/usr/bin/clang++    -MD -MT CMakeFiles/cmTC_2d064.dir/testCXXCompiler.cxx.o -MF CMakeFiles/cmTC_2d064.dir/testCXXCompiler.cxx.o.d -o CMakeFiles/cmTC_2d064.dir/testCXXCompiler.cxx.o -c /media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp/testCXXCompiler.cxx
+Linking CXX executable cmTC_2d064
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2d064.dir/link.txt --verbose=1
+/usr/bin/clang++ CMakeFiles/cmTC_2d064.dir/testCXXCompiler.cxx.o -o cmTC_2d064 
+/usr/bin/ld: -lstdc++ kann nicht gefunden werden: Datei oder Verzeichnis nicht gefunden
+clang: error: linker command failed with exit code 1 (use -v to see invocation)
+gmake[1]: *** [CMakeFiles/cmTC_2d064.dir/build.make:100: cmTC_2d064] Fehler 1
+gmake[1]: Verzeichnis „/media/wolle/DRIVE-N-GO/platformio-workspace/ESP32-MiniWebRadio/build/CMakeFiles/CMakeTmp“ wird verlassen
+gmake: *** [Makefile:127: cmTC_2d064/fast] Fehler 2
+
+
+
