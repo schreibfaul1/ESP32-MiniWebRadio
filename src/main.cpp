@@ -759,12 +759,12 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     showFooterRSSI();
     showFooterBitRate(_icyBitRate);
 }
-void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t indent, uint16_t winWidth, uint16_t winHeight){
+void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight){
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK);  // Clear the space for new info
     tft.setTextColor(color);                                // Set the requested color
-    tft.setCursor(xPos + indent, yPos);                            // Prepare to show the info
+    tft.setCursor(xPos + margin_l, yPos);                            // Prepare to show the info
     // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
-    uint16_t ch_written = tft.writeText((const uint8_t*) str, winWidth - 5, winHeight);
+    uint16_t ch_written = tft.writeText((const uint8_t*) str, winWidth - margin_r, winHeight);
     if(ch_written < strlenUTF8(str)){
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
@@ -790,7 +790,7 @@ void showStreamTitle(const char* streamtitle){
         case 131 ... 200: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, _winSTitle.w - 5, _winSTitle.h);
+    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, 5, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
 }
 void showVUmeter() {
@@ -830,7 +830,7 @@ void showLogoAndStationName(){
         case  61 ... 90:  tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, _winName.w, _winName.h);
+    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, 0, _winName.w, _winName.h);
 
     String logo = "/logo/" + (String) SN_ascii.c_str() +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
@@ -865,7 +865,7 @@ void showFileName(const char* fname){
         case 101 ... 150: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, _winName.w,_winName.h);
+    display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w,_winName.h);
 }
 
 void display_time(boolean showall){ //show current time on the TFT Display
@@ -2854,7 +2854,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "set_station"){       setStation(param.toInt()); return;}                                 // via websocket
 
-    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); log_w("%s",param.c_str()); return;} 
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); return;}
 
     if(cmd == "getnetworks"){       webSrv.send((String)"networks=" + WiFi.SSID().c_str()); return;}
 
@@ -2916,7 +2916,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
-                                    webSrv.reply(_chbuf);
+                                    webSrv.send((String)"test=" + _chbuf);
                                     SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark());
                                     SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL));
                                     return;}

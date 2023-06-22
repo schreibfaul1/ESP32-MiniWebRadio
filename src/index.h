@@ -413,7 +413,9 @@ function connect() {
                                 opt.text = networks[i]
                                 select.add(opt)
                               }
-                              break;
+                              break
+      case "test":            resultstr1.value = val
+                              break
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -542,7 +544,12 @@ function uploadTextFile (fileName, content) {
   fd.append('Text=', content)
   var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
+  xhr.timeout = 2000; // time in milliseconds
   xhr.open('POST', theUrl, true)
+  xhr.ontimeout = (e) => {
+    // XMLHttpRequest timed out.
+    alert(filename + ' not uploaded, timeout')
+  }
   xhr.onreadystatechange = function () { // Call a function when the state changes.
     if (xhr.readyState === 4) {
       if (xhr.responseText === 'OK') alert(fileName + ' successfully uploaded')
@@ -903,6 +910,7 @@ function saveGridFileToSD () { // save to SD
 function loadGridFileFromSD () { // load from SD
   var XLrowObject
   var rawFile = new XMLHttpRequest()
+  rawFile.timeout = 2000; // time in milliseconds
   rawFile.open('POST', '/SD/stations.csv', true)
   rawFile.onreadystatechange = function () {
     if (rawFile.readyState === 4) {
@@ -922,7 +930,11 @@ function loadGridFileFromSD () { // load from SD
         data: objJSON
       })
       updateStationlist()
-    };
+    }
+  }
+  rawFile.ontimeout = (e) => {
+    // XMLHttpRequest timed out.
+    console.log("load /SD/stations.csv timeout")
   }
   rawFile.send()
 }
@@ -1194,6 +1206,7 @@ function addStationsToGrid () {
 function loadJSON (path, success, error) {
   console.log(path)
   var xhr = new XMLHttpRequest()
+  xhr.timeout = 2000; // time in milliseconds
   xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       if (xhr.status === 200) {
@@ -1204,6 +1217,9 @@ function loadJSON (path, success, error) {
     }
   }
   xhr.open('GET', path, true)
+  xhr.ontimeout = (e) => {
+    // XMLHttpRequest timed out. Do something here.
+  }
   xhr.send()
 }
 
@@ -1330,6 +1346,7 @@ function uploadCanvasImage () {
   var fd = new FormData(document.forms.form1)
   var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
   var xhr = new XMLHttpRequest()
+  xhr.timeout = 2000; // time in milliseconds
   xhr.open('POST', theUrl, true)
 
   xhr.upload.onprogress = function (e) {
@@ -1339,6 +1356,10 @@ function uploadCanvasImage () {
     }
   }
   xhr.onload = function () {
+  }
+  xhr.ontimeout = (e) => {
+    // XMLHttpRequest timed out.
+    alert(filename + ' not uploaded, timeout')
   }
   xhr.onreadystatechange = function () { // Call a function when the state changes.
     if (xhr.readyState === 4) {
