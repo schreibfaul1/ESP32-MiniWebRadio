@@ -2793,8 +2793,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "to_listen"){         StationsItems(); // via websocket, return the name and number of the current station
                                     return;}
 
-    if(cmd == "gettone"){           if(DECODER) webSrv.reply(setI2STone().c_str());
-                                    else webSrv.reply(setTone().c_str());
+    if(cmd == "gettone"){           if(DECODER) webSrv.send((String)"settone=" + setI2STone().c_str());
+                                    else        webSrv.send((String)"settone=" + setTone().c_str());
                                     return;}
 
     if(cmd == "getmute"){           if(_f_mute) webSrv.send("mute=1");
@@ -2807,33 +2807,33 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle);
                                     return;}
 
-    if(cmd == "toneha"){            _toneha = param.toInt();                           // vs1053 tone
-                                    webSrv.reply("Treble Gain set");
-                                    setTone(); return;}
-
-    if(cmd == "tonehf"){            _tonehf = param.toInt();                           // vs1053 tone
-                                    webSrv.reply("Treble Freq set");
-                                    setTone(); return;}
-
-    if(cmd == "tonela"){            _tonela = param.toInt();                           // vs1053 tone
-                                    webSrv.reply("Bass Gain set");
-                                    setTone(); return;}
-
-    if(cmd == "tonelf"){            _tonelf = param.toInt();                           // vs1053 tone
-                                    webSrv.reply("Bass Freq set");
-                                    setTone(); return;}
-
+    if(cmd == "toneha"){            _toneha = param.toInt();                           // vs1053 treble gain
+                                    setTone();
+                                    char lp[40] = "tone=Treble Gain set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
+                                    webSrv.send(lp); return;}
+    if(cmd == "tonehf"){            _tonehf = param.toInt();                           // vs1053 treble frequency
+                                    setTone();
+                                    char lp[40] = "tone=Treble Frecquency set to "; strcat(lp, param.c_str()); strcat(lp, "KHz");
+                                    webSrv.send(lp); return;}
+    if(cmd == "tonela"){            _tonela = param.toInt();                           // vs1053 bass gain
+                                    setTone();
+                                    char lp[40] = "tone=Bass Gain set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
+                                    webSrv.send(lp); return;}
+    if(cmd == "tonelf"){            _tonelf = param.toInt();                           // vs1053 bass frequency
+                                    setTone();
+                                    char lp[40] = "tone=Bass Frecquency set to "; strcat(lp, param.c_str()); strcat(lp, "KHz");
+                                    webSrv.send(lp); return;}
     if(cmd == "LowPass"){           _toneLP = param.toInt();                           // audioI2S tone
-                                    char lp[25] = "Lowpass set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
-                                    webSrv.reply(lp); setI2STone(); return;}
+                                    char lp[30] = "tone=Lowpass set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
+                                    webSrv.send(lp); setI2STone(); return;}
 
     if(cmd == "BandPass"){          _toneBP = param.toInt();                           // audioI2S tone
-                                    char bp[25] = "Bandpass set to "; strcat(bp, param.c_str()); strcat(bp, "dB");
-                                    webSrv.reply(bp); setI2STone(); return;}
+                                    char bp[30] = "tone=Bandpass set to "; strcat(bp, param.c_str()); strcat(bp, "dB");
+                                    webSrv.send(bp); setI2STone(); return;}
 
     if(cmd == "HighPass"){          _toneHP = param.toInt();                           // audioI2S tone
-                                    char hp[25] = "Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
-                                    webSrv.reply(hp); setI2STone(); return;}
+                                    char hp[30] = "tone=Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
+                                    webSrv.send(hp); setI2STone(); return;}
 
     if(cmd == "audiolist"){         sendAudioList2Web("/audiofiles");                                   // via websocket
                                     return;}
@@ -2854,9 +2854,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "set_station"){       setStation(param.toInt()); return;}                                 // via websocket
 
-    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); webSrv.reply("OK\n"); return;}
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); log_w("%s",param.c_str()); return;} 
 
-    if(cmd == "getnetworks"){       webSrv.reply(WiFi.SSID().c_str()); return;}
+    if(cmd == "getnetworks"){       webSrv.send((String)"networks=" + WiFi.SSID().c_str()); return;}
 
     if(cmd == "ping"){              webSrv.send("pong"); return;}
 

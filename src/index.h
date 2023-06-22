@@ -279,6 +279,8 @@ function connect() {
     socket.send('to_listen')
     socket.send("getmute")
     socket.send("get_timeAnnouncement")
+    socket.send("gettone=")   // Now load the tones (tab Radio)
+    socket.send("getnetworks=")
 
     setInterval(ping, 20000)
   };
@@ -322,6 +324,14 @@ function connect() {
                               if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
                                               resultstr1.value = "mute off"
                                               console.log("mute off")}
+                              break
+      case "tone":            resultstr1.value = val  // text shown in resultstr1 as info
+                              break
+      case "settone":         lines = val.split('\n')
+                              for (i = 0; i < (lines.length - 1); i++) {
+                                parts = lines[i].split('=')
+                                setSlider(parts[0], parts[1])
+                              }
                               break
       case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
                               break
@@ -394,7 +404,16 @@ function connect() {
                               break
       case "Level5":          show_DLNA_Content(val, 5)
                               break
-
+      case "networks":        var networks = val.split('\n')
+                              select = document.getElementById('ssid')
+                              for (i = 0; i < (networks.length); i++) {
+                                opt = document.createElement('OPTION')
+                                opt.value = i
+                                console.log(networks[i])
+                                opt.text = networks[i]
+                                select.add(opt)
+                              }
+                              break;
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -412,8 +431,6 @@ document.addEventListener('readystatechange', event => {
   if (event.target.readyState === 'complete') {
     console.log('Now external resources are loaded too, like css,src etc... ')
     connect();  // establish websocket connection
-    gettone()   // Now load the tones (tab Radio)
-    getnetworks()
     loadGridFileFromSD()
     showExcelGrid()
   }
@@ -658,50 +675,8 @@ function showLogo(id, src) { // get the bitmap from SD, convert to URL first
   document.getElementById(id).style.backgroundImage = file
 }
 
-var _num = 0
-
-function httpGet (theReq, nr) { // universal request prev, next, vol,  mute...
-  var param = ''
-  var idx = theReq.indexOf('=')
-  if (idx > 0){
-    param = theReq.substr(idx+1)
-    theReq = theReq.substr(0, idx)
-  }
-  var theUrl =  '/' + theReq + '?' + param + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      if (nr === 1) {
-        if (xhr.responseText.startsWith('http')) {
-          console.log(xhr.responseText)
-          window.open(xhr.responseText, '_blank') // show the station homepage
-        } else if (theReq === 'getstreamtitle') {
-          cmd.value = xhr.responseText
-        } else resultstr1.value = xhr.responseText
-      }
-//    if (nr === 2) resultstr2.value = xhr.responseText
-      if (nr === 3) resultstr3.value = xhr.responseText
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
-}
-
-function gettone () { // tab Radio: get tones values and set them
-  var i, lines, parts
-  var theUrl = '/gettone?' + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      lines = xhr.responseText.split('\n')
-      for (i = 0; i < (lines.length - 1); i++) {
-        parts = lines[i].split('=')
-        setSlider(parts[0], parts[1])
-      }
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
+function test(){
+  socket.send("test=")
 }
 
 function handleStation (presctrl) { // tab Radio: preset, select a station
@@ -709,37 +684,20 @@ function handleStation (presctrl) { // tab Radio: preset, select a station
   socket.send('set_station=' + presctrl.value)
 }
 
-function handletone (tonectrl) { // Radio: treble, bass, freq
-  var theUrl = '/' + tonectrl.id + '?' + tonectrl.value + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      resultstr1.value = xhr.responseText
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
-}
-
 function setstation () { // Radio: button play - Enter a streamURL here....
-  var theUrl = '/stationURL?' + station.value + '&version=' + Math.random()
+  var sel = document.getElementById('preset')
+  sel.selectedIndex = 0
+  cmd.value = ''
+
+  var theUrl =  station.value;
   theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
   theUrl = theUrl.replace(/%21/g, '!') //
   theUrl = theUrl.replace(/%22/g, '"') //
   theUrl = theUrl.replace(/%23/g, '#') //
   theUrl = theUrl.replace(/%3f/g, '?') //
   theUrl = theUrl.replace(/%40/g, '@') //
-  var sel = document.getElementById('preset')
-  sel.selectedIndex = 0
-  cmd.value = ''
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      resultstr1.value = xhr.responseText
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
+
+  socket.send("stationURL=" + theUrl)
 }
 
 function selectItemByValue (elmnt, value) { // tab Radio: load and set tones
@@ -889,17 +847,10 @@ function slider_HP_set (value) { // set Slider HighPass
 }
 
 function handlectrl (id, val) { // Radio: treble, bass, freq
-  var theUrl = '/' + id + '?' + val + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      resultstr1.value = xhr.responseText
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
+  var theUrl = id + "=" + val
+  console.log(theUrl)
+  socket.send(theUrl)
 }
-
 // ----------------------------------- TAB CONFIG ------------------------------------
 
 function saveGridFileToSD () { // save to SD
@@ -1315,19 +1266,14 @@ function selectstation () { // select a station
 }
 
 function teststreamurl () { // Search: button play - enter a url to play from
-  var theUrl = '/stationURL?' + streamurl.value + '&version=' + Math.random()
+  var theUrl = "stationURL=" + streamurl.value
   theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
   theUrl = theUrl.replace(/%21/g, '!') //
   theUrl = theUrl.replace(/%22/g, '"') //
   theUrl = theUrl.replace(/%23/g, '#') //
   theUrl = theUrl.replace(/%3f/g, '?') //
   theUrl = theUrl.replace(/%40/g, '@') //
-  var xhr = new XMLHttpRequest()
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {}
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
+  socket.send(theUrl)
 }
 
 function scaleCanvasImage (url) {
@@ -1421,26 +1367,9 @@ function downloadCanvasImage () {
   }
 }
 // -------------------------------------- TAB Info ---------------------------------------
-function getnetworks () { // tab Config: load the connected WiFi network
-  var i, select, opt, networks
-  var theUrl = '/getnetworks?' + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  select = document.getElementById('ssid') // Radio: show stationlist
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === XMLHttpRequest.DONE) {
-      networks = xhr.responseText.split('\n')
-      for (i = 0; i < (networks.length); i++) {
-        opt = document.createElement('OPTION')
-        opt.value = i
-        console.log(networks[i])
-        opt.text = networks[i]
-        select.add(opt)
-      }
-    }
-  }
-  xhr.open('GET', theUrl, true)
-  xhr.send()
-}
+
+// no functions in there
+
 /* eslint-enable no-unused-vars, no-undef */
 
 </script>
@@ -1676,7 +1605,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
                           ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
                           onmouseup="this.src='SD/png/Button_Test_Green.png'"
                           ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                          onclick="httpGet('test', 1)" />
+                          onclick="test()" />
       </div>
     </div>
     <hr>
@@ -1886,7 +1815,7 @@ function getnetworks () { // tab Config: load the connected WiFi network
        Author: Wolle (schreibfaul1)</p>
     <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
     <h3>Connected WiFi network
-      <select class="boxstyle" onchange="handletone(this)" id="ssid"></select>
+      <select class="boxstyle" onchange="setNetworks(this)" id="ssid"></select>  <!-- setNetworks() not impl yet -->
     </h3>
     <h3>
       <p> Time announcement on the hour
