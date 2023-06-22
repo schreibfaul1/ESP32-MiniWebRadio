@@ -256,12 +256,12 @@ SemaphoreHandle_t  mutex_display;
     };
 
     struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
-    struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 130;} const _winLogo;
-    struct w_n {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 130;} const _winName;
-    struct w_e {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 130;} const _winFName;
-    struct w_t {uint16_t x =   0; uint16_t y = 160; uint16_t w = 480; uint16_t h = 130;} const _winTitle;
-    struct w_c {uint16_t x =   0; uint16_t y = 160; uint16_t w = 448; uint16_t h = 130;} const _winSTitle;
-    struct w_g {uint16_t x = 448; uint16_t y = 160; uint16_t w =  32; uint16_t h = 130;} const _winVUmeter;
+    struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
+    struct w_n {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 132;} const _winName;
+    struct w_e {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
+    struct w_t {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
+    struct w_c {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
+    struct w_g {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
     struct w_f {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
     struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
     struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
@@ -790,7 +790,7 @@ void showStreamTitle(const char* streamtitle){
         case 131 ... 200: tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, _winSTitle.w, _winSTitle.h);
+    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, _winSTitle.w - 5, _winSTitle.h);
     xSemaphoreGive(mutex_display);
 }
 void showVUmeter() {
