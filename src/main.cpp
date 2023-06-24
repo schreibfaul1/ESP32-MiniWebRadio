@@ -344,6 +344,7 @@ boolean defaultsettings(){
     _toneBP             = (int16_t)     jV["toneBP"];
     _toneHP             = (int16_t)     jV["toneHP"];
 
+    if(!_lastconnectedhost) _lastconnectedhost = "";
     if(_sum_stations == 0) saveStationsToNVS(); // first init
 	return true;
 }
@@ -401,6 +402,7 @@ boolean saveStationsToNVS(){
 }
 
 void updateSettings(){
+    if(!_lastconnectedhost)_lastconnectedhost = "";
     JSONVar jObject;
     jObject["volume"]            = (uint8_t)  _cur_volume;
     jObject["ringvolume"]        = (uint8_t)  _ringvolume;
@@ -1581,8 +1583,8 @@ void setStation(uint16_t sta){
     if(sta == 0) return;
     if(sta > _sum_stations) sta = _cur_station;
     sprintf (_chbuf, "station_%03d", sta);
-    String content = stations.getString(_chbuf);
-    //SerialPrintfln("content %s", content.c_str());
+    String content = stations.getString(_chbuf," #not_found");
+    // SerialPrintfln("content %s", content.c_str());
     _stationName_nvs = content.substring(0, content.indexOf("#")); //get stationname
     content = content.substring(content.indexOf("#") + 1, content.length()); //get URL
     content.trim();
@@ -2917,8 +2919,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
                                     webSrv.send((String)"test=" + _chbuf);
-                                    SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark());
-                                    SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL));
+                                    SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark() * 4);
+                                    SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL) * 4);
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
