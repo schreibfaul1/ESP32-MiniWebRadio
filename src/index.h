@@ -463,7 +463,6 @@ document.addEventListener('readystatechange', event => {
     connect();  // establish websocket connection
     loadGridFileFromSD()
     showExcelGrid()
-    buildFileSystemTree("/")
   }
 })
 
@@ -542,6 +541,7 @@ function showTab3 () {
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
+  buildFileSystemTree("/")
 }
 
 function showTab4 () {
@@ -1043,8 +1043,10 @@ function uploadTextFile (fileName, content) {
 		if (path.length == 0) {
 			return;
 		}
+    console.log("We can now have data!")
 		getData("/explorer?/" + '&version=' + Math.random(), function(data) {
 			/* We now have data! */
+      console.log("We now have data!")
       console.log("data", data)
 			$('#explorerTree').jstree(true).settings.core.data.children = [];
 
