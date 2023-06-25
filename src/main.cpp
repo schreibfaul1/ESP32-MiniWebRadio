@@ -431,6 +431,46 @@ void updateSettings(){
     }
 }
 
+
+/***********************************************************************************************************************
+*                                        F I L E   E X P L O R E R                                                  *
+***********************************************************************************************************************/
+// Sends a list of the content of a directory as JSON file
+String dirContent(String path) {
+	File root, file;
+    JSONVar jObject, jArr;
+    int i = 0;
+
+    if(path =="") path = "/";
+    root = SD_MMC.open(path.c_str());
+
+	if (!root.isDirectory()) {
+		SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
+		return "";
+	}
+	while (true) {
+        file = root.openNextFile();
+        if(!file) break;
+		if (startsWith(file.name() , "/.")) continue;  // ignore hidden folders
+		jArr["name"] = (String)file.name();
+		jArr["dir"]  = (boolean)file.isDirectory();
+        jObject[i]   = jArr;
+        i++;
+    }
+    file.close();
+	root.close();
+    if(i){
+        String jO = JSON.stringify(jObject);
+        log_i("%s", jO.c_str());
+        return jO;
+    }
+    return "";
+}
+
+
+
+
+
 /***********************************************************************************************************************
 *                                        T F T   B R I G H T N E S S                                                   *
 ***********************************************************************************************************************/
@@ -1441,19 +1481,19 @@ void trim(char *s) {
         *s = '\0';
     }
 }
-bool startsWith (const char* base, const char* str) {
+bool startsWith (const char* base, const char* searchString) {
     char c;
-    while ( (c = *str++) != '\0' )
+    while ( (c = *searchString++) != '\0' )
       if (c != *base++) return false;
     return true;
 }
-bool endsWith (const char* base, const char* str) {
-    int slen = strlen(str) - 1;
+bool endsWith (const char* base, const char* searchString) {
+    int slen = strlen(searchString) - 1;
     const char *p = base + strlen(base) - 1;
     while(p > base && isspace(*p)) p--;  // rtrim
     p -= slen;
     if (p < base) return false;
-    return (strncmp(p, str, slen) == 0);
+    return (strncmp(p, searchString, slen) == 0);
 }
 int indexOf (const char* haystack, const char* needle, int startIndex) {
     const char *p = haystack;
@@ -2926,6 +2966,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
+
+    if(cmd == "getDirContent"){     webSrv.send("dirContent=" + dirContent(param)); return;}
+
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);

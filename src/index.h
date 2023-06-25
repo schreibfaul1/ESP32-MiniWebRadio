@@ -527,7 +527,8 @@ function showTab3 () {
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
-  socket.send('DLNA_getServer')
+  socket.send("getDirContent")
+
 }
 
 function showTab4 () {
@@ -544,6 +545,7 @@ function showTab4 () {
   document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
   document.getElementById('btn5').src = 'SD/png/Search_Green.png'
   document.getElementById('btn6').src = 'SD/png/About_Green.png'
+  socket.send('DLNA_getServer')
 }
 
 function showTab5 () {

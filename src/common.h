@@ -145,6 +145,7 @@
 boolean defaultsettings();
 boolean saveStationsToNVS();
 void urldecode(char *str);
+String dirContent(String path);
 void setTFTbrightness(uint8_t duty);
 void showHeadlineVolume();
 void showHeadlineTime(bool complete = true);
