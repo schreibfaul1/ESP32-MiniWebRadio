@@ -34,15 +34,18 @@ const char index_html[] PROGMEM = R"=====(
     <meta http-equiv="content-style-type" content="text/css">
     <meta http-equiv="expires" content="0">
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/themes/default/style.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
 
+<!--   <link rel="stylesheet" href="SD/css/jstree-style.css" />  -->
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/jstree.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
@@ -50,6 +53,7 @@ const char index_html[] PROGMEM = R"=====(
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
 
+<!--  <script src="SD/js/jstree.js"></script>    --->
 <!--  <script src="SD/js/jquery.js"></script>    --->
 <!--  <script src="SD/js/jquery-ui.js"></script> --->
 <!--  <script src="SD/js/jsgrid.js"></script>    --->
@@ -98,6 +102,10 @@ const char index_html[] PROGMEM = R"=====(
             margin : 20px;
         }
         #tab-content5 {
+            display : none;
+            margin : 20px;
+        }
+        #tab-content6 {
             display : none;
             margin : 20px;
         }
@@ -227,6 +235,12 @@ const char index_html[] PROGMEM = R"=====(
             padding-top: 0px;
             padding-bottom: 0px;
         }
+        .filetree {
+			      border: 1px solid black;
+			      height: 200px;
+			      margin: 0em 0em 1em 0em;
+			      overflow-y: scroll;
+		    }
         #preloaded-images{
             display: none;
         }
@@ -464,11 +478,13 @@ function showTab1 () {
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   socket.send("change_state=" + "0")
   socket.send("getmute")
 }
@@ -480,11 +496,13 @@ function showTab2 () {
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   $('#jsGrid').jsGrid('refresh')
 }
 
@@ -495,11 +513,13 @@ function showTab3 () {
   document.getElementById('tab-content3').style.display = 'block'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   document.getElementById('level1').options.length = 0
   document.getElementById('level2').options.length = 0
   document.getElementById('level3').options.length = 0
@@ -511,32 +531,51 @@ function showTab3 () {
 }
 
 function showTab4 () {
-  console.log('tab-content4 (Search Stations)')
+  console.log('tab-content4 (DLNA)')
   document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('tab-content2').style.display = 'none'
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'block'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Yellow.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
 }
 
 function showTab5 () {
-  console.log('tab-content5 (About)')
+  console.log('tab-content5 (Search Stations)')
   document.getElementById('tab-content1').style.display = 'none'
   document.getElementById('tab-content2').style.display = 'none'
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'block'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Yellow.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+}
+
+function showTab6 () {
+  console.log('tab-content6 (About)')
+  document.getElementById('tab-content1').style.display = 'none'
+  document.getElementById('tab-content2').style.display = 'none'
+  document.getElementById('tab-content3').style.display = 'none'
+  document.getElementById('tab-content4').style.display = 'none'
+  document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'block'
+  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
 }
 
 function uploadTextFile (fileName, content) {
@@ -559,7 +598,464 @@ function uploadTextFile (fileName, content) {
   xhr.send(fd) // send
 }
 
-// ----------------------------------- DLNA ------------------------------------
+
+// --------------------------------------------------------- File Explorer ---------------------------------------------------------------------------
+	var lastSelectedNodePath = "";
+
+	$('#explorerTree').on('select_node.jstree', function (e, data) {
+
+		$('input[name=fileOrUrl]').val(data.node.data.path);
+
+		if (ActiveSubTab !== 'rfid-music-tab') {
+			$('#SubTab.nav-tabs a[id="rfid-music-tab"]').tab('show');
+		}
+
+		if (data.node.type == "folder") {
+			$('.option-folder').show();
+			$('.option-file').hide();
+			$('#playMode option').removeAttr('selected').filter('[value=3]').attr('selected', true);
+		}
+
+		if (data.node.type == "audio") {
+			$('.option-file').show();
+			$('.option-folder').hide();
+			$('#playMode option').removeAttr('selected').filter('[value=1]').attr('selected', true);
+		}
+
+		if(lastSelectedNodePath != data.node.data.path) {
+			if (data.node.data.directory) {
+
+				var ref = $('#explorerTree').jstree(true),
+					sel = ref.get_selected();
+				if(!sel.length) { return false; }
+				sel = sel[0];
+				var children = $("#explorerTree").jstree("get_children_dom",sel);
+				/* refresh only, when there is no child -> possible not yet updated */
+				if(children.length < 1){
+					refreshNode(sel);
+				}
+
+			}
+		 lastSelectedNodePath = data.node.data.path;
+		}
+
+
+	});
+
+	function doRest(path, callback, obj) {
+		obj.url      = path;
+		obj.dataType = "json";
+		obj.contentType= "application/json;charset=IBM437",
+		obj.scriptCharset= "IBM437",
+		obj.success  = function(data, textStatus, jqXHR) {
+			if (callback) {
+				callback(data);
+			}
+		};
+		obj.error    = function(jqXHR, textStatus, errorThrown) {
+			console.log("AJAX error");
+			/*debugger; */
+		};
+		jQuery.ajax(obj);
+	} /* doRest */
+
+	function getData(path, callback) {
+		doRest(path, callback, {
+			method   : "GET"
+		});
+	} /* getData */
+
+	function deleteData(path, callback, _data) {
+		doRest(path, callback, {
+			method   : "DELETE",
+			data: _data
+		});
+	} /* deleteData */
+
+	function patchData(path, callback, _data) {
+		doRest(path, callback, {
+			method   : "PATCH",
+			data: _data
+		});
+	} /* patchData */
+
+	function postData(path, callback, _data) {
+		doRest(path, callback, {
+			method   : "POST",
+			data: _data
+		});
+	} /* postData */
+
+
+	function putData(path, callback, _data) {
+		doRest(path, callback, {
+			method   : "PUT",
+			data: _data
+		});
+	} /* putData */
+
+
+	/* File Upload */
+	$('#explorerUploadForm').submit(function(e){
+		e.preventDefault();
+		console.log("Upload!");
+		var data = new FormData(this);
+
+		var ref = $('#explorerTree').jstree(true),
+			sel = ref.get_selected(),
+			path = "/";
+		if(!sel.length) { alert(i18next.t("files.upload.selectFolder")); return false; }
+		if(!document.getElementById('uploaded_file').files.length > 0) { alert(i18next.t("files.upload.selectFile")); return false; }
+		sel = sel[0];
+		selectedNode = ref.get_node(sel);
+		if(selectedNode.data.directory){
+			path = selectedNode.data.path
+		} else {
+			/* remap sel to parent folder */
+			sel = ref.get_node(ref.get_parent(sel));
+			path = parentNode.data.path;
+			console.log("Parent path: " + path);
+		}
+
+		const startTime = new Date().getTime();
+		let bytesTotal = 0;
+		$.ajax({
+			url: '/explorer?path=' + path,
+			type: 'POST',
+			data: data,
+			contentType: false,
+			processData:false,
+			xhr: function() {
+				var xhr = new window.XMLHttpRequest();
+
+				xhr.upload.addEventListener("progress", function(evt) {
+				  if (evt.lengthComputable) {
+					const now = new Date().getTime();
+					const percent = parseInt(evt.loaded * 100 / evt.total);
+					const elapsed = (now - startTime) / 1000;
+					bytesTotal = evt.total;
+
+					let progressText = i18next.t("files.upload.timeCalc");
+					if(elapsed){
+						const bps = evt.loaded / elapsed;
+						const kbps = bps / 1024;
+						const remaining = Math.round((evt.total - evt.loaded) / bps);
+
+						const data = {
+							percent: percent,
+							remaining: {
+								unit: (remaining>60) ? i18next.t("files.upload.minutes", {count: Math.round(remaining/60)}) : i18next.t("files.upload.seconds"),
+								value: (remaining>60) ? Math.round(remaining/60) : ((remaining > 2) ? remaining : i18next.t("files.upload.fewSec"))
+							},
+							speed: kbps.toFixed(2)
+						}
+						progressText = i18next.t("files.upload.progress", data);
+						console.log("Percent: " + percent + "%% " + kbps.toFixed(2) + " KB/s");
+					}
+					$("#explorerUploadProgress").css('width', percent+"%").text(progressText);
+				  }
+				}, false);
+
+				return xhr;
+			},
+			success: function(data, textStatus, jqXHR) {
+				const now = new Date().getTime();
+				const elapsed = (now - startTime) / 1000;
+
+				let transData = {
+					elapsed: "00:00",
+					speed: "0,00"
+				};
+				if(elapsed){
+					const bps = bytesTotal / elapsed;
+					const kbps = bps / 1024;
+
+					const date = new Date(null);
+					date.setSeconds(elapsed);
+					const timeText = date.toISOString().substr(11, 8);
+
+					transData = { elapsed: timeText, speed: kbps.toFixed(2) };
+				}
+				console.log("Upload success (" + transData.elapsed + ", " + transData.speed + " KB/s): " + textStatus);
+				const progressText = i18next.t("files.upload.success", transData);
+				$("#explorerUploadProgress").text(progressText);
+				document.getElementById('uploaded_file').value = '';
+				document.getElementById('uploaded_file_text').innerHTML = '';
+
+				getData("/explorer?path=" + path, function(data) {
+					/* We now have data! */
+					deleteChildrenNodes(sel);
+					addFileDirectory(sel, data);
+					ref.open_node(sel);
+				});
+
+			},
+			error: function(request, status, error) {
+				console.log("Upload ERROR!");
+				$("#explorerUploadProgress").text(i18next.t("files.upload.error") +": " + status);
+				toastr.error(i18next.t("files.upload.error") + ": " + status);
+			}
+		});
+	});
+
+	/* File Delete */
+	function handleDeleteData(nodeId) {
+		var ref = $('#explorerTree').jstree(true);
+		var node = ref.get_node(nodeId);
+		console.log("call delete request: " + node.data.path);
+		deleteData("/explorer?path=" + encodeURIComponent(node.data.path));
+	}
+
+	function fileNameSort( a, b ) {
+		if ( a.dir && !b.dir ) {
+			return -1
+		}
+		if ( !a.dir && b.dir ) {
+			return 1
+		}
+		if ( a.name < b.name ){
+			return -1;
+		}
+		if ( a.name > b.name ){
+			return 1;
+		}
+		return 0;
+	}
+
+	function createChild(nodeId, data) {
+		var ref = $('#explorerTree').jstree(true);
+		var node = ref.get_node(nodeId);
+		var parentNodePath = node.data.path;
+		/* In case of root node remove leading '/' to avoid '//' */
+		if(parentNodePath == "/"){
+			parentNodePath = "";
+		}
+		var child = {
+			text: data.name,
+			type: getType(data),
+			data: {
+				path: parentNodePath + "/" + data.name,
+				directory: data.dir
+			}
+		};
+
+		return child;
+
+	}
+
+	function deleteChildrenNodes(nodeId) {
+		var ref = $('#explorerTree').jstree(true);
+		var children = $("#explorerTree").jstree("get_children_dom",nodeId);
+		for(var i=0;i<children.length;i++)
+		{
+			ref.delete_node(children[i].id);
+		}
+
+	}
+
+	function refreshNode(nodeId) {
+
+		var ref = $('#explorerTree').jstree(true);
+
+		var node = ref.get_node(nodeId);
+
+		getData("/explorer?path=" + encodeURIComponent(node.data.path), function(data) {
+			/* We now have data! */
+
+			deleteChildrenNodes(nodeId);
+			addFileDirectory(nodeId, data);
+			ref.open_node(nodeId);
+
+		});
+
+
+	}
+
+	function getType(data) {
+		var type = "";
+
+		if(data.dir) {
+			type = "folder";
+		} else if ((/\.(mp3|MP3|ogg|wav|WAV|OGG|wma|WMA|acc|ACC|m4a|M4A|flac|FLAC)$/i).test(data.name)) {
+			type = "audio";
+		} else if ((/\.(png|PNG|jpg|JPG|jpeg|JPEG|bmp|BMP|gif|GIF)$/i).test(data.name)) {
+			type = "image";
+		} else {
+			type = "file";
+		}
+
+		return type;
+	}
+
+
+	function addFileDirectory(parent, data) {
+
+		data.sort( fileNameSort );
+		var ref = $('#explorerTree').jstree(true);
+
+		for (var i=0; i<data.length; i++) {
+			console.log("Create Node");
+			ref.create_node(parent, createChild(parent, data[i]));
+		}
+	} /* addFileDirectory */
+
+	function buildFileSystemTree(path) {
+
+		$('#explorerTree').jstree({
+				"core" : {
+						"check_callback" : true,
+						'force_text' : true,
+						'strings' : { "Loading ..." : () => i18next.t("files.loading") },
+						"themes" : { "stripes" : true },
+						'data' : {	text: '/',
+									state: {
+										opened: true
+									},
+									type: 'folder',
+									children: [],
+									data: {
+										path: '/',
+										directory: true
+								}}
+					},
+					'types': {
+						'folder': {
+							'icon': "fa fa-folder"
+						},
+						'file': {
+							'icon': "fa fa-file"
+						},
+						'audio': {
+							'icon': "fa fa-file-audio"
+						},
+						'image': {
+							'icon': "fa fa-file-image"
+						},
+						'default': {
+							'icon': "fa fa-folder"
+						}
+					},
+				plugins: ["contextmenu", "themes", "types"],
+				contextmenu: {
+					items: function(nodeId) {
+						var ref = $('#explorerTree').jstree(true);
+						var node = ref.get_node(nodeId);
+						var items = {};
+
+
+						if (node.data.directory) {
+							items.createDir = {
+								label: () => i18next.t("files.context.newFolder"),
+								action: function(x) {
+									var childNode = ref.create_node(nodeId, {text: () => i18next.t("files.context.newFolder"), type: "folder"});
+									if(childNode) {
+										ref.edit(childNode, null, function(childNode, status){
+											putData("/explorer?path=" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
+											refreshNode(nodeId);
+										});
+									}
+								}
+							};
+						}
+
+						/* Play */
+						items.play = {
+							label: () => i18next.t("files.context.play"),
+							action: function(x) {
+								var playMode = 1;
+								if (node.data.directory) {
+									playMode = 5;
+								} else {
+									if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
+										playMode = 11;
+									}
+								}
+								postData("/exploreraudio?path=" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
+							}
+						};
+
+						/* Refresh */
+						items.refresh = {
+							label: () => i18next.t("files.context.refresh"),
+							action: function(x) {
+								refreshNode(nodeId);
+							}
+						};
+
+						/* Delete */
+						items.delete = {
+							label: () => i18next.t("files.context.delete"),
+							action: function(x) {
+								handleDeleteData(nodeId);
+								refreshNode(ref.get_parent(nodeId));
+							}
+						};
+
+						/* Rename */
+						items.rename = {
+							label: () => i18next.t("files.context.rename"),
+							action: function(x) {
+								var srcPath = node.data.path;
+								ref.edit(nodeId, null, function(node, status){
+									node.data.path = node.data.path.substring(0,node.data.path.lastIndexOf("/")+1) + node.text;
+									patchData("/explorer?srcpath=" + encodeURIComponent(srcPath) + "&dstpath=" + encodeURIComponent(node.data.path));
+									refreshNode(ref.get_parent(nodeId));
+								});
+							}
+						};
+
+						/* Download */
+						if (!node.data.directory) {
+							items.download = {
+								label: () => i18next.t("files.context.download"),
+								action: function(x) {
+									uri = "/explorerdownload?path=" + encodeURIComponent(node.data.path);
+									console.log("download file: " + node.data.path);
+									var anchor = document.createElement('a');
+									anchor.href = uri;
+									anchor.target = '_blank';
+									anchor.download = node.data.path;
+									anchor.click();
+									document.body.removeChild(document.body.lastElementChild);
+								}
+							}
+						};
+
+						return items;
+					}
+				}
+			});
+
+		if (path.length == 0) {
+			return;
+		}
+		getData("/explorer?path=/", function(data) {
+			/* We now have data! */
+			$('#explorerTree').jstree(true).settings.core.data.children = [];
+
+			data.sort( fileNameSort );
+
+
+			for (var i=0; i<data.length; i++) {
+				var newChild = {
+					text: data[i].name,
+					type: getType(data[i]),
+					data: {
+						path: "/" + data[i].name,
+						directory: data[i].dir
+					},
+					children: []
+				};
+				$('#explorerTree').jstree(true).settings.core.data.children.push(newChild);
+			}
+
+			$("#explorerTree").jstree(true).refresh();
+
+
+		});
+	} /* buildFileSystemTree */
+
+// ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
 function clearDLNAServerList(){
     console.log('clear DLNA server list')
     var select
@@ -660,10 +1156,6 @@ function select_l3 (presctrl) { // preset, select level 2
     socket.send('DLNA_getContent5=' + presctrl.value)
     console.log('DLNA_getContent5=' + presctrl.value)
  }
-
-
-
-
 
 // ----------------------------------- TAB RADIO ------------------------------------
 
@@ -1458,12 +1950,13 @@ function downloadCanvasImage () {
 
   <!--==============================================================================================-->
   <div style="height: 66px; display: flex;">
-    <div style="flex: 0 0 345px;">
+    <div style="flex: 0 0 445px;">
       <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()" />
       <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()" />
       <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()" />
-      <img id="btn4" src="SD/png/Search_Green.png" alt="search" onclick="showTab4()" />
-      <img id="btn5" src="SD/png/About_Green.png" alt="radio" onclick="showTab5()" />
+      <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()" />
+      <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()" />
+      <img id="btn6" src="SD/png/About_Green.png" alt="radio" onclick="showTab6()" />
     </div>
     <div style="font-size: 50px; text-align: center; flex: 1;">
       MiniWebRadio
@@ -1690,8 +2183,43 @@ function downloadCanvasImage () {
       <br>
       <hr>
       <br>
+      <div class="container" id="filetreeContainer">
+			  <fieldset>
+			  	<legend data-i18n="files.title">Files</legend>
+			  	<div class="filetree-container">
+			  	<div id="filebrowser">
+			  		<div class="filetree demo" id="explorerTree"></div>
+			  	</div>
+			  	<div>
+			  		<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+			  			<div class="input-group">
+			  				<span class="form-control" id="uploaded_file_text"></span>&nbsp
+			  				<span class="input-group-btn">
+			  					<span class="btn btn-secondary" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
+			  					<span class="btn btn-secondary" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
+			  					<span class="btn btn-primary" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
+			  					<input name="uploaded_file" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
+			  				 </span>
+			  			</div>
+			  		</form>
+			  		<br>
+					  <div class="progress">
+						  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+					  </div>
+			  		<div class="progress">
+			  			<div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+			  		</div>
+			  	</div>
+			  	<br>
+			  </fieldset>
+		  </div>
+      </center>
+  </div>
 
-        <div style="flex: 0 0 calc(100% - 0px);">
+  <!--==============================================================================================-->
+  <div id="tab-content4">
+    <center>
+      <div style="flex: 0 0 calc(100% - 0px);">
             <select class="boxstyle" style="width: 100%;" onchange="selectserver(this)" id="server">
                 <option value="-1">Select a DLNA Server here</option>
             </select>
@@ -1710,19 +2238,12 @@ function downloadCanvasImage () {
             <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
                 <option value="-1"> </option>
             </select>
-        </div>
-
-
-
-
-
-
-
-
-      </center>
+      </div>
+    </center>
   </div>
+
   <!--==============================================================================================-->
-  <div id="tab-content4">
+  <div id="tab-content5">
       <div style="height: 30px;">
         This service is provided by
         <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
@@ -1829,7 +2350,7 @@ function downloadCanvasImage () {
       </div>
   </div>
   <!--==============================================================================================-->
-  <div id="tab-content5">
+  <div id="tab-content6">
     <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
         external DAC. This project is documented on
     <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
