@@ -436,8 +436,8 @@ void updateSettings(){
 ***********************************************************************************************************************/
 void setTFTbrightness(uint8_t duty){        // duty 0...100 (min...max)
     if(TFT_BL == -1) return;
-    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
+    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
 }
@@ -1292,7 +1292,9 @@ void setup(){
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found");
+    float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
+    float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
 
     defaultsettings();  // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
