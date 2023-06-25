@@ -45,9 +45,9 @@ const char index_html[] PROGMEM = R"=====(
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/jstree.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/jstree.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
@@ -235,19 +235,33 @@ const char index_html[] PROGMEM = R"=====(
             padding-top: 0px;
             padding-bottom: 0px;
         }
-        .filetree {
-			      border: 1px solid black;
-			      height: 200px;
-			      margin: 0em 0em 1em 0em;
-			      overflow-y: scroll;
-		    }
         #preloaded-images{
             display: none;
         }
         #dialog {
             display: none;
         }
-        #BODY { display:block; }
+        #BODY {
+            display:block;
+        }
+        .filetree {
+			      border: 1px solid black;
+			      height: 200px;
+			      margin: 0em 0em 1em 0em;
+			      overflow-y: scroll;
+		    }
+		    .filetree-container {
+			      position: relative;
+		    }
+		    .indexing-progress {
+			      width: 100%;
+			      height: 100%;
+			      position: absolute;
+			      top: 0;
+			      left: 0;
+			      opacity: 0.7;
+			      display: none;
+		    }
     </style>
 </head>
 
@@ -449,6 +463,7 @@ document.addEventListener('readystatechange', event => {
     connect();  // establish websocket connection
     loadGridFileFromSD()
     showExcelGrid()
+    buildFileSystemTree("/")
   }
 })
 
@@ -527,8 +542,6 @@ function showTab3 () {
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
-  socket.send("getDirContent")
-
 }
 
 function showTab4 () {
@@ -944,7 +957,6 @@ function uploadTextFile (fileName, content) {
 						var node = ref.get_node(nodeId);
 						var items = {};
 
-
 						if (node.data.directory) {
 							items.createDir = {
 								label: () => i18next.t("files.context.newFolder"),
@@ -952,7 +964,7 @@ function uploadTextFile (fileName, content) {
 									var childNode = ref.create_node(nodeId, {text: () => i18next.t("files.context.newFolder"), type: "folder"});
 									if(childNode) {
 										ref.edit(childNode, null, function(childNode, status){
-											putData("/explorer?path=" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
+											putData("/explorer?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
 											refreshNode(nodeId);
 										});
 									}
@@ -972,7 +984,7 @@ function uploadTextFile (fileName, content) {
 										playMode = 11;
 									}
 								}
-								postData("/exploreraudio?path=" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
+								postData("/exploreraudio?" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
 							}
 						};
 
@@ -1000,7 +1012,7 @@ function uploadTextFile (fileName, content) {
 								var srcPath = node.data.path;
 								ref.edit(nodeId, null, function(node, status){
 									node.data.path = node.data.path.substring(0,node.data.path.lastIndexOf("/")+1) + node.text;
-									patchData("/explorer?srcpath=" + encodeURIComponent(srcPath) + "&dstpath=" + encodeURIComponent(node.data.path));
+									patchData("/explorer?src=" + encodeURIComponent(srcPath) + "&dst=" + encodeURIComponent(node.data.path));
 									refreshNode(ref.get_parent(nodeId));
 								});
 							}
@@ -1011,7 +1023,7 @@ function uploadTextFile (fileName, content) {
 							items.download = {
 								label: () => i18next.t("files.context.download"),
 								action: function(x) {
-									uri = "/explorerdownload?path=" + encodeURIComponent(node.data.path);
+									uri = "/explorerdownload?=" + encodeURIComponent(node.data.path);
 									console.log("download file: " + node.data.path);
 									var anchor = document.createElement('a');
 									anchor.href = uri;
@@ -1031,8 +1043,9 @@ function uploadTextFile (fileName, content) {
 		if (path.length == 0) {
 			return;
 		}
-		getData("/explorer?path=/", function(data) {
+		getData("/explorer?/" + '&version=' + Math.random(), function(data) {
 			/* We now have data! */
+      console.log("data", data)
 			$('#explorerTree').jstree(true).settings.core.data.children = [];
 
 			data.sort( fileNameSort );
@@ -2187,7 +2200,7 @@ function downloadCanvasImage () {
       <br>
       <div class="container" id="filetreeContainer">
 			  <fieldset>
-			  	<legend data-i18n="files.title">Files</legend>
+			  	<legend "title">Files</legend>
 			  	<div class="filetree-container">
 			  	<div id="filebrowser">
 			  		<div class="filetree demo" id="explorerTree"></div>

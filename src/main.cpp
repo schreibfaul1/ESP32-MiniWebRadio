@@ -2967,8 +2967,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
 
-    if(cmd == "getDirContent"){     webSrv.send("dirContent=" + dirContent(param)); return;}
-
+    if(cmd == "explorer"){          webSrv.reply("dirContent=" + dirContent(param)); return;}
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
