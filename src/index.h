@@ -463,6 +463,7 @@ document.addEventListener('readystatechange', event => {
     connect();  // establish websocket connection
     loadGridFileFromSD()
     showExcelGrid()
+    buildFileSystemTree("/")
   }
 })
 
@@ -541,7 +542,6 @@ function showTab3 () {
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
-  buildFileSystemTree("/")
 }
 
 function showTab4 () {
@@ -719,8 +719,8 @@ function uploadTextFile (fileName, content) {
 		var ref = $('#explorerTree').jstree(true),
 			sel = ref.get_selected(),
 			path = "/";
-		if(!sel.length) { alert(i18next.t("files.upload.selectFolder")); return false; }
-		if(!document.getElementById('uploaded_file').files.length > 0) { alert(i18next.t("files.upload.selectFile")); return false; }
+		if(!sel.length) { alert("Please select the upload location!");return false; }
+		if(!document.getElementById('uploaded_file').files.length > 0)  { alert("Please select files to upload!");return false; }
 		sel = sel[0];
 		selectedNode = ref.get_node(sel);
 		if(selectedNode.data.directory){
@@ -750,7 +750,7 @@ function uploadTextFile (fileName, content) {
 					const elapsed = (now - startTime) / 1000;
 					bytesTotal = evt.total;
 
-					let progressText = i18next.t("files.upload.timeCalc");
+					let progressText = "Remaining time is being calculated..";
 					if(elapsed){
 						const bps = evt.loaded / elapsed;
 						const kbps = bps / 1024;
@@ -759,12 +759,12 @@ function uploadTextFile (fileName, content) {
 						const data = {
 							percent: percent,
 							remaining: {
-								unit: (remaining>60) ? i18next.t("files.upload.minutes", {count: Math.round(remaining/60)}) : i18next.t("files.upload.seconds"),
-								value: (remaining>60) ? Math.round(remaining/60) : ((remaining > 2) ? remaining : i18next.t("files.upload.fewSec"))
+								unit: (remaining>60) ? ("minutes", {count: Math.round(remaining/60)}) : "seconds",
+								value: (remaining>60) ? Math.round(remaining/60) : ((remaining > 2) ? remaining : few)
 							},
 							speed: kbps.toFixed(2)
 						}
-						progressText = i18next.t("files.upload.progress", data);
+						progressText = "{{percent}}% ({{speed}} KB/s), {{remaining.value}} {{remaining.unit}} remaining..";
 						console.log("Percent: " + percent + "%% " + kbps.toFixed(2) + " KB/s");
 					}
 					$("#explorerUploadProgress").css('width', percent+"%").text(progressText);
@@ -792,7 +792,7 @@ function uploadTextFile (fileName, content) {
 					transData = { elapsed: timeText, speed: kbps.toFixed(2) };
 				}
 				console.log("Upload success (" + transData.elapsed + ", " + transData.speed + " KB/s): " + textStatus);
-				const progressText = i18next.t("files.upload.success", transData);
+				const progressText = "Upload successfull ({{elapsed}}, {{speed}} KB/s)"
 				$("#explorerUploadProgress").text(progressText);
 				document.getElementById('uploaded_file').value = '';
 				document.getElementById('uploaded_file_text').innerHTML = '';
@@ -807,8 +807,8 @@ function uploadTextFile (fileName, content) {
 			},
 			error: function(request, status, error) {
 				console.log("Upload ERROR!");
-				$("#explorerUploadProgress").text(i18next.t("files.upload.error") +": " + status);
-				toastr.error(i18next.t("files.upload.error") + ": " + status);
+				$("#explorerUploadProgress").text("Upload error: " + status);
+				toastr.error("Upload error: " + status);
 			}
 		});
 	});
@@ -920,7 +920,7 @@ function uploadTextFile (fileName, content) {
 				"core" : {
 						"check_callback" : true,
 						'force_text' : true,
-						'strings' : { "Loading ..." : () => i18next.t("files.loading") },
+						'strings' : { "Loading ..." : "Please wait..." },
 						"themes" : { "stripes" : true },
 						'data' : {	text: '/',
 									state: {
@@ -959,9 +959,9 @@ function uploadTextFile (fileName, content) {
 
 						if (node.data.directory) {
 							items.createDir = {
-								label: () => i18next.t("files.context.newFolder"),
+								label: "New Folder",
 								action: function(x) {
-									var childNode = ref.create_node(nodeId, {text: () => i18next.t("files.context.newFolder"), type: "folder"});
+									var childNode = ref.create_node(nodeId, {text: "New Folder", type: "folder"});
 									if(childNode) {
 										ref.edit(childNode, null, function(childNode, status){
 											putData("/explorer?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
@@ -974,7 +974,7 @@ function uploadTextFile (fileName, content) {
 
 						/* Play */
 						items.play = {
-							label: () => i18next.t("files.context.play"),
+							label: "Play",
 							action: function(x) {
 								var playMode = 1;
 								if (node.data.directory) {
@@ -990,7 +990,7 @@ function uploadTextFile (fileName, content) {
 
 						/* Refresh */
 						items.refresh = {
-							label: () => i18next.t("files.context.refresh"),
+							label: "Refresh",
 							action: function(x) {
 								refreshNode(nodeId);
 							}
@@ -998,7 +998,7 @@ function uploadTextFile (fileName, content) {
 
 						/* Delete */
 						items.delete = {
-							label: () => i18next.t("files.context.delete"),
+							label: "Delete",
 							action: function(x) {
 								handleDeleteData(nodeId);
 								refreshNode(ref.get_parent(nodeId));
@@ -1007,7 +1007,7 @@ function uploadTextFile (fileName, content) {
 
 						/* Rename */
 						items.rename = {
-							label: () => i18next.t("files.context.rename"),
+							label: "Rename",
 							action: function(x) {
 								var srcPath = node.data.path;
 								ref.edit(nodeId, null, function(node, status){
@@ -1021,7 +1021,7 @@ function uploadTextFile (fileName, content) {
 						/* Download */
 						if (!node.data.directory) {
 							items.download = {
-								label: () => i18next.t("files.context.download"),
+								label: "Download",
 								action: function(x) {
 									uri = "/explorerdownload?=" + encodeURIComponent(node.data.path);
 									console.log("download file: " + node.data.path);
