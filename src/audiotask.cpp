@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 28.05.2022
+// updated: 26.06.2022
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -291,6 +291,7 @@ boolean audioPauseResume(){
     return RX.ret;
 }
 void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
+    audioTxMessage.cmd = CONNECTION_TIMEOUT;
     audioTxMessage.value1 = timeout_ms;
     audioTxMessage.value2 = timeout_ms_ssl;
     audioMessage RX = transmitReceive(audioTxMessage);
@@ -582,6 +583,7 @@ boolean audioPauseResume(){
     return RX.ret;
 }
 void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl){
+    audioTxMessage.cmd = CONNECTION_TIMEOUT;
     audioTxMessage.value1 = timeout_ms;
     audioTxMessage.value2 = timeout_ms_ssl;
     audioMessage RX = transmitReceive(audioTxMessage);

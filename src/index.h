@@ -34,11 +34,12 @@ const char index_html[] PROGMEM = R"=====(
     <meta http-equiv="content-style-type" content="text/css">
     <meta http-equiv="expires" content="0">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/themes/default/style.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"/>
 
 <!--   <link rel="stylesheet" href="SD/css/jstree-style.css" />  -->
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
@@ -909,7 +910,7 @@ function uploadTextFile (fileName, content) {
 		var ref = $('#explorerTree').jstree(true);
 
 		for (var i=0; i<data.length; i++) {
-			console.log("Create Node");
+			console.log("Create Node", data[i]);
 			ref.create_node(parent, createChild(parent, data[i]));
 		}
 	} /* addFileDirectory */
@@ -921,7 +922,9 @@ function uploadTextFile (fileName, content) {
 						"check_callback" : true,
 						'force_text' : true,
 						'strings' : { "Loading ..." : "Please wait..." },
-						"themes" : { "stripes" : true },
+						"themes" : { 
+              "stripes" : true
+            },
 						'data' : {	text: '/',
 									state: {
 										opened: true
@@ -935,7 +938,7 @@ function uploadTextFile (fileName, content) {
 					},
 					'types': {
 						'folder': {
-							'icon': "fa fa-folder"
+							'icon' : "fa fa-folder"
 						},
 						'file': {
 							'icon': "fa fa-file"
@@ -1046,7 +1049,7 @@ function uploadTextFile (fileName, content) {
     console.log("We can now have data!")
 		getData("/explorer?/" + '&version=' + Math.random(), function(data) {
 			/* We now have data! */
-      console.log("We now have data!")
+      console.log("We have data now!")
       console.log("data", data)
 			$('#explorerTree').jstree(true).settings.core.data.children = [];
 
@@ -1060,7 +1063,7 @@ function uploadTextFile (fileName, content) {
 					data: {
 						path: "/" + data[i].name,
 						directory: data[i].dir
-					},
+          },
 					children: []
 				};
 				$('#explorerTree').jstree(true).settings.core.data.children.push(newChild);
@@ -2204,30 +2207,28 @@ function downloadCanvasImage () {
 			  <fieldset>
 			  	<legend "title">Files</legend>
 			  	<div class="filetree-container">
-			  	<div id="filebrowser">
-			  		<div class="filetree demo" id="explorerTree"></div>
-			  	</div>
-			  	<div>
-			  		<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
-			  			<div class="input-group">
-			  				<span class="form-control" id="uploaded_file_text"></span>&nbsp
-			  				<span class="input-group-btn">
-			  					<span class="btn btn-secondary" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
-			  					<span class="btn btn-secondary" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
-			  					<span class="btn btn-primary" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
-			  					<input name="uploaded_file" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
-			  				 </span>
-			  			</div>
-			  		</form>
-			  		<br>
-					  <div class="progress">
-						  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-					  </div>
-			  		<div class="progress">
-			  			<div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-			  		</div>
-			  	</div>
-			  	<br>
+			  	  <div id="filebrowser">
+			  	  	<div class="filetree demo" id="explorerTree"></div>
+			  	  </div>
+			  	  <div>
+			  	  	<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+			  	  		<div class="input-group">
+			  	  			<span class="form-control" id="uploaded_file_text"></span>&nbsp
+			  	  			<span>
+			  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
+			  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
+			  	  				<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
+			  	  				<input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
+			  	  			 </span>
+			  	  		</div>
+			  	  	</form>
+			  	  	<br>
+					    <div class="progress">
+					  	  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+					    </div>
+            </div> 
+            <br>
+			    </div>
 			  </fieldset>
 		  </div>
       </center>
