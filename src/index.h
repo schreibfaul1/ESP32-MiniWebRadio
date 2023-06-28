@@ -38,7 +38,6 @@ const char index_html[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"/>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"/>
 
 <!--   <link rel="stylesheet" href="SD/css/jstree-style.css" />  -->
@@ -253,6 +252,7 @@ const char index_html[] PROGMEM = R"=====(
 		    }
 		    .filetree-container {
 			      position: relative;
+            background-color: white;
 		    }
 		    .indexing-progress {
 			      width: 100%;
@@ -937,20 +937,35 @@ function uploadTextFile (fileName, content) {
 								}}
 					},
 					'types': {
-						'folder': {
-							'icon' : "fa fa-folder"
+						'folder': {  // folder_yellow.png (24x24px)
+							'icon' : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAL9J"
+                     + "REFUSIntlL0KwmAMRU9qFaydHHXS53L3NfoyLr6Ui+ImCKUotr0ulg4t2l9Q6Z3CB19ObkgC3y5J42YfwaTA6bieD1DJ2i"
+                     + "fZM5IoJCp7AwiC3KUCCo4N4LTzVAW+CKOJbXlUL5ci8Z3OvnfJihHljloBBH4WG1RyXatFtSQOy0207m8MjRWAC2CO4U7b"
+                     + "T2AmJRDfUnKAwWzebCHLFN9Twheg900dAAPgBwBuFqjTa5RfBRcgTcT1eO+S8Ed6ApsnOMljAhdKAAAAAElFTkSuQmCC"
 						},
-						'file': {
-							'icon': "fa fa-file"
+            'file': { // file_red.png
+							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAJxJR"
+                    + "EFUSIljYBgF5IL/DAz/ceEDMhr/3xpb/yfGHEZ8FhyU0cAq5/DkBuMBGY3/uuLCDMJnj+I0g4GBgYGJGFfgApdfvmUg5BOK"
+                    + "LCDGEootIGQJVSyAWYINsJBjmMP++RwOjomM////Z2RkZPzPwMDAcEBGA6sPyEpF2ID9kxsMjFjMo1oQ4QKjFoxaMGoBHSz"
+                    + "AW1SQYRjeymdoAgDd9jyx3CsGWQAAAABJRU5ErkJggg=="
 						},
-						'audio': {
-							'icon': "fa fa-file-audio"
+						'audio': { // file_green.png 
+							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKdJR"
+                    + "EFUSIljYBgFBAAjLgm9Q3X/ccn9ePCagVdfkOGsfhtO/TDAhE/yx4PXWPGtuOmMny++ZzC+WIXTEURZQAgQYwlFFhBjCcUW"
+                    + "ELKEKhbALMEGWMgxzGH/fI4DjomM////Z2RkZPzPwMDAoLYoE6sP8CbTHw9eE20ph4IowyW7JgzzqBZEuMCoBaMWEAVoWxY"
+                    + "x4MlL1LIAL6C5BXjLIg4FUVrbPwQAAP4cQnQllyzuAAAAAElFTkSuQmCC"
 						},
-						'image': {
-							'icon': "fa fa-file-image"
+						'image': { // file_blue.png
+							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKZJRE"
+                    + "FUSIljYBgFBAAjLgnTlif/cck9vX2BwcPRjGFeghhO/TDAgk/y6e0LWMWfLfRh3MGw5X/Sglf/CVnCRMgF+MCO/acYkha8wu"
+                    + "lTii0gxhKKLSBkCVUsgFmCDeCNZFzAYf98jgOOPoz///9nZGRk/M/AwMAgFb8Fqw/wJlNcqQgbkFY1YDhdI4NhHtWCCBcYtW"
+                    + "DUglEL6GAB3rJIWtWA1vYPAQAAsLk0T5/6UqIAAAAASUVORK5CYII="
 						},
-						'default': {
-							'icon': "fa fa-folder"
+						'default': { // file_yellow.png
+							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKRJRE"
+                    + "FUSIljYBgFBAAjLon/Nxj+45J7dpaLQdg+iIFDZglO/TDAgk/y2VkurOLS0d8Yny5d9//Hk5j/hCxhIuQCfODtwXUMP57E4P"
+                    + "QpxRYQYwnFFhCyhCoWwCzBBvBGMi7gsH8+h7RjIuP///8ZGRkZ/zMwMDA8XcqF1Qd4kymuVIQNSBl/Y2DUwDSPakGEC4xaMG"
+                    + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
 						}
 					},
 				plugins: ["contextmenu", "themes", "types"],
@@ -2189,7 +2204,7 @@ function downloadCanvasImage () {
   </div>
   <!--==============================================================================================-->
   <div id="tab-content3">
-      <center>
+    <center>
       <label for="seltrack"><big>Audio files on SD card:</big></label>
       <br>
       <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
@@ -2200,39 +2215,39 @@ function downloadCanvasImage () {
       <button class="button" onclick="socket.send('resumefile')">RESUME</button>
       <br>
       <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-      <br>
-      <hr>
-      <br>
-      <div class="container" id="filetreeContainer">
-			  <fieldset>
-			  	<legend "title">Files</legend>
-			  	<div class="filetree-container">
-			  	  <div id="filebrowser">
-			  	  	<div class="filetree demo" id="explorerTree"></div>
-			  	  </div>
-			  	  <div>
-			  	  	<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
-			  	  		<div class="input-group">
-			  	  			<span class="form-control" id="uploaded_file_text"></span>&nbsp
-			  	  			<span>
-			  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
-			  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
-			  	  				<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
-			  	  				<input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
-			  	  			 </span>
-			  	  		</div>
-			  	  	</form>
-			  	  	<br>
-					    <div class="progress">
-					  	  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-					    </div>
-            </div> 
-            <br>
-			    </div>
-			  </fieldset>
-		  </div>
-      </center>
-  </div>
+    </center>  
+    <br>
+    <hr>
+    <br>
+    <div class="container" id="filetreeContainer">
+		  <fieldset>
+		  	<legend "title">Files</legend>
+		  	<div class="filetree-container">
+		  	  <div id="filebrowser">
+		  	  	<div class="filetree demo" id="explorerTree"></div>
+		  	  </div>
+		  	  <div>
+		  	  	<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+		  	  		<div class="input-group">
+		  	  			<span class="form-control" id="uploaded_file_text"></span>&nbsp
+		  	  			<span>
+		  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
+		  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
+		  	  				<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
+		  	  				<input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
+		  	  			 </span>
+		  	  		</div>
+		  	  	</form>
+		  	  	<br>
+				    <div class="progress">
+				  	  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+				    </div>
+          </div> 
+          <br>
+		    </div>
+		  </fieldset>
+	  </div>
+  <div>
 
   <!--==============================================================================================-->
   <div id="tab-content4">
