@@ -38,18 +38,22 @@ const char index_html[] PROGMEM = R"=====(
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"/>
 
+<!--   <link rel="stylesheet" href="SD/css/jstree-style.css" />  -->
 <!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
 <!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 
+<!--  <script src="SD/js/jstree.js"></script>    --->
 <!--  <script src="SD/js/jquery.js"></script>    --->
 <!--  <script src="SD/js/jquery-ui.js"></script> --->
 <!--  <script src="SD/js/jsgrid.js"></script>    --->
@@ -98,6 +102,10 @@ const char index_html[] PROGMEM = R"=====(
             margin : 20px;
         }
         #tab-content5 {
+            display : none;
+            margin : 20px;
+        }
+        #tab-content6 {
             display : none;
             margin : 20px;
         }
@@ -233,11 +241,33 @@ const char index_html[] PROGMEM = R"=====(
         #dialog {
             display: none;
         }
-        #BODY { display:block; }
+        #BODY {
+            display:block;
+        }
+        .filetree {
+                        border: 1px solid black;
+                        height: 200px;
+                        margin: 0em 0em 1em 0em;
+                        overflow-y: scroll;
+                }
+                .filetree-container {
+                        position: relative;
+            background-color: white;
+                }
+                .indexing-progress {
+                        width: 100%;
+                        height: 100%;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        opacity: 0.7;
+                        display: none;
+                }
     </style>
 </head>
 
 <script>
+
 // global variables and functions
 /* eslint-disable no-unused-vars, no-undef */
 var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
@@ -435,6 +465,7 @@ document.addEventListener('readystatechange', event => {
     connect();  // establish websocket connection
     loadGridFileFromSD()
     showExcelGrid()
+    buildFileSystemTree("/")
   }
 })
 
@@ -464,11 +495,13 @@ function showTab1 () {
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   socket.send("change_state=" + "0")
   socket.send("getmute")
 }
@@ -480,11 +513,13 @@ function showTab2 () {
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   $('#jsGrid').jsGrid('refresh')
 }
 
@@ -495,11 +530,13 @@ function showTab3 () {
   document.getElementById('tab-content3').style.display = 'block'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
   document.getElementById('level1').options.length = 0
   document.getElementById('level2').options.length = 0
   document.getElementById('level3').options.length = 0
@@ -507,36 +544,55 @@ function showTab3 () {
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
   socket.send("audiolist") // Now get the audio file list from SD
-  socket.send('DLNA_getServer')
 }
 
 function showTab4 () {
-  console.log('tab-content4 (Search Stations)')
+  console.log('tab-content4 (DLNA)')
   document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('tab-content2').style.display = 'none'
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'block'
   document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Yellow.png'
-  document.getElementById('btn5').src = 'SD/png/About_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+  socket.send('DLNA_getServer')
 }
 
 function showTab5 () {
-  console.log('tab-content5 (About)')
+  console.log('tab-content5 (Search Stations)')
   document.getElementById('tab-content1').style.display = 'none'
   document.getElementById('tab-content2').style.display = 'none'
   document.getElementById('tab-content3').style.display = 'none'
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'block'
+  document.getElementById('tab-content6').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn5').src = 'SD/png/About_Yellow.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+}
+
+function showTab6 () {
+  console.log('tab-content6 (About)')
+  document.getElementById('tab-content1').style.display = 'none'
+  document.getElementById('tab-content2').style.display = 'none'
+  document.getElementById('tab-content3').style.display = 'none'
+  document.getElementById('tab-content4').style.display = 'none'
+  document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'block'
+  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
 }
 
 function uploadTextFile (fileName, content) {
@@ -559,7 +615,7 @@ function uploadTextFile (fileName, content) {
   xhr.send(fd) // send
 }
 
-// ----------------------------------- DLNA ------------------------------------
+// ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
 function clearDLNAServerList(){
     console.log('clear DLNA server list')
     var select
@@ -660,10 +716,6 @@ function select_l3 (presctrl) { // preset, select level 2
     socket.send('DLNA_getContent5=' + presctrl.value)
     console.log('DLNA_getContent5=' + presctrl.value)
  }
-
-
-
-
 
 // ----------------------------------- TAB RADIO ------------------------------------
 
@@ -1396,459 +1448,473 @@ function downloadCanvasImage () {
 </script>
 
 <body id="BODY">
-
 <div id="content" >
-
-  <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
-  <div id="preloaded-images">
-    <img src="SD/png/Radio_Green.png"               width="1" height="1" loading="eager" alt="Image 01" />
-    <img src="SD/png/Radio_Yellow.png"              width="1" height="1" loading="eager" alt="Image 02" />
-    <img src="SD/png/Station_Green.png"             width="1" height="1" loading="eager" alt="Image 03" />
-    <img src="SD/png/Station_Yellow.png"            width="1" height="1" loading="eager" alt="Image 04" />
-    <img src="SD/png/MP3_Green.png"                 width="1" height="1" loading="eager" alt="Image 05" />
-    <img src="SD/png/MP3_Yellow.png"                width="1" height="1" loading="eager" alt="Image 06" />
-    <img src="SD/png/Search_Green.png"              width="1" height="1" loading="eager" alt="Image 06" />
-    <img src="SD/png/Search_Yellow.png"             width="1" height="1" loading="eager" alt="Image 07" />
-    <img src="SD/png/About_Green.png"               width="1" height="1" loading="eager" alt="Image 08" />
-    <img src="SD/png/About_Yellow.png"              width="1" height="1" loading="eager" alt="Image 09" />
-    <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" loading="eager" alt="Image 10" />
-    <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" loading="eager" alt="Image 11" />
-    <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" loading="eager" alt="Image 12" />
-    <img src="SD/png/Button_Next_Green.png"         width="1" height="1" loading="eager" alt="Image 13" />
-    <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" loading="eager" alt="Image 14" />
-    <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" loading="eager" alt="Image 15" />
-    <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" loading="eager" alt="Image 16" />
-    <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" loading="eager" alt="Image 17" />
-    <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" loading="eager" alt="Image 18" />
-    <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" loading="eager" alt="Image 19" />
-    <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" loading="eager" alt="Image 20" />
-    <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" loading="eager" alt="Image 21" />
-    <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" loading="eager" alt="Image 22" />
-    <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" loading="eager" alt="Image 23" />
-    <img src="SD/png/Button_Test_Green.png"         width="1" height="1" loading="eager" alt="Image 24" />
-    <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" loading="eager" alt="Image 25" />
-    <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" loading="eager" alt="Image 26" />
-    <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="eager" alt="Image 27" />
-    <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="eager" alt="Image 28" />
-    <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="eager" alt="Image 29" />
-//  <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 30" />
-  </div>
-
-  <div id="dialog">
-    <table>
-      <tr>
-        <td> Hide </td>
-        <td> <input type="checkbox" id="chkHide" /></td>
-      </tr>
-      <tr>
-        <td>  Cy  </td>
-        <td> <input type="text" id="txtCy" size="100"/></td>
-      </tr>
-      <tr>
-        <td>  StationName  </td>
-        <td> <input type="text" id="txtStationName" size="100"/></td>
-      </tr>
-      <tr>
-        <td>  StreamURL  </td>
-        <td> <input type="text" id="txtStreamURL" size="100"/></td>
-      </tr>
-    </table>
-  </div>
-  <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
-
-  <!--==============================================================================================-->
-  <div style="height: 66px; display: flex;">
-    <div style="flex: 0 0 345px;">
-      <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()" />
-      <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()" />
-      <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()" />
-      <img id="btn4" src="SD/png/Search_Green.png" alt="search" onclick="showTab4()" />
-      <img id="btn5" src="SD/png/About_Green.png" alt="radio" onclick="showTab5()" />
+    <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
+    <div id="preloaded-images">
+        <img src="SD/png/Radio_Green.png"               width="1" height="1" loading="eager" alt="Image 01" />
+        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" loading="eager" alt="Image 02" />
+        <img src="SD/png/Station_Green.png"             width="1" height="1" loading="eager" alt="Image 03" />
+        <img src="SD/png/Station_Yellow.png"            width="1" height="1" loading="eager" alt="Image 04" />
+        <img src="SD/png/MP3_Green.png"                 width="1" height="1" loading="eager" alt="Image 05" />
+        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" loading="eager" alt="Image 06" />
+        <img src="SD/png/Search_Green.png"              width="1" height="1" loading="eager" alt="Image 06" />
+        <img src="SD/png/Search_Yellow.png"             width="1" height="1" loading="eager" alt="Image 07" />
+        <img src="SD/png/About_Green.png"               width="1" height="1" loading="eager" alt="Image 08" />
+        <img src="SD/png/About_Yellow.png"              width="1" height="1" loading="eager" alt="Image 09" />
+        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" loading="eager" alt="Image 10" />
+        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" loading="eager" alt="Image 11" />
+        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" loading="eager" alt="Image 12" />
+        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" loading="eager" alt="Image 13" />
+        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" loading="eager" alt="Image 14" />
+        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" loading="eager" alt="Image 15" />
+        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" loading="eager" alt="Image 16" />
+        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" loading="eager" alt="Image 17" />
+        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" loading="eager" alt="Image 18" />
+        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" loading="eager" alt="Image 19" />
+        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" loading="eager" alt="Image 20" />
+        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" loading="eager" alt="Image 21" />
+        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" loading="eager" alt="Image 22" />
+        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" loading="eager" alt="Image 23" />
+        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" loading="eager" alt="Image 24" />
+        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" loading="eager" alt="Image 25" />
+        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" loading="eager" alt="Image 26" />
+        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="eager" alt="Image 27" />
+        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="eager" alt="Image 28" />
+        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="eager" alt="Image 29" />
+        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 30" />
     </div>
-    <div style="font-size: 50px; text-align: center; flex: 1;">
-      MiniWebRadio
-    </div>
-  </div>
-  <hr>
 
-<!--==============================================================================================-->
-  <div id="tab-content1">
+    <div id="dialog">
+        <table>
+            <tr>
+                <td> Hide </td>
+                <td> <input type="checkbox" id="chkHide" /></td>
+            </tr>
+            <tr>
+                <td>  Cy  </td>
+                <td> <input type="text" id="txtCy" size="100"/></td>
+            </tr>
+            <tr>
+                <td>  StationName  </td>
+                <td> <input type="text" id="txtStationName" size="100"/></td>
+            </tr>
+            <tr>
+                <td>  StreamURL  </td>
+                <td> <input type="text" id="txtStreamURL" size="100"/></td>
+            </tr>
+        </table>
+    </div>
+    <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
+
+<!--===============================================================================================================================================-->
     <div style="height: 66px; display: flex;">
-      <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Previous_Green.png" alt="previous"
+        <div style="flex: 0 0 445px;">
+            <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()" />
+            <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()" />
+            <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()" />
+            <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()" />
+            <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()" />
+            <img id="btn6" src="SD/png/About_Green.png" alt="radio" onclick="showTab6()" />
+        </div>
+        <div style="font-size: 50px; text-align: center; flex: 1;">
+            MiniWebRadio
+        </div>
+    </div>
+    <hr>
+<!--===============================================================================================================================================-->
+    <div id="tab-content1">
+        <div style="height: 66px; display: flex;">
+            <div style="flex: 0 0 210px;">
+                <img src="SD/png/Button_Previous_Green.png" alt="previous"
                           onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
                           onmouseup ="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';"
                           ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';" />
-        <img src="SD/png/Button_Next_Green.png" alt="next"
+                <img src="SD/png/Button_Next_Green.png" alt="next"
                           onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
                           onmouseup= "socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';"
                           ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';" />
-      </div>
-      <div style="flex:1;">
-        <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
-          <option value="-1">Select a station here</option>
-        </select>
-      </div>
+            </div>
+            <div style="flex:1;">
+                <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
+                    <option value="-1">Select a station here</option>
+                </select>
+            </div>
+        </div>
+        <div style="display: flex;">
+            <div id="div-logo-s" style="flex: 0 0 210px;">
+                <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
+            </div>
+            <div id="div-logo-m" style="flex: 0 0 210px;">
+                <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
+            </div>
+            <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
+                <div style="width: 380px; height:108px;">
+                    <label class="sdr_lbl_left">Treble Gain:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
+                        <input type="range" min="0" max="15" value="8" id="TrebleGain"
+                        onmouseup="slider_TG_mouseUp()"
+                        ontouchend="slider_TG_mouseUp()"
+                        oninput="slider_TG_change()">
+                    </div>
+                    <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Treble Freq:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="1" max="15" value="8" id="TrebleFreq"
+                        onmouseup="slider_TF_mouseUp()"
+                        ontouchend="slider_TF_mouseUp()"
+                        oninput="slider_TF_change()">
+                    </div>
+                    <label id="label_TF_value" class="sdr_lbl_right">00</label>
+                    <label class="sdr_lbl_measure">KHz</label>
+                    <label class="sdr_lbl_left">Bass Gain:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="0" max="15" value="8" id="BassGain"
+                        onmouseup="slider_BG_mouseUp()"
+                        ontouchend="slider_BG_mouseUp()"
+                        oninput="slider_BG_change()">
+                    </div>
+                    <label id="label_BG_value" class="sdr_lbl_right">+00</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Bass Freq:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="2" max="15" value="6" id="BassFreq"
+                        onmouseup="slider_BF_mouseUp()"
+                        ontouchend="slider_BF_mouseUp()"
+                        oninput="slider_BF_change()">
+                    </div>
+                    <label  id="label_BF_value" class="sdr_lbl_right">000</label>
+                    <label class="sdr_lbl_measure">Hz</label>
+                </div>
+            </div>
+            <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
+                <div style="width: 380px; height:130px;">
+                    <label class="sdr_lbl_left">Low:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="LowPass"
+                        onmouseup="slider_LP_mouseUp()"
+                        ontouchend="slider_LP_mouseUp()"
+                        oninput="slider_LP_change()">
+                    </div>
+                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Band:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="BandPass"
+                        onmouseup="slider_BP_mouseUp()"
+                        ontouchend="slider_BP_mouseUp()"
+                        oninput="slider_BP_change()">
+                    </div>
+                    <label id="label_BP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">High:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="HighPass"
+                        onmouseup="slider_HP_mouseUp()"
+                        ontouchend="slider_HP_mouseUp()"
+                        oninput="slider_HP_change()">
+                    </div>
+                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                </div>
+            </div>
+        </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex: 0 0 210px;">
+                <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
+                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    onclick="socket.send('downvolume')" />
+                <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    onclick="socket.send('upvolume')" />
+                <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
+                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
+                    onclick="socket.send('setmute')" />
+            </div>
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" 
+                                   placeholder=" Waiting....">
+            </div>
+        </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
+                    placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
+            </div>
+            <div style="flex: 0 0 66px;">
+                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    ontouchend='SD/png/Button_Ready_Blue.png'"
+                    onclick="setstation()" />
+            </div>
+        </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1"
+                                   placeholder=" Test....">
+            </div>
+            <div style="flex: 0 0 66px;">
+                <img src="SD/png/Button_Test_Green.png" alt="Test"
+                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                    ontouchend="this.src='SD/png/Button_Test_Green.png'"
+                    onclick="test()" />
+            </div>
+        </div>
+        <hr>
+        <div style="height: 46px; padding: 0; text-align:center;">
+            Find new radio stations at
+            <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
+            or
+            <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
+        </div>
     </div>
-    <div style="display: flex;">
+<!--===============================================================================================================================================-->
+    <div id="tab-content2">
+        <center>
+            <div id="jsGrid"></div>
+            <br>
+            <button class="button buttongreen"
+                    onclick="saveGridFileToSD()"
+                    onmousedown="this.style.backgroundColor='#D62C1A'"
+                    ontouchstart="this.style.backgroundColor='#D62C1A'"
+                    onmouseup="this.style.backgroundColor='#128F76'"
+                    ontouchend="this.style.backgroundColor='#128F76'"
+                    title="Save to SD">Save
+            </button>
+            &nbsp;
+            <button class="button buttongreen"
+                    onclick="loadGridFileFromSD()"
+                    onmousedown="this.style.backgroundColor='#D62C1A'"
+                    ontouchstart="this.style.backgroundColor='#D62C1A'"
+                    onmouseup="this.style.backgroundColor='#128F76'"
+                    ontouchend="this.style.backgroundColor='#128F76'"
+                    id="loadSD" title="Load from SD">Load
+            </button>
+            &nbsp;
+            <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+            &nbsp;
+            <button class="button buttonblue"
+                    onclick="javascript:document.getElementById('file').click();"
+                    title="Load from PC">load xlsx
+            </button>
 
-      <div id="div-logo-s" style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
-      </div>
-      <div id="div-logo-m" style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
-      </div>
+            <!-- <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img" onchange="loadDataExcel(this.files);"/>    -->
 
-      <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
-        <div style="width: 380px; height:108px;">
-          <label class="sdr_lbl_left">Treble Gain:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="TrebleGain"
-                          onmouseup="slider_TG_mouseUp()"
-                          ontouchend="slider_TG_mouseUp()"
-                          oninput="slider_TG_change()">
-          </div>
-          <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Treble Freq:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="1" max="15" value="8" id="TrebleFreq"
-                          onmouseup="slider_TF_mouseUp()"
-                          ontouchend="slider_TF_mouseUp()"
-                          oninput="slider_TF_change()">
-          </div>
-          <label id="label_TF_value" class="sdr_lbl_right">00</label>
-          <label class="sdr_lbl_measure">KHz</label>
-
-          <label class="sdr_lbl_left">Bass Gain:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="BassGain"
-                          onmouseup="slider_BG_mouseUp()"
-                          ontouchend="slider_BG_mouseUp()"
-                          oninput="slider_BG_change()">
-          </div>
-          <label id="label_BG_value" class="sdr_lbl_right">+00</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Bass Freq:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="2" max="15" value="6" id="BassFreq"
-                          onmouseup="slider_BF_mouseUp()"
-                          ontouchend="slider_BF_mouseUp()"
-                          oninput="slider_BF_change()">
-          </div>
-          <label  id="label_BF_value" class="sdr_lbl_right">000</label>
-          <label class="sdr_lbl_measure">Hz</label>
-        </div>
-      </div>
-      <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
-        <div style="width: 380px; height:130px;">
-          <label class="sdr_lbl_left">Low:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="LowPass"
-                          onmouseup="slider_LP_mouseUp()"
-                          ontouchend="slider_LP_mouseUp()"
-                          oninput="slider_LP_change()">
-          </div>
-          <label id="label_LP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Band:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="BandPass"
-                          onmouseup="slider_BP_mouseUp()"
-                          ontouchend="slider_BP_mouseUp()"
-                          oninput="slider_BP_change()">
-          </div>
-          <label id="label_BP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">High:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="HighPass"
-                          onmouseup="slider_HP_mouseUp()"
-                          ontouchend="slider_HP_mouseUp()"
-                          oninput="slider_HP_change()">
-          </div>
-          <label id="label_HP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-        </div>
-      </div>
+            <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
+                             width: 0px;" name="img"; onchange="loadDataExcel(this.files);"/>
+            <br>
+        </center>
     </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
-                          onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                          ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                          onclick="socket.send('downvolume')" />
-        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
-                          onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                          ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                          onclick="socket.send('upvolume')" />
-        <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
-                          onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                          onclick="socket.send('setmute')" />
-      </div>
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
-      </div>
+<!--===============================================================================================================================================-->
+    <div id="tab-content3">
+        <center>
+            <label for="seltrack"><big>Audio files on SD card:</big></label>
+            <br>
+            <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
+                <option value="-1">Select a track here</option>
+            </select>
+            <br><br>
+            <button class="button" onclick="socket.send('stopfile')">STOP</button>
+            <button class="button" onclick="socket.send('resumefile')">RESUME</button>
+            <br>
+            <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
+        </center>  
+        <br>
+        <hr>
+        <br>
+        <div class="container" id="filetreeContainer">
+            <fieldset>
+                <legend "title">Files</legend>
+                <div class="filetree-container">
+                    <div id="filebrowser">
+                        <div id="explorerTree"></div>
+                    </div>
+                </div>
+                <form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+                    <div class="input-group">
+                        <span class="form-control" id="uploaded_file_text"></span>&nbsp
+                        <span>
+                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
+                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
+                        <span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
+                            <input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
+                        </span>
+                    </div>
+                    <br>
+                    <div class="progress">
+                        <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+                    </div>
+                </form>    
+            </fieldset>
+        </div>
     </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
-                          placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
-      </div>
-      <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-                          onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                          ontouchend='SD/png/Button_Ready_Blue.png'"
-                          onclick="setstation()" />
-      </div>
+
+<!--===============================================================================================================================================-->
+    <div id="tab-content4">
+        <center>
+            <div style="flex: 0 0 calc(100% - 0px);">
+                <select class="boxstyle" style="width: 100%;" onchange="selectserver(this)" id="server">
+                    <option value="-1">Select a DLNA Server here</option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l1(this)" id="level1">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l2(this)" id="level2">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l3(this)" id="level3">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l4(this)" id="level4">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
+                    <option value="-1"> </option>
+                </select>
+            </div>
+        </center>
     </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1" placeholder=" Test....">
-      </div>
-      <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Test_Green.png" alt="Test"
-                          onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                          ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                          onclick="test()" />
-      </div>
+
+<!--===============================================================================================================================================-->
+    <div id="tab-content5">
+        <div style="height: 30px;">
+            This service is provided by
+            <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
+        </div>
+        <div style="display: flex;">
+            <div style="flex: 0 0 calc(100% - 66px);">
+                <select class="boxstyle" style="width: 100%;" onchange="selectcategory(this)" id="category">
+                    <option value="-1">Select a category</option>
+                    <option value="bycountry">By country</option>
+                    <option value="bylanguage">By language</option>
+                    <option value="bytag">By tag</option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectitem(this)" id="item">
+                    <option value="-1">Select a item here</option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectstation(this)" id="stations">
+                    <option value="-1">Select a station here</option>
+                </select>
+            </div>
+        </div>
+        <hr>
+        <div style="display: flex;">
+            <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+                StreamURL
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                id="streamurl" placeholder="StreamURL">
+            </div>
+             <div style="flex: 1; padding-left: 2px; height: 66px;">
+                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                onclick="teststreamurl()"/>
+            </div>
+        </div>
+        <div style="display: flex;">
+            <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+                HomepageUrl
+                <input type="text" class="boxstyle" style=" width: calc(100% - 8px); "id="homepageurl" placeholder="HomepageURL">
+            </div>
+            <div style="flex: 1; padding-left: 2px; height: 66px;">
+                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                    onclick="window.open(homepageurl.value, '_blank')"/>
+            </div>
+        </div>
+        <div style="display: flex;">
+            <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
+                LogoUrl
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px);" onclick="refreshCanvas()"
+                id="favicon" placeholder="Favicon">
+            </div>
+            <div style="flex: 1;  padding-left: 2px; height: 66px;">
+                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                    onclick="window.open(favicon.value, '_blank')"/>
+            </div>
+        </div>
+        <hr>
+        <div style="display: flex;">
+            <div style="flex: 0 0 130px; padding 1px 5px 5px 1px; ">
+                <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
+            </div>
+            <div style="flex: 1;">
+                <div style="flex: 1; height: 38px; padding-left: 10px;">
+                    <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
+                                id="stationname" placeholder="Change the Stationname here">
+                </div>
+                <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
+                    <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
+                        onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
+                        onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+                        ontouchend="this.src='SD/png/Button_Upload_Blue.png'"
+                        onclick="uploadCanvasImage()"/>
+                    <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC"
+                        onmousedown="this.src='SD/png/Button_Download_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Button_Download_Yellow.png'"
+                        onmouseup="this.src='SD/png/Button_Download_Blue.png'"
+                        ontouchend="this.src='SD/png/Button_Download_Blue.png'"
+                        onclick="downloadCanvasImage()"/>
+                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
+                        onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
+                        onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
+                        ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
+                        onclick="addStationsToGrid()"/>
+                    <form method="post" accept-charset="utf-8" name="form1">
+                        <input name="hidden_data" id="hidden_data" type="hidden"/>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-    <hr>
-    <div style="height: 46px; padding: 0; text-align:center;">
-     Find new radio stations at
-      <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
-      or
-      <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
+<!--===============================================================================================================================================-->
+    <div id="tab-content6">
+        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
+            external DAC. This project is documented on
+        <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
+           Author: Wolle (schreibfaul1)</p>
+        <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+        <h3>Connected WiFi network
+          <select class="boxstyle" onchange="setNetworks(this)" id="ssid"></select>  <!-- setNetworks() not impl yet -->
+        </h3>
+        <h3>
+            <p> Time announcement on the hour
+            <input type="checkbox" id="chk_timeSpeech"
+                       onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+            </p>
+        </h3>
     </div>
-  </div>
-  <!--==============================================================================================-->
-  <div id="tab-content2">
-      <center>
-      <div id="jsGrid"></div>
-      <br>
-      <button class="button buttongreen"
-              onclick="saveGridFileToSD()"
-              onmousedown="this.style.backgroundColor='#D62C1A'"
-              ontouchstart="this.style.backgroundColor='#D62C1A'"
-              onmouseup="this.style.backgroundColor='#128F76'"
-              ontouchend="this.style.backgroundColor='#128F76'"
-              title="Save to SD">Save
-      </button>
-      &nbsp;
-      <button class="button buttongreen"
-              onclick="loadGridFileFromSD()"
-              onmousedown="this.style.backgroundColor='#D62C1A'"
-              ontouchstart="this.style.backgroundColor='#D62C1A'"
-              onmouseup="this.style.backgroundColor='#128F76'"
-              ontouchend="this.style.backgroundColor='#128F76'"
-              id="loadSD" title="Load from SD">Load
-      </button>
-      &nbsp;
-      <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
-      &nbsp;
-      <button class="button buttonblue"
-              onclick="javascript:document.getElementById('file').click();"
-              title="Load from PC">load xlsx
-      </button>
-
-      <!-- <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img" onchange="loadDataExcel(this.files);"/>    -->
-
-      <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden; width: 0px;"  name="img"
-          onchange="loadDataExcel(this.files);"/>
-      <br>
-      </center>
-  </div>
-  <!--==============================================================================================-->
-  <div id="tab-content3">
-      <center>
-      <label for="seltrack"><big>Audio files on SD card:</big></label>
-      <br>
-      <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
-          <option value="-1">Select a track here</option>
-      </select>
-      <br><br>
-      <button class="button" onclick="socket.send('stopfile')">STOP</button>
-      <button class="button" onclick="socket.send('resumefile')">RESUME</button>
-      <br>
-      <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-      <br>
-      <hr>
-      <br>
-
-        <div style="flex: 0 0 calc(100% - 0px);">
-            <select class="boxstyle" style="width: 100%;" onchange="selectserver(this)" id="server">
-                <option value="-1">Select a DLNA Server here</option>
-            </select>
-            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l1(this)" id="level1">
-                 <option value="-1"> </option>
-            </select>
-            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l2(this)" id="level2">
-                <option value="-1"> </option>
-            </select>
-            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l3(this)" id="level3">
-                <option value="-1"> </option>
-            </select>
-            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l4(this)" id="level4">
-                <option value="-1"> </option>
-            </select>
-            <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
-                <option value="-1"> </option>
-            </select>
-        </div>
-
-
-
-
-
-
-
-
-      </center>
-  </div>
-  <!--==============================================================================================-->
-  <div id="tab-content4">
-      <div style="height: 30px;">
-        This service is provided by
-        <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
-      </div>
-      <div style="display: flex;">
-        <div style="flex: 0 0 calc(100% - 66px);">
-          <select class="boxstyle" style="width: 100%;" onchange="selectcategory(this)" id="category">
-            <option value="-1">Select a category</option>
-            <option value="bycountry">By country</option>
-            <option value="bylanguage">By language</option>
-            <option value="bytag">By tag</option>
-          </select>
-          <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectitem(this)" id="item">
-            <option value="-1">Select a item here</option>
-          </select>
-          <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="selectstation(this)" id="stations">
-            <option value="-1">Select a station here</option>
-          </select>
-        </div>
-      </div>
-      <hr>
-      <div style="display: flex;">
-        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
-          StreamURL
-          <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
-            id="streamurl" placeholder="StreamURL">
-        </div>
-        <div style="flex: 1; padding-left: 2px; height: 66px;">
-          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
-            onclick="teststreamurl()"/>
-        </div>
-      </div>
-      <div style="display: flex;">
-        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
-          HomepageUrl
-          <input type="text" class="boxstyle" style=" width: calc(100% - 8px);"
-          id="homepageurl" placeholder="HomepageURL">
-        </div>
-        <div style="flex: 1; padding-left: 2px; height: 66px;">
-          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
-            onclick="window.open(homepageurl.value, '_blank')"/>
-        </div>
-      </div>
-      <div style="display: flex;">
-        <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
-          LogoUrl
-          <input type="text" class="boxstyle" style="width: calc(100% - 8px);" onclick="refreshCanvas()"
-            id="favicon" placeholder="Favicon">
-        </div>
-        <div style="flex: 1;  padding-left: 2px; height: 66px;">
-          <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
-            onclick="window.open(favicon.value, '_blank')"/>
-        </div>
-      </div>
-      <hr>
-      <div style="display: flex;">
-        <div style="flex: 0 0 130px; padding 1px 5px 5px 1px; ">
-          <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
-        </div>
-        <div style="flex: 1;">
-          <div style="flex: 1; height: 38px; padding-left: 10px;">
-            <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
-                id="stationname" placeholder="Change the Stationname here">
-          </div>
-          <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
-            <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
-            onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Upload_Blue.png'"
-            onclick="uploadCanvasImage()"/>
-
-            <img src="SD/png/Button_Download_Blue.png" alt="Download" title="Download to PC"
-            onmousedown="this.src='SD/png/Button_Download_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Download_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Download_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Download_Blue.png'"
-            onclick="downloadCanvasImage()"/>
-
-            <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
-            onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
-            ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
-            onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
-            ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
-            onclick="addStationsToGrid()"/>
-
-            <form method="post" accept-charset="utf-8" name="form1">
-              <input name="hidden_data" id="hidden_data" type="hidden"/>
-            </form>
-          </div>
-        </div>
-      </div>
-  </div>
-  <!--==============================================================================================-->
-  <div id="tab-content5">
-    <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
-        external DAC. This project is documented on
-    <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
-       Author: Wolle (schreibfaul1)</p>
-    <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
-    <h3>Connected WiFi network
-      <select class="boxstyle" onchange="setNetworks(this)" id="ssid"></select>  <!-- setNetworks() not impl yet -->
-    </h3>
-    <h3>
-      <p> Time announcement on the hour
-      <input type="checkbox" id="chk_timeSpeech"
-                   onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-      </p>
-    </h3>
-  </div>
-  <!--==============================================================================================-->
+<!--===============================================================================================================================================-->
 </div>
+
+<script src="index.js"></script>
+
 </body>
 </html>
 
-)=====" ;
+)=====";
 #endif /* INDEX_H_ */
