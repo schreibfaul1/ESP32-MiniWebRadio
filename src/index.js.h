@@ -26,6 +26,31 @@ const char index_js[] PROGMEM = R"=====(
 
 // --------------------------------------------------------- File Explorer ---------------------------------------------------------------------------
 
+var iconFolderYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAL9J"
+                + "REFUSIntlL0KwmAMRU9qFaydHHXS53L3NfoyLr6Ui+ImCKUotr0ulg4t2l9Q6Z3CB19ObkgC3y5J42YfwaTA6bieD1DJ2i"
+                + "fZM5IoJCp7AwiC3KUCCo4N4LTzVAW+CKOJbXlUL5ci8Z3OvnfJihHljloBBH4WG1RyXatFtSQOy0207m8MjRWAC2CO4U7b"
+                + "T2AmJRDfUnKAwWzebCHLFN9Twheg900dAAPgBwBuFqjTa5RfBRcgTcT1eO+S8Ed6ApsnOMljAhdKAAAAAElFTkSuQmCC"
+
+var iconFileRed  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAJxJR"
+                + "EFUSIljYBgF5IL/DAz/ceEDMhr/3xpb/yfGHEZ8FhyU0cAq5/DkBuMBGY3/uuLCDMJnj+I0g4GBgYGJGFfgApdfvmUg5BOK"
+                + "LCDGEootIGQJVSyAWYINsJBjmMP++RwOjomM////Z2RkZPzPwMDAcEBGA6sPyEpF2ID9kxsMjFjMo1oQ4QKjFoxaMGoBHSz"
+                + "AW1SQYRjeymdoAgDd9jyx3CsGWQAAAABJRU5ErkJggg=="
+
+var iconFileGreen = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKdJR"
+                + "EFUSIljYBgFBAAjLgm9Q3X/ccn9ePCagVdfkOGsfhtO/TDAhE/yx4PXWPGtuOmMny++ZzC+WIXTEURZQAgQYwlFFhBjCcUW"
+                + "ELKEKhbALMEGWMgxzGH/fI4DjomM////Z2RkZPzPwMDAoLYoE6sP8CbTHw9eE20ph4IowyW7JgzzqBZEuMCoBaMWEAVoWxY"
+                + "x4MlL1LIAL6C5BXjLIg4FUVrbPwQAAP4cQnQllyzuAAAAAElFTkSuQmCC"
+var iconFileBlue = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKZJRE"
+                + "FUSIljYBgFBAAjLgnTlif/cck9vX2BwcPRjGFeghhO/TDAgk/y6e0LWMWfLfRh3MGw5X/Sglf/CVnCRMgF+MCO/acYkha8wu"
+                + "lTii0gxhKKLSBkCVUsgFmCDeCNZFzAYf98jgOOPoz///9nZGRk/M/AwMAgFb8Fqw/wJlNcqQgbkFY1YDhdI4NhHtWCCBcYtW"
+                + "DUglEL6GAB3rJIWtWA1vYPAQAAsLk0T5/6UqIAAAAASUVORK5CYII="
+
+var iconFileYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKRJRE"
+                + "FUSIljYBgFBAAjLon/Nxj+45J7dpaLQdg+iIFDZglO/TDAgk/y2VkurOLS0d8Yny5d9//Hk5j/hCxhIuQCfODtwXUMP57E4P"
+                + "QpxRYQYwnFFhCyhCoWwCzBBvBGMi7gsH8+h7RjIuP///8ZGRkZ/zMwMDA8XcqF1Qd4kymuVIQNSBl/Y2DUwDSPakGEC4xaMG"
+                + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
+
+
 var lastSelectedNodePath = "";
 
 $('#explorerTree').on('select_node.jstree', function (e, data) {
@@ -59,7 +84,7 @@ $('#explorerTree').on('select_node.jstree', function (e, data) {
     }
 });
 
-function doRest(path, callback, obj) {
+function XmlHttpReq(path, callback, obj) {
     obj.url      = path;
     obj.dataType = "json";
     obj.contentType= "application/json;charset=IBM437",
@@ -74,37 +99,37 @@ function doRest(path, callback, obj) {
         /*debugger; */
     };
     jQuery.ajax(obj);
-} /* doRest */
+} /* XmlHttpReq */
 
 function getData(path, callback) {
-    doRest(path, callback, {
+    XmlHttpReq(path, callback, {
         method   : "GET"
     });
 } /* getData */
 
 function deleteData(path, callback, _data) {
-    doRest(path, callback, {
+    XmlHttpReq(path, callback, {
         method   : "DELETE",
         data: _data
     });
 } /* deleteData */
 
 function patchData(path, callback, _data) {
-    doRest(path, callback, {
+    XmlHttpReq(path, callback, {
         method   : "PATCH",
         data: _data
     });
 } /* patchData */
 
 function postData(path, callback, _data) {
-    doRest(path, callback, {
+    XmlHttpReq(path, callback, {
         method   : "POST",
         data: _data
     });
 } /* postData */
 
 function putData(path, callback, _data) {
-    doRest(path, callback, {
+    XmlHttpReq(path, callback, {
         method   : "PUT",
         data: _data
     });
@@ -138,7 +163,7 @@ $('#explorerUploadForm').submit(function(e){
     const startTime = new Date().getTime();
     let bytesTotal = 0;
     $.ajax({
-        url: '/explorer?path=' + path,
+        url: '/SD_GetFolder?' + path,
         type: 'POST',
         data: data,
         contentType: false,
@@ -192,7 +217,7 @@ $('#explorerUploadForm').submit(function(e){
             $("#explorerUploadProgress").text(progressText);
             document.getElementById('uploaded_file').value = '';
             document.getElementById('uploaded_file_text').innerHTML = '';
-            getData("/explorer?path=" + path, function(data) {
+            getData("/SD_upload?path=" + path, function(data) {
                 /* We now have data! */
                 deleteChildrenNodes(sel);
                 addFileDirectory(sel, data);
@@ -261,7 +286,7 @@ function deleteChildrenNodes(nodeId) {
 function refreshNode(nodeId) {
     var ref = $('#explorerTree').jstree(true);
     var node = ref.get_node(nodeId);
-    getData("/explorer?path=" + encodeURIComponent(node.data.path), function(data) {
+    getData("/SD_GetFolder?" + encodeURIComponent(node.data.path), function(data) {
         /* We now have data! */
         deleteChildrenNodes(nodeId);
         addFileDirectory(nodeId, data);
@@ -320,34 +345,19 @@ function buildFileSystemTree(path) {
         },
         'types': {
             'folder': {  // folder_yellow.png (24x24px)
-              'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAL9J"
-                + "REFUSIntlL0KwmAMRU9qFaydHHXS53L3NfoyLr6Ui+ImCKUotr0ulg4t2l9Q6Z3CB19ObkgC3y5J42YfwaTA6bieD1DJ2i"
-                + "fZM5IoJCp7AwiC3KUCCo4N4LTzVAW+CKOJbXlUL5ci8Z3OvnfJihHljloBBH4WG1RyXatFtSQOy0207m8MjRWAC2CO4U7b"
-                + "T2AmJRDfUnKAwWzebCHLFN9Twheg900dAAPgBwBuFqjTa5RfBRcgTcT1eO+S8Ed6ApsnOMljAhdKAAAAAElFTkSuQmCC"
+              'icon': iconFolderYellow
             },
             'file': { // file_red.png
-              'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAJxJR"
-                + "EFUSIljYBgF5IL/DAz/ceEDMhr/3xpb/yfGHEZ8FhyU0cAq5/DkBuMBGY3/uuLCDMJnj+I0g4GBgYGJGFfgApdfvmUg5BOK"
-                + "LCDGEootIGQJVSyAWYINsJBjmMP++RwOjomM////Z2RkZPzPwMDAcEBGA6sPyEpF2ID9kxsMjFjMo1oQ4QKjFoxaMGoBHSz"
-                + "AW1SQYRjeymdoAgDd9jyx3CsGWQAAAABJRU5ErkJggg=="
+              'icon': iconFileRed
             },
             'audio': { // file_green.png 
-              'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKdJR"
-                + "EFUSIljYBgFBAAjLgm9Q3X/ccn9ePCagVdfkOGsfhtO/TDAhE/yx4PXWPGtuOmMny++ZzC+WIXTEURZQAgQYwlFFhBjCcUW"
-                + "ELKEKhbALMEGWMgxzGH/fI4DjomM////Z2RkZPzPwMDAoLYoE6sP8CbTHw9eE20ph4IowyW7JgzzqBZEuMCoBaMWEAVoWxY"
-                + "x4MlL1LIAL6C5BXjLIg4FUVrbPwQAAP4cQnQllyzuAAAAAElFTkSuQmCC"
+              'icon': iconFileGreen
             },
             'image': { // file_blue.png
-              'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKZJRE"
-                + "FUSIljYBgFBAAjLgnTlif/cck9vX2BwcPRjGFeghhO/TDAgk/y6e0LWMWfLfRh3MGw5X/Sglf/CVnCRMgF+MCO/acYkha8wu"
-                + "lTii0gxhKKLSBkCVUsgFmCDeCNZFzAYf98jgOOPoz///9nZGRk/M/AwMAgFb8Fqw/wJlNcqQgbkFY1YDhdI4NhHtWCCBcYtW"
-                + "DUglEL6GAB3rJIWtWA1vYPAQAAsLk0T5/6UqIAAAAASUVORK5CYII="
+              'icon': iconFileBlue
             },
             'default': { // file_yellow.png
-              'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKRJRE"
-                + "FUSIljYBgFBAAjLon/Nxj+45J7dpaLQdg+iIFDZglO/TDAgk/y2VkurOLS0d8Yny5d9//Hk5j/hCxhIuQCfODtwXUMP57E4P"
-                + "QpxRYQYwnFFhCyhCoWwCzBBvBGMi7gsH8+h7RjIuP///8ZGRkZ/zMwMDA8XcqF1Qd4kymuVIQNSBl/Y2DUwDSPakGEC4xaMG"
-                + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
+              'icon': iconFileYellow
             }
         },
         plugins: ["contextmenu", "themes", "types"],
@@ -356,6 +366,7 @@ function buildFileSystemTree(path) {
                 var ref = $('#explorerTree').jstree(true);
                 var node = ref.get_node(nodeId);
                 var items = {};
+                /* New Folder */
                 if (node.data.directory) {
                     items.createDir = {
                         label: "New Folder",
@@ -365,8 +376,8 @@ function buildFileSystemTree(path) {
                             });
                             if (childNode) {
                                 ref.edit(childNode, null, function (childNode, status) {
-                                    putData("/explorer?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
-                                 refreshNode(nodeId);
+                                    getData("/SD_newFolder?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
+                                    refreshNode(nodeId);
                                 });
                             }
                         }
@@ -385,7 +396,7 @@ function buildFileSystemTree(path) {
                                 playMode = 11;
                             }
                         }
-                        postData("/exploreraudio?" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
+                        getData("/SD_playFile?" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
                     }
                 };
                 /* Refresh */
@@ -410,7 +421,7 @@ function buildFileSystemTree(path) {
                         var srcPath = node.data.path;
                         ref.edit(nodeId, null, function (node, status) {
                             node.data.path = node.data.path.substring(0, node.data.path.lastIndexOf("/") + 1) + node.text;
-                            patchData("/explorer?src=" + encodeURIComponent(srcPath) + "&dst=" + encodeURIComponent(node.data.path));
+                            getData("/SD_rename?src=" + encodeURIComponent(srcPath) + "&dst=" + encodeURIComponent(node.data.path));
                             refreshNode(ref.get_parent(nodeId));
                         });
                     }
@@ -420,7 +431,7 @@ function buildFileSystemTree(path) {
                     items.download = {
                         label: "Download",
                         action: function (x) {
-                            uri = "/explorerdownload?=" + encodeURIComponent(node.data.path);
+                            uri = "/SD_download?=" + encodeURIComponent(node.data.path);
                             console.log("download file: " + node.data.path);
                             var anchor = document.createElement('a');
                             anchor.href = uri;
@@ -439,7 +450,7 @@ function buildFileSystemTree(path) {
         return;
     }
     console.log("We can now have data!")
-    getData("/explorer?/" + '&version=' + Math.random(), function(data) {
+    getData("/SD_GetFolder?/" + '&version=' + Math.random(), function(data) {
         /* We now have data! */
         console.log("We have data now!")
         console.log("data", data)

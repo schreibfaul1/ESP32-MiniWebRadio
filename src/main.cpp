@@ -440,7 +440,6 @@ String dirContent(String path) {
 	File root, file;
     JSONVar jObject, jArr;
     int i = 0;
-
     if(path =="") path = "/";
     root = SD_MMC.open(path.c_str());
 
@@ -461,7 +460,7 @@ String dirContent(String path) {
 	root.close();
     if(i){
         String jO = JSON.stringify(jObject);
-        log_i("%s", jO.c_str());
+        // log_i("%s", jO.c_str());
         return jO;
     }
     return "";
@@ -2824,7 +2823,7 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_VERBOSE){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_WARN){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -2919,7 +2918,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
 
-    if(cmd.startsWith("SD")){       str = cmd.substring(2);
+    if(cmd.startsWith("SD/")){      str = cmd.substring(2);
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
@@ -2969,7 +2968,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
 
-    if(cmd == "explorer"){          webSrv.reply(dirContent(param.substring(5))); return;}
+    if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param)); return;}
+
+    if(cmd == "SD_newFolder"){      log_w("new Folder %s", param.c_str()); return;}
+
+    if(cmd == "SD_playFile"){       log_w("play File %s", param.c_str()); return;}
+
+    if(cmd == "SD_rename"){         log_w("rename %s", param.c_str()); return;}
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
