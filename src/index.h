@@ -1735,7 +1735,7 @@ function downloadCanvasImage () {
         <br>
         <hr>
         <br>
-        <div class="container" id="filetreeContainer">
+        <div class="container" id="filetreeContainer" style="visibility: hidden; >
             <fieldset>
                 <legend "title">Files</legend>
                 <div class="filetree-container">
