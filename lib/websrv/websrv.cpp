@@ -3,7 +3,7 @@
  *
  *  Created on: 09.07.2017
  *  updated on: 29.06.2023
- *      Author: Wolle
+ *      Author: Wolle 
  */
 
 #include "websrv.h"
