@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 19.10.2022
+ *  updated on: 29.06.2023
  *      Author: Wolle
  */
 
@@ -100,7 +100,8 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     size_t bytesPerTransaction = 1024;
     uint8_t transBuf[bytesPerTransaction], i=0;
     size_t wIndex = 0, res=0, leftover=0;
-    if(!cmdclient.connected()){log_e("not connected"); return false;}
+    if(!cmdclient.connected()){log_e("cmdclient is not connected"); return false;}
+
     while(path[i] != 0){     // protect SD for invalid signs to avoid a crash!!
         if(path[i] < 32)return false;
         i++;
@@ -365,7 +366,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         // log_i("currLine %s", currentLine.c_str());
         // If the current line is blank, you got two newline characters in a row.
         // that's the end of the client HTTP request, so send a response:
-        if (currentLine.length() == 1) { // contains '\n' only
+        if (currentLine.length() <= 1) { // contains '\n' only
             wswitch=false; // use second while
             if (http_cmd.length()) {
                 if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd).c_str());
@@ -421,6 +422,12 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                     http_arg =   "";
                 }
             }
+            if(currentLine.length() == 0){
+                // schould be never zero, can be '\n'
+                cmdclient.clearWriteError(); cmdclient.stop();
+                log_e("err %s is not completed", http_cmd.c_str());
+                return true;
+            }
             currentLine = "";
         }
     } //end first while
@@ -461,7 +468,6 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         }
 
     } // end second while
-    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -597,16 +603,17 @@ void WebSrv::parseWsMessage(uint32_t len){
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::loop() {
 
-    cmdclient = cmdserver.available();
-    if (cmdclient.available()){                                     // Check Input from client?
+    if(cmdclient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("Command client available");
         return handlehttp();
-    }
+    }     
+    cmdclient = cmdserver.available();
 
     if(!webSocketClient.connected()){
         hasclient_WS = false;
     }
     if(!hasclient_WS) webSocketClient = webSocketServer.available();
+ 
     if (webSocketClient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");
         return handleWS();

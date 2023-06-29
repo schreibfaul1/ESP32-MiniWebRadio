@@ -60,7 +60,7 @@ protected:
 
 
 public:
-    enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_PUT = 2 };
+    enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
     enum { Continuation_Frame = 0x00, Text_Frame = 0x01, Binary_Frame = 0x02, Connection_Close_Frame = 0x08,
            Ping_Frame = 0x09, Pong_Frame = 0x0A };
     WebSrv(String Name="WebSrv library", String Version="1.0");
