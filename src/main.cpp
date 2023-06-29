@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.0 Jun 17/2023
+    Version 2.8.0 Jun 29/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -431,13 +431,52 @@ void updateSettings(){
     }
 }
 
+
+/***********************************************************************************************************************
+*                                        F I L E   E X P L O R E R                                                  *
+***********************************************************************************************************************/
+// Sends a list of the content of a directory as JSON file
+String dirContent(String path) {
+	File root, file;
+    JSONVar jObject, jArr;
+    int i = 0;
+    if(path =="") path = "/";
+    root = SD_MMC.open(path.c_str());
+
+	if (!root.isDirectory()) {
+		SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
+		return "";
+	}
+	while (true) {
+        file = root.openNextFile();
+        if(!file) break;
+		if (startsWith(file.name() , "/.")) continue;  // ignore hidden folders
+		jArr["name"] = (String)file.name();
+		jArr["dir"]  = (boolean)file.isDirectory();
+        jObject[i]   = jArr;
+        i++;
+    }
+    file.close();
+	root.close();
+    if(i){
+        String jO = JSON.stringify(jObject);
+        // log_i("%s", jO.c_str());
+        return jO;
+    }
+    return "";
+}
+
+
+
+
+
 /***********************************************************************************************************************
 *                                        T F T   B R I G H T N E S S                                                   *
 ***********************************************************************************************************************/
 void setTFTbrightness(uint8_t duty){        // duty 0...100 (min...max)
     if(TFT_BL == -1) return;
-    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
+    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
 }
@@ -1292,7 +1331,9 @@ void setup(){
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         while(1){};  // endless loop, MiniWebRadio does not work without SD
     }
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found");
+    float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
+    float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
 
     defaultsettings();  // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
@@ -1439,19 +1480,19 @@ void trim(char *s) {
         *s = '\0';
     }
 }
-bool startsWith (const char* base, const char* str) {
+bool startsWith (const char* base, const char* searchString) {
     char c;
-    while ( (c = *str++) != '\0' )
+    while ( (c = *searchString++) != '\0' )
       if (c != *base++) return false;
     return true;
 }
-bool endsWith (const char* base, const char* str) {
-    int slen = strlen(str) - 1;
+bool endsWith (const char* base, const char* searchString) {
+    int slen = strlen(searchString) - 1;
     const char *p = base + strlen(base) - 1;
     while(p > base && isspace(*p)) p--;  // rtrim
     p -= slen;
     if (p < base) return false;
-    return (strncmp(p, str, slen) == 0);
+    return (strncmp(p, searchString, slen) == 0);
 }
 int indexOf (const char* haystack, const char* needle, int startIndex) {
     const char *p = haystack;
@@ -2782,7 +2823,7 @@ void tp_released(){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_VERBOSE){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_WARN){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -2868,6 +2909,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                                         webSrv.show(index_html);      }
                                     return;}
 
+    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");
+                                    webSrv.show(index_js); return;}
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
@@ -2875,7 +2918,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
 
-    if(cmd.startsWith("SD")){       str = cmd.substring(2);
+    if(cmd.startsWith("SD/")){      str = cmd.substring(2);
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
@@ -2924,6 +2967,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
+
+    if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param)); return;}
+
+    if(cmd == "SD_newFolder"){      log_w("new Folder %s", param.c_str()); return;}
+
+    if(cmd == "SD_playFile"){       log_w("play File %s", param.c_str()); return;}
+
+    if(cmd == "SD_rename"){         log_w("rename %s", param.c_str()); return;}
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);

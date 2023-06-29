@@ -3,3 +3,4 @@
   nvs,      data,   nvs,       0x10000,  0x40000,
   factory,  app,    factory,   0x50000,  0x7A0000,
   coredump, data,   coredump,  0x7F0000, 0x10000,
+
