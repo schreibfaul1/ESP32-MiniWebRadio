@@ -36,6 +36,7 @@
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
 #include "index.h"
+#include "index.js.h"
 #include "accesspoint.h"
 #include "websrv.h"
 #include "rtime.h"

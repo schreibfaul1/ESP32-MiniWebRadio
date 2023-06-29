@@ -46,12 +46,12 @@ const char index_html[] PROGMEM = R"=====(
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.15/jstree.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 
 <!--  <script src="SD/js/jstree.js"></script>    --->
 <!--  <script src="SD/js/jquery.js"></script>    --->
@@ -245,24 +245,24 @@ const char index_html[] PROGMEM = R"=====(
             display:block;
         }
         .filetree {
-			      border: 1px solid black;
-			      height: 200px;
-			      margin: 0em 0em 1em 0em;
-			      overflow-y: scroll;
-		    }
-		    .filetree-container {
-			      position: relative;
+                        border: 1px solid black;
+                        height: 200px;
+                        margin: 0em 0em 1em 0em;
+                        overflow-y: scroll;
+                }
+                .filetree-container {
+                        position: relative;
             background-color: white;
-		    }
-		    .indexing-progress {
-			      width: 100%;
-			      height: 100%;
-			      position: absolute;
-			      top: 0;
-			      left: 0;
-			      opacity: 0.7;
-			      display: none;
-		    }
+                }
+                .indexing-progress {
+                        width: 100%;
+                        height: 100%;
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        opacity: 0.7;
+                        display: none;
+                }
     </style>
 </head>
 
@@ -613,482 +613,6 @@ function uploadTextFile (fileName, content) {
   }
   xhr.send(fd) // send
 }
-
-
-// --------------------------------------------------------- File Explorer ---------------------------------------------------------------------------
-	var lastSelectedNodePath = "";
-
-	$('#explorerTree').on('select_node.jstree', function (e, data) {
-
-		$('input[name=fileOrUrl]').val(data.node.data.path);
-
-		if (ActiveSubTab !== 'rfid-music-tab') {
-			$('#SubTab.nav-tabs a[id="rfid-music-tab"]').tab('show');
-		}
-
-		if (data.node.type == "folder") {
-			$('.option-folder').show();
-			$('.option-file').hide();
-			$('#playMode option').removeAttr('selected').filter('[value=3]').attr('selected', true);
-		}
-
-		if (data.node.type == "audio") {
-			$('.option-file').show();
-			$('.option-folder').hide();
-			$('#playMode option').removeAttr('selected').filter('[value=1]').attr('selected', true);
-		}
-
-		if(lastSelectedNodePath != data.node.data.path) {
-			if (data.node.data.directory) {
-
-				var ref = $('#explorerTree').jstree(true),
-					sel = ref.get_selected();
-				if(!sel.length) { return false; }
-				sel = sel[0];
-				var children = $("#explorerTree").jstree("get_children_dom",sel);
-				/* refresh only, when there is no child -> possible not yet updated */
-				if(children.length < 1){
-					refreshNode(sel);
-				}
-
-			}
-		 lastSelectedNodePath = data.node.data.path;
-		}
-
-
-	});
-
-	function doRest(path, callback, obj) {
-		obj.url      = path;
-		obj.dataType = "json";
-		obj.contentType= "application/json;charset=IBM437",
-		obj.scriptCharset= "IBM437",
-		obj.success  = function(data, textStatus, jqXHR) {
-			if (callback) {
-				callback(data);
-			}
-		};
-		obj.error    = function(jqXHR, textStatus, errorThrown) {
-			console.log("AJAX error");
-			/*debugger; */
-		};
-		jQuery.ajax(obj);
-	} /* doRest */
-
-	function getData(path, callback) {
-		doRest(path, callback, {
-			method   : "GET"
-		});
-	} /* getData */
-
-	function deleteData(path, callback, _data) {
-		doRest(path, callback, {
-			method   : "DELETE",
-			data: _data
-		});
-	} /* deleteData */
-
-	function patchData(path, callback, _data) {
-		doRest(path, callback, {
-			method   : "PATCH",
-			data: _data
-		});
-	} /* patchData */
-
-	function postData(path, callback, _data) {
-		doRest(path, callback, {
-			method   : "POST",
-			data: _data
-		});
-	} /* postData */
-
-
-	function putData(path, callback, _data) {
-		doRest(path, callback, {
-			method   : "PUT",
-			data: _data
-		});
-	} /* putData */
-
-
-	/* File Upload */
-	$('#explorerUploadForm').submit(function(e){
-		e.preventDefault();
-		console.log("Upload!");
-		var data = new FormData(this);
-
-		var ref = $('#explorerTree').jstree(true),
-			sel = ref.get_selected(),
-			path = "/";
-		if(!sel.length) { alert("Please select the upload location!");return false; }
-		if(!document.getElementById('uploaded_file').files.length > 0)  { alert("Please select files to upload!");return false; }
-		sel = sel[0];
-		selectedNode = ref.get_node(sel);
-		if(selectedNode.data.directory){
-			path = selectedNode.data.path
-		} else {
-			/* remap sel to parent folder */
-			sel = ref.get_node(ref.get_parent(sel));
-			path = parentNode.data.path;
-			console.log("Parent path: " + path);
-		}
-
-		const startTime = new Date().getTime();
-		let bytesTotal = 0;
-		$.ajax({
-			url: '/explorer?path=' + path,
-			type: 'POST',
-			data: data,
-			contentType: false,
-			processData:false,
-			xhr: function() {
-				var xhr = new window.XMLHttpRequest();
-
-				xhr.upload.addEventListener("progress", function(evt) {
-				  if (evt.lengthComputable) {
-					const now = new Date().getTime();
-					const percent = parseInt(evt.loaded * 100 / evt.total);
-					const elapsed = (now - startTime) / 1000;
-					bytesTotal = evt.total;
-
-					let progressText = "Remaining time is being calculated..";
-					if(elapsed){
-						const bps = evt.loaded / elapsed;
-						const kbps = bps / 1024;
-						const remaining = Math.round((evt.total - evt.loaded) / bps);
-
-						const data = {
-							percent: percent,
-							remaining: {
-								unit: (remaining>60) ? ("minutes", {count: Math.round(remaining/60)}) : "seconds",
-								value: (remaining>60) ? Math.round(remaining/60) : ((remaining > 2) ? remaining : few)
-							},
-							speed: kbps.toFixed(2)
-						}
-						progressText = "{{percent}}% ({{speed}} KB/s), {{remaining.value}} {{remaining.unit}} remaining..";
-						console.log("Percent: " + percent + "%% " + kbps.toFixed(2) + " KB/s");
-					}
-					$("#explorerUploadProgress").css('width', percent+"%").text(progressText);
-				  }
-				}, false);
-
-				return xhr;
-			},
-			success: function(data, textStatus, jqXHR) {
-				const now = new Date().getTime();
-				const elapsed = (now - startTime) / 1000;
-
-				let transData = {
-					elapsed: "00:00",
-					speed: "0,00"
-				};
-				if(elapsed){
-					const bps = bytesTotal / elapsed;
-					const kbps = bps / 1024;
-
-					const date = new Date(null);
-					date.setSeconds(elapsed);
-					const timeText = date.toISOString().substr(11, 8);
-
-					transData = { elapsed: timeText, speed: kbps.toFixed(2) };
-				}
-				console.log("Upload success (" + transData.elapsed + ", " + transData.speed + " KB/s): " + textStatus);
-				const progressText = "Upload successfull ({{elapsed}}, {{speed}} KB/s)"
-				$("#explorerUploadProgress").text(progressText);
-				document.getElementById('uploaded_file').value = '';
-				document.getElementById('uploaded_file_text').innerHTML = '';
-
-				getData("/explorer?path=" + path, function(data) {
-					/* We now have data! */
-					deleteChildrenNodes(sel);
-					addFileDirectory(sel, data);
-					ref.open_node(sel);
-				});
-
-			},
-			error: function(request, status, error) {
-				console.log("Upload ERROR!");
-				$("#explorerUploadProgress").text("Upload error: " + status);
-				toastr.error("Upload error: " + status);
-			}
-		});
-	});
-
-	/* File Delete */
-	function handleDeleteData(nodeId) {
-		var ref = $('#explorerTree').jstree(true);
-		var node = ref.get_node(nodeId);
-		console.log("call delete request: " + node.data.path);
-		deleteData("/explorer?path=" + encodeURIComponent(node.data.path));
-	}
-
-	function fileNameSort( a, b ) {
-		if ( a.dir && !b.dir ) {
-			return -1
-		}
-		if ( !a.dir && b.dir ) {
-			return 1
-		}
-		if ( a.name < b.name ){
-			return -1;
-		}
-		if ( a.name > b.name ){
-			return 1;
-		}
-		return 0;
-	}
-
-	function createChild(nodeId, data) {
-		var ref = $('#explorerTree').jstree(true);
-		var node = ref.get_node(nodeId);
-		var parentNodePath = node.data.path;
-		/* In case of root node remove leading '/' to avoid '//' */
-		if(parentNodePath == "/"){
-			parentNodePath = "";
-		}
-		var child = {
-			text: data.name,
-			type: getType(data),
-			data: {
-				path: parentNodePath + "/" + data.name,
-				directory: data.dir
-			}
-		};
-
-		return child;
-
-	}
-
-	function deleteChildrenNodes(nodeId) {
-		var ref = $('#explorerTree').jstree(true);
-		var children = $("#explorerTree").jstree("get_children_dom",nodeId);
-		for(var i=0;i<children.length;i++)
-		{
-			ref.delete_node(children[i].id);
-		}
-
-	}
-
-	function refreshNode(nodeId) {
-
-		var ref = $('#explorerTree').jstree(true);
-
-		var node = ref.get_node(nodeId);
-
-		getData("/explorer?path=" + encodeURIComponent(node.data.path), function(data) {
-			/* We now have data! */
-
-			deleteChildrenNodes(nodeId);
-			addFileDirectory(nodeId, data);
-			ref.open_node(nodeId);
-
-		});
-
-
-	}
-
-	function getType(data) {
-		var type = "";
-
-		if(data.dir) {
-			type = "folder";
-		} else if ((/\.(mp3|MP3|ogg|wav|WAV|OGG|wma|WMA|acc|ACC|m4a|M4A|flac|FLAC)$/i).test(data.name)) {
-			type = "audio";
-		} else if ((/\.(png|PNG|jpg|JPG|jpeg|JPEG|bmp|BMP|gif|GIF)$/i).test(data.name)) {
-			type = "image";
-		} else {
-			type = "file";
-		}
-
-		return type;
-	}
-
-
-	function addFileDirectory(parent, data) {
-
-		data.sort( fileNameSort );
-		var ref = $('#explorerTree').jstree(true);
-
-		for (var i=0; i<data.length; i++) {
-			console.log("Create Node", data[i]);
-			ref.create_node(parent, createChild(parent, data[i]));
-		}
-	} /* addFileDirectory */
-
-	function buildFileSystemTree(path) {
-
-		$('#explorerTree').jstree({
-				"core" : {
-						"check_callback" : true,
-						'force_text' : true,
-						'strings' : { "Loading ..." : "Please wait..." },
-						"themes" : { 
-              "stripes" : true
-            },
-						'data' : {	text: '/',
-									state: {
-										opened: true
-									},
-									type: 'folder',
-									children: [],
-									data: {
-										path: '/',
-										directory: true
-								}}
-					},
-					'types': {
-						'folder': {  // folder_yellow.png (24x24px)
-							'icon' : "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAL9J"
-                     + "REFUSIntlL0KwmAMRU9qFaydHHXS53L3NfoyLr6Ui+ImCKUotr0ulg4t2l9Q6Z3CB19ObkgC3y5J42YfwaTA6bieD1DJ2i"
-                     + "fZM5IoJCp7AwiC3KUCCo4N4LTzVAW+CKOJbXlUL5ci8Z3OvnfJihHljloBBH4WG1RyXatFtSQOy0207m8MjRWAC2CO4U7b"
-                     + "T2AmJRDfUnKAwWzebCHLFN9Twheg900dAAPgBwBuFqjTa5RfBRcgTcT1eO+S8Ed6ApsnOMljAhdKAAAAAElFTkSuQmCC"
-						},
-            'file': { // file_red.png
-							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAJxJR"
-                    + "EFUSIljYBgF5IL/DAz/ceEDMhr/3xpb/yfGHEZ8FhyU0cAq5/DkBuMBGY3/uuLCDMJnj+I0g4GBgYGJGFfgApdfvmUg5BOK"
-                    + "LCDGEootIGQJVSyAWYINsJBjmMP++RwOjomM////Z2RkZPzPwMDAcEBGA6sPyEpF2ID9kxsMjFjMo1oQ4QKjFoxaMGoBHSz"
-                    + "AW1SQYRjeymdoAgDd9jyx3CsGWQAAAABJRU5ErkJggg=="
-						},
-						'audio': { // file_green.png 
-							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKdJR"
-                    + "EFUSIljYBgFBAAjLgm9Q3X/ccn9ePCagVdfkOGsfhtO/TDAhE/yx4PXWPGtuOmMny++ZzC+WIXTEURZQAgQYwlFFhBjCcUW"
-                    + "ELKEKhbALMEGWMgxzGH/fI4DjomM////Z2RkZPzPwMDAoLYoE6sP8CbTHw9eE20ph4IowyW7JgzzqBZEuMCoBaMWEAVoWxY"
-                    + "x4MlL1LIAL6C5BXjLIg4FUVrbPwQAAP4cQnQllyzuAAAAAElFTkSuQmCC"
-						},
-						'image': { // file_blue.png
-							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKZJRE"
-                    + "FUSIljYBgFBAAjLgnTlif/cck9vX2BwcPRjGFeghhO/TDAgk/y6e0LWMWfLfRh3MGw5X/Sglf/CVnCRMgF+MCO/acYkha8wu"
-                    + "lTii0gxhKKLSBkCVUsgFmCDeCNZFzAYf98jgOOPoz///9nZGRk/M/AwMAgFb8Fqw/wJlNcqQgbkFY1YDhdI4NhHtWCCBcYtW"
-                    + "DUglEL6GAB3rJIWtWA1vYPAQAAsLk0T5/6UqIAAAAASUVORK5CYII="
-						},
-						'default': { // file_yellow.png
-							'icon': "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKRJRE"
-                    + "FUSIljYBgFBAAjLon/Nxj+45J7dpaLQdg+iIFDZglO/TDAgk/y2VkurOLS0d8Yny5d9//Hk5j/hCxhIuQCfODtwXUMP57E4P"
-                    + "QpxRYQYwnFFhCyhCoWwCzBBvBGMi7gsH8+h7RjIuP///8ZGRkZ/zMwMDA8XcqF1Qd4kymuVIQNSBl/Y2DUwDSPakGEC4xaMG"
-                    + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
-						}
-					},
-				plugins: ["contextmenu", "themes", "types"],
-				contextmenu: {
-					items: function(nodeId) {
-						var ref = $('#explorerTree').jstree(true);
-						var node = ref.get_node(nodeId);
-						var items = {};
-
-						if (node.data.directory) {
-							items.createDir = {
-								label: "New Folder",
-								action: function(x) {
-									var childNode = ref.create_node(nodeId, {text: "New Folder", type: "folder"});
-									if(childNode) {
-										ref.edit(childNode, null, function(childNode, status){
-											putData("/explorer?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
-											refreshNode(nodeId);
-										});
-									}
-								}
-							};
-						}
-
-						/* Play */
-						items.play = {
-							label: "Play",
-							action: function(x) {
-								var playMode = 1;
-								if (node.data.directory) {
-									playMode = 5;
-								} else {
-									if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
-										playMode = 11;
-									}
-								}
-								postData("/exploreraudio?" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
-							}
-						};
-
-						/* Refresh */
-						items.refresh = {
-							label: "Refresh",
-							action: function(x) {
-								refreshNode(nodeId);
-							}
-						};
-
-						/* Delete */
-						items.delete = {
-							label: "Delete",
-							action: function(x) {
-								handleDeleteData(nodeId);
-								refreshNode(ref.get_parent(nodeId));
-							}
-						};
-
-						/* Rename */
-						items.rename = {
-							label: "Rename",
-							action: function(x) {
-								var srcPath = node.data.path;
-								ref.edit(nodeId, null, function(node, status){
-									node.data.path = node.data.path.substring(0,node.data.path.lastIndexOf("/")+1) + node.text;
-									patchData("/explorer?src=" + encodeURIComponent(srcPath) + "&dst=" + encodeURIComponent(node.data.path));
-									refreshNode(ref.get_parent(nodeId));
-								});
-							}
-						};
-
-						/* Download */
-						if (!node.data.directory) {
-							items.download = {
-								label: "Download",
-								action: function(x) {
-									uri = "/explorerdownload?=" + encodeURIComponent(node.data.path);
-									console.log("download file: " + node.data.path);
-									var anchor = document.createElement('a');
-									anchor.href = uri;
-									anchor.target = '_blank';
-									anchor.download = node.data.path;
-									anchor.click();
-									document.body.removeChild(document.body.lastElementChild);
-								}
-							}
-						};
-
-						return items;
-					}
-				}
-			});
-
-		if (path.length == 0) {
-			return;
-		}
-    console.log("We can now have data!")
-		getData("/explorer?/" + '&version=' + Math.random(), function(data) {
-			/* We now have data! */
-      console.log("We have data now!")
-      console.log("data", data)
-			$('#explorerTree').jstree(true).settings.core.data.children = [];
-
-			data.sort( fileNameSort );
-
-
-			for (var i=0; i<data.length; i++) {
-				var newChild = {
-					text: data[i].name,
-					type: getType(data[i]),
-					data: {
-						path: "/" + data[i].name,
-						directory: data[i].dir
-          },
-					children: []
-				};
-				$('#explorerTree').jstree(true).settings.core.data.children.push(newChild);
-			}
-
-			$("#explorerTree").jstree(true).refresh();
-
-
-		});
-	} /* buildFileSystemTree */
 
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
 function clearDLNAServerList(){
@@ -2000,171 +1524,163 @@ function downloadCanvasImage () {
   <hr>
 
 <!--==============================================================================================-->
-  <div id="tab-content1">
-    <div style="height: 66px; display: flex;">
-      <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Previous_Green.png" alt="previous"
+    <div id="tab-content1">
+        <div style="height: 66px; display: flex;">
+            <div style="flex: 0 0 210px;">
+                <img src="SD/png/Button_Previous_Green.png" alt="previous"
                           onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
                           onmouseup ="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';"
                           ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';" />
-        <img src="SD/png/Button_Next_Green.png" alt="next"
+                <img src="SD/png/Button_Next_Green.png" alt="next"
                           onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
                           onmouseup= "socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';"
                           ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';" />
-      </div>
-      <div style="flex:1;">
-        <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
-          <option value="-1">Select a station here</option>
-        </select>
-      </div>
-    </div>
-    <div style="display: flex;">
-
-      <div id="div-logo-s" style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
-      </div>
-      <div id="div-logo-m" style="flex: 0 0 210px;">
-        <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
-      </div>
-
-      <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
-        <div style="width: 380px; height:108px;">
-          <label class="sdr_lbl_left">Treble Gain:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="TrebleGain"
-                          onmouseup="slider_TG_mouseUp()"
-                          ontouchend="slider_TG_mouseUp()"
-                          oninput="slider_TG_change()">
-          </div>
-          <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Treble Freq:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="1" max="15" value="8" id="TrebleFreq"
-                          onmouseup="slider_TF_mouseUp()"
-                          ontouchend="slider_TF_mouseUp()"
-                          oninput="slider_TF_change()">
-          </div>
-          <label id="label_TF_value" class="sdr_lbl_right">00</label>
-          <label class="sdr_lbl_measure">KHz</label>
-
-          <label class="sdr_lbl_left">Bass Gain:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="0" max="15" value="8" id="BassGain"
-                          onmouseup="slider_BG_mouseUp()"
-                          ontouchend="slider_BG_mouseUp()"
-                          oninput="slider_BG_change()">
-          </div>
-          <label id="label_BG_value" class="sdr_lbl_right">+00</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Bass Freq:</label>
-          <div class="slidecontainer" style="float: left; height: 25px;">
-            <input type="range" min="2" max="15" value="6" id="BassFreq"
-                          onmouseup="slider_BF_mouseUp()"
-                          ontouchend="slider_BF_mouseUp()"
-                          oninput="slider_BF_change()">
-          </div>
-          <label  id="label_BF_value" class="sdr_lbl_right">000</label>
-          <label class="sdr_lbl_measure">Hz</label>
+            </div>
+            <div style="flex:1;">
+                <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
+                    <option value="-1">Select a station here</option>
+                </select>
+            </div>
         </div>
-      </div>
-      <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
-        <div style="width: 380px; height:130px;">
-          <label class="sdr_lbl_left">Low:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="LowPass"
-                          onmouseup="slider_LP_mouseUp()"
-                          ontouchend="slider_LP_mouseUp()"
-                          oninput="slider_LP_change()">
-          </div>
-          <label id="label_LP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">Band:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="BandPass"
-                          onmouseup="slider_BP_mouseUp()"
-                          ontouchend="slider_BP_mouseUp()"
-                          oninput="slider_BP_change()">
-          </div>
-          <label id="label_BP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
-          <label class="sdr_lbl_left">High:</label>
-          <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
-            <input type="range" min="0" max="15" value="13" id="HighPass"
-                          onmouseup="slider_HP_mouseUp()"
-                          ontouchend="slider_HP_mouseUp()"
-                          oninput="slider_HP_change()">
-          </div>
-          <label id="label_HP_value" class="sdr_lbl_right">0</label>
-          <label class="sdr_lbl_measure">dB</label>
-
+        <div style="display: flex;">
+            <div id="div-logo-s" style="flex: 0 0 210px;">
+                <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
+            </div>
+            <div id="div-logo-m" style="flex: 0 0 210px;">
+                <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
+            </div>
+            <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
+                <div style="width: 380px; height:108px;">
+                    <label class="sdr_lbl_left">Treble Gain:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
+                        <input type="range" min="0" max="15" value="8" id="TrebleGain"
+                        onmouseup="slider_TG_mouseUp()"
+                        ontouchend="slider_TG_mouseUp()"
+                        oninput="slider_TG_change()">
+                    </div>
+                    <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Treble Freq:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="1" max="15" value="8" id="TrebleFreq"
+                        onmouseup="slider_TF_mouseUp()"
+                        ontouchend="slider_TF_mouseUp()"
+                        oninput="slider_TF_change()">
+                    </div>
+                    <label id="label_TF_value" class="sdr_lbl_right">00</label>
+                    <label class="sdr_lbl_measure">KHz</label>
+                    <label class="sdr_lbl_left">Bass Gain:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="0" max="15" value="8" id="BassGain"
+                        onmouseup="slider_BG_mouseUp()"
+                        ontouchend="slider_BG_mouseUp()"
+                        oninput="slider_BG_change()">
+                    </div>
+                    <label id="label_BG_value" class="sdr_lbl_right">+00</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Bass Freq:</label>
+                    <div class="slidecontainer" style="float: left; height: 25px;">
+                        <input type="range" min="2" max="15" value="6" id="BassFreq"
+                        onmouseup="slider_BF_mouseUp()"
+                        ontouchend="slider_BF_mouseUp()"
+                        oninput="slider_BF_change()">
+                    </div>
+                    <label  id="label_BF_value" class="sdr_lbl_right">000</label>
+                    <label class="sdr_lbl_measure">Hz</label>
+                </div>
+            </div>
+            <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
+                <div style="width: 380px; height:130px;">
+                    <label class="sdr_lbl_left">Low:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="LowPass"
+                        onmouseup="slider_LP_mouseUp()"
+                        ontouchend="slider_LP_mouseUp()"
+                        oninput="slider_LP_change()">
+                    </div>
+                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">Band:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="BandPass"
+                        onmouseup="slider_BP_mouseUp()"
+                        ontouchend="slider_BP_mouseUp()"
+                        oninput="slider_BP_change()">
+                    </div>
+                    <label id="label_BP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                    <label class="sdr_lbl_left">High:</label>
+                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                        <input type="range" min="0" max="15" value="13" id="HighPass"
+                        onmouseup="slider_HP_mouseUp()"
+                        ontouchend="slider_HP_mouseUp()"
+                        oninput="slider_HP_change()">
+                    </div>
+                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure">dB</label>
+                </div>
+            </div>
         </div>
-      </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex: 0 0 210px;">
+                <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
+                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    onclick="socket.send('downvolume')" />
+                <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    onclick="socket.send('upvolume')" />
+                <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
+                    onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
+                    onclick="socket.send('setmute')" />
+            </div>
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
+            </div>
+        </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
+                    placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
+            </div>
+            <div style="flex: 0 0 66px;">
+                <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    ontouchend='SD/png/Button_Ready_Blue.png'"
+                    onclick="setstation()" />
+            </div>
+        </div>
+        <div style="height: 66px; display: flex;">
+            <div style="flex:1;">
+                <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1" placeholder=" Test....">
+            </div>
+            <div style="flex: 0 0 66px;">
+                <img src="SD/png/Button_Test_Green.png" alt="Test"
+                    onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Test_Green.png'"
+                    ontouchend="this.src='SD/png/Button_Test_Green.png'"
+                    onclick="test()" />
+            </div>
+        </div>
+        <hr>
+        <div style="height: 46px; padding: 0; text-align:center;">
+            Find new radio stations at
+            <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
+            or
+            <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
+        </div>
     </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex: 0 0 210px;">
-        <img src="SD/png/Button_Volume_Down_Blue.png" alt="Vol_down"
-                          onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                          ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                          onclick="socket.send('downvolume')" />
-        <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
-                          onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                          ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                          onclick="socket.send('upvolume')" />
-        <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
-                          onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                          onclick="socket.send('setmute')" />
-      </div>
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd" placeholder=" Waiting....">
-      </div>
-    </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
-                          placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
-      </div>
-      <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-                          onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                          ontouchend='SD/png/Button_Ready_Blue.png'"
-                          onclick="setstation()" />
-      </div>
-    </div>
-    <div style="height: 66px; display: flex;">
-      <div style="flex:1;">
-        <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="resultstr1" placeholder=" Test....">
-      </div>
-      <div style="flex: 0 0 66px;">
-        <img src="SD/png/Button_Test_Green.png" alt="Test"
-                          onmousedown="this.src='SD/png/Button_Test_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
-                          onmouseup="this.src='SD/png/Button_Test_Green.png'"
-                          ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                          onclick="test()" />
-      </div>
-    </div>
-    <hr>
-    <div style="height: 46px; padding: 0; text-align:center;">
-     Find new radio stations at
-      <a target="_blank" href="https://radiolise.gitlab.io">Radiolise</a>
-      or
-      <a target="_blank" href="http://streamstat.net/main.cgi?mode=all"> StreamStat.NET </a>
-    </div>
-  </div>
   <!--==============================================================================================-->
   <div id="tab-content2">
       <center>
@@ -2202,52 +1718,49 @@ function downloadCanvasImage () {
       <br>
       </center>
   </div>
-  <!--==============================================================================================-->
-  <div id="tab-content3">
-    <center>
-      <label for="seltrack"><big>Audio files on SD card:</big></label>
-      <br>
-      <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
-          <option value="-1">Select a track here</option>
-      </select>
-      <br><br>
-      <button class="button" onclick="socket.send('stopfile')">STOP</button>
-      <button class="button" onclick="socket.send('resumefile')">RESUME</button>
-      <br>
-      <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-    </center>  
-    <br>
-    <hr>
-    <br>
-    <div class="container" id="filetreeContainer">
-		  <fieldset>
-		  	<legend "title">Files</legend>
-		  	<div class="filetree-container">
-		  	  <div id="filebrowser">
-		  	  	<div class="filetree demo" id="explorerTree"></div>
-		  	  </div>
-		  	  <div>
-		  	  	<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
-		  	  		<div class="input-group">
-		  	  			<span class="form-control" id="uploaded_file_text"></span>&nbsp
-		  	  			<span>
-		  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
-		  	  				<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
-		  	  				<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
-		  	  				<input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
-		  	  			 </span>
-		  	  		</div>
-		  	  	</form>
-		  	  	<br>
-				    <div class="progress">
-				  	  <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-				    </div>
-          </div> 
-          <br>
-		    </div>
-		  </fieldset>
-	  </div>
-  <div>
+<!--====================================================================================================================-->
+    <div id="tab-content3">
+        <center>
+            <label for="seltrack"><big>Audio files on SD card:</big></label>
+            <br>
+            <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
+                <option value="-1">Select a track here</option>
+            </select>
+            <br><br>
+            <button class="button" onclick="socket.send('stopfile')">STOP</button>
+            <button class="button" onclick="socket.send('resumefile')">RESUME</button>
+            <br>
+            <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
+        </center>  
+        <br>
+        <hr>
+        <br>
+        <div class="container" id="filetreeContainer">
+            <fieldset>
+                <legend "title">Files</legend>
+                <div class="filetree-container">
+                    <div id="filebrowser">
+                        <div id="explorerTree"></div>
+                    </div>
+                </div>
+                <form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+                    <div class="input-group">
+                        <span class="form-control" id="uploaded_file_text"></span>&nbsp
+                        <span>
+                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
+                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
+                        <span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
+                            <input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
+                        </span>
+                    </div>
+                    <br>
+                    <div class="progress">
+                        <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+                    </div>
+                </form>    
+            </fieldset>
+        </div>
+    </div>
 
   <!--==============================================================================================-->
   <div id="tab-content4">
@@ -2401,6 +1914,9 @@ function downloadCanvasImage () {
   </div>
   <!--==============================================================================================-->
 </div>
+
+<script src="index.js"></script>
+
 </body>
 </html>
 

@@ -2910,6 +2910,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                                         webSrv.show(index_html);      }
                                     return;}
 
+    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");
+                                    webSrv.show(index_js); return;}
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
@@ -2967,7 +2969,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
 
-    if(cmd == "explorer"){          webSrv.reply(dirContent(param)); return;}
+    if(cmd == "explorer"){          webSrv.reply(dirContent(param.substring(5))); return;}
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
