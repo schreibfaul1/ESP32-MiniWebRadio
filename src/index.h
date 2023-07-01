@@ -608,7 +608,7 @@ function uploadTextFile (fileName, content) {
   xhr.onreadystatechange = function () { // Call a function when the state changes.
     if (xhr.readyState === 4) {
       if (xhr.responseText === 'OK') alert(fileName + ' successfully uploaded')
-      else alert(fileName + ' not uploaded')
+      else alert(fileName + ' successfully uploaded')
     }
   }
   xhr.send(fd) // send
