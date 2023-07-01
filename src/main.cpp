@@ -2943,14 +2943,15 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "get_alarmtime"){     webSrv.send("alarmtime=" + String(_alarmtime, 10)); return;}
 
-    if(cmd == "set_alarmtime"){    _alarmtime = param.toInt(); updateSettings(); return;}
+    if(cmd == "set_alarmtime"){     _alarmtime = param.toInt(); updateSettings(); return;}
 
     if(cmd == "get_timeAnnouncement"){ if(_f_timeAnnouncement) webSrv.send("timeAnnouncement=1");
                                     if(  !_f_timeAnnouncement) webSrv.send("timeAnnouncement=0");
                                     return;}
 
     if(cmd == "set_timeAnnouncement"){ if(param == "true" ) _f_timeAnnouncement = true;
-                                    if(   param == "false") _f_timeAnnouncement = false;}
+                                    if(   param == "false") _f_timeAnnouncement = false;
+                                    return;}
 
     if(cmd == "DLNA_getServer")  {  DLNA_showServer(); return;}
     if(cmd == "DLNA_getContent0"){  _level = 0; DLNA_showContent(param, 0); return;}
