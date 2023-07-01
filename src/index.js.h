@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 
+ *  Updated on: 01.07.2023
  *      Author: Wolle
  *
  *
@@ -17,12 +17,6 @@
 //
 
 const char index_js[] PROGMEM = R"=====(
-
-
-
-
-
-
 
 // --------------------------------------------------------- File Explorer ---------------------------------------------------------------------------
 
@@ -52,6 +46,7 @@ var iconFileYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYA
 
 
 var lastSelectedNodePath = "";
+var lastNodeID = 0;
 
 $('#explorerTree').on('select_node.jstree', function (e, data) {
     console.log("node")
@@ -95,41 +90,75 @@ function XmlHttpReq(path, callback, obj) {
         }
     };
     obj.error    = function(jqXHR, textStatus, errorThrown) {
-        console.log("AJAX error");
+        console.log("AJAX error ", "Path ", path);
         /*debugger; */
     };
     jQuery.ajax(obj);
 } /* XmlHttpReq */
 
+
+function XmlHttpReq1 (method, url, postmessage) {
+    var theUrl = url+ '&version=' + Math.random()
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open(method, theUrl, true)
+    xhr.ontimeout = (e) => {
+        XMLHttpRequest timed out.
+        //alert(url + ' not uploaded, timeout')
+    }
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+            var resp = xhr.responseText
+            console.log(resp);
+            if(resp.startsWith('SD_playFile=')){
+                resultstr3.value = "Audiofile is " + resp.substring(12)
+            }
+            if(resp === "refresh") refreshNode(lastNodeID);
+        }
+    }
+    xhr.send(postmessage) // send
+}
+
+
+
+
+
+
 function getData(path, callback) {
-    XmlHttpReq(path, callback, {
+    var num = path + '&version=' + Math.random().toString()
+    console.log("num: ", num );
+    XmlHttpReq(num, callback, {
         method   : "GET"
     });
 } /* getData */
 
 function deleteData(path, callback, _data) {
-    XmlHttpReq(path, callback, {
+    var num = Math.random()
+    XmlHttpReq(path + '&version=' + num.toString(), callback, {
         method   : "DELETE",
         data: _data
     });
 } /* deleteData */
 
 function patchData(path, callback, _data) {
-    XmlHttpReq(path, callback, {
+    var num = Math.random()
+    XmlHttpReq(path + '&version=' + num.toString(), callback, {
         method   : "PATCH",
         data: _data
     });
 } /* patchData */
 
 function postData(path, callback, _data) {
-    XmlHttpReq(path, callback, {
+    var num = Math.random()
+    XmlHttpReq(path + '&version=' + num.toString(), callback, {
         method   : "POST",
         data: _data
     });
 } /* postData */
 
 function putData(path, callback, _data) {
-    XmlHttpReq(path, callback, {
+    var num = Math.random()
+    XmlHttpReq(path + '&version=' + num.toString(), callback, {
         method   : "PUT",
         data: _data
     });
@@ -162,8 +191,10 @@ $('#explorerUploadForm').submit(function(e){
     }
     const startTime = new Date().getTime();
     let bytesTotal = 0;
+    var num = 'SD_GetFolder?' + path + '&version=' + Math.random().toString()
+    console.log("num ", num)
     $.ajax({
-        url: '/SD_GetFolder?' + path,
+        url:  num,
         type: 'POST',
         data: data,
         contentType: false,
@@ -217,7 +248,7 @@ $('#explorerUploadForm').submit(function(e){
             $("#explorerUploadProgress").text(progressText);
             document.getElementById('uploaded_file').value = '';
             document.getElementById('uploaded_file_text').innerHTML = '';
-            getData("/SD_upload?path=" + path, function(data) {
+            getData("SD_upload?path=" + path, function(data) {
                 /* We now have data! */
                 deleteChildrenNodes(sel);
                 addFileDirectory(sel, data);
@@ -237,7 +268,7 @@ function handleDeleteData(nodeId) {
     var ref = $('#explorerTree').jstree(true);
     var node = ref.get_node(nodeId);
     console.log("call delete request: " + node.data.path);
-    deleteData("/explorer?path=" + encodeURIComponent(node.data.path));
+    postData("SD_delete?" + encodeURIComponent(node.data.path));
 }
 
 function fileNameSort( a, b ) {
@@ -286,7 +317,7 @@ function deleteChildrenNodes(nodeId) {
 function refreshNode(nodeId) {
     var ref = $('#explorerTree').jstree(true);
     var node = ref.get_node(nodeId);
-    getData("/SD_GetFolder?" + encodeURIComponent(node.data.path), function(data) {
+    getData("SD_GetFolder?" + encodeURIComponent(node.data.path), function(data) {
         /* We now have data! */
         deleteChildrenNodes(nodeId);
         addFileDirectory(nodeId, data);
@@ -299,10 +330,13 @@ function getType(data) {
     if(data.dir) {
         type = "folder";
     }
-    else if ((/\.(mp3|MP3|ogg|wav|WAV|OGG|wma|WMA|acc|ACC|m4a|M4A|flac|FLAC)$/i).test(data.name)) {
+    else if ((/\.(mp3|ogg|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name)) {
         type = "audio";
-    } else if ((/\.(png|PNG|jpg|JPG|jpeg|JPEG|bmp|BMP|gif|GIF)$/i).test(data.name)) {
+    } else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name)) {
         type = "image";
+    }
+    else if ((/\.(m3u)$/i).test(data.name)) {
+        type = "playlist";
     }
     else {
         type = "file";
@@ -350,14 +384,17 @@ function buildFileSystemTree(path) {
             'file': { // file_red.png
               'icon': iconFileRed
             },
-            'audio': { // file_green.png 
+            'audio': { // file_green.png
               'icon': iconFileGreen
             },
             'image': { // file_blue.png
               'icon': iconFileBlue
             },
-            'default': { // file_yellow.png
+            'playlist': { // file_blue.png
               'icon': iconFileYellow
+            },
+            'default': { // file_yellow.png
+              'icon': iconFileRed
             }
         },
         plugins: ["contextmenu", "themes", "types"],
@@ -376,7 +413,8 @@ function buildFileSystemTree(path) {
                             });
                             if (childNode) {
                                 ref.edit(childNode, null, function (childNode, status) {
-                                    getData("/SD_newFolder?" + encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text));
+                                    var pathAndName = encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text) 
+                                    getData("SD_newFolder?" + pathAndName);
                                     refreshNode(nodeId);
                                 });
                             }
@@ -396,16 +434,18 @@ function buildFileSystemTree(path) {
                                 playMode = 11;
                             }
                         }
-                        getData("/SD_playFile?" + encodeURIComponent(node.data.path) + "&playmode=" + playMode);
+                        XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), null)
                     }
                 };
                 /* Refresh */
-                items.refresh = {
-                    label: "Refresh",
-                    action: function (x) {
-                        refreshNode(nodeId);
-                    }
-                };
+                if (node.data.directory) {
+                    items.refresh = {
+                        label: "Refresh",
+                        action: function (x) {
+                            refreshNode(nodeId);
+                        }
+                    };
+                }
                 /* Delete */
                 items.delete = {
                     label: "Delete",
@@ -421,8 +461,8 @@ function buildFileSystemTree(path) {
                         var srcPath = node.data.path;
                         ref.edit(nodeId, null, function (node, status) {
                             node.data.path = node.data.path.substring(0, node.data.path.lastIndexOf("/") + 1) + node.text;
-                            getData("/SD_rename?src=" + encodeURIComponent(srcPath) + "&dst=" + encodeURIComponent(node.data.path));
-                            refreshNode(ref.get_parent(nodeId));
+                            lastNodeID = ref.get_parent(nodeId)
+                            XmlHttpReq1("GET", "SD_rename?" + encodeURIComponent(srcPath) + "&" + encodeURIComponent(node.data.path), null)
                         });
                     }
                 };
@@ -431,12 +471,12 @@ function buildFileSystemTree(path) {
                     items.download = {
                         label: "Download",
                         action: function (x) {
-                            uri = "/SD_download?=" + encodeURIComponent(node.data.path);
-                            console.log("download file: " + node.data.path);
+                            uri = "SD/" + encodeURIComponent(node.data.path);
                             var anchor = document.createElement('a');
                             anchor.href = uri;
                             anchor.target = '_blank';
-                            anchor.download = node.data.path;
+                            console.log("download file: ", node.text);
+                            anchor.download = node.text;
                             anchor.click();
                             document.body.removeChild(document.body.lastElementChild);
                         }
@@ -450,7 +490,7 @@ function buildFileSystemTree(path) {
         return;
     }
     console.log("We can now have data!")
-    getData("/SD_GetFolder?/" + '&version=' + Math.random(), function(data) {
+    getData("SD_GetFolder?/", function(data) {
         /* We now have data! */
         console.log("We have data now!")
         console.log("data", data)

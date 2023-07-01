@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 29.06.2023
+ *  updated on: 01.07.2023
  *      Author: Wolle 
  */
 
@@ -348,7 +348,7 @@ String WebSrv::getContentType(String filename){
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::handlehttp() {                // HTTPserver, message received
     bool wswitch=true;
-    int16_t inx0, inx1, inx2, inx3;         // Pos. of search string in currenLine
+    int16_t inx1 = 0, inx2 = 0;                 // Pos. of search string in currenLine
     String currentLine = "";                // Build up to complete line
     String ct;                              // contentType
     uint32_t contentLength = 0;                        // contentLength
@@ -389,46 +389,58 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             break;
         } else {
             // Newline seen
-            inx0 = 0;
-
+            method = HTTP_NONE;
             if (currentLine.startsWith("Content-Length:")) contentLength = currentLine.substring(15).toInt();
 
-            if (currentLine.startsWith("GET /")) {method = HTTP_GET; inx0 = 5;}  // GET request?
-            if (currentLine.startsWith("POST /")){method = HTTP_PUT; inx0 = 6;}  // POST request?
-            if (inx0 == 0) method = HTTP_NONE;
+            if (currentLine.startsWith("GET /")) {     // GET request?
+                method = HTTP_GET;
+                currentLine = currentLine.substring(5);
+            }
+            else if (currentLine.startsWith("POST /")){ // POST request?
+                method = HTTP_PUT;
+                currentLine = currentLine.substring(6);}
 
-            if(inx0>0){
+            if(method > 0){
+                http_cmd    = "";
+                http_param  = "";
+                http_arg    = "";
+                http_rqfile = "";
+                int posHTTP = currentLine.indexOf(" HTTP/");
+                if(posHTTP >= 0) currentLine = currentLine.substring(0, posHTTP);
+
+                int pos = currentLine.indexOf("&version="); if(pos > 0) currentLine = currentLine.substring(0, pos);
+
+                currentLine = URLdecode(currentLine);
+
+                //log_i("cl \"%s\"", currentLine.c_str());
+
                 inx1 = currentLine.indexOf("?");    // Search for 1st parameter
                 inx2 = currentLine.lastIndexOf("&");    // Search for 2nd parameter
-                inx3 = currentLine.indexOf(" HTTP");// Search for 3th parameter
 
-                if(inx1 > inx0){     // it is a command
-                    http_cmd = currentLine.substring(inx0, inx1);//isolate the command
+                if(inx1 > 0){     // it is a command
+                    http_cmd = currentLine.substring(0, inx1); //isolate the command
                     http_rqfile = "";               // No file
                 }
-                if((inx1>0) && (inx1+1 < inx3)){        // it is a parameter
-                    http_param = currentLine.substring(inx1+1, inx3);//isolate the parameter
-
-                    if(inx2>0){
-                        http_arg = currentLine.substring(inx2+1, inx3);//isolate the arguments
-                        http_param = currentLine.substring(inx1+1, inx2);//cut the parameter
+                if((inx1 > 0) && (inx2 > inx1 + 1)){        // it is a parameter
+                    http_param = currentLine.substring(inx1 + 1, inx2);//isolate the parameter
+                    if(inx2 < currentLine.length()){
+                        http_arg = currentLine.substring(inx2 + 1, currentLine.length());
                     }
-                    http_rqfile = "";               // No file
+                }
+                if(inx1 > 0 && inx2 < 0){
+                    http_param = currentLine.substring(inx1 + 1, currentLine.length());
+                    http_arg = "";
                 }
                 if(inx1 < 0 && inx2 < 0){   // it is a filename
-                    http_rqfile = currentLine.substring(inx0, inx3);
+                    http_rqfile = currentLine;
                     http_cmd =   "";
                     http_param = "";
                     http_arg =   "";
                 }
+                //log_i("cmd \"%s\"  param \"%s\"  arg \"%s\"  rqfile \"%s\"", http_cmd.c_str(), http_param.c_str(), http_arg.c_str(), http_rqfile.c_str());
+
+                currentLine = "";
             }
-            if(currentLine.length() == 0){
-                // schould be never zero, can be '\n'
-                cmdclient.clearWriteError(); cmdclient.stop();
-                log_e("err %s is not completed", http_cmd.c_str());
-                return true;
-            }
-            currentLine = "";
         }
     } //end first while
     while(wswitch==false){                          // second while
@@ -606,23 +618,27 @@ boolean WebSrv::loop() {
     if(cmdclient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("Command client available");
         return handlehttp();
-    }     
+    }
+
     cmdclient = cmdserver.available();
+    if(cmdclient.available()) return true; // cmdclient has prio
+
+    if (webSocketClient.available()){
+        if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");
+        return handleWS();
+    } 
 
     if(!webSocketClient.connected()){
         hasclient_WS = false;
     }
     if(!hasclient_WS) webSocketClient = webSocketServer.available();
  
-    if (webSocketClient.available()){
-        if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");
-        return handleWS();
-    }
+
 
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::reply(const String &response, bool header){
+void WebSrv::reply(const String &response, boolean header){
     if(header==true) {
         int l= response.length();
         // HTTP header
@@ -638,6 +654,21 @@ void WebSrv::reply(const String &response, bool header){
         cmdclient.print(httpheader) ;             // header sent
     }
     cmdclient.print(response);
+}
+void WebSrv::sendStatus(uint16_t HTTPstatusCode){
+    int l= 0; // respunse length
+    // HTTP header
+    String httpheader="";
+    httpheader += "HTTP/1.1 200 OK\r\n";
+    httpheader += "Connection: close\r\n";
+    httpheader += "Content-type: text/html\r\n";
+    httpheader += "Content-Length: " + String(l, 10) + "\r\n";
+    httpheader += "Server: " + _Name+ "\r\n";
+    httpheader += "Cache-Control: max-age=3600\r\n";
+    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
+    cmdclient.print(httpheader) ;             // header sent
+
+    cmdclient.print("  ");
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::UTF8toASCII(String str){

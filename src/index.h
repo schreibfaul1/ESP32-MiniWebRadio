@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 17.06.2023
+ *  Updated on: 01.07.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -46,11 +46,11 @@ const char index_html[] PROGMEM = R"=====(
 <!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 
 <!--  <script src="SD/js/jstree.js"></script>    --->
@@ -405,7 +405,7 @@ function connect() {
                               break
       case  "volume":         resultstr1.value = "Volume is now " + val;
                               break
-      case  "audiotrack":     resultstr3.value = "Audiofile is " + val;
+      case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
                               break
 
       case  "stopfile":       resultstr3.value = val;
@@ -543,7 +543,6 @@ function showTab3 () {
   document.getElementById('level4').options.length = 0
   document.getElementById('level5').options.length = 0
   socket.send("change_state=6")
-  socket.send("audiolist") // Now get the audio file list from SD
 }
 
 function showTab4 () {
@@ -728,8 +727,8 @@ function showLogo(id, src) { // get the bitmap from SD, convert to URL first
   src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
   var timestamp = new Date().getTime()
   var file
-  if(src == '') file = 'url(SD/unknown.jpg?t=' + timestamp + ')'
-  else file = 'url(SD' + src + '?t=' + timestamp + ')'
+  if(src == '') file = 'url(SD/unknown.jpg&version=' + timestamp + ')'
+  else file = 'url(SD' + src + '?&version=' + timestamp + ')'
   console.log("showLogo id=", id, "file=", file)
   document.getElementById(id).style.backgroundImage = file
 }
@@ -963,7 +962,7 @@ function loadGridFileFromSD () { // load from SD
   var XLrowObject
   var rawFile = new XMLHttpRequest()
   rawFile.timeout = 2000; // time in milliseconds
-  rawFile.open('POST', '/SD/stations.csv', true)
+  rawFile.open('POST', 'SD/stations.csv', true)
   rawFile.onreadystatechange = function () {
     if (rawFile.readyState === 4) {
       var rawdata = rawFile.responseText
@@ -986,7 +985,7 @@ function loadGridFileFromSD () { // load from SD
   }
   rawFile.ontimeout = (e) => {
     // XMLHttpRequest timed out.
-    console.log("load /SD/stations.csv timeout")
+    console.log("load SD/stations.csv timeout")
   }
   rawFile.send()
 }
@@ -1217,31 +1216,6 @@ function updateStationlist () { // select in tab Radio
 
 // ----------------------------------- TAB AUDIO PLAYER ------------------------------------
 
-function trackreq (presctrl) { // Audio Player: select audio title from track list
-  if (presctrl.value !== '-1') {
-    socket.send('audiotrack=' + presctrl.value)
-  }
-}
-
-function getAudioFileList(val){
-  content =JSON.parse(val)
-  var select = document.getElementById('seltrack')
-  select.options.length = 0;
-  var fileNames = val.split(",")
-  for (i = -1; i < (fileNames.length); i++) {
-    opt = document.createElement('OPTION')
-    if(i == -1){
-      opt.value = ""
-      opt.text =  "select a file here"
-    }
-    else{
-      console.log(content[i].name)
-      opt.value = content[i].name
-      opt.text =  content[i].name
-    }
-    select.add(opt)
-  }
-}
 
 // ----------------------------------- TAB Search Stations ------------------------------------
 
@@ -1723,9 +1697,7 @@ function downloadCanvasImage () {
         <center>
             <label for="seltrack"><big>Audio files on SD card:</big></label>
             <br>
-            <select class="boxstyle" style="width: calc(100% -280px)"; onchange="trackreq(this)" id="seltrack">
-                <option value="-1">Select a track here</option>
-            </select>
+
             <br><br>
             <button class="button" onclick="socket.send('stopfile')">STOP</button>
             <button class="button" onclick="socket.send('resumefile')">RESUME</button>
@@ -1735,7 +1707,7 @@ function downloadCanvasImage () {
         <br>
         <hr>
         <br>
-        <div class="container" id="filetreeContainer" style="visibility: hidden; >
+        <div class="container" id="filetreeContainer">
             <fieldset>
                 <legend "title">Files</legend>
                 <div class="filetree-container">
@@ -1747,9 +1719,6 @@ function downloadCanvasImage () {
                     <div class="input-group">
                         <span class="form-control" id="uploaded_file_text"></span>&nbsp
                         <span>
-                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" data-i18n="[title]files.files.desc;files.files.title">Files</span>&nbsp
-                        <span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=true; input.click();" data-i18n="[title]files.directory.desc;files.directory.title">Directory</span>&nbsp
-                        <span class="button" onclick="$(this).parent().find('input[type=file]').submit();" data-i18n="[title]files.upload.desc;files.upload.title">Upload</span>
                             <input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
                         </span>
                     </div>

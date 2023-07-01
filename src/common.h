@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 29.Jun.2023
+// updated: 01.Jul.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -10,7 +10,6 @@
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
 #define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
@@ -171,8 +170,7 @@ void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false);
 void display_sleeptime(int8_t ud = 0);
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0 , uint16_t maxHeigth = 0);
 bool setAudioFolder(const char* audioDir);
-const char* listAudioFile();
-bool sendAudioList2Web(const char* audioDir);
+File getNextAudioFile();
 bool connectToWiFi();
 void openAccessPoint();
 const char* byte_to_binary(int8_t x);
@@ -181,6 +179,7 @@ void trim(char *s);
 bool startsWith (const char* base, const char* str);
 bool endsWith (const char* base, const char* str);
 int indexOf (const char* base, const char* str, int startIndex);
+int lastIndexOf(const char* haystack, const char needle);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
 int16_t strlenUTF8(const char* str);
@@ -200,7 +199,10 @@ void changeBtn_released(uint8_t btnNr);
 void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
 String setI2STone();
-void audiotrack(const char* fileName, uint32_t resumeFilePos = 0, bool showFN = true);
+void SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
+bool SD_rename(const char* src , const char* dest);
+bool SD_newFolder(const char* folderPathName);
+bool SD_delete(const char* itemPath);
 void processPlaylist(boolean first = false);
 void changeState(int state);
 void connecttohost(const char* host);

@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.0 Jun 29/2023
+    Version 2.8.1 Jul 01/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -56,7 +56,6 @@ uint32_t       _audioFileSize  = 0;
 char           _chbuf[512];
 char           _fName[256];
 char           _myIP[25];
-char           _afn[256];                // audioFileName
 char           _path[128];
 char           _prefix[5]      = "/s";
 char           _commercial[25];
@@ -145,6 +144,7 @@ Ticker ticker100ms;
 IR ir(IR_PIN);                  // do not change the objectname, it must be "ir"
 TP tp(TP_CS, TP_IRQ);
 File audioFile;
+File nextAudioFile;
 File playlistFile;
 FtpServer ftpSrv;
 WiFiClient client;
@@ -346,17 +346,17 @@ boolean defaultsettings(){
 
     if(!_lastconnectedhost) _lastconnectedhost = "";
     if(_sum_stations == 0) saveStationsToNVS(); // first init
-	return true;
+    return true;
 }
 
 boolean saveStationsToNVS(){
     String Hide="", Cy="", StationName="", StreamURL="", currentLine="", tmp="";
     uint16_t cnt = 0;
     // StationList
-	if(!SD_MMC.exists("/stations.csv")){
-		SerialPrintfln(ANSI_ESC_RED "SD_MMC/stations.csv not found");
-		return false;
-	}
+    if(!SD_MMC.exists("/stations.csv")){
+        SerialPrintfln(ANSI_ESC_RED "SD_MMC/stations.csv not found");
+        return false;
+    }
 
     File file = SD_MMC.open("/stations.csv");
     if(file){  // try to read from SD_MMC
@@ -437,27 +437,27 @@ void updateSettings(){
 ***********************************************************************************************************************/
 // Sends a list of the content of a directory as JSON file
 String dirContent(String path) {
-	File root, file;
+    File root, file;
     JSONVar jObject, jArr;
     int i = 0;
     if(path =="") path = "/";
     root = SD_MMC.open(path.c_str());
 
-	if (!root.isDirectory()) {
-		SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
-		return "";
-	}
-	while (true) {
+    if (!root.isDirectory()) {
+        SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
+        return "";
+    }
+    while (true) {
         file = root.openNextFile();
         if(!file) break;
-		if (startsWith(file.name() , "/.")) continue;  // ignore hidden folders
-		jArr["name"] = (String)file.name();
-		jArr["dir"]  = (boolean)file.isDirectory();
+        if (startsWith(file.name() , "/.")) continue;  // ignore hidden folders
+        jArr["name"] = (String)file.name();
+        jArr["dir"]  = (boolean)file.isDirectory();
         jObject[i]   = jArr;
         i++;
     }
     file.close();
-	root.close();
+    root.close();
     if(i){
         String jO = JSON.stringify(jObject);
         // log_i("%s", jO.c_str());
@@ -465,10 +465,6 @@ String dirContent(String path) {
     }
     return "";
 }
-
-
-
-
 
 /***********************************************************************************************************************
 *                                        T F T   B R I G H T N E S S                                                   *
@@ -898,6 +894,7 @@ void showFileLogo(){
 
 void showFileName(const char* fname){
     clearLogo();
+    if(!fname) return;
     switch(strlenUTF8(fname)){
         case   0 ... 15:  tft.setFont(_fonts[5]); break;
         case  16 ... 30:  tft.setFont(_fonts[4]); break;
@@ -1062,7 +1059,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     return false; // neither jpg nor bmp
 }
 /***********************************************************************************************************************
-*                                         L I S T A U D I O F I L E                                                    *
+*                                      H A N D L E  A U D I O F I L E                                                  *
 ***********************************************************************************************************************/
 bool setAudioFolder(const char* audioDir){
     if(audioFile) audioFile.close();  // same as rewind()
@@ -1071,45 +1068,103 @@ bool setAudioFolder(const char* audioDir){
     if(!audioFile.isDirectory()){SerialPrintfln(ANSI_ESC_RED "%s is not a directory", audioDir); return false;}
     return true;
 }
-const char* listAudioFile(){
-    File file = audioFile.openNextFile();
-    if(!file) {
-        // SerialPrintfln(ANSI_ESC_BLUE "no more files found");
-        audioFile.close();
-        return nullptr;
-    }
-    else{
-        if(file.isDirectory()) return "dir";
-        strcpy(_chbuf, file.name());
-        if(endsWith(_chbuf, ".mp3") || endsWith(_chbuf, ".aac") || endsWith(_chbuf, ".m4a") ||
-                                       endsWith(_chbuf, ".wav") || endsWith(_chbuf, ".flac")||
-                                       endsWith(_chbuf, ".m3u") || endsWith(_chbuf, ".opus")||
-                                       endsWith(_chbuf, ".ogg")){
-
-            return _chbuf;
+File getNextAudioFile(){
+    File file; 
+    while(true){
+        if(!audioFile){
+            SerialPrintfln(ANSI_ESC_BLUE "no audiofiles found");
+            break;
+        } 
+        file = audioFile.openNextFile();
+        if(!file) {
+            audioFile.close();
+            SerialPrintfln(ANSI_ESC_BLUE "no more files found");
+            break;
         }
         else{
-            return nullptr;
+            log_i("%s", file.path());
+            if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") ||
+               endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac")|| endsWith(file.name(), ".m3u") ||
+               endsWith(file.name(), ".opus")|| endsWith(file.name(), ".ogg")){ break; }        
         }
     }
-    return nullptr;
+    if(file) log_i("%s", file.path());
+    else     log_i("returns zero");
+    return file;
 }
-
-bool sendAudioList2Web(const char* audioDir){
-    if(!setAudioFolder(audioDir)) return false;
-    const char* FileName = NULL;
-    JSONVar jObject;
-    uint8_t i = 0;
-    while(true){
-        FileName = listAudioFile();
-        if(!FileName) break;
-        if(strcmp(FileName, "dir") == 0) continue;
-        jObject[i]["name"] = (String)FileName;
-        i++;
+void processPlaylist(boolean first){
+    static bool f_has_EXTINF = false;
+    while(playlistFile.available() > 0){
+        size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
+        _chbuf[bytesRead] = '\0';
+        if(bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
+        if(startsWith(_chbuf, "#"))SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
+        trim(_chbuf);
+        if(first){
+            _playlistTime = millis();
+            if(startsWith(_chbuf, "#EXTM3U")){
+                first = false;
+                _f_playlistEnabled = true;
+                continue;
+            }
+            else{
+                SerialPrintfln("Playlist:    " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", playlistFile.name());
+                playlistFile.close();
+                return;
+            }
+        }
+        if(startsWith(_chbuf, "#EXTINF")){
+            int8_t idx1 = indexOf(_chbuf, ":",  0) + 1;
+            int8_t idx2 = indexOf(_chbuf, ",",  0);
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
+            showFileName(_chbuf + idx2 + 1);
+            f_has_EXTINF = true;
+            int8_t len = idx2 -idx1;
+            if(len > 0 && len < 6){ // song playtime
+                char tmp[7];
+                memcpy(tmp, _chbuf + idx1, len);
+                tmp[len] = '\0';
+                SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
+            }
+            continue;
+        }
+        _f_playlistNextFile = false;
+        if(!startsWith(_chbuf, "#")){
+            if(startsWith(_chbuf, "http")){
+                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
+                showVolumeBar();
+                if(!f_has_EXTINF) clearLogoAndStationname();
+                f_has_EXTINF = false;
+                webSrv.send((String)"SD_playFile=" + _chbuf);
+                changeState(PLAYERico);
+                _cur_Codec = 0;
+                audioConnecttohost(_chbuf);
+            }
+            else{
+                const char* path = playlistFile.path();
+                int idx = lastIndexOf(path, '/');
+                int len = strlen(_chbuf);
+                for(int i = len; i > -1; i--){
+                    _chbuf[idx + i + 1 ] = _chbuf[i];
+                }
+                strncpy(_chbuf, path, idx + 1);
+                log_w("pls path %s, %i, %i", _chbuf, idx, len);
+                urldecode(_chbuf);
+                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
+                webSrv.send((String)"SD_playFile=" + _chbuf);
+                if(!f_has_EXTINF) SD_playFile(_chbuf);
+                else {f_has_EXTINF = false; SD_playFile(_chbuf, 0, false);}
+            }
+            return;
+        }
     }
-    String msg = "AudioFileList=" + JSON.stringify(jObject);
-    webSrv.send(msg);
-    return true;
+    SerialPrintfln("end of playlist");
+    webSrv.send("SD_playFile=end of playlist");
+    playlistFile.close();
+    _f_playlistEnabled = false;
+    clearLogoAndStationname();
+    showFileName(audioFile.name());
+    changeState(PLAYER);
 }
 /***********************************************************************************************************************
 *               C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                           *
@@ -1445,8 +1500,8 @@ uint32_t simpleHash(const char* str){
     if(str == NULL) return 0;
     uint32_t hash = 0;
     for(int i=0; i<strlen(str); i++){
-	    if(str[i] < 32) continue; // ignore control sign
-	    hash += (str[i] - 31) * i * 32;
+        if(str[i] < 32) continue; // ignore control sign
+        hash += (str[i] - 31) * i * 32;
     }
     return hash;
 }
@@ -1501,6 +1556,10 @@ int indexOf (const char* haystack, const char* needle, int startIndex) {
     char* pos = strstr(p, needle);
     if (pos == nullptr) return -1;
     return pos - haystack;
+}
+int lastIndexOf(const char* haystack, const char needle) {
+        const char *p = strrchr(haystack, needle);
+        return (p ? p - haystack : -1);
 }
 boolean strCompare(char* str1, char* str2){
     return strCompare((const char*) str1, str2);
@@ -1751,99 +1810,54 @@ String setI2STone(){
     return tone;
 }
 
-void audiotrack(const char* fileName, uint32_t resumeFilePos, bool showFN){
-    char* path = (char*)malloc(strlen(fileName) + 20);
-    strcpy(path, "/audiofiles/");
-    strcat(path, fileName);
+void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN){
     if(endsWith(path, "m3u")){
         playlistFile.close(); // as a precaution
-        strcpy(_afn, fileName);
         if(SD_MMC.exists(path)){
             playlistFile = SD_MMC.open(path);
             _f_playlistEnabled = false;
             processPlaylist(true);
         }
-        if(path) free(path);
         return;
     }
     showVolumeBar();
-//    clearLogoAndStationname();
-    if(showFN) showFileName(fileName);
+    int idx = lastIndexOf(path, '/');
+    if(idx < 0) return;
+    if(showFN) showFileName(path + idx + 1);
     changeState(PLAYERico);
-	connecttoFS((const char*)path, resumeFilePos);
-	if(_f_isFSConnected){
+    connecttoFS((const char*)path, resumeFilePos);
+    if(_f_isFSConnected){
         free(_lastconnectedfile);
-        _lastconnectedfile = strdup(fileName);
+        _lastconnectedfile = strdup(path);
         _resumeFilePos = 0;
     }
-    if(path) free(path);
 }
 
-void processPlaylist(boolean first){
-    static bool f_has_EXTINF = false;
-    while(playlistFile.available() > 0){
-        size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
-        _chbuf[bytesRead] = '\0';
-        if(bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
-        if(startsWith(_chbuf, "#"))SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
-        trim(_chbuf);
-        if(first){
-            _playlistTime = millis();
-            if(startsWith(_chbuf, "#EXTM3U")){
-                first = false;
-                _f_playlistEnabled = true;
-                continue;
-            }
-            else{
-                SerialPrintfln("Playlist:    " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", _afn);
-                playlistFile.close();
-                return;
-            }
-        }
-        if(startsWith(_chbuf, "#EXTINF")){
-            int8_t idx1 = indexOf(_chbuf, ":",  0) + 1;
-            int8_t idx2 = indexOf(_chbuf, ",",  0);
-            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
-            showFileName(_chbuf + idx2 + 1);
-            f_has_EXTINF = true;
-            int8_t len = idx2 -idx1;
-            if(len > 0 && len < 6){ // song playtime
-                char tmp[7];
-                memcpy(tmp, _chbuf + idx1, len);
-                tmp[len] = '\0';
-                SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
-            }
-            continue;
-        }
-        _f_playlistNextFile = false;
-        if(!startsWith(_chbuf, "#")){
-            if(startsWith(_chbuf, "http")){
-                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
-                showVolumeBar();
-                if(!f_has_EXTINF) clearLogoAndStationname();
-                f_has_EXTINF = false;
-                webSrv.send((String)"audiotrack=" + _chbuf);
-                changeState(PLAYERico);
-                _cur_Codec = 0;
-                audioConnecttohost(_chbuf);
-            }
-            else{
-                urldecode(_chbuf);
-                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
-                webSrv.send((String)"audiotrack=" + _chbuf);
-                if(!f_has_EXTINF) audiotrack(_chbuf);
-                else {f_has_EXTINF = false; audiotrack(_chbuf, 0, false);}
-            }
-            return;
-        }
+bool SD_rename(const char* src , const char* dest){
+    bool success = false;
+    if(SD_MMC.exists(src)){
+        log_i("exists");
+        success = SD_MMC.rename(src, dest);
     }
-    SerialPrintfln("end of playlist");
-    webSrv.send("audiotrack=end of playlist");
-    playlistFile.close();
-    _f_playlistEnabled = false;
-    clearLogoAndStationname();
-    showFileName(_afn);
-    changeState(PLAYER);
+    return success;
+}
+
+bool SD_newFolder(const char* folderPathName){
+    bool success = false;
+    success = SD_MMC.mkdir(folderPathName);
+    return success;
+}
+
+bool SD_delete(const char* itemPath){
+    bool success = false;
+    if(SD_MMC.exists(itemPath)){
+        File dirTest = SD_MMC.open(itemPath, "r");
+        bool isDir = dirTest.isDirectory();
+        dirTest.close();
+        if(isDir) success = SD_MMC.rmdir(itemPath);
+        else      success = SD_MMC.remove(itemPath);
+    }
+    return success;
 }
 
 void IRAM_ATTR headphoneDetect(){ // called via interrupt
@@ -2112,13 +2126,10 @@ void DLNA_showContent(String objectId, uint8_t level){
 *                                                      L O O P                                                         *
 ***********************************************************************************************************************/
 void loop() {
-    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     if(webSrv.loop()) return; // if true: ignore all other for faster response to web
-    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
-    yield(); //give audiotask priority, avoid cracking on VORBIS (ogg)
     soap.loop();
 
     if(_f_muteDecrement){
@@ -2174,7 +2185,7 @@ void loop() {
         _f_100ms = false;
         updateVUmeter();
     }
-
+    webSrv.loop();
     if(_f_1sec){
         _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
@@ -2248,7 +2259,7 @@ void loop() {
             _commercial_dur--;
             if((_commercial_dur == 2) && (_state == RADIO)) clearStreamTitle();// end of commercial? clear streamtitle
         }
-
+        webSrv.loop();
         if(_f_newStreamTitle && !_timeCounter) {
             _f_newStreamTitle = false;
             if(_state == RADIO) {
@@ -2391,6 +2402,7 @@ void vs1053_eof_mp3(const char *info){                  // end of mp3 file (file
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
+    webSrv.send("SD_playFile=end of audiofile");
 }
 void audio_eof_mp3(const char *info){                  // end of mp3 file (filename)
     _f_eof = true;
@@ -2398,6 +2410,7 @@ void audio_eof_mp3(const char *info){                  // end of mp3 file (filen
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico){clearLogo(); clearStationName();}
+    webSrv.send("SD_playFile=end of audiofile");
 }
 //----------------------------------------------------------------------------------------
 void vs1053_eof_stream(const char *info){
@@ -2563,69 +2576,69 @@ void tp_pressed(uint16_t x, uint16_t y){
 
     if(_f_sleeping) return; // awake in tp_released()
 
-	switch(_state) {
-		case RADIO:
-						if(y <= _winTitle.y) { yPos = RADIO_1; }
-						break;
-		case RADIOico:
-						if(y <= _winTitle.y) { yPos = RADIOico_1; }
- 						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = RADIOico_2;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case RADIOmenue:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = RADIOmenue_1;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case PLAYER:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = PLAYER_1;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case PLAYERico:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = PLAYERico_1;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case CLOCK:
-						if(_winDigits.y <= y && y <= _winDigits.y + _winDigits.h) { yPos = CLOCK_1; }
-						break;
-		case CLOCKico:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = CLOCKico_1;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case ALARM:
-						if(_winAlarmDays.y <= y && y <= _winAlarmDays.y + _winAlarmDays.h) {
-											yPos = ALARM_1;
-											btnNr = (x - 2) / _alarmdays_w;
-						}  // weekdays
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = ALARM_2;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case SLEEP:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = SLEEP_1;
-											btnNr = x / _winButton.w;
-						}
-						break;
-		case BRIGHTNESS:
-						if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
-											yPos = BRIGHTNESS_1;
-											btnNr = x / _winButton.w;
-						}
-		default:
-						break;
-	}
-	if(yPos == none) {SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y); return;}
+    switch(_state) {
+        case RADIO:
+                        if(y <= _winTitle.y) { yPos = RADIO_1; }
+                        break;
+        case RADIOico:
+                        if(y <= _winTitle.y) { yPos = RADIOico_1; }
+                         if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = RADIOico_2;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case RADIOmenue:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = RADIOmenue_1;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case PLAYER:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = PLAYER_1;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case PLAYERico:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = PLAYERico_1;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case CLOCK:
+                        if(_winDigits.y <= y && y <= _winDigits.y + _winDigits.h) { yPos = CLOCK_1; }
+                        break;
+        case CLOCKico:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = CLOCKico_1;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case ALARM:
+                        if(_winAlarmDays.y <= y && y <= _winAlarmDays.y + _winAlarmDays.h) {
+                                            yPos = ALARM_1;
+                                            btnNr = (x - 2) / _alarmdays_w;
+                        }  // weekdays
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = ALARM_2;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case SLEEP:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = SLEEP_1;
+                                            btnNr = x / _winButton.w;
+                        }
+                        break;
+        case BRIGHTNESS:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = BRIGHTNESS_1;
+                                            btnNr = x / _winButton.w;
+                        }
+        default:
+                        break;
+    }
+    if(yPos == none) {SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y); return;}
 
     switch(yPos){
         case RADIO_1:       changeState(RADIOico); break;
@@ -2700,8 +2713,6 @@ void tp_pressed(uint16_t x, uint16_t y){
 }
 void tp_released(){
     //SerialPrintfln("tp_released, state is: %i", _state);
-    const char* chptr = NULL;
-    char path[256 + 12] = "/audiofiles/";
     if(_f_sleeping == true){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
@@ -2725,9 +2736,10 @@ void tp_released(){
 
         /* RADIOmenue ******************************/
         case 10:    changeState(PLAYER);
-                    if(setAudioFolder("/audiofiles")) chptr = listAudioFile();
-                    if(chptr) strcpy(_afn, chptr);
-                    showFileName(_afn); break;
+                    setAudioFolder("/audiofiles");
+                    nextAudioFile = getNextAudioFile();
+                    showFileName(nextAudioFile.name());
+                    break;
         case 11:    changeState(CLOCK); break;
         case 12:    changeState(RADIO); break;
         case 13:    changeState(SLEEP); break;
@@ -2749,18 +2761,19 @@ void tp_released(){
 
         /* AUDIOPLAYER ******************************/
         case 40:    changeBtn_released(0); // first audiofile
-                    if(setAudioFolder("/audiofiles")) chptr = listAudioFile();
-                    if(chptr) strcpy(_afn, chptr);
-                    showFileName(_afn); break;
+                    if(setAudioFolder("/audiofiles"));
+                    nextAudioFile = getNextAudioFile();
+                    showFileName(nextAudioFile.name());
+                    break;
         case 41:    changeBtn_released(1); // next audiofile
-                    chptr = listAudioFile();
-                    if(chptr) strcpy(_afn ,chptr);
-                    showFileName(_afn); break;
+                    nextAudioFile = getNextAudioFile();
+                    showFileName(nextAudioFile.name());
+                    break;
         case 42:    changeState(PLAYERico); showVolumeBar(); // ready
-                    audiotrack(_afn);
-                    if(_f_isFSConnected){
+                    SD_playFile(nextAudioFile.path());
+                    if(_f_isFSConnected && nextAudioFile){
                         free(_lastconnectedfile);
-                        _lastconnectedfile = strdup(path);
+                        _lastconnectedfile = strdup(nextAudioFile.path());
                     } break;
         case 43:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 44:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
@@ -2878,50 +2891,38 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     char hp[30] = "tone=Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
                                     webSrv.send(hp); setI2STone(); return;}
 
-    if(cmd == "audiolist"){         sendAudioList2Web("/audiofiles");                                   // via websocket
-                                    return;}
-
-    if(cmd == "audiotrack"){        webSrv.send("audiotrack=" + param);                                 // via websocket
-                                    audiotrack(param.c_str());
-                                    return;}
-
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "upvolume"){          webSrv.send("volume=" + (String)upvolume());  return;}              // via websocket
+    if(cmd == "upvolume"){          webSrv.send("volume=" + (String)upvolume());  return;}                                                            // via websocket
 
-    if(cmd == "downvolume"){        webSrv.send("volume=" + (String)downvolume()); return;}             // via websocket
+    if(cmd == "downvolume"){        webSrv.send("volume=" + (String)downvolume()); return;}                                                           // via websocket
 
-    if(cmd == "prev_station"){      prevStation(); return;}                                             // via websocket
+    if(cmd == "prev_station"){      prevStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "next_station"){      nextStation(); return;}                                             // via websocket
+    if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                 // via websocket
+    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
 
-    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); return;}
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); return;}                                                                         // via websocket
 
-    if(cmd == "getnetworks"){       webSrv.send((String)"networks=" + WiFi.SSID().c_str()); return;}
+    if(cmd == "getnetworks"){       webSrv.send((String)"networks=" + WiFi.SSID().c_str()); return;}                                                  // via websocket
 
-    if(cmd == "ping"){              webSrv.send("pong"); return;}
+    if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
 
-    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");
+    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
                                                         webSrv.show(accesspoint_html);}
                                     else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
                                                         webSrv.show(index_html);      }
                                     return;}
 
-    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");
+    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
                                     webSrv.show(index_js); return;}
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
     if(cmd == "get_decoder"){       webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
 
-    if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}
-
-    if(cmd.startsWith("SD/")){      str = cmd.substring(2);
-                                    if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
-                                        webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
-                                    return;}
+    if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
     if(cmd == "change_state"){      if(_state != CLOCK) changeState(param.toInt()); return;}
 
@@ -2930,11 +2931,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=nothing to resume");
-									else {
-										audiotrack(_lastconnectedfile, _resumeFilePos);
-										webSrv.send("resumefile=audiofile resumed");
-									}
-									return;}
+                                    else {
+                                        SD_playFile(_lastconnectedfile, _resumeFilePos);
+                                        webSrv.send("resumefile=audiofile resumed");
+                                    }
+                                    return;}
 
     if(cmd == "get_alarmdays"){     webSrv.send("alarmdays=" + String(_alarmdays, 10)); return;}
 
@@ -2966,24 +2967,47 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL) * 4);
                                     return;}
 
-    if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}  // via websocket
+    if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}                                                     // via websocket
 
-    if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param)); return;}
-
-    if(cmd == "SD_newFolder"){      log_w("new Folder %s", param.c_str()); return;}
-
-    if(cmd == "SD_playFile"){       log_w("play File %s", param.c_str()); return;}
-
-    if(cmd == "SD_rename"){         log_w("rename %s", param.c_str()); return;}
-
-    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));
+    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
-                                    log_i("SSID %s, PW %s", AP_SSID.c_str(), AP_PW.c_str());
-                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s"
-                                                                                                                  , AP_SSID.c_str(), AP_PW.c_str());
+                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
+                                    AP_SSID.c_str(), AP_PW.c_str());
                                     pref.putString("ap_ssid", AP_SSID);
                                     pref.putString("ap_pw", AP_PW);
                                     ESP.restart();}
+
+    if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
+                                    if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
+                                        webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
+                                    return;}
+
+    if(cmd == "SD_GetFolder"){      SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    webSrv.reply(dirContent(param)); return;}
+
+    if(cmd == "SD_newFolder"){      SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    bool res = SD_newFolder(param.c_str());
+                                    if(res) webSrv.reply("200"); else webSrv.reply("400");
+                                    return;}
+
+    if(cmd == "SD_playFile"){       SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
+                                    webSrv.reply("SD_playFile=" + param);
+                                    SD_playFile(param.c_str());
+                                    return;}
+
+    if(cmd == "SD_rename"){         SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
+                                    param.c_str(), arg.c_str());
+                                    bool res = SD_rename(param.c_str(), arg.c_str());
+                                    if(res) webSrv.reply("refresh");
+                                    else webSrv.reply("400");
+                                    return;}
+
+    if(cmd == "SD_delete"){         SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
+                                    bool res = SD_delete(param.c_str());
+                                    if(res) webSrv.reply("200");else webSrv.reply("400");
+                                    return;}
+
+
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }
@@ -2996,6 +3020,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength){
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
     if(request == "fileUpload"){savefile(_filename.c_str(), contentLength);  return;}
+
     SerialPrintfln(ANSI_ESC_RED "unknown request: %s",request.c_str());
 }
 void WEBSRV_onInfo(const char* info){
