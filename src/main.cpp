@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1 Jul 01/2023
+    Version 2.8.1a Jul 01/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1368,6 +1368,8 @@ void setup(){
     tft.setRotation(TFT_ROTATION);
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
+    tp.TP_Send(0xD0); tp.TP_Send(0x90); // Remove any blockage
+
 
     SerialPrintfln("setup: ....  Init SD card");
     pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
