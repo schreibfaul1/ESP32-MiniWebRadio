@@ -710,7 +710,7 @@ class TP : public TFT {
         uint16_t Ymin=220;
         uint8_t  TP_vers = 0;
 
-    protected:
+    public:
         uint16_t TP_Send(uint8_t set_val);
         bool read_TP(uint16_t& x, uint16_t& y);
 };
