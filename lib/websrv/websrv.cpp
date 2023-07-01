@@ -93,6 +93,8 @@ void WebSrv::show(const char* pagename, int16_t len){
             pagelen -= TCPCHUNKSIZE;
         }
     }
+    cmdclient.flush();
+    cmdclient.stop();
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -150,6 +152,8 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     }
     if(wIndex!=file.size()) log_e("file %s not correct sent", path);
     file.close();
+    cmdclient.flush();
+    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -275,6 +279,8 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     sprintf(buff, "File: %s written, FileSize: %d", path, contentLength);
     //log_i(buff);
     if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    cmdclient.flush();
+    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -308,6 +314,8 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     }
     sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
+    cmdclient.flush();
+    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -317,6 +325,7 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::stop() {
+    cmdclient.flush();
     cmdclient.stop();
     webSocketClient.stop();
 }
@@ -360,6 +369,8 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
     while (wswitch==true){                  // first while
         if(!cmdclient.available()){
             log_e("Command client schould be available but is not!");
+            cmdclient.flush();
+            cmdclient.stop();
             return false;
         }
         currentLine = cmdclient.readStringUntil('\n');
@@ -454,6 +465,8 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             currentLine = "";
         }
         if(!currentLine.length()){
+            cmdclient.flush();
+            cmdclient.stop();
             return true;
         }
         if((currentLine.length() == 1 && count == 0) || count >= 2){
@@ -480,6 +493,8 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         }
 
     } // end second while
+    cmdclient.flush();
+    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -626,14 +641,12 @@ boolean WebSrv::loop() {
     if (webSocketClient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");
         return handleWS();
-    } 
+    }
 
     if(!webSocketClient.connected()){
         hasclient_WS = false;
     }
     if(!hasclient_WS) webSocketClient = webSocketServer.available();
- 
-
 
     return false;
 }
@@ -654,6 +667,8 @@ void WebSrv::reply(const String &response, boolean header){
         cmdclient.print(httpheader) ;             // header sent
     }
     cmdclient.print(response);
+    cmdclient.flush();
+    cmdclient.stop();
 }
 void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     int l= 0; // respunse length
@@ -669,6 +684,8 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     cmdclient.print(httpheader) ;             // header sent
 
     cmdclient.print("  ");
+    cmdclient.flush();
+    cmdclient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::UTF8toASCII(String str){
