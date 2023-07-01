@@ -1769,9 +1769,9 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         strcat(fn, fileName);
         if(webSrv.uploadB64image(SD_MMC, fn, contentLength)){
             SerialPrintfln("save image " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
-            webSrv.reply("OK");
+            webSrv.sendStatus(200);
         }
-        else webSrv.reply("failure");
+        else webSrv.sendStatus(400);
     }
     else{
         if(!startsWith(fileName, "/")){
@@ -1783,9 +1783,9 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         }
         if(webSrv.uploadfile(SD_MMC, fn, contentLength)){
             SerialPrintfln("save file " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
-            webSrv.reply("OK");
+            webSrv.sendStatus(200);
         }
-        else webSrv.reply("failure");
+        else webSrv.sendStatus(400);
         if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
@@ -2860,7 +2860,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setmute"){           mute();
                                     return;}
 
-    if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle);
+    if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle, webSrv.TEXT);
                                     return;}
 
     if(cmd == "toneha"){            _toneha = param.toInt();                           // vs1053 treble gain
@@ -2910,13 +2910,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
 
     if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
-                                                        webSrv.show(accesspoint_html);}
+                                                        webSrv.show(accesspoint_html, webSrv.TEXT);}
                                     else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
-                                                        webSrv.show(index_html);      }
+                                                        webSrv.show(index_html, webSrv.TEXT);      }
                                     return;}
 
     if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
-                                    webSrv.show(index_js); return;}
+                                    webSrv.show(index_js, webSrv.JS); return;}
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
@@ -2983,29 +2983,30 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
 
-    if(cmd == "SD_GetFolder"){      SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
-                                    webSrv.reply(dirContent(param)); return;}
-
-    if(cmd == "SD_newFolder"){      SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
-                                    bool res = SD_newFolder(param.c_str());
-                                    if(res) webSrv.reply("200"); else webSrv.reply("400");
+    if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param), webSrv.JS);
+                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}
 
-    if(cmd == "SD_playFile"){       SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
-                                    webSrv.reply("SD_playFile=" + param);
+    if(cmd == "SD_newFolder"){      bool res = SD_newFolder(param.c_str());
+                                    if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
+                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    return;}
+
+    if(cmd == "SD_playFile"){       webSrv.reply("SD_playFile=" + param, webSrv.TEXT);
+                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
                                     SD_playFile(param.c_str());
                                     return;}
 
     if(cmd == "SD_rename"){         SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
                                     param.c_str(), arg.c_str());
                                     bool res = SD_rename(param.c_str(), arg.c_str());
-                                    if(res) webSrv.reply("refresh");
-                                    else webSrv.reply("400");
+                                    if(res) webSrv.reply("refresh", webSrv.TEXT);
+                                    else webSrv.sendStatus(400);
                                     return;}
 
-    if(cmd == "SD_delete"){         SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
-                                    bool res = SD_delete(param.c_str());
-                                    if(res) webSrv.reply("200");else webSrv.reply("400");
+    if(cmd == "SD_delete"){         bool res = SD_delete(param.c_str());
+                                    if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
+                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
                                     return;}
 
 

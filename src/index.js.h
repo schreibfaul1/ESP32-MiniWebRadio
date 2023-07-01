@@ -434,7 +434,7 @@ function buildFileSystemTree(path) {
                                 playMode = 11;
                             }
                         }
-                        XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), null)
+                        XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), "play")
                     }
                 };
                 /* Refresh */
@@ -462,7 +462,7 @@ function buildFileSystemTree(path) {
                         ref.edit(nodeId, null, function (node, status) {
                             node.data.path = node.data.path.substring(0, node.data.path.lastIndexOf("/") + 1) + node.text;
                             lastNodeID = ref.get_parent(nodeId)
-                            XmlHttpReq1("GET", "SD_rename?" + encodeURIComponent(srcPath) + "&" + encodeURIComponent(node.data.path), null)
+                            XmlHttpReq1("GET", "SD_rename?" + encodeURIComponent(srcPath) + "&" + encodeURIComponent(node.data.path), "rename")
                         });
                     }
                 };
