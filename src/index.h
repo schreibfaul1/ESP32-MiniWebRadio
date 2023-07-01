@@ -1326,7 +1326,7 @@ function scaleCanvasImage (url) {
   ctx.rect(0, 0, canvas.width, canvas.height)
   ctx.fillStyle = 'white'
   ctx.fill()
-  var co = 'https://corsproxy.io/?'
+  var co = 'https://api.codetabs.com/v1/proxy?quest='
   src = co + url
   var imgObj = new Image()
   imgObj.crossOrigin = 'anonymous'
