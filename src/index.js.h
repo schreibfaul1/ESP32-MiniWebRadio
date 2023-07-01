@@ -103,7 +103,7 @@ function XmlHttpReq1 (method, url, postmessage) {
     xhr.timeout = 2000; // time in milliseconds
     xhr.open(method, theUrl, true)
     xhr.ontimeout = (e) => {
-        XMLHttpRequest timed out.
+        //XMLHttpRequest timed out.
         //alert(url + ' not uploaded, timeout')
     }
     xhr.onreadystatechange = function () { // Call a function when the state changes.
