@@ -77,6 +77,7 @@ public:
     boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
     boolean uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength);
     void reply(const String &response, boolean header=true);
+    void sendStatus(uint16_t HTTPstatusCode);
     const char* ASCIItoUTF8(const char* str);
 
 private:
