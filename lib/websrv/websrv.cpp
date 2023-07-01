@@ -39,7 +39,7 @@ void WebSrv::printWebSocketHeader(String wsRespKey){
     webSocketClient.print(wsHeader) ;             // header sent
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::show(const char* pagename, int16_t len){
+void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len){
     uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
     size_t pagelen=0, res=0;                    // Size of requested page
     const unsigned char* p;
@@ -58,7 +58,7 @@ void WebSrv::show(const char* pagename, int16_t len){
     String httpheader="";
     httpheader += "HTTP/1.1 200 OK\r\n";
     httpheader += "Connection: close\r\n";
-    httpheader += "Content-type: text/html\r\n";
+    httpheader += "Content-type: " + (String)MIMEType + "\r\n";
     httpheader += "Content-Length: " + String(pagelen, 10) + "\r\n";
     httpheader += "Server: " + _Name+ "\r\n";
     httpheader += "Cache-Control: max-age=86400\r\n";
@@ -93,8 +93,6 @@ void WebSrv::show(const char* pagename, int16_t len){
             pagelen -= TCPCHUNKSIZE;
         }
     }
-    cmdclient.flush();
-    cmdclient.stop();
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -152,8 +150,6 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     }
     if(wIndex!=file.size()) log_e("file %s not correct sent", path);
     file.close();
-    cmdclient.flush();
-    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -279,8 +275,6 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     sprintf(buff, "File: %s written, FileSize: %d", path, contentLength);
     //log_i(buff);
     if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-    cmdclient.flush();
-    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -314,8 +308,6 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     }
     sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
-    cmdclient.flush();
-    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -325,8 +317,6 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::stop() {
-    cmdclient.flush();
-    cmdclient.stop();
     webSocketClient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -352,6 +342,7 @@ String WebSrv::getContentType(String filename){
     else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
     else if (filename.endsWith(".xls" )) return "application/msexcel" ;
     else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
+    else if (filename.endsWith(".csv" )) return "text/csv";
     return "text/plain" ;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -369,8 +360,6 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
     while (wswitch==true){                  // first while
         if(!cmdclient.available()){
             log_e("Command client schould be available but is not!");
-            cmdclient.flush();
-            cmdclient.stop();
             return false;
         }
         currentLine = cmdclient.readStringUntil('\n');
@@ -465,8 +454,6 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             currentLine = "";
         }
         if(!currentLine.length()){
-            cmdclient.flush();
-            cmdclient.stop();
             return true;
         }
         if((currentLine.length() == 1 && count == 0) || count >= 2){
@@ -493,8 +480,6 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         }
 
     } // end second while
-    cmdclient.flush();
-    cmdclient.stop();
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -651,24 +636,18 @@ boolean WebSrv::loop() {
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::reply(const String &response, boolean header){
+void WebSrv::reply(const String &response, const char* MIMEType, boolean header){
     if(header==true) {
         int l= response.length();
         // HTTP header
         String httpheader="";
         httpheader += "HTTP/1.1 200 OK\r\n";
-        httpheader += "Connection: close\r\n";
-        httpheader += "Content-type: text/html\r\n";
-        httpheader += "Content-Length: " + String(l, 10) + "\r\n";
-        httpheader += "Server: " + _Name+ "\r\n";
-        httpheader += "Cache-Control: max-age=3600\r\n";
-        httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
+        httpheader += "Content-type: " + (String)MIMEType + "\r\n";
+        httpheader += "Content-Length: " + String(l, 10) + "\r\n\r\n";
 
         cmdclient.print(httpheader) ;             // header sent
     }
     cmdclient.print(response);
-    cmdclient.flush();
-    cmdclient.stop();
 }
 void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     int l= 0; // respunse length
@@ -684,8 +663,6 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     cmdclient.print(httpheader) ;             // header sent
 
     cmdclient.print("  ");
-    cmdclient.flush();
-    cmdclient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::UTF8toASCII(String str){

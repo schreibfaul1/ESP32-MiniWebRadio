@@ -67,7 +67,7 @@ public:
     void begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
     void stop();
     boolean loop();
-    void show(const char* pagename, int16_t len=-1);
+    void show(const char* pagename, const char* MIMEType, int16_t len=-1);
     void show_not_found();
     boolean streamfile(fs::FS &fs,const char* path);
     boolean send(String msg, uint8_t opcode = Text_Frame);
@@ -76,9 +76,16 @@ public:
     void    sendPong();
     boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
     boolean uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength);
-    void reply(const String &response, boolean header=true);
+    void reply(const String &response, const char* MIMEType, boolean header=true);
     void sendStatus(uint16_t HTTPstatusCode);
     const char* ASCIItoUTF8(const char* str);
+
+    const char JSON[17]  = "application/json";
+    const char TEXT[10]  = "text/html";
+    const char JS[23]    = "application/javascript";
+    const char BMP[15]   = "image/bmp";
+    const char JPG[15]   = "image/jpeg";
+    const char PNG[15]   = "image/png";
 
 private:
     const int B64index[123] ={
