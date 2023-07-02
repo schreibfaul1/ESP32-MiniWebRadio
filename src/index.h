@@ -727,8 +727,8 @@ function showLogo(id, src) { // get the bitmap from SD, convert to URL first
   src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
   var timestamp = new Date().getTime()
   var file
-  if(src == '') file = 'url(SD/unknown.jpg&version=' + timestamp + ')'
-  else file = 'url(SD' + src + '?&version=' + timestamp + ')'
+  if(src == '') file = 'url(SD/unknown.jpg)'
+  else file = 'url(SD' + src + ')'
   console.log("showLogo id=", id, "file=", file)
   document.getElementById(id).style.backgroundImage = file
 }

@@ -82,8 +82,7 @@ $('#explorerTree').on('select_node.jstree', function (e, data) {
 function XmlHttpReq(path, callback, obj) {
     obj.url      = path;
     obj.dataType = "json";
-    obj.contentType= "application/json;charset=IBM437",
-    obj.scriptCharset= "IBM437",
+    obj.contentType= "application/json",
     obj.success  = function(data, textStatus, jqXHR) {
         if (callback) {
             callback(data);
