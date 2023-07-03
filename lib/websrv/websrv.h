@@ -53,7 +53,6 @@ protected:
     boolean handlehttp();
     boolean handleWS();
     void    parseWsMessage(uint32_t len);
-    uint8_t inbyte();
     String  URLdecode(String str);
     String  UTF8toASCII(String str);
     String  responseCodeToString(int code);
@@ -76,9 +75,9 @@ public:
     void    sendPong();
     boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
     boolean uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength);
-    void reply(const String &response, const char* MIMEType, boolean header=true);
+    void reply(const String response, const char* MIMEType, boolean header=true);
     void sendStatus(uint16_t HTTPstatusCode);
-    const char* ASCIItoUTF8(const char* str);
+
 
     const char JSON[17]  = "application/json";
     const char TEXT[10]  = "text/html";

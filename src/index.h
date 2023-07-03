@@ -311,6 +311,7 @@ function connect() {
     socket.send("get_timeAnnouncement")
     socket.send("gettone=")   // Now load the tones (tab Radio)
     socket.send("getnetworks=")
+    socket.send("change_state=" + "0")
 
     setInterval(ping, 20000)
   };

@@ -1209,7 +1209,6 @@ bool connectToWiFi(){
         }
         file.close();
     }
-
     wifiMulti.run();
 
     if(WiFi.isConnected()){
@@ -2133,7 +2132,6 @@ void loop() {
     tp.loop();
     ftpSrv.handleFTP();
     soap.loop();
-
     if(_f_muteDecrement){
         if(_mute_volume > 0){
             _mute_volume--;
@@ -2187,7 +2185,6 @@ void loop() {
         _f_100ms = false;
         updateVUmeter();
     }
-    webSrv.loop();
     if(_f_1sec){
         _f_1sec = false;
         if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
@@ -2261,7 +2258,6 @@ void loop() {
             _commercial_dur--;
             if((_commercial_dur == 2) && (_state == RADIO)) clearStreamTitle();// end of commercial? clear streamtitle
         }
-        webSrv.loop();
         if(_f_newStreamTitle && !_timeCounter) {
             _f_newStreamTitle = false;
             if(_state == RADIO) {
