@@ -634,7 +634,7 @@ boolean WebSrv::loop() {
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::reply(const String &response, const char* MIMEType, boolean header){
+void WebSrv::reply(const String response, const char* MIMEType, boolean header){
     if(header==true) {
         int l= response.length();
         // HTTP header
