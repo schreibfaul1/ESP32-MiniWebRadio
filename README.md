@@ -18,7 +18,7 @@ Required HW:
 <ul>
 <li>Decoder module VS1053 or external DAC (e.g. PCM5102a)</li>
 <li>TFT Display with Tochpad (SPI), Controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
-<li>ESP32 Board (PSRAM not necessary)</li>
+<li>ESP32 Board with PSRAM</li>
 <li>SD Card + adapter</li>
 </ul><br>
 
