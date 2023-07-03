@@ -1,0 +1,7 @@
+{
+    "files.associations": {
+        "*.ipp": "cpp",
+        "*.tcc": "cpp",
+        "algorithm": "cpp"
+    }
+}

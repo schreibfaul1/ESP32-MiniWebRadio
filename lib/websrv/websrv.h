@@ -65,7 +65,7 @@ public:
     WebSrv(String Name="WebSrv library", String Version="1.0");
     void begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
     void stop();
-    boolean loop();
+    void loop();
     void show(const char* pagename, const char* MIMEType, int16_t len=-1);
     void show_not_found();
     boolean streamfile(fs::FS &fs,const char* path);
