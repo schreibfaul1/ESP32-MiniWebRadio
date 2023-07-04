@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1a Jul 01/2023
+    Version 2.8.1b Jul 04/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -116,7 +116,7 @@ uint32_t       _media_downloadPort = 0;
 String         _media_downloadIP = "";
 vector<String> _names{};
 
-char _hl_item[10][40]{                          // Title in headline
+char _hl_item[11][40]{                          // Title in headline
                 "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
                 "** Internet Radio **",
                 "** Internet Radio **",
@@ -127,10 +127,11 @@ char _hl_item[10][40]{                          // Title in headline
                 "** Audioplayer **",
                 "** Alarm **",                  // Alarm
                 "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+                "** DLNA **",                   // Digital Living Network Alliance
 };
 
 enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2, CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5, PLAYER= 6, PLAYERico= 7,
-            ALARM = 8, SLEEP = 9};
+            ALARM = 8, SLEEP = 9, DLNA = 10};
 
 const char *codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
@@ -202,8 +203,8 @@ SemaphoreHandle_t  mutex_display;
     struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
     struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
     struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-    struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  45; uint16_t h = 20; } const _winStaNr;
-    struct w_p {uint16_t x = 45;  uint16_t y = 220; uint16_t w =  75; uint16_t h = 20; } const _winSleep;
+    struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
+    struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w =  65; uint16_t h = 20; } const _winSleep;
     struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
     struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winBitRate;
     struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
@@ -266,9 +267,9 @@ SemaphoreHandle_t  mutex_display;
     struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
     struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
     struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 110; uint16_t h =  30;} const _winVolume;
-    struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  65; uint16_t h =  30;} const _winStaNr;
-    struct w_p {uint16_t x =  65; uint16_t y = 290; uint16_t w = 105; uint16_t h =  30;} const _winSleep;
-    struct w_r {uint16_t x = 170; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
+    struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
+    struct w_p {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
+    struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  30; uint16_t h =  30;} const _winRSSID;
     struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h =  30;} const _winBitRate;
     struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
     struct w_b {uint16_t x =   0; uint16_t y = 218; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
@@ -644,11 +645,12 @@ void showFooterIPaddr(){
 }
 void showFooterStaNr(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
+    uint8_t offset = 0;
+    if(TFT_CONTROLLER < 2 ) offset = 32; else offset = 43;
     clearStaNr();
+    drawImage("/common/STA.bmp", _winStaNr.x, _winStaNr.y);
     tft.setFont(_fonts[1]);
-    tft.setCursor(_winStaNr.x + 6 , _winStaNr.y + 2);
-    tft.setTextColor(TFT_GREENYELLOW);
-    tft.print("#");
+    tft.setCursor(_winStaNr.x + offset, _winStaNr.y + 2);
     tft.setTextColor(TFT_LAVENDER);
     tft.printf("%03d", _cur_station);
     xSemaphoreGive(mutex_display);
@@ -707,17 +709,20 @@ void showFooterBitRate(uint16_t br){
 void updateSleepTime(boolean noDecrement){  // decrement and show new value in footer
     if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
+    clearSleep();
+    drawImage("/common/zz.bmp", _winSleep.x, _winSleep.y);
+    uint8_t offset = 0;
+    if(TFT_CONTROLLER < 2 ) offset = 25; else offset = 33;
     boolean sleep = false;
     if(_sleeptime == 1) sleep = true;
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
     if(_state != ALARM){
         char Slt[15];
-        sprintf(Slt,"Slp %d:%02d", _sleeptime / 60, _sleeptime % 60);
+        sprintf(Slt,"%d:%02d", _sleeptime / 60, _sleeptime % 60);
         tft.setFont(_fonts[1]);
         if(!_sleeptime) tft.setTextColor(TFT_DEEPSKYBLUE);
         else tft.setTextColor(TFT_RED);
-        clearSleep();
-        tft.setCursor(_winSleep.x + 6 , _winSleep.y + 2);
+        tft.setCursor(_winSleep.x + offset , _winSleep.y + 2);
         tft.print(Slt);
     }
     if(sleep){ // fall asleep
@@ -877,12 +882,15 @@ void showLogoAndStationName(){
     xSemaphoreGive(mutex_display);
 }
 
-void showFileLogo(){
+void showFileLogo(uint8_t state){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     String logo;
-    if(_state == RADIO){
+    if(state == RADIO){
         if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String)"M3U8" + ".jpg";
         else logo = "/common/" + (String) codecname[_cur_Codec] +".jpg";
+    }
+    else if(state == DLNA){
+        logo = "/common/DLNA.jpg";
     }
     else{ // _state PLAYER or PLAYERico
         logo = "/common/" + (String) codecname[_cur_Codec] +".jpg";
@@ -2009,7 +2017,7 @@ void changeState(int state){
             break;
         }
         case PLAYER:{
-            if(_state == RADIO){
+            if(_state == RADIO || _state == DLNA){
                 clearLogoAndStationname();
                 clearTitle();
             }
@@ -2070,6 +2078,13 @@ void changeState(int state){
             if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
             else                   drawImage("/common/Night_Gown.bmp", 280, 45);
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            break;
+        }
+        case DLNA:{
+            showHeadlineItem(DLNA);
+            clearLogoAndStationname();
+            clearTitle();
+            showFileLogo(state);
             break;
         }
     }
@@ -2295,8 +2310,8 @@ void loop() {
             if(c != 0 && c != 8){ // unknown or OGG
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
-                if(_state == PLAYER || _state == PLAYERico) showFileLogo();
-                if(_state == RADIO && _f_logoUnknown == true) {_f_logoUnknown = false; showFileLogo();}
+                if(_state == PLAYER || _state == PLAYERico) showFileLogo(_state);
+                if(_state == RADIO && _f_logoUnknown == true) {_f_logoUnknown = false; showFileLogo(_state);}
             }
         }
 
