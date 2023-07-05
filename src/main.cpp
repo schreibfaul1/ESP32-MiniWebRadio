@@ -2307,7 +2307,7 @@ void loop() {
 
         if(_cur_Codec == 0){
             uint8_t c = audioGetCodec();
-            if(c != 0 && c != 8){ // unknown or OGG
+            if(c != 0 && c != 8 && c < 10){ // unknown or OGG, guard: c {1 ... 7, 9}
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
                 if(_state == PLAYER || _state == PLAYERico) showFileLogo(_state);
