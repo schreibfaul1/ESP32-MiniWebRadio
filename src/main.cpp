@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1b Jul 04/2023
+    Version 2.8.1c Jul 05/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -646,7 +646,7 @@ void showFooterIPaddr(){
 void showFooterStaNr(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2 ) offset = 32; else offset = 43;
+    if(TFT_CONTROLLER < 2 ) offset = 25; else offset = 33;
     clearStaNr();
     drawImage("/common/STA.bmp", _winStaNr.x, _winStaNr.y);
     tft.setFont(_fonts[1]);
@@ -712,7 +712,7 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     clearSleep();
     drawImage("/common/zz.bmp", _winSleep.x, _winSleep.y);
     uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2 ) offset = 25; else offset = 33;
+    if(TFT_CONTROLLER < 2 ) offset = 28; else offset = 33;
     boolean sleep = false;
     if(_sleeptime == 1) sleep = true;
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
