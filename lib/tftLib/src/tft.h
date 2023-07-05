@@ -26,7 +26,9 @@ using namespace std;
 
 extern __attribute__((weak)) void tft_info(const char*);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
+extern __attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_released();
+extern __attribute__((weak)) void tp_long_released();
 
 #define ANSI_ESC_BLACK      "\033[30m"
 #define ANSI_ESC_RED        "\033[31m"
@@ -709,6 +711,10 @@ class TP : public TFT {
         uint16_t Ymax=1944;
         uint16_t Ymin=220;
         uint8_t  TP_vers = 0;
+
+        uint32_t m_pressingTime = 0;
+        boolean  m_f_isPressing = false;
+        boolean  m_f_longPressed = false;
 
     public:
         uint16_t TP_Send(uint8_t set_val);

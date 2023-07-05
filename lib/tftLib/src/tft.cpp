@@ -4699,6 +4699,7 @@ uint16_t TP::TP_Send(uint8_t set_val) {
 //----------------------------------------------------------------------------------------------------------------------
 
 void TP::loop() {
+    static uint16_t x1 = 0, y1 = 0;
     if (!digitalRead(TP_IRQ)) {
         if (f_loop) {
             read_TP(x, y);  // skip first measurement
@@ -4706,12 +4707,30 @@ void TP::loop() {
                 f_loop = false;
                 // log_i("tp_pressed x=%d, y=%d", x, y);
                 if (tp_pressed) tp_pressed(x, y);
+                x1 = x; y1 = y;
+                m_pressingTime = millis();
+                m_f_isPressing = true;
+            }
+        }
+        else {
+            if(m_f_isPressing){
+                if(m_pressingTime + 2500 < millis()){
+                    m_f_isPressing = false;
+                    if(tp_long_pressed) tp_long_pressed(x1, y1);
+                    m_f_longPressed = true;
+                }
             }
         }
     } else {
         if (f_loop == false) {
             // log_i("tp_released");
-            if (tp_released) tp_released();
+            if(m_f_longPressed){
+                m_f_longPressed = false;
+                if (tp_long_released) tp_long_released();
+            }
+            else{
+                if (tp_released) tp_released();
+            }
             f_loop = true;
         }
     }

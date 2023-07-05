@@ -2729,8 +2729,11 @@ void tp_pressed(uint16_t x, uint16_t y){
         default:            break;
     }
 }
+void tp_long_pressed(uint16_t x, uint16_t y){
+    log_w("long pressed %i  %i", x, y);
+}
 void tp_released(){
-    //SerialPrintfln("tp_released, state is: %i", _state);
+    // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping == true){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
@@ -2849,6 +2852,11 @@ void tp_released(){
         case 82:    changeState(RADIO); break;
     }
     _releaseNr = -1;
+}
+
+void tp_long_released(){
+    log_w("long released)");
+    tp_released();
 }
 
 //Events from websrv
