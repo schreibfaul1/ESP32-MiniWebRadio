@@ -624,6 +624,7 @@ void showHeadlineTime(bool complete){
     xSemaphoreGive(mutex_display);
 }
 void showHeadlineItem(uint8_t idx){ //radio, clock, audioplayer...
+    if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
@@ -742,6 +743,7 @@ void showVolumeBar(){
 void updateVUmeter() {
     if(_state != RADIO) return;
     if(_f_state_isChanging) return;
+    if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     uint8_t width = 0, height = 0, xOffs = 0, yOffs = 0, xStart = 0, yStart = 0;
     #if TFT_CONTROLLER < 2  // 320 x 240px
@@ -811,6 +813,7 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
     }
 }
 void showStreamTitle(const char* streamtitle){
+    if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     String ST = streamtitle;
 
@@ -830,6 +833,7 @@ void showStreamTitle(const char* streamtitle){
     xSemaphoreGive(mutex_display);
 }
 void showVUmeter() {
+    if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     drawImage("/common/level_bar.bmp", _winVUmeter.x, _winVUmeter.y);
     _VUrightCh = 0;
@@ -1874,12 +1878,12 @@ void IRAM_ATTR headphoneDetect(){ // called via interrupt
 
 void fall_asleep(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
+    _f_sleeping = true;
+    audioStopSong();
     if(_state != CLOCK){
         clearAll();
         setTFTbrightness(0);
     }
-    audioStopSong();
-    _f_sleeping = true;
     SerialPrintfln("falling asleep");
     xSemaphoreGive(mutex_display);
 }
@@ -1890,6 +1894,7 @@ void wake_up(){
         SerialPrintfln("awake");
         setTFTbrightness(_brightness);
         changeState(RADIO);
+        showVUmeter();
         connecttohost(_lastconnectedhost.c_str());
         showLogoAndStationName();
         showFooter();
