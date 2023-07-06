@@ -38,8 +38,8 @@ uint8_t        _state          = 0;      // statemaschine
 uint8_t        _timeCounter    = 0;
 uint8_t        _commercial_dur = 0;      // duration of advertising
 uint8_t        _cur_Codec      = 0;
-uint8_t        _VUleftCh = 0;        // VU meter left channel
-uint8_t        _VUrightCh = 0;       // VU meter right channel
+uint8_t        _VUleftCh       = 0;      // VU meter left channel
+uint8_t        _VUrightCh      = 0;      // VU meter right channel
 int16_t        _alarmtime      = 0;      // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha         = 0;      // BassFreq 0...15        VS1053
 int16_t        _tonehf         = 0;      // TrebleGain 0...14      VS1053
@@ -540,9 +540,9 @@ void timer100ms(){
     static volatile uint8_t ms100 = 0;
     _f_100ms = true;
     ms100 ++;
-    if(!(ms100 % 10))  _f_1sec  = true;
-    if(!(ms100 % 100)) _f_10sec = true;
-    if(ms100 == 600) {ms100 = 0; _f_1min = true;}
+    if(!(ms100 % 10))   _f_1sec  = true;
+    if(!(ms100 % 100))  _f_10sec = true;
+    if(!(ms100 % 600)) {_f_1min  = true; ms100 = 0;}
 
 }
 
@@ -708,12 +708,12 @@ void showFooterBitRate(uint16_t br){
 
 void updateSleepTime(boolean noDecrement){  // decrement and show new value in footer
     if(_f_sleeping) return;
+    boolean sleep = false;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearSleep();
     drawImage("/common/zz.bmp", _winSleep.x, _winSleep.y);
     uint8_t offset = 0;
     if(TFT_CONTROLLER < 2 ) offset = 28; else offset = 33;
-    boolean sleep = false;
     if(_sleeptime == 1) sleep = true;
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
     if(_state != ALARM){
@@ -725,17 +725,11 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
         tft.setCursor(_winSleep.x + offset , _winSleep.y + 2);
         tft.print(Slt);
     }
-    if(sleep){ // fall asleep
-        if(_state != CLOCK){
-            clearAll();
-            setTFTbrightness(0);
-        }
-        audioStopSong();
-        _f_sleeping = true;
-        SerialPrintfln("falling asleep");
-    }
     xSemaphoreGive(mutex_display);
-
+    if(sleep){ // fall asleep
+        fall_asleep();
+        _sleeptime = 0;
+    }
 }
 void showVolumeBar(){
     uint16_t val = tft.width() * getvolume()/21;
@@ -796,7 +790,7 @@ void showBrightnessBar(){
 }
 void showFooter(){  // stationnumber, sleeptime, IPaddress
     showFooterStaNr();
-    updateSleepTime();
+    updateSleepTime(true);
     showFooterIPaddr();
     showFooterRSSI();
     showFooterBitRate(_icyBitRate);
@@ -1077,12 +1071,12 @@ bool setAudioFolder(const char* audioDir){
     return true;
 }
 File getNextAudioFile(){
-    File file; 
+    File file;
     while(true){
         if(!audioFile){
             SerialPrintfln(ANSI_ESC_BLUE "no audiofiles found");
             break;
-        } 
+        }
         file = audioFile.openNextFile();
         if(!file) {
             audioFile.close();
@@ -1093,7 +1087,7 @@ File getNextAudioFile(){
             log_i("%s", file.path());
             if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") ||
                endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac")|| endsWith(file.name(), ".m3u") ||
-               endsWith(file.name(), ".opus")|| endsWith(file.name(), ".ogg")){ break; }        
+               endsWith(file.name(), ".opus")|| endsWith(file.name(), ".ogg")){ break; }
         }
     }
     if(file) log_i("%s", file.path());
@@ -1878,6 +1872,33 @@ void IRAM_ATTR headphoneDetect(){ // called via interrupt
     _f_hpChanged = true;
 }
 
+void fall_asleep(){
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    if(_state != CLOCK){
+        clearAll();
+        setTFTbrightness(0);
+    }
+    audioStopSong();
+    _f_sleeping = true;
+    SerialPrintfln("falling asleep");
+    xSemaphoreGive(mutex_display);
+}
+
+void wake_up(){
+    if(_f_sleeping == true){ //awake
+        _f_sleeping = false;
+        SerialPrintfln("awake");
+        setTFTbrightness(_brightness);
+        changeState(RADIO);
+        connecttohost(_lastconnectedhost.c_str());
+        showLogoAndStationName();
+        showFooter();
+        showHeadlineItem(RADIO);
+        showHeadlineVolume();
+        _f_mute = true;
+        mute();
+    }
+}
 /***********************************************************************************************************************
 *                                          M E N U E / B U T T O N S                                                   *
 ***********************************************************************************************************************/
@@ -2731,21 +2752,15 @@ void tp_pressed(uint16_t x, uint16_t y){
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
     log_w("long pressed %i  %i", x, y);
+    if((_releaseNr == 0 || _releaseNr ==50) && _f_mute) {
+        fall_asleep();
+    }
+
+
 }
 void tp_released(){
     // SerialPrintfln("tp_released, state is: %i", _state);
-    if(_f_sleeping == true){ //awake
-        _f_sleeping = false;
-        SerialPrintfln("awake");
-        setTFTbrightness(_brightness);
-        changeState(RADIO);
-        connecttohost(_lastconnectedhost.c_str());
-        showLogoAndStationName();
-        showFooter();
-        showHeadlineItem(RADIO);
-        showHeadlineVolume();
-        return;
-    }
+    wake_up();   // if sleeping
 
     switch(_releaseNr){
         /* RADIOico ******************************/
@@ -2856,6 +2871,7 @@ void tp_released(){
 
 void tp_long_released(){
     log_w("long released)");
+    if(_releaseNr == 0 || _releaseNr ==50) {return;}
     tp_released();
 }
 

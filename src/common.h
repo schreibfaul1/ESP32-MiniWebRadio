@@ -152,6 +152,8 @@ void showHeadlineItem(uint8_t idx);
 void showFooterIPaddr();
 void showFooterStaNr();
 void showFooterRSSI();
+void fall_asleep();
+void wake_up();
 void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();
