@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1c Jul 05/2023
+    Version 2.8.1d Jul 06/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -106,7 +106,8 @@ String         _homepage = "";
 String         _filename = "";
 String         _lastconnectedhost = "";
 String         _scannedNetworks = "";
-
+String         _TZName = "Europe/Berlin";
+String         _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 uint           _numServers = 0;
 uint8_t        _level = 0;
 int            _currentServer = -1;
@@ -311,6 +312,8 @@ boolean defaultsettings(){
         jObject["lastconnectedhost"] = (String)   "";
         jObject["station"]           = (uint16_t) 1;
         jObject["sumstations"]       = (uint16_t) 0;
+        jObject["Timezone_Name"]     = (String)   "Europe/Berlin";
+        jObject["Timezone_String"]   = (String)   "CET-1CEST,M3.5.0,M10.5.0/3";
         jObject["toneha"]            = (int16_t)  0; // BassFreq 0...15        VS1053
         jObject["tonehf"]            = (int16_t)  8; // TrebleGain 0...14      VS1053
         jObject["tonela"]            = (int16_t)  8; // BassGain 0...15        VS1053
@@ -344,6 +347,8 @@ boolean defaultsettings(){
     _toneLP             = (int16_t)     jV["toneLP"];
     _toneBP             = (int16_t)     jV["toneBP"];
     _toneHP             = (int16_t)     jV["toneHP"];
+    _TZName             = (const char*) jV["Timezone_Name"];
+    _TZString           = (const char*) jV["Timezone_String"];
 
     if(!_lastconnectedhost) _lastconnectedhost = "";
     if(_sum_stations == 0) saveStationsToNVS(); // first init
@@ -423,6 +428,9 @@ void updateSettings(){
     jObject["toneLP"]            = (int16_t)  _toneLP; // -40 ... +6 (dB)        audioI2S
     jObject["toneBP"]            = (int16_t)  _toneBP; // -40 ... +6 (dB)        audioI2S
     jObject["toneHP"]            = (int16_t)  _toneHP; // -40 ... +6 (dB)        audioI2S
+    jObject["Timezone_Name"]     = (String)   _TZName;
+    jObject["Timezone_String"]   = (String)   _TZString;
+
     String jO = JSON.stringify(jObject);
     if(_settingsHash != simpleHash(jO.c_str())){
         File file = SD_MMC.open("/settings.json","w", false);
@@ -1433,11 +1441,7 @@ void setup(){
 
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); //username, password for ftp.
 
-    _f_rtc = rtc.begin(TZName);
-    if(!_f_rtc){
-        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
-        ESP.restart();
-    }
+    setRTC(_TZString.c_str());
 
     #if DECODER > 1 // DAC controlled by I2C
         if(!dac.begin(I2C_DATA, I2C_CLK)){
@@ -1902,6 +1906,16 @@ void wake_up(){
         showHeadlineVolume();
         _f_mute = true;
         mute();
+    }
+}
+
+void setRTC(const char* TZString){
+    log_i("_TZString %s", TZString);
+    rtc.stop();
+    _f_rtc = rtc.begin(_TZString.c_str());
+    if(!_f_rtc){
+        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
+        ESP.restart();
     }
 }
 /***********************************************************************************************************************
@@ -2967,6 +2981,15 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
+    if(cmd == "getTimeZones"){      webSrv.streamfile(SD_MMC, "/timezones.csv"); return;}
+
+    if(cmd == "setTimeZone"){       _TZName = param;  _TZString = arg;
+                                    SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s", param.c_str(), arg.c_str());
+                                    setRTC(_TZString.c_str());
+                                    return;}
+
+    if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
+
     if(cmd == "get_decoder"){       webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
 
     if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
@@ -3031,20 +3054,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param), webSrv.JS);
-                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}
 
     if(cmd == "SD_newFolder"){      bool res = SD_newFolder(param.c_str());
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}
 
     if(cmd == "SD_playFile"){       webSrv.reply("SD_playFile=" + param, webSrv.TEXT);
-                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
                                     SD_playFile(param.c_str());
                                     return;}
 
-    if(cmd == "SD_rename"){         SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
+    if(cmd == "SD_rename"){         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
                                     param.c_str(), arg.c_str());
                                     bool res = SD_rename(param.c_str(), arg.c_str());
                                     if(res) webSrv.reply("refresh", webSrv.TEXT);
@@ -3053,7 +3076,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "SD_delete"){         bool res = SD_delete(param.c_str());
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                    SerialPrintfln("webSrv: . .  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
                                     return;}
 
 

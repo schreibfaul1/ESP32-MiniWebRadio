@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 29.06.2023
+ *  updated on: 06.07.2023
  *      Author: Wolle
  */
 
@@ -97,6 +97,29 @@ private:
         0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
         41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
     };
+
+
+    int indexOf (const char* base, char ch, int startIndex = 0) {
+    //fb
+        const char *p = base;
+        for (; startIndex > 0; startIndex--)
+            if (*p++ == '\0') return -1;
+        char *pos = strchr(p, ch);
+        if (pos == nullptr) return -1;
+        return pos - base;
+    }
+
+    int lastIndexOf(const char* haystack, const char needle) {
+    //fb
+        const char *p = strrchr(haystack, needle);
+        return (p ? p - haystack : -1);
+    }
+//--------------------------------------------------------------------------------------------------------------
+
+
+
+
+
 };
 
 

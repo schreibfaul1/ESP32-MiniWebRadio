@@ -1,19 +1,18 @@
 // created: 10.Feb.2022
-// updated: 01.Jul.2023
+// updated: 06.Jul.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"
-#define TZName              "CET-1CEST,M3.5.0,M10.5.0/3"    // Timezone (more TZNames in "rtime.cpp")
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER      0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
-#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TP_VERSION          0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define SDMMC_FREQUENCY     20000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
@@ -154,6 +153,7 @@ void showFooterStaNr();
 void showFooterRSSI();
 void fall_asleep();
 void wake_up();
+void setRTC(const char* TZString);
 void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();

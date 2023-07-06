@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 01.07.2023
+ *  Updated on: 06.07.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -594,6 +594,8 @@ function showTab6 () {
   document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
   document.getElementById('btn5').src = 'SD/png/Search_Green.png'
   document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
+  getTimeZoneName()
+  loadTimeZones()
 }
 
 function uploadTextFile (fileName, content) {
@@ -1417,9 +1419,70 @@ function downloadCanvasImage () {
 }
 // -------------------------------------- TAB Info ---------------------------------------
 
-// no functions in there
+function getTimeZoneName() { //
+  var xhr = new XMLHttpRequest()
+  xhr.timeout = 2000; // time in milliseconds
+  xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true)
+  xhr.onreadystatechange = function () {
+    if (xhr.readyState === 4) {
+      if (xhr.status === 200) {
+        g_timeZoneName =xhr.responseText
+        console.log("tzName=", g_timeZoneName)
+        return g_timeZoneName
+      }
+      console.log("xhr.status=", xhr.status)
+    }
+  }
+  xhr.ontimeout = (e) => {
+    // XMLHttpRequest timed out. Do something here.
+    console.log("timeout in getTimeZoneName()")
+  }
+  xhr.send()
+}
 
-/* eslint-enable no-unused-vars, no-undef */
+function setTimeZone(selectObject){
+    var value = selectObject.value;
+    var txt = selectObject.options[selectObject.selectedIndex].text;
+    socket.send("setTimeZone=" + txt + "&" + value)
+}
+
+function loadTimeZones() { // load from SD
+    g_timeZoneName = getTimeZoneName()
+    var tzFile = new XMLHttpRequest()
+    tzFile.timeout = 2000; // time in milliseconds
+    tzFile.open('POST', 'SD/timezones.csv', true)
+    tzFile.onreadystatechange = function () {
+        if (tzFile.readyState === 4) {
+            var tzdata = tzFile.responseText
+            var tzNames = tzdata.split("\n")
+            select = document.getElementById('TimeZoneSelect') // show Time Zones List
+            select.options.length = 1
+            var j = 1
+            for (var i = 0; i < tzNames.length; i++) {
+                var [tzItem1, tzItem2] = tzNames[i].split("\t")
+                opt = document.createElement('OPTION')
+                opt.text = (tzItem1)
+                opt.value = (tzItem2)
+                console.log("tzItem2", tzItem2)
+                select.add(opt)
+            }
+            for(var i = 0, j = select.options.length; i < j; ++i) {
+                if(select.options[i].innerHTML === g_timeZoneName) {
+                    select.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+    tzFile.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        console.log("load SD/timezones.csv timeout")
+    }
+    tzFile.send()
+}  // END loadTimeZones
+
+
+
 
 </script>
 
@@ -1705,7 +1768,7 @@ function downloadCanvasImage () {
             <button class="button" onclick="socket.send('resumefile')">RESUME</button>
             <br>
             <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-        </center>  
+        </center>
         <br>
         <hr>
         <br>
@@ -1728,7 +1791,7 @@ function downloadCanvasImage () {
                     <div class="progress">
                         <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
                     </div>
-                </form>    
+                </form>
             </fieldset>
         </div>
     </div>
@@ -1866,17 +1929,24 @@ function downloadCanvasImage () {
     <div id="tab-content6">
         <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
             external DAC. This project is documented on
-        <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
-           Author: Wolle (schreibfaul1)</p>
+            <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
+            Author: Wolle (schreibfaul1)
+        </p>
         <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
-        <h3>Connected WiFi network
-          <select class="boxstyle" onchange="setNetworks(this)" id="ssid"></select>  <!-- setNetworks() not impl yet -->
-        </h3>
         <h3>
-            <p> Time announcement on the hour
-            <input type="checkbox" id="chk_timeSpeech"
-                       onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-            </p>
+            Connected WiFi network
+            <select class="boxstyle" id="ssid" ></select>
+        </h3>
+
+        <h3>
+            Timezone
+            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
+        </h3>
+
+        <h3>
+            Time announcement on the hour
+            <input  type="checkbox" id="chk_timeSpeech"
+                    onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
         </h3>
     </div>
 <!--===============================================================================================================================================-->

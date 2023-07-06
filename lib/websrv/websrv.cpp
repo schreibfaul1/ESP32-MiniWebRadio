@@ -2,8 +2,8 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 01.07.2023
- *      Author: Wolle 
+ *  updated on: 06.07.2023
+ *      Author: Wolle
  */
 
 #include "websrv.h"
@@ -590,12 +590,33 @@ void WebSrv::parseWsMessage(uint32_t len){
             buff[plen] = 0;
             if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
             if(len < 256){ // can be a command like "mute=1"
-                char *ret;
-                ret = strchr((const char*)buff, '=');
-                if(ret){
-                    *ret = 0;
-                    // log_i("cmd=%s, para=%s", buff, ret);
-                    if(WEBSRV_onCommand) WEBSRV_onCommand((const char*) buff, ret + 1, "");
+                const char* cmd = buff;
+                const char* param = NULL;
+                const char* arg = NULL;
+                int idx1 = indexOf(buff, '=');
+                if(idx1 > 0){
+                    buff[idx1] = '\0';
+                    const char* cmd = buff;
+                    int offset = idx1 + 1;
+                    int idx2 = lastIndexOf(buff + offset, '&');
+                    if (idx2 > 0){
+                        *(buff + offset + idx2) = '\0';
+                        param = buff + offset;
+                        arg = buff + offset + idx2 + 1;
+                        if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, arg);
+                        buff[0] = 0;
+                        return;
+                    }
+                    else{
+                        param = buff + offset;
+                        if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
+                        buff[0] = 0;
+                        return;
+                    }
+
+                }
+                else{
+                    if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, "", "");
                     buff[0] = 0;
                     return;
                 }

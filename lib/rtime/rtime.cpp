@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 11.02.2022
+ *  Updated on: 06.07.2023
  * 
  */
 
@@ -258,6 +258,10 @@ boolean RTIME::begin(String TimeZone){
     sntp_setservername(0, sbuf);
     sntp_init();
     return obtain_time();
+}
+
+void RTIME::stop(){
+    sntp_stop();
 }
 
 boolean RTIME::obtain_time(){
