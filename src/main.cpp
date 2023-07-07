@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1d Jul 06/2023
+    Version 2.8.1d Jul 07/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1910,7 +1910,6 @@ void wake_up(){
 }
 
 void setRTC(const char* TZString){
-    log_i("_TZString %s", TZString);
     rtc.stop();
     _f_rtc = rtc.begin(_TZString.c_str());
     if(!_f_rtc){

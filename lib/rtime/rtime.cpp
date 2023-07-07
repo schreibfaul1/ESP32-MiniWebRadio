@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 06.07.2023
+ *  Updated on: 07.07.2023
  * 
  */
 
@@ -251,6 +251,7 @@ RTIME::~RTIME(){
 	sntp_stop();
 }
 boolean RTIME::begin(String TimeZone){
+    if(TimeZone.length() == 0) return false;
     RTIME_TZ=TimeZone;
     if (RTIME_info) RTIME_info("Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);

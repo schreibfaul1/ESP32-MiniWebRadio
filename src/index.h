@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 06.07.2023
+ *  Updated on: 07.07.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -245,24 +245,29 @@ const char index_html[] PROGMEM = R"=====(
             display:block;
         }
         .filetree {
-                        border: 1px solid black;
-                        height: 200px;
-                        margin: 0em 0em 1em 0em;
-                        overflow-y: scroll;
-                }
-                .filetree-container {
-                        position: relative;
+            border: 1px solid black;
+            height: 200px;
+            margin: 0em 0em 1em 0em;
+            overflow-y: scroll;
+        }
+        .filetree-container {
+            position: relative;
             background-color: white;
-                }
-                .indexing-progress {
-                        width: 100%;
-                        height: 100%;
-                        position: absolute;
-                        top: 0;
-                        left: 0;
-                        opacity: 0.7;
-                        display: none;
-                }
+        }
+        .progress-bar{
+            display:-ms-flexbox;
+            display:flex;
+            -ms-flex-direction:column;
+            flex-direction:column;
+            -ms-flex-pack:center;
+            justify-content:center;
+            overflow:hidden;
+            color:#fff;
+            text-align:center;
+            white-space:nowrap;
+            background-color:#007bff;
+            transition:width
+        }
     </style>
 </head>
 
@@ -1456,14 +1461,14 @@ function loadTimeZones() { // load from SD
             var tzdata = tzFile.responseText
             var tzNames = tzdata.split("\n")
             select = document.getElementById('TimeZoneSelect') // show Time Zones List
-            select.options.length = 1
-            var j = 1
+            select.options.length = 0
+            var j = 0
             for (var i = 0; i < tzNames.length; i++) {
                 var [tzItem1, tzItem2] = tzNames[i].split("\t")
                 opt = document.createElement('OPTION')
                 opt.text = (tzItem1)
                 opt.value = (tzItem2)
-                console.log("tzItem2", tzItem2)
+                if(tzItem1.length == 0 || tzItem2.length == 0) continue
                 select.add(opt)
             }
             for(var i = 0, j = select.options.length; i < j; ++i) {
@@ -1780,18 +1785,20 @@ function loadTimeZones() { // load from SD
                         <div id="explorerTree"></div>
                     </div>
                 </div>
-                <form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
-                    <div class="input-group">
-                        <span class="form-control" id="uploaded_file_text"></span>&nbsp
-                        <span>
-                            <input type="text" class="boxstyle" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop());" style="display: none;" type="file" multiple>
-                        </span>
-                    </div>
-                    <br>
-                    <div class="progress">
-                        <div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-                    </div>
-                </form>
+				<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
+					<div class="input-group"   style="display:none;">
+                    	<span class="form-control" id="uploaded_file_text"></span>&nbsp
+						<span class="input-group-btn">
+							<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" files.files.title">Files</span> &nbsp
+							<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" files.upload.title">Upload</span>
+							<input name="uploaded_file" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop()); type="file" multiple>
+						</span>
+					</div>
+				</form>
+                <br>
+				<div class="progress">
+					<div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
+				</div>
             </fieldset>
         </div>
     </div>

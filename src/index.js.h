@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 01.07.2023
+ *  Updated on: 07.07.2023
  *      Author: Wolle
  *
  *
@@ -45,40 +45,103 @@ var iconFileYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYA
                 + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
 
 
-var lastSelectedNodePath = "";
 var lastNodeID = 0;
-
+//----------------------------------------------------------------------------------------------------------------------
+function deleteChildren(nodeId) {
+    $('#explorerTree').jstree('open_node', nodeId); // need to open node for accruate selection
+    var ref = $('#explorerTree').jstree(true);
+    var children = $("#explorerTree").jstree("get_children_dom",nodeId);
+    for(var i=0;i<children.length;i++) {
+        console.log("delete child", i)
+        ref.delete_node(children[i]);
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+function addFileDirectory(nodeId, content) {
+    content.sort( fileNameSort );
+    var ref = $('#explorerTree').jstree(true);
+    for (var i=0; i< content.length; i++) {
+        console.log("Create Node", content[i]);
+        ref.create_node(nodeId, createChild(nodeId, content[i]));
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------
+function refreshNode(nodeId) {
+    var ref = $('#explorerTree').jstree(true);
+    var node = ref.get_node(nodeId);
+    getData("SD_GetFolder?" + encodeURIComponent(node.data.path), function(content) {
+        /* We now have data! */
+        deleteChildren(nodeId);
+        addFileDirectory(nodeId, content);
+        ref.open_node(nodeId);
+    });
+}
+//----------------------------------------------------------------------------------------------------------------------
+function getType(data) {
+    var type = "";
+    if(data.dir)                                                            type = "folder";
+    else if ((/\.(mp3|ogg|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name))  type = "audio";
+    else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name))                type = "image";
+    else if ((/\.(m3u)$/i).test(data.name))                                 type = "playlist";
+    else                                                                    type = "file";
+    return type;
+}
+//----------------------------------------------------------------------------------------------------------------------
+function getData(path, callback) {
+    var num = path + '&version=' + Math.random().toString()
+    console.log("num: ", num );
+    XmlHttpReq(num, callback, {
+        method   : "GET"
+    });
+}
+//----------------------------------------------------------------------------------------------------------------------
+function deleteData(nodeId) {
+    var ref = $('#explorerTree').jstree(true);
+    var node = ref.get_node(nodeId);
+    postData("SD_delete?" + encodeURIComponent(node.data.path));
+}
+//----------------------------------------------------------------------------------------------------------------------
+function fileNameSort( a, b ) {
+    if ( a.dir && !b.dir ) return -1
+    if ( !a.dir && b.dir ) return  1
+    if ( a.name < b.name ) return -1
+    if ( a.name > b.name ) return  1
+    return 0;
+}
+//----------------------------------------------------------------------------------------------------------------------
+function createChild(nodeId, data) {
+    var ref = $('#explorerTree').jstree(true);
+    var node = ref.get_node(nodeId);
+    var parentNodePath = node.data.path;
+    /* In case of root node remove leading '/' to avoid '//' */
+    if(parentNodePath == "/") parentNodePath = "";
+    var child = {
+        text: data.name,
+        type: getType(data),
+        data: {
+            path: parentNodePath + "/" + data.name,
+            directory: data.dir
+        }
+    };
+    return child;
+}
+//----------------------------------------------------------------------------------------------------------------------
 $('#explorerTree').on('select_node.jstree', function (e, data) {
-    console.log("node")
-    $('input[name=fileOrUrl]').val(data.node.data.path);
+    var ref = $('#explorerTree').jstree(true)
+    var node = data.node;
+    var nodeId = node.id;
+    var path = node.data.path;
+    $('input[name=fileOrUrl]').val(path);
     if (data.node.type == "folder") {
         $('.option-folder').show();
         $('.option-file').hide();
-        $('#playMode option').removeAttr('selected').filter('[value=3]').attr('selected', true);
     }
-    if (data.node.type == "audio") {
-        $('.option-file').show();
-        $('.option-folder').hide();
-        $('#playMode option').removeAttr('selected').filter('[value=1]').attr('selected', true);
+    if (data.node.data.directory) {
+        refreshNode(nodeId);
     }
-    if(lastSelectedNodePath != data.node.data.path) {
-        if (data.node.data.directory) {
-            var ref = $('#explorerTree').jstree(true),
-            sel = ref.get_selected();
-            if(!sel.length) {
-                return false;
-            }
-            sel = sel[0];
-            var children = $("#explorerTree").jstree("get_children_dom",sel);
-            /* refresh only, when there is no child -> possible not yet updated */
-            if(children.length < 1){
-                refreshNode(sel);
-            }
-        }
-        lastSelectedNodePath = data.node.data.path;
-    }
+    ref.open_node(nodeId);
 });
-
+//----------------------------------------------------------------------------------------------------------------------
 function XmlHttpReq(path, callback, obj) {
     obj.url      = path;
     obj.dataType = "json";
@@ -93,9 +156,8 @@ function XmlHttpReq(path, callback, obj) {
         /*debugger; */
     };
     jQuery.ajax(obj);
-} /* XmlHttpReq */
-
-
+}
+//----------------------------------------------------------------------------------------------------------------------
 function XmlHttpReq1 (method, url, postmessage) {
     var theUrl = url+ '&version=' + Math.random()
     var xhr = new XMLHttpRequest()
@@ -103,7 +165,7 @@ function XmlHttpReq1 (method, url, postmessage) {
     xhr.open(method, theUrl, true)
     xhr.ontimeout = (e) => {
         //XMLHttpRequest timed out.
-        //alert(url + ' not uploaded, timeout')
+        //alert(url + 'timeout')
     }
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
@@ -117,52 +179,15 @@ function XmlHttpReq1 (method, url, postmessage) {
     }
     xhr.send(postmessage) // send
 }
-
-
-
-
-
-
-function getData(path, callback) {
-    var num = path + '&version=' + Math.random().toString()
-    console.log("num: ", num );
-    XmlHttpReq(num, callback, {
-        method   : "GET"
-    });
-} /* getData */
-
-function deleteData(path, callback, _data) {
-    var num = Math.random()
-    XmlHttpReq(path + '&version=' + num.toString(), callback, {
-        method   : "DELETE",
-        data: _data
-    });
-} /* deleteData */
-
-function patchData(path, callback, _data) {
-    var num = Math.random()
-    XmlHttpReq(path + '&version=' + num.toString(), callback, {
-        method   : "PATCH",
-        data: _data
-    });
-} /* patchData */
-
+//----------------------------------------------------------------------------------------------------------------------
 function postData(path, callback, _data) {
     var num = Math.random()
     XmlHttpReq(path + '&version=' + num.toString(), callback, {
         method   : "POST",
         data: _data
     });
-} /* postData */
-
-function putData(path, callback, _data) {
-    var num = Math.random()
-    XmlHttpReq(path + '&version=' + num.toString(), callback, {
-        method   : "PUT",
-        data: _data
-    });
-} /* putData */
-
+}
+//----------------------------------------------------------------------------------------------------------------------
 /* File Upload */
 $('#explorerUploadForm').submit(function(e){
     e.preventDefault();
@@ -247,10 +272,11 @@ $('#explorerUploadForm').submit(function(e){
             $("#explorerUploadProgress").text(progressText);
             document.getElementById('uploaded_file').value = '';
             document.getElementById('uploaded_file_text').innerHTML = '';
-            getData("SD_upload?path=" + path, function(data) {
+            getData("SD_upload?path=" + path, function(content) {
                 /* We now have data! */
-                deleteChildrenNodes(sel);
-                addFileDirectory(sel, data);
+                deleteChildren(selectedNode.id);
+                console.log("sel", sel)
+                addFileDirectory(sel, content);
                 ref.open_node(sel);
             });
         },
@@ -261,97 +287,7 @@ $('#explorerUploadForm').submit(function(e){
         }
     });
 });
-
-/* File Delete */
-function handleDeleteData(nodeId) {
-    var ref = $('#explorerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    console.log("call delete request: " + node.data.path);
-    postData("SD_delete?" + encodeURIComponent(node.data.path));
-}
-
-function fileNameSort( a, b ) {
-    if ( a.dir && !b.dir ) {
-        return -1
-    }
-    if ( !a.dir && b.dir ) {
-        return 1
-    }
-    if ( a.name < b.name ){
-        return -1;
-    }
-    if ( a.name > b.name ){
-        return 1;
-    }
-    return 0;
-}
-
-function createChild(nodeId, data) {
-    var ref = $('#explorerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    var parentNodePath = node.data.path;
-    /* In case of root node remove leading '/' to avoid '//' */
-    if(parentNodePath == "/"){
-        parentNodePath = "";
-    }
-    var child = {
-        text: data.name,
-        type: getType(data),
-        data: {
-            path: parentNodePath + "/" + data.name,
-            directory: data.dir
-        }
-    };
-    return child;
-}
-
-function deleteChildrenNodes(nodeId) {
-    var ref = $('#explorerTree').jstree(true);
-    var children = $("#explorerTree").jstree("get_children_dom",nodeId);
-    for(var i=0;i<children.length;i++) {
-        ref.delete_node(children[i].id);
-    }
-}
-
-function refreshNode(nodeId) {
-    var ref = $('#explorerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    getData("SD_GetFolder?" + encodeURIComponent(node.data.path), function(data) {
-        /* We now have data! */
-        deleteChildrenNodes(nodeId);
-        addFileDirectory(nodeId, data);
-        ref.open_node(nodeId);
-    });
-}
-
-function getType(data) {
-    var type = "";
-    if(data.dir) {
-        type = "folder";
-    }
-    else if ((/\.(mp3|ogg|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name)) {
-        type = "audio";
-    } else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name)) {
-        type = "image";
-    }
-    else if ((/\.(m3u)$/i).test(data.name)) {
-        type = "playlist";
-    }
-    else {
-        type = "file";
-    }
-    return type;
-}
-
-function addFileDirectory(parent, data) {
-    data.sort( fileNameSort );
-    var ref = $('#explorerTree').jstree(true);
-    for (var i=0; i<data.length; i++) {
-        console.log("Create Node", data[i]);
-        ref.create_node(parent, createChild(parent, data[i]));
-    }
-} /* addFileDirectory */
-
+//----------------------------------------------------------------------------------------------------------------------
 function buildFileSystemTree(path) {
     $('#explorerTree').jstree({
         "core": {
@@ -449,7 +385,7 @@ function buildFileSystemTree(path) {
                 items.delete = {
                     label: "Delete",
                     action: function (x) {
-                        handleDeleteData(nodeId);
+                        deleteData(nodeId);
                         refreshNode(ref.get_parent(nodeId));
                     }
                 };
@@ -488,10 +424,8 @@ function buildFileSystemTree(path) {
     if (path.length == 0) {
         return;
     }
-    console.log("We can now have data!")
     getData("SD_GetFolder?/", function(data) {
         /* We now have data! */
-        console.log("We have data now!")
         console.log("data", data)
         $('#explorerTree').jstree(true).settings.core.data.children = [];
         data.sort( fileNameSort );
