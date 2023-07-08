@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 07.07.2023
+ *  Updated on: 08.07.2023
  *      Author: Wolle
  *
  *
@@ -46,6 +46,7 @@ var iconFileYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYA
 
 
 var lastNodeID = 0;
+var lastNode
 //----------------------------------------------------------------------------------------------------------------------
 function deleteChildren(nodeId) {
     $('#explorerTree').jstree('open_node', nodeId); // need to open node for accruate selection
@@ -131,7 +132,10 @@ $('#explorerTree').on('select_node.jstree', function (e, data) {
     var node = data.node;
     var nodeId = node.id;
     var path = node.data.path;
-    $('input[name=fileOrUrl]').val(path);
+    console.log("select: nodeId=", nodeId, "path=", path)
+    lastNode = node
+    lastNodeID = nodeId
+    resultstr3.value = path;
     if (data.node.type == "folder") {
         $('.option-folder').show();
         $('.option-file').hide();
@@ -188,105 +192,53 @@ function postData(path, callback, _data) {
     });
 }
 //----------------------------------------------------------------------------------------------------------------------
-/* File Upload */
-$('#explorerUploadForm').submit(function(e){
-    e.preventDefault();
-    console.log("Upload!");
-    var data = new FormData(this);
-    var ref = $('#explorerTree').jstree(true),
-    sel = ref.get_selected(),
-    path = "/";
-    if(!sel.length) {
-        alert("Please select the upload location!");return false;
+function uploadFile(uploadFile){
+    if(!uploadFile) return;
+    if (!lastNode.data.directory){
+        alert("selected " + lastNode.data.path + " is not a folder!")
+        document.getElementById('file1').value = null;
+        return
     }
-    if(!document.getElementById('uploaded_file').files.length > 0) {
-        alert("Please select files to upload!");return false;
-    }
-    sel = sel[0];
-    selectedNode = ref.get_node(sel);
-    if(selectedNode.data.directory){
-        path = selectedNode.data.path
-    }
-    else {
-        /* remap sel to parent folder */
-        sel = ref.get_node(ref.get_parent(sel));
-        path = parentNode.data.path;
-        console.log("Parent path: " + path);
-    }
-    const startTime = new Date().getTime();
-    let bytesTotal = 0;
-    var num = 'SD_GetFolder?' + path + '&version=' + Math.random().toString()
-    console.log("num ", num)
-    $.ajax({
-        url:  num,
-        type: 'POST',
-        data: data,
-        contentType: false,
-        processData:false,
-        xhr: function() {
-            var xhr = new window.XMLHttpRequest();
-            xhr.upload.addEventListener("progress", function(evt) {
-                if (evt.lengthComputable) {
-                    const now = new Date().getTime();
-                    const percent = parseInt(evt.loaded * 100 / evt.total);
-                    const elapsed = (now - startTime) / 1000;
-                    bytesTotal = evt.total;
-                    let progressText = "Remaining time is being calculated..";
-                    if(elapsed){
-                        const bps = evt.loaded / elapsed;
-                        const kbps = bps / 1024;
-                        const remaining = Math.round((evt.total - evt.loaded) / bps);
-                        const data = {
-                            percent: percent,
-                            remaining: {
-                                unit: (remaining>60) ? ("minutes", {count: Math.round(remaining/60)}) : "seconds",
-                                value: (remaining>60) ? Math.round(remaining/60) : ((remaining > 2) ? remaining : few)
-                            },
-                            speed: kbps.toFixed(2)
-                        }
-                        progressText = "{{percent}}% ({{speed}} KB/s), {{remaining.value}} {{remaining.unit}} remaining..";
-                        console.log("Percent: " + percent + "%% " + kbps.toFixed(2) + " KB/s");
-                    }
-                    $("#explorerUploadProgress").css('width', percent+"%").text(progressText);
-                }
-            }, false);
-            return xhr;
-        },
-        success: function(data, textStatus, jqXHR) {
-            const now = new Date().getTime();
-            const elapsed = (now - startTime) / 1000;
-            let transData = {
-                elapsed: "00:00",
-                speed: "0,00"
-            };
-            if(elapsed) {
-                const bps = bytesTotal / elapsed;
-                const kbps = bps / 1024;
-                const date = new Date(null);
-                date.setSeconds(elapsed);
-                const timeText = date.toISOString().substr(11, 8);
-                transData = { elapsed: timeText, speed: kbps.toFixed(2) };
-            }
-            console.log("Upload success (" + transData.elapsed + ", " + transData.speed + " KB/s): " + textStatus);
-            const progressText = "Upload successfull ({{elapsed}}, {{speed}} KB/s)"
-            $("#explorerUploadProgress").text(progressText);
-            document.getElementById('uploaded_file').value = '';
-            document.getElementById('uploaded_file_text').innerHTML = '';
-            getData("SD_upload?path=" + path, function(content) {
-                /* We now have data! */
-                deleteChildren(selectedNode.id);
-                console.log("sel", sel)
-                addFileDirectory(sel, content);
-                ref.open_node(sel);
-            });
-        },
-        error: function(request, status, error) {
-            console.log("Upload ERROR!");
-            $("#explorerUploadProgress").text("Upload error: " + status);
-            toastr.error("Upload error: " + status);
+    var startTime, total
+    var file = uploadFile[0]
+    console.log(file.name, file.size)
+    filename = "/" + file.name
+    var theUrl = '/uploadfile?' + lastNode.data.path + filename + '&version=' + Math.random()
+    var fd = new FormData(document.forms.form2)
+    var xhr = new XMLHttpRequest()
+    // xhr.timeout = 2000; // time in milliseconds
+    xhr.open('POST', theUrl, true)
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            var percentComplete = (e.loaded / e.total) * 100
+            console.log(percentComplete + '% uploaded')
+            deltaT = (new Date().getTime() - startTime) / 1000 ;
+            Bps = e.loaded /deltaT
+            KBps = Bps / 1024
+            console.log("KB/s =", KBps)
+            $("#explorerUploadProgress").css('width', percentComplete + "%").text(KBps.toFixed(2) + " KB/s");
+            refreshNode(lastNode.id)
         }
-    });
-});
+    }
+    xhr.onload = function () {
+    }
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        alert(filename + ' not uploaded, timeout')
+    }
+    xhr.onreadystatechange = function () {        // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+            if (xhr.status == 200){
+                alert(filename + ' successfully uploaded')
+            }
+            else alert(filename + ' upload failed')
+        }
+        $("#explorerUploadProgress").css('width', 0 + "%").text("");
+        document.getElementById('file1').value = null;
+    }
+    startTime = new Date().getTime();
+    xhr.send(fd)
+}
 //----------------------------------------------------------------------------------------------------------------------
 function buildFileSystemTree(path) {
     $('#explorerTree').jstree({

@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 07.07.2023
+ *  Updated on: 08.07.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -244,15 +244,11 @@ const char index_html[] PROGMEM = R"=====(
         #BODY {
             display:block;
         }
-        .filetree {
-            border: 1px solid black;
-            height: 200px;
-            margin: 0em 0em 1em 0em;
-            overflow-y: scroll;
-        }
         .filetree-container {
             position: relative;
             background-color: white;
+            height: 420px !important;
+            overflow: auto;
         }
         .progress-bar{
             display:-ms-flexbox;
@@ -1755,8 +1751,6 @@ function loadTimeZones() { // load from SD
                     title="Load from PC">load xlsx
             </button>
 
-            <!-- <input id="file" type="file" style="visibility: hidden; width: 0px;"  name="img" onchange="loadDataExcel(this.files);"/>    -->
-
             <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
                              width: 0px;" name="img"; onchange="loadDataExcel(this.files);"/>
             <br>
@@ -1764,19 +1758,6 @@ function loadTimeZones() { // load from SD
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content3">
-        <center>
-            <label for="seltrack"><big>Audio files on SD card:</big></label>
-            <br>
-
-            <br><br>
-            <button class="button" onclick="socket.send('stopfile')">STOP</button>
-            <button class="button" onclick="socket.send('resumefile')">RESUME</button>
-            <br>
-            <input type="text" class="boxstyle" style="width: calc(100% - 8px);" id="resultstr3" placeholder="Waiting for a command...."> <br>
-        </center>
-        <br>
-        <hr>
-        <br>
         <div class="container" id="filetreeContainer">
             <fieldset>
                 <legend "title">Files</legend>
@@ -1785,20 +1766,44 @@ function loadTimeZones() { // load from SD
                         <div id="explorerTree"></div>
                     </div>
                 </div>
-				<form id="explorerUploadForm" method="POST" enctype="multipart/form-data" action="/explorer">
-					<div class="input-group"   style="display:none;">
-                    	<span class="form-control" id="uploaded_file_text"></span>&nbsp
-						<span class="input-group-btn">
-							<span class="button" onclick="let input = $(this).parent().find('input[type=file]')[0]; input.webkitdirectory=false; input.click();" files.files.title">Files</span> &nbsp
-							<span class="button" onclick="$(this).parent().find('input[type=file]').submit();" files.upload.title">Upload</span>
-							<input name="uploaded_file" id ="uploaded_file" onchange="$(this).parent().parent().find('.form-control').html($(this).val().split(/[\\|/]/).pop()); type="file" multiple>
-						</span>
-					</div>
-				</form>
-                <br>
-				<div class="progress">
-					<div id="explorerUploadProgress" class="progress-bar" role="progressbar" ></div>
-				</div>
+                <hr>
+                <div style="height: 66px; display: flex;">
+                    <div style="flex:1;">
+                        <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                               id="resultstr3" placeholder="Waiting for a command....">
+                    </div>
+                    <div style="flex: 0 0 2px;">
+                    </div>
+                    <div style="flex: 0 0 42px;">
+                        <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD"
+                            onmousedown="this.src='SD/png/Button_Upload_Yellow_s.png'"
+                            ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
+                            onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
+                            ontouchend="this.src='SD/png/Button_Upload_Blue_s.png'"
+                            onclick="javascript:document.getElementById('file1').click();" />
+                    </div>
+                    <div style="flex: 0 0 42px;">
+                        <img src="SD/png/Button_Pause_Blue_s.png" alt="Pause" title="PAUSE"
+                            onmousedown="this.src='SD/png/Button_Pause_Yellow_s.png'"
+                            ontouchstart="this.src='SD/png/Button_Pause_Yellow_s.png'"
+                            onmouseup="this.src='SD/png/Button_Pause_Blue_s.png'"
+                            ontouchend="this.src='SD/png/Button_Pause_Blue_s.png'"
+                            onclick="socket.send('stopfile');" />
+                    </div>
+                    <div style="flex: 0 0 40px;">
+                        <img src="SD/png/Button_Right_Blue_s.png" alt="Resume" title="RESUME"
+                            onmousedown="this.src='SD/png/Button_Right_Yellow_s.png'"
+                            ontouchstart="this.src='SD/png/Button_Right_Yellow_s.png'"
+                            onmouseup="this.src='SD/png/Button_Right_Blue_s.png'"
+                            ontouchend="this.src='SD/png/Button_Right_Blue_s.png'"
+                            onclick="socket.send('resumefile');" />
+                    </div>
+                </div>
+                <div id="explorerUploadProgress" class="progress-bar" role="progressbar"> </div>
+                <form method="post" accept-charset="utf-8" name="form2">
+                    <input id="file1" type="file" accept="audio/*" style="visibility: hidden";
+                       width: 0px;" name="audio"; onchange="uploadFile(this.files);"/>
+                </form>
             </fieldset>
         </div>
     </div>

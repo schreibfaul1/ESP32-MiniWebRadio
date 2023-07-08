@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 06.07.2023
+ *  updated on: 08.07.2023
  *      Author: Wolle
  */
 
@@ -278,7 +278,14 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer file from webbrowser to sd
     size_t   bytesPerTransaction = 1024;
-    uint8_t  tBuf[bytesPerTransaction];
+    uint8_t *tBuf = NULL;
+    if(psramFound()){
+        bytesPerTransaction = 1024 * 24;
+        tBuf = (uint8_t*)ps_malloc(bytesPerTransaction);
+    }
+    else{
+        tBuf = (uint8_t*)malloc(bytesPerTransaction);
+    }
     uint16_t av;
     uint32_t len = contentLength;
     boolean f_werror=false;
@@ -287,14 +294,20 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
 
     file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
-    while(cmdclient.available()){
-        av=cmdclient.available();
-        if(av>bytesPerTransaction) av=bytesPerTransaction;
-        if(av>len) av=len;
-        len -= av;
-        cmdclient.read(tBuf, av);
-        if(file.write(tBuf, av)!=av) f_werror=true;  // write error?
+    uint32_t t = millis();
+    while(true){
+        if(cmdclient.available()){
+            t = millis();
+            av=cmdclient.available();
+            if(av>bytesPerTransaction) av=bytesPerTransaction;
+            if(av>len) av=len;
+            len -= av;
+            cmdclient.read(tBuf, av);
+            if(file.write(tBuf, av)!=av) f_werror=true;  // write error?
+        }
+        if((t + 2000) < millis()) { log_e("timeout"); goto exit;}
         if(len == 0) break;
+        if(f_werror) {log_e("error while writing on SD"); goto exit;}
     }
     cmdclient.readStringUntil('\n'); // read the remains, first \n
     cmdclient.readStringUntil('\n'); // read the remains  webkit\n
@@ -302,11 +315,15 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
     if(f_werror) {
         sprintf(buff, "File: %s write error", path);
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-        return false;
+        goto exit;
     }
     sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
+    if(tBuf) {free(tBuf); tBuf = NULL;}
     return true;
+exit:
+    if(tBuf) {free(tBuf); tBuf = NULL;}
+    return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
@@ -440,7 +457,9 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         if(cmdclient.available()) {
             //log_i("%i", cmdclient.available());
             currentLine = cmdclient.readStringUntil('\n');
-            //log_i("currLine %s", currentLine.c_str());
+            int idx = currentLine.indexOf("\r");
+            if(idx > 0) currentLine[idx] = ' ';
+            // log_i("currLine %s", currentLine.c_str());
             contentLength -= currentLine.length();
         }
         else{
@@ -466,7 +485,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                 contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer ist 2 chars longer
             }
             if(currentLine.length() == 1 && count == 1){
-                contentLength -= 6; // "\r\n\r\n..."
+                contentLength -= 7; // "\r\n\r\n..."
                 if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
                 count++;
             }

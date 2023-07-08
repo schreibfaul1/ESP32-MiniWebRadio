@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1d Jul 07/2023
+    Version 2.8.1e Jul 08/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1798,10 +1798,13 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
             strcpy(fn, fileName);
         }
         if(webSrv.uploadfile(SD_MMC, fn, contentLength)){
-            SerialPrintfln("save file " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+            SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.sendStatus(200);
         }
-        else webSrv.sendStatus(400);
+        else{
+            SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
+            webSrv.sendStatus(400);
+        }
         if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
@@ -3091,6 +3094,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength){
     if(request.startsWith("------")) return;      // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return;  // uninteresting Info
     if(request == "fileUpload"){savefile(_filename.c_str(), contentLength);  return;}
+    if(request.startsWith("Content"))return;      // suppress Content-Disposition and Content-Type
 
     SerialPrintfln(ANSI_ESC_RED "unknown request: %s",request.c_str());
 }
@@ -3099,9 +3103,9 @@ void WEBSRV_onInfo(const char* info){
     if(!strcmp("ping", info)) return;               // suppress ping
     if(!strcmp("to_listen", info)) return;          // suppress to_isten
     if(startsWith(info, "Command client"))return;   // suppress Command client available
-
+    if(startsWith(info, "Content-D"))return;        // Content-Disposition
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
-        SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "%s", info);    // infos for debug
+        SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info);    // infos for debug
     }
 }
 
