@@ -118,17 +118,17 @@ String         _media_downloadIP = "";
 vector<String> _names{};
 
 char _hl_item[11][40]{                          // Title in headline
-                "** Internet Radio **",         // "* интернет-радио *"  "ραδιόφωνο Internet"
-                "** Internet Radio **",
-                "** Internet Radio **",
-                "** Clock **",                  // Clock "** часы́ **"  "** ρολόι **"
-                "** Clock **",
-                "** Brightness **",             // Brightness яркость λάμψη
-                "** Audioplayer **",            // "** цифрово́й плеер **"
-                "** Audioplayer **",
-                "** Alarm **",                  // Alarm
-                "* Einschlafautomatik *",       // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-                "** DLNA **",                   // Digital Living Network Alliance
+                "   Internet Radio   ",         // "* интернет-радио *"  "ραδιόφωνο Internet"
+                "   Internet Radio   ",
+                "   Internet Radio   ",
+                "        Clock       ",         // Clock "** часы́ **"  "** ρολόι **"
+                "        Clock       ",
+                "     Brightness     ",         // Brightness яркость λάμψη
+                "    Audio player    ",         // "** цифрово́й плеер **"
+                "    Audio player    ",
+                "    Alarm (hh:mm)   ",         // Alarm
+                "  Off Timer (h:mm)  ",         // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+                "        DLNA        ",         // Digital Living Network Alliance
 };
 
 enum status{RADIO = 0, RADIOico = 1, RADIOmenue = 2, CLOCK = 3, CLOCKico = 4, BRIGHTNESS = 5, PLAYER= 6, PLAYERico= 7,
