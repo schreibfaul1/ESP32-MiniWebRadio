@@ -2315,7 +2315,7 @@ void loop() {
                 }
             }
 
-            if(_alarmtime == rtc.getMinuteOfTheDay()){ //is alarmtime?
+            if(_alarmtime == rtc.getMinuteOfTheDay() && _state != ALARM){ //is alarmtime?
                 SerialPrintfln("is alarmtime");
                 if((_alarmdays >> rtc.getweekday()) & 1){ //is alarmday? 0-Sun, 1-Mon, 2 Tue ....
                     if(!_f_semaphore) {_f_alarm = true;  _f_semaphore = true;} //set alarmflag
