@@ -1914,9 +1914,11 @@ void fall_asleep(){
 }
 
 void wake_up(){
-    if(_f_sleeping == true){ //awake
+    if(_f_sleeping == true || _f_eof_alarm){ //awake
         _f_sleeping = false;
         SerialPrintfln("awake");
+        _f_mute = true;
+        mute();
         setTFTbrightness(_brightness);
         changeState(RADIO);
         showVUmeter();
@@ -1925,8 +1927,6 @@ void wake_up(){
         showFooter();
         showHeadlineItem(RADIO);
         showHeadlineVolume();
-        _f_mute = true;
-        mute();
     }
 }
 
@@ -2291,12 +2291,10 @@ void loop() {
             if(_f_eof && (_state == RADIO || _f_eof_alarm)){
                 _f_eof = false;
                 if(_f_eof_alarm){
+                    audioSetVolume(_cur_volume);
+                    wake_up();
                     _f_eof_alarm = false;
-                    if(_f_mute){
-                        mute(); // mute off
-                    }
                 }
-                connecttohost(_lastconnectedhost.c_str());
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -2792,7 +2790,7 @@ void tp_pressed(uint16_t x, uint16_t y){
     }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
-    log_w("long pressed %i  %i", x, y);
+    // log_w("long pressed %i  %i", x, y);
     if((_releaseNr == 0 || _releaseNr ==50) && _f_mute) {
         fall_asleep();
     }
@@ -2911,7 +2909,7 @@ void tp_released(){
 }
 
 void tp_long_released(){
-    log_w("long released)");
+    // log_w("long released)");
     if(_releaseNr == 0 || _releaseNr ==50) {return;}
     tp_released();
 }
