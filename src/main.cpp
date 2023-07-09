@@ -2033,6 +2033,8 @@ void changeState(int state){
 
                 SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%02d:%02d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
                                "%s -> %s", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays), wd);
+                _f_semaphore = false;
+                _f_alarm = false;
             }
             if(_state != CLOCKico) clearDigits();
             clearAlarmDaysBar();
