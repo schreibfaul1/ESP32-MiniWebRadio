@@ -142,6 +142,7 @@
 // //prototypes (main.cpp)
 boolean defaultsettings();
 boolean saveStationsToNVS();
+void updateSettings();
 void urldecode(char *str);
 String dirContent(String path);
 void setTFTbrightness(uint8_t duty);
@@ -150,7 +151,7 @@ void showHeadlineTime(bool complete = true);
 void showHeadlineItem(uint8_t idx);
 void showFooterIPaddr();
 void showFooterStaNr();
-void showFooterRSSI();
+void showFooterRSSI(boolean show = false);
 void fall_asleep();
 void wake_up();
 void setRTC(const char* TZString);
@@ -184,6 +185,7 @@ int lastIndexOf(const char* haystack, const char needle);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
 int16_t strlenUTF8(const char* str);
+int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
 void SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char* scaleImage(const char* path);
 void setVolume(uint8_t vol);

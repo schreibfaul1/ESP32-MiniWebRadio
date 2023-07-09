@@ -337,7 +337,6 @@ boolean defaultsettings(){
     _f_mute             = (bool)        jV["mute"];
     _brightness         = (uint8_t)     jV["brightness"];
     _sleeptime          = (uint16_t)    jV["sleeptime"];
-    _lastconnectedhost  = (const char*) jV["lastconnectedhost"];
     _cur_station        = (uint16_t)    jV["station"];
     _sum_stations       = (uint16_t)    jV["sumstations"];
     _toneha             = (int16_t)     jV["toneha"];
@@ -347,10 +346,13 @@ boolean defaultsettings(){
     _toneLP             = (int16_t)     jV["toneLP"];
     _toneBP             = (int16_t)     jV["toneBP"];
     _toneHP             = (int16_t)     jV["toneHP"];
-    _TZName             = (const char*) jV["Timezone_Name"];
-    _TZString           = (const char*) jV["Timezone_String"];
 
-    if(!_lastconnectedhost) _lastconnectedhost = "";
+    bool f_updateSettings = false;
+    if(!(const char*)jV["Timezone_Name"]     ) f_updateSettings = true;  else _TZName             = (const char*) jV["Timezone_Name"];
+    if(!(const char*)jV["Timezone_String"]   ) f_updateSettings = true;  else _TZString           = (const char*) jV["Timezone_String"];
+    if(!(const char*) jV["lastconnectedhost"]) f_updateSettings = true;  else _lastconnectedhost  = (const char*) jV["lastconnectedhost"];
+    if(f_updateSettings) updateSettings();
+
     if(_sum_stations == 0) saveStationsToNVS(); // first init
     return true;
 }
@@ -664,7 +666,7 @@ void showFooterStaNr(){
     tft.printf("%03d", _cur_station);
     xSemaphoreGive(mutex_display);
 }
-void showFooterRSSI(){
+void showFooterRSSI(boolean show){
     static int old_rssi = -1;
     int new_rssi = -1;
     int rssi = WiFi.RSSI(); // Received Signal Strength Indicator
@@ -683,6 +685,9 @@ void showFooterRSSI(){
             }
             tmp_rssi = rssi;
         }
+        show = true;
+    }
+    if(show){
         switch(new_rssi){
             case 4: {drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y); break;}
             case 3: {drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y); break;}
@@ -720,7 +725,7 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     boolean sleep = false;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearSleep();
-    drawImage("/common/zz.bmp", _winSleep.x, _winSleep.y);
+    drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
     uint8_t offset = 0;
     if(TFT_CONTROLLER < 2 ) offset = 28; else offset = 33;
     if(_sleeptime == 1) sleep = true;
@@ -729,8 +734,14 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
         char Slt[15];
         sprintf(Slt,"%d:%02d", _sleeptime / 60, _sleeptime % 60);
         tft.setFont(_fonts[1]);
-        if(!_sleeptime) tft.setTextColor(TFT_DEEPSKYBLUE);
-        else tft.setTextColor(TFT_RED);
+        if(!_sleeptime){
+            drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
+            tft.setTextColor(TFT_DEEPSKYBLUE);
+        }
+        else{
+            drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
+            tft.setTextColor(TFT_RED);
+        }
         tft.setCursor(_winSleep.x + offset , _winSleep.y + 2);
         tft.print(Slt);
     }
@@ -777,8 +788,8 @@ void updateVUmeter() {
 
     uint16_t vum = audioGetVUlevel();
 
-    uint8_t left  = map(vum >> 8,     0, 127, 0, 11);
-    uint8_t right = map(vum & 0x00FF, 0, 127, 0, 11);
+    uint8_t left  = map_l(vum >> 8,     0, 127, 0, 11);
+    uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
 
     if(left > _VUleftCh)   {for(int i = _VUleftCh; i < left; i++) { drawRect(i, 0, 1); }}
     if(left < _VUleftCh)   {for(int i = left; i < _VUleftCh; i++) { drawRect(i, 0, 0); }}
@@ -802,7 +813,7 @@ void showFooter(){  // stationnumber, sleeptime, IPaddress
     showFooterStaNr();
     updateSleepTime(true);
     showFooterIPaddr();
-    showFooterRSSI();
+    showFooterRSSI(true);
     showFooterBitRate(_icyBitRate);
 }
 void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight){
@@ -1592,7 +1603,6 @@ boolean strCompare(const char* str1, char* str2){ // returns true if str1 == str
     }
     return f;
 }
-
 int16_t strlenUTF8(const char* str){ // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
     if(str == NULL) return -1;
     uint16_t idx = 0;
@@ -1605,8 +1615,16 @@ int16_t strlenUTF8(const char* str){ // returns only printable glyphs, all ASCII
     }
     return cnt;
 }
-
-
+int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+    const int32_t run = in_max - in_min;
+    if(run == 0){
+        log_e("map(): Invalid input range, min == max");
+        return -1; // AVR returns -1, SAM returns 0
+    }
+    const int32_t rise = out_max - out_min;
+    const int32_t delta = x - in_min;
+    return (delta * rise) / run + out_min;
+}
 void SerialPrintflnCut(const char* item, const char* color, const char* str){
     if(strlen(str) > 75){
         String f = str;
