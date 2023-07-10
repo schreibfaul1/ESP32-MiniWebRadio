@@ -3073,6 +3073,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
 
+    if(cmd == "download"){          webSrv.streamfile(SD_MMC, param.c_str());
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
+                                    return;}
+
     if(cmd == "SD_GetFolder"){      webSrv.reply(dirContent(param), webSrv.JS);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}

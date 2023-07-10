@@ -358,7 +358,7 @@ function buildFileSystemTree(path) {
                     items.download = {
                         label: "Download",
                         action: function (x) {
-                            uri = "SD/" + encodeURIComponent(node.data.path);
+                            uri = "download?" + encodeURIComponent(node.data.path);
                             var anchor = document.createElement('a');
                             anchor.href = uri;
                             anchor.target = '_blank';
