@@ -98,6 +98,7 @@ boolean        _f_logoUnknown = false;
 boolean        _f_pauseResume = false;
 boolean        _f_accessPoint = false;
 boolean        _f_state_isChanging = false;
+boolean        _f_SD_Upload = false;
 
 String         _station = "";
 String         _stationName_nvs = "";
@@ -1796,7 +1797,7 @@ void changeBtn_released(uint8_t btnNr){
 void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfile on SD_MMC
     char fn[256];
 
-    if(endsWith(fileName, "jpg")){
+    if(!_f_SD_Upload && endsWith(fileName, "jpg")){
         strcpy(fn, "/logo");
         strcat(fn, _prefix);
         if(!startsWith(fileName, "/")) strcat(fn, "/");
@@ -1808,6 +1809,7 @@ void savefile(const char* fileName, uint32_t contentLength){ //save the uploadfi
         else webSrv.sendStatus(400);
     }
     else{
+        _f_SD_Upload = false;
         if(!startsWith(fileName, "/")){
             strcpy(fn, "/");
             strcat(fn, fileName);
@@ -3073,7 +3075,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
                                     return;}
 
-    if(cmd == "download"){          webSrv.streamfile(SD_MMC, param.c_str());
+    if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
@@ -3103,13 +3105,18 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
                                     return;}
 
+    if(cmd == "SD_Upload"){        _filename = param;
+                                   _f_SD_Upload = true;
+                                   SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Upload  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
+                                   return;}
+
 
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }
 void WEBSRV_onRequest(const String request, uint32_t contentLength){
 
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN){
+    if(CORE_DEBUG_LEVEL > ARDUHAL_LOG_LEVEL_INFO){
         SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
     }
 

@@ -202,8 +202,9 @@ function uploadFile(uploadFile){
     var startTime, total
     var file = uploadFile[0]
     console.log(file.name, file.size)
-    filename = "/" + file.name
-    var theUrl = '/uploadfile?' + lastNode.data.path + filename + '&version=' + Math.random()
+    if(lastNode.data.path === '/') filename = file.name
+    else filename = "/" + file.name
+    var theUrl = 'SD_Upload?' + lastNode.data.path + filename + '&version=' + Math.random()
     var fd = new FormData(document.forms.form2)
     var xhr = new XMLHttpRequest()
     // xhr.timeout = 2000; // time in milliseconds
@@ -358,7 +359,7 @@ function buildFileSystemTree(path) {
                     items.download = {
                         label: "Download",
                         action: function (x) {
-                            uri = "download?" + encodeURIComponent(node.data.path);
+                            uri = "SD_Download?" + encodeURIComponent(node.data.path);
                             var anchor = document.createElement('a');
                             anchor.href = uri;
                             anchor.target = '_blank';
