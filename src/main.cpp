@@ -731,21 +731,21 @@ void updateSleepTime(boolean noDecrement){  // decrement and show new value in f
     if(TFT_CONTROLLER < 2 ) offset = 28; else offset = 33;
     if(_sleeptime == 1) sleep = true;
     if(_sleeptime > 0 && !noDecrement) _sleeptime--;
-    if(_state != ALARM){
-        char Slt[15];
-        sprintf(Slt,"%d:%02d", _sleeptime / 60, _sleeptime % 60);
-        tft.setFont(_fonts[1]);
-        if(!_sleeptime){
-            drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
-            tft.setTextColor(TFT_DEEPSKYBLUE);
-        }
-        else{
-            drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
-            tft.setTextColor(TFT_RED);
-        }
-        tft.setCursor(_winSleep.x + offset , _winSleep.y + 2);
-        tft.print(Slt);
+
+    char Slt[15];
+    sprintf(Slt,"%d:%02d", _sleeptime / 60, _sleeptime % 60);
+    tft.setFont(_fonts[1]);
+    if(!_sleeptime){
+        drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
+        tft.setTextColor(TFT_DEEPSKYBLUE);
     }
+    else{
+        drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
+        tft.setTextColor(TFT_RED);
+    }
+    tft.setCursor(_winSleep.x + offset , _winSleep.y + 2);
+    tft.print(Slt);
+
     xSemaphoreGive(mutex_display);
     if(sleep){ // fall asleep
         fall_asleep();
@@ -1164,7 +1164,8 @@ void processPlaylist(boolean first){
                 webSrv.send((String)"SD_playFile=" + _chbuf);
                 changeState(PLAYERico);
                 _cur_Codec = 0;
-                audioConnecttohost(_chbuf);
+                _f_isWebConnected = audioConnecttohost(_chbuf);
+                _f_isFSConnected = false;
             }
             else{
                 const char* path = playlistFile.path();
@@ -2190,7 +2191,8 @@ void DLNA_getFileItems(String uri){
     String URL = "http://" + _media_downloadIP + ":" + _media_downloadPort + "/" + uri;
     log_i("URL=%s", URL.c_str());
     _cur_Codec = 0;
-    audioConnecttohost(URL.c_str());
+    _f_isWebConnected = audioConnecttohost(URL.c_str());
+    _f_isFSConnected = false;
 }
 void DLNA_showContent(String objectId, uint8_t level){
     audioStopSong();
@@ -2271,7 +2273,7 @@ void loop() {
     }
     if(_f_1sec){
         _f_1sec = false;
-        if(_state != ALARM && !_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
+        if(!_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
         if(_state == CLOCK || _state == CLOCKico) display_time();
 
         if(_timeCounter){
