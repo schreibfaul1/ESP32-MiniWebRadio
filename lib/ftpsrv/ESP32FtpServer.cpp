@@ -628,6 +628,14 @@ boolean FtpServer::processCommand() {
     else if(!strcmp(command, "SITE")) {  //  SITE - System command
         client.println("500 Unknow SITE command " + String(parameters));
     }
+    else if(!strcmp(command, "OPTS")){
+        if(strcmp(parameters, "UTF8 ON") == 0){
+            client.println("200 OK, UTF8 ON");
+        }
+        else{
+            client.println("504 Unknown OPTS");
+        }
+    }
     else   //  Unrecognized commands ...
         client.println("500 Unknow command");
 
