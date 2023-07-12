@@ -1,0 +1,24 @@
+#######################################
+# Syntax Coloring Map For Ultrasound
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+IR	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+setIRresult	KEYWORD2
+loop	KEYWORD2
+ir_res	KEYWORD2
+ir_number	KEYWORD2
+ir_key	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
