@@ -355,6 +355,19 @@ boolean defaultsettings(){
     if(f_updateSettings) updateSettings();
 
     if(_sum_stations == 0) saveStationsToNVS(); // first init
+
+    // irBtn_t b[5];
+ 
+    // b[0].val = 0x00;
+    // b[0].ch = 'a';
+    // b[1].ch = 'b';
+    // b[1].val = 0x01;
+    // b[2].ch = 'b';
+    // b[2].val = 0x02;
+    // b[4].ch = 'c';
+    // b[4].val = 0xFF;
+    // ir.defineButtons(b);
+
     return true;
 }
 
@@ -764,6 +777,7 @@ void updateVUmeter() {
     if(_state != RADIO) return;
     if(_f_state_isChanging) return;
     if(_f_sleeping) return;
+    if(_f_irNumberSeen) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     uint8_t width = 0, height = 0, xOffs = 0, yOffs = 0, xStart = 0, yStart = 0;
     #if TFT_CONTROLLER < 2  // 320 x 240px
@@ -864,25 +878,24 @@ void showVUmeter() {
 void showLogoAndStationName(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearLogoAndStationname();
+    xSemaphoreGive(mutex_display);
     String  SN_utf8 = "";
-    String  SN_ascii = "";
     if(_cur_station){
         SN_utf8  = _stationName_nvs;
-        SN_ascii = _stationName_nvs;
     }
     else{
         SN_utf8  = _stationName_air;
-        SN_ascii = _stationName_air;
     }
-    int16_t idx = SN_ascii.indexOf('|');
-    if(idx>0){
-        SN_ascii = SN_ascii.substring(idx + 1); // before pipe
-        SN_utf8 = SN_utf8.substring(0, idx);
-    }
-    SN_ascii.trim();
     SN_utf8.trim();
 
-    switch(strlenUTF8(SN_utf8.c_str())){
+    showStationName(SN_utf8);
+
+    showStationLogo(SN_utf8);
+}
+
+void showStationName(String sn){
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    switch(strlenUTF8(sn.c_str())){
         case   0 ... 20:  tft.setFont(_fonts[5]); break;
         case  21 ... 32:  tft.setFont(_fonts[4]); break;
         case  33 ... 45:  tft.setFont(_fonts[3]); break;
@@ -890,9 +903,13 @@ void showLogoAndStationName(){
         case  61 ... 90:  tft.setFont(_fonts[1]); break;
         default:          tft.setFont(_fonts[0]); break;
     }
-    display_info(SN_utf8.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, 0, _winName.w, _winName.h);
+    display_info(sn.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, 0, _winName.w, _winName.h);
+    xSemaphoreGive(mutex_display);
+}
 
-    String logo = "/logo/" + (String) SN_ascii.c_str() +".jpg";
+void showStationLogo(String ln){
+    xSemaphoreTake(mutex_display, portMAX_DELAY);
+    String logo = "/logo/" + (String) ln.c_str() +".jpg";
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == false){
         drawImage("/common/unknown.jpg", 0, _winName.y + 2);  // if no draw unknown
         _f_logoUnknown = true;
@@ -1912,6 +1929,9 @@ void fall_asleep(){
         clearAll();
         setTFTbrightness(0);
     }
+    if(_state == CLOCKico) _state = CLOCK;
+    if(_state == RADIOico) _state = RADIO;
+    if(_state == PLAYERico)_state = PLAYER;
     SerialPrintfln("falling asleep");
     xSemaphoreGive(mutex_display);
 }
@@ -1922,14 +1942,22 @@ void wake_up(){
         SerialPrintfln("awake");
         _f_mute = true;
         mute();
+        clearAll();
         setTFTbrightness(_brightness);
-        changeState(RADIO);
-        showVUmeter();
         connecttohost(_lastconnectedhost.c_str());
-        showLogoAndStationName();
         showFooter();
-        showHeadlineItem(RADIO);
+        showHeadlineTime();
         showHeadlineVolume();
+        if(_state == CLOCK){
+            showHeadlineItem(CLOCK);
+            display_time(true);
+        }
+        else{
+            changeState(RADIO);
+            showVUmeter();
+            showLogoAndStationName();
+            showHeadlineItem(RADIO);
+        }
     }
 }
 
@@ -2256,25 +2284,28 @@ void loop() {
             }
         }
     }
+    if(!_f_sleeping) {
+        if(_f_newBitRate){
+            showFooterBitRate(_icyBitRate);
+            _f_newBitRate = false;
+        }
 
-    if(_f_newBitRate){
-        showFooterBitRate(_icyBitRate);
-        _f_newBitRate = false;
-    }
+        if(_f_newLogoAndStation){
+            showLogoAndStationName();
+            _f_newLogoAndStation = false;
+        }
 
-    if(_f_newLogoAndStation){
-        showLogoAndStationName();
-        _f_newLogoAndStation = false;
-    }
-
-    if(_f_100ms){
-        _f_100ms = false;
-        updateVUmeter();
+        if(_f_100ms){
+            _f_100ms = false;
+            if(_state != ALARM) updateVUmeter();
+        }
     }
     if(_f_1sec){
         _f_1sec = false;
-        if(!_f_sleeping) {showHeadlineTime(false); showFooterRSSI();}
-        if(_state == CLOCK || _state == CLOCKico) display_time();
+        if(!_f_sleeping) {
+            showHeadlineTime(false); showFooterRSSI();
+            if(_state == CLOCK || _state == CLOCKico) display_time();
+        }
 
         if(_timeCounter){
             _timeCounter--;
@@ -2326,6 +2357,10 @@ void loop() {
             else _f_semaphore=false;
 
             if(_f_alarm){
+                clearAll();
+                showFileName("ALARM");
+                drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
+                setTFTbrightness(_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 _f_alarm=false;
                 connecttoFS("/ring/alarm_clock.mp3");
@@ -2390,7 +2425,7 @@ void loop() {
 
     if(_f_10sec == true){
         _f_10sec = false;
-        if(_state == RADIO && !_icyBitRate){
+        if(_state == RADIO && !_icyBitRate && !_f_sleeping){
             uint32_t ibr = audioGetBitRate() / 1000;
             if(ibr > 0){
                 if(ibr != _avrBitRate) {_avrBitRate = ibr;  showFooterBitRate(_avrBitRate);}
@@ -2587,17 +2622,19 @@ void ir_res(uint32_t res){
     if(_f_sleeping == true) return;
     if(res != 0){
         setStation(res);
+        showVUmeter();
     }
     else{
         setStation(_cur_station); // valid between 1 ... 999
+        showVUmeter();
     }
     return;
 }
 void ir_number(const char* num){
-    _f_irNumberSeen = true;
     if(_state != RADIO) return;
     if(_f_sleeping) return;
-    tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth , _winName.h + _winTitle.h, TFT_BLACK);
+    if(!_f_irNumberSeen) tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth , _winName.h + _winTitle.h, TFT_BLACK);
+    _f_irNumberSeen = true;
     tft.setFont(_fonts[6]);
     tft.setTextColor(TFT_GOLD);
     tft.setCursor(_irNumber_x, _irNumber_y);
@@ -2795,15 +2832,13 @@ void tp_pressed(uint16_t x, uint16_t y){
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
     // log_w("long pressed %i  %i", x, y);
-    if((_releaseNr == 0 || _releaseNr ==50) && _f_mute) {
+    if((_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) && _f_mute) {
         fall_asleep();
     }
-
-
 }
 void tp_released(){
     // SerialPrintfln("tp_released, state is: %i", _state);
-    wake_up();   // if sleeping
+    if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
     switch(_releaseNr){
         /* RADIOico ******************************/
@@ -2914,7 +2949,7 @@ void tp_released(){
 
 void tp_long_released(){
     // log_w("long released)");
-    if(_releaseNr == 0 || _releaseNr ==50) {return;}
+    if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr ==50) {return;}
     tp_released();
 }
 

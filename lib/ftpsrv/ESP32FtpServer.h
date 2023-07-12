@@ -68,11 +68,10 @@ public:
     ~FtpServer();
     void    begin(String uname, String pword);
     void    begin(fs::FS &fs, String uname, String pword);
-    void    loop();
     uint8_t isConnected();
+    int  handleFTP();
 
 private:
-    int  handleFTP();
     void iniVariables();
     void clientConnected();
     void disconnectClient();
