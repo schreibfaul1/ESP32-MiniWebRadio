@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.1e Jul 08/2023
+    Version 2.8.2 Jul 13/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -356,17 +356,31 @@ boolean defaultsettings(){
 
     if(_sum_stations == 0) saveStationsToNVS(); // first init
 
-    // irBtn_t b[5];
- 
-    // b[0].val = 0x00;
-    // b[0].ch = 'a';
-    // b[1].ch = 'b';
-    // b[1].val = 0x01;
-    // b[2].ch = 'b';
-    // b[2].val = 0x02;
-    // b[4].ch = 'c';
-    // b[4].val = 0xFF;
-    // ir.defineButtons(b);
+    // irBtn_t ir_buttons[20];
+    // ir_buttons[ 0].val = 0x52; ir_buttons[ 0].ch = '0';
+    // ir_buttons[ 1].val = 0x16; ir_buttons[ 1].ch = '1';
+    // ir_buttons[ 2].val = 0x19; ir_buttons[ 2].ch = '2';
+    // ir_buttons[ 3].val = 0x0D; ir_buttons[ 3].ch = '3';
+    // ir_buttons[ 4].val = 0x0C; ir_buttons[ 4].ch = '4';
+    // ir_buttons[ 5].val = 0x18; ir_buttons[ 5].ch = '5';
+    // ir_buttons[ 6].val = 0x5E; ir_buttons[ 6].ch = '6';
+    // ir_buttons[ 7].val = 0x08; ir_buttons[ 7].ch = '7';
+    // ir_buttons[ 8].val = 0x1C; ir_buttons[ 8].ch = '8';
+    // ir_buttons[ 9].val = 0x5A; ir_buttons[ 9].ch = '9';
+    // ir_buttons[10].val = 0x40; ir_buttons[10].ch = 'o';  // OK
+    // ir_buttons[11].val = 0x46; ir_buttons[11].ch = 'u';  // UP
+    // ir_buttons[12].val = 0x15; ir_buttons[12].ch = 'd';  // DOWN
+    // ir_buttons[13].val = 0x43; ir_buttons[13].ch = 'r';  // RIGHT
+    // ir_buttons[14].val = 0x44; ir_buttons[14].ch = 'l';  // LEFT
+    // ir_buttons[15].val = 0x4A; ir_buttons[15].ch = '#';  // #
+    // ir_buttons[16].val = 0x42; ir_buttons[16].ch = '*';  // *
+    // ir_buttons[17].val = 0x00; ir_buttons[17].ch = '0';
+    // ir_buttons[18].val = 0x00; ir_buttons[18].ch = '0';
+    // ir_buttons[19].val = 0x00; ir_buttons[19].ch = '0';
+
+//    ir.set_irButtons(ir_buttons);
+//    ir.set_irAddress(0x00);
+
 
     return true;
 }
@@ -2330,6 +2344,9 @@ void loop() {
                     wake_up();
                     _f_eof_alarm = false;
                 }
+                else{
+                    connecttohost(_lastconnectedhost.c_str());
+                }
             }
             if((_f_mute==false)&&(!_f_sleeping)){
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -2615,17 +2632,23 @@ void tft_info(const char *info){
     SerialPrintfln("tft_info: .  %s", info);
 }
 
+void ir_code(const char *adr, const char* cmd, uint8_t address, uint8_t command){
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s, "
+                                   ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "%s", adr, cmd);
+}
+
 // Events from IR Library
 void ir_res(uint32_t res){
     _f_irNumberSeen = false;
     if(_state != RADIO) return;
     if(_f_sleeping == true) return;
+    SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%d", res);
     if(res != 0){
-        setStation(res);
+        setStation(res); // valid between 1 ... 999
         showVUmeter();
     }
     else{
-        setStation(_cur_station); // valid between 1 ... 999
+        setStation(_cur_station);
         showVUmeter();
     }
     return;
