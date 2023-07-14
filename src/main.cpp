@@ -1970,16 +1970,24 @@ void IRAM_ATTR headphoneDetect(){ // called via interrupt
 void fall_asleep(){
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     _f_sleeping = true;
+    _f_playlistEnabled = false;
+    _f_isFSConnected = false;
+    _f_isWebConnected = false;
+    playlistFile.close();
     audioStopSong();
     if(_state != CLOCK){
         clearAll();
         setTFTbrightness(0);
     }
+    xSemaphoreGive(mutex_display);
+    WiFi.disconnect(true);  // Disconnect from the network
+    vTaskDelay(300);
+    WiFi.mode(WIFI_OFF);    // Switch WiFi off
+    setCpuFrequencyMhz(80);   // 10MHz and 40MHz seem to stop TPanel after minute or so.
     if(_state == CLOCKico) _state = CLOCK;
     if(_state == RADIOico) _state = RADIO;
     if(_state == PLAYERico)_state = PLAYER;
     SerialPrintfln("falling asleep");
-    xSemaphoreGive(mutex_display);
 }
 
 void wake_up(){
@@ -1990,6 +1998,14 @@ void wake_up(){
         mute();
         clearAll();
         setTFTbrightness(_brightness);
+        setCpuFrequencyMhz(240);
+        WiFi.disconnect(false);  // Reconnect the network
+        wifiMulti.run();
+        SerialPrintfln("START WIFI");
+        while (WiFi.status() != WL_CONNECTED) {
+            delay(100);
+            SerialPrintfln(".");
+        }
         connecttohost(_lastconnectedhost.c_str());
         showFooter();
         showHeadlineTime();
@@ -2699,19 +2715,11 @@ void ir_number(uint16_t num){
     tft.print(num);
 }
 void ir_key(uint8_t key){
-    // if(_f_sleeping == true && key[0] != 'k') return;
-    // if(_f_sleeping == true && key[0] == 'k'){ //awake
-    //     _f_sleeping = false;
-    //     SerialPrintfln("awake");
-    //     setTFTbrightness(_brightness);
-    //     changeState(RADIO);
-    //     connecttohost(_lastconnectedhost.c_str());
-    //     showLogoAndStationName();
-    //     showFooter();
-    //     showHeadlineItem(RADIO);
-    //     showHeadlineVolume();
-    //     return;
-    // }
+    if(_f_sleeping == true && key != 10) return;
+    if(_f_sleeping == true && key == 10){ //awake
+        wake_up();
+        return;
+    }
 
     switch(key){
         case 15:       if(_state == SLEEP) {                                                   // CLOCK <-> RADIO
