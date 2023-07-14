@@ -172,10 +172,10 @@ void IRAM_ATTR isr_IR()
 
         ir_begin=false;
         userCode = ir_value & 0xFFFF;
-        uint8_t a, b, c, d;
-        a = (userCode & 0xFF00) >> 8;
-        b = (userCode & 0x00FF);
-        if(a + b == 0xFF){
+        uint8_t a, b, c, d; (void)b;
+        a = (userCode & 0xFF00) >> 8; // Extended NEC protocol: Address low
+        b = (userCode & 0x00FF);      // Extended NEC protocol: Address high
+        if(true){                     //if(a + b == 0xFF){ // not in ext. NEC prot.
             dataCode=(ir_value & 0xFFFF0000) >> 16;
             c = (dataCode & 0xFF00) >> 8;
             d = (dataCode & 0x00FF);
