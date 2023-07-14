@@ -154,6 +154,20 @@ void IRAM_ATTR isr_IR()
     levelcounter++;
     if(levelcounter%2==1)return;                // only falling edge can pass
 
+    if((intval > 400) && (intval < 750)){       // Short pulse?
+        ir_value += bit;                        // Count number of received bits
+        pulsecounter++;
+        bit <<= 1;
+    }
+    else if((intval > 1400) && (intval < 1900)){     // Long pulse?
+        pulsecounter++;
+        bit <<= 1;
+    }
+    else{
+        pulsecounter = 0;
+        bit = 1;
+    }
+
     if(pulsecounter==32){
 
         ir_begin=false;
@@ -170,18 +184,6 @@ void IRAM_ATTR isr_IR()
             }
         }
     }
-    if((intval > 400) && (intval < 750)){       // Short pulse?
-        ir_value += bit;                        // Count number of received bits
-        pulsecounter++;
-        bit <<= 1;
-    }
-    else if((intval > 1400) && (intval < 1900)){     // Long pulse?
-        pulsecounter++;
-        bit <<= 1;
-    }
-    else{
-        pulsecounter = 0;
-        bit = 1;
-    }
+
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
