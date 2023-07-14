@@ -82,7 +82,7 @@ void IR::loop(){ // transform raw data from IR to ir_result
 
     if(ir_cmd != -01){
         if(ir_code) ir_code(ir_adr, ir_cmd);
-        if(ir_adr != ir_addressCode){ir_adr = -01; return;}
+        if(ir_adr != ir_addressCode){ir_cmd = -01; return;}
         m_t0 = millis();
         bool found = false;
         for(uint8_t i = 0; i < 20; i++){
