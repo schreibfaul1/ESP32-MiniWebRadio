@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 08.07.2023
+ *  Updated on: 14.07.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -109,6 +109,10 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
+        #tab-content7 {
+            display : none;
+            margin : 20px;
+        }
         .button {
             width : 80px;
             height : 30px;
@@ -206,6 +210,20 @@ const char index_html[] PROGMEM = R"=====(
             border-width: thin;
             border-radius : 5px;
         }
+        .boxstyle_s {
+            height : 36px;
+            width : 50px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 0;
+            background-color: white;
+            font-size : 16px;
+            line-height : normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius : 5px;
+        }
         .sdr_lbl_left {
             display: inline-block;
             float: left;
@@ -289,6 +307,7 @@ var audio_decoder  = 0  // (0)vs1053,  (1)SW_Decoder
 var socket = undefined
 var host = location.hostname
 var tm
+var IR_addr = ""
 
 function ping() {
   if (socket.readyState == 1) { // reayState 'open'
@@ -448,6 +467,14 @@ function connect() {
                               break
       case "test":            resultstr1.value = val
                               break
+      case "IR_address":      if(IR_addr != val){
+                                  IR_addr = val
+                                  ir_address.value=val
+                                  socket.send("setIRadr=" + val)
+                              }
+                              break
+      case "IR_command":      ir_command.value=val
+                              break
       default:                console.log('unknown message', msg, val)
     }
   }
@@ -498,6 +525,7 @@ function showTab1 () {
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
   document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -516,6 +544,7 @@ function showTab2 () {
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
   document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -533,6 +562,7 @@ function showTab3 () {
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
   document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
@@ -555,6 +585,7 @@ function showTab4 () {
   document.getElementById('tab-content4').style.display = 'block'
   document.getElementById('tab-content5').style.display = 'none'
   document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -573,6 +604,7 @@ function showTab5 () {
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'block'
   document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -589,6 +621,7 @@ function showTab6 () {
   document.getElementById('tab-content4').style.display = 'none'
   document.getElementById('tab-content5').style.display = 'none'
   document.getElementById('tab-content6').style.display = 'block'
+  document.getElementById('tab-content7').style.display = 'none'
   document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
   document.getElementById('btn2').src = 'SD/png/Station_Green.png'
   document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -598,6 +631,28 @@ function showTab6 () {
   getTimeZoneName()
   loadTimeZones()
 }
+
+function showTab7 () {  // Remote Control
+  console.log('tab-content7 (Remote Control)')
+  document.getElementById('tab-content1').style.display = 'none'
+  document.getElementById('tab-content2').style.display = 'none'
+  document.getElementById('tab-content3').style.display = 'none'
+  document.getElementById('tab-content4').style.display = 'none'
+  document.getElementById('tab-content5').style.display = 'none'
+  document.getElementById('tab-content6').style.display = 'none'
+  document.getElementById('tab-content7').style.display = 'block'
+  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+}
+
+
+
+
+
 
 function uploadTextFile (fileName, content) {
   var fd = new FormData()
@@ -1481,9 +1536,101 @@ function loadTimeZones() { // load from SD
     }
     tzFile.send()
 }  // END loadTimeZones
+// -------------------------------------- TAB Remote Control---------------------------------------
+function setIRcmd(func){
 
+    switch(func){
+        case 0: ir_command_0.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 1: ir_command_1.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 2: ir_command_2.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 3: ir_command_3.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 4: ir_command_4.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 5: ir_command_5.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 6: ir_command_6.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 7: ir_command_7.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 8: ir_command_8.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 9: ir_command_9.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 10 : ir_command_10.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 11 : ir_command_11.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 12 : ir_command_12.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 13 : ir_command_13.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 14 : ir_command_14.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 15 : ir_command_15.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+        case 16 : ir_command_16.value = ir_command.value
+            socket.send("setIRcmd=" + ir_command.value + "&" + func)
+            break
+    }
+    console.log("setIRcmd=" + ir_command.value + "&" + func)
+}
 
-
+function loadIRbuttons(){
+  var theUrl = 'loadIRbuttons?' + "" + '&version=' + Math.random()
+  var xhr = new XMLHttpRequest()
+  xhr.timeout = 2000; // time in milliseconds
+  xhr.open('POST', theUrl, true)
+  xhr.ontimeout = (e) => {
+    // XMLHttpRequest timed out.
+    alert('IR buttons not loaded, timeout')
+  }
+  xhr.onreadystatechange = function () { // Call a function when the state changes.
+    if (xhr.readyState === 4) {
+      var ir_data = xhr.responseText
+      var ir_btnVal = ir_data.split(",")
+      ir_address.value = ir_btnVal[0]
+      ir_command.value = "0x00"
+      ir_command_0.value = ir_btnVal[1]
+      ir_command_1.value = ir_btnVal[2]
+      ir_command_2.value = ir_btnVal[3]
+      ir_command_3.value = ir_btnVal[4]
+      ir_command_4.value = ir_btnVal[5]
+      ir_command_5.value = ir_btnVal[6]
+      ir_command_6.value = ir_btnVal[7]
+      ir_command_7.value = ir_btnVal[8]
+      ir_command_8.value = ir_btnVal[9]
+      ir_command_9.value = ir_btnVal[10]
+      ir_command_10.value = ir_btnVal[11]
+      ir_command_11.value = ir_btnVal[12]
+      ir_command_12.value = ir_btnVal[13]
+      ir_command_13.value = ir_btnVal[14]
+      ir_command_14.value = ir_btnVal[15]
+      ir_command_15.value = ir_btnVal[16]
+      ir_command_16.value = ir_btnVal[17]
+    }
+  }
+  xhr.send() // send
+}
 
 </script>
 
@@ -1521,7 +1668,9 @@ function loadTimeZones() { // load from SD
         <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="eager" alt="Image 27" />
         <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="eager" alt="Image 28" />
         <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="eager" alt="Image 29" />
-        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 30" />
+        <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="eager" alt="Image 30" />
+        <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="eager" alt="Image 30" />
+        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 31" />
     </div>
 
     <div id="dialog">
@@ -1944,7 +2093,22 @@ function loadTimeZones() { // load from SD
             <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
             Author: Wolle (schreibfaul1)
         </p>
-        <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+        <div style="display: flex;">
+            <div style="flex; height:320px; ">
+                <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+            </div>
+
+            <div style="display: flex; padding-left: 10px; align-items: center;">
+                <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings"
+                        onmousedown="this.src='SD/png/Remote_Control_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'"
+                        onmouseup="this.src='SD/png/Remote_Control_Blue.png'"
+                        ontouchend="this.src='SD/png/Remote_Control_Blue.png'"
+                        onclick="showTab7()"/>
+                <span style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">IR Settings</span>
+            </div>
+
+        </div>
         <h3>
             Connected WiFi network
             <select class="boxstyle" id="ssid" ></select>
@@ -1960,6 +2124,131 @@ function loadTimeZones() { // load from SD
             <input  type="checkbox" id="chk_timeSpeech"
                     onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
         </h3>
+    </div>
+<!--===============================================================================================================================================-->
+    <div id="tab-content7">
+
+        <table>
+            <tr>
+            <th></th>
+            <th> <input type="text" class="boxstyle_s" id="ir_address"> </th>
+            <th style="width:150px; text-align: left;"> IR address </th>
+            <th></th>
+            <th> <input type="text" class="boxstyle_s" id="ir_command"> </th>
+            <th style="width:150px; text-align: left;"> IR command </th>
+            </tr>
+
+            <tr>
+            <td> 0 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="setIRcmd(0)";</td>
+            <td> ZERO </td>
+            <td> 10 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="setIRcmd(10)";</td>
+            <td> MUTE </td>
+            </tr>
+
+            <tr>
+            <td> 1 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="setIRcmd(1)";</td>
+            <td> ONE</td>
+            <td> 11 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="setIRcmd(11)";</td>
+            <td> VOLUME+ </td>
+            </tr>
+
+            <tr>
+            <td> 2 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="setIRcmd(2)";</td>
+            <td> TWO </td>
+            <td> 12 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="setIRcmd(12)";</td>
+            <td> VOLUME- </td>
+            </tr>
+
+            <tr>
+            <td> 3 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="setIRcmd(3)";</td>
+            <td> THREE </td>
+            <td> 13 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="setIRcmd(13)";</td>
+            <td> PREVIOUS STATION </td>
+            </tr>
+
+            <tr>
+            <td> 4 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="setIRcmd(4)";</td>
+            <td> FOUR </td>
+            <td> 14 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="setIRcmd(14)";</td>
+            <td> NEXT STATION </td>
+            </tr>
+
+            <tr>
+            <td> 5 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="setIRcmd(5)";</td>
+            <td> FIVE </td>
+            <td> 15 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="setIRcmd(15)";</td>
+            <td> CLOCK <--> RADIO </td>
+            </tr>
+
+            <tr>
+            <td> 6 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="setIRcmd(6)";</td>
+            <td> SIX </td>
+            <td> 16 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="setIRcmd(16)";</td>
+            <td> OFF TIMER </td>
+            </tr>
+
+            <tr>
+            <td> 7 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="setIRcmd(7)";</td>
+            <td> SEVEN </td>
+            <td>  </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+
+            <tr>
+            <td> 8 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="setIRcmd(8)";</td>
+            <td> EIGHT </td>
+            <td>  </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+
+            <tr>
+            <td> 9 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="setIRcmd(9)";</td>
+            <td> NINE</td>
+            <td>  </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+        </table>
+        <br>
+        <button class="button buttongreen"
+                onclick="socket.send('saveIRbuttons')"
+                onmousedown="this.style.backgroundColor='#D62C1A'"
+                ontouchstart="this.style.backgroundColor='#D62C1A'"
+                onmouseup="this.style.backgroundColor='#128F76'"
+                ontouchend="this.style.backgroundColor='#128F76'"
+                title="Save IR buttons">Save
+        </button>
+        &nbsp;
+        <button class="button buttongreen"
+                onclick="loadIRbuttons()"
+                onmousedown="this.style.backgroundColor='#D62C1A'"
+                ontouchstart="this.style.backgroundColor='#D62C1A'"
+                onmouseup="this.style.backgroundColor='#128F76'"
+                ontouchend="this.style.backgroundColor='#128F76'"
+                id="load_IR_Buttons" title="Load IR buttons">Load
+        </button>
+        <p>Here you can assign a function to the buttons on your NEC remote control. Press a button on your remote
+           control and then click on the text field for the desired function. You can test the function immediately.
+           Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
     </div>
 <!--===============================================================================================================================================-->
 </div>

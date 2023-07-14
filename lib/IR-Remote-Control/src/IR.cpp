@@ -3,45 +3,42 @@
  *
  *  Created on: 11.08.2017
  *      Author: Wolle
- *  Updated on: 13.07.2023
+ *  Updated on: 14.07.2023
  */
 #include "IR.h"
 
 // global var
-DRAM_ATTR int16_t ir_dataCode; // set from isr
-DRAM_ATTR uint8_t ir_userCode; // set from isr
+DRAM_ATTR int16_t ir_cmd = -1; // set from isr
+DRAM_ATTR int16_t ir_adr = 0;  // set from isr
+DRAM_ATTR uint8_t ir_addressCode;
 DRAM_ATTR uint8_t g_ir_pin;
 
 IR::IR(uint8_t IR_PIN){
     m_ir_pin = IR_PIN;
-    ir_dataCode = -01;
+    ir_adr = -1;
     m_t0 = 0;
-    ir_userCode = 0x00;
+    ir_cmd = -1;
 
-    ir_buttons[ 0].val = 0x52; ir_buttons[ 0].ch = '0';
-    ir_buttons[ 1].val = 0x16; ir_buttons[ 1].ch = '1';
-    ir_buttons[ 2].val = 0x19; ir_buttons[ 2].ch = '2';
-    ir_buttons[ 3].val = 0x0D; ir_buttons[ 3].ch = '3';
-    ir_buttons[ 4].val = 0x0C; ir_buttons[ 4].ch = '4';
-    ir_buttons[ 5].val = 0x18; ir_buttons[ 5].ch = '5';
-    ir_buttons[ 6].val = 0x5E; ir_buttons[ 6].ch = '6';
-    ir_buttons[ 7].val = 0x08; ir_buttons[ 7].ch = '7';
-    ir_buttons[ 8].val = 0x1C; ir_buttons[ 8].ch = '8';
-    ir_buttons[ 9].val = 0x5A; ir_buttons[ 9].ch = '9';
-    ir_buttons[10].val = 0x40; ir_buttons[10].ch = 'o';  // OK
-    ir_buttons[11].val = 0x46; ir_buttons[11].ch = 'u';  // UP
-    ir_buttons[12].val = 0x15; ir_buttons[12].ch = 'd';  // DOWN
-    ir_buttons[13].val = 0x43; ir_buttons[13].ch = 'r';  // RIGHT
-    ir_buttons[14].val = 0x44; ir_buttons[14].ch = 'l';  // LEFT
-    ir_buttons[15].val = 0x4A; ir_buttons[15].ch = '#';  // #
-    ir_buttons[16].val = 0x42; ir_buttons[16].ch = '*';  // *
-    ir_buttons[17].val = 0x00; ir_buttons[17].ch = '0';
-    ir_buttons[18].val = 0x00; ir_buttons[18].ch = '0';
-    ir_buttons[19].val = 0x00; ir_buttons[19].ch = '0';
-}
-
-IR::~IR(){
-
+    ir_buttons[ 0] = 0x00; //
+    ir_buttons[ 1] = 0x00; //
+    ir_buttons[ 2] = 0x00; //
+    ir_buttons[ 3] = 0x00; //
+    ir_buttons[ 4] = 0x00; //
+    ir_buttons[ 5] = 0x00; //
+    ir_buttons[ 6] = 0x00; //
+    ir_buttons[ 7] = 0x00; //
+    ir_buttons[ 8] = 0x00; //
+    ir_buttons[ 9] = 0x00; //
+    ir_buttons[10] = 0x00; //  mute
+    ir_buttons[11] = 0x00; //  volume+
+    ir_buttons[12] = 0x00; //  volume-
+    ir_buttons[13] = 0x00; //  previous station
+    ir_buttons[14] = 0x00; //  next station
+    ir_buttons[15] = 0x00; //
+    ir_buttons[16] = 0x00; //
+    ir_buttons[17] = 0x00; //
+    ir_buttons[18] = 0x00; //
+    ir_buttons[19] = 0x00; //
 }
 
 void IR::begin(){
@@ -51,67 +48,65 @@ void IR::begin(){
         attachInterrupt(m_ir_pin, isr_IR, CHANGE); // Interrupts will be handle by isr_IR
     }
 }
-void IR::set_irButtons(irBtn_t* b){
-    uint8_t b_len = 20;
-    for (int i = 0; i < b_len; i++){
-        // log_i("Button [%i] val=%d   ch=%c",i, b[i].val, b[i].ch);
-        ir_buttons[i].val = b[i].val;
-        ir_buttons[i].ch = b[i].ch;
-    }
+
+IR::~IR(){
+    ;
 }
 
-irBtn_t* IR::get_irButtons(){
+void IR::set_irButtons(uint8_t btnNr,  uint8_t cmd){
+        ir_buttons[btnNr] = cmd;
+        // log_w("ButtonNumber: %i, Command: 0x%02x", btnNr, cmd);
+}
+
+uint8_t* IR::get_irButtons(){
     return ir_buttons;
 }
 
 void IR::set_irAddress(uint8_t addr){
-    ir_userCode = addr;
+    ir_addressCode = addr;
 }
 
 uint8_t IR::get_irAddress(){
-    return ir_userCode;
+    return ir_addressCode;
 }
 
 
-void IRAM_ATTR IR::setIRresult(uint8_t userCode, uint8_t dataCode){
-    ir_dataCode = dataCode;
-    ir_userCode = userCode;
+void IRAM_ATTR IR::setIRresult(uint8_t ir_userCode, uint8_t ir_dataCode){
+    ir_cmd = ir_dataCode;
+    ir_adr = ir_userCode;
 }
 
 void IR::loop(){ // transform raw data from IR to ir_result
     static uint16_t number = 0;
     static uint8_t idx = 0;
 
-    if(ir_dataCode != -01){
-        char adr[5];
-        char cmd[5];
-        sprintf(adr, "0x%02X", ir_userCode);
-        sprintf(cmd, "0x%02X", ir_dataCode);
-        if(ir_code) ir_code(adr, cmd, ir_userCode, ir_dataCode);
-        if(ir_userCode != 0x00){ir_dataCode = -01; return;}
+    if(ir_cmd != -01){
+        if(ir_code) ir_code(ir_adr, ir_cmd);
+        if(ir_adr != ir_addressCode){ir_adr = -01; return;}
         m_t0 = millis();
-        for(uint i = 0; i < 256; i++){
-            if(ir_dataCode == ir_buttons[i].val){
-                uint8_t ch = ir_buttons[i].ch;
-                if(ch >= '0' && ch <= '9'){
+        bool found = false;
+        for(uint8_t i = 0; i < 20; i++){
+            // log_i("ir_cmd %i ir_buttons[i] %i", ir_cmd, ir_buttons[i]);
+            if(ir_cmd == ir_buttons[i]){
+                found = true;
+                if(i <= 9){
                     if(idx > 2) break;
-                    uint8_t digit = ch - 48;
+                    uint8_t digit = i;
                     number *= 10;
                     number += digit;
-                    char buf[5]; itoa(number, buf, 10);
-                    if(ir_number) ir_number(buf);
+                    if(ir_number) ir_number(number);
                     idx++;
                 }
                 else{ // is not a number
-                    ir_resultstr[0] = (uint8_t)ch;
-                    ir_resultstr[1] = '\0';
-                    if(ir_key) ir_key(ir_resultstr);
+                    if(ir_key) ir_key(i);
+                    // log_i("ir key 0x%02x", i);
                     idx = 0;
                 }
                 break;
             }
         }
-        ir_dataCode = -01;
+        if(!found) log_w("No function has been assigned to the code 0x%02x", ir_cmd);
+        ir_cmd = -01;
     }
     if(idx && (m_t0 + 2000 < millis())){
         idx = 0;
@@ -163,7 +158,6 @@ void IRAM_ATTR isr_IR()
 
         ir_begin=false;
         userCode = ir_value & 0xFFFF;
-        log_i("ir_value %x", ir_value);
         uint8_t a, b, c, d;
         a = (userCode & 0xFF00) >> 8;
         b = (userCode & 0x00FF);

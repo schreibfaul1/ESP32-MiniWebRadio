@@ -2,7 +2,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017
-    Version 2.8.2 Jul 13/2023
+    Version 2.8.3 Jul 14/2023
 
     2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -355,33 +355,8 @@ boolean defaultsettings(){
     if(f_updateSettings) updateSettings();
 
     if(_sum_stations == 0) saveStationsToNVS(); // first init
-
-    // irBtn_t ir_buttons[20];
-    // ir_buttons[ 0].val = 0x52; ir_buttons[ 0].ch = '0';
-    // ir_buttons[ 1].val = 0x16; ir_buttons[ 1].ch = '1';
-    // ir_buttons[ 2].val = 0x19; ir_buttons[ 2].ch = '2';
-    // ir_buttons[ 3].val = 0x0D; ir_buttons[ 3].ch = '3';
-    // ir_buttons[ 4].val = 0x0C; ir_buttons[ 4].ch = '4';
-    // ir_buttons[ 5].val = 0x18; ir_buttons[ 5].ch = '5';
-    // ir_buttons[ 6].val = 0x5E; ir_buttons[ 6].ch = '6';
-    // ir_buttons[ 7].val = 0x08; ir_buttons[ 7].ch = '7';
-    // ir_buttons[ 8].val = 0x1C; ir_buttons[ 8].ch = '8';
-    // ir_buttons[ 9].val = 0x5A; ir_buttons[ 9].ch = '9';
-    // ir_buttons[10].val = 0x40; ir_buttons[10].ch = 'o';  // OK
-    // ir_buttons[11].val = 0x46; ir_buttons[11].ch = 'u';  // UP
-    // ir_buttons[12].val = 0x15; ir_buttons[12].ch = 'd';  // DOWN
-    // ir_buttons[13].val = 0x43; ir_buttons[13].ch = 'r';  // RIGHT
-    // ir_buttons[14].val = 0x44; ir_buttons[14].ch = 'l';  // LEFT
-    // ir_buttons[15].val = 0x4A; ir_buttons[15].ch = '#';  // #
-    // ir_buttons[16].val = 0x42; ir_buttons[16].ch = '*';  // *
-    // ir_buttons[17].val = 0x00; ir_buttons[17].ch = '0';
-    // ir_buttons[18].val = 0x00; ir_buttons[18].ch = '0';
-    // ir_buttons[19].val = 0x00; ir_buttons[19].ch = '0';
-
-//    ir.set_irButtons(ir_buttons);
-//    ir.set_irAddress(0x00);
-
-
+    if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
+    loadIRbuttonsFromNVS();
     return true;
 }
 
@@ -437,6 +412,61 @@ boolean saveStationsToNVS(){
     else return false;
 }
 
+boolean saveDefaultIRbuttonsToNVS(){  // default values, first init
+    pref.putShort("irAddress", 0x00);
+    pref.putShort("button_0",  0x52); // '0';
+    pref.putShort("button_1",  0x16); // '1';
+    pref.putShort("button_2",  0x19); // '2';
+    pref.putShort("button_3",  0x0D); // '3';
+    pref.putShort("button_4",  0x0C); // '4';
+    pref.putShort("button_5",  0x18); // '5';
+    pref.putShort("button_6",  0x5E); // '6';
+    pref.putShort("button_7",  0x08); // '7';
+    pref.putShort("button_8",  0x1C); // '8';
+    pref.putShort("button_9",  0x5A); // '9';
+    pref.putShort("button_10", 0x40); // 'm';  // MUTE
+    pref.putShort("button_11", 0x46); // 'u';  // VOLUME+
+    pref.putShort("button_12", 0x15); // 'd';  // VOLUME-
+    pref.putShort("button_13", 0x43); // 'p';  // PREVIOUS STATION
+    pref.putShort("button_14", 0x44); // 'n';  // NEXT STATION
+    pref.putShort("button_15", 0x4A); // 'k';  // CLOCK <--> RADIO
+    pref.putShort("button_16", 0x42); // 's';  // OFF TIMER
+    pref.putShort("button_17", 0x00); // '0';
+    pref.putShort("button_18", 0x00); // '0';
+    pref.putShort("button_19", 0x00); // '0';
+
+    pref.putShort("IR_numButtons", 20);
+    // log_i("saveDefaultIRbuttonsToNVS");
+
+    loadIRbuttonsFromNVS();
+
+    return true;
+}
+void saveIRbuttonsToNVS(){
+    uint8_t ir_addr =     ir.get_irAddress();
+    uint8_t* ir_buttons = ir.get_irButtons();
+    char buf[12];
+    pref.putShort("irAddress", ir_addr);
+    for(uint8_t i = 0; i < 20; i++){
+        sprintf(buf, "button_%d", i);
+        pref.putShort(buf, ir_buttons[i]);
+        log_i("i=%i ir_buttons[i] %i", i, ir_buttons[i]);
+    }
+    pref.putShort("IR_numButtons", 20);
+}
+void loadIRbuttonsFromNVS(){
+    // load IR settings from NVS
+    uint numButtons = pref.getShort("IR_numButtons", 0);
+    ir.set_irAddress(pref.getShort("irAddress", 0));
+    char buf[12];
+    uint8_t cmd = 0;
+    for(uint i = 0; i< numButtons; i++){
+        sprintf(buf, "button_%d", i);
+        cmd = pref.getShort(buf, 0);
+        ir.set_irButtons(i, cmd);
+    }
+}
+
 void updateSettings(){
     if(!_lastconnectedhost)_lastconnectedhost = "";
     JSONVar jObject;
@@ -468,6 +498,8 @@ void updateSettings(){
         file.print(jO);
         _settingsHash = simpleHash(jO.c_str());
     }
+
+
 }
 
 
@@ -2632,9 +2664,12 @@ void tft_info(const char *info){
     SerialPrintfln("tft_info: .  %s", info);
 }
 
-void ir_code(const char *adr, const char* cmd, uint8_t address, uint8_t command){
-    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s, "
-                                   ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "%s", adr, cmd);
+void ir_code(uint8_t addr, uint8_t cmd){
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x%02x, "
+                                   ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x", addr, cmd);
+    char buf[20];
+    sprintf(buf, "IR_address=0x%02x", addr); webSrv.send(buf);
+    sprintf(buf, "IR_command=0x%02x", cmd); webSrv.send(buf);
 }
 
 // Events from IR Library
@@ -2653,7 +2688,7 @@ void ir_res(uint32_t res){
     }
     return;
 }
-void ir_number(const char* num){
+void ir_number(uint16_t num){
     if(_state != RADIO) return;
     if(_f_sleeping) return;
     if(!_f_irNumberSeen) tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth , _winName.h + _winTitle.h, TFT_BLACK);
@@ -2663,44 +2698,44 @@ void ir_number(const char* num){
     tft.setCursor(_irNumber_x, _irNumber_y);
     tft.print(num);
 }
-void ir_key(const char* key){
-    if(_f_sleeping == true && key[0] != 'k') return;
-    if(_f_sleeping == true && key[0] == 'k'){ //awake
-        _f_sleeping = false;
-        SerialPrintfln("awake");
-        setTFTbrightness(_brightness);
-        changeState(RADIO);
-        connecttohost(_lastconnectedhost.c_str());
-        showLogoAndStationName();
-        showFooter();
-        showHeadlineItem(RADIO);
-        showHeadlineVolume();
-        return;
-    }
+void ir_key(uint8_t key){
+    // if(_f_sleeping == true && key[0] != 'k') return;
+    // if(_f_sleeping == true && key[0] == 'k'){ //awake
+    //     _f_sleeping = false;
+    //     SerialPrintfln("awake");
+    //     setTFTbrightness(_brightness);
+    //     changeState(RADIO);
+    //     connecttohost(_lastconnectedhost.c_str());
+    //     showLogoAndStationName();
+    //     showFooter();
+    //     showHeadlineItem(RADIO);
+    //     showHeadlineVolume();
+    //     return;
+    // }
 
-    switch(key[0]){
-        case 'k':       if(_state == SLEEP) {                                                   // OK
+    switch(key){
+        case 15:       if(_state == SLEEP) {                                                   // CLOCK <-> RADIO
                             updateSleepTime(true); changeState(RADIO); break;}
                         if(_state == RADIO){changeState(CLOCK); break;}
                         if(_state == CLOCK){changeState(RADIO); break;}
                         break;
-        case 'r':       upvolume();                                                             // right
+        case 11:        upvolume();                                                             // VOLUME+
                         break;
-        case 'l':       downvolume();                                                           // left
+        case 12:        downvolume();                                                           // VOLUME-
                         break;
-        case 'u':       if(_state == RADIO){nextStation(); break;}                              // up
+        case 14:        if(_state == RADIO){nextStation(); break;}                              // NEXT STATION
                         if(_state == CLOCK){nextStation(); changeState(RADIO);
                                             _timeCounter = 5; _f_switchToClock = true; break;}
                         if(_state == SLEEP){display_sleeptime(1); break;}
                         break;
-        case 'd':       if(_state == RADIO){prevStation(); break;}                              // down
+        case 13:        if(_state == RADIO){prevStation(); break;}                              // PREV STATION
                         if(_state == CLOCK){prevStation(); changeState(RADIO);
                                             _timeCounter = 5; _f_switchToClock = true; break;}
                         if(_state == SLEEP) display_sleeptime(-1);
                         break;
-        case '#':       mute();                                                                 // #
+        case 10:        mute();                                                                 // MUTE
                         break;
-        case '*':       if(_state == RADIO){changeState(SLEEP); break;}                                 // *
+        case 16:        if(_state == RADIO){changeState(SLEEP); break;}                         // OFF TIMER
                         if(_state == SLEEP){changeState(RADIO); break;}
         default:        break;
     }
@@ -3170,7 +3205,29 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Upload  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                    return;}
 
+    if(cmd == "setIRcmd"){         int command = (int)strtol(param.c_str(), NULL, 16);
+                                   int btnNr = (int)strtol(arg.c_str(), NULL, 10);
+                                   SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x, "
+                                   ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "0x%02x", command, btnNr);
+                                   ir.set_irButtons(btnNr,  command);
+                                   return;}
+    if(cmd == "setIRadr"){         SerialPrintfln("set_IR_adr:  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s",
+                                   param.c_str());
+                                   int address = (int)strtol(param.c_str(), NULL, 16);
+                                   ir.set_irAddress(address);
+                                   return;}
 
+    if(cmd =="saveIRbuttons"){     saveIRbuttonsToNVS(); return;}
+
+    if(cmd =="loadIRbuttons"){     loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
+                                   char buf[150];
+                                   uint8_t* buttons = ir.get_irButtons();
+                                   sprintf(buf,"0x%02x,", ir.get_irAddress());
+                                   for(uint8_t i = 0; i< 20; i++){
+                                        sprintf(buf + 5 + 5 * i, "0x%02x,", buttons[i]);
+                                   }
+                                   buf[5 + 5 * 20] = '\0';
+                                   webSrv.reply(buf, webSrv.TEXT); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
 }

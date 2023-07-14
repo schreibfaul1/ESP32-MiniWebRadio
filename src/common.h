@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 06.Jul.2023
+// updated: 14.Jul.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -142,6 +142,9 @@
 // //prototypes (main.cpp)
 boolean defaultsettings();
 boolean saveStationsToNVS();
+boolean saveDefaultIRbuttonsToNVS();
+void saveIRbuttonsToNVS();
+void loadIRbuttonsFromNVS();
 void updateSettings();
 void urldecode(char *str);
 String dirContent(String path);
