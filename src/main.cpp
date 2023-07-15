@@ -1,10 +1,11 @@
+#include "common.h"
 /***********************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32
 
-    first release on 03/2017
-    Version 2.8.3 Jul 14/2023
+    first release on 03/2017                                                                         */String Version="\
+    Version 2.8.3 Jul 15/2023                                                                                         ";
 
-    2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
+/*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
 
     HW decoder VS1053 or
@@ -21,7 +22,7 @@
 // OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 // OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
-#include "common.h"
+
 
 //global variables
 const uint8_t  _max_volume     = 21;
@@ -1419,7 +1420,10 @@ void setup(){
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
     Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
+    Version = Version.substring(0, 30);
+    Serial.printf("MiniWebRadio %s\n", Version.c_str());
     Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+
     if(psramInit()) {
         Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
     }
@@ -2747,6 +2751,10 @@ void ir_key(uint8_t key){
                         if(_state == SLEEP){changeState(RADIO); break;}
         default:        break;
     }
+}
+void ir_long_key(int8_t key){
+    log_i("long pressed key nr: %i", key);
+    if(key == 10) fall_asleep(); // long mute
 }
 // Event from TouchPad
 void tp_pressed(uint16_t x, uint16_t y){
