@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 14.Jul.2023
+// updated: 17.Jul.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -91,7 +91,7 @@
         #define SD_MMC_D0     11
         #define SD_MMC_CLK    13
         #define SD_MMC_CMD    14
-        #define IR_PIN        33
+        #define IR_PIN         4
         #define TFT_MOSI      18  // TFT and TP (FSPI)
         #define TFT_MISO       2  // TFT and TP (FSPI)
         #define TFT_SCK       17  // TFT and TP (FSPI)
