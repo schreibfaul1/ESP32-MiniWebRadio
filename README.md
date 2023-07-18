@@ -28,7 +28,7 @@ Required HW:
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 <li>IR receiver + IR remote controller (optional)
-<li>Note: if using a VS1053, pin 21 VS1053_SCK may we need a 1k resistor connected to ground in order to boot</li>
+<li>Note: if using a VS1053, VS1053_SCK may need a 1k resistor connected to ground in order to boot</li>
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
