@@ -27,6 +27,7 @@ class IR {
         int8_t   m_ir_pin;
         uint8_t  m_ir_resultstr[10];
         int8_t   m_key = -1;
+        boolean  m_f_error = false;
 
     protected:
         uint8_t m_ir_buttons[20];
@@ -38,11 +39,10 @@ class IR {
         uint8_t* get_irButtons();
         void set_irAddress(uint8_t addr);
         uint8_t get_irAddress();
-        void setIRresult(uint8_t userCode, uint8_t dataCode);
+        void setIRresult(uint8_t userCode_a, uint8_t userCode_b, uint8_t dataCode_a, uint8_t dataCode_b);
         void rcCounter(uint8_t rc);
         void loop();
-
-
+        void error(uint32_t intval_l, uint32_t intval_h, uint8_t pulsecounter);
 };
 
 #endif /* IR_H_ */

@@ -1,24 +1,33 @@
+
 /*
  * IR.cpp
  *
  *  Created on: 11.08.2017
  *      Author: Wolle
- *  Updated on: 14.07.2023
+ *  Updated on: 18.07.2023
  */
 #include "IR.h"
 
+
 // global var
-DRAM_ATTR int16_t ir_cmd = -1; // set from isr
-DRAM_ATTR int16_t ir_adr = 0;  // set from isr
+DRAM_ATTR int16_t ir_cmd_a = -1; // set from isr
+DRAM_ATTR int16_t ir_cmd_b = -1; // set from isr
+DRAM_ATTR int16_t ir_adr_a = 0;  // set from isr
+DRAM_ATTR int16_t ir_adr_b = 0;  // set from isr
 DRAM_ATTR uint8_t ir_rc = 0;
 DRAM_ATTR uint8_t ir_addressCode;
 DRAM_ATTR uint8_t g_ir_pin;
 
+DRAM_ATTR uint32_t ir_intval_l = 0;
+DRAM_ATTR uint32_t ir_intval_h = 0;
+DRAM_ATTR int16_t ir_pulsecounter = 0;
+
 IR::IR(uint8_t IR_PIN){
     m_ir_pin = IR_PIN;
-    ir_adr = -1;
+    ir_adr_b = -1;
     m_t0 = 0;
-    ir_cmd = -1;
+    ir_cmd_b = -1;
+    m_f_error = false;
 
     m_ir_buttons[ 0] = 0x00; //
     m_ir_buttons[ 1] = 0x00; //
@@ -72,13 +81,22 @@ uint8_t IR::get_irAddress(){
 }
 
 
-void IRAM_ATTR IR::setIRresult(uint8_t ir_userCode, uint8_t ir_dataCode){
-    ir_cmd = ir_dataCode;
-    ir_adr = ir_userCode;
+void IRAM_ATTR IR::setIRresult(uint8_t userCode_a, uint8_t userCode_b, uint8_t dataCode_a, uint8_t dataCode_b){
+    ir_cmd_a = dataCode_a;
+    ir_cmd_b = dataCode_b;
+    ir_adr_a = userCode_a;
+    ir_adr_b = userCode_b;
 }
 
 void IRAM_ATTR IR::rcCounter (uint8_t rc){
         ir_rc = rc;
+}
+
+void IRAM_ATTR IR::error(uint32_t intval_l, uint32_t intval_h, uint8_t pulsecounter){
+        ir_intval_l = intval_l;
+        ir_intval_h = intval_h;
+        ir_pulsecounter = pulsecounter;
+        m_f_error = true;
 }
 
 
@@ -86,14 +104,17 @@ void IR::loop(){ // transform raw data from IR to ir_result
     static uint16_t number = 0;
     static uint8_t idx = 0;
 
-    if(ir_cmd != -01){
-        if(ir_code) ir_code(ir_adr, ir_cmd);
-        if(ir_adr != ir_addressCode){ir_cmd = -01; return;}
+    if(ir_cmd_a != -01){
+        if(ir_cmd_a + ir_cmd_b != 0xFF){
+            return;
+        }
+        if(ir_code) ir_code(ir_adr_a, ir_cmd_a);
+        // log_i("ir_adr_a %i  ir_adr_b %i ir_cmd_a %i  ir_cmd_b %i", ir_adr_a, ir_adr_b, ir_cmd_a, ir_cmd_b);
+        if(ir_adr_a != ir_addressCode){ir_cmd_a = -01; return;}
         m_t0 = millis();
         bool found = false;
         for(uint8_t i = 0; i < 20; i++){
-            // log_i("ir_cmd %i m_ir_buttons[i] %i", ir_cmd, m_ir_buttons[i]);
-            if(ir_cmd == m_ir_buttons[i]){
+            if(ir_cmd_a == m_ir_buttons[i]){
                 found = true;
                 if(i <= 9){
                     if(idx > 2) break;
@@ -112,8 +133,8 @@ void IR::loop(){ // transform raw data from IR to ir_result
                 break;
             }
         }
-        if(!found) log_w("No function has been assigned to the code 0x%02x", ir_cmd);
-        ir_cmd = -01;
+        if(!found) log_w("No function has been assigned to the code 0x%02x", ir_cmd_a);
+        ir_cmd_a = -01;
     }
     if(idx && (m_t0 + 2000 < millis())){
         idx = 0;
@@ -127,6 +148,10 @@ void IR::loop(){ // transform raw data from IR to ir_result
         }
         m_key = -1;
     }
+    if(m_f_error){
+        log_e("something went wrong, intval_l %d, intval_h %d, pulsecounter %d", ir_intval_l, ir_intval_h, ir_pulsecounter);
+        m_f_error = false;
+    }
 }
 
 //**************************************************************************************************
@@ -137,72 +162,110 @@ void IR::loop(){ // transform raw data from IR to ir_result
 // Input is complete after 65 level changes.                                                       *
 // Only the last 32 level changes are significant.                                                 *
 //**************************************************************************************************
-void IRAM_ATTR isr_IR()
-{
+void IRAM_ATTR isr_IR(){
+
     extern IR ir;
 
-    uint16_t        userCode=0;                     // The first 4 bytes of IR code
-    uint16_t        dataCode=0;                     // The last 4 bytes of IR code
-    int32_t         t1=0, intval_h=0, intval_l = 0; // Current time and interval since last change
+    uint16_t        userCode = 0;                       // The first 4 bytes of IR code
+    uint16_t        dataCode = 0;                       // The last 4 bytes of IR code
+    int32_t         t1=0, intval_h=0, intval_l = 0;     // Current time and interval since last change
 
-    static uint8_t  rc = 0;                         // repeat code counter
-    static uint8_t  levelcounter=0;                 // Counts the level changes
-    static uint8_t  pulsecounter=0;                 // Counts the pulse
-    static uint32_t t0 = 0;                         // To get the interval
-    static uint32_t ir_value=0;                     // IR code
+    static uint8_t  pulsecounter=0;                     // Counts the pulse
+    static uint32_t t0 = 0;                             // To get the interval
+    static uint32_t ir_value=0;                         // IR code
     static uint64_t bit = 0x00000001;
 
-    t1 = micros();                                  // Get current time
-    if(!digitalRead(g_ir_pin)) intval_h = t1 - t0;  // Compute interval, only high
-    if( digitalRead(g_ir_pin)) intval_l = t1 - t0;  // Compute interval, only low
-    t0 = t1;                                        // Save for next compare
-    if((intval_h >= 3500)&&(intval_h <= 5500)) {    // begin sequence of code?
-        pulsecounter=0;                             // Reset counter
-        ir_value=0;
-        levelcounter=0;
-        bit = 0x00000001;
-        rc = 0;
+    static boolean f_AGC = 0;                          // AGC pulse 9000µs (negative)
+    static boolean f_LP = 0;                           // LP pulse 4500µs (positive)
+    static boolean f_BURST  = 0;                       // BURST pulse 562.5µs (negative)
+    static boolean f_P = 0;                            // SPACE pulse 2250µs (positive), in repeat code
+    static boolean f_RC = false;                       // repeat code sequence received
+    static uint8_t RC_cnt = 0;                         // repeat code counter
+
+    t1 = micros();                                      // Get current time
+    if(!digitalRead(g_ir_pin)) intval_h = t1 - t0;      // Compute interval, only high
+    else                       intval_l = t1 - t0;      // Compute interval, only low
+    t0 = t1;                                            // Save for next compare
+
+    if(intval_l >= 8000 && intval_l < 10000){           // 9000µs AGC
+        f_AGC = true;
+        f_LP = false;
         return;
     }
 
-    levelcounter++;
-    if(levelcounter%2 == 0){                                // only falling edge can pass
-        if((intval_h > 400) && (intval_h < 750)){           // Short pulse?
-            ir_value += bit;                                // Count number of received bits
-            pulsecounter++;
-            bit <<= 1;
+    if(f_AGC && !f_LP){
+        if((intval_h >= 3500)&&(intval_h <= 5500)) {    // begin sequence of code?
+            f_LP = true;
+            f_AGC = false;
+            pulsecounter = 0;                           // Reset counter
+            ir_value = 0;
+            bit = 0x00000001;
+            RC_cnt = 0;
+            return;
         }
-        else if((intval_h > 1400) && (intval_h < 1900)){     // Long pulse?
-            pulsecounter++;
-            bit <<= 1;
-        }
-        else{
-            pulsecounter = 0;
-            bit = 1;
-        }
-        if(pulsecounter==32){
+        // else fall through
+    }
 
-            userCode = ir_value & 0xFFFF;
-            uint8_t a, b, c, d; (void)b;
-            a = (userCode & 0xFF00) >> 8; // Extended NEC protocol: Address low
-            b = (userCode & 0x00FF);      // Extended NEC protocol: Address high
-            if(true){                     //if(a + b == 0xFF){ // not in ext. NEC prot.
-                dataCode=(ir_value & 0xFFFF0000) >> 16;
-                c = (dataCode & 0xFF00) >> 8;
-                d = (dataCode & 0x00FF);
-                if(c + d == 0xFF){
-                    ir.setIRresult(a, c);
-                }
+    if(f_LP){
+        if((intval_h > 400) && (intval_h < 750)){  // Logical '0' – a 562.5µs pulse burst followed by a 562.5µs space
+            if(f_BURST){
+                f_BURST = false;
+                bit <<= 1;
+                pulsecounter++;
+                return;
             }
         }
-    }
-    else{
-        if((intval_l > 8000) && (intval_l < 12000)){        // 9ms leading pulse burst or repeat code
-            rc++;
-            pulsecounter = 0;
-            bit = 1;
-            ir.rcCounter(rc);
+
+        if((intval_h > 1500) && (intval_h < 1700)){ // Logical '1' – a 562.5µs pulse burst followed by a 1.6875ms space
+            if(f_BURST){
+                f_BURST = false;
+                ir_value += bit;
+                bit <<= 1;
+                pulsecounter++;
+            }
+            return;
         }
+
+        if((intval_l > 400) && (intval_l < 750)){
+            f_BURST = true;
+            if(pulsecounter < 32) return;
+            // last p_BURST
+            userCode =  ir_value & 0x0000FFFF;          // aka address
+            dataCode = (ir_value & 0xFFFF0000) >> 16;   // aka command
+            uint8_t a, b, c, d;
+            a = (userCode & 0x00FF);      // Extended NEC protocol: Address high
+            b = (userCode & 0xFF00) >> 8; // Extended NEC protocol: Address low
+            d = (dataCode & 0xFF00) >> 8;
+            c = (dataCode & 0x00FF);
+            ir.setIRresult(a, b, c, d);
+
+            pulsecounter++;
+            f_LP = false;
+            return;
+        }
+        // else fall through
     }
+
+
+    if(f_AGC){  // repeat code
+        if((intval_h > 1700) && (intval_h < 2800)){ // repeat code 2250µs
+            f_P = true;
+            return;
+        }
+       if(f_P){
+            if((intval_l > 400) && (intval_l < 750)){
+                f_AGC = false;
+                f_RC = true;
+            }
+       }
+    }
+    if(f_RC){
+        f_RC = false;
+        RC_cnt++;
+        ir.rcCounter(RC_cnt);
+        return;
+    }
+
+    if(intval_l) ir.error( intval_l, intval_h, pulsecounter);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------
