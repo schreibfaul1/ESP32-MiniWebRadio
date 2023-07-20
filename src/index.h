@@ -494,7 +494,7 @@ document.addEventListener('readystatechange', event => {
     connect();  // establish websocket connection
     loadGridFileFromSD()
     showExcelGrid()
-    buildFileSystemTree("/")
+    audioPlayer_buildFileSystemTree("/")
   }
 })
 
