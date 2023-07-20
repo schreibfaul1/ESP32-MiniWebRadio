@@ -1363,8 +1363,8 @@ function selectstation () { // select a station
   var h = document.getElementById('homepageurl')
   h.value = countryallstations[value].homepage
   scaleCanvasImage(favi)
-  var j = document.getElementById('stationname')
-  j.value = countryallstations[value].name
+  var j = document.getElementById('rb_stationname')
+  j.value = countryallstations[value].name.trim()
 }
 
 function teststreamurl () { // Search: button play - enter a url to play from
@@ -1420,7 +1420,7 @@ function refreshCanvas () {
 
 function uploadCanvasImage () {
   var filename
-  var sn = document.getElementById('stationname')
+  var sn = document.getElementById('rb_stationname')
   if (sn.value !== '') filename = sn.value + '.jpg'
   else {
     alert('no stationname given')
@@ -2058,7 +2058,7 @@ function loadIRbuttons(){
             <div style="flex: 1;">
                 <div style="flex: 1; height: 38px; padding-left: 10px;">
                     <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
-                                id="stationname" placeholder="Change the Stationname here">
+                                id="rb_stationname" placeholder="Change the Stationname here">
                 </div>
                 <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
                     <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
