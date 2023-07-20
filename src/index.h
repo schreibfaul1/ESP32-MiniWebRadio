@@ -1912,7 +1912,7 @@ function loadIRbuttons(){
                 <legend "title">Files</legend>
                 <div class="filetree-container">
                     <div id="filebrowser">
-                        <div id="explorerTree"></div>
+                        <div id="audioPalayerTree"></div>
                     </div>
                 </div>
                 <hr>
@@ -1929,7 +1929,7 @@ function loadIRbuttons(){
                             ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
                             onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
                             ontouchend="this.src='SD/png/Button_Upload_Blue_s.png'"
-                            onclick="javascript:document.getElementById('file1').click();" />
+                            onclick="javascript:document.getElementById('audioPlayer_File').click();" />
                     </div>
                     <div style="flex: 0 0 42px;">
                         <img src="SD/png/Button_Pause_Blue_s.png" alt="Pause" title="PAUSE"
@@ -1950,7 +1950,7 @@ function loadIRbuttons(){
                 </div>
                 <div id="explorerUploadProgress" class="progress-bar" role="progressbar"> </div>
                 <form method="post" accept-charset="utf-8" name="form2">
-                    <input id="file1" type="file" accept="audio/*" style="visibility: hidden";
+                    <input id="audioPlayer_File" type="file" accept="audio/*" style="visibility: hidden";
                        width: 0px;" name="audio"; onchange="uploadFile(this.files);"/>
                 </form>
             </fieldset>

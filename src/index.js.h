@@ -25,6 +25,17 @@ var iconFolderYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCA
                 + "fZM5IoJCp7AwiC3KUCCo4N4LTzVAW+CKOJbXlUL5ci8Z3OvnfJihHljloBBH4WG1RyXatFtSQOy0207m8MjRWAC2CO4U7b"
                 + "T2AmJRDfUnKAwWzebCHLFN9Twheg900dAAPgBwBuFqjTa5RfBRcgTcT1eO+S8Ed6ApsnOMljAhdKAAAAAElFTkSuQmCC"
 
+var iconDLNAGreen = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAnNJREF"
+                + "USIm1Vc9rE0EU/nY3TaPU1B9YoWSNLVI1UEO8VjGQCKHWRD1IqfTgreAlFjHUg+hfYBAVxYPIgrciaSKixCpqW8lFS7V6aG0TEj"
+                + "Fg0MRUi2Z3PJSs+2M2uxH9bvNm3vvem+/NG0YihOA/wmZ2IJFNAwCGZ+O6PcEbRcQdbOjP0CqoERH3c08MAyvhcbox1nUMh1wHs"
+                + "J5rNSdolHEdvvadGN0xAAC4W5zGg08ZakWEEDVBIps2zfiEy4+bvlFwDCvb4gvjuDB/WyYJuwNgwKgrsBI81jOIcz2DaGHV0hEQ"
+                + "7JscwWK1oKuEqsHfQJtgnYQRiUQmso9Nsz/JBxDa3GvYNcHnZ5H58l5lq4RT4Hyn9l80Cw4Ac5Ul3Cu+hMfRgd0bu3XZX11O6Xw"
+                + "8jg76O4h09iG+9zS22J0QiYRUblKucHg2DkFxNi+uYOzNLcPEmLbEYZUGezZsx4uDV3RCWmkCGlit4Xz3cV1wAIi4gxC80aYJTE"
+                + "eFEv28HxWNyN9q3+Fg7RCJBI5lUfjxGa51W1H6WcG21k16guv5R9ROmS69RWgqBhvDwcG1oFpbtZQUqy17pjSPRDYtjwxg7f5DU"
+                + "zEAa3OqWluFRCSIRDQlYCRCiHNigLopeKNUYSthdUs28teJrISV4HVbb3sXNYbNyKlZ7GrjMVdeUtki7uAfkY3KVOKG7wyG+AB1"
+                + "b6GaV62/HkkCULyDcjhp2ucjry7j0rs7Ovt44Rlelz/Ia8EbBctoxnUdVl7s0c4+DPFBODg7HhYzuLaYkAMr/wIqAQCUf63g6ce"
+                + "ZpkaD0f/c8D+QCEEyZzzKBW8U/byfOlosEfwL/AZ9yBk6MV8BXwAAAABJRU5ErkJggg=="
+
 var iconFileRed  = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAJxJR"
                 + "EFUSIljYBgF5IL/DAz/ceEDMhr/3xpb/yfGHEZ8FhyU0cAq5/DkBuMBGY3/uuLCDMJnj+I0g4GBgYGJGFfgApdfvmUg5BOK"
                 + "LCDGEootIGQJVSyAWYINsJBjmMP++RwOjomM////Z2RkZPzPwMDAcEBGA6sPyEpF2ID9kxsMjFjMo1oQ4QKjFoxaMGoBHSz"
@@ -34,6 +45,7 @@ var iconFileGreen = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAA
                 + "EFUSIljYBgFBAAjLgm9Q3X/ccn9ePCagVdfkOGsfhtO/TDAhE/yx4PXWPGtuOmMny++ZzC+WIXTEURZQAgQYwlFFhBjCcUW"
                 + "ELKEKhbALMEGWMgxzGH/fI4DjomM////Z2RkZPzPwMDAoLYoE6sP8CbTHw9eE20ph4IowyW7JgzzqBZEuMCoBaMWEAVoWxY"
                 + "x4MlL1LIAL6C5BXjLIg4FUVrbPwQAAP4cQnQllyzuAAAAAElFTkSuQmCC"
+
 var iconFileBlue = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAKZJRE"
                 + "FUSIljYBgFBAAjLgnTlif/cck9vX2BwcPRjGFeghhO/TDAgk/y6e0LWMWfLfRh3MGw5X/Sglf/CVnCRMgF+MCO/acYkha8wu"
                 + "lTii0gxhKKLSBkCVUsgFmCDeCNZFzAYf98jgOOPoz///9nZGRk/M/AwMAgFb8Fqw/wJlNcqQgbkFY1YDhdI4NhHtWCCBcYtW"
@@ -49,9 +61,9 @@ var lastNodeID = 0;
 var lastNode
 //----------------------------------------------------------------------------------------------------------------------
 function deleteChildren(nodeId) {
-    $('#explorerTree').jstree('open_node', nodeId); // need to open node for accruate selection
-    var ref = $('#explorerTree').jstree(true);
-    var children = $("#explorerTree").jstree("get_children_dom",nodeId);
+    $('#audioPalayerTree').jstree('open_node', nodeId); // need to open node for accruate selection
+    var ref = $('#audioPalayerTree').jstree(true);
+    var children = $("#audioPalayerTree").jstree("get_children_dom",nodeId);
     for(var i=0;i<children.length;i++) {
         console.log("delete child", i)
         ref.delete_node(children[i]);
@@ -60,7 +72,7 @@ function deleteChildren(nodeId) {
 //----------------------------------------------------------------------------------------------------------------------
 function addFileDirectory(nodeId, content) {
     content.sort( fileNameSort );
-    var ref = $('#explorerTree').jstree(true);
+    var ref = $('#audioPalayerTree').jstree(true);
     for (var i=0; i< content.length; i++) {
         console.log("Create Node", content[i]);
         ref.create_node(nodeId, createChild(nodeId, content[i]));
@@ -68,7 +80,7 @@ function addFileDirectory(nodeId, content) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 function refreshNode(nodeId) {
-    var ref = $('#explorerTree').jstree(true);
+    var ref = $('#audioPalayerTree').jstree(true);
     var node = ref.get_node(nodeId);
     getData("SD_GetFolder?" + encodeURIComponent(node.data.path), function(content) {
         /* We now have data! */
@@ -97,7 +109,7 @@ function getData(path, callback) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 function deleteData(nodeId) {
-    var ref = $('#explorerTree').jstree(true);
+    var ref = $('#audioPalayerTree').jstree(true);
     var node = ref.get_node(nodeId);
     postData("SD_delete?" + encodeURIComponent(node.data.path));
 }
@@ -111,7 +123,7 @@ function fileNameSort( a, b ) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 function createChild(nodeId, data) {
-    var ref = $('#explorerTree').jstree(true);
+    var ref = $('#audioPalayerTree').jstree(true);
     var node = ref.get_node(nodeId);
     var parentNodePath = node.data.path;
     /* In case of root node remove leading '/' to avoid '//' */
@@ -127,8 +139,8 @@ function createChild(nodeId, data) {
     return child;
 }
 //----------------------------------------------------------------------------------------------------------------------
-$('#explorerTree').on('select_node.jstree', function (e, data) {
-    var ref = $('#explorerTree').jstree(true)
+$('#audioPalayerTree').on('select_node.jstree', function (e, data) {
+    var ref = $('#audioPalayerTree').jstree(true)
     var node = data.node;
     var nodeId = node.id;
     var path = node.data.path;
@@ -196,7 +208,7 @@ function uploadFile(uploadFile){
     if(!uploadFile) return;
     if (!lastNode.data.directory){
         alert("selected " + lastNode.data.path + " is not a folder! Select target folder and try again.")
-        document.getElementById('file1').value = null;
+        document.getElementById('audioPlayer_File').value = null;
         return
     }
     var startTime, total
@@ -235,14 +247,14 @@ function uploadFile(uploadFile){
             else alert(filename + ' upload failed')
         }
         $("#explorerUploadProgress").css('width', 0 + "%").text("");
-        document.getElementById('file1').value = null;
+        document.getElementById('audioPlayer_File').value = null;
     }
     startTime = new Date().getTime();
     xhr.send(fd)
 }
 //----------------------------------------------------------------------------------------------------------------------
-function buildFileSystemTree(path) {
-    $('#explorerTree').jstree({
+function audioPlayer_buildFileSystemTree(path) {
+    $('#audioPalayerTree').jstree({
         "core": {
             "check_callback": true,
             'force_text': true,
@@ -288,7 +300,7 @@ function buildFileSystemTree(path) {
         plugins: ["contextmenu", "themes", "types"],
         contextmenu: {
             items: function (nodeId) {
-                var ref = $('#explorerTree').jstree(true);
+                var ref = $('#audioPalayerTree').jstree(true);
                 var node = ref.get_node(nodeId);
                 var items = {};
                 /* New Folder */
@@ -380,7 +392,7 @@ function buildFileSystemTree(path) {
     getData("SD_GetFolder?/", function(data) {
         /* We now have data! */
         console.log("data", data)
-        $('#explorerTree').jstree(true).settings.core.data.children = [];
+        $('#audioPalayerTree').jstree(true).settings.core.data.children = [];
         data.sort( fileNameSort );
         for (var i=0; i<data.length; i++) {
             var newChild = {
@@ -392,11 +404,11 @@ function buildFileSystemTree(path) {
                 },
                 children: []
             };
-            $('#explorerTree').jstree(true).settings.core.data.children.push(newChild);
+            $('#audioPalayerTree').jstree(true).settings.core.data.children.push(newChild);
         }
-        $("#explorerTree").jstree(true).refresh();
+        $("#audioPalayerTree").jstree(true).refresh();
     });
-} /* buildFileSystemTree */
+} /* audioPlayer_buildFileSystemTree */
 
 )=====" ;
 #endif /* INDEX_JS_H_ */
