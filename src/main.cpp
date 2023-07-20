@@ -2049,7 +2049,7 @@ void changeState(int state){
             if(_state == RADIOico || _state == RADIOmenue){
                 _f_newStreamTitle = true;
             }
-            else if(_state == PLAYER  || _state == PLAYERico){
+            else if(_state == PLAYER  || _state == PLAYERico || _state == DLNA){
                 setStation(_cur_station);
                 clearTitle();
                 showLogoAndStationName();
@@ -2242,9 +2242,19 @@ void changeState(int state){
         }
         case DLNA:{
             showHeadlineItem(DLNA);
+            _pressBtn[0] = "/btn/Button_Mute_Yellow.bmp";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.bmp":"/btn/Button_Mute_Green.bmp";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.bmp"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.bmp";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.bmp";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.bmp";
+            _pressBtn[3] = "/btn/Black.bmp";                     _releaseBtn[3] = "/btn/Black.bmp";
+            _pressBtn[4] = "/btn/Black.bmp";                     _releaseBtn[4] = "/btn/Black.bmp";
+            _pressBtn[5] = "/btn/Black.bmp";                     _releaseBtn[5] = "/btn/Black.bmp";
+            _pressBtn[6] = "/btn/Black.bmp";                     _releaseBtn[6] = "/btn/Black.bmp";
+            _pressBtn[7] = "/btn/Radio_Yellow.bmp";              _releaseBtn[7] = "/btn/Radio_Green.bmp";
             clearLogoAndStationname();
             clearTitle();
             showFileLogo(state);
+            showVolumeBar();
+            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
     }
@@ -2324,7 +2334,7 @@ void loop() {
             _f_muteDecrement = false;
             _f_mute = true;
             webSrv.send("mute=1");
-            if(_state == RADIOico || _state == PLAYERico){
+            if(_state == RADIOico || _state == PLAYERico || _state == DLNA){
                 drawImage("/btn/Button_Mute_Red.bmp", 0, _winButton.y);
             }
             if(_state == CLOCKico){
@@ -2765,7 +2775,7 @@ void tp_pressed(uint16_t x, uint16_t y){
     _timeCounter = 5;
     enum : int8_t{none = -1, RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1,
                              PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1,
-                             CLOCK_1, CLOCKico_1, ALARM_2, SLEEP_1};
+                             CLOCK_1, CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1};
     int8_t yPos    = none;
     int8_t btnNr   = none; // buttonnumber
 
@@ -2828,6 +2838,11 @@ void tp_pressed(uint16_t x, uint16_t y){
         case BRIGHTNESS:
                         if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
                                             yPos = BRIGHTNESS_1;
+                                            btnNr = x / _winButton.w;
+                        }
+        case DLNA:
+                        if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
+                                            yPos = DLNA_1;
                                             btnNr = x / _winButton.w;
                         }
         default:
@@ -2903,12 +2918,17 @@ void tp_pressed(uint16_t x, uint16_t y){
                             if(btnNr == 1){_releaseNr = 81;} // brighter
                             if(btnNr == 2){_releaseNr = 82;} // okay
                             changeBtn_pressed(btnNr); break;
+        case DLNA_1:        if(btnNr == 0){_releaseNr = 90; mute();}
+                            if(btnNr == 1){_releaseNr = 91; } // Vol-
+                            if(btnNr == 2){_releaseNr = 92; } // Vol+
+                            if(btnNr == 7){_releaseNr = 97;}  // RADIO
+                            changeBtn_pressed(btnNr); break;
         default:            break;
     }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
     // log_w("long pressed %i  %i", x, y);
-    if((_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) && _f_mute) {
+    if((_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50 || _releaseNr == 90) && _f_mute) {
         fall_asleep();
     }
 }
@@ -3019,6 +3039,12 @@ void tp_released(){
         case 80:    downBrightness(); changeBtn_released(0); break;
         case 81:    upBrightness();   changeBtn_released(1); break;
         case 82:    changeState(RADIO); break;
+
+        /* DLNA ************************************/
+        case 90:    /*changeBtn_released(0);*/ break; // Mute
+        case 91:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
+        case 92:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
+        case 97:    changeState(RADIO); break;
     }
     _releaseNr = -1;
 }
