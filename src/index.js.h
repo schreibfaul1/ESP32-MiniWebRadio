@@ -195,7 +195,7 @@ function postData(path, callback, _data) {
 function uploadFile(uploadFile){
     if(!uploadFile) return;
     if (!lastNode.data.directory){
-        alert("selected " + lastNode.data.path + " is not a folder!")
+        alert("selected " + lastNode.data.path + " is not a folder! Select target folder and try again.")
         document.getElementById('file1').value = null;
         return
     }

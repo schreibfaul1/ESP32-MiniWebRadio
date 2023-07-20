@@ -1924,7 +1924,7 @@ function loadIRbuttons(){
                     <div style="flex: 0 0 2px;">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD"
+                        <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD FOLDER"
                             onmousedown="this.src='SD/png/Button_Upload_Yellow_s.png'"
                             ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
                             onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
@@ -2061,7 +2061,7 @@ function loadIRbuttons(){
                                 id="stationname" placeholder="Change the Stationname here">
                 </div>
                 <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
-                    <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="Upload to SD"
+                    <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
                         onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
                         ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
                         onmouseup="this.src='SD/png/Button_Upload_Blue.png'"

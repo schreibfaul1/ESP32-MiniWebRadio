@@ -149,7 +149,7 @@ void IR::loop(){ // transform raw data from IR to ir_result
         m_key = -1;
     }
     if(m_f_error){
-        log_e("something went wrong, intval_l %d, intval_h %d, pulsecounter %d", ir_intval_l, ir_intval_h, ir_pulsecounter);
+        log_d("something went wrong, intval_l %d, intval_h %d, pulsecounter %d", ir_intval_l, ir_intval_h, ir_pulsecounter);
         m_f_error = false;
     }
 }
