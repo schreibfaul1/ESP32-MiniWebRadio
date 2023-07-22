@@ -1603,6 +1603,7 @@ function setIRcmd(func){
             break
     }
     console.log("setIRcmd=" + ir_command.value + "&" + func)
+    chIRcmd()
 }
 
 function loadIRbuttons(){
@@ -1640,6 +1641,30 @@ function loadIRbuttons(){
     }
   }
   xhr.send() // send
+}
+
+function chIRcmd(){  // IR command, value changed
+    var arrLen = 17
+    var irArr = []
+    var val1
+    for(i = 0; i < arrLen; i++){
+        var id
+    	  id = "#ir_command_" + i
+        val1 = $(id).val()
+        irArr.push(val1)
+    }
+    console.log(irArr)
+    for (var i = 0; i < irArr.length; i++) {
+        for (var j = 0; j < irArr.length; j++) {
+            if(i != j && irArr[i] === irArr[j]){
+                var id = "#ir_command_" + i
+                $(id).css("background-color", "yellow");
+                break
+            }
+            var id = "#ir_command_" + i
+            $(id).css("background-color", "white");
+        }
+    }
 }
 
 </script>
@@ -2138,7 +2163,7 @@ function loadIRbuttons(){
 <!--===============================================================================================================================================-->
     <div id="tab-content7">
 
-        <table>
+       <table>
             <tr>
             <th></th>
             <th> <input type="text" class="boxstyle_s" id="ir_address"> </th>
@@ -2150,70 +2175,70 @@ function loadIRbuttons(){
 
             <tr>
             <td> 0 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="setIRcmd(0)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="setIRcmd(0)" oninput="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> ZERO </td>
             <td> 10 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="setIRcmd(10)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="setIRcmd(10)" oninput="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2">  MUTE <br /> long press: SLEEP </td>
             </tr>
 
             <tr>
             <td> 1 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="setIRcmd(1)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="setIRcmd(1)" oninput="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> ONE</td>
             <td> 11 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="setIRcmd(11)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="setIRcmd(11)" oninput="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2">VOLUME+ </td>
             </tr>
 
             <tr>
             <td> 2 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="setIRcmd(2)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="setIRcmd(2)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1">  TWO </td>
             <td> 12 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="setIRcmd(12)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="setIRcmd(12)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2">VOLUME- </td>
             </tr>
 
             <tr>
             <td> 3 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="setIRcmd(3)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="setIRcmd(3)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1">  THREE </td>
             <td> 13 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="setIRcmd(13)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="setIRcmd(13)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2"> PREVIOUS STATION </td>
             </tr>
 
             <tr>
             <td> 4 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="setIRcmd(4)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="setIRcmd(4)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> FOUR </td>
             <td> 14 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="setIRcmd(14)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="setIRcmd(14)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2">NEXT STATION </td>
             </tr>
 
             <tr>
             <td> 5 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="setIRcmd(5)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="setIRcmd(5)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> FIVE </td>
             <td> 15 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="setIRcmd(15)";</td>
-            <td class="table_cell2"> CLOCK <--> RADIO </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="setIRcmd(15)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
+            <td class="table_cell2"> CLOCK &#60; &#8722; &#62; RADIO </td>
             </tr>
 
             <tr>
             <td> 6 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="setIRcmd(6)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="setIRcmd(6)" onchange="chIRcmd() " onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> SIX </td>
             <td> 16 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="setIRcmd(16)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="setIRcmd(16)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell2">OFF TIMER </td>
             </tr>
 
             <tr>
             <td> 7 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="setIRcmd(7)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="setIRcmd(7)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> SEVEN </td>
             <td>  </td>
             <td> </td>
@@ -2222,7 +2247,7 @@ function loadIRbuttons(){
 
             <tr>
             <td> 8 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="setIRcmd(8)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="setIRcmd(8)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> EIGHT </td>
             <td>  </td>
             <td> </td>
@@ -2231,7 +2256,7 @@ function loadIRbuttons(){
 
             <tr>
             <td> 9 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="setIRcmd(9)";</td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="setIRcmd(9)" onchange="chIRcmd()" onkeyup="chIRcmd()"></td>
             <td class="table_cell1"> NINE</td>
             <td>  </td>
             <td> </td>
