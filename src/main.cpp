@@ -3,7 +3,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                         */String Version="\
-    Version 2.8.3a Jul 17/2023                                                                                         ";
+    Version 2.8.3b Jul 22/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -2840,11 +2840,13 @@ void tp_pressed(uint16_t x, uint16_t y){
                                             yPos = BRIGHTNESS_1;
                                             btnNr = x / _winButton.w;
                         }
+                        break;
         case DLNA:
                         if((y >_winButton.y) && (y < _winButton.y + _winButton.h)) {
                                             yPos = DLNA_1;
                                             btnNr = x / _winButton.w;
                         }
+                        break;
         default:
                         break;
     }
