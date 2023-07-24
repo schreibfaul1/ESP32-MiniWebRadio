@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 08.07.2023
+ *  Updated on: 24.07.2023
  *      Author: Wolle
  *
  *
@@ -92,11 +92,11 @@ function refreshNode(nodeId) {
 //----------------------------------------------------------------------------------------------------------------------
 function getType(data) {
     var type = "";
-    if(data.dir)                                                            type = "folder";
-    else if ((/\.(mp3|ogg|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name))  type = "audio";
-    else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name))                type = "image";
-    else if ((/\.(m3u)$/i).test(data.name))                                 type = "playlist";
-    else                                                                    type = "file";
+    if(data.dir)                                                                type = "folder";
+    else if ((/\.(mp3|ogg|oga|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name))  type = "audio";
+    else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name))                    type = "image";
+    else if ((/\.(m3u)$/i).test(data.name))                                     type = "playlist";
+    else                                                                        type = "file";
     return type;
 }
 //----------------------------------------------------------------------------------------------------------------------
