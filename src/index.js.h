@@ -322,21 +322,23 @@ function audioPlayer_buildFileSystemTree(path) {
                     };
                 }
                 /* Play */
-                items.play = {
-                    label: "Play",
-                    action: function (x) {
-                        var playMode = 1;
-                        if (node.data.directory) {
-                            playMode = 5;
-                        }
-                        else {
-                            if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
-                                playMode = 11;
+                if ((/\.(mp3|ogg|oga|wav|aac|m4a|flac|opus|m3u)$/i).test(node.data.path)) {
+                    items.play = {
+                        label: "Play",
+                        action: function (x) {
+                            var playMode = 1;
+                            if (node.data.directory) {
+                                playMode = 5;
                             }
+                            else {
+                                if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
+                                    playMode = 11;
+                                }
+                            }
+                            XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), "play")
                         }
-                        XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), "play")
-                    }
-                };
+                    };
+                }
                 /* Refresh */
                 if (node.data.directory) {
                     items.refresh = {

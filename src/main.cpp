@@ -1919,6 +1919,7 @@ String setI2STone(){
 }
 
 void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN){
+    if(endsWith(path, "ogg")) resumeFilePos = 0; // resume only mp3, m4a, flac and wav
     if(endsWith(path, "m3u")){
         playlistFile.close(); // as a precaution
         if(SD_MMC.exists(path)){
