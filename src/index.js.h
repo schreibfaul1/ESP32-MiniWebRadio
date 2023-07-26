@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 24.07.2023
+ *  Updated on: 26.07.2023
  *      Author: Wolle
  *
  *
@@ -230,7 +230,6 @@ function uploadFile(uploadFile){
             KBps = Bps / 1024
             console.log("KB/s =", KBps)
             $("#explorerUploadProgress").css('width', percentComplete + "%").text(KBps.toFixed(2) + " KB/s");
-            refreshNode(lastNode.id)
         }
     }
     xhr.onload = function () {
@@ -241,6 +240,7 @@ function uploadFile(uploadFile){
     }
     xhr.onreadystatechange = function () {        // Call a function when the state changes.
         if (xhr.readyState === 4) {
+            refreshNode(lastNode.id)
             if (xhr.status == 200){
                 alert(filename + ' successfully uploaded')
             }
