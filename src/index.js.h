@@ -101,11 +101,19 @@ function getType(data) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 function getData(path, callback) {
-    var num = path + '&version=' + Math.random().toString()
-    console.log("num: ", num );
-    XmlHttpReq(num, callback, {
-        method   : "GET"
-    });
+    var theUrl = path + '&version=' + Math.random().toString()
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', theUrl, true)
+    xhr.setRequestHeader('dataType', 'json')
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+    if (xhr.readyState === 4) {
+        var json = JSON.parse(xhr.responseText)
+        if(callback) callback(json)
+        if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
+    }
+  }
+  xhr.send() // send
 }
 //----------------------------------------------------------------------------------------------------------------------
 function deleteNode(nodeId) {
@@ -171,22 +179,6 @@ $('#audioPalayerTree').on('select_node.jstree', function (e, data) {
     }
     ref.open_node(nodeId);
 });
-//----------------------------------------------------------------------------------------------------------------------
-function XmlHttpReq(path, callback, obj) {
-    obj.url      = path;
-    obj.dataType = "json";
-    obj.contentType= "application/json",
-    obj.success  = function(data, textStatus, jqXHR) {
-        if (callback) {
-            callback(data);
-        }
-    };
-    obj.error    = function(jqXHR, textStatus, errorThrown) {
-        console.log("AJAX error ", "Path ", path);
-        /*debugger; */
-    };
-    jQuery.ajax(obj);
-}
 //----------------------------------------------------------------------------------------------------------------------
 function XmlHttpReq1 (method, url, postmessage) {
     var theUrl = url+ '&version=' + Math.random()
