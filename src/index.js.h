@@ -108,10 +108,24 @@ function getData(path, callback) {
     });
 }
 //----------------------------------------------------------------------------------------------------------------------
-function deleteData(nodeId) {
+function deleteNode(nodeId) {
     var ref = $('#audioPalayerTree').jstree(true);
     var node = ref.get_node(nodeId);
-    postData("SD_delete?" + encodeURIComponent(node.data.path));
+    var theUrl = "SD_delete?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open('POST', theUrl, true)
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        alert('delete ' + node.data.path, 'timeout')
+    }
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+            if (xhr.status == 200) console.log(node.data.path + ' successfully deleted')
+            if (xhr.status == 400) alert(node.data.path + ' could not be deleted')
+        }
+    }
+    xhr.send() // send
 }
 //----------------------------------------------------------------------------------------------------------------------
 function fileNameSort( a, b ) {
@@ -194,14 +208,6 @@ function XmlHttpReq1 (method, url, postmessage) {
         }
     }
     xhr.send(postmessage) // send
-}
-//----------------------------------------------------------------------------------------------------------------------
-function postData(path, callback, _data) {
-    var num = Math.random()
-    XmlHttpReq(path + '&version=' + num.toString(), callback, {
-        method   : "POST",
-        data: _data
-    });
 }
 //----------------------------------------------------------------------------------------------------------------------
 function uploadFile(uploadFile){
@@ -352,7 +358,7 @@ function audioPlayer_buildFileSystemTree(path) {
                 items.delete = {
                     label: "Delete",
                     action: function (x) {
-                        deleteData(nodeId);
+                        deleteNode(nodeId);
                         refreshNode(ref.get_parent(nodeId));
                     }
                 };
