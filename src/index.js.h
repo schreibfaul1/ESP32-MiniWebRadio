@@ -18,7 +18,9 @@
 
 const char index_js[] PROGMEM = R"=====(
 
-// --------------------------------------------------------- File Explorer ---------------------------------------------------------------------------
+/*****************************************************************************************************************************************************
+*                                                    c o m m o n J S T r e e                                                                         *
+*****************************************************************************************************************************************************/
 
 var iconFolderYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAAABHNCSVQICAgIfAhkiAAAAL9J"
                 + "REFUSIntlL0KwmAMRU9qFaydHHXS53L3NfoyLr6Ui+ImCKUotr0ulg4t2l9Q6Z3CB19ObkgC3y5J42YfwaTA6bieD1DJ2i"
@@ -56,130 +58,10 @@ var iconFileYellow = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYA
                 + "QpxRYQYwnFFhCyhCoWwCzBBvBGMi7gsH8+h7RjIuP///8ZGRkZ/zMwMDA8XcqF1Qd4kymuVIQNSBl/Y2DUwDSPakGEC4xaMG"
                 + "rBqAV0sICsGg2nYViKiqEPAOK0NZUptwOwAAAAAElFTkSuQmCC"
 
-
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 var lastNodeID = 0;
 var lastNode
-//----------------------------------------------------------------------------------------------------------------------
-function deleteChildren(nodeId) {
-    $('#audioPalayerTree').jstree('open_node', nodeId); // need to open node for accruate selection
-    var ref = $('#audioPalayerTree').jstree(true);
-    var children = $("#audioPalayerTree").jstree("get_children_dom",nodeId);
-    for(var i=0;i<children.length;i++) {
-        console.log("delete child", i)
-        ref.delete_node(children[i]);
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------
-function addFileDirectory(nodeId, content) {
-    content.sort( fileNameSort );
-    var ref = $('#audioPalayerTree').jstree(true);
-    for (var i=0; i< content.length; i++) {
-        console.log("Create Node", content[i]);
-        ref.create_node(nodeId, createChild(nodeId, content[i]));
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------
-function refreshNode(nodeId) {
-    var ref = $('#audioPalayerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    getData("SD_GetFolder?" + encodeURIComponent(node.data.path), function(content) {
-        /* We now have data! */
-        deleteChildren(nodeId);
-        addFileDirectory(nodeId, content);
-        ref.open_node(nodeId);
-    });
-}
-//----------------------------------------------------------------------------------------------------------------------
-function getType(data) {
-    var type = "";
-    if(data.dir)                                                                type = "folder";
-    else if ((/\.(mp3|ogg|oga|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name))  type = "audio";
-    else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name))                    type = "image";
-    else if ((/\.(m3u)$/i).test(data.name))                                     type = "playlist";
-    else                                                                        type = "file";
-    return type;
-}
-//----------------------------------------------------------------------------------------------------------------------
-function getData(path, callback) {
-    var theUrl = path + '&version=' + Math.random().toString()
-    var xhr = new XMLHttpRequest()
-    xhr.open('GET', theUrl, true)
-    xhr.setRequestHeader('dataType', 'json')
-    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-    if (xhr.readyState === 4) {
-        var json = JSON.parse(xhr.responseText)
-        if(callback) callback(json)
-        if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
-    }
-  }
-  xhr.send() // send
-}
-//----------------------------------------------------------------------------------------------------------------------
-function deleteNode(nodeId) {
-    var ref = $('#audioPalayerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    var theUrl = "SD_delete?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
-    var xhr = new XMLHttpRequest()
-    xhr.timeout = 2000; // time in milliseconds
-    xhr.open('POST', theUrl, true)
-    xhr.ontimeout = (e) => {
-        // XMLHttpRequest timed out.
-        alert('delete ' + node.data.path, 'timeout')
-    }
-    xhr.onreadystatechange = function () { // Call a function when the state changes.
-        if (xhr.readyState === 4) {
-            if (xhr.status == 200) console.log(node.data.path + ' successfully deleted')
-            if (xhr.status == 400) alert(node.data.path + ' could not be deleted')
-        }
-    }
-    xhr.send() // send
-}
-//----------------------------------------------------------------------------------------------------------------------
-function fileNameSort( a, b ) {
-    if ( a.dir && !b.dir ) return -1
-    if ( !a.dir && b.dir ) return  1
-    if ( a.name < b.name ) return -1
-    if ( a.name > b.name ) return  1
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------
-function createChild(nodeId, data) {
-    var ref = $('#audioPalayerTree').jstree(true);
-    var node = ref.get_node(nodeId);
-    var parentNodePath = node.data.path;
-    /* In case of root node remove leading '/' to avoid '//' */
-    if(parentNodePath == "/") parentNodePath = "";
-    var child = {
-        text: data.name,
-        type: getType(data),
-        data: {
-            path: parentNodePath + "/" + data.name,
-            directory: data.dir
-        }
-    };
-    return child;
-}
-//----------------------------------------------------------------------------------------------------------------------
-$('#audioPalayerTree').on('select_node.jstree', function (e, data) {
-    var ref = $('#audioPalayerTree').jstree(true)
-    var node = data.node;
-    var nodeId = node.id;
-    var path = node.data.path;
-    console.log("select: nodeId=", nodeId, "path=", path)
-    lastNode = node
-    lastNodeID = nodeId
-    resultstr3.value = path;
-    if (data.node.type == "folder") {
-        $('.option-folder').show();
-        $('.option-file').hide();
-    }
-    if (data.node.data.directory) {
-        refreshNode(nodeId);
-    }
-    ref.open_node(nodeId);
-});
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 function XmlHttpReq1 (method, url, postmessage) {
     var theUrl = url+ '&version=' + Math.random()
     var xhr = new XMLHttpRequest()
@@ -201,8 +83,135 @@ function XmlHttpReq1 (method, url, postmessage) {
     }
     xhr.send(postmessage) // send
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function getData(path, callback) {
+    var theUrl = path + '&version=' + Math.random().toString()
+    var xhr = new XMLHttpRequest()
+    xhr.open('GET', theUrl, true)
+    xhr.setRequestHeader('dataType', 'json')
+    xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+    if (xhr.readyState === 4) {
+        var json = JSON.parse(xhr.responseText)
+        if(callback) callback(json)
+        if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
+    }
+  }
+  xhr.send() // send
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function getType(data) {
+    var type = "";
+    if(data.dir)                                                                type = "folder";
+    else if ((/\.(mp3|ogg|oga|wav|aac|m4a|flac|opus|m3u8)$/i).test(data.name))  type = "audio";
+    else if ((/\.(png|jpg|jpeg|bmp|gif)$/i).test(data.name))                    type = "image";
+    else if ((/\.(m3u)$/i).test(data.name))                                     type = "playlist";
+    else                                                                        type = "file";
+    return type;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function fileNameSort( a, b ) {
+    if ( a.dir && !b.dir ) return -1
+    if ( !a.dir && b.dir ) return  1
+    if ( a.name < b.name ) return -1
+    if ( a.name > b.name ) return  1
+    return 0;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function refreshNode(treeId, nodeId) {
+    var ref = $(treeId).jstree(true);
+    var node = ref.get_node(nodeId);
+    var cmd = treeId.substring(1) + '_GetFolder?' + encodeURIComponent(node.data.path)
+    getData(cmd , function(content) {
+        /* We now have data! */
+        deleteChildren(nodeId);
+        addFileDirectory(nodeId, content);
+        ref.open_node(nodeId);
+    });
+}
+
+/*****************************************************************************************************************************************************
+*                                                 a u d i o P l a y e r T r e e                                                                      *
+*****************************************************************************************************************************************************/
+
+function deleteChildren(nodeId) {
+    $('#audioPlayerTree').jstree('open_node', nodeId); // need to open node for accruate selection
+    var ref = $('#audioPlayerTree').jstree(true);
+    var children = $("#audioPlayerTree").jstree("get_children_dom",nodeId);
+    for(var i=0;i<children.length;i++) {
+        console.log("delete child", i)
+        ref.delete_node(children[i]);
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function addFileDirectory(nodeId, content) {
+    content.sort( fileNameSort );
+    var ref = $('#audioPlayerTree').jstree(true);
+    for (var i=0; i< content.length; i++) {
+        console.log("Create Node", content[i]);
+        ref.create_node(nodeId, createChild(nodeId, content[i]));
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function deleteNode(nodeId) {
+    var ref = $('#audioPlayerTree').jstree(true);
+    var node = ref.get_node(nodeId);
+    var theUrl = "SD_delete?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open('POST', theUrl, true)
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        alert('delete ' + node.data.path, 'timeout')
+    }
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+            if (xhr.status == 200) console.log(node.data.path + ' successfully deleted')
+            if (xhr.status == 400) alert(node.data.path + ' could not be deleted')
+        }
+    }
+    xhr.send() // send
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function createChild(nodeId, data) {
+    var ref = $('#audioPlayerTree').jstree(true);
+    var node = ref.get_node(nodeId);
+    var parentNodePath = node.data.path;
+    /* In case of root node remove leading '/' to avoid '//' */
+    if(parentNodePath == "/") parentNodePath = "";
+    var child = {
+        text: data.name,
+        type: getType(data),
+        data: {
+            path: parentNodePath + "/" + data.name,
+            directory: data.dir
+        }
+    };
+    return child;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+$('#audioPlayerTree').on('select_node.jstree', function (e, data) {
+    var treeId = '#audioPlayerTree'
+    var ref = $(treeId).jstree(true)
+    var node = data.node;
+    var nodeId = node.id;
+    var path = node.data.path;
+    console.log("select: nodeId=", nodeId, "path=", path)
+    lastNode = node
+    lastNodeID = nodeId
+    resultstr3.value = path;
+    if (data.node.type == "folder") {
+        $('.option-folder').show();
+        $('.option-file').hide();
+    }
+    if (data.node.data.directory) {
+        refreshNode(treeId, nodeId);
+    }
+    ref.open_node(nodeId);
+});
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 function uploadFile(uploadFile){
+    var treeId = '#audioPlayerTree'
     if(!uploadFile) return;
     if (!lastNode.data.directory){
         alert("selected " + lastNode.data.path + " is not a folder! Select target folder and try again.")
@@ -238,7 +247,7 @@ function uploadFile(uploadFile){
     }
     xhr.onreadystatechange = function () {        // Call a function when the state changes.
         if (xhr.readyState === 4) {
-            refreshNode(lastNode.id)
+            refreshNode(treeId, lastNode.id)
             if (xhr.status == 200){
                 alert(filename + ' successfully uploaded')
             }
@@ -250,9 +259,10 @@ function uploadFile(uploadFile){
     startTime = new Date().getTime();
     xhr.send(fd)
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 function audioPlayer_buildFileSystemTree(path) {
-    $('#audioPalayerTree').jstree({
+    var treeId = 'audioPlayerTree'
+    $(treeId).jstree({
         "core": {
             "check_callback": true,
             'force_text': true,
@@ -298,7 +308,7 @@ function audioPlayer_buildFileSystemTree(path) {
         plugins: ["contextmenu", "themes", "types"],
         contextmenu: {
             items: function (nodeId) {
-                var ref = $('#audioPalayerTree').jstree(true);
+                var ref = $('#audioPlayerTree').jstree(true);
                 var node = ref.get_node(nodeId);
                 var items = {};
                 /* New Folder */
@@ -311,9 +321,9 @@ function audioPlayer_buildFileSystemTree(path) {
                             });
                             if (childNode) {
                                 ref.edit(childNode, null, function (childNode, status) {
-                                    var pathAndName = encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text) 
+                                    var pathAndName = encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text)
                                     getData("SD_newFolder?" + pathAndName);
-                                    refreshNode(nodeId);
+                                    refreshNode(treeId, nodeId);
                                 });
                             }
                         }
@@ -342,7 +352,7 @@ function audioPlayer_buildFileSystemTree(path) {
                     items.refresh = {
                         label: "Refresh",
                         action: function (x) {
-                            refreshNode(nodeId);
+                            refreshNode(treeId, nodeId);
                         }
                     };
                 }
@@ -351,7 +361,7 @@ function audioPlayer_buildFileSystemTree(path) {
                     label: "Delete",
                     action: function (x) {
                         deleteNode(nodeId);
-                        refreshNode(ref.get_parent(nodeId));
+                        refreshNode(treeId, ref.get_parent(nodeId));
                     }
                 };
                 /* Rename */
@@ -392,7 +402,7 @@ function audioPlayer_buildFileSystemTree(path) {
     getData("SD_GetFolder?/", function(data) {
         /* We now have data! */
         console.log("data", data)
-        $('#audioPalayerTree').jstree(true).settings.core.data.children = [];
+        $('#audioPlayerTree').jstree(true).settings.core.data.children = [];
         data.sort( fileNameSort );
         for (var i=0; i<data.length; i++) {
             var newChild = {
@@ -404,11 +414,165 @@ function audioPlayer_buildFileSystemTree(path) {
                 },
                 children: []
             };
-            $('#audioPalayerTree').jstree(true).settings.core.data.children.push(newChild);
+            $('#audioPlayerTree').jstree(true).settings.core.data.children.push(newChild);
         }
-        $("#audioPalayerTree").jstree(true).refresh();
+        $("#audioPlayerTree").jstree(true).refresh();
     });
 } /* audioPlayer_buildFileSystemTree */
+
+
+
+/*****************************************************************************************************************************************************
+*                                                  d l n a P l a y e r T r e e                                                                       *
+*****************************************************************************************************************************************************/
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// $('#dlnaPlayerTree').on('select_node.jstree', function (e, data) {
+//     var treeId = '#dlnaPlayerTree'
+//     var ref = $('#audioPlayerTree').jstree(true)
+//     var node = data.node;
+//     var nodeId = node.id;
+//     var path = node.data.path;
+//     console.log("select: nodeId=", nodeId, "path=", path)
+//     lastNode = node
+//     lastNodeID = nodeId
+//     resultstr3.value = path;
+//     if (data.node.type == "folder") {
+//         $('.option-folder').show();
+//         $('.option-file').hide();
+//     }
+//     if (data.node.data.directory) {
+//         refreshNode(nodeId);
+//     }
+//     ref.open_node(nodeId);
+// });
+
+
+
+
+// function dlnaPlayer_buildFileSystemTree(path) {
+//     $('#dlnaPlayerTree').jstree({
+//         "core": {
+//             "check_callback": true,
+//             'force_text': true,
+//             'strings': {
+//               "Loading ...": "Please wait..."
+//             },
+//             "themes": {
+//                 "stripes": true
+//             },
+//             'data': {
+//                 text: '/',
+//                 state: {
+//                     opened: true
+//                 },
+//                 type: 'folder',
+//                 children: [],
+//                 data: {
+//                     path: '/',
+//                     directory: true
+//                 }
+//             }
+//         },
+//         'types': {
+//             'folder': {  // folder_yellow.png (24x24px)
+//               'icon': iconFolderYellow
+//             },
+//             'file': { // file_red.png
+//               'icon': iconFileRed
+//             },
+//             'audio': { // file_green.png
+//               'icon': iconFileGreen
+//             },
+//             'image': { // file_blue.png
+//               'icon': iconFileBlue
+//             },
+//             'playlist': { // file_blue.png
+//               'icon': iconFileYellow
+//             },
+//             'default': { // file_yellow.png
+//               'icon': iconFileRed
+//             }
+//         },
+//         plugins: ["contextmenu", "themes", "types"],
+//         contextmenu: {
+//             items: function (nodeId) {
+//                 var ref = $('#dlnaPlayerTree').jstree(true);
+//                 var node = ref.get_node(nodeId);
+//                 var items = {};
+//                 /* Play */
+//                 if ((/\.(mp3|ogg|oga|wav|aac|m4a|flac|opus|m3u)$/i).test(node.data.path)) {
+//                     items.play = {
+//                         label: "Play",
+//                         action: function (x) {
+//                             var playMode = 1;
+//                             if (node.data.directory) {
+//                                 playMode = 5;
+//                             }
+//                             else {
+//                                 if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
+//                                     playMode = 11;
+//                                 }
+//                             }
+//                             XmlHttpReq1("GET", "DLNA_playFile?" +  encodeURIComponent(node.data.path), "play")
+//                         }
+//                     };
+//                 }
+//                 /* Download */
+//                 if (!node.data.directory) {
+//                     items.download = {
+//                         label: "Download",
+//                         action: function (x) {
+//                             uri = "DLNA_Download?" + encodeURIComponent(node.data.path);
+//                             var anchor = document.createElement('a');
+//                             anchor.href = uri;
+//                             anchor.target = '_blank';
+//                             console.log("download file: ", node.text);
+//                             anchor.download = node.text;
+//                             anchor.click();
+//                             document.body.removeChild(document.body.lastElementChild);
+//                         }
+//                     }
+//                 };
+//                 return items;
+//             }
+//         }
+//     })
+//     if (path.length == 0) {
+//         return;
+//     }
+//     getData("DLNA_GetFolder?/", function(data) {
+//         /* We now have data! */
+//         console.log("data", data)
+//         $('#dlnaPlayerTree').jstree(true).settings.core.data.children = [];
+//         data.sort( fileNameSort );
+//         for (var i=0; i<data.length; i++) {
+//             var newChild = {
+//                 text: data[i].name,
+//                 type: getType(data[i]),
+//                 data: {
+//                     path: "/" + data[i].name,
+//                     directory: data[i].dir
+//                 },
+//                 children: []
+//             };
+//             $('#dlnaPlayerTree').jstree(true).settings.core.data.children.push(newChild);
+//         }
+//         $("#dlnaPlayerTree").jstree(true).refresh();
+//     });
+// } /* dlnaPlayer_buildFileSystemTree */
+
+
+
+
+
+
+
+
+
+
+
+
 
 )=====" ;
 #endif /* INDEX_JS_H_ */
