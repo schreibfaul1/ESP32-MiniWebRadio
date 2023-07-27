@@ -1897,7 +1897,7 @@ function chIRcmd(btn){  // IR command, value changed
                 <legend "title">Files</legend>
                 <div class="filetree-container">
                     <div id="filebrowser">
-                        <div id="audioPalayerTree"></div>
+                        <div id="audioFileTree"></div>
                     </div>
                 </div>
                 <hr>
