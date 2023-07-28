@@ -853,12 +853,12 @@ void updateVUmeter() {
     uint8_t left  = map_l(vum >> 8,     0, 127, 0, 11);
     uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
 
-    if(left > _VUleftCh)   {for(int i = _VUleftCh; i < left; i++) { drawRect(i, 0, 1); }}
-    if(left < _VUleftCh)   {for(int i = left; i < _VUleftCh; i++) { drawRect(i, 0, 0); }}
+    if(left > _VUleftCh)   {for(int i = _VUleftCh; i < left; i++) { drawRect(i, 1, 1); }}
+    if(left < _VUleftCh)   {for(int i = left; i < _VUleftCh; i++) { drawRect(i, 1, 0); }}
     _VUleftCh = left;
 
-    if(right > _VUrightCh) {for(int i = _VUrightCh; i < right; i++) { drawRect(i, 1, 1); }}
-    if(right < _VUrightCh) {for(int i = right; i < _VUrightCh; i++) { drawRect(i, 1, 0); }}
+    if(right > _VUrightCh) {for(int i = _VUrightCh; i < right; i++) { drawRect(i, 0, 1); }}
+    if(right < _VUrightCh) {for(int i = right; i < _VUrightCh; i++) { drawRect(i, 0, 0); }}
     _VUrightCh = right;
     xSemaphoreGive(mutex_display);
 }

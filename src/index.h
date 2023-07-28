@@ -638,7 +638,7 @@ function showTab6 () {
   document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
   document.getElementById('btn5').src = 'SD/png/Search_Green.png'
   document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
-  getTimeZoneName()
+  // getTimeZoneName()
   loadTimeZones()
 }
 
