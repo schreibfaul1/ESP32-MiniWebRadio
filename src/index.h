@@ -320,368 +320,362 @@ var tm
 var IR_addr = ""
 
 function ping() {
-  if (socket.readyState == 1) { // reayState 'open'
-    socket.send("ping")
-    console.log("send ping")
-    tm = setTimeout(function () {
-      toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
-    }, 10000)
-  }
+    if (socket.readyState == 1) { // reayState 'open'
+        socket.send("ping")
+        console.log("send ping")
+        tm = setTimeout(function () {
+            toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
+        }, 10000)
+    }
 }
 
 function connect() {
-  socket = new WebSocket('ws://'+window.location.hostname+':81/');
+    socket = new WebSocket('ws://'+window.location.hostname+':81/');
 
-  socket.onopen = function () {
-    console.log("Websocket connected")
-    socket.send('get_tftSize')
-    socket.send('get_decoder')
-    socket.send('to_listen')
-    socket.send("getmute")
-    socket.send("get_timeAnnouncement")
-    socket.send("gettone=")   // Now load the tones (tab Radio)
-    socket.send("getnetworks=")
-    socket.send("change_state=" + "0")
+    socket.onopen = function () {
+        console.log("Websocket connected")
+        socket.send('get_tftSize')
+        socket.send('get_decoder')
+        socket.send('to_listen')
+        socket.send("getmute")
+        socket.send("get_timeAnnouncement")
+        socket.send("gettone=")   // Now load the tones (tab Radio)
+        socket.send("getnetworks=")
+        socket.send("change_state=" + "0")
 
-    setInterval(ping, 20000)
-  };
+        setInterval(ping, 20000)
+    };
 
-  socket.onclose = function (e) {
-    console.log(e)
-    console.log('Socket is closed. Reconnect will be attempted in 1 second.', e)
-    socket = null
-    setTimeout(function () {
-      connect()
-    }, 1000)
-  }
-
-  socket.onerror = function (err) {
-    console.log(err)
-  }
-
-  socket.onmessage = function(event) {
-    var socketMsg = event.data
-
-    var n   = socketMsg.indexOf('=')
-    var msg = ''
-    var val = ''
-    if (n >= 0) {
-      var msg  = socketMsg.substring(0, n)
-      var val  = socketMsg.substring(n + 1)
-//    console.log("para ",msg, " val ",val)
-    }
-    else {
-      msg = socketMsg
+    socket.onclose = function (e) {
+        console.log(e)
+        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e)
+        socket = null
+        setTimeout(function () {
+            connect()
+        }, 1000)
     }
 
-    switch(msg) {
-      case "pong":            clearTimeout(tm)
-                              console.log("pong")
-                              toastr.clear()
-                              break
-      case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                                              resultstr1.value = "mute on"
-                                              console.log("mute on")}
-                              if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
-                                              resultstr1.value = "mute off"
-                                              console.log("mute off")}
-                              break
-      case "tone":            resultstr1.value = val  // text shown in resultstr1 as info
-                              break
-      case "settone":         lines = val.split('\n')
-                              for (i = 0; i < (lines.length - 1); i++) {
-                                parts = lines[i].split('=')
-                                setSlider(parts[0], parts[1])
-                              }
-                              break
-      case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
-                              break
-      case "stationURL":      station.value = val
-                              break
-      case "stationLogo":     if(tft_size == 0) showLogo('label-logo-s', val)
-                              if(tft_size == 1) showLogo('label-logo-m', val)
-                              break
-      case "streamtitle":     cmd.value = val
-                              break
-      case "homepage":        window.open(val, '_blank') // show the station homepage
-                              break
-      case "icy_description": resultstr1.value = val
-                              break
-      case "AudioFileList":   getAudioFileList(val)
-                              break
-      case "tftSize":         if(val == 's')  { tft_size = 0; // 320x240px
-                                                document.getElementById('div-logo-m').style.display = 'none';
-                                                document.getElementById('div-logo-s').style.display = 'block';
-                                                document.getElementById('canvas').width  = 96;
-                                                document.getElementById('canvas').height = 96;
-                                                console.log("tftSize is s");
-                              }
-                              if(val == 'm')  { tft_size = 1;
-                                                document.getElementById('div-logo-s').style.display = 'none';
-                                                document.getElementById('div-logo-m').style.display = 'block';
-                                                document.getElementById('canvas').width  = 128;
-                                                document.getElementById('canvas').height = 128;
-                                                console.log("tftSize is m");
-                              }
-                              break
-      case  "decoder":        if(val == 'h')  { audio_decoder = 0; // vs1053 HW decoder
-                                                document.getElementById('div-tone-s').style.display = 'none';
-                                                document.getElementById('div-tone-h').style.display = 'block';
-                                                console.log("vs1053");
-                              }
-                              if(val == 's')  { audio_decoder = 1; // audioI2S SW decoder
-                                                document.getElementById('div-tone-h').style.display = 'none';
-                                                document.getElementById('div-tone-s').style.display = 'block';
-                                                console.log("audioI2S");}
-                              break
-      case  "volume":         resultstr1.value = "Volume is now " + val;
-                              break
-      case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
-                              break
-
-      case  "stopfile":       resultstr3.value = val;
-                              break
-
-      case  "resumefile":     resultstr3.value = val;
-                              break
-
-      case  "timeAnnouncement": console.log("timeAnnouncement=" + val)
-                              if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
-                              if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
-                              break
-
-      case "clearDLNA":       clearDLNAServerList()
-                              break
-
-      case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
-                              break
-      case "Level1":          show_DLNA_Content(val, 1)
-                              break
-      case "Level2":          show_DLNA_Content(val, 2)
-                              break
-      case "Level3":          show_DLNA_Content(val, 3)
-                              break
-      case "Level4":          show_DLNA_Content(val, 4)
-                              break
-      case "Level5":          show_DLNA_Content(val, 5)
-                              break
-      case "networks":        var networks = val.split('\n')
-                              select = document.getElementById('ssid')
-                              for (i = 0; i < (networks.length); i++) {
-                                opt = document.createElement('OPTION')
-                                opt.value = i
-                                console.log(networks[i])
-                                opt.text = networks[i]
-                                select.add(opt)
-                              }
-                              break
-      case "test":            resultstr1.value = val
-                              break
-      case "IR_address":      if(IR_addr != val){
-                                  IR_addr = val
-                                  ir_address.value=val
-                                  socket.send("setIRadr=" + val)
-                              }
-                              break
-      case "IR_command":      ir_command.value=val
-                              break
-      default:                console.log('unknown message', msg, val)
+    socket.onerror = function (err) {
+        console.log(err)
     }
-  }
+
+    socket.onmessage = function(event) {
+        var socketMsg = event.data
+
+        var n   = socketMsg.indexOf('=')
+        var msg = ''
+        var val = ''
+        if (n >= 0) {
+            var msg  = socketMsg.substring(0, n)
+            var val  = socketMsg.substring(n + 1)
+            // console.log("para ",msg, " val ",val)
+        }
+        else {
+            msg = socketMsg
+        }
+
+        switch(msg) {
+            case "pong":            clearTimeout(tm)
+                                    console.log("pong")
+                                    toastr.clear()
+                                    break
+            case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                                                    resultstr1.value = "mute on"
+                                                    console.log("mute on")}
+                                    if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
+                                                    resultstr1.value = "mute off"
+                                                    console.log("mute off")}
+                                    break
+            case "tone":            resultstr1.value = val  // text shown in resultstr1 as info
+                                    break
+            case "settone":         lines = val.split('\n')
+                                    for (i = 0; i < (lines.length - 1); i++) {
+                                      parts = lines[i].split('=')
+                                      setSlider(parts[0], parts[1])
+                                    }
+                                    break
+            case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
+                                    break
+            case "stationURL":      station.value = val
+                                    break
+            case "stationLogo":     if(tft_size == 0) showLogo('label-logo-s', val)
+                                    if(tft_size == 1) showLogo('label-logo-m', val)
+                                    break
+            case "streamtitle":     cmd.value = val
+                                    break
+            case "homepage":        window.open(val, '_blank') // show the station homepage
+                                    break
+            case "icy_description": resultstr1.value = val
+                                    break
+            case "AudioFileList":   getAudioFileList(val)
+                                    break
+            case "tftSize":         if(val == 's')  { tft_size = 0; // 320x240px
+                                                        document.getElementById('div-logo-m').style.display = 'none';
+                                                        document.getElementById('div-logo-s').style.display = 'block';
+                                                        document.getElementById('canvas').width  = 96;
+                                                        document.getElementById('canvas').height = 96;
+                                                        console.log("tftSize is s");
+                                    }
+                                    if(val == 'm')  { tft_size = 1;
+                                                        document.getElementById('div-logo-s').style.display = 'none';
+                                                        document.getElementById('div-logo-m').style.display = 'block';
+                                                        document.getElementById('canvas').width  = 128;
+                                                        document.getElementById('canvas').height = 128;
+                                                        console.log("tftSize is m");
+                                    }
+                                    break
+            case  "decoder":        if(val == 'h')  { audio_decoder = 0; // vs1053 HW decoder
+                                                        document.getElementById('div-tone-s').style.display = 'none';
+                                                        document.getElementById('div-tone-h').style.display = 'block';
+                                                        console.log("vs1053");
+                                    }
+                                    if(val == 's')  { audio_decoder = 1; // audioI2S SW decoder
+                                                        document.getElementById('div-tone-h').style.display = 'none';
+                                                        document.getElementById('div-tone-s').style.display = 'block';
+                                                        console.log("audioI2S");}
+                                    break
+            case  "volume":         resultstr1.value = "Volume is now " + val;
+                                    break
+            case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
+                                    break
+
+            case  "stopfile":       resultstr3.value = val;
+                                    break
+
+            case  "resumefile":     resultstr3.value = val;
+                                    break
+
+            case  "timeAnnouncement": console.log("timeAnnouncement=" + val)
+                                    if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
+                                    if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
+                                    break
+
+            case "clearDLNA":       clearDLNAServerList()
+                                    break
+
+            case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
+                                    break
+            case "Level1":          show_DLNA_Content(val, 1)
+                                    break
+            case "Level2":          show_DLNA_Content(val, 2)
+                                    break
+            case "Level3":          show_DLNA_Content(val, 3)
+                                    break
+            case "Level4":          show_DLNA_Content(val, 4)
+                                    break
+            case "Level5":          show_DLNA_Content(val, 5)
+                                    break
+            case "networks":        var networks = val.split('\n')
+                                    select = document.getElementById('ssid')
+                                    for (i = 0; i < (networks.length); i++) {
+                                        opt = document.createElement('OPTION')
+                                        opt.value = i
+                                        console.log(networks[i])
+                                        opt.text = networks[i]
+                                        select.add(opt)
+                                    }
+                                    break
+            case "test":            resultstr1.value = val
+                                    break
+            case "IR_address":      if(IR_addr != val){
+                                        IR_addr = val
+                                        ir_address.value=val
+                                        socket.send("setIRadr=" + val)
+                                    }
+                                    break
+            case "IR_command":      ir_command.value=val
+                                    break
+            default:                console.log('unknown message', msg, val)
+        }
+    }
 }
 // ---- end websocket section------------------------
 
 
 document.addEventListener('readystatechange', event => {
-  if (event.target.readyState === 'interactive') { // same as:  document.addEventListener('DOMContentLoaded'...
-    // same as  jQuery.ready
-    console.log('All HTML DOM elements are accessible')
-    document.getElementById('dialog').style.display = 'none' // hide the div (its only a template)
-
-  }
-  if (event.target.readyState === 'complete') {
-    console.log('Now external resources are loaded too, like css,src etc... ')
-    connect();  // establish websocket connection
-    loadGridFileFromSD()
-    showExcelGrid()
-    audioPlayer_buildFileSystemTree("/")
-  }
+    if (event.target.readyState === 'interactive') { // same as:  document.addEventListener('DOMContentLoaded'...
+        // same as  jQuery.ready
+        console.log('All HTML DOM elements are accessible')
+        document.getElementById('dialog').style.display = 'none' // hide the div (its only a template)
+    }
+    if (event.target.readyState === 'complete') {
+        console.log('Now external resources are loaded too, like css,src etc... ')
+        connect();  // establish websocket connection
+        loadGridFileFromSD()
+        showExcelGrid()
+        audioPlayer_buildFileSystemTree("/")
+    }
 })
 
 toastr.options = {
-  "closeButton": false,
-  "debug": false,
-  "newestOnTop": false,
-  "progressBar": false,
-  "positionClass": "toast-top-right",
-  "preventDuplicates": true,
-  "preventOpenDuplicates": true,
-  "onclick": null,
-  "showDuration": "300",
-  "hideDuration": "1000",
-  "timeOut": "20000",
-  "extendedTimeOut": "1000",
-  "showEasing": "swing",
-  "hideEasing": "linear",
-  "showMethod": "fadeIn",
-  "hideMethod": "fadeOut"
+    "closeButton": false,
+    "debug": false,
+    "newestOnTop": false,
+    "progressBar": false,
+    "positionClass": "toast-top-right",
+    "preventDuplicates": true,
+    "preventOpenDuplicates": true,
+    "onclick": null,
+    "showDuration": "300",
+    "hideDuration": "1000",
+    "timeOut": "20000",
+    "extendedTimeOut": "1000",
+    "showEasing": "swing",
+    "hideEasing": "linear",
+    "showMethod": "fadeIn",
+    "hideMethod": "fadeOut"
 }
 
 function showTab1 () {
-  console.log('tab-content1 (Radio)')
-  document.getElementById('tab-content1').style.display = 'block'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
-  socket.send("change_state=" + "0")
-  socket.send("getmute")
+    console.log('tab-content1 (Radio)')
+    document.getElementById('tab-content1').style.display = 'block'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send("change_state=" + "0")
+    socket.send("getmute")
 }
 
 function showTab2 () {
-  console.log('tab-content2 (Stations)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'block'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
-  $('#jsGrid').jsGrid('refresh')
+    console.log('tab-content2 (Stations)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'block'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    $('#jsGrid').jsGrid('refresh')
 }
 
 function showTab3 () {
-  console.log('tab-content3 (Audio Player)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'block'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
-  document.getElementById('level1').options.length = 0
-  document.getElementById('level2').options.length = 0
-  document.getElementById('level3').options.length = 0
-  document.getElementById('level4').options.length = 0
-  document.getElementById('level5').options.length = 0
-  socket.send("change_state=6")
+    console.log('tab-content3 (Audio Player)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'block'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('level1').options.length = 0
+    document.getElementById('level2').options.length = 0
+    document.getElementById('level3').options.length = 0
+    document.getElementById('level4').options.length = 0
+    document.getElementById('level5').options.length = 0
+    socket.send("change_state=6")
 }
 
 function showTab4 () {
-  console.log('tab-content4 (DLNA)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'block'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
-  socket.send('DLNA_getServer')
-  socket.send("change_state=" + "10")
+    console.log('tab-content4 (DLNA)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'block'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send('DLNA_getServer')
+    socket.send("change_state=" + "10")
 }
 
 function showTab5 () {
-  console.log('tab-content5 (Search Stations)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'block'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    console.log('tab-content5 (Search Stations)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'block'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
 }
 
 function showTab6 () {
-  console.log('tab-content6 (About)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'block'
-  document.getElementById('tab-content7').style.display = 'none'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
-  // getTimeZoneName()
-  loadTimeZones()
+    console.log('tab-content6 (About)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'block'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
+    // getTimeZoneName()
+    loadTimeZones()
 }
 
 function showTab7 () {  // Remote Control
-  console.log('tab-content7 (Remote Control)')
-  document.getElementById('tab-content1').style.display = 'none'
-  document.getElementById('tab-content2').style.display = 'none'
-  document.getElementById('tab-content3').style.display = 'none'
-  document.getElementById('tab-content4').style.display = 'none'
-  document.getElementById('tab-content5').style.display = 'none'
-  document.getElementById('tab-content6').style.display = 'none'
-  document.getElementById('tab-content7').style.display = 'block'
-  document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
-  document.getElementById('btn2').src = 'SD/png/Station_Green.png'
-  document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-  document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
-  document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-  document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    console.log('tab-content7 (Remote Control)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'block'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
 }
 
-
-
-
-
-
 function uploadTextFile (fileName, content) {
-  var fd = new FormData()
-  fd.append('Text=', content)
-  var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.timeout = 2000; // time in milliseconds
-  xhr.open('POST', theUrl, true)
-  xhr.ontimeout = (e) => {
-    // XMLHttpRequest timed out.
-    alert(filename + ' not uploaded, timeout')
-  }
-  xhr.onreadystatechange = function () { // Call a function when the state changes.
-    if (xhr.readyState === 4) {
-      if (xhr.responseText === 'OK') alert(fileName + ' successfully uploaded')
-      else alert(fileName + ' successfully uploaded')
+    var fd = new FormData()
+    fd.append('Text=', content)
+    var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open('POST', theUrl, true)
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        alert(filename + ' not uploaded, timeout')
     }
-  }
-  xhr.send(fd) // send
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+            if (xhr.responseText === 'OK') alert(fileName + ' successfully uploaded')
+            else alert(fileName + ' successfully uploaded')
+        }
+    }
+    xhr.send(fd) // send
 }
 
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
@@ -789,499 +783,492 @@ function select_l3 (presctrl) { // preset, select level 2
 // ----------------------------------- TAB RADIO ------------------------------------
 
 function showLogo(id, src) { // get the bitmap from SD, convert to URL first
-  src = src.replace(/%/g, '%25') // % must be the first
-  src = src.replace(/\s/g, '%20') // URLs never can have blanks
-  src = src.replace(/'/g, '%27') // must be replace
-  src = src.replace(/\(/g, '%28') // must be replace
-  src = src.replace(/\)/g, '%29') // must be replace
-  src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
-  var timestamp = new Date().getTime()
-  var file
-  if(src == '') file = 'url(SD/unknown.jpg)'
-  else file = 'url(SD' + src + ')'
-  console.log("showLogo id=", id, "file=", file)
-  document.getElementById(id).style.backgroundImage = file
+    src = src.replace(/%/g, '%25') // % must be the first
+    src = src.replace(/\s/g, '%20') // URLs never can have blanks
+    src = src.replace(/'/g, '%27') // must be replace
+    src = src.replace(/\(/g, '%28') // must be replace
+    src = src.replace(/\)/g, '%29') // must be replace
+    src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
+    var timestamp = new Date().getTime()
+    var file
+    if(src == '') file = 'url(SD/unknown.jpg)'
+    else file = 'url(SD' + src + ')'
+    console.log("showLogo id=", id, "file=", file)
+    document.getElementById(id).style.backgroundImage = file
 }
 
 function test(){
-  socket.send("test=")
+    socket.send("test=")
 }
 
 function handleStation (presctrl) { // tab Radio: preset, select a station
-  cmd.value = ''
-  socket.send('set_station=' + presctrl.value)
+    cmd.value = ''
+    socket.send('set_station=' + presctrl.value)
 }
 
 function setstation () { // Radio: button play - Enter a streamURL here....
-  var sel = document.getElementById('preset')
-  sel.selectedIndex = 0
-  cmd.value = ''
-
-  var theUrl =  station.value;
-  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
-  theUrl = theUrl.replace(/%21/g, '!') //
-  theUrl = theUrl.replace(/%22/g, '"') //
-  theUrl = theUrl.replace(/%23/g, '#') //
-  theUrl = theUrl.replace(/%3f/g, '?') //
-  theUrl = theUrl.replace(/%40/g, '@') //
-
-  socket.send("stationURL=" + theUrl)
+    var sel = document.getElementById('preset')
+    sel.selectedIndex = 0
+    cmd.value = ''
+    var theUrl =  station.value;
+    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+    theUrl = theUrl.replace(/%21/g, '!') //
+    theUrl = theUrl.replace(/%22/g, '"') //
+    theUrl = theUrl.replace(/%23/g, '#') //
+    theUrl = theUrl.replace(/%3f/g, '?') //
+    theUrl = theUrl.replace(/%40/g, '@') //
+    socket.send("stationURL=" + theUrl)
 }
 
 function selectItemByValue (elmnt, value) { // tab Radio: load and set tones
-  var sel = document.getElementById(elmnt)
-  for (var i = 0; i < sel.options.length; i++) {
-    if (sel.options[i].value === value) {
-      sel.selectedIndex = i
+    var sel = document.getElementById(elmnt)
+    for (var i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].value === value) {
+            sel.selectedIndex = i
+        }
     }
-  }
 }
 
 function setSlider (elmnt, value) {
-  if (elmnt === 'toneha') slider_TG_set(value)
-  if (elmnt === 'tonehf') slider_TF_set(value)
-  if (elmnt === 'tonela') slider_BG_set(value)
-  if (elmnt === 'tonelf') slider_BF_set(value)
-  v = Math.trunc((40 + parseInt(value, 10)) /3)
-  console.log("setSlider", elmnt, value)
-  if (elmnt === 'LowPass' ) slider_LP_set(v)
-  if (elmnt === 'BandPass') slider_BP_set(v)
-  if (elmnt === 'HighPass') slider_HP_set(v)
+    if (elmnt === 'toneha') slider_TG_set(value)
+    if (elmnt === 'tonehf') slider_TF_set(value)
+    if (elmnt === 'tonela') slider_BG_set(value)
+    if (elmnt === 'tonelf') slider_BF_set(value)
+    v = Math.trunc((40 + parseInt(value, 10)) /3)
+    console.log("setSlider", elmnt, value)
+    if (elmnt === 'LowPass' ) slider_LP_set(v)
+    if (elmnt === 'BandPass') slider_BP_set(v)
+    if (elmnt === 'HighPass') slider_HP_set(v)
 }
 
 function slider_TG_mouseUp () { // Slider Treble Gain   mouseupevent
-  handlectrl('toneha', trebleVal[TrebleGain.value])
-  // console.log('Treble Gain=%i',Number(TrebleGain.value));
+    handlectrl('toneha', trebleVal[TrebleGain.value])
+    // console.log('Treble Gain=%i',Number(TrebleGain.value));
 }
 
 function slider_TG_change () { //  Slider Treble Gain  changeevent
-  console.log('Treble Gain=%i', Number(TrebleGain.value))
-  document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
+    console.log('Treble Gain=%i', Number(TrebleGain.value))
+    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
 }
 
 function slider_TG_set (value) { // set Slider Treble Gain
-  var val = Number(value)
-  if (val < 8) val = val + 8
-  else val = val - 8
-  document.getElementById('TrebleGain').value = val
-  document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
-  console.log('Treble Gain=%i', val)
+    var val = Number(value)
+    if (val < 8) val = val + 8
+    else val = val - 8
+    document.getElementById('TrebleGain').value = val
+    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
+    console.log('Treble Gain=%i', val)
 }
 
 function slider_TF_mouseUp () { // Slider Treble Freq   mouseupevent
-  handlectrl('tonehf', TrebleFreq.value)
-  // console.log('Treble Freq=%i', Number(TrebleFreq.value));
+    handlectrl('tonehf', TrebleFreq.value)
+    // console.log('Treble Freq=%i', Number(TrebleFreq.value));
 }
 
 function slider_TF_change () { //  Slider Treble Freq  changeevent
-  console.log('Treble Freq=%i', Number(TrebleFreq.value))
-  document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
+    console.log('Treble Freq=%i', Number(TrebleFreq.value))
+    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
 }
 
 function slider_TF_set (value) { // set Slider Treble Freq
-  var val = Number(value)
-  document.getElementById('TrebleFreq').value = val
-  document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
-  console.log('Treble Freq=%i', val)
+    var val = Number(value)
+    document.getElementById('TrebleFreq').value = val
+    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
+    console.log('Treble Freq=%i', val)
 }
 
 function slider_BG_mouseUp () { // Slider Bass Gain   mouseupevent
-  handlectrl('tonela', BassGain.value)
-  // console.log('Bass Gain=%i', Number(BassGain.value));
+    handlectrl('tonela', BassGain.value)
+    // console.log('Bass Gain=%i', Number(BassGain.value));
 }
 
 function slider_BG_change () { //  Slider Bass Gain  changeevent
-  var sign = ''
-  if (BassGain.value !== '0') sign = '+'
-  console.log('Bass Gain=%i', Number(BassGain.value))
-  document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
+    var sign = ''
+    if (BassGain.value !== '0') sign = '+'
+    console.log('Bass Gain=%i', Number(BassGain.value))
+    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
 }
 
 function slider_BG_set (value) { // set Slider Bass Gain
-  var val = Number(value)
-  var sign = ''
-  if (BassGain.value !== '0') sign = '+'
-  document.getElementById('BassGain').value = val
-  document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
-  console.log('Bass Gain=%i', val)
+    var val = Number(value)
+    var sign = ''
+    if (BassGain.value !== '0') sign = '+'
+    document.getElementById('BassGain').value = val
+    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
+    console.log('Bass Gain=%i', val)
 }
 
 function slider_BF_mouseUp () { // Slider Bass Gain   mouseupevent
-  handlectrl('tonelf', BassFreq.value)
-  // console.log('Bass Freq=%i', Number(BassFreq.value));
+    handlectrl('tonelf', BassFreq.value)
+    // console.log('Bass Freq=%i', Number(BassFreq.value));
 }
 
 function slider_BF_change () { //  Slider Bass Gain  changeevent
-  console.log('Bass Freq=%i', Number(BassFreq.value))
-  document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
+    console.log('Bass Freq=%i', Number(BassFreq.value))
+    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
 }
 
 function slider_BF_set (value) { // set Slider Bass Gain
-  var val = Number(value)
-  document.getElementById('BassFreq').value = val
-  document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
-  console.log('Bass Freq=%i', val)
+    var val = Number(value)
+    document.getElementById('BassFreq').value = val
+    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
+    console.log('Bass Freq=%i', val)
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
-  handlectrl('LowPass', I2S_eq_Val[LowPass.value])
-  console.log('LowPass=%i', Number(LowPass.value));
+    handlectrl('LowPass', I2S_eq_Val[LowPass.value])
+    console.log('LowPass=%i', Number(LowPass.value));
 }
 
 function slider_LP_change () { //  Slider LowPass changeevent
-  console.log('LowPass=%i', Number(LowPass.value))
-  document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+    console.log('LowPass=%i', Number(LowPass.value))
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
 }
 
 function slider_LP_set (value) { // set Slider LowPass
-  var val = Number(value)
-  document.getElementById('LowPass').value = val
-  document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
-  console.log('LowPass=%i', val)
+    var val = Number(value)
+    document.getElementById('LowPass').value = val
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+    console.log('LowPass=%i', val)
 }
 
 function slider_BP_mouseUp () { // BandPass mouseupevent
-  handlectrl('BandPass', I2S_eq_Val[BandPass.value])
-  console.log('BandPass=%i', Number(BandPass.value));
+    handlectrl('BandPass', I2S_eq_Val[BandPass.value])
+    console.log('BandPass=%i', Number(BandPass.value));
 }
 
 function slider_BP_change () { //  BandPass changeevent
-  console.log('BandPass=%i', Number(BandPass.value))
-  document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+    console.log('BandPass=%i', Number(BandPass.value))
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
 }
 
 function slider_BP_set (value) { // set Slider BandPass
-  var val = Number(value)
-  document.getElementById('BandPass').value = val
-  document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
-  console.log('BandPass=%i', val)
+    var val = Number(value)
+    document.getElementById('BandPass').value = val
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+    console.log('BandPass=%i', val)
 }
 
 function slider_HP_mouseUp () { // Slider HighPass mouseupevent
-  handlectrl('HighPass', I2S_eq_Val[HighPass.value])
-  console.log('HighPass=%i', Number(HighPass.value));
+    handlectrl('HighPass', I2S_eq_Val[HighPass.value])
+    console.log('HighPass=%i', Number(HighPass.value));
 }
 
 function slider_HP_change () { //  Slider HighPass changeevent
-  console.log('HighPass=%i', Number(HighPass.value))
-  document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+    console.log('HighPass=%i', Number(HighPass.value))
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
 }
 
 function slider_HP_set (value) { // set Slider HighPass
-  var val = Number(value)
-  document.getElementById('HighPass').value = val
-  document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
-  console.log('HighPass=%i', val)
+    var val = Number(value)
+    document.getElementById('HighPass').value = val
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+    console.log('HighPass=%i', val)
 }
 
 function handlectrl (id, val) { // Radio: treble, bass, freq
-  var theUrl = id + "=" + val
-  console.log(theUrl)
-  socket.send(theUrl)
+    var theUrl = id + "=" + val
+    console.log(theUrl)
+    socket.send(theUrl)
 }
 // ----------------------------------- TAB CONFIG ------------------------------------
 
 function saveGridFileToSD () { // save to SD
-  var wsData = $('#jsGrid').jsGrid('option', 'data')
-  var strJSON = JSON.stringify(wsData)
-  var objJSON = JSON.parse(strJSON)
-  console.log(wsData.length)
-  var txt = ''
-  var l
-  var c
-  var select, opt
-  select = document.getElementById('preset') // Radio: show stationlist
-  select.options.length = 1
-  var j = 1
-  txt = 'Hide\tCy\tStationName\tStreamURL\n'
-  for (var i = 0; i < wsData.length; i++) {
-    c = ''
-    if (objJSON[i].Hide) {
-      c = objJSON[i].Hide
-      txt += c+ '\t'
-    } else txt += '\t'
-    if (objJSON[i].Hide !== '*') {
-      if (j < 1000) {
-        opt = document.createElement('OPTION')
-        opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-        select.add(opt)
-      }
-      j++
+    var wsData = $('#jsGrid').jsGrid('option', 'data')
+    var strJSON = JSON.stringify(wsData)
+    var objJSON = JSON.parse(strJSON)
+    console.log(wsData.length)
+    var txt = ''
+    var l
+    var c
+    var select, opt
+    select = document.getElementById('preset') // Radio: show stationlist
+    select.options.length = 1
+    var j = 1
+    txt = 'Hide\tCy\tStationName\tStreamURL\n'
+    for (var i = 0; i < wsData.length; i++) {
+        c = ''
+        if (objJSON[i].Hide) {
+            c = objJSON[i].Hide
+            txt += c+ '\t'
+        } else txt += '\t'
+        if (objJSON[i].Hide !== '*') {
+            if (j < 1000) {
+                opt = document.createElement('OPTION')
+                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
+                select.add(opt)
+            }
+            j++
+        }
+        if (objJSON[i].Cy) {
+            c = objJSON[i].Cy
+            c = c + '\t'
+            txt += c
+        } else txt += '\t'
+        if (objJSON[i].StationName) {
+            c = objJSON[i].StationName
+            c = c + '\t'
+            txt += c
+        } else txt += '\t'
+        if (objJSON[i].StreamURL) {
+            c = objJSON[i].StreamURL
+            txt += c
+        } else txt += '\t'
+        txt += '\n'
     }
-    if (objJSON[i].Cy) {
-      c = objJSON[i].Cy
-      c = c + '\t'
-      txt += c
-    } else txt += '\t'
-    if (objJSON[i].StationName) {
-      c = objJSON[i].StationName
-      c = c + '\t'
-      txt += c
-    } else txt += '\t'
-    if (objJSON[i].StreamURL) {
-      c = objJSON[i].StreamURL
-      txt += c
-    } else txt += '\t'
-    txt += '\n'
-  }
-  uploadTextFile('stations.csv', txt)
-  updateStationlist()
+    uploadTextFile('stations.csv', txt)
+    updateStationlist()
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function loadGridFileFromSD () { // load from SD
-  var XLrowObject
-  var rawFile = new XMLHttpRequest()
-  rawFile.timeout = 2000; // time in milliseconds
-  rawFile.open('POST', 'SD/stations.csv', true)
-  rawFile.onreadystatechange = function () {
-    if (rawFile.readyState === 4) {
-      var rawdata = rawFile.responseText
-      var workbook = XLSX.read(rawdata, {
-        raw: true,
-        type: 'string',
-        cellDates: false,
-        cellText: true
-      })
-      workbook.SheetNames.forEach(function (sheetName) {
-        XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
-      })
-      var strJSON = JSON.stringify(XLrowObject)
-      var objJSON = JSON.parse(strJSON)
-      $('#jsGrid').jsGrid({
-        data: objJSON
-      })
-      updateStationlist()
+    var XLrowObject
+    var rawFile = new XMLHttpRequest()
+    rawFile.timeout = 2000; // time in milliseconds
+    rawFile.open('POST', 'SD/stations.csv', true)
+    rawFile.onreadystatechange = function () {
+        if (rawFile.readyState === 4) {
+            var rawdata = rawFile.responseText
+            var workbook = XLSX.read(rawdata, {
+                raw: true,
+                type: 'string',
+                cellDates: false,
+                cellText: true
+            })
+            workbook.SheetNames.forEach(function (sheetName) {
+                XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
+            })
+            var strJSON = JSON.stringify(XLrowObject)
+            var objJSON = JSON.parse(strJSON)
+            $('#jsGrid').jsGrid({
+                data: objJSON
+            })
+            updateStationlist()
+        }
     }
-  }
-  rawFile.ontimeout = (e) => {
-    // XMLHttpRequest timed out.
-    console.log("load SD/stations.csv timeout")
-  }
-  rawFile.send()
+    rawFile.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        console.log("load SD/stations.csv timeout")
+    }
+    rawFile.send()
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function saveExcel () { // save xlsx to PC
-  var wb = XLSX.utils.book_new()
-  wb.Props = {
-    Title: 'Stations',
-    Subject: 'Stationlist',
-    Author: 'MiniWebRadio',
-    CreatedDate: new Date('2018.10.10')
-  }
-  wb.SheetNames.push('Stations')
-  var wsData = $('#jsGrid').jsGrid('option', 'data')
-  var wscols = [{
-    wch: 4
-  }, // 'characters'
-  {
-    wch: 5
-  }, // 'characters'
-  {
-    wch: 100
-  }, // 'characters'
-  {
-    wch: 150
-  }  // 'characters'
-  ]
-  var ws = XLSX.utils.json_to_sheet(wsData, {
-    header: ['Hide', 'Cy', 'StationName', 'StreamURL']
-  })
-  ws['!cols'] = wscols
-  wb.Sheets.Stations = ws
+    var wb = XLSX.utils.book_new()
+    wb.Props = {
+        Title: 'Stations',
+        Subject: 'Stationlist',
+        Author: 'MiniWebRadio',
+        CreatedDate: new Date('2018.10.10')
+    }
+    wb.SheetNames.push('Stations')
+    var wsData = $('#jsGrid').jsGrid('option', 'data')
+    var wscols = [{
+        wch: 4
+    }, // 'characters'
+    {
+        wch: 5
+    }, // 'characters'
+    {
+        wch: 100
+    }, // 'characters'
+    {
+        wch: 150
+    }  // 'characters'
+    ]
+    var ws = XLSX.utils.json_to_sheet(wsData, {
+        header: ['Hide', 'Cy', 'StationName', 'StreamURL']
+    })
+    ws['!cols'] = wscols
+    wb.Sheets.Stations = ws
 
-  var wbout = XLSX.write(wb, {
-    bookType: 'xlsx',
-    type: 'binary'
-  })
+    var wbout = XLSX.write(wb, {
+        bookType: 'xlsx',
+        type: 'binary'
+    })
 
-  function s2ab (s) {
-    var buf = new ArrayBuffer(s.length)
-    var view = new Uint8Array(buf)
-    for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
-    return buf
-  }
-  saveAs(
-    new Blob([s2ab(wbout)], {
-      type: 'application/octet-stream'
-    }),
-    'stations.xlsx'
-  )
-  updateStationlist()
+    function s2ab (s) {
+        var buf = new ArrayBuffer(s.length)
+        var view = new Uint8Array(buf)
+        for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
+        return buf
+    }
+    saveAs(
+        new Blob([s2ab(wbout)], {
+            type: 'application/octet-stream'
+        }),
+        'stations.xlsx'
+    )
+    updateStationlist()
 }
 
 var clients = [ // testdata
-  {
-    Hide: '*',
-    Cy: 'D',
-    StationName: 'Station',
-    StreamURL: 'URL'
-  }
+    {
+        Hide: '*',
+        Cy: 'D',
+        StationName: 'Station',
+        StreamURL: 'URL'
+    }
 ]
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function showExcelGrid () {
-  $('#jsGrid').jsGrid({
-    width: '100%',
-    height: '432px',
-    editing: true,
-    sorting: true,
-    paging: false,
-    shrinkToFit: false,
-    onItemDeleted: function (args) {
-      updateStationlist()
-    },
-    onItemUpdated: function (args) {
-      updateStationlist()
-    },
-    onItemInserted: function (args) {
-      updateStationlist()
-    },
-    deleteConfirm: function (item) {
-      return 'The entry ' + item.StationName + ' will be removed. Are you sure?'
-    },
-    rowClick: function (args) {
-      showDetailsDialog('Edit', args.item)
-    },
-    data: clients,
-    fields: [{
-      name: 'Hide',
-      type: 'text',
-      width: 20,
-      align: 'center'
-    },
-    {
-      name: 'Cy',
-      type: 'text',
-      width: 25,
-      align: 'center'
-    },
-    {
-      name: 'StationName',
-      type: 'text',
-      width: 170
-    },
-    {
-      name: 'StreamURL',
-      type: 'text',
-      width: 320
-    },
-    {
-      type: 'control',
-      modeSwitchButton: false,
-      editButton: false,
-      shrinkToFit: true,
-      headerTemplate: function () {
-        return $('<button>')
-          .attr('type', 'button')
-          .text('Add')
-          .on('click', function () {
-            showDetailsDialog('Add', {})
-          })
-      }
-    }
-    ]
-  })
+    $('#jsGrid').jsGrid({
+        width: '100%',
+        height: '432px',
+        editing: true,
+        sorting: true,
+        paging: false,
+        shrinkToFit: false,
+        onItemDeleted: function (args) {
+            updateStationlist()
+        },
+        onItemUpdated: function (args) {
+            updateStationlist()
+        },
+        onItemInserted: function (args) {
+            updateStationlist()
+        },
+        deleteConfirm: function (item) {
+            return 'The entry ' + item.StationName + ' will be removed. Are you sure?'
+        },
+        rowClick: function (args) {
+            showDetailsDialog('Edit', args.item)
+        },
+        data: clients,
+        fields: [{
+            name: 'Hide',
+            type: 'text',
+            width: 20,
+            align: 'center'
+        },
+        {
+            name: 'Cy',
+            type: 'text',
+            width: 25,
+            align: 'center'
+        },
+        {
+            name: 'StationName',
+            type: 'text',
+            width: 170
+        },
+        {
+            name: 'StreamURL',
+            type: 'text',
+            width: 320
+        },
+        {
+            type: 'control',
+            modeSwitchButton: false,
+            editButton: false,
+            shrinkToFit: true,
+            headerTemplate: function () {
+                return $('<button>')
+                .attr('type', 'button')
+                .text('Add')
+                .on('click', function () {
+                    showDetailsDialog('Add', {})
+                })
+            }
+        }
+        ]
+    })
 }
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 var showDetailsDialog = function (dialogType, client) { // popUp window
-  if(client.Hide === '*') $("#chkHide").prop("checked", true)
-  else                    $("#chkHide").prop("checked", false)
-  $('#txtCy').val(client.Cy)
-  $('#txtStationName').val(client.StationName)
-  $('#txtStreamURL').val(client.StreamURL)
-  var divdialog = $('#dialog')
-  $('#dialog').attr('title', 'Edit')
-  $('#dialog').dialog({
-    width: 505,
-    resizable: false,
-    show: 'fade',
-    modal: false,
-    buttons: {
-      OK: function () {
-        if($('#chkHide').is(':checked')) client.Hide = '*'
-        else                             client.Hide = ''
-        client.Cy = $('#txtCy').val()
-        client.StationName = $('#txtStationName').val()
-        client.StreamURL = $('#txtStreamURL').val()
-        includeStation(client, dialogType === 'Add')
-        $(this).dialog('close')
-        console.log('dialog saved')
-      }
-    }
-  })
-  divdialog.dialog()
-  console.log('dialog opened')
+    if(client.Hide === '*') $("#chkHide").prop("checked", true)
+    else                    $("#chkHide").prop("checked", false)
+    $('#txtCy').val(client.Cy)
+    $('#txtStationName').val(client.StationName)
+    $('#txtStreamURL').val(client.StreamURL)
+    var divdialog = $('#dialog')
+    $('#dialog').attr('title', 'Edit')
+    $('#dialog').dialog({
+        width: 505,
+        resizable: false,
+        show: 'fade',
+        modal: false,
+        buttons: {
+            OK: function () {
+                if($('#chkHide').is(':checked')) client.Hide = '*'
+                else                             client.Hide = ''
+                client.Cy = $('#txtCy').val()
+                client.StationName = $('#txtStationName').val()
+                client.StreamURL = $('#txtStreamURL').val()
+                includeStation(client, dialogType === 'Add')
+                $(this).dialog('close')
+                console.log('dialog saved')
+            }
+        }
+    })
+    divdialog.dialog()
+    console.log('dialog opened')
 }
 
 var includeStation = function (client, isNew) {
-  $.extend(client, {
-    Hide: $('#txHide').val(),
-    Cy: $('#txtCy').val(),
-    StationName: $('#txtStationName').val(),
-    StreamURL: $('#txtStreamURL').val()
-  })
+    $.extend(client, {
+        Hide: $('#txHide').val(),
+        Cy: $('#txtCy').val(),
+        StationName: $('#txtStationName').val(),
+        StreamURL: $('#txtStreamURL').val()
+    })
 
-  $('#jsGrid').jsGrid(isNew ? 'insertItem' : 'updateItem', client)
-  $('#detailsDialog').dialog('close')
+    $('#jsGrid').jsGrid(isNew ? 'insertItem' : 'updateItem', client)
+    $('#detailsDialog').dialog('close')
 }
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function loadDataExcel (event) { // load xlsx from PC
-  var file = event[0]
-  var reader = new FileReader()
-  var excelData = []
-  reader.onload = function (event) {
-    var data = event.target.result
-    var workbook = XLSX.read(data, {
-      type: 'binary'
-    })
-    workbook.SheetNames.forEach(function (sheetName) {
-      // Here is your object
-      var XLrowObject = XLSX.utils.sheet_to_row_object_array(
-        workbook.Sheets[sheetName]
-      )
-
-      for (var i = 0; i < XLrowObject.length; i++) {
-        excelData.push(XLrowObject[i]['your column name'])
-      }
-
-      var strJSON = JSON.stringify(XLrowObject)
-      var objJSON = JSON.parse(strJSON)
-      // alert(strJSON);
-      $('#jsGrid').jsGrid({
-        data: objJSON
-      })
-      updateStationlist()
-    })
-  }
-  $('#file').val('') // allow load twice
-  reader.onerror = function (ex) {
-    console.log(ex)
-  }
-
-  reader.readAsBinaryString(file)
+    var file = event[0]
+    var reader = new FileReader()
+    var excelData = []
+    reader.onload = function (event) {
+        var data = event.target.result
+        var workbook = XLSX.read(data, {
+            type: 'binary'
+        })
+        workbook.SheetNames.forEach(function (sheetName) {
+            // Here is your object
+            var XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
+            for (var i = 0; i < XLrowObject.length; i++) {
+                excelData.push(XLrowObject[i]['your column name'])
+            }
+            var strJSON = JSON.stringify(XLrowObject)
+            var objJSON = JSON.parse(strJSON)
+            // alert(strJSON);
+            $('#jsGrid').jsGrid({
+                data: objJSON
+            })
+            updateStationlist()
+        })
+    }
+    $('#file').val('') // allow load twice
+    reader.onerror = function (ex) {
+        console.log(ex)
+    }
+    reader.readAsBinaryString(file)
 }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function updateStationlist () { // select in tab Radio
-  var opt, select
-  var wsData = $('#jsGrid').jsGrid('option', 'data')
-  var strJSON = JSON.stringify(wsData)
-  var objJSON = JSON.parse(strJSON)
-  console.log(wsData.length)
-  select = document.getElementById('preset') // Radio: show stationlist
-  select.options.length = 1
-  var j = 1
-  for (var i = 0; i < wsData.length; i++) {
-    if (objJSON[i].Hide !== '*') {
-      if (j < 1000) {
-        opt = document.createElement('OPTION')
-        opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-        select.add(opt)
-      }
-      j++
+    var opt, select
+    var wsData = $('#jsGrid').jsGrid('option', 'data')
+    var strJSON = JSON.stringify(wsData)
+    var objJSON = JSON.parse(strJSON)
+    console.log(wsData.length)
+    select = document.getElementById('preset') // Radio: show stationlist
+    select.options.length = 1
+    var j = 1
+    for (var i = 0; i < wsData.length; i++) {
+        if (objJSON[i].Hide !== '*') {
+            if (j < 1000) {
+                opt = document.createElement('OPTION')
+                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
+                select.add(opt)
+            }
+            j++
+        }
     }
-  }
 }
 
 // ----------------------------------- TAB AUDIO PLAYER ------------------------------------
@@ -1294,216 +1281,216 @@ var countryallstations
 var category
 
 function addStationsToGrid () {
-  showDetailsDialog('Add', {})
-  $('#txtStreamURL').val($('#streamurl').val())
-  $('#txtStationName').val($('#stationname').val())
+    showDetailsDialog('Add', {})
+    $('#txtStreamURL').val($('#streamurl').val())
+    $('#txtStationName').val($('#stationname').val())
 }
 
 function loadJSON (path, success, error) {
-  console.log(path)
-  var xhr = new XMLHttpRequest()
-  xhr.timeout = 2000; // time in milliseconds
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        success(JSON.parse(xhr.responseText))
-      } else {
-        error(xhr)
-      }
+    console.log(path)
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                success(JSON.parse(xhr.responseText))
+            } else {
+                error(xhr)
+            }
+        }
     }
-  }
-  xhr.open('GET', path, true)
-  xhr.ontimeout = (e) => {
-    // XMLHttpRequest timed out. Do something here.
-  }
-  xhr.send()
+    xhr.open('GET', path, true)
+    xhr.ontimeout = (e) => {
+      // XMLHttpRequest timed out. Do something here.
+    }
+    xhr.send()
 }
 
 function selectcategory (presctrl) { // tab Search: preset, select a category
-  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
-  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
-  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
+    if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
+    if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
+    if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
-  if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
+    if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
+    if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
+    if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
 }
 
 function gotItems (data) { // fill select countries
-  var select = document.getElementById('item')
-  var opt
-  select.options.length = 1
-  for (var i = 0; i < data.length; i++) {
-    if (i < 2) continue
-    opt = document.createElement('OPTION')
-    opt.text = data[i].name
-    select.add(opt)
-  }
-  console.log(data.uuid)
-  var stations = document.getElementById('stations') // set stations to default
-  stations.options.length = 1
+    var select = document.getElementById('item')
+    var opt
+    select.options.length = 1
+    for (var i = 0; i < data.length; i++) {
+        if (i < 2) continue
+        opt = document.createElement('OPTION')
+        opt.text = data[i].name
+        select.add(opt)
+    }
+    console.log(data.uuid)
+    var stations = document.getElementById('stations') // set stations to default
+    stations.options.length = 1
 }
 
 function gotStations (data) { // fill select stations
-  var select = document.getElementById('stations')
-  var opt
-  select.options.length = 1
-  for (var i = 0; i < data.length; i++) {
-    opt = document.createElement('OPTION')
-    opt.text = data[i].name
-    opt.value = i
-    select.add(opt)
-  }
-  countryallstations = data
+    var select = document.getElementById('stations')
+    var opt
+    select.options.length = 1
+    for (var i = 0; i < data.length; i++) {
+        opt = document.createElement('OPTION')
+        opt.text = data[i].name
+        opt.value = i
+        select.add(opt)
+    }
+    countryallstations = data
 }
 
 function selectstation () { // select a station
-  var e = document.getElementById('stations')
-  var value = e.options[e.selectedIndex].value
-  var sturl = countryallstations[value].url
-  console.log(value)
-  console.log(sturl)
-  var f = document.getElementById('streamurl')
-  f.value = sturl
-  var g = document.getElementById('favicon')
-  var favi = countryallstations[value].favicon
-  g.value = favi
-  var h = document.getElementById('homepageurl')
-  h.value = countryallstations[value].homepage
-  scaleCanvasImage(favi)
-  var j = document.getElementById('rb_stationname')
-  j.value = countryallstations[value].name.trim()
+    var e = document.getElementById('stations')
+    var value = e.options[e.selectedIndex].value
+    var sturl = countryallstations[value].url
+    console.log(value)
+    console.log(sturl)
+    var f = document.getElementById('streamurl')
+    f.value = sturl
+    var g = document.getElementById('favicon')
+    var favi = countryallstations[value].favicon
+    g.value = favi
+    var h = document.getElementById('homepageurl')
+    h.value = countryallstations[value].homepage
+    scaleCanvasImage(favi)
+    var j = document.getElementById('rb_stationname')
+    j.value = countryallstations[value].name.trim()
 }
 
 function teststreamurl () { // Search: button play - enter a url to play from
-  var theUrl = "stationURL=" + streamurl.value
-  theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
-  theUrl = theUrl.replace(/%21/g, '!') //
-  theUrl = theUrl.replace(/%22/g, '"') //
-  theUrl = theUrl.replace(/%23/g, '#') //
-  theUrl = theUrl.replace(/%3f/g, '?') //
-  theUrl = theUrl.replace(/%40/g, '@') //
-  socket.send(theUrl)
+    var theUrl = "stationURL=" + streamurl.value
+    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+    theUrl = theUrl.replace(/%21/g, '!') //
+    theUrl = theUrl.replace(/%22/g, '"') //
+    theUrl = theUrl.replace(/%23/g, '#') //
+    theUrl = theUrl.replace(/%3f/g, '?') //
+    theUrl = theUrl.replace(/%40/g, '@') //
+    socket.send(theUrl)
 }
 
 function scaleCanvasImage (url) {
-  var canvas = document.getElementById('canvas')
-  var ctx = canvas.getContext('2d')
-  var src
-  ctx.beginPath()
-  ctx.rect(0, 0, canvas.width, canvas.height)
-  ctx.fillStyle = 'white'
-  ctx.fill()
-  var co = 'https://api.codetabs.com/v1/proxy?quest='
-  src = co + url
-  var imgObj = new Image()
-  imgObj.crossOrigin = 'anonymous'
-  imgObj.src = src
+    var canvas = document.getElementById('canvas')
+    var ctx = canvas.getContext('2d')
+    var src
+    ctx.beginPath()
+    ctx.rect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = 'white'
+    ctx.fill()
+    var co = 'https://api.codetabs.com/v1/proxy?quest='
+    src = co + url
+    var imgObj = new Image()
+    imgObj.crossOrigin = 'anonymous'
+    imgObj.src = src
 
-  imgObj.onload = function() {
-    var imgWidth = imgObj.width
-    var imgHeight = imgObj.height
-    var scaleX = 1
-    var scaleY = 1
-    if (imgWidth > canvas.width) scaleX = canvas.width / imgWidth
-    if (imgHeight > canvas.height) scaleY = canvas.height / imgHeight
-    var scale = scaleY
-    if (scaleX < scaleY) scale = scaleX
-    if (scale < 1) {
-      imgHeight = imgHeight * scale
-      imgWidth = imgWidth * scale
+    imgObj.onload = function() {
+        var imgWidth = imgObj.width
+        var imgHeight = imgObj.height
+        var scaleX = 1
+        var scaleY = 1
+        if (imgWidth > canvas.width) scaleX = canvas.width / imgWidth
+        if (imgHeight > canvas.height) scaleY = canvas.height / imgHeight
+        var scale = scaleY
+        if (scaleX < scaleY) scale = scaleX
+        if (scale < 1) {
+            imgHeight = imgHeight * scale
+            imgWidth = imgWidth * scale
+        }
+        var dx = (canvas.width - imgWidth) / 2
+        var dy = (canvas.height - imgHeight) / 2
+        ctx.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height, dx, dy, imgWidth, imgHeight)
     }
-    var dx = (canvas.width - imgWidth) / 2
-    var dy = (canvas.height - imgHeight) / 2
-    ctx.drawImage(imgObj, 0, 0, imgObj.width, imgObj.height, dx, dy, imgWidth, imgHeight)
-  }
 
 }
 
 function refreshCanvas () {
-  var g = document.getElementById('favicon')
-  scaleCanvasImage(g.value)
-  console.log('refresh')
+    var g = document.getElementById('favicon')
+    scaleCanvasImage(g.value)
+    console.log('refresh')
 }
 
 function uploadCanvasImage () {
-  var filename
-  var sn = document.getElementById('rb_stationname')
-  if (sn.value !== '') filename = sn.value + '.jpg'
-  else {
-    alert('no stationname given')
-    return
-  }
-  var canvas = document.getElementById('canvas')
-  var dataURL = canvas.toDataURL('image/jpeg')
-  document.getElementById('hidden_data').value = dataURL
-  var fd = new FormData(document.forms.form1)
-  var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.timeout = 2000; // time in milliseconds
-  xhr.open('POST', theUrl, true)
+    var filename
+    var sn = document.getElementById('rb_stationname')
+    if (sn.value !== '') filename = sn.value + '.jpg'
+    else {
+        alert('no stationname given')
+        return
+    }
+    var canvas = document.getElementById('canvas')
+    var dataURL = canvas.toDataURL('image/jpeg')
+    document.getElementById('hidden_data').value = dataURL
+    var fd = new FormData(document.forms.form1)
+    var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open('POST', theUrl, true)
 
-  xhr.upload.onprogress = function (e) {
-    if (e.lengthComputable) {
-      var percentComplete = (e.loaded / e.total) * 100
-      console.log(percentComplete + '% uploaded')
+    xhr.upload.onprogress = function (e) {
+        if (e.lengthComputable) {
+            var percentComplete = (e.loaded / e.total) * 100
+            console.log(percentComplete + '% uploaded')
+        }
     }
-  }
-  xhr.onload = function () {
-  }
-  xhr.ontimeout = (e) => {
-    // XMLHttpRequest timed out.
-    alert(filename + ' not uploaded, timeout')
-  }
-  xhr.onreadystatechange = function () { // Call a function when the state changes.
-    if (xhr.readyState === 4) {
-      if (xhr.responseText === 'OK') alert(filename + ' successfully uploaded')
-      else alert(filename + ' successfully uploaded')
+    xhr.onload = function () {
     }
-  }
-  xhr.send(fd)
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out.
+        alert(filename + ' not uploaded, timeout')
+    }
+    xhr.onreadystatechange = function () { // Call a function when the state changes.
+        if (xhr.readyState === 4) {
+          if (xhr.responseText === 'OK') alert(filename + ' successfully uploaded')
+            else alert(filename + ' successfully uploaded')
+        }
+    }
+    xhr.send(fd)
 }
 
 function downloadCanvasImage () {
-  var filename
-  var sn = document.getElementById('stationname')
-  if (sn.value !== '') filename = sn.value + '.jpg'
-  else filename = 'myimage.jpg'
-  var lnk = document.createElement('a')
-  var e // create an 'off-screen' anchor tag
-  lnk.download = filename // the key here is to set the download attribute of the a tag
-  lnk.href = canvas.toDataURL('image/jpeg')
-  if (document.createEvent) { // create a 'fake' click-event to trigger the download
-    e = document.createEvent('MouseEvents')
-    e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
-    lnk.dispatchEvent(e)
-  } else if (lnk.fireEvent) {
-    lnk.fireEvent('onclick')
-  }
+    var filename
+    var sn = document.getElementById('stationname')
+    if (sn.value !== '') filename = sn.value + '.jpg'
+    else filename = 'myimage.jpg'
+    var lnk = document.createElement('a')
+    var e // create an 'off-screen' anchor tag
+    lnk.download = filename // the key here is to set the download attribute of the a tag
+    lnk.href = canvas.toDataURL('image/jpeg')
+    if (document.createEvent) { // create a 'fake' click-event to trigger the download
+        e = document.createEvent('MouseEvents')
+        e.initMouseEvent('click', true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null)
+        lnk.dispatchEvent(e)
+    } else if (lnk.fireEvent) {
+        lnk.fireEvent('onclick')
+    }
 }
 // -------------------------------------- TAB Info ---------------------------------------
 
 function getTimeZoneName() { //
-  var xhr = new XMLHttpRequest()
-  xhr.timeout = 2000; // time in milliseconds
-  xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true)
-  xhr.onreadystatechange = function () {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200) {
-        g_timeZoneName =xhr.responseText
-        console.log("tzName=", g_timeZoneName)
-        return g_timeZoneName
-      }
-      console.log("xhr.status=", xhr.status)
+    var xhr = new XMLHttpRequest()
+    xhr.timeout = 2000; // time in milliseconds
+    xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true)
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                g_timeZoneName =xhr.responseText
+                console.log("tzName=", g_timeZoneName)
+                return g_timeZoneName
+            }
+            console.log("xhr.status=", xhr.status)
+        }
     }
-  }
-  xhr.ontimeout = (e) => {
-    // XMLHttpRequest timed out. Do something here.
-    console.log("timeout in getTimeZoneName()")
-  }
-  xhr.send()
+    xhr.ontimeout = (e) => {
+        // XMLHttpRequest timed out. Do something here.
+        console.log("timeout in getTimeZoneName()")
+    }
+    xhr.send()
 }
 
 function setTimeZone(selectObject){
@@ -1565,7 +1552,7 @@ function loadIRbuttons(){
 
       for(i = 0; i < 17; i++){
           var id
-      	  id = "#ir_command_" + i
+          id = "#ir_command_" + i
           $(id).val(ir_btnVal[i + 1]);
           chIRcmd(-1)
       }
@@ -1588,7 +1575,7 @@ function chIRcmd(btn){  // IR command, value changed
     var ret = true
     for(i = 0; i < arrLen; i++){
         var id
-    	  id = "#ir_command_" + i
+        id = "#ir_command_" + i
         val1 = $(id).val().toString()
         irArr.push(val1)
         $(id).val(" ")
@@ -1966,6 +1953,27 @@ function chIRcmd(btn){  // IR command, value changed
                 </select>
             </div>
         </center>
+
+        <div class="container">
+            <fieldset>
+                <legend "title">DLNA</legend>
+                <div class="filetree-container">
+                    <div>
+                        <div id="dlnaFileTree"></div>
+                    </div>
+                </div>
+                <hr>
+                <div style="height: 66px; display: flex;">
+                    <div style="flex:1;">
+                        <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
+                               id="resultstr4" placeholder="Waiting for a command....">
+                    </div>
+                    <div style="flex: 0 0 2px;">
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+
     </div>
 
 <!--===============================================================================================================================================-->
