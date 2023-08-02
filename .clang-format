@@ -1,43 +1,45 @@
 ﻿---
-BasedOnStyle: Google
-AccessModifierOffset: '-2'
-ColumnLimit: '150'
-IndentWidth: '4'
-ReflowComments: 'true'
+BasedOnStyle: llvm
+AccessModifierOffset: -2
+ColumnLimit: 150
+IndentWidth: 4
+ReflowComments: true
 PointerAlignment: Right
-SpaceAfterLogicalNot: 'false'
-SpaceBeforeAssignmentOperators: 'true'
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: Never
-SpaceInEmptyParentheses: 'false'
-SpacesInParentheses: 'false'
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
 UseTab: Never
 IndentPPDirectives: BeforeHash
 IncludeBlocks: Merge
-Cpp11BracedListStyle: 'true'
-AllowShortLoopsOnASingleLine: 'true'
+Cpp11BracedListStyle: true
+AllowShortLoopsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: Always
-AllowShortBlocksOnASingleLine: 'true'
-AllowAllParametersOfDeclarationOnNextLine: 'true'
-AllowAllArgumentsOnNextLine: 'true'
-AlignTrailingComments: 'true'
+AllowShortBlocksOnASingleLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+AlignTrailingComments: true
 AlignEscapedNewlines: Left
-AlignConsecutiveDeclarations: 'true'
-AlignConsecutiveMacros: 'true'
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
 AlignAfterOpenBracket: Align
-AllowShortEnumsOnASingleLine: 'true'
+AllowShortEnumsOnASingleLine: true
 
+BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterCaseLabel:  false
   AfterClass:      false
   AfterControlStatement: false
   AfterEnum:       false
   AfterFunction:   false
-  AfterNamespace:  true
-  AfterObjCDeclaration: true
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
   BeforeCatch:     true
   BeforeElse:      true
   IndentBraces:    false
-BreakBeforeBraces: Custom
+
 
 ...
