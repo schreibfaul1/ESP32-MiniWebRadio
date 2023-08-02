@@ -4,7 +4,7 @@ AccessModifierOffset: -2
 ColumnLimit: 150
 IndentWidth: 4
 ReflowComments: true
-PointerAlignment: Right
+PointerAlignment: Left
 SpaceAfterLogicalNot: false
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: Never

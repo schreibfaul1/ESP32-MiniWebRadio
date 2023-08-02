@@ -60,8 +60,8 @@ uint32_t       _playlistTime = 0;         // playlist start time millis() for ti
 uint32_t       _settingsHash = 0;
 uint32_t       _audioFileSize = 0;
 uint32_t       _media_downloadPort = 0;
-const char    *_pressBtn[8];
-const char    *_releaseBtn[8];
+const char*    _pressBtn[8];
+const char*    _releaseBtn[8];
 char           _chbuf[512];
 char           _fName[256];
 char           _myIP[25];
@@ -70,8 +70,8 @@ char           _prefix[5] = "/s";
 char           _commercial[25];
 char           _icyDescription[512] = {};
 char           _streamTitle[512] = {};
-char          *_lastconnectedfile = nullptr;
-char          *_stationURL = nullptr;
+char*          _lastconnectedfile = nullptr;
+char*          _stationURL = nullptr;
 boolean        _f_rtc = false; // true if time from ntp is received
 boolean        _f_100ms = false;
 boolean        _f_1sec = false;
@@ -144,7 +144,7 @@ enum status {
     DLNA = 10
 };
 
-const char *codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
+const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
 Preferences pref;
 Preferences stations;
@@ -452,7 +452,7 @@ boolean saveDefaultIRbuttonsToNVS() { // default values, first init
 
 void saveIRbuttonsToNVS() {
     uint8_t  ir_addr = ir.get_irAddress();
-    uint8_t *ir_buttons = ir.get_irButtons();
+    uint8_t* ir_buttons = ir.get_irButtons();
     char     buf[12];
     pref.putShort("irAddress", ir_addr);
     for(uint8_t i = 0; i < 20; i++) {
@@ -618,7 +618,7 @@ inline uint8_t getBrightness() { return _brightness; }
 // Since UTF-8 is always shorter than URI, the same memory is used for decoding
 // e.g. Born%20On%20The%20B.mp3 --> Born On The B.mp3
 // e.g. %D0%B8%D1%81%D0%BF%D1%8B%D1%82%D0%B0%D0%BD%D0%B8%D0%B5.mp3 --> испытание.mp3
-void urldecode(char *str) {
+void urldecode(char* str) {
     uint16_t p1 = 0, p2 = 0;
     char     a, b;
     while(str[p1]) {
@@ -963,12 +963,12 @@ void showFooter() { // stationnumber, sleeptime, IPaddress
     showFooterRSSI(true);
     showFooterBitRate(_icyBitRate);
 }
-void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
+void display_info(const char* str, int xPos, int yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
     tft.setCursor(xPos + margin_l, yPos);                     // Prepare to show the info
     // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
-    uint16_t ch_written = tft.writeText((const uint8_t *)str, winWidth - margin_r, winHeight);
+    uint16_t ch_written = tft.writeText((const uint8_t*)str, winWidth - margin_r, winHeight);
     if(ch_written < strlenUTF8(str)) {
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
@@ -977,7 +977,7 @@ void display_info(const char *str, int xPos, int yPos, uint16_t color, uint16_t 
                        winHeight, strlenUTF8(str), ch_written, str);
     }
 }
-void showStreamTitle(const char *streamtitle) {
+void showStreamTitle(const char* streamtitle) {
     if(_f_sleeping) return;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     String ST = streamtitle;
@@ -1088,7 +1088,7 @@ void showFileLogo(uint8_t state) {
     xSemaphoreGive(mutex_display);
 }
 
-void showFileName(const char *fname) {
+void showFileName(const char* fname) {
     clearLogo();
     if(!fname) return;
     switch(strlenUTF8(fname)) {
@@ -1234,7 +1234,7 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall) {
         uint8_t p = i;
         if(i > 1) p++; // skip colon
         strcpy(_path, "/digits/");
-        strncat(_path, (const char *)hhmm + i, 1);
+        strncat(_path, (const char*)hhmm + i, 1);
         if(showall) {
             if(i == pos) strcat(_path, "or.jpg"); // show orange number
             else
@@ -1310,8 +1310,8 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
     }
 }
 
-boolean drawImage(const char *path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
-    const char *scImg = scaleImage(path);
+boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
+    const char* scImg = scaleImage(path);
     if(!SD_MMC.exists(scImg)) {
         if(indexOf(scImg, "/.", 0) > 0) return false; // empty filename
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg);
@@ -1328,7 +1328,7 @@ boolean drawImage(const char *path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool setAudioFolder(const char *audioDir) {
+bool setAudioFolder(const char* audioDir) {
     if(audioFile) audioFile.close(); // same as rewind()
     if(!SD_MMC.exists(audioDir)) {
         SerialPrintfln(ANSI_ESC_RED "%s not exist", audioDir);
@@ -1417,7 +1417,7 @@ void processPlaylist(boolean first) {
                 _f_isFSConnected = false;
             }
             else {
-                const char *path = playlistFile.path();
+                const char* path = playlistFile.path();
                 int         idx = lastIndexOf(path, '/');
                 int         len = strlen(_chbuf);
                 for(int i = len; i > -1; i--) { _chbuf[idx + i + 1] = _chbuf[i]; }
@@ -1531,11 +1531,11 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
  *****************************************************************************************************************************************************/
-void connecttohost(const char *host) {
+void connecttohost(const char* host) {
     int   idx1, idx2;
-    char *url = nullptr;
-    char *user = nullptr;
-    char *pwd = nullptr;
+    char* url = nullptr;
+    char* user = nullptr;
+    char* pwd = nullptr;
 
     clearBitRate();
     _cur_Codec = 0;
@@ -1570,7 +1570,7 @@ void connecttohost(const char *host) {
         }
     }
 }
-void connecttoFS(const char *filename, uint32_t resumeFilePos) {
+void connecttoFS(const char* filename, uint32_t resumeFilePos) {
     clearBitRate();
     _icyBitRate = 0;
     _avrBitRate = 0;
@@ -1594,7 +1594,7 @@ void stopSong() {
 void setup() {
     Serial.begin(115200);
     Serial.print("\n\n");
-    const char *chipModel = ESP.getChipModel();
+    const char* chipModel = ESP.getChipModel();
     uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t     avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t     avPatch = ESP_ARDUINO_VERSION_PATCH;
@@ -1762,7 +1762,7 @@ void setup() {
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
  *****************************************************************************************************************************************************/
-const char *byte_to_binary(int8_t x) {
+const char* byte_to_binary(int8_t x) {
     static char b[9];
     b[0] = '\0';
 
@@ -1770,7 +1770,7 @@ const char *byte_to_binary(int8_t x) {
     for(z = 128; z > 0; z >>= 1) { strcat(b, ((x & z) == z) ? "1" : "0"); }
     return b;
 }
-uint32_t simpleHash(const char *str) {
+uint32_t simpleHash(const char* str) {
     if(str == NULL) return 0;
     uint32_t hash = 0;
     for(int i = 0; i < strlen(str); i++) {
@@ -1779,7 +1779,7 @@ uint32_t simpleHash(const char *str) {
     }
     return hash;
 }
-int str2int(const char *str) {
+int str2int(const char* str) {
     int len = strlen(str);
     if(len > 0) {
         for(int i = 0; i < len; i++) {
@@ -1792,10 +1792,10 @@ int str2int(const char *str) {
     }
     return 0;
 }
-void trim(char *s) {
+void trim(char* s) {
     // fb   trim in place
-    char *pe;
-    char *p = s;
+    char* pe;
+    char* p = s;
     while(isspace(*p)) p++; // left
     pe = p;                 // right
     while(*pe != '\0') pe++;
@@ -1806,34 +1806,34 @@ void trim(char *s) {
         *s = '\0';
     }
 }
-bool startsWith(const char *base, const char *searchString) {
+bool startsWith(const char* base, const char* searchString) {
     char c;
     while((c = *searchString++) != '\0')
         if(c != *base++) return false;
     return true;
 }
-bool endsWith(const char *base, const char *searchString) {
+bool endsWith(const char* base, const char* searchString) {
     int         slen = strlen(searchString) - 1;
-    const char *p = base + strlen(base) - 1;
+    const char* p = base + strlen(base) - 1;
     while(p > base && isspace(*p)) p--; // rtrim
     p -= slen;
     if(p < base) return false;
     return (strncmp(p, searchString, slen) == 0);
 }
-int indexOf(const char *haystack, const char *needle, int startIndex) {
-    const char *p = haystack;
+int indexOf(const char* haystack, const char* needle, int startIndex) {
+    const char* p = haystack;
     for(; startIndex > 0; startIndex--)
         if(*p++ == '\0') return -1;
-    char *pos = strstr(p, needle);
+    char* pos = strstr(p, needle);
     if(pos == nullptr) return -1;
     return pos - haystack;
 }
-int lastIndexOf(const char *haystack, const char needle) {
-    const char *p = strrchr(haystack, needle);
+int lastIndexOf(const char* haystack, const char needle) {
+    const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
 }
-boolean strCompare(char *str1, char *str2) { return strCompare((const char *)str1, str2); }
-boolean strCompare(const char *str1, char *str2) { // returns true if str1 == str2
+boolean strCompare(char* str1, char* str2) { return strCompare((const char*)str1, str2); }
+boolean strCompare(const char* str1, char* str2) { // returns true if str1 == str2
     if(!str1) return false;
     if(!str2) return false;
     if(strlen(str1) != strlen(str2)) return false;
@@ -1848,7 +1848,7 @@ boolean strCompare(const char *str1, char *str2) { // returns true if str1 == st
     }
     return f;
 }
-int16_t strlenUTF8(const char *str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
+int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
     if(str == NULL) return -1;
     uint16_t idx = 0;
     uint16_t cnt = 0;
@@ -1869,7 +1869,7 @@ int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_
     const int32_t delta = x - in_min;
     return (delta * rise) / run + out_min;
 }
-void SerialPrintflnCut(const char *item, const char *color, const char *str) {
+void SerialPrintflnCut(const char* item, const char* color, const char* str) {
     if(strlen(str) > 75) {
         String f = str;
         SerialPrintfln("%s%s%s ... %s", item, color, f.substring(0, 50).c_str(), f.substring(f.length() - 20, f.length()).c_str());
@@ -1877,13 +1877,13 @@ void SerialPrintflnCut(const char *item, const char *color, const char *str) {
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 
-const char *scaleImage(const char *path) {
+const char* scaleImage(const char* path) {
     if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))) { // not a image
         return path;
     }
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
-    char *pch = strstr(path + 1, "/");
+    char* pch = strstr(path + 1, "/");
     if(pch) {
         strncpy(pathBuff, path, (pch - path));
         if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
@@ -2011,7 +2011,7 @@ void StationsItems() {
     }
 }
 
-void setStationViaURL(const char *url) {
+void setStationViaURL(const char* url) {
     _stationName_air = "";
     _stationName_nvs = "";
     _cur_station = 0;
@@ -2038,7 +2038,7 @@ void changeBtn_released(uint8_t btnNr) {
     drawImage(_releaseBtn[btnNr], btnNr * _winButton.w, _winButton.y);
 }
 
-void savefile(const char *fileName, uint32_t contentLength) { // save the uploadfile on SD_MMC
+void savefile(const char* fileName, uint32_t contentLength) { // save the uploadfile on SD_MMC
     char fn[256];
 
     if(!_f_SD_Upload && endsWith(fileName, "jpg")) {
@@ -2093,7 +2093,7 @@ String setI2STone() {
     return tone;
 }
 
-void SD_playFile(const char *path, uint32_t resumeFilePos, bool showFN) {
+void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     if(endsWith(path, "ogg")) resumeFilePos = 0; // resume only mp3, m4a, flac and wav
     if(endsWith(path, "m3u")) {
         playlistFile.close();                    // as a precaution
@@ -2109,7 +2109,7 @@ void SD_playFile(const char *path, uint32_t resumeFilePos, bool showFN) {
     if(idx < 0) return;
     if(showFN) showFileName(path + idx + 1);
     changeState(PLAYERico);
-    connecttoFS((const char *)path, resumeFilePos);
+    connecttoFS((const char*)path, resumeFilePos);
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
         _lastconnectedfile = strdup(path);
@@ -2117,7 +2117,7 @@ void SD_playFile(const char *path, uint32_t resumeFilePos, bool showFN) {
     }
 }
 
-bool SD_rename(const char *src, const char *dest) {
+bool SD_rename(const char* src, const char* dest) {
     bool success = false;
     if(SD_MMC.exists(src)) {
         log_i("exists");
@@ -2126,13 +2126,13 @@ bool SD_rename(const char *src, const char *dest) {
     return success;
 }
 
-bool SD_newFolder(const char *folderPathName) {
+bool SD_newFolder(const char* folderPathName) {
     bool success = false;
     success = SD_MMC.mkdir(folderPathName);
     return success;
 }
 
-bool SD_delete(const char *itemPath) {
+bool SD_delete(const char* itemPath) {
     bool success = false;
     if(SD_MMC.exists(itemPath)) {
         File dirTest = SD_MMC.open(itemPath, "r");
@@ -2205,7 +2205,7 @@ void wake_up() {
     }
 }
 
-void setRTC(const char *TZString) {
+void setRTC(const char* TZString) {
     rtc.stop();
     _f_rtc = rtc.begin(_TZString.c_str());
     if(!_f_rtc) {
@@ -2717,7 +2717,7 @@ void loop() {
  *                                                                    E V E N T S                                                                    *
  *****************************************************************************************************************************************************/
 // Events from vs1053_ext or audioI2S library
-void vs1053_info(const char *info) {
+void vs1053_info(const char* info) {
     if(startsWith(info, "Request")) {
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "%s", info);
         return;
@@ -2745,7 +2745,7 @@ void vs1053_info(const char *info) {
         return;
     }
 }
-void audio_info(const char *info) {
+void audio_info(const char* info) {
     if(startsWith(info, "Request")) {
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "%s", info);
         return;
@@ -2774,29 +2774,29 @@ void audio_info(const char *info) {
     }
 }
 //----------------------------------------------------------------------------------------
-void vs1053_showstation(const char *info) {
+void vs1053_showstation(const char* info) {
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) _f_newLogoAndStation = true;
 }
-void audio_showstation(const char *info) {
+void audio_showstation(const char* info) {
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) _f_newLogoAndStation = true;
 }
 //----------------------------------------------------------------------------------------
-void vs1053_showstreamtitle(const char *info) {
+void vs1053_showstreamtitle(const char* info) {
     strcpy(_streamTitle, info);
     if(!_f_irNumberSeen) _f_newStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
-void audio_showstreamtitle(const char *info) {
+void audio_showstreamtitle(const char* info) {
     strcpy(_streamTitle, info);
     if(!_f_irNumberSeen) _f_newStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
 //----------------------------------------------------------------------------------------
-void show_ST_commercial(const char *info) {
+void show_ST_commercial(const char* info) {
     _commercial_dur = atoi(info) / 1000; // info is the duration of advertising in ms
     char cdur[10];
     itoa(_commercial_dur, cdur, 10);
@@ -2807,10 +2807,10 @@ void show_ST_commercial(const char *info) {
     _f_newCommercial = true;
     SerialPrintfln("StreamTitle: %s", info);
 }
-void vs1053_commercial(const char *info) { show_ST_commercial(info); }
-void audio_commercial(const char *info) { show_ST_commercial(info); }
+void vs1053_commercial(const char* info) { show_ST_commercial(info); }
+void audio_commercial(const char* info) { show_ST_commercial(info); }
 //----------------------------------------------------------------------------------------
-void vs1053_eof_mp3(const char *info) { // end of mp3 file (filename)
+void vs1053_eof_mp3(const char* info) { // end of mp3 file (filename)
     _f_eof = true;
     _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
@@ -2821,7 +2821,7 @@ void vs1053_eof_mp3(const char *info) { // end of mp3 file (filename)
     }
     webSrv.send("SD_playFile=end of audiofile");
 }
-void audio_eof_mp3(const char *info) { // end of mp3 file (filename)
+void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     _f_eof = true;
     _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
@@ -2833,7 +2833,7 @@ void audio_eof_mp3(const char *info) { // end of mp3 file (filename)
     webSrv.send("SD_playFile=end of audiofile");
 }
 //----------------------------------------------------------------------------------------
-void vs1053_eof_stream(const char *info) {
+void vs1053_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
@@ -2841,7 +2841,7 @@ void vs1053_eof_stream(const char *info) {
         clearStationName();
     }
 }
-void audio_eof_stream(const char *info) {
+void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
@@ -2850,27 +2850,27 @@ void audio_eof_stream(const char *info) {
     }
 }
 //----------------------------------------------------------------------------------------
-void vs1053_lasthost(const char *info) { // really connected URL
+void vs1053_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
     webSrv.send("stationURL=" + _lastconnectedhost);
 }
-void audio_lasthost(const char *info) { // really connected URL
+void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintfln("lastURL: ..  %s", _lastconnectedhost.c_str());
     webSrv.send("stationURL=" + _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------
-void vs1053_icyurl(const char *info) { // if the Radio has a homepage, this event is calling
+void vs1053_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
         SerialPrintfln("icy-url: ..  %s", info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
-void audio_icyurl(const char *info) { // if the Radio has a homepage, this event is calling
+void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
         SerialPrintfln("icy-url: ..  %s", info);
         _homepage = String(info);
@@ -2878,43 +2878,43 @@ void audio_icyurl(const char *info) { // if the Radio has a homepage, this event
     }
 }
 //----------------------------------------------------------------------------------------
-void vs1053_id3data(const char *info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
-void audio_id3data(const char *info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
+void vs1053_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
+void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
 //----------------------------------------------------------------------------------------
-void vs1053_icydescription(const char *info) {
+void vs1053_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
     if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
 
-void audio_icydescription(const char *info) {
+void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
     if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
 //----------------------------------------------------------------------------------------
-void audio_bitrate(const char *info) {
+void audio_bitrate(const char* info) {
     if(!strlen(info)) return; // guard
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
 }
-void vs1053_bitrate(const char *info) {
+void vs1053_bitrate(const char* info) {
     if(!strlen(info)) return; // guard
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
 }
 //----------------------------------------------------------------------------------------
-void ftp_debug(const char *info) {
+void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
     SerialPrintfln("ftpServer:   %s", info);
 }
 //----------------------------------------------------------------------------------------
-void RTIME_info(const char *info) { SerialPrintfln("rtime_info:  %s", info); }
+void RTIME_info(const char* info) { SerialPrintfln("rtime_info:  %s", info); }
 
 // Events from tft library
-void tft_info(const char *info) { SerialPrintfln("tft_info: .  %s", info); }
+void tft_info(const char* info) { SerialPrintfln("tft_info: .  %s", info); }
 
 void ir_code(uint8_t addr, uint8_t cmd) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x%02x, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x", addr,
@@ -3575,7 +3575,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength) {
 
     SerialPrintfln(ANSI_ESC_RED "unknown request: %s", request.c_str());
 }
-void WEBSRV_onInfo(const char *info) {
+void WEBSRV_onInfo(const char* info) {
     if(startsWith(info, "WebSocket")) return;                           // suppress WebSocket client available
     if(!strcmp("ping", info)) return;                                   // suppress ping
     if(!strcmp("to_listen", info)) return;                              // suppress to_isten
@@ -3587,7 +3587,7 @@ void WEBSRV_onInfo(const char *info) {
 }
 
 // Events from DLNA
-void dlna_info(const char *info) {
+void dlna_info(const char* info) {
     SerialPrintfln("DLNA_info:   " ANSI_ESC_WHITE "%s", info); // infos
 }
 
