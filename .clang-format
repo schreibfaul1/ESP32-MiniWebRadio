@@ -1,7 +1,7 @@
 ﻿---
 BasedOnStyle: Google
 AccessModifierOffset: '-2'
-ColumnLimit: '120'
+ColumnLimit: '150'
 IndentWidth: '4'
 ReflowComments: 'true'
 PointerAlignment: Right
@@ -10,8 +10,7 @@ SpaceBeforeAssignmentOperators: 'true'
 SpaceBeforeParens: Never
 SpaceInEmptyParentheses: 'false'
 SpacesInParentheses: 'false'
-TabWidth: '4'
-UseTab: ForContinuationAndIndentation
+UseTab: Never
 IndentPPDirectives: BeforeHash
 IncludeBlocks: Merge
 Cpp11BracedListStyle: 'true'
@@ -25,11 +24,12 @@ AlignEscapedNewlines: Left
 AlignConsecutiveDeclarations: 'true'
 AlignConsecutiveMacros: 'true'
 AlignAfterOpenBracket: Align
+AllowShortEnumsOnASingleLine: 'true'
 
 BraceWrapping:
   AfterClass:      false
   AfterControlStatement: false
-  AfterEnum:       true
+  AfterEnum:       false
   AfterFunction:   false
   AfterNamespace:  true
   AfterObjCDeclaration: true

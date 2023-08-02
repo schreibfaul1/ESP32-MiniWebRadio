@@ -112,7 +112,7 @@
 #define SOAP_DEFAULT_BROWSE_FLAG           "BrowseDirectChildren"
 #define SOAP_DEFAULT_BROWSE_FILTER         "*"
 #define SOAP_DEFAULT_BROWSE_STARTING_INDEX 0
-#define SOAP_DEFAULT_BROWSE_MAX_COUNT      300
+#define SOAP_DEFAULT_BROWSE_MAX_COUNT      1000
 #define SOAP_DEFAULT_BROWSE_SORT_CRITERIA  ""
 
 // selected DIDL attributes for scanning
@@ -125,10 +125,10 @@
 #define DIDL_ATTR_SAMPLEFREQU "sampleFrequency="
 
 extern __attribute__((weak)) void dlna_info(const char *);
-extern __attribute__((weak)) void dlna_server(uint8_t serverId, String IP_addr, uint16_t port,
+extern __attribute__((weak)) void dlna_server(uint8_t serverId, size_t serverSize, String IP_addr, uint16_t port,
                                               String friendlyName, String controlURL);
-extern __attribute__((weak)) void dlna_folder(String name, String id, size_t childCount);
-extern __attribute__((weak)) void dlna_file(String name, String id, size_t size, String uri, bool isAudio);
+extern __attribute__((weak)) void dlna_folder(bool lastItem, String name = "", String id = "", size_t childCount = 0);
+extern __attribute__((weak)) void dlna_file(bool lastItem, String name = "", String id = "", size_t size = 0, String uri = "", bool isAudio = false);
 
 // for replacing predefined XML entities in server reply
 enum eXmlReplaceState

@@ -114,13 +114,13 @@ function getData(path, callback) {
     xhr.setRequestHeader('dataType', 'json')
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
     xhr.onreadystatechange = function () { // Call a function when the state changes.
-    if (xhr.readyState === 4) {
-        var json = JSON.parse(xhr.responseText)
-        if(callback) callback(json)
-        if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
+        if (xhr.readyState === 4) {
+            var json = JSON.parse(xhr.responseText)
+            if(callback) callback(json)
+            if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
+        }
     }
-  }
-  xhr.send() // send
+    xhr.send() // send
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -476,7 +476,7 @@ function dlnaPlayer_buildFileSystemTree(path) {
                 state: {
                     opened: true
                 },
-                type: 'folder',
+                type: 'server',
                 children: [],
                 data: {
                     path: '/',
@@ -485,23 +485,26 @@ function dlnaPlayer_buildFileSystemTree(path) {
             }
         },
         'types': {
+            'server': {  // dlna server green
+                'icon': iconDLNAGreen
+            },
             'folder': {  // folder_yellow.png (24x24px)
-              'icon': iconFolderYellow
+                'icon': iconFolderYellow
             },
             'file': { // file_red.png
-              'icon': iconFileRed
+                'icon': iconFileRed
             },
             'audio': { // file_green.png
-              'icon': iconFileGreen
+                'icon': iconFileGreen
             },
             'image': { // file_blue.png
-              'icon': iconFileBlue
+                'icon': iconFileBlue
             },
             'playlist': { // file_blue.png
-              'icon': iconFileYellow
+                'icon': iconFileYellow
             },
             'default': { // file_yellow.png
-              'icon': iconFileRed
+                'icon': iconFileRed
             }
         },
         plugins: ["contextmenu", "themes", "types"],
