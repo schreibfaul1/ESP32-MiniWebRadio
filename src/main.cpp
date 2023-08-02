@@ -116,18 +116,18 @@ String         _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String         _media_downloadIP = "";
 vector<String> _names{};
 
-char _hl_item[11][40]{                          // Title in headline
-                "   Internet Radio   ",         // "* интернет-радио *"  "ραδιόφωνο Internet"
-                "   Internet Radio   ",
-                "   Internet Radio   ",
-                "        Clock       ",         // Clock "** часы́ **"  "** ρολόι **"
-                "        Clock       ",
-                "     Brightness     ",         // Brightness яркость λάμψη
-                "    Audio player    ",         // "** цифрово́й плеер **"
-                "    Audio player    ",
-                "    Alarm (hh:mm)   ",         // Alarm
-                "  Off Timer (h:mm)  ",         // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-                "        DLNA        ",         // Digital Living Network Alliance
+char _hl_item[11][40]{       // Title in headline
+    "   Internet Radio   ",  // "* интернет-радио *"  "ραδιόφωνο Internet"
+    "   Internet Radio   ",  //
+    "   Internet Radio   ",  //
+    "        Clock       ",  // Clock "** часы́ **"  "** ρολόι **"
+    "        Clock       ",  //
+    "     Brightness     ",  // Brightness яркость λάμψη
+    "    Audio player    ",  // "** цифрово́й плеер **"
+    "    Audio player    ",  //
+    "    Alarm (hh:mm)   ",  // Alarm
+    "  Off Timer (h:mm)  ",  // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+    "        DLNA        ",  // Digital Living Network Alliance
 };
 
 enum status {
@@ -662,6 +662,8 @@ void timer100ms(){
 /*****************************************************************************************************************************************************
  *                                                               D I S P L A Y                                                                       *
  *****************************************************************************************************************************************************/
+
+// clang-format off
 inline void clearHeader()             {tft.fillRect(_winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h,   TFT_BLACK);}
 inline void clearLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
 inline void clearStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
@@ -681,6 +683,7 @@ inline void clearDigits()             {tft.fillRect(_winDigits.x,    _winDigits.
 inline void clearAlarmDaysBar()       {tft.fillRect( 0,              _winAlarmDays.y, _dispWidth,      _winAlarmDays.h,TFT_BLACK);}
 inline void clearButtonBar()          {tft.fillRect( 0,              _winButton.y,    _dispWidth,      _winButton.h,   TFT_BLACK);}
 inline void clearAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
+// clang-format on
 
 inline uint16_t txtlen(String str) {
     uint16_t len = 0;
