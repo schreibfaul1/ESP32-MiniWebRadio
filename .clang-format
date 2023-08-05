@@ -1,43 +1,54 @@
 ﻿---
-BasedOnStyle: Google
-AccessModifierOffset: '-2'
-ColumnLimit: '120'
-IndentWidth: '4'
-ReflowComments: 'true'
-PointerAlignment: Right
-SpaceAfterLogicalNot: 'false'
-SpaceBeforeAssignmentOperators: 'true'
+AccessModifierOffset: -2
+ColumnLimit: 150
+IndentWidth: 4
+ReflowComments: true
+PointerAlignment: Left
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: Never
-SpaceInEmptyParentheses: 'false'
-SpacesInParentheses: 'false'
-TabWidth: '4'
-UseTab: ForContinuationAndIndentation
+SpaceInEmptyParentheses: false
+SpacesInParentheses: false
+UseTab: Never
 IndentPPDirectives: BeforeHash
 IncludeBlocks: Merge
-Cpp11BracedListStyle: 'true'
-AllowShortLoopsOnASingleLine: 'true'
+Cpp11BracedListStyle: true
+
+AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
 AllowShortIfStatementsOnASingleLine: Always
-AllowShortBlocksOnASingleLine: 'true'
-AllowAllParametersOfDeclarationOnNextLine: 'true'
-AllowAllArgumentsOnNextLine: 'true'
-AlignTrailingComments: 'true'
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowAllArgumentsOnNextLine: true
+
+AlignTrailingComments: true
 AlignEscapedNewlines: Left
-AlignConsecutiveDeclarations: 'true'
-AlignConsecutiveMacros: 'true'
+AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true
 AlignAfterOpenBracket: Align
 
+SortUsingDeclarations: true
+
+BreakBeforeBraces: Custom
 BraceWrapping:
+  AfterCaseLabel:  false
   AfterClass:      false
   AfterControlStatement: false
-  AfterEnum:       true
+  AfterEnum:       false
   AfterFunction:   false
-  AfterNamespace:  true
-  AfterObjCDeclaration: true
-  AfterStruct:     true
-  AfterUnion:      true
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  AfterExternBlock: false
   BeforeCatch:     true
   BeforeElse:      true
   IndentBraces:    false
-BreakBeforeBraces: Custom
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
 
 ...

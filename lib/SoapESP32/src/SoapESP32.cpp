@@ -695,7 +695,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
     // add valid container to result list
     info.isDirectory = true;
 
-    if(dlna_folder) dlna_folder(info.name, info.id, info.size);
+    if(dlna_folder) dlna_folder(false, info.name, info.id, info.size);
 
     return true;
 }
@@ -834,7 +834,7 @@ bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, c
     // add valid file to result list
     info.isDirectory = false;
     m_downloadPort = info.downloadPort;
-    if(dlna_file) dlna_file(info.name, info.id, info.size, info.uri, info.fileType == fileTypeAudio);
+    if(dlna_file) dlna_file(false, info.name, info.id, info.size, info.uri, info.fileType == fileTypeAudio);
 
     return true;
 }
@@ -977,6 +977,8 @@ end_stop:
         sprintf(m_chbuf, "found %d folders and %d files", countContainer, countItem);
         dlna_info(m_chbuf);
     }
+    if(dlna_file) dlna_file(true);
+    if(dlna_folder) dlna_folder(true);
 
     // TEST
 #if CORE_DEBUG_LEVEL > 3
@@ -1373,7 +1375,7 @@ void SoapESP32::loop(){
     switch(m_status){
         case GET_SERVER_INFO:
                     if(m_idx >= m_server.size()) {m_status = IDLE; m_idx = 0; break;}
-                    if(dlna_server){ dlna_server(m_idx,
+                    if(dlna_server){ dlna_server(m_idx, m_server.size(),
                                                  m_server[m_idx].ip.toString(),
                                                  m_server[m_idx].port,
                                                  m_server[m_idx].friendlyName,
