@@ -1,5 +1,4 @@
 ﻿---
-BasedOnStyle: llvm
 AccessModifierOffset: -2
 ColumnLimit: 150
 IndentWidth: 4
@@ -14,17 +13,24 @@ UseTab: Never
 IndentPPDirectives: BeforeHash
 IncludeBlocks: Merge
 Cpp11BracedListStyle: true
-AllowShortLoopsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: Always
+
 AllowShortBlocksOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: Always
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowAllArgumentsOnNextLine: true
+
 AlignTrailingComments: true
 AlignEscapedNewlines: Left
 AlignConsecutiveDeclarations: true
 AlignConsecutiveMacros: true
 AlignAfterOpenBracket: Align
-AllowShortEnumsOnASingleLine: true
+
+SortUsingDeclarations: true
 
 BreakBeforeBraces: Custom
 BraceWrapping:
@@ -37,9 +43,12 @@ BraceWrapping:
   AfterObjCDeclaration: false
   AfterStruct:     false
   AfterUnion:      false
+  AfterExternBlock: false
   BeforeCatch:     true
   BeforeElse:      true
   IndentBraces:    false
-
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
 
 ...

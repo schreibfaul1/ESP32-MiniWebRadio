@@ -987,24 +987,12 @@ void showStreamTitle(const char* streamtitle) {
     ST.replace("| ", "\n");  // or
     ST.replace("|", "\n");
     switch(strlenUTF8(ST.c_str())) {
-    case 0 ... 30:
-        tft.setFont(_fonts[5]);
-        break;
-    case 31 ... 43:
-        tft.setFont(_fonts[4]);
-        break;
-    case 44 ... 65:
-        tft.setFont(_fonts[3]);
-        break;
-    case 66 ... 130:
-        tft.setFont(_fonts[2]);
-        break;
-    case 131 ... 200:
-        tft.setFont(_fonts[1]);
-        break;
-    default:
-        tft.setFont(_fonts[0]);
-        break;
+    case 0 ... 30: tft.setFont(_fonts[5]); break;
+    case 31 ... 43: tft.setFont(_fonts[4]); break;
+    case 44 ... 65: tft.setFont(_fonts[3]); break;
+    case 66 ... 130: tft.setFont(_fonts[2]); break;
+    case 131 ... 200: tft.setFont(_fonts[1]); break;
+    default: tft.setFont(_fonts[0]); break;
     }
     display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, 5, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
@@ -1035,24 +1023,12 @@ void showLogoAndStationName() {
 void showStationName(String sn) {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     switch(strlenUTF8(sn.c_str())) {
-    case 0 ... 20:
-        tft.setFont(_fonts[5]);
-        break;
-    case 21 ... 32:
-        tft.setFont(_fonts[4]);
-        break;
-    case 33 ... 45:
-        tft.setFont(_fonts[3]);
-        break;
-    case 46 ... 60:
-        tft.setFont(_fonts[2]);
-        break;
-    case 61 ... 90:
-        tft.setFont(_fonts[1]);
-        break;
-    default:
-        tft.setFont(_fonts[0]);
-        break;
+    case 0 ... 20: tft.setFont(_fonts[5]); break;
+    case 21 ... 32: tft.setFont(_fonts[4]); break;
+    case 33 ... 45: tft.setFont(_fonts[3]); break;
+    case 46 ... 60: tft.setFont(_fonts[2]); break;
+    case 61 ... 90: tft.setFont(_fonts[1]); break;
+    default: tft.setFont(_fonts[0]); break;
     }
     display_info(sn.c_str(), _winName.x, _winName.y, TFT_CYAN, 10, 0, _winName.w, _winName.h);
     xSemaphoreGive(mutex_display);
@@ -1092,24 +1068,12 @@ void showFileName(const char* fname) {
     clearLogo();
     if(!fname) return;
     switch(strlenUTF8(fname)) {
-    case 0 ... 15:
-        tft.setFont(_fonts[5]);
-        break;
-    case 16 ... 30:
-        tft.setFont(_fonts[4]);
-        break;
-    case 31 ... 70:
-        tft.setFont(_fonts[3]);
-        break;
-    case 71 ... 100:
-        tft.setFont(_fonts[2]);
-        break;
-    case 101 ... 150:
-        tft.setFont(_fonts[1]);
-        break;
-    default:
-        tft.setFont(_fonts[0]);
-        break;
+    case 0 ... 15: tft.setFont(_fonts[5]); break;
+    case 16 ... 30: tft.setFont(_fonts[4]); break;
+    case 31 ... 70: tft.setFont(_fonts[3]); break;
+    case 71 ... 100: tft.setFont(_fonts[2]); break;
+    case 101 ... 150: tft.setFont(_fonts[1]); break;
+    default: tft.setFont(_fonts[0]); break;
     }
     display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w, _winName.h);
 }
@@ -1259,34 +1223,18 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall) {
 void display_sleeptime(int8_t ud) { // set sleeptimer
     if(ud == 1) {
         switch(_sleeptime) {
-        case 0 ... 14:
-            _sleeptime = (_sleeptime / 5) * 5 + 5;
-            break;
-        case 15 ... 59:
-            _sleeptime = (_sleeptime / 15) * 15 + 15;
-            break;
-        case 60 ... 359:
-            _sleeptime = (_sleeptime / 60) * 60 + 60;
-            break;
-        default:
-            _sleeptime = 360;
-            break; // max 6 hours
+        case 0 ... 14: _sleeptime = (_sleeptime / 5) * 5 + 5; break;
+        case 15 ... 59: _sleeptime = (_sleeptime / 15) * 15 + 15; break;
+        case 60 ... 359: _sleeptime = (_sleeptime / 60) * 60 + 60; break;
+        default: _sleeptime = 360; break; // max 6 hours
         }
     }
     if(ud == -1) {
         switch(_sleeptime) {
-        case 1 ... 15:
-            _sleeptime = ((_sleeptime - 1) / 5) * 5;
-            break;
-        case 16 ... 60:
-            _sleeptime = ((_sleeptime - 1) / 15) * 15;
-            break;
-        case 61 ... 360:
-            _sleeptime = ((_sleeptime - 1) / 60) * 60;
-            break;
-        default:
-            _sleeptime = 0;
-            break; // min
+        case 1 ... 15: _sleeptime = ((_sleeptime - 1) / 5) * 5; break;
+        case 16 ... 60: _sleeptime = ((_sleeptime - 1) / 15) * 15; break;
+        case 61 ... 360: _sleeptime = ((_sleeptime - 1) / 60) * 60; break;
+        default: _sleeptime = 0; break; // min
         }
     }
     char tmp[10];
@@ -3025,8 +2973,7 @@ void ir_key(uint8_t key) {
             changeState(RADIO);
             break;
         }
-    default:
-        break;
+    default: break;
     }
 }
 void ir_long_key(int8_t key) {
