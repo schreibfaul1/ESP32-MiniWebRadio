@@ -29,21 +29,20 @@ const char index_html[] PROGMEM = R"=====(
     <meta name="keywords" content="">
     <meta name="description" content="index">
     <meta name="ROBOTS" content="NOINDEX, NOFOLLOW">
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-    <meta http-equiv="content-type" content="application/xhtml+xml; charset=UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta http-equiv="content-style-type" content="text/css">
     <meta http-equiv="expires" content="0">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid-theme.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css">
 
-<!--   <link rel="stylesheet" href="SD/css/jstree-style.css" />  -->
-<!--   <link rel="stylesheet" href="SD/css/jquery-ui.css" />     -->
-<!--   <link rel="stylesheet" href="SD/css/jsgrid.css" />        -->
-<!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css" /> -->
+<!--   <link rel="stylesheet" href="SD/css/jstree-style.css">  -->
+<!--   <link rel="stylesheet" href="SD/css/jquery-ui.css">     -->
+<!--   <link rel="stylesheet" href="SD/css/jsgrid.css">        -->
+<!--   <link rel="stylesheet" href="SD/css//jsgrid-theme.css"> -->
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
@@ -53,15 +52,15 @@ const char index_html[] PROGMEM = R"=====(
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script>
 
-<!--  <script src="SD/js/jstree.js"></script>    --->
-<!--  <script src="SD/js/jquery.js"></script>    --->
-<!--  <script src="SD/js/jquery-ui.js"></script> --->
-<!--  <script src="SD/js/jsgrid.js"></script>    --->
-<!--  <script src="SD/js/xlsx.js"></script>      --->
-<!--  <script src="SD/js/FileSaver.js"></script> --->
+<!--  <script src="SD/js/jstree.js"></script>    -->
+<!--  <script src="SD/js/jquery.js"></script>    -->
+<!--  <script src="SD/js/jquery-ui.js"></script> -->
+<!--  <script src="SD/js/jsgrid.js"></script>    -->
+<!--  <script src="SD/js/xlsx.js"></script>      -->
+<!--  <script src="SD/js/FileSaver.js"></script> -->
 
 
-    <style type="text/css">           /* optimized with csstidy */
+    <style>           /* optimized with csstidy */
         html {  /* This is the groundplane */
             font-family : serif;
             height : 100%;
@@ -164,17 +163,17 @@ const char index_html[] PROGMEM = R"=====(
           display: none;
         }
         #div-tone-s{
-          display: none;  // audioI2S SW decoder
+          display: none;  /* audioI2S SW decoder */
         }
         #div-tone-h{
-          display: none;  // vs1053 HW decoder
+          display: none;  /* vs1053 HW decoder */
         }
         canvas {
             left : 0;
             margin-left : 0;
             display : inline-block;
-            //width : 96px;
-            //height : 96px;
+            /* width : 96px;
+               height : 96px; */
             border : #000 solid 2px;
         }
         .jsgrid-header-cell {
@@ -1620,58 +1619,58 @@ function chIRcmd(btn){  // IR command, value changed
 <div id="content" >
     <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
     <div id="preloaded-images">
-        <img src="SD/png/Radio_Green.png"               width="1" height="1" loading="eager" alt="Image 01" />
-        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" loading="eager" alt="Image 02" />
-        <img src="SD/png/Station_Green.png"             width="1" height="1" loading="eager" alt="Image 03" />
-        <img src="SD/png/Station_Yellow.png"            width="1" height="1" loading="eager" alt="Image 04" />
-        <img src="SD/png/MP3_Green.png"                 width="1" height="1" loading="eager" alt="Image 05" />
-        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" loading="eager" alt="Image 06" />
-        <img src="SD/png/Search_Green.png"              width="1" height="1" loading="eager" alt="Image 06" />
-        <img src="SD/png/Search_Yellow.png"             width="1" height="1" loading="eager" alt="Image 07" />
-        <img src="SD/png/About_Green.png"               width="1" height="1" loading="eager" alt="Image 08" />
-        <img src="SD/png/About_Yellow.png"              width="1" height="1" loading="eager" alt="Image 09" />
-        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" loading="eager" alt="Image 10" />
-        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" loading="eager" alt="Image 11" />
-        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" loading="eager" alt="Image 12" />
-        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" loading="eager" alt="Image 13" />
-        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" loading="eager" alt="Image 14" />
-        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" loading="eager" alt="Image 15" />
-        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" loading="eager" alt="Image 16" />
-        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" loading="eager" alt="Image 17" />
-        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" loading="eager" alt="Image 18" />
-        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" loading="eager" alt="Image 19" />
-        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" loading="eager" alt="Image 20" />
-        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" loading="eager" alt="Image 21" />
-        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" loading="eager" alt="Image 22" />
-        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" loading="eager" alt="Image 23" />
-        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" loading="eager" alt="Image 24" />
-        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" loading="eager" alt="Image 25" />
-        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" loading="eager" alt="Image 26" />
-        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="eager" alt="Image 27" />
-        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="eager" alt="Image 28" />
-        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="eager" alt="Image 29" />
-        <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="eager" alt="Image 30" />
-        <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="eager" alt="Image 30" />
-        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="eager" alt="Image 31" />
+        <img src="SD/png/Radio_Green.png"               width="1" height="1" loading="lazy" alt="Image 01">
+        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" loading="lazy" alt="Image 02">
+        <img src="SD/png/Station_Green.png"             width="1" height="1" loading="lazy" alt="Image 03">
+        <img src="SD/png/Station_Yellow.png"            width="1" height="1" loading="lazy" alt="Image 04">
+        <img src="SD/png/MP3_Green.png"                 width="1" height="1" loading="lazy" alt="Image 05">
+        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" loading="lazy" alt="Image 06">
+        <img src="SD/png/Search_Green.png"              width="1" height="1" loading="lazy" alt="Image 06">
+        <img src="SD/png/Search_Yellow.png"             width="1" height="1" loading="lazy" alt="Image 07">
+        <img src="SD/png/About_Green.png"               width="1" height="1" loading="lazy" alt="Image 08">
+        <img src="SD/png/About_Yellow.png"              width="1" height="1" loading="lazy" alt="Image 09">
+        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" loading="lazy" alt="Image 10">
+        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 11">
+        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" loading="lazy" alt="Image 12">
+        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" loading="lazy" alt="Image 13">
+        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 14">
+        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" loading="lazy" alt="Image 15">
+        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" loading="lazy" alt="Image 16">
+        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" loading="lazy" alt="Image 17">
+        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" loading="lazy" alt="Image 18">
+        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" loading="lazy" alt="Image 19">
+        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 20">
+        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" loading="lazy" alt="Image 21">
+        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" loading="lazy" alt="Image 22">
+        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" loading="lazy" alt="Image 23">
+        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" loading="lazy" alt="Image 24">
+        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 25">
+        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" loading="lazy" alt="Image 26">
+        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="lazy" alt="Image 27">
+        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="lazy" alt="Image 28">
+        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 29">
+        <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="lazy" alt="Image 30">
+        <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="lazy" alt="Image 30">
+        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
     </div>
 
     <div id="dialog">
         <table>
             <tr>
                 <td> Hide </td>
-                <td> <input type="checkbox" id="chkHide" /></td>
+                <td> <input type="checkbox" id="chkHide"></td>
             </tr>
             <tr>
                 <td>  Cy  </td>
-                <td> <input type="text" id="txtCy" size="100"/></td>
+                <td> <input type="text" id="txtCy" size="100"></td>
             </tr>
             <tr>
                 <td>  StationName  </td>
-                <td> <input type="text" id="txtStationName" size="100"/></td>
+                <td> <input type="text" id="txtStationName" size="100"></td>
             </tr>
             <tr>
                 <td>  StreamURL  </td>
-                <td> <input type="text" id="txtStreamURL" size="100"/></td>
+                <td> <input type="text" id="txtStreamURL" size="100"></td>
             </tr>
         </table>
     </div>
@@ -1680,12 +1679,12 @@ function chIRcmd(btn){  // IR command, value changed
 <!--===============================================================================================================================================-->
     <div style="height: 66px; display: flex;">
         <div style="flex: 0 0 445px;">
-            <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()" />
-            <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()" />
-            <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()" />
-            <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()" />
-            <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()" />
-            <img id="btn6" src="SD/png/About_Green.png" alt="radio" onclick="showTab6()" />
+            <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()">
+            <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()">
+            <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()">
+            <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()">
+            <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()">
+            <img id="btn6" src="SD/png/About_Green.png" alt="radio" onclick="showTab6()">
         </div>
         <div style="font-size: 50px; text-align: center; flex: 1;">
             MiniWebRadio
@@ -1700,12 +1699,12 @@ function chIRcmd(btn){  // IR command, value changed
                           onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
                           onmouseup ="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';"
-                          ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';" />
+                          ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';">
                 <img src="SD/png/Button_Next_Green.png" alt="next"
                           onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
                           ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
                           onmouseup= "socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';"
-                          ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';" />
+                          ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';">
             </div>
             <div style="flex:1;">
                 <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
@@ -1720,10 +1719,10 @@ function chIRcmd(btn){  // IR command, value changed
             <div id="div-logo-m" style="flex: 0 0 210px;">
                 <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
             </div>
-            <div id="div-tone-h" style="flex; flex:1; justify-content: center;">
+            <div id="div-tone-h" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:108px;">
                     <label class="sdr_lbl_left">Treble Gain:</label>
-                    <div class="slidecontainer" style="float: left; width 180px; height: 25px;">
+                    <div class="slidecontainer" style="float: left; width: 180px; height: 25px;">
                         <input type="range" min="0" max="15" value="8" id="TrebleGain"
                         onmouseup="slider_TG_mouseUp()"
                         ontouchend="slider_TG_mouseUp()"
@@ -1760,10 +1759,10 @@ function chIRcmd(btn){  // IR command, value changed
                     <label class="sdr_lbl_measure">Hz</label>
                 </div>
             </div>
-            <div id="div-tone-s" style="flex; flex:1; justify-content: center;">
+            <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
                     <label class="sdr_lbl_left">Low:</label>
-                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="LowPass"
                         onmouseup="slider_LP_mouseUp()"
                         ontouchend="slider_LP_mouseUp()"
@@ -1772,7 +1771,7 @@ function chIRcmd(btn){  // IR command, value changed
                     <label id="label_LP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
                     <label class="sdr_lbl_left">Band:</label>
-                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="BandPass"
                         onmouseup="slider_BP_mouseUp()"
                         ontouchend="slider_BP_mouseUp()"
@@ -1781,7 +1780,7 @@ function chIRcmd(btn){  // IR command, value changed
                     <label id="label_BP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
                     <label class="sdr_lbl_left">High:</label>
-                    <div class="slidecontainer" style="float: left; width 180px; height: 40px;">
+                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="HighPass"
                         onmouseup="slider_HP_mouseUp()"
                         ontouchend="slider_HP_mouseUp()"
@@ -1799,17 +1798,17 @@ function chIRcmd(btn){  // IR command, value changed
                     ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    onclick="socket.send('downvolume')" />
+                    onclick="socket.send('downvolume')">
                 <img src="SD/png/Button_Volume_Up_Blue.png" alt="Vol_up"
                     onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                     ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    onclick="socket.send('upvolume')" />
+                    onclick="socket.send('upvolume')">
                 <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
                     onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
                     ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                    onclick="socket.send('setmute')" />
+                    onclick="socket.send('setmute')">
             </div>
             <div style="flex:1;">
                 <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd"
@@ -1827,7 +1826,7 @@ function chIRcmd(btn){  // IR command, value changed
                     ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
                     ontouchend='SD/png/Button_Ready_Blue.png'"
-                    onclick="setstation()" />
+                    onclick="setstation()">
             </div>
         </div>
         <div style="height: 66px; display: flex;">
@@ -1841,7 +1840,7 @@ function chIRcmd(btn){  // IR command, value changed
                     ontouchstart="this.src='SD/png/Button_Test_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Test_Green.png'"
                     ontouchend="this.src='SD/png/Button_Test_Green.png'"
-                    onclick="test()" />
+                    onclick="test()">
             </div>
         </div>
         <hr>
@@ -1883,7 +1882,7 @@ function chIRcmd(btn){  // IR command, value changed
             </button>
 
             <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
-                             width: 0px;" name="img"; onchange="loadDataExcel(this.files);"/>
+                             width: 0px;" name="img"; onchange="loadDataExcel(this.files);">
             <br>
         </center>
     </div>
@@ -1891,7 +1890,7 @@ function chIRcmd(btn){  // IR command, value changed
     <div id="tab-content3">
         <div class="container" id="filetreeContainer">
             <fieldset>
-                <legend "title">Files</legend>
+                <legend> Files </legend>
                 <div class="filetree-container">
                     <div id="filebrowser">
                         <div id="audioFileTree"></div>
@@ -1911,7 +1910,7 @@ function chIRcmd(btn){  // IR command, value changed
                             ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
                             onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
                             ontouchend="this.src='SD/png/Button_Upload_Blue_s.png'"
-                            onclick="javascript:document.getElementById('audioPlayer_File').click();" />
+                            onclick="javascript:document.getElementById('audioPlayer_File').click();">
                     </div>
                     <div style="flex: 0 0 42px;">
                         <img src="SD/png/Button_Pause_Blue_s.png" alt="Pause" title="PAUSE"
@@ -1919,7 +1918,7 @@ function chIRcmd(btn){  // IR command, value changed
                             ontouchstart="this.src='SD/png/Button_Pause_Yellow_s.png'"
                             onmouseup="this.src='SD/png/Button_Pause_Blue_s.png'"
                             ontouchend="this.src='SD/png/Button_Pause_Blue_s.png'"
-                            onclick="socket.send('stopfile');" />
+                            onclick="socket.send('stopfile');">
                     </div>
                     <div style="flex: 0 0 40px;">
                         <img src="SD/png/Button_Right_Blue_s.png" alt="Resume" title="RESUME"
@@ -1932,8 +1931,8 @@ function chIRcmd(btn){  // IR command, value changed
                 </div>
                 <div id="explorerUploadProgress" class="progress-bar" role="progressbar"> </div>
                 <form method="post" accept-charset="utf-8" name="form2">
-                    <input id="audioPlayer_File" type="file" accept="audio/*" style="visibility: hidden";
-                       width: 0px;" name="audio"; onchange="uploadFile(this.files);"/>
+                    <input id="audioPlayer_File" type="file" accept="audio/*" style="visibility: hidden; width: 0px;"
+                    name="audio" onchange="uploadFile(this.files);">
                 </form>
             </fieldset>
         </div>
@@ -1966,7 +1965,7 @@ function chIRcmd(btn){  // IR command, value changed
 
         <div class="container" hidden>
             <fieldset>
-                <legend "title">DLNA</legend>
+                <legend> DLNA </legend>
                 <div class="filetree-container">
                     <div>
                         <div id="dlnaFileTree"></div>
@@ -2021,13 +2020,13 @@ function chIRcmd(btn){  // IR command, value changed
                 ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
                 onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
                 ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
-                onclick="teststreamurl()"/>
+                onclick="teststreamurl()">
             </div>
         </div>
         <div style="display: flex;">
             <div style="flex: 0 0 calc(100% - 66px); height: 66px;">
                 HomepageUrl
-                <input type="text" class="boxstyle" style=" width: calc(100% - 8px); "id="homepageurl" placeholder="HomepageURL">
+                <input type="text" class="boxstyle" style=" width: calc(100% - 8px);" id="homepageurl" placeholder="HomepageURL">
             </div>
             <div style="flex: 1; padding-left: 2px; height: 66px;">
                 <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
@@ -2083,7 +2082,7 @@ function chIRcmd(btn){  // IR command, value changed
                         ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
                         onclick="addStationsToGrid()"/>
                     <form method="post" accept-charset="utf-8" name="form1">
-                        <input name="hidden_data" id="hidden_data" type="hidden"/>
+                        <input name="hidden_data" id="hidden_data" type="hidden">
                     </form>
                 </div>
             </div>
@@ -2145,7 +2144,7 @@ function chIRcmd(btn){  // IR command, value changed
         </h3>
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content7">
+    <div id="tab-content7"> <!-- IR Settings -->
 
        <table>
             <tr>
@@ -2162,8 +2161,8 @@ function chIRcmd(btn){  // IR command, value changed
             <td> <input type="text" class="boxstyle_s" id="ir_command_0" onchange="chIRcmd(0)"  onclick="IRclick(0)"  onkeyup="chIRcmd(0)"></td>
             <td class="table_cell1"> ZERO </td>
             <td> 10 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_10" " onchange="chIRcmd(10)" onclick="IRclick(10)" onkeyup="chIRcmd(10)"></td>
-            <td class="table_cell2">  MUTE <br /> long press: SLEEP </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onchange="chIRcmd(10)" onclick="IRclick(10)" onkeyup="chIRcmd(10)"></td>
+            <td class="table_cell2">  MUTE <br> long press: SLEEP </td>
             </tr>
 
             <tr>
