@@ -325,6 +325,15 @@ const char* RTIME::gettime_xs(){  // hh:mm
     return strftime_buf;
 }
 
+const char* RTIME::gettime_xs_12h(){  // hh:mm
+    time_t rawtime;
+    struct tm * timeinfo;
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    strftime(strftime_buf, 64, "%I:%M %p",  timeinfo);
+    return strftime_buf;
+}
+
 uint8_t RTIME::getweekday(){ //So=0, Mo=1 ... Sa=6
     time(&now);
     localtime_r(&now, &timeinfo);

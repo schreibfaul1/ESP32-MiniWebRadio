@@ -42,6 +42,7 @@ uint8_t        _VUleftCh = 0;             // VU meter left channel
 uint8_t        _VUrightCh = 0;            // VU meter right channel
 uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
+uint8_t        _timeFormat = 24;          // 24 or 12
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -220,7 +221,7 @@ struct w_o {uint16_t x = 0;   uint16_t y = 180; uint16_t w =  40; uint16_t h = 4
 struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 480; uint16_t h = 120;} const _winDigits;
 struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
-uint16_t _alarmtimeXPos[5] = {2, 75, 148, 173, 246};
+uint16_t _alarmtimeXPos7S[5] = {2, 75, 148, 173, 246};
 uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
 uint8_t  _alarmdays_w = 44 + 4;
 uint8_t  _alarmdays_h = 40;
@@ -281,7 +282,8 @@ struct w_o {uint16_t x =   0; uint16_t y = 230; uint16_t w =  60; uint16_t h =  
 struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
 struct w_y {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
-uint16_t _alarmtimeXPos[5] = {12, 118, 224, 266, 372};
+uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
+uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
 uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
 uint8_t  _alarmdays_w = 64 + 4;
 uint8_t  _alarmdays_h = 56;
@@ -324,6 +326,7 @@ boolean defaultsettings(){
         jObject["toneLP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
         jObject["toneBP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
         jObject["toneHP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
+        jObject["timeFormat"]        = (int8_t)   24;
         String jO = JSON.stringify(jObject);
         file.print(jO);
     }
@@ -349,6 +352,7 @@ boolean defaultsettings(){
     _toneLP             = (int16_t)     jV["toneLP"];
     _toneBP             = (int16_t)     jV["toneBP"];
     _toneHP             = (int16_t)     jV["toneHP"];
+    _timeFormat         = (uint8_t)     jV["timeFormat"];
 
     bool f_updateSettings = false;
     if(!(const char*)jV["Timezone_Name"]     ) f_updateSettings = true;  else _TZName             = (const char*) jV["Timezone_Name"];
@@ -500,6 +504,7 @@ void updateSettings(){
     jObject["toneHP"]            = (int16_t)  _toneHP; // -40 ... +6 (dB)        audioI2S
     jObject["Timezone_Name"]     = (String)   _TZName;
     jObject["Timezone_String"]   = (String)   _TZString;
+    jObject["timeFormat"]        = (uint8_t)  _timeFormat;
 
     String jO = JSON.stringify(jObject);
     if(_settingsHash != simpleHash(jO.c_str())) {
@@ -1082,9 +1087,11 @@ void display_time(boolean showall) { // show current time on the TFT Display
     static String  t, oldt = "";
     static boolean k = false;
     uint8_t        i = 0;
-    if(showall == true) oldt = "";
+    if(showall == true) { oldt = "        ";}
     if((_state == CLOCK) || (_state == CLOCKico)) {
-        t = rtc.gettime_s();
+        if(_timeFormat == 12) t = rtc.gettime_xs_12h(); // 01:27 PM
+        else                  t = rtc.gettime_xs();     // 13:27
+
         for(i = 0; i < 5; i++) {
             if(t[i] == ':') {
                 if(k == false) {
@@ -1096,9 +1103,25 @@ void display_time(boolean showall) { // show current time on the TFT Display
                     k = false;
                 }
             }
-            if(t[i] != oldt[i]) {
-                sprintf(_chbuf, "/digits/%cgn.jpg", t[i]);
-                drawImage(_chbuf, _alarmtimeXPos[i], _winDigits.y);
+            if(_timeFormat == 12){
+                if(t[i] != oldt[i]) {
+                    sprintf(_chbuf, "/digits/foldedNumbers/%cwhite.jpg", t[i]);
+                    drawImage(_chbuf, _alarmtimeXPosFN[i], _winDigits.y);
+                    if(i == 4){
+                        if(t.substring(5,7) == "PM"){
+                            drawImage("/digits/foldedNumbers/pmwhite.jpg", _alarmtimeXPosFN[5], _winDigits.y);
+                        }
+                        else{
+                            drawImage("/digits/foldedNumbers/amwhite.jpg", _alarmtimeXPosFN[5], _winDigits.y);
+                        }
+                    }
+                }
+            }
+            else{
+                if(t[i] != oldt[i]) { // 24h representation
+                    sprintf(_chbuf, "/digits/sevenSegment/%cgreen.jpg", t[i]);
+                    drawImage(_chbuf, _alarmtimeXPos7S[i], _winDigits.y);
+                }
             }
         }
         oldt = t;
@@ -1191,7 +1214,7 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall) {
     sprintf(hhmm, "%d%d%d%d", h / 10, h % 10, m / 10, m % 10);
 
     if(showall) {
-        drawImage("/digits/drt.jpg", _alarmtimeXPos[2], _winDigits.y); // colon
+        drawImage("/digits/drt.jpg", _alarmtimeXPos7S[2], _winDigits.y); // colon
     }
 
     for(uint8_t i = 0; i < 4; i++) {
@@ -1204,17 +1227,17 @@ void display_alarmtime(int8_t xy, int8_t ud, boolean showall) {
             else
                 strcat(_path, "rt.jpg");          // show red numbers
 
-            drawImage(_path, _alarmtimeXPos[p], _winDigits.y);
+            drawImage(_path, _alarmtimeXPos7S[p], _winDigits.y);
         }
 
         else {
             if(i == updatePos) {
                 strcat(_path, "or.jpg");
-                drawImage(_path, _alarmtimeXPos[p], _winDigits.y);
+                drawImage(_path, _alarmtimeXPos7S[p], _winDigits.y);
             }
             if(i == oldPos) {
                 strcat(_path, "rt.jpg");
-                drawImage(_path, _alarmtimeXPos[p], _winDigits.y);
+                drawImage(_path, _alarmtimeXPos7S[p], _winDigits.y);
             }
         }
     }
@@ -2538,6 +2561,7 @@ void loop() {
                     h++;
                     if(h == 24) h = 0;
                     if(_f_timeAnnouncement) {
+                        if(_timeFormat == 12) if(h > 12) h -=  12;
                         sprintf(_chbuf, "/voice_time/%d_00.mp3", h);
                         SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
                     }
@@ -3492,9 +3516,21 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    ir.set_irAddress(address);
                                    return;}
 
-    if(cmd =="saveIRbuttons"){     saveIRbuttonsToNVS(); return;}
+    if(cmd == "saveIRbuttons"){    saveIRbuttonsToNVS(); return;}
 
-    if(cmd =="loadIRbuttons"){     loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
+    if(cmd == "getTimeFormat"){    webSrv.send("timeFormat=" + String(_timeFormat, 10));
+                                   return;}
+
+    if(cmd == "setTimeFormat"){    _timeFormat = param.toInt();
+                                   if(_state == CLOCK){
+                                        clearLogoAndStationname();
+                                        clearTitle();
+                                        display_time(true);
+                                   }
+                                   SerialPrintfln("TimeFormat:  " ANSI_ESC_YELLOW "new time format: " ANSI_ESC_BLUE "%sh", param.c_str());
+                                   return;}
+
+    if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
                                    char buf[150];
                                    uint8_t* buttons = ir.get_irButtons();
                                    sprintf(buf,"0x%02x,", ir.get_irAddress());
@@ -3504,7 +3540,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    buf[5 + 5 * 20] = '\0';
                                    webSrv.reply(buf, webSrv.TEXT); return;}
 
+    if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
+
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
+    webSrv.sendStatus(400);
 }
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {

@@ -342,6 +342,7 @@ function connect() {
         socket.send("gettone=")   // Now load the tones (tab Radio)
         socket.send("getnetworks=")
         socket.send("change_state=" + "0")
+        socket.send("getTimeFormat")
 
         setInterval(ping, 20000)
     };
@@ -485,6 +486,12 @@ function connect() {
                                     break
             case "IR_command":      ir_command.value=val
                                     break
+            case "timeFormat":      var radiobtn;
+                                    if     (val == '12') radiobtn = document.getElementById("h12")
+                                    else if(val == '24') radiobtn = document.getElementById("h24")
+                                    else{console.log("wrong timeFormat ", val); break;}
+                                    radiobtn.checked = true;
+                                    break;
             default:                console.log('unknown message', msg, val)
         }
     }
@@ -2089,22 +2096,38 @@ function chIRcmd(btn){  // IR command, value changed
             <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
             Author: Wolle (schreibfaul1)
         </p>
-        <div style="display: flex;">
-            <div style="flex; height:320px; ">
-                <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
-            </div>
 
-            <div style="display: flex; padding-left: 10px; align-items: center;">
-                <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings"
-                        onmousedown="this.src='SD/png/Remote_Control_Yellow.png'"
-                        ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'"
-                        onmouseup="this.src='SD/png/Remote_Control_Blue.png'"
-                        ontouchend="this.src='SD/png/Remote_Control_Blue.png'"
-                        onclick="showTab7()"/>
-                <span style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">IR Settings</span>
-            </div>
 
-        </div>
+        <table>
+            <tr>
+                <td style="vertical-align: top;">
+                    <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+                </td>
+                <td>
+                    <div style="display: flex;">
+                        <div style="width=64px; height=64px;">
+                            <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings" onmousedown="this.src='SD/png/Remote_Control_Yellow.png'" ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'" onmouseup="this.src='SD/png/Remote_Control_Blue.png'" ontouchend="this.src='SD/png/Remote_Control_Blue.png'" onclick="showTab7()">
+                        </div>
+                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
+                            <p> IR Settings </p>
+                        </div>
+                    </div>
+                    <br>
+                    <fieldset>
+                        <legend> 12-hour and 24-hour time format </legend>
+                        <div>
+                            <input type="radio" id="h12" name="timeFormat" value="12h" onclick="socket.send('setTimeFormat=12');">
+                            <label for="h12">12h</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="h24" name="timeFormat" value="24h" checked onclick="socket.send('setTimeFormat=24');">
+                            <label for="h24">24h</label>
+                        </div>
+                    </fieldset>
+                </td>
+            </tr>
+        </table>
+
         <h3>
             Connected WiFi network
             <select class="boxstyle" id="ssid" ></select>

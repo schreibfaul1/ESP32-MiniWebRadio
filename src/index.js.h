@@ -115,9 +115,11 @@ function getData(path, callback) {
     xhr.setRequestHeader('Content-type', 'application/json; charset=utf-8')
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
-            var json = JSON.parse(xhr.responseText)
-            if(callback) callback(json)
             if (xhr.status != 200) console.log("getData error:", path, "status:", xhr.status)
+            else{
+                var json = JSON.parse(xhr.responseText)
+                if(callback) callback(json)
+            }
         }
     }
     xhr.send() // send
@@ -334,7 +336,7 @@ function audioPlayer_buildFileSystemTree(path) {
                             });
                             if (childNode) {
                                 ref.edit(childNode, null, function (childNode, status) {
-                                    var pathAndName = encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text) 
+                                    var pathAndName = encodeURIComponent(node.data.path) + "/" + encodeURIComponent(childNode.text)
                                     getData("SD_newFolder?" + pathAndName);
                                     refreshNode(ref, nodeId);
                                 });
