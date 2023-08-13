@@ -30,6 +30,7 @@ public:
 	const char* gettime_l();
 	const char* gettime_s();
 	const char* gettime_xs();
+	const char* gettime_xs_12h();
 	uint8_t getweekday();
 	uint16_t getMinuteOfTheDay();
 protected:

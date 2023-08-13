@@ -683,7 +683,7 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     int l= 0; // respunse length
     // HTTP header
     String httpheader="";
-    httpheader += "HTTP/1.1 200 OK\r\n";
+    httpheader += "HTTP/1.1 " +  String(HTTPstatusCode, 10) + "\r\n";
     httpheader += "Connection: close\r\n";
     httpheader += "Content-type: text/html\r\n";
     httpheader += "Content-Length: " + String(l, 10) + "\r\n";
@@ -691,8 +691,6 @@ void WebSrv::sendStatus(uint16_t HTTPstatusCode){
     httpheader += "Cache-Control: max-age=3600\r\n";
     httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
     cmdclient.print(httpheader) ;             // header sent
-
-    cmdclient.print("  ");
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::UTF8toASCII(String str){
