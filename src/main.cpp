@@ -1578,9 +1578,11 @@ void setup() {
     Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
     Version = Version.substring(0, 30);
     Serial.printf("MiniWebRadio %s\n", Version.c_str());
-    Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
     Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
     Serial.printf("FLASH size %d bytes, speed %d MHz\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed() / 1000000);
+    Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
+    Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
+    Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
     if(psramInit()) { Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size()); }
     else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio will not work properly!" ANSI_ESC_WHITE); }
     Serial.print("\n\n");
