@@ -1091,10 +1091,11 @@ void showFileName(const char* fname) {
 
 void showStationsList(){
     showHeadlineItem(STATIONSLIST);
-    tft.setFont(_fonts[0]);
+    tft.setFont(_fonts[1]);
     uint8_t staNr = 0;
+    uint8_t lineHight = _winWoHF.h / 10;
     for(staNr = 1; staNr < 11; staNr++){
-        tft.setCursor(10, _winFooter.h + (staNr -1) * 26) ;
+        tft.setCursor(10, _winFooter.h + (staNr -1) * lineHight) ;
         sprintf(_chbuf, "station_%03d", staNr);
         String content = stations.getString(_chbuf, " #not_found");
         content.replace('#','\0');
