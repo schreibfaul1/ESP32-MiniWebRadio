@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on June 19 2023
+// updated on Aug 17 2023
 
 
 #pragma once
@@ -27,7 +27,7 @@ using namespace std;
 extern __attribute__((weak)) void tft_info(const char*);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y);
-extern __attribute__((weak)) void tp_released();
+extern __attribute__((weak)) void tp_released(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_released();
 
 #define ANSI_ESC_BLACK      "\033[30m"
@@ -129,7 +129,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         boolean   drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
         boolean   drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         uint16_t  color565(uint8_t r, uint8_t g, uint8_t b);
-        size_t    writeText(const uint8_t *str, int16_t maxWidth = -1, int16_t maxHeight = -1);
+        size_t    writeText(const uint8_t *str, int16_t maxWidth = -1, int16_t maxHeight = -1, boolean noWrap = false);
 
         inline void setTextColor(uint16_t  color){_textcolor=color;}
         inline void setFont(const uint16_t* font){_font=font;

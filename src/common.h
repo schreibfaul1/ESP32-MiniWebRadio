@@ -171,6 +171,7 @@ void showStationName(String sn);
 void showStationLogo(String ln);
 void showFileLogo(uint8_t state);
 void showFileName(const char* fname);
+void showStationsList(uint16_t staListNr);
 void display_time(boolean showall = false);
 void display_alarmDays(uint8_t ad, boolean showall=false);
 void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false);

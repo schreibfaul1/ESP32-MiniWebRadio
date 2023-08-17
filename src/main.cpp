@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.8.4a Aug 13/2023                                                                                         ";
+    Version 2.9 Aug 17/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -43,6 +43,8 @@ uint8_t        _VUrightCh = 0;            // VU meter right channel
 uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
+uint8_t        _staListPos = 0;
+uint16_t       _staListNr = 0;
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -117,7 +119,7 @@ String         _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String         _media_downloadIP = "";
 vector<String> _names{};
 
-char _hl_item[11][40]{
+char _hl_item[12][40]{
     "   Internet Radio   ", // "* интернет-радио *"  "ραδιόφωνο Internet"
     "   Internet Radio   ", //
     "   Internet Radio   ", //
@@ -129,6 +131,7 @@ char _hl_item[11][40]{
     "    Alarm (hh:mm)   ", // Alarm
     "  Off Timer (h:mm)  ", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
     "        DLNA        ", // Digital Living Network Alliance
+    "   Stations List    ",
 };
 
 enum status {
@@ -142,7 +145,8 @@ enum status {
     PLAYERico = 7,
     ALARM = 8,
     SLEEP = 9,
-    DLNA = 10
+    DLNA = 10,
+    STATIONSLIST = 11
 };
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
@@ -218,8 +222,9 @@ struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 2
 struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
 struct w_b {uint16_t x = 0;   uint16_t y = 166; uint16_t w = 320; uint16_t h =  6; } const _winVolBar;
 struct w_o {uint16_t x = 0;   uint16_t y = 180; uint16_t w =  40; uint16_t h = 40; } const _winButton;
-struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 480; uint16_t h = 120;} const _winDigits;
-struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
+struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
+struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
+struct w_w {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF; // without Header and Footer
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
 uint16_t _alarmtimeXPos7S[5] = {2, 75, 148, 173, 246}; // seven segment digits
 uint16_t _alarmtimeXPosFN[6] = {0, 56, 112, 152, 208, 264}; // folded numbers
@@ -282,6 +287,7 @@ struct w_b {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =  
 struct w_o {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
 struct w_y {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
+struct w_w {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;} const _winWoHF; // without Header and Footer
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
 uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
 uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
@@ -674,8 +680,9 @@ inline void clearHeader()             {tft.fillRect(_winHeader.x,    _winHeader.
 inline void clearLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
 inline void clearStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
 inline void clearLogoAndStationname() {tft.fillRect(_winFName.x,     _winFName.y,     _winFName.w,     _winFName.h,    TFT_BLACK);}
-inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);}
-inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);}
+inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);} // incl. VUmeter
+inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
+inline void clearWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
 inline void clearTime()               {tft.fillRect(_winTime.x,      _winTime.y,      _winTime.w,      _winTime.h,     TFT_BLACK);}
 inline void clearItem()               {tft.fillRect(_winItem.x,      _winItem.y,      _winItem.w,      _winTime.h,     TFT_BLACK);}
@@ -1083,6 +1090,26 @@ void showFileName(const char* fname) {
     }
     display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w, _winName.h);
 }
+
+void showStationsList(uint16_t staListNr){
+    clearWithOutHeaderFooter();
+    if(_sum_stations < 11) staListNr = 0;
+    else if(staListNr + 9 > _max_stations) staListNr = _max_stations - 9;
+    showHeadlineItem(STATIONSLIST);
+    tft.setFont(_fonts[1]);
+    uint8_t lineHight = _winWoHF.h / 10;
+    for(uint8_t pos = 0; pos < 10; pos++){
+        if(pos + staListNr + 1 > _sum_stations) break;
+        tft.setCursor(10, _winFooter.h + (pos) * lineHight) ;
+        sprintf(_chbuf, "station_%03d", pos + staListNr  + 1);
+        String content = stations.getString(_chbuf, " #not_found");
+        content.replace('#','\0');
+        sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",pos + staListNr  + 1, content.c_str());
+        tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+    }
+    _timeCounter = 10;
+}
+
 
 void display_time(boolean showall) { // show current time on the TFT Display
     static String  t, oldt = "";
@@ -2226,6 +2253,11 @@ void changeState(int state){
                 _f_newStreamTitle = true;
                 clearTitle();
             }
+            else if(_state == STATIONSLIST){
+                clearWithOutHeaderFooter();
+                showLogoAndStationName();
+                _f_newStreamTitle = true;
+            }
             else{
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -2240,12 +2272,12 @@ void changeState(int state){
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
             _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
             _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
+            _pressBtn[5] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[5] = "/btn/Button_List_Green.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             clearTitle();
             showVolumeBar();
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
         //    if(!_f_mute) drawImage("/btn/RADIOico1.jpg", _winButton.x, _winButton.y);
         //    else         drawImage("/btn/RADIOico2.jpg", _winButton.x, _winButton.y);
             break;
@@ -2265,8 +2297,12 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             clearVolBar();
+            break;
+        }
+        case STATIONSLIST:{
+            showStationsList(_staListNr);
             break;
         }
         case CLOCK:{
@@ -2542,6 +2578,9 @@ void loop() {
                 else if(_state == RADIO && _f_switchToClock) {
                     changeState(CLOCK);
                     _f_switchToClock = false;
+                }
+                else if(_state == STATIONSLIST){
+                    changeState(RADIO);
                 }
                 else { ; } // all other, do nothing
             }
@@ -3031,7 +3070,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
         CLOCKico_1,
         ALARM_2,
         SLEEP_1,
-        DLNA_1
+        DLNA_1,
+        STATIONSLIST_1,
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3104,6 +3144,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 btnNr = x / _winButton.w;
             }
             break;
+        case STATIONSLIST:
+            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                yPos = STATIONSLIST_1;
+            }
+            break;
         default:
             break;
     }
@@ -3121,6 +3167,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             else if(btnNr == 2){_releaseNr =  2; } // Vol+
                             else if(btnNr == 3){_releaseNr =  3; } // station--
                             else if(btnNr == 4){_releaseNr =  4; } // station++
+                            else if(btnNr == 5){_releaseNr =  5; } // list stations
                             else   {SerialPrintfln(ANSI_ESC_YELLOW "invalid button nr: %i", btnNr); break;}
                             changeBtn_pressed(btnNr);
                             break;
@@ -3184,6 +3231,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 2){_releaseNr = 92; } // Vol+
                             if(btnNr == 7){_releaseNr = 97;}  // RADIO
                             changeBtn_pressed(btnNr); break;
+        case STATIONSLIST_1:_releaseNr = 100;
+                            _staListPos = btnNr;
+                            _timeCounter = 10;
+                            break;
         default:            break;
     }
 }
@@ -3193,7 +3244,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
         fall_asleep();
     }
 }
-void tp_released(){
+void tp_released(uint16_t x, uint16_t y){
     // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
@@ -3202,8 +3253,9 @@ void tp_released(){
         case  0:    /*changeBtn_released(0);*/ break; // Mute
         case  1:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
         case  2:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
-        case  3:    prevStation(); showFooterStaNr(); changeBtn_released(3); break;  // previousstation
-        case  4:    nextStation(); showFooterStaNr(); changeBtn_released(4); break;  //  nextstation
+        case  3:    changeBtn_released(3); prevStation(); showFooterStaNr(); break;  // previousstation
+        case  4:    changeBtn_released(4); nextStation(); showFooterStaNr(); break;  //  nextstation
+        case  5:    changeBtn_released(5); changeState(STATIONSLIST); break;  //  list stations
 
         /* RADIOmenue ******************************/
         case 10:    changeState(PLAYER);
@@ -3305,14 +3357,47 @@ void tp_released(){
         case 91:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
         case 92:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
         case 97:    changeState(RADIO); break;
+
+        /* STATIONSLIST ****************************/
+        case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                        uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                        if(_staListPos + 2 < staListPos){               // wipe down
+                            if(_staListNr == 0) break;
+                            if(_staListNr >  9) _staListNr -= 9;
+                            else _staListNr = 0;
+                            showStationsList(_staListNr);
+                        }
+                        else if(staListPos + 2 < _staListPos){          // wipe up
+                            if(_staListNr + 9 >= _sum_stations) break;
+                            _staListNr += 9;
+                            showStationsList(_staListNr);
+                        }
+                        else if(staListPos == _staListPos){
+                            uint16_t staNr = _staListNr + staListPos + 1;
+                            if(staNr > _sum_stations){
+                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
+                                break;
+                            }
+                            uint8_t lineHight = _winWoHF.h / 10;
+                            tft.setCursor(10, _winFooter.h + (staListPos) * lineHight);
+                            sprintf(_chbuf, "station_%03d", staNr);
+                            String content = stations.getString(_chbuf, " #not_found");
+                            int idx = content.indexOf("#");
+                            sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
+                            tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+                            setStation(staNr);
+                            changeState(RADIO);
+                        }
+                        else log_i("unknown gesture");
+                    } break;
     }
     _releaseNr = -1;
 }
 
 void tp_long_released(){
     // log_w("long released)");
-    if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr ==50) {return;}
-    tp_released();
+    if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) {return;}
+    tp_released(0, 0);
 }
 
 //Events from websrv
