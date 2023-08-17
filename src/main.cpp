@@ -43,6 +43,7 @@ uint8_t        _VUrightCh = 0;            // VU meter right channel
 uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
+uint8_t        _staListPos = 0;
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -3061,7 +3062,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
         CLOCKico_1,
         ALARM_2,
         SLEEP_1,
-        DLNA_1
+        DLNA_1,
+        STATIONSLIST_1,
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3132,6 +3134,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
                 yPos = DLNA_1;
                 btnNr = x / _winButton.w;
+            }
+            break;
+        case STATIONSLIST:
+            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                yPos = STATIONSLIST_1;
             }
             break;
         default:
@@ -3215,6 +3223,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 2){_releaseNr = 92; } // Vol+
                             if(btnNr == 7){_releaseNr = 97;}  // RADIO
                             changeBtn_pressed(btnNr); break;
+        case STATIONSLIST_1:_releaseNr = 100;
+                            _staListPos = btnNr;
+                            _timeCounter = 10;
+                            break;
         default:            break;
     }
 }
@@ -3224,7 +3236,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
         fall_asleep();
     }
 }
-void tp_released(){
+void tp_released(uint16_t x, uint16_t y){
     // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
@@ -3337,14 +3349,34 @@ void tp_released(){
         case 91:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
         case 92:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
         case 97:    changeState(RADIO); break;
+
+        /* STATIONSLIST ****************************/
+        case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                        uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                        if(_staListPos + 2 < staListPos) log_i("swipe down");
+                        else if(staListPos + 2 < _staListPos) log_i("swipe up");
+                        else if(staListPos == _staListPos){
+                            uint8_t lineHight = _winWoHF.h / 10;
+                            log_i("button %i pressed", staListPos);
+                            tft.setCursor(10, _winFooter.h + (staListPos) * lineHight);
+                            sprintf(_chbuf, "station_%03d", staListPos + 1);
+                            String content = stations.getString(_chbuf, " #not_found");
+                            int idx = content.indexOf("#");
+                            sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staListPos + 1, content.substring(0, idx).c_str());
+                            tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+                            setStation(staListPos + 1);
+                            changeState(RADIO);
+                        }
+                        else log_i("unknown gesture");
+                    } break;
     }
     _releaseNr = -1;
 }
 
 void tp_long_released(){
     // log_w("long released)");
-    if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr ==50) {return;}
-    tp_released();
+    if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) {return;}
+    tp_released(0, 0);
 }
 
 //Events from websrv
