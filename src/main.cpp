@@ -220,8 +220,9 @@ struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 2
 struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
 struct w_b {uint16_t x = 0;   uint16_t y = 166; uint16_t w = 320; uint16_t h =  6; } const _winVolBar;
 struct w_o {uint16_t x = 0;   uint16_t y = 180; uint16_t w =  40; uint16_t h = 40; } const _winButton;
-struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 480; uint16_t h = 120;} const _winDigits;
-struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
+struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
+struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
+struct w_w {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF; // without Header and Footer
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
 uint16_t _alarmtimeXPos7S[5] = {2, 75, 148, 173, 246}; // seven segment digits
 uint16_t _alarmtimeXPosFN[6] = {0, 56, 112, 152, 208, 264}; // folded numbers
@@ -1090,26 +1091,19 @@ void showFileName(const char* fname) {
 
 void showStationsList(){
     showHeadlineItem(STATIONSLIST);
-    tft.setFont(_fonts[2]);
-    tft.setCursor(10, _winFooter.h);
+    tft.setFont(_fonts[0]);
     uint8_t staNr = 0;
-    char name[10][50] = {
-        "die erste Station 1234567890 1234567890",
-        "die zweite Station 1234567890 1234567890",
-        "die dritte Station 1234567890 1234567890",
-        "die vierte Station 1234567890 1234567890",
-        "die fünfte Station 1234567890 1234567890",
-        "die sechste Station 1234567890 1234567890",
-        "die siebente Station 1234567890 1234567890",
-        "die achte Station 1234567890 1234567890",
-        "die neunte Station 1234567890 1234567890"
-    };
-    for(staNr = 0; staNr < 8; staNr++){
-        sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",staNr, name[staNr]);
+    for(staNr = 1; staNr < 11; staNr++){
+        tft.setCursor(10, _winFooter.h + (staNr -1) * 26) ;
+        sprintf(_chbuf, "station_%03d", staNr);
+        String content = stations.getString(_chbuf, " #not_found");
+        content.replace('#','\0');
+        sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",staNr, content.c_str());
         tft.writeText((uint8_t*)_chbuf, -1, -1, true);
     }
     _timeCounter = 10;
 }
+
 
 void display_time(boolean showall) { // show current time on the TFT Display
     static String  t, oldt = "";
