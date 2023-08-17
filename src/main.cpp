@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.8.4a Aug 13/2023                                                                                         ";
+    Version 2.9 Aug 17/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -44,6 +44,7 @@ uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
 uint8_t        _staListPos = 0;
+uint16_t       _staListNr = 0;
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -1090,17 +1091,20 @@ void showFileName(const char* fname) {
     display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w, _winName.h);
 }
 
-void showStationsList(){
+void showStationsList(uint16_t staListNr){
+    clearWithOutHeaderFooter();
+    if(_sum_stations < 11) staListNr = 0;
+    else if(staListNr + 9 > _max_stations) staListNr = _max_stations - 9;
     showHeadlineItem(STATIONSLIST);
     tft.setFont(_fonts[1]);
-    uint8_t staNr = 0;
     uint8_t lineHight = _winWoHF.h / 10;
-    for(staNr = 1; staNr < 11; staNr++){
-        tft.setCursor(10, _winFooter.h + (staNr -1) * lineHight) ;
-        sprintf(_chbuf, "station_%03d", staNr);
+    for(uint8_t pos = 0; pos < 10; pos++){
+        if(pos + staListNr + 1 > _sum_stations) break;
+        tft.setCursor(10, _winFooter.h + (pos) * lineHight) ;
+        sprintf(_chbuf, "station_%03d", pos + staListNr  + 1);
         String content = stations.getString(_chbuf, " #not_found");
         content.replace('#','\0');
-        sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",staNr, content.c_str());
+        sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",pos + staListNr  + 1, content.c_str());
         tft.writeText((uint8_t*)_chbuf, -1, -1, true);
     }
     _timeCounter = 10;
@@ -2249,6 +2253,11 @@ void changeState(int state){
                 _f_newStreamTitle = true;
                 clearTitle();
             }
+            else if(_state == STATIONSLIST){
+                clearWithOutHeaderFooter();
+                showLogoAndStationName();
+                _f_newStreamTitle = true;
+            }
             else{
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -2293,8 +2302,7 @@ void changeState(int state){
             break;
         }
         case STATIONSLIST:{
-            clearWithOutHeaderFooter();
-            showStationsList();
+            showStationsList(_staListNr);
             break;
         }
         case CLOCK:{
@@ -3353,18 +3361,31 @@ void tp_released(uint16_t x, uint16_t y){
         /* STATIONSLIST ****************************/
         case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
                         uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                        if(_staListPos + 2 < staListPos) log_i("swipe down");
-                        else if(staListPos + 2 < _staListPos) log_i("swipe up");
+                        if(_staListPos + 2 < staListPos){               // wipe down
+                            if(_staListNr == 0) break;
+                            if(_staListNr >  9) _staListNr -= 9;
+                            else _staListNr = 0;
+                            showStationsList(_staListNr);
+                        }
+                        else if(staListPos + 2 < _staListPos){          // wipe up
+                            if(_staListNr + 9 >= _sum_stations) break;
+                            _staListNr += 9;
+                            showStationsList(_staListNr);
+                        }
                         else if(staListPos == _staListPos){
+                            uint16_t staNr = _staListNr + staListPos + 1;
+                            if(staNr > _sum_stations){
+                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
+                                break;
+                            }
                             uint8_t lineHight = _winWoHF.h / 10;
-                            log_i("button %i pressed", staListPos);
                             tft.setCursor(10, _winFooter.h + (staListPos) * lineHight);
-                            sprintf(_chbuf, "station_%03d", staListPos + 1);
+                            sprintf(_chbuf, "station_%03d", staNr);
                             String content = stations.getString(_chbuf, " #not_found");
                             int idx = content.indexOf("#");
-                            sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staListPos + 1, content.substring(0, idx).c_str());
+                            sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
                             tft.writeText((uint8_t*)_chbuf, -1, -1, true);
-                            setStation(staListPos + 1);
+                            setStation(staNr);
                             changeState(RADIO);
                         }
                         else log_i("unknown gesture");
