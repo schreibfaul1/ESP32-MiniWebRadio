@@ -1793,18 +1793,18 @@ bool TFT::setCursor(uint16_t x, uint16_t y) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight) {    // a pointer to string
+size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, boolean noWrap) {  // a pointer to string
 
     int16_t sHeight = height();
     int16_t sWidth =  width();
 
-    uint16_t len=0;
+    uint16_t wordLength = 0;
     uint16_t ch_count = 0;
-    while(str[len]!=0)len++;  // determine length of text
+    while(str[wordLength] !=0 ) wordLength++;  // determine length of text
 
-    static int16_t xC=64;
-    static int16_t tmp_curX=0;
-    static int16_t tmp_curY=0;
+    static int16_t xC = 64;
+    static int16_t tmp_curX = 0;
+    static int16_t tmp_curY = 0;
 
     if(_f_curPos==true){tmp_curX=_curX; tmp_curY=_curY; _f_curPos=false;} //new CursorValues?
 
@@ -1827,16 +1827,16 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight) {
     uint16_t font_height = _font[6];
     startWrite();
 
-    while(i != len) {  //until string ends
+    while(i != wordLength) {  //until string ends
         int strw=0;
         //------------------------------------------------------------------  word wrap
         a=i+1 ;
-        if(str[i] == 32) { // space
+        if(str[i] == 32 && !noWrap) { // space
             strw=font_height/4; // erstes Leerzeichen
             uint16_t fi=8;
             fi=fi + (str[i] - 32) * 4;
             strw=strw + _font[fi] +1;
-            while((str[a] != 32) && (a < len)) {
+            while((str[a] != 32) && (a < wordLength)) {
                 fi=8;
                 if((_f_utf8)&&(str[a]>=0xC2)){ //next char is UTF-8
                     uint16_t ch=str[a]; ch<<=8; ch+=str[a+1];
@@ -1861,6 +1861,26 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight) {
             else{
                 if((Ypos+strw) >= sHeight) f_wrap=true;
             }
+        }
+        if(str[i] == '\033' && (i + 4) < wordLength){ // ANSI ESC?
+            if(str[i + 1] == '[' && str[i + 2] == '3'){// ANSI ESCAPE COLOR SEQUENCE found
+                if(str[i + 4] == 'm'){
+                    switch (str[i + 3]) {
+                        case '0':   color = TFT_BLACK;         break; // ANSI_ESC_BLACK
+                        case '1':   color = TFT_RED;           break; // ANSI_ESC_RED
+                        case '2':   color = TFT_GREEN;         break; // ANSI_ESC_GREEN
+                        case '3':   color = TFT_YELLOW;        break; // ANSI_ESC_YELLOW
+                        case '4':   color = TFT_BLUE;          break; // ANSI_ESC_BLUE
+                        case '5':   color = TFT_MAGENTA;       break; // ANSI_ESC_MAGENTA
+                        case '6':   color = TFT_CYAN;          break; // ANSI_ESC_CYAN
+                        case '7':   color = TFT_WHITE;         break; // ANSI_ESC_WHITE
+                        default: log_w("unknown ANSI ESCAPE COLOR SEQUENCE "); break;
+                    }
+                    i += 5;
+                }
+                else log_w("ANSI ESCAPE COLOR SEQUENCE not impl");
+            }
+            continue;
         }
         //------------------------------------------------------------------ word wrap end
 
@@ -1887,8 +1907,15 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight) {
             uint16_t space;
             if(font_char==0) space=font_height/4; else space=0; //correct spacewidth is 1
             if(_textorientation==0) {
-                if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                if((Xpos+char_width+space)>=mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
+                if(noWrap){
+                    if((Xpos + char_width + space) >= sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos; tmp_curY=Ypos; endWrite(); return ch_count;}
+                    if((Xpos + char_width + space) >= mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos; tmp_curY=Ypos; endWrite(); return ch_count;}
+                }
+                else{ // wrap is enabled
+                    if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
+                    if((Xpos+char_width+space)>=mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
+
+                }
                 if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
                 if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
             }
