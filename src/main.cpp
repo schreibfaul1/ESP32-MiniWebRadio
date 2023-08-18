@@ -2223,6 +2223,10 @@ void changeState(int state){
     if(state == _state) return;  //nothing todo
     _f_state_isChanging = true;
     _f_volBarVisible = false;
+    if(_timeCounter){
+        _timeCounter = 0;
+        showFooterRSSI(true);
+    }
     switch(state) {
         case RADIO:{
             showHeadlineItem(RADIO);
@@ -2256,7 +2260,7 @@ void changeState(int state){
             else if(_state == STATIONSLIST){
                 clearWithOutHeaderFooter();
                 showLogoAndStationName();
-                _f_newStreamTitle = true;
+                showStreamTitle(_streamTitle);
             }
             else{
                 showLogoAndStationName();
@@ -2569,7 +2573,12 @@ void loop() {
 
         if(_timeCounter) {
             _timeCounter--;
+            if(_timeCounter < 10){
+                sprintf(_chbuf, "/common/tc%02d.bmp", _timeCounter);
+                drawImage(_chbuf, _winRSSID.x, _winRSSID.y);
+            }
             if(!_timeCounter) {
+                showFooterRSSI(true);
                 if(_state == RADIOico) changeState(RADIO);
                 else if(_state == RADIOmenue)
                     changeState(RADIO);
@@ -3055,7 +3064,6 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    _timeCounter = 5;
     enum : int8_t {
         none = -1,
         RADIO_1,
@@ -3239,6 +3247,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             break;
         default:            break;
     }
+    _timeCounter = 5;
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
     // log_w("long pressed %i  %i", x, y);
@@ -3387,6 +3396,8 @@ void tp_released(uint16_t x, uint16_t y){
                             int idx = content.indexOf("#");
                             sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
                             tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+                            _timeCounter = 0;
+                            showFooterRSSI(true);
                             setStation(staNr);
                             changeState(RADIO);
                         }
