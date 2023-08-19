@@ -3182,8 +3182,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case RADIOico_1:    changeState(RADIOmenue); break;
         case CLOCK_1:       changeState(CLOCKico);   break;
         case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; mute();}
-                            else if(btnNr == 1){_releaseNr =  1; } // Vol-
-                            else if(btnNr == 2){_releaseNr =  2; } // Vol+
+                            else if(btnNr == 1){_releaseNr =  1; _timeCounter.timer = 5;} // Vol-
+                            else if(btnNr == 2){_releaseNr =  2; _timeCounter.timer = 5;} // Vol+
                             else if(btnNr == 3){_releaseNr =  3; } // station--
                             else if(btnNr == 4){_releaseNr =  4; } // station++
                             else if(btnNr == 5){_releaseNr =  5; } // list stations
@@ -3200,8 +3200,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
                             if(btnNr == 2){_releaseNr = 22; mute();}
-                            if(btnNr == 3){_releaseNr = 23; } // Vol-
-                            if(btnNr == 4){_releaseNr = 24; } // Vol+
+                            if(btnNr == 3){_releaseNr = 23; _timeCounter.timer = 5;} // Vol-
+                            if(btnNr == 4){_releaseNr = 24; _timeCounter.timer = 5;} // Vol+
                             changeBtn_pressed(btnNr); break;
         case ALARM_2:       if(btnNr == 0){_releaseNr = 30;} // left
                             if(btnNr == 1){_releaseNr = 31;} // right
