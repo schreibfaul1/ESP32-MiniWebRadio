@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.9 Aug 17/2023                                                                                         ";
+    Version 2.9a Aug 17/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -35,7 +35,6 @@ uint8_t        _ringvolume = _max_volume; //
 uint8_t        _mute_volume = 0;          // decrement to 0 or increment to _cur_volume
 uint8_t        _brightness = 0;
 uint8_t        _state = 0;                // statemaschine
-uint8_t        _timeCounter = 0;
 uint8_t        _commercial_dur = 0;       // duration of advertising
 uint8_t        _cur_Codec = 0;
 uint8_t        _VUleftCh = 0;             // VU meter left channel
@@ -118,6 +117,11 @@ String         _TZName = "Europe/Berlin";
 String         _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String         _media_downloadIP = "";
 vector<String> _names{};
+
+struct timecounter {
+    uint8_t timer = 0;
+    float factor = 2.0;
+} _timeCounter;
 
 char _hl_item[12][40]{
     "   Internet Radio   ", // "* интернет-радио *"  "ραδιόφωνο Internet"
@@ -811,7 +815,7 @@ void showFooterRSSI(boolean show) {
         }
         show = true;
     }
-    if(show) {
+    if(show && !_timeCounter.timer) {
         switch(new_rssi) {
         case 4: {
             drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y);
@@ -1107,7 +1111,8 @@ void showStationsList(uint16_t staListNr){
         sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",pos + staListNr  + 1, content.c_str());
         tft.writeText((uint8_t*)_chbuf, -1, -1, true);
     }
-    _timeCounter = 10;
+    _timeCounter.timer = 10;
+    _timeCounter.factor = 1.0;
 }
 
 
@@ -2223,6 +2228,10 @@ void changeState(int state){
     if(state == _state) return;  //nothing todo
     _f_state_isChanging = true;
     _f_volBarVisible = false;
+    if(_timeCounter.timer){
+        _timeCounter.timer = 0;
+        showFooterRSSI(true);
+    }
     switch(state) {
         case RADIO:{
             showHeadlineItem(RADIO);
@@ -2237,7 +2246,7 @@ void changeState(int state){
             }
             else if(_state == CLOCKico){
                 showLogoAndStationName();
-                _timeCounter = 0;
+                _timeCounter.timer = 0;
                 _f_newStreamTitle = true;
             }
             else if(_state == SLEEP){
@@ -2256,7 +2265,7 @@ void changeState(int state){
             else if(_state == STATIONSLIST){
                 clearWithOutHeaderFooter();
                 showLogoAndStationName();
-                _f_newStreamTitle = true;
+                showStreamTitle(_streamTitle);
             }
             else{
                 showLogoAndStationName();
@@ -2280,6 +2289,8 @@ void changeState(int state){
             for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
         //    if(!_f_mute) drawImage("/btn/RADIOico1.jpg", _winButton.x, _winButton.y);
         //    else         drawImage("/btn/RADIOico2.jpg", _winButton.x, _winButton.y);
+            _timeCounter.timer = 5;
+            _timeCounter.factor = 2.0;
             break;
         }
         case RADIOmenue:{
@@ -2299,10 +2310,14 @@ void changeState(int state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             clearVolBar();
+            _timeCounter.timer = 5;
+            _timeCounter.factor = 2.0;
             break;
         }
         case STATIONSLIST:{
             showStationsList(_staListNr);
+            _timeCounter.timer = 10;
+            _timeCounter.factor = 1.0;
             break;
         }
         case CLOCK:{
@@ -2352,6 +2367,8 @@ void changeState(int state){
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            _timeCounter.timer = 5;
+            _timeCounter.factor = 2.0;
             break;
         }
         case BRIGHTNESS:{
@@ -2567,9 +2584,14 @@ void loop() {
             if(_state == CLOCK || _state == CLOCKico) display_time();
         }
 
-        if(_timeCounter) {
-            _timeCounter--;
-            if(!_timeCounter) {
+        if(_timeCounter.timer) {
+            _timeCounter.timer--;
+            if(_timeCounter.timer < 10){
+                sprintf(_chbuf, "/common/tc%02d.bmp", uint8_t(_timeCounter.timer * _timeCounter.factor));
+                drawImage(_chbuf, _winRSSID.x, _winRSSID.y);
+            }
+            if(!_timeCounter.timer) {
+                showFooterRSSI(true);
                 if(_state == RADIOico) changeState(RADIO);
                 else if(_state == RADIOmenue)
                     changeState(RADIO);
@@ -2648,7 +2670,7 @@ void loop() {
             _commercial_dur--;
             if((_commercial_dur == 2) && (_state == RADIO)) clearStreamTitle(); // end of commercial? clear streamtitle
         }
-        if(_f_newStreamTitle && !_timeCounter) {
+        if(_f_newStreamTitle && !_timeCounter.timer) {
             _f_newStreamTitle = false;
             if(_state == RADIO) {
                 if(strlen(_streamTitle)) showStreamTitle(_streamTitle);
@@ -2662,7 +2684,7 @@ void loop() {
             }
             webSrv.send((String) "streamtitle=" + _streamTitle);
         }
-        if(_f_newIcyDescription && !_timeCounter) {
+        if(_f_newIcyDescription && !_timeCounter.timer) {
             if(_state == RADIO) {
                 if(!strlen(_streamTitle)) showStreamTitle(_icyDescription);
             }
@@ -2670,7 +2692,7 @@ void loop() {
             _f_newIcyDescription = false;
         }
 
-        if(_f_newCommercial && !_timeCounter) {
+        if(_f_newCommercial && !_timeCounter.timer) {
             if(_state == RADIO) { showStreamTitle(_commercial); }
             webSrv.send((String) "streamtitle=" + _commercial);
             _f_newCommercial = false;
@@ -3008,7 +3030,6 @@ void ir_key(uint8_t key) {
         if(_state == CLOCK) {
             nextStation();
             changeState(RADIO);
-            _timeCounter = 5;
             _f_switchToClock = true;
             break;
         }
@@ -3025,7 +3046,6 @@ void ir_key(uint8_t key) {
         if(_state == CLOCK) {
             prevStation();
             changeState(RADIO);
-            _timeCounter = 5;
             _f_switchToClock = true;
             break;
         }
@@ -3055,7 +3075,6 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    _timeCounter = 5;
     enum : int8_t {
         none = -1,
         RADIO_1,
@@ -3163,8 +3182,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case RADIOico_1:    changeState(RADIOmenue); break;
         case CLOCK_1:       changeState(CLOCKico);   break;
         case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; mute();}
-                            else if(btnNr == 1){_releaseNr =  1; } // Vol-
-                            else if(btnNr == 2){_releaseNr =  2; } // Vol+
+                            else if(btnNr == 1){_releaseNr =  1; _timeCounter.timer = 5;} // Vol-
+                            else if(btnNr == 2){_releaseNr =  2; _timeCounter.timer = 5;} // Vol+
                             else if(btnNr == 3){_releaseNr =  3; } // station--
                             else if(btnNr == 4){_releaseNr =  4; } // station++
                             else if(btnNr == 5){_releaseNr =  5; } // list stations
@@ -3175,14 +3194,14 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 1){_releaseNr = 11;} // Clock
                             if(btnNr == 2){_releaseNr = 12;} // Sleep
                             if(TFT_BL != -1){
-                            if(btnNr == 3){_releaseNr = 13;} // Brightness
+                                if(btnNr == 3){_releaseNr = 13;} // Brightness
                             }
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
                             if(btnNr == 2){_releaseNr = 22; mute();}
-                            if(btnNr == 3){_releaseNr = 23; } // Vol-
-                            if(btnNr == 4){_releaseNr = 24; } // Vol+
+                            if(btnNr == 3){_releaseNr = 23; _timeCounter.timer = 5;} // Vol-
+                            if(btnNr == 4){_releaseNr = 24; _timeCounter.timer = 5;} // Vol+
                             changeBtn_pressed(btnNr); break;
         case ALARM_2:       if(btnNr == 0){_releaseNr = 30;} // left
                             if(btnNr == 1){_releaseNr = 31;} // right
@@ -3231,9 +3250,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 2){_releaseNr = 92; } // Vol+
                             if(btnNr == 7){_releaseNr = 97;}  // RADIO
                             changeBtn_pressed(btnNr); break;
-        case STATIONSLIST_1:_releaseNr = 100;
+        case STATIONSLIST_1:if(btnNr == none) break;
+                            _releaseNr = 100;
                             _staListPos = btnNr;
-                            _timeCounter = 10;
+                            vTaskDelay(100);
                             break;
         default:            break;
     }
@@ -3385,6 +3405,8 @@ void tp_released(uint16_t x, uint16_t y){
                             int idx = content.indexOf("#");
                             sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
                             tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+                            _timeCounter.timer = 0;
+                            showFooterRSSI(true);
                             setStation(staNr);
                             changeState(RADIO);
                         }
