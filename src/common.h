@@ -32,6 +32,7 @@
 #include <Wire.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
+#include <vector>
 #include "index.h"
 #include "index.js.h"
 #include "accesspoint.h"
@@ -158,6 +159,7 @@ void showFooterRSSI(boolean show = false);
 void fall_asleep();
 void wake_up();
 void setRTC(const char* TZString);
+void vector_clear_and_shrink(vector<char*>&vec);
 void updateSleepTime(boolean noDecrement = false);
 void showVolumeBar();
 void showBrightnessBar();
@@ -177,6 +179,7 @@ void display_alarmDays(uint8_t ad, boolean showall=false);
 void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false);
 void display_sleeptime(int8_t ud = 0);
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0 , uint16_t maxHeigth = 0);
+bool SD_listDir(const char* path);
 bool setAudioFolder(const char* audioDir);
 File getNextAudioFile();
 bool connectToWiFi();
@@ -243,3 +246,4 @@ void audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
 uint32_t audioGetFileSize();
 uint32_t audioGetFilePosition();
 uint16_t audioGetVUlevel();
+
