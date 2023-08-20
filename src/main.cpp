@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.10 Aug 20/2023                                                                                         ";
+    Version 2.10a Aug 20/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1342,7 +1342,6 @@ bool SD_listDir(const char* path){
     File file;
     vector_clear_and_shrink(_SD_content);
     if(audioFile) audioFile.close();
-    log_i("path: %s", path);
     if(!SD_MMC.exists(path)){
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
         return false;
@@ -1358,14 +1357,12 @@ bool SD_listDir(const char* path){
         if(!file) break;
         if(file.isDirectory()){
             sprintf(_chbuf, "%s", file.name());
-            log_i("%s",_chbuf);
             _SD_content.push_back(strdup((const char*)_chbuf));
         }
         else {
             if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
                endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
                     sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                    log_i("%s",_chbuf);
                     _SD_content.push_back(strdup((const char*) _chbuf));
             }
         }
@@ -1391,7 +1388,6 @@ bool setAudioFolder(const char* audioDir) {
 
 void showAudioFilesList(uint16_t fileListNr){
     clearWithOutHeaderFooter();
-    log_i("_SD_content.size() %d, fileListNr %d", _SD_content.size(), fileListNr);
     if(_SD_content.size() < 10) fileListNr = 0;
     showHeadlineItem(AUDIOFILESLIST);
     tft.setCursor(10, _winFooter.h) ;
@@ -1407,7 +1403,6 @@ void showAudioFilesList(uint16_t fileListNr){
             tft.writeText((uint8_t*)"˄");
         }
         if(pos == 9 && fileListNr + 9 < _SD_content.size()){
-            log_i("pos = 9");
             tft.setCursor(0, _winFooter.h + (pos) * lineHight);
             tft.setTextColor(TFT_AQUAMARINE);
             tft.writeText((uint8_t*)"˅");
@@ -1436,16 +1431,12 @@ File getNextAudioFile() {
             break;
         }
         else {
-            log_i("%s", file.path());
             if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
                endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
                 break;
             }
         }
     }
-    if(file) log_i("%s", file.path());
-    else
-        log_i("returns zero");
     return file;
 }
 void processPlaylist(boolean first) {
@@ -3542,7 +3533,6 @@ void tp_released(uint16_t x, uint16_t y){
                             uint8_t lineHight = _winWoHF.h / 10;
                             tft.setCursor(20, _winFooter.h + (fileListPos) * lineHight);
                             if(fileListPos == 0) {
-                                log_i("is  path");
                                 int idx = _curAudioFolder.lastIndexOf("/");
                                 if(idx > 1){ // not the first '/'
                                     _curAudioFolder = _curAudioFolder.substring(0, idx);
@@ -3553,7 +3543,6 @@ void tp_released(uint16_t x, uint16_t y){
                                 }
                             }
                             else{
-                                log_i("fileNr %i", fileNr -1);
                                 if(fileNr > _SD_content.size()) break;
                                 tft.setTextColor(TFT_CYAN);
                                 tft.writeText((uint8_t*)_SD_content[fileNr - 1], -1, -1, true);
@@ -3569,7 +3558,6 @@ void tp_released(uint16_t x, uint16_t y){
                                 else {
                                     _chbuf[idx] = '\0';  // remove color and filesize
                                     changeState(PLAYER);
-                                    log_i("playfile %s", _chbuf);
                                     SD_playFile(_chbuf, 0, true);
                                 }
                             }
