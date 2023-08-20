@@ -1362,9 +1362,12 @@ bool SD_listDir(const char* path){
             _SD_content.push_back(strdup((const char*)_chbuf));
         }
         else {
-            sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-            log_i("%s",_chbuf);
-            _SD_content.push_back(strdup((const char*) _chbuf));
+            if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
+               endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
+                    sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
+                    log_i("%s",_chbuf);
+                    _SD_content.push_back(strdup((const char*) _chbuf));
+            }
         }
     }
     audioFile.close();
@@ -3540,6 +3543,14 @@ void tp_released(uint16_t x, uint16_t y){
                             tft.setCursor(20, _winFooter.h + (fileListPos) * lineHight);
                             if(fileListPos == 0) {
                                 log_i("is  path");
+                                int idx = _curAudioFolder.lastIndexOf("/");
+                                if(idx > 1){ // not the first '/'
+                                    _curAudioFolder = _curAudioFolder.substring(0, idx);
+                                    _fileListNr = 0;
+                                    SD_listDir(_curAudioFolder.c_str());
+                                    showAudioFilesList(_fileListNr);
+                                    break;
+                                }
                             }
                             else{
                                 log_i("fileNr %i", fileNr -1);
@@ -3548,14 +3559,24 @@ void tp_released(uint16_t x, uint16_t y){
                                 tft.writeText((uint8_t*)_SD_content[fileNr - 1], -1, -1, true);
                                 sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[fileNr - 1]);
                                 int idx = indexOf(_chbuf, "\033[", 1);
-                                if(idx > 0) _chbuf[idx] = '\0';  // remove color and filesize
-                                changeState(PLAYER);
-                                log_i("playfile %s", _chbuf);
-                                SD_playFile(_chbuf, 0, true);
+                                if(idx == -1){ // is folder
+                                    _curAudioFolder += "/" + (String)_SD_content[fileNr - 1];
+                                    _fileListNr = 0;
+                                    SD_listDir(_curAudioFolder.c_str());
+                                    showAudioFilesList(_fileListNr);
+                                    break;
+                                }
+                                else {
+                                    _chbuf[idx] = '\0';  // remove color and filesize
+                                    changeState(PLAYER);
+                                    log_i("playfile %s", _chbuf);
+                                    SD_playFile(_chbuf, 0, true);
+                                }
                             }
                             _timeCounter.timer = 0;
                             showFooterRSSI(true);
                         }
+                        else log_i("unknown gesture");
                     } break;
     }
     _releaseNr = -1;
