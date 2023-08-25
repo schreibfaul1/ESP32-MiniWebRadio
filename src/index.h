@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 13.08.2023
+ *  Updated on: 25.08.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1696,15 +1696,17 @@ function chIRcmd(btn){  // IR command, value changed
         <div style="height: 66px; display: flex;">
             <div style="flex: 0 0 210px;">
                 <img src="SD/png/Button_Previous_Green.png" alt="previous"
-                          onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
-                          onmouseup ="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';"
-                          ontouchend="socket.send('prev_station'); this.src='SD/png/Button_Previous_Green.png';">
+                        onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
+                        onmouseup="this.src='SD/png/Button_Previous_Green.png';"
+                        ontouchend="this.src='SD/png/Button_Previous_Green.png';"
+                        onclick="socket.send('prev_station')">
                 <img src="SD/png/Button_Next_Green.png" alt="next"
-                          onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
-                          ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
-                          onmouseup= "socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';"
-                          ontouchend="socket.send('next_station'); this.src='SD/png/Button_Next_Green.png';">
+                        onmousedown="this.src='SD/png/Button_Next_Yellow.png'"
+                        ontouchstart="this.src='SD/png/Button_Next_Yellow.png'"
+                        onmouseup="this.src='SD/png/Button_Next_Green.png';"
+                        ontouchend="this.src='SD/png/Button_Next_Green.png';"
+                        onclick="socket.send('next_station')">
             </div>
             <div style="flex:1;">
                 <select class="boxstyle" style="width:100%; margin-top: 14px;" onchange="handleStation(this)" id="preset">
