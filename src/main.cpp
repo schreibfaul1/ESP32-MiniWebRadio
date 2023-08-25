@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.10b Aug 23/2023                                                                                         ";
+    Version 2.10c Aug 25/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -377,7 +377,7 @@ boolean defaultsettings(){
     if(!(const char*) jV["lastconnectedhost"]) f_updateSettings = true;  else _lastconnectedhost  = (const char*) jV["lastconnectedhost"];
     if(f_updateSettings) updateSettings();
 
-    if(_sum_stations == 0) saveStationsToNVS();  // first init
+    if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
     return true;
@@ -432,6 +432,7 @@ boolean saveStationsToNVS() {
         _sum_stations = cnt;
         stations.putLong("stations.size", file.size());
         file.close();
+        pref.putBool("stations_filled", true);
         SerialPrintfln("stationlist internally loaded");
         SerialPrintfln("number of stations: " ANSI_ESC_CYAN "%i", cnt);
         return true;
