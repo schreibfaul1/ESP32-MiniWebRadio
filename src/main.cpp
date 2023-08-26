@@ -122,6 +122,15 @@ String         _media_downloadIP = "";
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
 
+struct dlna_items{
+    std::vector<char*> name{};
+    std::vector<uint8_t> isDir; // contains boolean
+    std::vector<char*> id{};
+    std::vector<size_t> size;
+    std::vector<char*> uri{};
+    std::vector<uint8_t> isAudio; // contains boolean
+    boolean isReady = true;
+} _dlna_items;
 struct timecounter {
     uint8_t timer = 0;
     float factor = 2.0;
@@ -1924,7 +1933,7 @@ boolean strCompare(const char* str1, char* str2) { // returns true if str1 == st
     return f;
 }
 
-const char* ps_strdup(const char* str){
+char* ps_strdup(const char* str){
     char* ps_str = (char*) ps_malloc(strlen(str) + 1);
     strcpy(ps_str, str);
     return ps_str;
@@ -2307,6 +2316,16 @@ void vector_clear_and_shrink(vector<char*>&vec){
     vec.clear();
     vec.shrink_to_fit();
 }
+
+void dlna_items_vector_clear_ans_shrink(){
+    vector_clear_and_shrink(_dlna_items.name);
+    vector_clear_and_shrink(_dlna_items.id);
+    vector_clear_and_shrink(_dlna_items.uri);
+    _dlna_items.size.clear();
+    _dlna_items.isDir.clear();
+    _dlna_items.isAudio.clear();
+}
+
 /*****************************************************************************************************************************************************
  *                                                            M E N U E / B U T T O N S                                                              *
  *****************************************************************************************************************************************************/
@@ -3918,4 +3937,30 @@ void dlna_file(bool lastItem, String name, String id, size_t size, String uri, b
     myObject[j]["isAudio"] = isAudio;
     i++;
     j++;
+}
+
+void dlna_item(bool lastItem, String name, String id, size_t size, String uri, bool isDir, bool isAudio){
+    //log_w("lastItem %i, name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", lastItem, name.c_str(), id.c_str(), size, uri.c_str(), isDir, isAudio);
+    if(lastItem){
+        _dlna_items.isReady = true;
+
+        int s = _dlna_items.name.size();
+
+        for(int i = 0; i < s;  i++){
+            log_w("name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", _dlna_items.name[i], _dlna_items.id[i], _dlna_items.size[i], _dlna_items.uri[i], _dlna_items.isDir[i], _dlna_items.isAudio[i]);
+        }
+
+        dlna_items_vector_clear_ans_shrink();
+        return;
+    }
+    _dlna_items.isReady = false;
+    _dlna_items.name.push_back(ps_strdup(name.c_str()));
+    _dlna_items.id.push_back(ps_strdup(id.c_str()));
+    _dlna_items.size.push_back(size);
+    _dlna_items.uri.push_back(ps_strdup(uri.c_str()));
+    _dlna_items.isDir.push_back(isDir == true);
+    _dlna_items.isAudio.push_back(isAudio == true);
+
+
+
 }

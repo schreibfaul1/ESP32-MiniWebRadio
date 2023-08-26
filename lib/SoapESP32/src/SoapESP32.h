@@ -129,6 +129,7 @@ extern __attribute__((weak)) void dlna_server(uint8_t serverId, size_t serverSiz
                                               String friendlyName, String controlURL);
 extern __attribute__((weak)) void dlna_folder(bool lastItem, String name = "", String id = "", size_t childCount = 0);
 extern __attribute__((weak)) void dlna_file(bool lastItem, String name = "", String id = "", size_t size = 0, String uri = "", bool isAudio = false);
+extern __attribute__((weak)) void dlna_item(bool lastItem, String name, String id, size_t size, String uri, bool isDir, bool isAudio);
 
 // for replacing predefined XML entities in server reply
 enum eXmlReplaceState
