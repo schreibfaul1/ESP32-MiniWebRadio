@@ -193,6 +193,7 @@ int indexOf (const char* base, const char* str, int startIndex);
 int lastIndexOf(const char* haystack, const char needle);
 boolean strCompare(char* str1, char* str2);
 boolean strCompare(const char* str1, char* str2);
+const char* ps_strdup(const char* str);
 int16_t strlenUTF8(const char* str);
 int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
 void SerialPrintflnCut(const char* item, const char* color, const char* str);

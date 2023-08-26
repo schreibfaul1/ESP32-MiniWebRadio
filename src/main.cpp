@@ -1685,7 +1685,7 @@ void setup() {
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
     if(psramInit()) { Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size()); }
-    else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio will not work properly!" ANSI_ESC_WHITE); }
+    else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio will not work properly!" ANSI_ESC_WHITE); return;}
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1923,6 +1923,13 @@ boolean strCompare(const char* str1, char* str2) { // returns true if str1 == st
     }
     return f;
 }
+
+const char* ps_strdup(const char* str){
+    char* ps_str = (char*) ps_malloc(strlen(str) + 1);
+    strcpy(ps_str, str);
+    return ps_str;
+}
+
 int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
     if(str == NULL) return -1;
     uint16_t idx = 0;
