@@ -2393,8 +2393,6 @@ void changeState(int state){
             clearTitle();
             showVolumeBar();
             for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-        //    if(!_f_mute) drawImage("/btn/RADIOico1.jpg", _winButton.x, _winButton.y);
-        //    else         drawImage("/btn/RADIOico2.jpg", _winButton.x, _winButton.y);
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2402,15 +2400,15 @@ void changeState(int state){
         case RADIOmenue:{
             showHeadlineItem(RADIOmenue);
             _pressBtn[0] = "/btn/MP3_Yellow.jpg";                _releaseBtn[0] = "/btn/MP3_Green.jpg";
-            _pressBtn[1] = "/btn/Clock_Yellow.jpg";              _releaseBtn[1] = "/btn/Clock_Green.jpg";
-            _pressBtn[2] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Sleep_Green.jpg";
+            _pressBtn[1] = "/btn/Button_DLNA_Yellow.jpg";        _releaseBtn[1] = "/btn/Button_DLNA_Green.jpg";
+            _pressBtn[2] = "/btn/Clock_Yellow.jpg";              _releaseBtn[2] = "/btn/Clock_Green.jpg";
+            _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
             if(TFT_BL != -1){
-                _pressBtn[3]="/btn/Bulb_Yellow.jpg";             _releaseBtn[3]="/btn/Bulb_Green.jpg";
+                _pressBtn[4]="/btn/Bulb_Yellow.jpg";             _releaseBtn[4]="/btn/Bulb_Green.jpg";
             }
             else{
-                _pressBtn[3]="/btn/Black.jpg";                   _releaseBtn[3]="/btn/Black.jpg";
+                _pressBtn[4]="/btn/Black.jpg";                   _releaseBtn[4]="/btn/Black.jpg";
             }
-            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
@@ -3312,10 +3310,11 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             changeBtn_pressed(btnNr);
                             break;
         case RADIOmenue_1:  if(btnNr == 0){_releaseNr = 10; audioStopSong();} // AudioPlayer
-                            if(btnNr == 1){_releaseNr = 11;} // Clock
-                            if(btnNr == 2){_releaseNr = 12;} // Sleep
+                            if(btnNr == 1){_releaseNr = 11;} // DLNA
+                            if(btnNr == 2){_releaseNr = 12;} // Clock
+                            if(btnNr == 3){_releaseNr = 13;} // Sleep
                             if(TFT_BL != -1){
-                                if(btnNr == 3){_releaseNr = 13;} // Brightness
+                                if(btnNr == 4){_releaseNr = 14;} // Brightness
                             }
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
@@ -3409,9 +3408,10 @@ void tp_released(uint16_t x, uint16_t y){
                     nextAudioFile = getNextAudioFile();
                     showFileName(nextAudioFile.name());
                     break;
-        case 11:    changeState(CLOCK); break;
-        case 12:    changeState(SLEEP); break;
-        case 13:    changeState(BRIGHTNESS); break;
+        case 11:    changeState(DLNA); break;
+        case 12:    changeState(CLOCK); break;
+        case 13:    changeState(SLEEP); break;
+        case 14:    changeState(BRIGHTNESS); break;
 
         /* CLOCKico ******************************/
         case 20:    changeState(ALARM); break;
