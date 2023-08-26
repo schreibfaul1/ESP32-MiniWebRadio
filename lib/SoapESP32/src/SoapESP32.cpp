@@ -696,6 +696,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
     info.isDirectory = true;
 
     if(dlna_folder) dlna_folder(false, info.name, info.id, info.size);
+    if(dlna_item) dlna_item(false, info.name, info.id, info.size, "", true, false);
 
     return true;
 }
@@ -835,7 +836,7 @@ bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, c
     info.isDirectory = false;
     m_downloadPort = info.downloadPort;
     if(dlna_file) dlna_file(false, info.name, info.id, info.size, info.uri, info.fileType == fileTypeAudio);
-
+    if(dlna_item) dlna_item(false, info.name, info.id, info.size, info.uri, false, info.fileType == fileTypeAudio);
     return true;
 }
 
@@ -979,6 +980,7 @@ end_stop:
     }
     if(dlna_file) dlna_file(true);
     if(dlna_folder) dlna_folder(true);
+    if(dlna_item) dlna_item(true, "", "", 0, "", true, false);
 
     // TEST
 #if CORE_DEBUG_LEVEL > 3
