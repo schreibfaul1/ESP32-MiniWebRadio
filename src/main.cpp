@@ -2646,6 +2646,17 @@ void DLNA_showContent(String objectId, uint8_t level) {
 
 void showDlnaItemsList(uint8_t level, uint16_t itemNr){
     clearWithOutHeaderFooter();
+    // showHeadlineItem(DLNAITEMSLIST);
+    tft.setCursor(10, _winFooter.h) ;
+    tft.setTextColor(TFT_ORANGE);
+    tft.setFont(_fonts[1]);
+    uint8_t lineHight = _winWoHF.h / 10;
+    if(level == 0){
+        for(uint8_t i = 0; i < _dlna_items.serverFriendlyName.size(); i++){
+            if(i == 10) break;
+
+        }
+    }
     // if(_SD_content.size() < 10) fileListNr = 0;
     // showHeadlineItem(AUDIOFILESLIST);
     // tft.setCursor(10, _winFooter.h) ;
@@ -3337,6 +3348,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 yPos = AUDIOFILESLIST_1;
             }
             break;
+        case DLNAITEMSLIST:
+            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                yPos = DLNAITEMSLIST_1;
+            }
+            break;
         default:
             break;
     }
@@ -3651,9 +3668,17 @@ void tp_released(uint16_t x, uint16_t y){
                         else log_i("unknown gesture");
                     } break;
         /* DLNAITEMSLIST *********************************/
-        case 120:
+        case 120:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                        uint8_t itemListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
 
-            break;
+
+
+
+
+
+                    } break;
+
+        default:    break;
     }
     _releaseNr = -1;
 }
