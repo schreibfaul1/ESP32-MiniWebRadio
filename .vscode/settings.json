@@ -14,5 +14,6 @@
         "string_view": "cpp",
         "memory": "cpp",
         "initializer_list": "cpp"
-    }
+    },
+    "commentTranslate.source": "intellsmi.deepl-translate-deepl"
 }
