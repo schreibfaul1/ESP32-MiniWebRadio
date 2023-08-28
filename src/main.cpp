@@ -46,8 +46,8 @@ uint8_t        _staListPos = 0;
 uint16_t       _staListNr = 0;
 uint8_t        _fileListPos = 0;
 uint16_t       _fileListNr = 0;
-
 uint8_t        _itemListPos = 0;          // DLNA items
+uint16_t       _itemListNr = 0;
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -2646,42 +2646,45 @@ void DLNA_showContent(String objectId, uint8_t level) {
 
 void showDlnaItemsList(uint8_t level, uint16_t itemNr){
     clearWithOutHeaderFooter();
-    // showHeadlineItem(DLNAITEMSLIST);
+    uint16_t itemsSize = 0;
+    if(level == 0){                                  // show DLNA server names
+        itemsSize = _dlna_items.serverFriendlyName.size();
+        if(itemsSize < 10) itemNr = 0;
+    }
+    else{
+        itemsSize = _dlna_items.name.size();
+        if(itemsSize < 10) itemNr = 0; // show DLNA items
+    }
+    log_i("level %d, itemsSize %d", level, itemsSize);
+    showHeadlineItem(DLNA);
     tft.setCursor(10, _winFooter.h) ;
     tft.setTextColor(TFT_ORANGE);
+    if(level > 0)  tft.writeText((uint8_t*)_dlna_items.path[0], -1,-1, true);
+    tft.setTextColor(TFT_WHITE);
     tft.setFont(_fonts[1]);
     uint8_t lineHight = _winWoHF.h / 10;
-    if(level == 0){
-        for(uint8_t i = 0; i < _dlna_items.serverFriendlyName.size(); i++){
-            if(i == 10) break;
-
+    for(uint8_t pos = 1; pos < 10; pos++){
+        if(pos == 1 && itemNr > 0){
+            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
+            tft.setTextColor(TFT_AQUAMARINE);
+            tft.writeText((uint8_t*)"˄");
+        }
+        if(pos == 9 && itemNr + 9 < itemsSize){
+            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
+            tft.setTextColor(TFT_AQUAMARINE);
+            tft.writeText((uint8_t*)"˅");
+        }
+        if(itemNr + pos > itemsSize) break;
+        tft.setCursor(20, _winFooter.h + (pos) * lineHight);
+        if(level == 0){
+            tft.setTextColor(TFT_LIME);
+            tft.writeText((uint8_t*)_dlna_items.serverFriendlyName[(pos - 1) + itemNr], -1, -1, true);
+        }
+        else{
+            //    if(indexOf(_SD_content[pos + itemNr - 1 ], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
+            //    else tft.setTextColor(TFT_WHITE);                                                     // is file
         }
     }
-    // if(_SD_content.size() < 10) fileListNr = 0;
-    // showHeadlineItem(AUDIOFILESLIST);
-    // tft.setCursor(10, _winFooter.h) ;
-    // tft.setTextColor(TFT_ORANGE);
-    // tft.writeText((uint8_t*)_curAudioFolder.c_str(), -1,-1, true);
-    // tft.setTextColor(TFT_WHITE);
-    // tft.setFont(_fonts[1]);
-    // uint8_t lineHight = _winWoHF.h / 10;
-    // for(uint8_t pos = 1; pos < 10; pos++){
-    //     if(pos == 1 && fileListNr > 0){
-    //         tft.setCursor(0, _winFooter.h + (pos) * lineHight);
-    //         tft.setTextColor(TFT_AQUAMARINE);
-    //         tft.writeText((uint8_t*)"˄");
-    //     }
-    //     if(pos == 9 && fileListNr + 9 < _SD_content.size()){
-    //         tft.setCursor(0, _winFooter.h + (pos) * lineHight);
-    //         tft.setTextColor(TFT_AQUAMARINE);
-    //         tft.writeText((uint8_t*)"˅");
-    //     }
-    //     if(fileListNr + pos > _SD_content.size()) break;
-    //     tft.setCursor(20, _winFooter.h + (pos) * lineHight);
-    //     if(indexOf(_SD_content[pos + fileListNr - 1 ], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
-    //     else tft.setTextColor(TFT_WHITE);                                                     // is file
-    //     tft.writeText((uint8_t*)_SD_content[pos + fileListNr - 1 ], -1, -1, true);
-    // }
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
 }
@@ -3670,7 +3673,17 @@ void tp_released(uint16_t x, uint16_t y){
         /* DLNAITEMSLIST *********************************/
         case 120:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
                         uint8_t itemListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-
+                        if(_itemListPos + 2 < itemListPos){               // wipe down
+                            if(_itemListNr == 0) break;
+                            if(_itemListNr >  9) _itemListNr -= 9;
+                            else _itemListNr = 0;
+                            showDlnaItemsList( 0,   _itemListNr);
+                        }
+                        else if(itemListPos + 2 < _itemListPos){          // wipe up
+                            if(_itemListNr + 9 >= _SD_content.size()) break;
+                            _itemListNr += 9;
+                            showDlnaItemsList( 0,    _itemListNr);
+                        }
 
 
 
