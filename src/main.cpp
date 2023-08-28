@@ -2117,7 +2117,10 @@ void setStationViaURL(const char* url) {
     _stationURL = strdup(url);
     connecttohost(url);
     StationsItems();
-    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
+    if(_state == RADIO || _state == RADIOico){
+        clearStreamTitle();
+        showLogoAndStationName();
+    }
     showFooterStaNr(); // set to '000'
 }
 
