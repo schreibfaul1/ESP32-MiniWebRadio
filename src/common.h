@@ -30,6 +30,7 @@
 #include <SD_MMC.h>
 #include <FS.h>
 #include <Wire.h>
+#include <ESPmDNS.h>
 #include <WiFiClient.h>
 #include <WiFiMulti.h>
 #include <vector>

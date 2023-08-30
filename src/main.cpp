@@ -1579,6 +1579,13 @@ bool connectToWiFi() {
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
         WiFi.setSleep(false);
+        if(!MDNS.begin("MiniWebRadio")) {
+            SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS");
+        }
+        else{
+            MDNS.addService("esp32", "tcp", 80);
+            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
+        }
         return true;
     }
     else {
