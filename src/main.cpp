@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.11 Aug 31/2023                                                                                         ";
+    Version 2.11a Sep 02/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -110,6 +110,9 @@ boolean        _f_pauseResume = false;
 boolean        _f_accessPoint = false;
 boolean        _f_state_isChanging = false;
 boolean        _f_SD_Upload = false;
+boolean        _f_PSRAMfound = false;
+boolean        _f_SD_MMCfound = false;
+boolean        _f_ESPfound = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -1708,7 +1711,8 @@ void setup() {
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
     if(psramInit()) { Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size()); }
-    else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio will not work properly!" ANSI_ESC_WHITE); return;}
+    else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio does not work without PSRAM!" ANSI_ESC_WHITE); return;}
+    _f_PSRAMfound = true;
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1721,13 +1725,14 @@ void setup() {
     if(startsWith(chipModel, "ESP32-P")) { ; } // ESP32-PICO ...  okay
     if(startsWith(chipModel, "ESP32-S2")) {
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-S2");
-        while(true) { ; }
+        return;
     }
     if(startsWith(chipModel, "ESP32-C3")) {
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-C3");
-        while(true) { ; }
+        return;
     }
     if(startsWith(chipModel, "ESP32-S3")) { ; } // ESP32-S3  ...  okay
+    _f_ESPfound = true;
 
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
@@ -1764,12 +1769,12 @@ void setup() {
         tft.print("SD Card Mount Failed");
         setTFTbrightness(80);
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
-        while(1) {}; // endless loop, MiniWebRadio does not work without SD
+        return;
     }
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
-
+    _f_SD_MMCfound = true;
     defaultsettings(); // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else
@@ -2706,6 +2711,9 @@ void showDlnaItemsList(uint8_t level, uint16_t itemNr){
  *                                                                 L O O P                                                                           *
  *****************************************************************************************************************************************************/
 void loop() {
+    if(!_f_PSRAMfound) return;  // Guard:  PSRAM could not be initialized
+    if(!_f_ESPfound) return;    // Guard:  wrong chip?
+    if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
     webSrv.loop();
     ir.loop();
     tp.loop();
