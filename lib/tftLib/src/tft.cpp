@@ -1653,7 +1653,7 @@ void TFT::fillCircle(int16_t Xm,       //specify x position.
                      uint16_t  r, //specify the radius of the circle.
                      uint16_t color)  //specify the color of the circle.
 {
-    signed int f = 1 - r, ddF_x = 1, ddF_y = 0 - (2 * r), x = 0, y = r;
+    int32_t f = 1 - r, ddF_x = 1, ddF_y = 0 - (2 * r), x = 0, y = r;
     startWrite();
     writeFastVLine(Xm, Ym - r, 2 * r, color);
 
@@ -1823,12 +1823,12 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, b
     uint16_t font_char=0;
     int16_t  i=0;
     uint16_t j=0;
-    int      a=0;
+    int32_t      a=0;
     uint16_t font_height = _font[6];
     startWrite();
 
     while(i != wordLength) {  //until string ends
-        int strw=0;
+        int32_t strw=0;
         //------------------------------------------------------------------  word wrap
         a=i+1 ;
         if(str[i] == 32 && !noWrap) { // space
@@ -2257,7 +2257,7 @@ boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, u
 ***********************************************************************************************************************/
 boolean TFT::drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat){
     //debug=true;
-    int iterations=repeat;
+    int32_t iterations=repeat;
 
     do{ // repeat this gif
         gif_file= fs.open(path);
@@ -2757,7 +2757,7 @@ boolean TFT::GIF_readExtension(char Label){
 
 //----------------------------------------------------------------------------------------------------------------------
 
-int TFT::GIF_GetCode(int code_size, int flag) {
+int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
     //    Assuming a character array of 8 bits per character and using 5 bit codes to be
     //    packed, an example layout would be similar to:
     //
@@ -2778,8 +2778,8 @@ int TFT::GIF_GetCode(int code_size, int flag) {
     //         +---------------+
 
     static char DSBbuffer[300];
-    static int curbit, lastbit, done, last_byte;
-    int i, j, ret;
+    static int32_t curbit, lastbit, done, last_byte;
+    int32_t i, j, ret;
     uint8_t count;
 
     if (flag) {
@@ -2826,10 +2826,10 @@ int TFT::GIF_GetCode(int code_size, int flag) {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-int TFT::GIF_LZWReadByte(boolean init) {
-    static int fresh = false;
-    int code, incode;
-    static int firstcode, oldcode;
+int32_t TFT::GIF_LZWReadByte(boolean init) {
+    static int32_t fresh = false;
+    int32_t code, incode;
+    static int32_t firstcode, oldcode;
 
     if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
     if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
@@ -2841,7 +2841,7 @@ int TFT::GIF_LZWReadByte(boolean init) {
 
     static uint8_t* sp;
 
-    register int i;
+    register int32_t i;
 
     if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
@@ -2912,7 +2912,7 @@ int TFT::GIF_LZWReadByte(boolean init) {
             if (debug) {
                 log_i("read EOI Code");
             }
-            int count;
+            int32_t count;
             char buf[260];
 
             if (gif_ZeroDataBlock) return -2;
@@ -2931,7 +2931,7 @@ int TFT::GIF_LZWReadByte(boolean init) {
 
         while (code >= gif_ClearCode) {
             *sp++ = gif_vals[code];
-            if (code == (int)gif_next[code]) {
+            if (code == (int32_t)gif_next[code]) {
                 return -1;
             }
             code = gif_next[code];
@@ -2957,11 +2957,11 @@ int TFT::GIF_LZWReadByte(boolean init) {
 //----------------------------------------------------------------------------------------------------------------------
 
 bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
-    int  j, color;
+    int32_t  j, color;
     uint count =0;
-    int  xpos  =x+gif_ImageLeftPosition;
-    int  ypos  =y+gif_ImageTopPosition;
-    int  max   =gif_ImageHeight*gif_ImageWidth;
+    int32_t  xpos  =x+gif_ImageLeftPosition;
+    int32_t  ypos  =y+gif_ImageTopPosition;
+    int32_t  max   =gif_ImageHeight*gif_ImageWidth;
 
 
     //if(gif_DisposalMethod==2) not supported yet
@@ -3000,7 +3000,7 @@ bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
 
 //----------------------------------------------------------------------------------------------------------------------
 
-int TFT::GIF_readGifItems() {
+int32_t TFT::GIF_readGifItems() {
     GIF_readHeader();
     GIF_readLogicalScreenDescriptor();
     gif_decodeSdFile_firstread=true;
@@ -3011,7 +3011,7 @@ int TFT::GIF_readGifItems() {
 
 boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     char c=0;
-    static int test=1;
+    static int32_t test=1;
     char Label=0;
     if(gif_decodeSdFile_firstread==true) GIF_readGlobalColorTable(); // If exists
     gif_decodeSdFile_firstread=false;
@@ -3034,7 +3034,7 @@ boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
            return true; // more images can follow
        }
     }
-    // for(int i=0; i<bigbuf.size(); i++)  log_i("bigbuf %i=%i", i, bigbuf[i]);
+    // for(int32_t i=0; i<bigbuf.size(); i++)  log_i("bigbuf %i=%i", i, bigbuf[i]);
     if(tft_info) tft_info("GIF: found Trailer");
     return false; // no more images to decode
 }
@@ -3082,7 +3082,7 @@ boolean TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, u
     return true;
 }
 
-void TFT::renderJPEG(int xpos, int ypos, uint16_t maxWidth, uint16_t maxHeight) {
+void TFT::renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight) {
     // retrieve infomration about the image
     uint16_t *pImg;
     uint16_t mcu_w = JpegDec.MCUWidth;
@@ -3206,7 +3206,7 @@ uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, 
     uint n;
     n = jpg_min(g_nInFileSize - g_nInFileOfs, buf_size);
     if (jpg_source == JPEG_ARRAY) {  // We are handling an array
-        for (int i = 0; i < n; i++) {
+        for (int32_t i = 0; i < n; i++) {
             pBuf[i] = pgm_read_byte(jpg_data++);
             // Serial.println(pBuf[i],HEX);
         }
@@ -3218,7 +3218,7 @@ uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, 
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::decode_mcu(void) {
+int32_t JPEGDecoder::decode_mcu(void) {
     status = JpegDec.pjpeg_decode_mcu();
     if (status) {
         is_available = 0 ;
@@ -3231,8 +3231,8 @@ int JPEGDecoder::decode_mcu(void) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::read(void){
-    int y, x;
+int32_t JPEGDecoder::read(void){
+    int32_t y, x;
     uint16_t *pDst_row;
     if(is_available == 0 || mcu_y >= image_info.m_MCUSPerCol) {
         abort();
@@ -3241,7 +3241,7 @@ int JPEGDecoder::read(void){
     // Copy MCU's pixel blocks into the destination bitmap.
     pDst_row = pImage;
     for (y = 0; y < image_info.m_MCUHeight; y += 8) {
-        const int by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
+        const int32_t by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
         for (x = 0; x < image_info.m_MCUWidth; x += 8) {
             uint16_t *pDst_block = pDst_row + x;
             // Compute source byte offset of the block in the decoder's MCU buffer.
@@ -3249,9 +3249,9 @@ int JPEGDecoder::read(void){
             const uint8_t *pSrcR = image_info.m_pMCUBufR + src_ofs;
             const uint8_t *pSrcG = image_info.m_pMCUBufG + src_ofs;
             const uint8_t *pSrcB = image_info.m_pMCUBufB + src_ofs;
-            const int bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
+            const int32_t bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
             if (image_info.m_scanType == PJPG_GRAYSCALE) {
-                int bx, by;
+                int32_t bx, by;
                 for (by = 0; by < by_limit; by++) {
                     uint16_t *pDst = pDst_block;
                     for (bx = 0; bx < bx_limit; bx++) {
@@ -3263,7 +3263,7 @@ int JPEGDecoder::read(void){
                 }
             }
             else {
-                int bx, by;
+                int32_t bx, by;
                 for (by = 0; by < by_limit; by++) {
                     uint16_t *pDst = pDst_block;
 
@@ -3294,8 +3294,8 @@ int JPEGDecoder::read(void){
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::readSwappedBytes(void) {
-    int y, x;
+int32_t JPEGDecoder::readSwappedBytes(void) {
+    int32_t y, x;
     uint16_t *pDst_row;
 
     if(is_available == 0 || mcu_y >= image_info.m_MCUSPerCol) {
@@ -3305,7 +3305,7 @@ int JPEGDecoder::readSwappedBytes(void) {
     // Copy MCU's pixel blocks into the destination bitmap.
     pDst_row = pImage;
     for (y = 0; y < image_info.m_MCUHeight; y += 8) {
-        const int by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
+        const int32_t by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
 
         for (x = 0; x < image_info.m_MCUWidth; x += 8) {
             uint16_t *pDst_block = pDst_row + x;
@@ -3314,10 +3314,10 @@ int JPEGDecoder::readSwappedBytes(void) {
             const uint8_t *pSrcR = image_info.m_pMCUBufR + src_ofs;
             const uint8_t *pSrcG = image_info.m_pMCUBufG + src_ofs;
             const uint8_t *pSrcB = image_info.m_pMCUBufB + src_ofs;
-            const int bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
+            const int32_t bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
 
             if (image_info.m_scanType == PJPG_GRAYSCALE) {
-                int bx, by;
+                int32_t bx, by;
                 for (by = 0; by < by_limit; by++) {
                     uint16_t *pDst = pDst_block;
                     for (bx = 0; bx < bx_limit; bx++) {
@@ -3327,7 +3327,7 @@ int JPEGDecoder::readSwappedBytes(void) {
                 }
             }
             else {
-                int bx, by;
+                int32_t bx, by;
                 for (by = 0; by < by_limit; by++) {
                     uint16_t *pDst = pDst_block;
 
@@ -3357,7 +3357,7 @@ int JPEGDecoder::readSwappedBytes(void) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
+int32_t JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
     g_pInFileSd = jpgFile;
     jpg_source = JPEG_SD_FILE; // Flag to indicate a SD file
 
@@ -3371,7 +3371,7 @@ int JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
+int32_t JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
     jpg_source = JPEG_ARRAY; // We are not processing a file, use arrays
     g_nInFileOfs = 0;
     jpg_data = (uint8_t *)array;
@@ -3380,7 +3380,7 @@ int JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
 }
 //----------------------------------------------------------------------------------------------------------------------
 
-int JPEGDecoder::decodeCommon(void) {
+int32_t JPEGDecoder::decodeCommon(void) {
     status = JpegDec.pjpeg_decode_init(&image_info, pjpeg_callback, NULL, 0);
     if (status) {
         log_e("pjpeg_decode_init() failed with status %i", status);
@@ -3448,7 +3448,7 @@ int16_t JPEGDecoder::replicateSignBit16(int8_t n){
 
 //----------------------------------------------------------------------------------------------------------------------
 void JPEGDecoder::fillInBuf(void) {
-    unsigned char status;
+    uint8_t status;
     // Reserve a few bytes at the beginning of the buffer for putting back ("stuffing") chars.
     gInBufOfs = 4;
     gInBufLeft = 0;
@@ -4656,7 +4656,7 @@ uint8_t JPEGDecoder::pjpeg_decode_mcu() {
 //----------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback,
-                                       void* pCallback_data, unsigned char reduce) {
+                                       void* pCallback_data, uint8_t reduce) {
     uint8_t status;
     pInfo->m_width = 0;
     pInfo->m_height = 0;

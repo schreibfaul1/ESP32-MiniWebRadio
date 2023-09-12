@@ -87,7 +87,7 @@ void FtpServer::iniVariables() {
     transferStatus = 0;
 }
 //----------------------------------------------------------------------------------------------------------------------
-int FtpServer::handleFTP() {
+int32_t FtpServer::handleFTP() {
     if((int32_t) (millisDelay - millis()) > 0) return 0;
 
     if(ftpServer.hasClient()) {
@@ -643,7 +643,7 @@ boolean FtpServer::processCommand() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 boolean FtpServer::dataConnect() {
-    unsigned long startTime = millis();
+    uint32_t startTime = millis();
 
     if(!data.connected()) {  //wait 10 seconds for a data connection
         while(!dataServer.hasClient() && millis() - startTime < 10000) {

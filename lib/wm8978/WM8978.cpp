@@ -318,7 +318,7 @@ bool WM8978::begin() {
     log_e("No WM8978 dac @ i2c address: 0x%X", WM8978_ADDR);
     return false;
   }
-  const int err = Init();
+  const int32_t err = Init();
   if (err) {
     log_e("WM8978 init err: 0x%X", err);
     return false;

@@ -35,8 +35,8 @@ WiFiUDP    udp;
 
 SoapESP32 soap(&client, &udp);
 
-bool findBigDirectory(SoapESP32 *soap, int servNum, soapObject_t *object) {
-  static int level;  
+bool findBigDirectory(SoapESP32 *soap, int32_t servNum, soapObject_t *object) {
+  static int32_t level;  
   soapObjectVect_t browseResult;
 
   if (object->id == "0") level = 0;            // root resets level counter
@@ -49,7 +49,7 @@ bool findBigDirectory(SoapESP32 *soap, int servNum, soapObject_t *object) {
   }
   else {
     // check this level first
-    for (int i = 0; i < browseResult.size(); i++) {
+    for (int32_t i = 0; i < browseResult.size(); i++) {
       // go through each item in list, break if directory with more 
       // than SOAP_DEFAULT_BROWSE_MAX_COUNT items (subdirs and/or files) is found
       if (browseResult[i].isDirectory &&
@@ -66,7 +66,7 @@ bool findBigDirectory(SoapESP32 *soap, int servNum, soapObject_t *object) {
       }
     }
     // we need to dig deeper
-    for (int i = 0; i < browseResult.size(); i++) {
+    for (int32_t i = 0; i < browseResult.size(); i++) {
       if (browseResult[i].isDirectory && (level + 1) < BROWSE_LEVELS) { 
         // recurse
         *object = browseResult[i];
@@ -108,7 +108,7 @@ void setup() {
   soapObject_t     directory;
   soapObjectVect_t directoryContent;
   soapServer_t     srvInfo;
-  int srvNum = 0,             // start with first server in list
+  int32_t srvNum = 0,             // start with first server in list
       startingIndex;
 
   while (soap.getServerInfo(srvNum, &srvInfo)) {
@@ -136,7 +136,7 @@ void setup() {
         }
         else {
           // show all entries in list
-          for (int i = 0; i < directoryContent.size(); i++) {
+          for (int32_t i = 0; i < directoryContent.size(); i++) {
             // print object count
             Serial.print(startingIndex + i);
             Serial.print(": ");

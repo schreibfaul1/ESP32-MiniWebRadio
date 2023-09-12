@@ -183,7 +183,7 @@ AC101::AC101( TwoWire *TwoWireInstance ){
     _TwoWireInstance = TwoWireInstance;
 }
 //----------------------------------------------------------------------------------------------------------------------
-bool AC101::begin(int sda, int scl, uint32_t frequency) {
+bool AC101::begin(int32_t sda, int32_t scl, uint32_t frequency) {
     bool ok;
     if((sda >= 0) && (scl >= 0)){
 	    ok = _TwoWireInstance->begin(sda, scl, frequency);

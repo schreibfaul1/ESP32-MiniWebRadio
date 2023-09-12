@@ -14,7 +14,7 @@
 #include "time.h"
 #include "esp_sntp.h"
 
-int	 setenv(const char *__string, const char *__value, int __overwrite);
+int32_t	 setenv(const char *__string, const char *__value, int32_t __overwrite);
 void tzset(void);
 
 extern __attribute__((weak)) void RTIME_info(const char*);

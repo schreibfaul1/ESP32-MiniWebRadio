@@ -69,7 +69,7 @@ public:
     void    begin(String uname, String pword);
     void    begin(fs::FS &fs, String uname, String pword);
     uint8_t isConnected();
-    int  handleFTP();
+    int32_t  handleFTP();
 
 private:
     void iniVariables();

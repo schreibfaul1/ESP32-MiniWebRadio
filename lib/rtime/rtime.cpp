@@ -267,8 +267,8 @@ void RTIME::stop(){
 
 boolean RTIME::obtain_time(){
     time_t now = 0;
-    int retry = 0;
-    const int retry_count = 10;
+    int32_t retry = 0;
+    const int32_t retry_count = 10;
     while(timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
         sprintf(sbuf, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         if (RTIME_info) RTIME_info(sbuf);

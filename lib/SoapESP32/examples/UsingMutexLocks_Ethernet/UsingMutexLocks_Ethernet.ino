@@ -34,7 +34,7 @@ byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 EthernetClient client;
 EthernetUDP    udp;
 
-const int led = 2;                                		// LED pin on ESP32 board
+const int32_t led = 2;                                		// LED pin on ESP32 board
 int8_t ledStat = 0;                                 	// counter needed to let LED blink
 TaskHandle_t      xAnotherTask;                     	// task handle for an additional task
 SemaphoreHandle_t SPIsem = NULL;                   	// smeaphore used as global mutex
@@ -112,7 +112,7 @@ void setup() {
   // Show root content of all discovered, usable media servers
   soapObjectVect_t browseResult;       // browse results get stored here
   soapServer_t serv;                   // single server info gets stored here
-  int i = 0;                           // start with first entry in server list
+  int32_t i = 0;                           // start with first entry in server list
 
   while (soap.getServerInfo(i, &serv)) {
     // Print some server details
@@ -134,7 +134,7 @@ void setup() {
       Serial.println(browseResult.size());
 
       // show each directory in root
-      for (int j = 0; j < browseResult.size(); j++) {
+      for (int32_t j = 0; j < browseResult.size(); j++) {
         Serial.print(" ");
         Serial.print(browseResult[j].name);
         if (browseResult[j].isDirectory) {

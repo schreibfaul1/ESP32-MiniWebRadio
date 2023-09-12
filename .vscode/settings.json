@@ -13,7 +13,9 @@
         "vector": "cpp",
         "string_view": "cpp",
         "memory": "cpp",
-        "initializer_list": "cpp"
+        "initializer_list": "cpp",
+        "neaacdec.h": "c"
     },
-    "commentTranslate.source": "intellsmi.deepl-translate-deepl"
+    "commentTranslate.source": "intellsmi.deepl-translate-deepl",
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc-12"
 }

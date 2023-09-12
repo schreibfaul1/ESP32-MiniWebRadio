@@ -423,7 +423,7 @@ boolean saveStationsToNVS() {
             Cy = "";
             StationName = "";
             StreamURL = "";
-            for(int i = 0; i < currentLine.length() + 1; i++) {
+            for(int32_t i = 0; i < currentLine.length() + 1; i++) {
                 if(currentLine[i] == '\t' || i == currentLine.length()) {
                     if(p == 0) Hide = currentLine.substring(q, i);
                     if(p == 1) Cy = currentLine.substring(q, i);
@@ -563,7 +563,7 @@ void updateSettings(){
 String SD_dirContent(String path) {
     File    root, file;
     JSONVar jObject, jArr;
-    int     i = 0;
+    int32_t     i = 0;
     if(path == "") path = "/";
     root = SD_MMC.open(path.c_str());
 
@@ -594,7 +594,7 @@ String SD_dirContent(String path) {
 String DLNA_dirContent(String path) {
     // File root, file;
     // JSONVar jObject, jArr;
-    // int i = 0;
+    // int32_t i = 0;
     // if(path =="") path = "/";
     // root = SD_MMC.open(path.c_str());
 
@@ -730,7 +730,7 @@ inline void clearAll()                {tft.fillScreen(TFT_BLACK);}              
 
 inline uint16_t txtlen(String str) {
     uint16_t len = 0;
-    for(int i = 0; i < str.length(); i++)
+    for(int32_t i = 0; i < str.length(); i++)
         if(str[i] <= 0xC2) len++;
     return len;
 }
@@ -741,7 +741,7 @@ void showHeadlineVolume() {
     tft.setTextColor(TFT_DEEPSKYBLUE);
     clearVolume();
 
-    int vol = 0;
+    int32_t vol = 0;
     if(_f_mute || _f_muteDecrement || _f_muteIncrement) { vol = _mute_volume; }
     else { vol = _cur_volume; }
 
@@ -823,9 +823,9 @@ void showFooterStaNr() {
     xSemaphoreGive(mutex_display);
 }
 void showFooterRSSI(boolean show) {
-    static int old_rssi = -1;
-    int        new_rssi = -1;
-    int        rssi = WiFi.RSSI(); // Received Signal Strength Indicator
+    static int32_t old_rssi = -1;
+    int32_t        new_rssi = -1;
+    int32_t        rssi = WiFi.RSSI(); // Received Signal Strength Indicator
     if(rssi < -1) new_rssi = 4;
     if(rssi < -50) new_rssi = 3;
     if(rssi < -65) new_rssi = 2;
@@ -835,7 +835,7 @@ void showFooterRSSI(boolean show) {
     if(new_rssi != old_rssi) {
         old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
         if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
-            static int tmp_rssi = 0;
+            static int32_t tmp_rssi = 0;
             if((abs(rssi - tmp_rssi) > 3)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
             tmp_rssi = rssi;
         }
@@ -975,18 +975,18 @@ void updateVUmeter() {
     uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
 
     if(left > _VUleftCh) {
-        for(int i = _VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
+        for(int32_t i = _VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
     }
     if(left < _VUleftCh) {
-        for(int i = left; i < _VUleftCh; i++) { drawRect(i, 1, 0); }
+        for(int32_t i = left; i < _VUleftCh; i++) { drawRect(i, 1, 0); }
     }
     _VUleftCh = left;
 
     if(right > _VUrightCh) {
-        for(int i = _VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
+        for(int32_t i = _VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
     }
     if(right < _VUrightCh) {
-        for(int i = right; i < _VUrightCh; i++) { drawRect(i, 0, 0); }
+        for(int32_t i = right; i < _VUrightCh; i++) { drawRect(i, 0, 0); }
     }
     _VUrightCh = right;
     xSemaphoreGive(mutex_display);
@@ -1006,7 +1006,7 @@ void showFooter() { // stationnumber, sleeptime, IPaddress
     showFooterRSSI(true);
     showFooterBitRate(_icyBitRate);
 }
-void display_info(const char* str, int xPos, int yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
+void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
     tft.setCursor(xPos + margin_l, yPos);                     // Prepare to show the info
@@ -1510,9 +1510,9 @@ void processPlaylist(boolean first) {
             }
             else {
                 const char* path = playlistFile.path();
-                int         idx = lastIndexOf(path, '/');
-                int         len = strlen(_chbuf);
-                for(int i = len; i > -1; i--) { _chbuf[idx + i + 1] = _chbuf[i]; }
+                int32_t         idx = lastIndexOf(path, '/');
+                int32_t         len = strlen(_chbuf);
+                for(int32_t i = len; i > -1; i--) { _chbuf[idx + i + 1] = _chbuf[i]; }
                 strncpy(_chbuf, path, idx + 1);
                 log_w("pls path %s, %i, %i", _chbuf, idx, len);
                 urldecode(_chbuf);
@@ -1560,7 +1560,7 @@ bool connectToWiFi() {
             str += "\t";
             uint p = 0, q = 0;
             s_ssid = "", s_password = "", s_info = "";
-            for(int i = 0; i < str.length(); i++) {
+            for(int32_t i = 0; i < str.length(); i++) {
                 if(str[i] == '\t') {
                     if(p == 0) s_ssid = str.substring(q, i);
                     if(p == 1) s_password = str.substring(q, i);
@@ -1611,14 +1611,14 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     String    AccesspointIP = myIP.toString();
     tft.printf("WiFi credentials are not correct\nAccesspoint IP: %s", AccesspointIP.c_str());
     SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
-    int n = WiFi.scanNetworks();
+    int32_t n = WiFi.scanNetworks();
     if(n == 0) {
         SerialPrintfln("setup: ....  no WiFi networks found");
         while(true) { ; }
     }
     else {
         SerialPrintfln("setup: ....  %d WiFi networks found", n);
-        for(int i = 0; i < n; ++i) {
+        for(int32_t i = 0; i < n; ++i) {
             SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), WiFi.RSSI(i));
             _scannedNetworks += WiFi.SSID(i) + '\n';
         }
@@ -1631,7 +1631,7 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
  *                                                                     A U D I O                                                                     *
  *****************************************************************************************************************************************************/
 void connecttohost(const char* host) {
-    int   idx1, idx2;
+    int32_t   idx1, idx2;
     char* url = nullptr;
     char* user = nullptr;
     char* pwd = nullptr;
@@ -1760,7 +1760,7 @@ void setup() {
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
 #endif
-    int sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
+    int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
         tft.setFont(_fonts[5]);
@@ -1869,23 +1869,23 @@ const char* byte_to_binary(int8_t x) {
     static char b[9];
     b[0] = '\0';
 
-    int z;
+    int32_t z;
     for(z = 128; z > 0; z >>= 1) { strcat(b, ((x & z) == z) ? "1" : "0"); }
     return b;
 }
 uint32_t simpleHash(const char* str) {
     if(str == NULL) return 0;
     uint32_t hash = 0;
-    for(int i = 0; i < strlen(str); i++) {
+    for(int32_t i = 0; i < strlen(str); i++) {
         if(str[i] < 32) continue; // ignore control sign
         hash += (str[i] - 31) * i * 32;
     }
     return hash;
 }
-int str2int(const char* str) {
-    int len = strlen(str);
+int32_t str2int(const char* str) {
+    int32_t len = strlen(str);
     if(len > 0) {
-        for(int i = 0; i < len; i++) {
+        for(int32_t i = 0; i < len; i++) {
             if(!isdigit(str[i])) {
                 log_e("NaN");
                 return 0;
@@ -1916,14 +1916,14 @@ bool startsWith(const char* base, const char* searchString) {
     return true;
 }
 bool endsWith(const char* base, const char* searchString) {
-    int         slen = strlen(searchString) - 1;
+    int32_t         slen = strlen(searchString) - 1;
     const char* p = base + strlen(base) - 1;
     while(p > base && isspace(*p)) p--; // rtrim
     p -= slen;
     if(p < base) return false;
     return (strncmp(p, searchString, slen) == 0);
 }
-int indexOf(const char* haystack, const char* needle, int startIndex) {
+int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
     const char* p = haystack;
     for(; startIndex > 0; startIndex--)
         if(*p++ == '\0') return -1;
@@ -1931,7 +1931,7 @@ int indexOf(const char* haystack, const char* needle, int startIndex) {
     if(pos == nullptr) return -1;
     return pos - haystack;
 }
-int lastIndexOf(const char* haystack, const char needle) {
+int32_t lastIndexOf(const char* haystack, const char needle) {
     const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
 }
@@ -2218,7 +2218,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
         return;
     }
     showVolumeBar();
-    int idx = lastIndexOf(path, '/');
+    int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
     if(showFN) showFileName(path + idx + 1);
     changeState(PLAYERico);
@@ -2329,7 +2329,7 @@ void setRTC(const char* TZString) {
 
 void vector_clear_and_shrink(vector<char*>&vec){
     uint size = vec.size();
-    for (int i = 0; i < size; i++) {
+    for (int32_t i = 0; i < size; i++) {
         if(vec[i]){
             free(vec[i]);
             vec[i] = NULL;
@@ -2352,7 +2352,7 @@ void dlna_items_vector_clear_ans_shrink(){
  *                                                            M E N U E / B U T T O N S                                                              *
  *****************************************************************************************************************************************************/
 // clang-format off
-void changeState(int state){
+void changeState(int32_t state){
     if(state == _state) return;  //nothing todo
     _f_state_isChanging = true;
     _f_volBarVisible = false;
@@ -2414,7 +2414,7 @@ void changeState(int state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             clearTitle();
             showVolumeBar();
-            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2434,7 +2434,7 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             clearVolBar();
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
@@ -2492,7 +2492,7 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2509,7 +2509,7 @@ void changeState(int state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             drawImage("/common/Brightness.jpg", 0, _winName.y);
             showBrightnessBar();
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case PLAYER:{
@@ -2525,7 +2525,7 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
-            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case PLAYERico:{
@@ -2538,7 +2538,7 @@ void changeState(int state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
-            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case AUDIOFILESLIST:{
@@ -2560,7 +2560,7 @@ void changeState(int state){
             clearDigits();
             display_alarmtime(0, 0, true);
             display_alarmDays(0, true);
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w,  _winButton.y);}
+            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w,  _winButton.y);}
             break;
         }
         case SLEEP:{
@@ -2578,7 +2578,7 @@ void changeState(int state){
             display_sleeptime();
             if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
             else                   drawImage("/common/Night_Gown.bmp", 280, 45);
-            for(int i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case DLNA:{
@@ -2598,7 +2598,7 @@ void changeState(int state){
             clearTitle();
             showFileLogo(state);
             showVolumeBar();
-            for(int i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case DLNAITEMSLIST:{
@@ -2615,9 +2615,9 @@ void changeState(int state){
 /*****************************************************************************************************************************************************
  *                                                                D L N A                                                                            *
  *****************************************************************************************************************************************************/
-int DLNA_setCurrentServer(String serverName) {
-    int serverNum = -1;
-    for(int i = 0; i < _names.size(); i++) {
+int32_t DLNA_setCurrentServer(String serverName) {
+    int32_t serverNum = -1;
+    for(int32_t i = 0; i < _names.size(); i++) {
         if(_names[i] == serverName) serverNum = i;
     }
     _currentServer = serverNum;
@@ -3625,7 +3625,7 @@ void tp_released(uint16_t x, uint16_t y){
                             tft.setCursor(10, _winFooter.h + (staListPos) * lineHight);
                             sprintf(_chbuf, "station_%03d", staNr);
                             String content = stations.getString(_chbuf, " #not_found");
-                            int idx = content.indexOf("#");
+                            int32_t idx = content.indexOf("#");
                             sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
                             tft.writeText((uint8_t*)_chbuf, -1, -1, true);
                             _timeCounter.timer = 0;
@@ -3658,7 +3658,7 @@ void tp_released(uint16_t x, uint16_t y){
                             uint8_t lineHight = _winWoHF.h / 10;
                             tft.setCursor(20, _winFooter.h + (fileListPos) * lineHight);
                             if(fileListPos == 0) {
-                                int idx = _curAudioFolder.lastIndexOf("/");
+                                int32_t idx = _curAudioFolder.lastIndexOf("/");
                                 if(idx > 1){ // not the first '/'
                                     _curAudioFolder = _curAudioFolder.substring(0, idx);
                                     _fileListNr = 0;
@@ -3672,7 +3672,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 tft.setTextColor(TFT_CYAN);
                                 tft.writeText((uint8_t*)_SD_content[fileNr - 1], -1, -1, true);
                                 sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[fileNr - 1]);
-                                int idx = indexOf(_chbuf, "\033[", 1);
+                                int32_t idx = indexOf(_chbuf, "\033[", 1);
                                 if(idx == -1){ // is folder
                                     _curAudioFolder += "/" + (String)_SD_content[fileNr - 1];
                                     _fileListNr = 0;
@@ -3917,15 +3917,15 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Upload  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                    return;}
 
-    if(cmd == "setIRcmd"){         int command = (int)strtol(param.c_str(), NULL, 16);
-                                   int btnNr = (int)strtol(arg.c_str(), NULL, 10);
+    if(cmd == "setIRcmd"){         int32_t command = (int32_t)strtol(param.c_str(), NULL, 16);
+                                   int32_t btnNr = (int32_t)strtol(arg.c_str(), NULL, 10);
                                    SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x, "
                                    ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "0x%02x", command, btnNr);
                                    ir.set_irButtons(btnNr,  command);
                                    return;}
     if(cmd == "setIRadr"){         SerialPrintfln("set_IR_adr:  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s",
                                    param.c_str());
-                                   int address = (int)strtol(param.c_str(), NULL, 16);
+                                   int32_t address = (int32_t)strtol(param.c_str(), NULL, 16);
                                    ir.set_irAddress(address);
                                    return;}
 
@@ -4067,9 +4067,9 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
     if(lastItem){
         _dlna_items.isReady = true;
 
-        int s = _dlna_items.name.size();
+        int32_t s = _dlna_items.name.size();
 
-        for(int i = 0; i < s;  i++){
+        for(int32_t i = 0; i < s;  i++){
             log_w("name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", _dlna_items.name[i], _dlna_items.id[i], _dlna_items.size[i], _dlna_items.uri[i], _dlna_items.isDir[i], _dlna_items.isAudio[i]);
         }
 
