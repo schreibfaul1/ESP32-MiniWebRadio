@@ -47,8 +47,8 @@ File myFile;
 // parameter "object": 
 //  - when entering the function it contains the directory to browse
 //  - when function returns true it contains the file info
-bool findAudioFile(SoapESP32 *soap, int servNum, soapObject_t *object) {
-  static int level;  
+bool findAudioFile(SoapESP32 *soap, int32_t servNum, soapObject_t *object) {
+  static int32_t level;  
   soapObjectVect_t browseResult;
 
   if (object->id == "0") level = 0;            // root resets level marker
@@ -60,7 +60,7 @@ bool findAudioFile(SoapESP32 *soap, int servNum, soapObject_t *object) {
     return false;
   }
   else {
-    for (int i = 0; i < browseResult.size(); i++) {
+    for (int32_t i = 0; i < browseResult.size(); i++) {
       // go through each object in list and recurse for directories or
       // break if we find an audio file
       if (browseResult[i].isDirectory ) {
@@ -180,7 +180,7 @@ void setup() {
         Serial.println("Start copying file from server to SD, please wait."); 
 
         do {
-          int res = soap.read(buffer, READ_BUFFER_SIZE);
+          int32_t res = soap.read(buffer, READ_BUFFER_SIZE);
           if (res < 0) {
             // read error or timeout 
             Serial.println("Error reading from media server."); 

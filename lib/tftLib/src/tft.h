@@ -293,7 +293,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint16_t gif_TextGridWidth=0;
         uint16_t gif_TextGridHeight=0;
 
-        int     GIF_readGifItems();
+        int32_t     GIF_readGifItems();
         boolean GIF_decodeGif(uint16_t x, uint16_t y);
         void    GIF_freeMemory();
         void    GIF_readHeader();
@@ -307,13 +307,13 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint8_t GIF_readCommentExtension(char *buf);
         uint8_t GIF_readDataSubBlock(char *buf);
         boolean GIF_readExtension(char Label);
-        int     GIF_GetCode(int code_size, int flag);
-        int     GIF_LZWReadByte(boolean init);
+        int32_t     GIF_GetCode(int32_t code_size, int32_t flag);
+        int32_t     GIF_LZWReadByte(boolean init);
         bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
         //------------TFT-------------------
 
-        inline int minimum(int a, int b){if(a < b) return a; else return b;}
+        inline int32_t minimum(int32_t a, int32_t b){if(a < b) return a; else return b;}
         inline void TFT_DC_HIGH() {if (TFT_DC < 32) {GPIO.out_w1ts = (1 << TFT_DC);}
                                    else             {GPIO.out1_w1ts.data = (1 << (TFT_DC - 32));}}
         inline void TFT_DC_LOW()  {if (TFT_DC < 32) {GPIO.out_w1tc = (1 << TFT_DC);}
@@ -358,7 +358,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         void      bmpSkipPixels(fs::File &file, uint8_t bitsPerPixel, size_t len);
         void      bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len);
         void      drawBitmap(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t *pcolors);
-        void      renderJPEG(int xpos, int ypos, uint16_t maxWidth, uint16_t maxHeight);
+        void      renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight);
 
         uint8_t   readcommand8(uint8_t reg, uint8_t index = 0);
 };
@@ -389,14 +389,14 @@ private:
     } JPEG_MARKER;
 
     typedef struct{
-        int     m_width;        // Image resolution
-        int     m_height;
-        int     m_comps;        // Number of components (1 or 3)
-        int     m_MCUSPerRow;   // Total number of minimum coded units (MCU's) per row/col.
-        int     m_MCUSPerCol;
+        int32_t     m_width;        // Image resolution
+        int32_t     m_height;
+        int32_t     m_comps;        // Number of components (1 or 3)
+        int32_t     m_MCUSPerRow;   // Total number of minimum coded units (MCU's) per row/col.
+        int32_t     m_MCUSPerCol;
         pjpeg_scan_type_t m_scanType; // Scan type
-        int     m_MCUWidth;     // MCU width/height in pixels (each is either 8 or 16 depending on the scan type)
-        int     m_MCUHeight;
+        int32_t     m_MCUWidth;     // MCU width/height in pixels (each is either 8 or 16 depending on the scan type)
+        int32_t     m_MCUHeight;
         uint8_t *m_pMCUBufR;
         uint8_t *m_pMCUBufG;
         uint8_t *m_pMCUBufB;
@@ -408,8 +408,8 @@ private:
         uint8_t mValPtr[16];
     }HuffTable;
 
-    typedef unsigned char (*pjpeg_need_bytes_callback_t)
-        (unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
+    typedef uint8_t(*pjpeg_need_bytes_callback_t)
+        (uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void* pCallback_data);
 
     pjpeg_scan_type_t  scanType, gScanType;
     pjpeg_image_info_t image_info;
@@ -518,41 +518,41 @@ private:
     void *g_pCallback_data;
 
     JPEGDecoder *thisPtr;
-    int comps=0;
-    int MCUSPerRow=0;
-    int MCUSPerCol=0;
+    int32_t comps=0;
+    int32_t MCUSPerRow=0;
+    int32_t MCUSPerCol=0;
     char chbuf[256];
 
 public:
     uint16_t *pImage=0;
-    int width=0;
-    int height=0;
-    int MCUWidth=0;
-    int MCUHeight=0;
-    int MCUx=0;
-    int MCUy=0;
+    int32_t width=0;
+    int32_t height=0;
+    int32_t MCUWidth=0;
+    int32_t MCUHeight=0;
+    int32_t MCUx=0;
+    int32_t MCUy=0;
 
     JPEGDecoder();
     ~JPEGDecoder();
-    int read(void);
-    int decodeSdFile (File g_pInFile);
+    int32_t read(void);
+    int32_t decodeSdFile (File g_pInFile);
     void abort(void);
         // Initializes the decompressor. Returns 0 on success, or one of the above error codes on failure. pNeed_bytes_callback will be called
         // to fill the decompressor's internal input buffer. If reduce is 1, only the first pixel of each block will be decoded. This mode is
         // much faster because it skips the AC dequantization, IDCT and chroma upsampling of every image pixel.Not thread safe.
-    uint8_t pjpeg_decode_init(pjpeg_image_info_t *pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback, void *pCallback_data, unsigned char reduce);
+    uint8_t pjpeg_decode_init(pjpeg_image_info_t *pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback, void *pCallback_data, uint8_t reduce);
         // Decompresses the file's next MCU. Returns 0 on success, PJPG_NO_MORE_BLOCKS if no more blocks are available, or an error code.
         // Must be called a total of m_MCUSPerRow*m_MCUSPerCol times to completely decompress the image. Not thread safe.
     uint8_t pjpeg_decode_mcu();
 
 private:
-    int available(void);
-    int readSwappedBytes(void);
-    int decodeArray(const uint8_t array[], uint32_t  array_size);
-    int decode_mcu(void);
-    int decodeCommon(void);
-    static uint8_t pjpeg_callback(unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
-    uint8_t pjpeg_need_bytes_callback(unsigned char* pBuf, unsigned char buf_size, unsigned char *pBytes_actually_read, void *pCallback_data);
+    int32_t available(void);
+    int32_t readSwappedBytes(void);
+    int32_t decodeArray(const uint8_t array[], uint32_t  array_size);
+    int32_t decode_mcu(void);
+    int32_t decodeCommon(void);
+    static uint8_t pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void *pCallback_data);
+    uint8_t pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t*pBytes_actually_read, void *pCallback_data);
 
     int16_t replicateSignBit16(int8_t n);
     uint16_t getBits(uint8_t numBits, uint8_t FFCheck);
@@ -598,7 +598,7 @@ private:
     void transformBlock(uint8_t mcuBlock);
     void transformBlockReduce(uint8_t mcuBlock);
 
-    inline int jpg_min(int a, int b){
+    inline int32_t jpg_min(int32_t a, int32_t b){
         if(a < b) return a; else return b;
     }
     inline int16_t arithmeticRightShiftN16(int16_t x, int8_t n){
@@ -607,8 +607,8 @@ private:
         return r;
     }
      inline int32_t arithmeticRightShift8L(long x){
-        int32_t r = (unsigned long)x >> 8U;
-        if (x < 0) r |= ~(~(unsigned long)0U >> 8U);
+        int32_t r = (uint32_t)x >> 8U;
+        if (x < 0) r |= ~(~(uint32_t)0U >> 8U);
         return r;
      }
      inline uint8_t getOctet(uint8_t FFCheck){

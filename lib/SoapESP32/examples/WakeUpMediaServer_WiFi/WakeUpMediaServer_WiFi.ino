@@ -85,7 +85,7 @@ void setup() {
   Serial.println("Now waiting a few seconds before scanning local network again.");
 
   // give target device some time to wake up
-  for (int sec = 0; sec < WAKE_UP_TIME; sec += 2) {
+  for (int32_t sec = 0; sec < WAKE_UP_TIME; sec += 2) {
     sleep(2);
     Serial.print('.');
   }

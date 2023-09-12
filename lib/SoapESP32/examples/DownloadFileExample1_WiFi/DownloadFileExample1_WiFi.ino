@@ -105,7 +105,7 @@ void setup() {
 
     bytesRead = 0;
     do {
-      int res = soap.read(buffer, READ_BUFFER_SIZE);
+      int32_t res = soap.read(buffer, READ_BUFFER_SIZE);
       if (res < 0) {
         // read error  
         break;

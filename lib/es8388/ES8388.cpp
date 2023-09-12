@@ -86,7 +86,7 @@ bool ES8388::read_reg(uint8_t slave_add, uint8_t reg_add, uint8_t &data)
     return retval;
 }
 
-bool ES8388::begin(int sda, int scl, uint32_t frequency)
+bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency)
 {
     bool res = identify(sda, scl, frequency);
 
@@ -261,7 +261,7 @@ void ES8388::SetVolumeHeadphone(uint8_t vol){
  * @return true device was found
  * @return false device was not found
  */
-bool ES8388::identify(int sda, int scl, uint32_t frequency)
+bool ES8388::identify(int32_t sda, int32_t scl, uint32_t frequency)
 {
     Wire.begin(sda, scl, frequency);
     Wire.beginTransmission(ES8388_ADDR);

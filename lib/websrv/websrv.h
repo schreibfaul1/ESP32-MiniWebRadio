@@ -55,7 +55,7 @@ protected:
     void    parseWsMessage(uint32_t len);
     String  URLdecode(String str);
     String  UTF8toASCII(String str);
-    String  responseCodeToString(int code);
+    String  responseCodeToString(int32_t code);
 
 
 public:
@@ -87,7 +87,7 @@ public:
     const char PNG[15]   = "image/png";
 
 private:
-    const int B64index[123] ={
+    const int32_t B64index[123] ={
         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
         0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
@@ -99,7 +99,7 @@ private:
     };
 
 
-    int indexOf (const char* base, char ch, int startIndex = 0) {
+    int32_t indexOf (const char* base, char ch, int32_t startIndex = 0) {
     //fb
         const char *p = base;
         for (; startIndex > 0; startIndex--)
@@ -109,7 +109,7 @@ private:
         return pos - base;
     }
 
-    int lastIndexOf(const char* haystack, const char needle) {
+    int32_t lastIndexOf(const char* haystack, const char needle) {
     //fb
         const char *p = strrchr(haystack, needle);
         return (p ? p - haystack : -1);

@@ -137,11 +137,11 @@ SoapESP32::SoapESP32(WiFiClient *client, WiFiUDP *udp)
 #define WOL_PACKET_SIZE 102
 bool SoapESP32::wakeUpServer(const char *macAddress) {
     uint8_t packetBuffer[WOL_PACKET_SIZE];
-    int     mac[6];
+    int32_t     mac[6];
     char    lower[20];
 
     if(strlen(macAddress) > 10 && strlen(macAddress) < 18) {
-        int i;
+        int32_t i;
         for(i = 0; i < strlen(macAddress); i++) { lower[i] = tolower(macAddress[i]); }
         lower[i] = 0;
         if(sscanf(lower, "%x:%x:%x:%x:%x:%x%*c", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) != 6) {
@@ -155,7 +155,7 @@ bool SoapESP32::wakeUpServer(const char *macAddress) {
         for(i = 0; i < 3; i++) {
             claimSPI();
             m_udp->begin(9);
-            int ret = m_udp->beginPacket(IPAddress(255, 255, 255, 255), 9);
+            int32_t ret = m_udp->beginPacket(IPAddress(255, 255, 255, 255), 9);
             releaseSPI();
             if(ret) {
                 claimSPI();
@@ -177,9 +177,9 @@ bool SoapESP32::wakeUpServer(const char *macAddress) {
 //
 // helper function, client timed read
 //
-int SoapESP32::soapClientTimedRead() {
-    int           c;
-    unsigned long startMillis = millis();
+int32_t SoapESP32::soapClientTimedRead() {
+    int32_t           c;
+    uint32_t startMillis = millis();
 
     do {
         claimSPI();
@@ -230,8 +230,8 @@ bool SoapESP32::soapUDPmulticast(uint8_t repeats) {
 //
 // SSDP/UDP search for media servers in local network
 //
-bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int msWait) {
-    int       i, port;
+bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int32_t msWait) {
+    int32_t       i, port;
     size_t    len;
     IPAddress ip;
     char      tmpBuffer[SSDP_TMP_BUFFER_SIZE], location[SSDP_LOCATION_BUF_SIZE] = "", address[20];
@@ -328,7 +328,7 @@ bool SoapESP32::soapReadHttpHeader(uint64_t *contentLength, bool *chunked) {
     if(chunked) *chunked = false;
     while(true) {
         claimSPI();
-        int av = m_client->available();
+        int32_t av = m_client->available();
         releaseSPI();
         if(!av) break;
         claimSPI();
@@ -366,9 +366,9 @@ bool SoapESP32::soapReadHttpHeader(uint64_t *contentLength, bool *chunked) {
 const replaceWith_t replaceWith[] = {{"&lt;", '<'},      {"&gt;", '>'},        {"&quot;", '"'},
                                      {"&amp;amp;", '&'}, {"&amp;apos;", '\''}, {"&amp;quot;", '\''}};
 
-int SoapESP32::soapReadXML(bool chunked, bool replace) {
+int32_t SoapESP32::soapReadXML(bool chunked, bool replace) {
     bool match;
-    int  i, c = -10;
+    int32_t  i, c = -10;
 
     if(!replace || (replace && (m_xmlReplaceState == xmlPassthrough))) {
     GET_MORE:
@@ -386,7 +386,7 @@ int SoapESP32::soapReadXML(bool chunked, bool replace) {
 
                 // next line contains chunk size
                 claimSPI();
-                int len = m_client->readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
+                int32_t len = m_client->readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
                 releaseSPI();
                 if(len < 2) {
                     return -2;  // we expect at least 1 digit chunk size + '\r'
@@ -474,7 +474,7 @@ uint8_t SoapESP32::seekServer() {
 
     // if(dlna_info) dlna_info("checking all discovered media servers for service ContentDirectory");
 
-    int          j = 0;
+    int32_t          j = 0;
     uint64_t     contentSize;
     bool         chunked, gotFriendlyName, gotServiceType;
     String       result((char *)0);
@@ -512,7 +512,7 @@ uint8_t SoapESP32::seekServer() {
         xPath.reset();
         xPath.setPath(xmlParserPaths[xpFriendlyName].tagNames, xmlParserPaths[xpFriendlyName].num);
         while(true) {
-            int ret = soapReadXML(chunked);
+            int32_t ret = soapReadXML(chunked);
             if(ret < 0) {
                 log_w("soapReadXML() returned: %d", ret);
                 goto end_stop_error;
@@ -573,7 +573,7 @@ uint8_t SoapESP32::seekServer() {
 //
 bool SoapESP32::addServer(IPAddress ip, uint16_t port, const char *controlURL, const char *name) {
     soapServer_t srv;
-    int          i;
+    int32_t          i;
 
     // just some basic checks
     if(!ip || !port || !name || strlen(name) == 0 || !controlURL || strlen(controlURL) == 0) {
@@ -607,7 +607,7 @@ void SoapESP32::clearServerList() { m_server.clear(); }
 // helper function: scan for certain attribute
 //
 bool SoapESP32::soapScanAttribute(const String *attributes, String *result, const char *what) {
-    int begin, end;
+    int32_t begin, end;
 
     if((begin = attributes->indexOf(what)) >= 0 &&
        (end = attributes->indexOf("\"", begin + strlen(what) + 1)) >= begin + strlen(what) + 1) {
@@ -625,7 +625,7 @@ bool SoapESP32::soapScanAttribute(const String *attributes, String *result, cons
 // scan <container> content in SOAP answer
 //
 bool SoapESP32::soapScanContainer(const String *parentId, const String *attributes, const String *container) {
-    int          i = 0;
+    int32_t          i = 0;
     soapObject_t info;
     String       str((char *)0);
 
@@ -654,7 +654,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
     if(!soapScanAttribute(attributes, &str, DIDL_ATTR_CHILD_COUNT)) { info.sizeMissing = true; }
     else {
         log_d("%s\"%s\"", DIDL_ATTR_CHILD_COUNT, str.c_str());
-        if((info.size = (int)str.toInt()) == 0) {
+        if((info.size = (int32_t)str.toInt()) == 0) {
             // if(dlna_info){
             //     sprintf(m_chbuf, "container \"%s\" child count=0", info.id.c_str());
             //     dlna_info(m_chbuf);
@@ -670,7 +670,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
     }
     else {
         log_d("%s\"%s\"", DIDL_ATTR_SEARCHABLE, str.c_str());
-        info.searchable = (1 == (int)str.toInt()) ? true : false;
+        info.searchable = (1 == (int32_t)str.toInt()) ? true : false;
         if(!info.searchable) {
             // sprintf(m_chbuf, "\"%s\" attribute searchable=0", info.id.c_str());
             // if(dlna_info) dlna_info(m_chbuf);
@@ -706,7 +706,7 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
 //
 bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, const String *item) {
     soapObject_t info;
-    int          i = 0, port;
+    int32_t          i = 0, port;
     char         address[20];
     IPAddress    ip;
     String       str((char *)0);
@@ -855,9 +855,9 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
     // evaluate SOAP answer
     static uint64_t  contentSize = 0;
     static bool      chunked = false;
-    static int       count = 0;
-    static int       countContainer = 0;
-    static int       countItem = 0;
+    static int32_t       count = 0;
+    static int32_t       countContainer = 0;
+    static int32_t       countItem = 0;
     static String    str = "";
     static String    strAttribute = "";
     static bool      browseServerLoop = false;
@@ -925,7 +925,7 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
 
 
     if(browseServerLoop) {
-        int ret = soapReadXML(chunked, true);  // de-chunk data stream and replace XML-entities (if found)
+        int32_t ret = soapReadXML(chunked, true);  // de-chunk data stream and replace XML-entities (if found)
         if(ret < 0) {
             log_e("soapReadXML() returned: %d", ret);
             goto end_stop;
@@ -1095,12 +1095,12 @@ bool SoapESP32::readStart(soapObject_t *object, size_t *size) {
 //   both cases, so we need to treat -1 & 0 equally.
 // - timeout checking is vital because client.read() can return 0 for ages in case of WiFi problems
 //
-int SoapESP32::read(uint8_t *buf, size_t size, uint32_t timeout) {
+int32_t SoapESP32::read(uint8_t *buf, size_t size, uint32_t timeout) {
     // first some basic checks
     if(!buf || !size || !m_clientDataConOpen) return -1;  // clearly an error
     if(!m_clientDataAvailable) return 0;                  // most probably EOF
 
-    int      res = -1;
+    int32_t      res = -1;
     uint32_t start = millis();
 
     while(1) {
@@ -1126,7 +1126,7 @@ int SoapESP32::read(uint8_t *buf, size_t size, uint32_t timeout) {
 //
 // read a single byte from server, return -1 in case of error
 //
-int SoapESP32::read(void) {
+int32_t SoapESP32::read(void) {
     uint8_t b;
     if(read(&b, 1) > 0) return b;
     return -1;
@@ -1159,7 +1159,7 @@ bool SoapESP32::soapGet(const IPAddress ip, const uint16_t port, const char *uri
         log_w("client data connection to media server was still open. Closed now.");
     }
 
-    for(int i = 0;;) {
+    for(int32_t i = 0;;) {
         claimSPI();
         bool ret = m_client->connect(ip, port);
         releaseSPI();
@@ -1200,7 +1200,7 @@ bool SoapESP32::soapGet(const IPAddress ip, const uint16_t port, const char *uri
     uint32_t start = millis();
     while(true) {
         claimSPI();
-        int av = m_client->available();
+        int32_t av = m_client->available();
         releaseSPI();
         if(av) break;
         if(millis() > (start + SERVER_RESPONSE_TIMEOUT)) {
@@ -1231,9 +1231,9 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
         log_w("client data connection to media server was still open. Closed now.");
     }
 
-    for(int i = 0;;) {
+    for(int32_t i = 0;;) {
         claimSPI();
-        int ret = m_client->connect(ip, (uint16_t)port);
+        int32_t ret = m_client->connect(ip, (uint16_t)port);
         releaseSPI();
         if(ret) break;
         if(++i >= 2) {
@@ -1329,7 +1329,7 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
     uint32_t start = millis();
     while(true) {
         claimSPI();
-        int av = m_client->available();
+        int32_t av = m_client->available();
         releaseSPI();
         if(av) break;
         if(millis() > (start + SERVER_RESPONSE_TIMEOUT)) {

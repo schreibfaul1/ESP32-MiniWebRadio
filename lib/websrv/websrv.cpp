@@ -22,7 +22,7 @@ void WebSrv::show_not_found(){
 String WebSrv::calculateWebSocketResponseKey(String sec_WS_key){
     // input  Sec-WebSocket-Key from client
     // output Sec-WebSocket-Accept-Key (used in response message to client)
-    unsigned char sha1_result[20];
+    uint8_t sha1_result[20];
     String concat = sec_WS_key + WS_sec_conKey;
     mbedtls_sha1_ret((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
     return base64::encode(sha1_result, 20);
@@ -42,7 +42,7 @@ void WebSrv::printWebSocketHeader(String wsRespKey){
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len){
     uint TCPCHUNKSIZE = 1024;   // Max number of bytes per write
     size_t pagelen=0, res=0;                    // Size of requested page
-    const unsigned char* p;
+    const uint8_t*p;
     p = reinterpret_cast<const unsigned char*>(pagename);
     if(len==-1){
         pagelen=strlen(pagename);
@@ -231,7 +231,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     uint32_t len = contentLength;
     boolean f_werror=false;
     String str="";
-    int n=0;
+    int32_t n=0;
     File file;
     fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
@@ -414,10 +414,10 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                     http_param  = "";
                     http_arg    = "";
                     http_rqfile = "";
-                    int posHTTP = currentLine.indexOf(" HTTP/");
+                    int32_t posHTTP = currentLine.indexOf(" HTTP/");
                     if(posHTTP >= 0) currentLine = currentLine.substring(0, posHTTP);
 
-                    int pos = currentLine.indexOf("&version="); if(pos > 0) currentLine = currentLine.substring(0, pos);
+                    int32_t pos = currentLine.indexOf("&version="); if(pos > 0) currentLine = currentLine.substring(0, pos);
 
                     currentLine = URLdecode(currentLine);
 
@@ -457,7 +457,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         if(cmdclient.available()) {
             //log_i("%i", cmdclient.available());
             currentLine = cmdclient.readStringUntil('\n');
-            int idx = currentLine.indexOf("\r");
+            int32_t idx = currentLine.indexOf("\r");
             if(idx > 0) currentLine[idx] = ' ';
             // log_i("currLine %s", currentLine.c_str());
             contentLength -= currentLine.length();
@@ -525,7 +525,7 @@ boolean WebSrv::handleWS() {                  // Websocketserver, receive messag
             }
         }
     }
-    int av = webSocketClient.available();
+    int32_t av = webSocketClient.available();
 
     if(av){
         parseWsMessage(av);
@@ -590,7 +590,7 @@ void WebSrv::parseWsMessage(uint32_t len){
     }
 
     if(opcode == 0x01) { // denotes a text frame
-        int plen;
+        int32_t plen;
         while(paylodLen){
             if(paylodLen > 255){
                 plen = 255;
@@ -602,7 +602,7 @@ void WebSrv::parseWsMessage(uint32_t len){
                 webSocketClient.readBytes(buff, plen);
             }
             if(mask){
-                for(int i = 0; i < plen; i++){
+                for(int32_t i = 0; i < plen; i++){
                     buff[i] = (buff[i] ^ maskingKey[i % 4]);
                 }
             }
@@ -612,12 +612,12 @@ void WebSrv::parseWsMessage(uint32_t len){
                 const char* cmd = buff;
                 const char* param = NULL;
                 const char* arg = NULL;
-                int idx1 = indexOf(buff, '=');
+                int32_t idx1 = indexOf(buff, '=');
                 if(idx1 > 0){
                     buff[idx1] = '\0';
                     const char* cmd = buff;
-                    int offset = idx1 + 1;
-                    int idx2 = lastIndexOf(buff + offset, '&');
+                    int32_t offset = idx1 + 1;
+                    int32_t idx2 = lastIndexOf(buff + offset, '&');
                     if (idx2 > 0){
                         *(buff + offset + idx2) = '\0';
                         param = buff + offset;
@@ -668,7 +668,7 @@ void WebSrv::loop() {
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::reply(const String response, const char* MIMEType, boolean header){
     if(header==true) {
-        int l= response.length();
+        int32_t l= response.length();
         // HTTP header
         String httpheader="";
         httpheader += "HTTP/1.1 200 OK\r\n";
@@ -680,7 +680,7 @@ void WebSrv::reply(const String response, const char* MIMEType, boolean header){
     cmdclient.print(response);
 }
 void WebSrv::sendStatus(uint16_t HTTPstatusCode){
-    int l= 0; // respunse length
+    int32_t l= 0; // respunse length
     // HTTP header
     String httpheader="";
     httpheader += "HTTP/1.1 " +  String(HTTPstatusCode, 10) + "\r\n";
@@ -732,7 +732,7 @@ String WebSrv::URLdecode(String str){
     return res;
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::responseCodeToString(int code) {
+String WebSrv::responseCodeToString(int32_t code) {
   switch (code) {
     case 100: return F("Continue");
     case 101: return F("Switching Protocols");

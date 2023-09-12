@@ -78,7 +78,7 @@ EthernetUDP    udp;
 
 SoapESP32 soap(&client, &udp);
 
-void printServerContent(SoapESP32 *soap, int servNum, String objectId, int numTabs = 0) {
+void printServerContent(SoapESP32 *soap, int32_t servNum, String objectId, int32_t numTabs = 0) {
   soapObjectVect_t browseResult;
 
   if (!soap->browseServer(servNum,          // server number in our internal server list
@@ -89,7 +89,7 @@ void printServerContent(SoapESP32 *soap, int servNum, String objectId, int numTa
     return;
   }
   else {
-    for (int i = 0; i < browseResult.size(); i++) {
+    for (int32_t i = 0; i < browseResult.size(); i++) {
       // go through each item in list
       for (uint8_t j=0; j<numTabs; j++) {
         Serial.print("  ");                 // indentation
