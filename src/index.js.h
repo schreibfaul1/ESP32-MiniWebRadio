@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 26.07.2023
+ *  Updated on: 17.09.2023
  *      Author: Wolle
  *
  *
@@ -326,6 +326,15 @@ function audioPlayer_buildFileSystemTree(path) {
                 ref.text = "SD_"
                 var node = ref.get_node(nodeId);
                 var items = {};
+                /* Play All */
+                if (node.data.directory){
+                    items.play = {
+                        label: "Play All",
+                        action: function (x) {
+                            XmlHttpReq1("GET", "SD_playAllFiles?" +  encodeURIComponent(node.data.path), "playAll")
+                        }
+                    }
+                };
                 /* New Folder */
                 if (node.data.directory) {
                     items.createDir = {
@@ -349,15 +358,6 @@ function audioPlayer_buildFileSystemTree(path) {
                     items.play = {
                         label: "Play",
                         action: function (x) {
-                            var playMode = 1;
-                            if (node.data.directory) {
-                                playMode = 5;
-                            }
-                            else {
-                                if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
-                                    playMode = 11;
-                                }
-                            }
                             XmlHttpReq1("GET", "SD_playFile?" +  encodeURIComponent(node.data.path), "play")
                         }
                     };
@@ -521,15 +521,6 @@ function dlnaPlayer_buildFileSystemTree(path) {
                     items.play = {
                         label: "Play",
                         action: function (x) {
-                            var playMode = 1;
-                            if (node.data.directory) {
-                                playMode = 5;
-                            }
-                            else {
-                                if ((/\.(m3u|M3U)$/i).test(node.data.path)) {
-                                    playMode = 11;
-                                }
-                            }
                             XmlHttpReq1("GET", "DLNA_playFile?" +  encodeURIComponent(node.data.path), "play")
                         }
                     };

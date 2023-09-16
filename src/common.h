@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 20.Aug.2023
+// updated: 17.Sep.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -183,6 +183,8 @@ void display_sleeptime(int8_t ud = 0);
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0 , uint16_t maxHeigth = 0);
 bool SD_listDir(const char* path);
 bool setAudioFolder(const char* audioDir);
+boolean isAudio(File file);
+boolean isPlaylist(File file);
 File getNextAudioFile();
 bool connectToWiFi();
 void openAccessPoint();
@@ -215,6 +217,7 @@ void savefile(const char* fileName, uint32_t contentLength);
 String setTone();
 String setI2STone();
 void SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
+void SD_playFolder(const char* folderPath, bool showFN);
 bool SD_rename(const char* src , const char* dest);
 bool SD_newFolder(const char* folderPathName);
 bool SD_delete(const char* itemPath);

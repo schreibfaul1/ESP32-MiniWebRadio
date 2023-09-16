@@ -113,6 +113,9 @@ boolean        _f_SD_Upload = false;
 boolean        _f_PSRAMfound = false;
 boolean        _f_SD_MMCfound = false;
 boolean        _f_ESPfound = false;
+boolean        _f_playAllFiles = false;
+boolean        _f_clearLogo = false;
+boolean        _f_clearStationName = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -1437,6 +1440,21 @@ void showAudioFilesList(uint16_t fileListNr){
     _timeCounter.factor = 1.0;
 }
 
+boolean isAudio(File file){
+    if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
+               endsWith(file.name(), ".flac") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")){
+        return true;
+    }
+    return false;
+}
+
+boolean isPlaylist(File file){
+    if(endsWith(file.name(), ".m3u")){
+        return true;
+    }
+    return false;
+}
+
 File getNextAudioFile() {
     File file;
     while(true) {
@@ -1685,6 +1703,7 @@ void stopSong() {
     _f_isWebConnected = false;
     _f_playlistEnabled = false;
     _f_pauseResume = false;
+    _f_playAllFiles = false;
 }
 
 /*****************************************************************************************************************************************************
@@ -2207,6 +2226,7 @@ String setI2STone() {
 }
 
 void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
+    if(!path) return; // avoid a possible crash
     if(endsWith(path, "ogg")) resumeFilePos = 0; // resume only mp3, m4a, flac and wav
     if(endsWith(path, "m3u")) {
         playlistFile.close();                    // as a precaution
@@ -2228,6 +2248,67 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
         _lastconnectedfile = strdup(path);
         _resumeFilePos = 0;
     }
+}
+
+void SD_playFolder(const char* folderPath, bool showFN) {
+    // Plays all audio files in a given folder. If the specified path is not a folder, the function aborts. Otherwise the first recording file is
+    // searched for and called. The flag _f_playAllFiles is set. The next time you call it up, the path doesn't matter, the next audio file is called
+    // up... etc. If no further audio file is found, the flag is reset and the function is aborted.
+    char* filePath;
+    File  file;
+    if(!_f_playAllFiles) {
+        if(audioFile) audioFile.close(); // maybe audioFile contains old data
+        audioFile = SD_MMC.open(folderPath);
+        if(!audioFile.isDirectory()) {                                                        // as a precaution
+            SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "%s is not a directory", folderPath); // should never occur
+            return;
+        }
+        _curAudioFolder = folderPath;
+        while(true) {
+            file = audioFile.openNextFile();
+            if(!file) goto exit;
+            if(isAudio(file)) break;
+            file.close();
+        }
+        _f_playAllFiles = true;
+        changeState(PLAYERico);
+        showVolumeBar();
+        filePath = strdup(file.path());
+        sprintf(_chbuf, "SD_playFolder=%s", filePath);
+        webSrv.send(_chbuf);
+        if(showFN) showFileName(file.name());
+        file.close(); // do not open a file twice
+        connecttoFS(filePath);
+        if(filePath) {
+            free(filePath);
+            filePath = NULL;
+        }
+        return;
+    }
+    while(true) {
+        file = audioFile.openNextFile();
+        if(!file) goto exit;
+        if(isAudio(file)) break;
+        file.close();
+    }
+    filePath = strdup(file.path());
+    sprintf(_chbuf, "SD_playFolder=%s", filePath);
+    webSrv.send(_chbuf);
+    if(showFN) showFileName(file.name());
+    file.close();
+    connecttoFS(filePath);
+    if(filePath) {
+        free(filePath);
+        filePath = NULL;
+    }
+    return;
+exit:
+    SerialPrintfln("AUDIO_info:  " ANSI_ESC_CYAN "No other audio files found");
+    webSrv.send("SD_playFolder=No other audio files found");
+    _f_playAllFiles = false;
+    audioFile.close();
+    changeState(PLAYER);
+    stopSong();
 }
 
 bool SD_rename(const char* src, const char* dest) {
@@ -2529,6 +2610,9 @@ void changeState(int32_t state){
             break;
         }
         case PLAYERico:{
+            if(_state == RADIO){
+                clearWithOutHeaderFooter();
+            }
             showHeadlineItem(PLAYERico);
             _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
@@ -2934,9 +3018,19 @@ void loop() {
         updateSleepTime();
     }
 
+    if(_f_clearLogo){
+        clearLogo();
+        _f_clearLogo = false;
+    }
+
+    if(_f_clearStationName){
+        clearStationName();
+        _f_clearStationName = false;
+    }
+
     if(_f_playlistEnabled) {
         if(!_f_playlistNextFile) {
-            if(!audioIsRunning() && !_f_pauseResume) {
+            if(!audioIsRunning() && !_f_pauseResume && !_f_isFSConnected) {
                 SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next playlist file");
                 processPlaylist(false);
                 _playlistTime = millis();
@@ -2945,6 +3039,13 @@ void loop() {
         }
         else {
             if(_playlistTime + 5000 < millis()) _f_playlistNextFile = false;
+        }
+    }
+
+    if(_f_playAllFiles){
+        if(!audioIsRunning() && !_f_pauseResume && !_f_isFSConnected){
+            SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next audio file");
+            SD_playFolder("", true);
         }
     }
 }
@@ -3046,42 +3147,42 @@ void vs1053_commercial(const char* info) { show_ST_commercial(info); }
 void audio_commercial(const char* info) { show_ST_commercial(info); }
 //----------------------------------------------------------------------------------------
 void vs1053_eof_mp3(const char* info) { // end of mp3 file (filename)
-    _f_eof = true;
-    _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico) {
-        clearLogo();
-        clearStationName();
+        _f_clearLogo = true;
+        _f_clearStationName = true;
     }
     webSrv.send("SD_playFile=end of audiofile");
+    _f_eof = true;
+    _f_isFSConnected = false;
 }
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
-    _f_eof = true;
-    _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico) {
-        clearLogo();
-        clearStationName();
+        _f_clearLogo = true;
+        _f_clearStationName = true;
     }
     webSrv.send("SD_playFile=end of audiofile");
+    _f_eof = true;
+    _f_isFSConnected = false;
 }
 //----------------------------------------------------------------------------------------
 void vs1053_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
-        clearLogo();
-        clearStationName();
+        _f_clearLogo = true;
+        _f_clearStationName = true;
     }
 }
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
-        clearLogo();
-        clearStationName();
+        _f_clearLogo = true;
+        _f_clearStationName = true;
     }
 }
 //----------------------------------------------------------------------------------------
@@ -3898,6 +3999,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "SD_playFile"){       webSrv.reply("SD_playFile=" + param, webSrv.TEXT);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
                                     SD_playFile(param.c_str());
+                                    return;}
+
+    if(cmd == "SD_playAllFiles"){   webSrv.send("SD_playFolder=" + param);
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
+                                    SD_playFolder(param.c_str(), true);
                                     return;}
 
     if(cmd == "SD_rename"){         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
