@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 25.08.2023
+ *  Updated on: 17.09.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -438,10 +438,11 @@ function connect() {
                                     break
             case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
                                     break
-
+            case  "SD_playFolder":  resultstr3.value = "play all: " + val;
+                                    console.log("Audiofolder: ", val);
+                                    break
             case  "stopfile":       resultstr3.value = val;
                                     break
-
             case  "resumefile":     resultstr3.value = val;
                                     break
 
