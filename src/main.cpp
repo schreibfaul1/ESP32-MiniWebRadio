@@ -78,6 +78,7 @@ char           _icyDescription[512] = {};
 char           _streamTitle[512] = {};
 char*          _lastconnectedfile = nullptr;
 char*          _stationURL = nullptr;
+char*          _JSONstr = nullptr;
 boolean        _f_rtc = false; // true if time from ntp is received
 boolean        _f_100ms = false;
 boolean        _f_1sec = false;
@@ -563,32 +564,45 @@ void updateSettings(){
  *                                                    F I L E   E X P L O R E R                                                                      *
  *****************************************************************************************************************************************************/
 // Sends a list of the content of a directory as JSON file
-String SD_dirContent(String path) {
+const char* SD_dirContent(String path) {
     File    root, file;
-    JSONVar jObject, jArr;
+    uint16_t JSONstrLength = 0;
     int32_t     i = 0;
     if(path == "") path = "/";
     root = SD_MMC.open(path.c_str());
+    if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
 
     if(!root.isDirectory()) {
         SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
         return "";
     }
-    while(true) {
+    if(psramFound()) _JSONstr = (char*) ps_malloc(2);
+    else             _JSONstr = (char*) malloc(2);
+    JSONstrLength += 2;
+    memcpy(_JSONstr, "[\0", 2);
+    while(true) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
         file = root.openNextFile();
         if(!file) break;
-        if(startsWith(file.name(), "/.")) continue; // ignore hidden folders
-        jArr["name"] = (String)file.name();
-        jArr["dir"] = (boolean)file.isDirectory();
-        jObject[i] = jArr;
+        const char* fn = file.name();
+        if(startsWith(fn, "/.")) continue; // ignore hidden folders
+        uint8_t isDir = file.isDirectory();
+        uint16_t len = strlen(fn);
+        JSONstrLength += len  + 24 - (boolean)isDir;
+        if(psramFound())_JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength);
+        else            _JSONstr = (char*)   realloc(_JSONstr, JSONstrLength);
+        strcat(_JSONstr, "{\"name\":\"");
+        strcat(_JSONstr, fn);
+        strcat(_JSONstr, "\",\"dir\":");
+        if(isDir) strcat(_JSONstr, "true");
+        else      strcat(_JSONstr, "false");
+        strcat(_JSONstr, "},");
         i++;
     }
     file.close();
     root.close();
-    if(i) {
-        String jO = JSON.stringify(jObject);
-        // log_i("%s", jO.c_str());
-        return jO;
+    if(i){
+        _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
+        return _JSONstr;
     }
     return "";
 }
