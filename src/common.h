@@ -149,7 +149,7 @@ void saveIRbuttonsToNVS();
 void loadIRbuttonsFromNVS();
 void updateSettings();
 void urldecode(char *str);
-const char* SD_dirContent(String path);
+const char* SD_stringifyDirContent(String path);
 void setTFTbrightness(uint8_t duty);
 void showHeadlineVolume();
 void showHeadlineTime(bool complete = true);

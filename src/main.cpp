@@ -564,7 +564,7 @@ void updateSettings(){
  *                                                    F I L E   E X P L O R E R                                                                      *
  *****************************************************************************************************************************************************/
 // Sends a list of the content of a directory as JSON file
-const char* SD_dirContent(String path) {
+const char* SD_stringifyDirContent(String path) {
     File    root, file;
     uint16_t JSONstrLength = 0;
     int32_t     i = 0;
@@ -1375,7 +1375,8 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool SD_listDir(const char* path){
+bool SD_listDir(const char* path){ // sort the content of an given directory and lay it in a vector
+    if(path[0] == 2) path++; // skip ASCII 2 (start of text)
     File file;
     vector_clear_and_shrink(_SD_content);
     if(audioFile) audioFile.close();
@@ -1393,7 +1394,8 @@ bool SD_listDir(const char* path){
         file = audioFile.openNextFile();
         if(!file) break;
         if(file.isDirectory()){
-            sprintf(_chbuf, "%s", file.name());
+            _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
+            sprintf(_chbuf + 1, "%s", file.name());
             _SD_content.push_back(strdup((const char*)_chbuf));
         }
         else {
@@ -1402,6 +1404,18 @@ bool SD_listDir(const char* path){
                     sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
                     _SD_content.push_back(strdup((const char*) _chbuf));
             }
+        }
+    }
+    for(int i = 0; i < _SD_content.size(); i++){  // easy bubble sort
+        for(int j = 1; j < _SD_content.size(); j++){
+            if(strcmp(_SD_content[j - 1], _SD_content[i]) > 0){
+                swap(_SD_content[i], _SD_content[j - 1]);
+            }
+        }
+    }
+    for(int i = 0; i < _SD_content.size(); i++){
+        if(_SD_content[i][0] == 2){ // remove ASCII 2
+            memcpy(_SD_content[i], _SD_content[i] + 1, strlen(_SD_content[i]));
         }
     }
     audioFile.close();
@@ -1423,7 +1437,7 @@ bool setAudioFolder(const char* audioDir) {
     return true;
 }
 
-void showAudioFilesList(uint16_t fileListNr){
+void showAudioFilesList(uint16_t fileListNr){ // on tft
     clearWithOutHeaderFooter();
     if(_SD_content.size() < 10) fileListNr = 0;
     showHeadlineItem(AUDIOFILESLIST);
@@ -4001,7 +4015,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_dirContent(param), webSrv.JS);
+    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}
 
