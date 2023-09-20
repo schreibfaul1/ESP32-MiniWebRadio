@@ -565,46 +565,49 @@ void updateSettings(){
  *****************************************************************************************************************************************************/
 // Sends a list of the content of a directory as JSON file
 const char* SD_stringifyDirContent(String path) {
-    File    root, file;
     uint16_t JSONstrLength = 0;
-    int32_t     i = 0;
-    if(path == "") path = "/";
-    root = SD_MMC.open(path.c_str());
-    if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
-
-    if(!root.isDirectory()) {
-        SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
-        return "";
-    }
-    if(psramFound()) _JSONstr = (char*) ps_malloc(2);
-    else             _JSONstr = (char*) malloc(2);
+    uint8_t  isDir = 0;
+    uint16_t fnLen = 0; // length of file mame
+    uint8_t  fsLen = 0; // length of file size
+    if(!SD_listDir(path.c_str())) return ""; // if success: result will be in _SD_content
+    if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
+    else             { _JSONstr = (char*)malloc(2);}
     JSONstrLength += 2;
     memcpy(_JSONstr, "[\0", 2);
-    while(true) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
-        file = root.openNextFile();
-        if(!file) break;
-        const char* fn = file.name();
+
+    for(int i = 0; i < _SD_content.size(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
+        const char* fn = _SD_content[i];
         if(startsWith(fn, "/.")) continue; // ignore hidden folders
-        uint8_t isDir = file.isDirectory();
-        uint16_t len = strlen(fn);
-        JSONstrLength += len  + 24 - (boolean)isDir;
-        if(psramFound())_JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength);
-        else            _JSONstr = (char*)   realloc(_JSONstr, JSONstrLength);
+        int16_t idx = indexOf(fn, "\033", 1);
+        if(idx > 0) {
+            isDir = 0;
+            fnLen = idx;
+            fsLen = strlen(fn) - (idx + 6);          // "033[33m"
+            JSONstrLength += fnLen + 24 + 8 + fsLen; // {"name":"test.mp3","dir":false,"size":"3421"}
+        }
+        else {
+            isDir = 1;
+            fnLen = strlen(fn);
+            fsLen = 0;
+            JSONstrLength += fnLen + 23;
+        }
+        if(psramFound()) { _JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength); }
+        else             { _JSONstr = (char*)realloc(_JSONstr, JSONstrLength); }
+
         strcat(_JSONstr, "{\"name\":\"");
-        strcat(_JSONstr, fn);
+        strncat(_JSONstr, fn, fnLen);
         strcat(_JSONstr, "\",\"dir\":");
-        if(isDir) strcat(_JSONstr, "true");
-        else      strcat(_JSONstr, "false");
+        if(isDir) { strcat(_JSONstr, "true"); }
+        else      { strcat(_JSONstr, "false"); }
+        if(!isDir) {
+            strcat(_JSONstr, ",\"size\":");
+            strncat(_JSONstr, fn + idx + 6, fsLen);
+        }
         strcat(_JSONstr, "},");
-        i++;
     }
-    file.close();
-    root.close();
-    if(i){
-        _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
-        return _JSONstr;
-    }
-    return "";
+    _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
+    log_i("%s", _JSONstr);
+    return _JSONstr;
 }
 
 // Sends a list of the content of a directory as JSON file
@@ -1375,9 +1378,8 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool SD_listDir(const char* path){ // sort the content of an given directory and lay it in a vector
-    if(path[0] == 2) path++; // skip ASCII 2 (start of text)
-    File file;
+bool SD_listDir(const char* path){ // sort the content of an given directory and lay it in the vector _SD_content
+    File file;                     // add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
