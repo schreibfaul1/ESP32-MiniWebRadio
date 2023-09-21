@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.12 Sep 17/2023                                                                                         ";
+    Version 2.13 Sep 21/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -78,6 +78,7 @@ char           _icyDescription[512] = {};
 char           _streamTitle[512] = {};
 char*          _lastconnectedfile = nullptr;
 char*          _stationURL = nullptr;
+char*          _JSONstr = nullptr;
 boolean        _f_rtc = false; // true if time from ntp is received
 boolean        _f_100ms = false;
 boolean        _f_1sec = false;
@@ -563,34 +564,54 @@ void updateSettings(){
  *                                                    F I L E   E X P L O R E R                                                                      *
  *****************************************************************************************************************************************************/
 // Sends a list of the content of a directory as JSON file
-String SD_dirContent(String path) {
-    File    root, file;
-    JSONVar jObject, jArr;
-    int32_t     i = 0;
-    if(path == "") path = "/";
-    root = SD_MMC.open(path.c_str());
+const char* SD_stringifyDirContent(String path) {
+    uint16_t JSONstrLength = 0;
+    uint8_t  isDir = 0;
+    uint16_t fnLen = 0; // length of file mame
+    uint8_t  fsLen = 0; // length of file size
+    if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
+    if(!SD_listDir(path.c_str(), false)) return "[]"; // if success: result will be in _SD_content
+    if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
+    else             { _JSONstr = (char*)malloc(2);}
+    JSONstrLength += 2;
+    memcpy(_JSONstr, "[\0", 2);
+    if(!_SD_content.size()) return "[]"; // empty?
 
-    if(!root.isDirectory()) {
-        SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
-        return "";
+    for(int i = 0; i < _SD_content.size(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
+        const char* fn = _SD_content[i];
+        if(startsWith(fn, "/.")) continue;        // ignore hidden folders
+        int16_t idx = indexOf(fn, "\033", 1);     // idx >0 we have size (after ANSI ESC SEQUENCE)
+        if(idx > 0) {
+            isDir = 0;
+            fnLen = idx;
+            fsLen = strlen(fn) - (idx + 6);          // "033[33m"
+            JSONstrLength += fnLen + 24 + 8 + fsLen; // {"name":"test.mp3","dir":false,"size":"3421"}
+        }
+        else {
+            isDir = 1;
+            fnLen = strlen(fn);
+            fsLen = 0;
+            JSONstrLength += fnLen + 23 + 11;
+        }
+        if(psramFound()) { _JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength); }
+        else             { _JSONstr = (char*)realloc(_JSONstr, JSONstrLength); }
+
+        strcat(_JSONstr, "{\"name\":\"");
+        strncat(_JSONstr, fn, fnLen);
+        strcat(_JSONstr, "\",\"dir\":");
+        if(isDir) { strcat(_JSONstr, "true"); }
+        else      { strcat(_JSONstr, "false"); }
+        if(!isDir) {
+            strcat(_JSONstr, ",\"size\":");
+            strncat(_JSONstr, fn + idx + 6, fsLen);
+        }
+        else {
+            strcat(_JSONstr, ",\"size\": \"\"");
+        }
+        strcat(_JSONstr, "},");
     }
-    while(true) {
-        file = root.openNextFile();
-        if(!file) break;
-        if(startsWith(file.name(), "/.")) continue; // ignore hidden folders
-        jArr["name"] = (String)file.name();
-        jArr["dir"] = (boolean)file.isDirectory();
-        jObject[i] = jArr;
-        i++;
-    }
-    file.close();
-    root.close();
-    if(i) {
-        String jO = JSON.stringify(jObject);
-        // log_i("%s", jO.c_str());
-        return jO;
-    }
-    return "";
+    _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
+    return _JSONstr;
 }
 
 // Sends a list of the content of a directory as JSON file
@@ -1361,8 +1382,8 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool SD_listDir(const char* path){
-    File file;
+bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content of an given directory and lay it in the vector _SD_content
+    File file;                     // add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
@@ -1379,15 +1400,34 @@ bool SD_listDir(const char* path){
         file = audioFile.openNextFile();
         if(!file) break;
         if(file.isDirectory()){
-            sprintf(_chbuf, "%s", file.name());
+            _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
+            sprintf(_chbuf + 1, "%s", file.name());
             _SD_content.push_back(strdup((const char*)_chbuf));
         }
         else {
-            if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
-               endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-                    sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                    _SD_content.push_back(strdup((const char*) _chbuf));
+            if(audioFilesOnly){
+                if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
+                    endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
+                        sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
+                        _SD_content.push_back(strdup((const char*) _chbuf));
+                }
             }
+            else{
+                sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
+                _SD_content.push_back(strdup((const char*) _chbuf));
+            }
+        }
+    }
+    for(int i = 0; i < _SD_content.size(); i++){  // easy bubble sort
+        for(int j = 1; j < _SD_content.size(); j++){
+            if(strcmp(_SD_content[j - 1], _SD_content[i]) > 0){
+                swap(_SD_content[i], _SD_content[j - 1]);
+            }
+        }
+    }
+    for(int i = 0; i < _SD_content.size(); i++){
+        if(_SD_content[i][0] == 2){ // remove ASCII 2
+            memcpy(_SD_content[i], _SD_content[i] + 1, strlen(_SD_content[i]));
         }
     }
     audioFile.close();
@@ -1395,7 +1435,7 @@ bool SD_listDir(const char* path){
 }
 
 bool setAudioFolder(const char* audioDir) {
-    SD_listDir(audioDir);
+    SD_listDir(audioDir, true);
     if(audioFile) audioFile.close(); // same as rewind()
     if(!SD_MMC.exists(audioDir)) {
         SerialPrintfln(ANSI_ESC_RED "%s not exist", audioDir);
@@ -1409,7 +1449,7 @@ bool setAudioFolder(const char* audioDir) {
     return true;
 }
 
-void showAudioFilesList(uint16_t fileListNr){
+void showAudioFilesList(uint16_t fileListNr){ // on tft
     clearWithOutHeaderFooter();
     if(_SD_content.size() < 10) fileListNr = 0;
     showHeadlineItem(AUDIOFILESLIST);
@@ -3763,7 +3803,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(idx > 1){ // not the first '/'
                                     _curAudioFolder = _curAudioFolder.substring(0, idx);
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str());
+                                    SD_listDir(_curAudioFolder.c_str(), true);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3777,7 +3817,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(idx == -1){ // is folder
                                     _curAudioFolder += "/" + (String)_SD_content[fileNr - 1];
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str());
+                                    SD_listDir(_curAudioFolder.c_str(), true);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3987,7 +4027,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_dirContent(param), webSrv.JS);
+    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
                                     return;}
 
