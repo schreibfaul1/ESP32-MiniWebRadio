@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 17.09.2023
+ *  Updated on: 21.09.2023
  *      Author: Wolle
  *
  *
@@ -168,7 +168,8 @@ function createChild(nodeId, data) {
         data: {
             path: parentNodePath + "/" + data.name,
             directory: data.dir
-        }
+        },
+        a_attr: {title:data.size}
     };
     return child;
 }
@@ -429,6 +430,7 @@ function audioPlayer_buildFileSystemTree(path) {
                     path: "/" + data[i].name,
                     directory: data[i].dir
                 },
+                a_attr: {title:data[i].size},
                 children: []
             };
             ref.settings.core.data.children.push(newChild);
