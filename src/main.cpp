@@ -59,6 +59,7 @@ int16_t        _toneHP = 0;               // -40 ... +6 (dB)        audioI2S
 uint16_t       _icyBitRate = 0;           // from http response header via event
 uint16_t       _avrBitRate = 0;           // from decoder via getBitRate(true)
 uint16_t       _cur_station = 0;          // current station(nr), will be set later
+uint16_t       _cur_AudioFileNr = 0;      // position inside _SD_content
 uint16_t       _sleeptime = 0;            // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations = 0;
 uint32_t       _resumeFilePos = 0;        //
@@ -1385,6 +1386,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content of an given directory and lay it in the vector _SD_content
     File file;                     // add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
+    _cur_AudioFileNr = 0;
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
@@ -3625,6 +3627,10 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     if((_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50 || _releaseNr == 90) && _f_mute) {
         fall_asleep();
     }
+    if(_releaseNr == 110){
+        uint8_t btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+        log_i("longPressed X %i, Y %i, btnNr %i", x, y, btnNr);
+    }
 }
 void tp_released(uint16_t x, uint16_t y){
     // SerialPrintfln("tp_released, state is: %i", _state);
@@ -3811,11 +3817,12 @@ void tp_released(uint16_t x, uint16_t y){
                             else{
                                 if(fileNr > _SD_content.size()) break;
                                 tft.setTextColor(TFT_CYAN);
-                                tft.writeText((uint8_t*)_SD_content[fileNr - 1], -1, -1, true);
-                                sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[fileNr - 1]);
+                                _cur_AudioFileNr = fileNr - 1;
+                                tft.writeText((uint8_t*)_SD_content[_cur_AudioFileNr], -1, -1, true);
+                                sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
                                 int32_t idx = indexOf(_chbuf, "\033[", 1);
                                 if(idx == -1){ // is folder
-                                    _curAudioFolder += "/" + (String)_SD_content[fileNr - 1];
+                                    _curAudioFolder += "/" + (String)_SD_content[_cur_AudioFileNr];
                                     _fileListNr = 0;
                                     SD_listDir(_curAudioFolder.c_str(), true);
                                     showAudioFilesList(_fileListNr);
