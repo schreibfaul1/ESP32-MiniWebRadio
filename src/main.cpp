@@ -1436,21 +1436,6 @@ bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content o
     return true;
 }
 
-bool setAudioFolder(const char* audioDir) {
-    SD_listDir(audioDir, true);
-    if(audioFile) audioFile.close(); // same as rewind()
-    if(!SD_MMC.exists(audioDir)) {
-        SerialPrintfln(ANSI_ESC_RED "%s not exist", audioDir);
-        return false;
-    }
-    audioFile = SD_MMC.open(audioDir);
-    if(!audioFile.isDirectory()) {
-        SerialPrintfln(ANSI_ESC_RED "%s is not a directory", audioDir);
-        return false;
-    }
-    return true;
-}
-
 void showAudioFilesList(uint16_t fileListNr){ // on tft
     clearWithOutHeaderFooter();
     if(_SD_content.size() < 10) fileListNr = 0;
@@ -1497,28 +1482,6 @@ boolean isPlaylist(File file){
     return false;
 }
 
-File getNextAudioFile() {
-    File file;
-    while(true) {
-        if(!audioFile) {
-            SerialPrintfln(ANSI_ESC_BLUE "no audiofiles found");
-            break;
-        }
-        file = audioFile.openNextFile();
-        if(!file) {
-            audioFile.close();
-            SerialPrintfln(ANSI_ESC_BLUE "no more files found");
-            break;
-        }
-        else {
-            if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
-               endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-                break;
-            }
-        }
-    }
-    return file;
-}
 void processPlaylist(boolean first) {
     static bool f_has_EXTINF = false;
     while(playlistFile.available() > 0) {
@@ -2640,7 +2603,8 @@ void changeState(int32_t state){
                 clearWithOutHeaderFooter();
             }
             showHeadlineItem(PLAYER);
-            _pressBtn[0] = "/btn/Button_First_Yellow.jpg";       _releaseBtn[0] = "/btn/Button_First_Blue.jpg";
+            if(_SD_content.size() == 0) SD_listDir(_curAudioFolder.c_str(), true);
+            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";       _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
             _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
             _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
@@ -3646,11 +3610,7 @@ void tp_released(uint16_t x, uint16_t y){
         case  5:    changeBtn_released(5); changeState(STATIONSLIST); break;  //  list stations
 
         /* RADIOmenue ******************************/
-        case 10:    changeState(PLAYER);
-                    setAudioFolder(_curAudioFolder.c_str());
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
-                    break;
+        case 10:    changeState(PLAYER); break;
         case 11:    changeState(DLNA); break;
         case 12:    changeState(CLOCK); break;
         case 13:    changeState(SLEEP); break;
@@ -3671,14 +3631,17 @@ void tp_released(uint16_t x, uint16_t y){
         case 34:    changeState(CLOCK); break;
 
         /* AUDIOPLAYER ******************************/
-        case 40:    changeBtn_released(0); // first audiofile
-                    if(setAudioFolder(_curAudioFolder.c_str()));
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
+        case 40:    changeBtn_released(0); // previous audiofile
+                    if(_cur_AudioFileNr > 0){
+                        _cur_AudioFileNr--;
+                        showFileName(_SD_content[_cur_AudioFileNr]);
+                    }
                     break;
         case 41:    changeBtn_released(1); // next audiofile
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
+                    if(_cur_AudioFileNr < _SD_content.size()){
+                        _cur_AudioFileNr++;
+                        showFileName(_SD_content[_cur_AudioFileNr]);
+                    }
                     break;
         case 42:    changeState(PLAYERico); showVolumeBar(); // ready
                     SD_playFile(nextAudioFile.path());

@@ -1877,6 +1877,7 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, b
                         default: log_w("unknown ANSI ESCAPE COLOR SEQUENCE "); break;
                     }
                     i += 5;
+                    ch_count += 5;
                 }
                 else log_w("ANSI ESCAPE COLOR SEQUENCE not impl");
             }

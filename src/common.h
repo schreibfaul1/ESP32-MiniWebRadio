@@ -7,12 +7,12 @@
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A... (2)AC101 (3)ES8388 (4)WM8978
-#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_ROTATION        3                               // 1 or 3 (landscape)
+#define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 27000000, 40000000, 80000000
-#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         3                               // 1 or 3 (landscape)
+#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define SDMMC_FREQUENCY     40000000                        // 40000000, 2000000, 10000000, not every SD Card will run at 40MHz
@@ -182,10 +182,8 @@ void display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false);
 void display_sleeptime(int8_t ud = 0);
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0 , uint16_t maxHeigth = 0);
 bool SD_listDir(const char* path, boolean audioFilesOnly);
-bool setAudioFolder(const char* audioDir);
 boolean isAudio(File file);
 boolean isPlaylist(File file);
-File getNextAudioFile();
 bool connectToWiFi();
 void openAccessPoint();
 const char* byte_to_binary(int8_t x);
