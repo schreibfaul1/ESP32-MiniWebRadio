@@ -2912,7 +2912,7 @@ void loop() {
                 else { connecttohost(_lastconnectedhost.c_str()); }
             }
             if(_f_eof && _state == PLAYERico){
-                if(!_f_playlistEnabled){
+                if(!_f_playlistEnabled && !_f_playAllFiles){
                     _f_eof = false;
                     changeState(PLAYER);
                 }
@@ -3544,7 +3544,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case PLAYER_1:      if(btnNr == 0){_releaseNr = 40;} // first audiofile
                             if(btnNr == 1){_releaseNr = 41;} // next audiofile
                             if(btnNr == 2){_releaseNr = 42;} // ready
-                            if(btnNr == 3){_releaseNr = 43;} // unused
+                            if(btnNr == 3){_releaseNr = 43;} // play all files
                             if(btnNr == 4){_releaseNr = 44;} // unused
                             if(btnNr == 5){_releaseNr = 45;} // unused
                             if(btnNr == 6){_releaseNr = 46;} // audiofiles list
@@ -3668,11 +3668,8 @@ void tp_released(uint16_t x, uint16_t y){
                     changeState(PLAYERico);
                     log_i("fn %s", _chbuf);
                     SD_playFile(_chbuf, 0, true);
-                    if(_f_isFSConnected && _lastconnectedfile){
-                        free(_lastconnectedfile);
-                        _lastconnectedfile = strdup(_chbuf);
-                    } break;
-        case 43:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+                    break;
+        case 43:    SD_playFolder(_curAudioFolder.c_str(), true); break;
         case 44:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 45:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 46:    SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST);break;
