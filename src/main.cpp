@@ -194,7 +194,6 @@ Ticker      ticker100ms;
 IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP          tp(TP_CS, TP_IRQ);
 File        audioFile;
-File        nextAudioFile;
 File        playlistFile;
 FtpServer   ftpSrv;
 WiFiClient  client;
@@ -571,7 +570,7 @@ const char* SD_stringifyDirContent(String path) {
     uint16_t fnLen = 0; // length of file mame
     uint8_t  fsLen = 0; // length of file size
     if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
-    if(!SD_listDir(path.c_str(), false)) return "[]"; // if success: result will be in _SD_content
+    if(!SD_listDir(path.c_str(), false, false)) return "[]"; // if success: result will be in _SD_content
     if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
     else             { _JSONstr = (char*)malloc(2);}
     JSONstrLength += 2;
@@ -1120,7 +1119,8 @@ void showFileLogo(uint8_t state) {
         else
             logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
-    else if(state == DLNA) { logo = "/common/DLNA.jpg"; }
+    else if(state == DLNA)  { logo = "/common/DLNA.jpg"; }
+    else if(state == PLAYER){ logo = "/common/AudioPlayer.jpg";}
     else { // _state PLAYER or PLAYERico
         logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
@@ -1133,7 +1133,6 @@ void showFileLogo(uint8_t state) {
 }
 
 void showFileName(const char* fname) {
-    clearLogo();
     if(!fname) return;
     switch(strlenUTF8(fname)) {
     case 0 ... 15: tft.setFont(_fonts[5]); break;
@@ -1383,10 +1382,9 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content of an given directory and lay it in the vector _SD_content
-    File file;                     // add to filename ANSI_ESC_YELLOW and file size
+bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ // sort the content of an given directory and lay it in the
+    File file;                                                                  // vector _SD_content, add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
-    _cur_AudioFileNr = 0;
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
@@ -1402,9 +1400,11 @@ bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content o
         file = audioFile.openNextFile();
         if(!file) break;
         if(file.isDirectory()){
-            _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
-            sprintf(_chbuf + 1, "%s", file.name());
-            _SD_content.push_back(strdup((const char*)_chbuf));
+            if(!withoutDirs){
+                _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
+                sprintf(_chbuf + 1, "%s", file.name());
+                _SD_content.push_back(strdup((const char*)_chbuf));
+            }
         }
         else {
             if(audioFilesOnly){
@@ -1507,6 +1507,7 @@ void processPlaylist(boolean first) {
             int8_t idx1 = indexOf(_chbuf, ":", 0) + 1;
             int8_t idx2 = indexOf(_chbuf, ",", 0);
             SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
+            clearLogo();
             showFileName(_chbuf + idx2 + 1);
             f_has_EXTINF = true;
             int8_t len = idx2 - idx1;
@@ -2245,7 +2246,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     showVolumeBar();
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
-    if(showFN) showFileName(path + idx + 1);
+    if(showFN) {clearLogo(); showFileName(path + idx + 1);}
     changeState(PLAYERico);
     connecttoFS((const char*)path, resumeFilePos);
     if(_f_isFSConnected) {
@@ -2269,6 +2270,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
             return;
         }
         _curAudioFolder = folderPath;
+        _cur_AudioFileNr = 0;
         while(true) {
             file = audioFile.openNextFile();
             if(!file) goto exit;
@@ -2281,7 +2283,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
         filePath = strdup(file.path());
         sprintf(_chbuf, "SD_playFolder=%s", filePath);
         webSrv.send(_chbuf);
-        if(showFN) showFileName(file.name());
+        if(showFN) {clearLogo(); showFileName(file.name());}
         file.close(); // do not open a file twice
         connecttoFS(filePath);
         if(filePath) {
@@ -2299,7 +2301,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
     filePath = strdup(file.path());
     sprintf(_chbuf, "SD_playFolder=%s", filePath);
     webSrv.send(_chbuf);
-    if(showFN) showFileName(file.name());
+    if(showFN) {clearLogo(); showFileName(file.name());}
     file.close();
     connecttoFS(filePath);
     if(filePath) {
@@ -2603,20 +2605,22 @@ void changeState(int32_t state){
                 clearWithOutHeaderFooter();
             }
             showHeadlineItem(PLAYER);
-            if(_SD_content.size() == 0) SD_listDir(_curAudioFolder.c_str(), true);
-            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";       _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
+            SD_listDir(_curAudioFolder.c_str(), true, true);
+            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
             _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
+            _pressBtn[3] = "/btn/Button_PlayAll_Yellow.jpg";     _releaseBtn[3] = "/btn/Button_PlayAll_Blue.jpg";
             _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            showFileLogo(state);
+            showFileName(_SD_content[_cur_AudioFileNr]);
             break;
         }
         case PLAYERico:{
-            if(_state == RADIO){
+            if(_state == RADIO || _state == AUDIOFILESLIST){
                 clearWithOutHeaderFooter();
             }
             showHeadlineItem(PLAYERico);
@@ -2907,6 +2911,13 @@ void loop() {
                 }
                 else { connecttohost(_lastconnectedhost.c_str()); }
             }
+            if(_f_eof && _state == PLAYERico){
+                if(!_f_playlistEnabled){
+                    _f_eof = false;
+                    changeState(PLAYER);
+                }
+            }
+
             if((_f_mute == false) && (!_f_sleeping)) {
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
                     String hour = time_s.substring(0, 2);         // extract the hour
@@ -3182,6 +3193,8 @@ void vs1053_eof_stream(const char* info) {
         _f_clearLogo = true;
         _f_clearStationName = true;
     }
+    _f_eof = true;
+    _f_isWebConnected = false;
 }
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
@@ -3190,6 +3203,8 @@ void audio_eof_stream(const char* info) {
         _f_clearLogo = true;
         _f_clearStationName = true;
     }
+    _f_eof = true;
+    _f_isWebConnected = false;
 }
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char* info) { // really connected URL
@@ -3638,21 +3653,29 @@ void tp_released(uint16_t x, uint16_t y){
                     }
                     break;
         case 41:    changeBtn_released(1); // next audiofile
-                    if(_cur_AudioFileNr < _SD_content.size()){
+                    if(_cur_AudioFileNr + 1 < _SD_content.size()){
                         _cur_AudioFileNr++;
                         showFileName(_SD_content[_cur_AudioFileNr]);
                     }
                     break;
         case 42:    changeState(PLAYERico); showVolumeBar(); // ready
-                    SD_playFile(nextAudioFile.path());
-                    if(_f_isFSConnected && nextAudioFile){
+                    sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
+                    {
+                        int32_t idx = indexOf(_chbuf, "\033[", 1);
+                        if(idx == -1) break;  // is folder
+                        _chbuf[idx] = '\0';  // remove color and filesize
+                    }
+                    changeState(PLAYERico);
+                    log_i("fn %s", _chbuf);
+                    SD_playFile(_chbuf, 0, true);
+                    if(_f_isFSConnected && _lastconnectedfile){
                         free(_lastconnectedfile);
-                        _lastconnectedfile = strdup(nextAudioFile.path());
+                        _lastconnectedfile = strdup(_chbuf);
                     } break;
         case 43:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 44:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 45:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
-        case 46:    changeState(AUDIOFILESLIST); break;
+        case 46:    SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST);break;
         case 47:    changeBtn_released(0); changeState(RADIO); break; // RADIO
 
         /* AUDIOPLAYERico ******************************/
@@ -3772,7 +3795,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(idx > 1){ // not the first '/'
                                     _curAudioFolder = _curAudioFolder.substring(0, idx);
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str(), true);
+                                    SD_listDir(_curAudioFolder.c_str(), true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3787,13 +3810,14 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(idx == -1){ // is folder
                                     _curAudioFolder += "/" + (String)_SD_content[_cur_AudioFileNr];
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str(), true);
+                                    SD_listDir(_curAudioFolder.c_str(), true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
                                 else {
                                     _chbuf[idx] = '\0';  // remove color and filesize
-                                    changeState(PLAYER);
+                                    changeState(PLAYERico);
+                                    log_i("fn %s", _chbuf);
                                     SD_playFile(_chbuf, 0, true);
                                 }
                             }
