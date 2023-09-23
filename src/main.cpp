@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.13 Sep 21/2023                                                                                         ";
+    Version 2.13a Sep 23/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -59,6 +59,7 @@ int16_t        _toneHP = 0;               // -40 ... +6 (dB)        audioI2S
 uint16_t       _icyBitRate = 0;           // from http response header via event
 uint16_t       _avrBitRate = 0;           // from decoder via getBitRate(true)
 uint16_t       _cur_station = 0;          // current station(nr), will be set later
+uint16_t       _cur_AudioFileNr = 0;      // position inside _SD_content
 uint16_t       _sleeptime = 0;            // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations = 0;
 uint32_t       _resumeFilePos = 0;        //
@@ -193,7 +194,6 @@ Ticker      ticker100ms;
 IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP          tp(TP_CS, TP_IRQ);
 File        audioFile;
-File        nextAudioFile;
 File        playlistFile;
 FtpServer   ftpSrv;
 WiFiClient  client;
@@ -237,24 +237,25 @@ const unsigned short* _fonts[7] = {
     Big_Numbers133x156  // ASCII 32...64 only
 };
 
-struct w_h {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 320; uint16_t h = 20; } const _winHeader;
-struct w_l {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 100; uint16_t h = 100;} const _winLogo;
-struct w_n {uint16_t x = 100; uint16_t y = 20;  uint16_t w = 220; uint16_t h = 100;} const _winName;
-struct w_e {uint16_t x = 0;   uint16_t y = 20;  uint16_t w = 320; uint16_t h = 100;} const _winFName;
-struct w_t {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
-struct w_c {uint16_t x = 0;   uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
+struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
+struct w_l {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;} const _winLogo;
+struct w_n {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
+struct w_e {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
+struct w_j {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  46;} const _winFileNr;
+struct w_t {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
+struct w_c {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
 struct w_g {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
-struct w_f {uint16_t x = 0;   uint16_t y = 220; uint16_t w = 320; uint16_t h = 20; } const _winFooter;
-struct w_i {uint16_t x = 0;   uint16_t y = 0;   uint16_t w = 180; uint16_t h = 20; } const _winItem;
-struct w_v {uint16_t x = 180; uint16_t y = 0;   uint16_t w =  50; uint16_t h = 20; } const _winVolume;
-struct w_m {uint16_t x = 260; uint16_t y = 0;   uint16_t w =  60; uint16_t h = 20; } const _winTime;
-struct w_s {uint16_t x = 0;   uint16_t y = 220; uint16_t w =  60; uint16_t h = 20; } const _winStaNr;
-struct w_p {uint16_t x = 60;  uint16_t y = 220; uint16_t w =  65; uint16_t h = 20; } const _winSleep;
-struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h = 20; } const _winRSSID;
-struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h = 20; } const _winBitRate;
-struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h = 20; } const _winIPaddr;
-struct w_b {uint16_t x = 0;   uint16_t y = 166; uint16_t w = 320; uint16_t h =  6; } const _winVolBar;
-struct w_o {uint16_t x = 0;   uint16_t y = 180; uint16_t w =  40; uint16_t h = 40; } const _winButton;
+struct w_f {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
+struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 180; uint16_t h =  20;} const _winItem;
+struct w_v {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  20;} const _winVolume;
+struct w_m {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
+struct w_s {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
+struct w_p {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
+struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h =  20;} const _winRSSID;
+struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h =  20;} const _winBitRate;
+struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h =  20;} const _winIPaddr;
+struct w_b {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
+struct w_o {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
 struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
 struct w_w {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF; // without Header and Footer
@@ -304,6 +305,7 @@ struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  
 struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
 struct w_n {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 132;} const _winName;
 struct w_e {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
+struct w_j {uint16_t x =   0; uint16_t y = 162; uint16_t w = 130; uint16_t h =  60;} const _winFileNr;
 struct w_t {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
 struct w_c {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
@@ -570,7 +572,7 @@ const char* SD_stringifyDirContent(String path) {
     uint16_t fnLen = 0; // length of file mame
     uint8_t  fsLen = 0; // length of file size
     if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
-    if(!SD_listDir(path.c_str(), false)) return "[]"; // if success: result will be in _SD_content
+    if(!SD_listDir(path.c_str(), false, false)) return "[]"; // if success: result will be in _SD_content
     if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
     else             { _JSONstr = (char*)malloc(2);}
     JSONstrLength += 2;
@@ -1119,7 +1121,8 @@ void showFileLogo(uint8_t state) {
         else
             logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
-    else if(state == DLNA) { logo = "/common/DLNA.jpg"; }
+    else if(state == DLNA)  { logo = "/common/DLNA.jpg"; }
+    else if(state == PLAYER){ logo = "/common/AudioPlayer.jpg";}
     else { // _state PLAYER or PLAYERico
         logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
@@ -1132,7 +1135,6 @@ void showFileLogo(uint8_t state) {
 }
 
 void showFileName(const char* fname) {
-    clearLogo();
     if(!fname) return;
     switch(strlenUTF8(fname)) {
     case 0 ... 15: tft.setFont(_fonts[5]); break;
@@ -1143,6 +1145,13 @@ void showFileName(const char* fname) {
     default: tft.setFont(_fonts[0]); break;
     }
     display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w, _winName.h);
+}
+
+void showFileNumber(){
+    tft.setFont(_fonts[3]);
+    char buf[10];
+    sprintf(buf, "%03d/%03d", _cur_AudioFileNr + 1, _SD_content.size());
+    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_DEEPSKYBLUE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
 void showStationsList(uint16_t staListNr){
@@ -1382,8 +1391,8 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 /*****************************************************************************************************************************************************
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
-bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content of an given directory and lay it in the vector _SD_content
-    File file;                     // add to filename ANSI_ESC_YELLOW and file size
+bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ // sort the content of an given directory and lay it in the
+    File file;                                                                  // vector _SD_content, add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
@@ -1400,9 +1409,11 @@ bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content o
         file = audioFile.openNextFile();
         if(!file) break;
         if(file.isDirectory()){
-            _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
-            sprintf(_chbuf + 1, "%s", file.name());
-            _SD_content.push_back(strdup((const char*)_chbuf));
+            if(!withoutDirs){
+                _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
+                sprintf(_chbuf + 1, "%s", file.name());
+                _SD_content.push_back(strdup((const char*)_chbuf));
+            }
         }
         else {
             if(audioFilesOnly){
@@ -1431,21 +1442,6 @@ bool SD_listDir(const char* path, boolean audioFilesOnly){ // sort the content o
         }
     }
     audioFile.close();
-    return true;
-}
-
-bool setAudioFolder(const char* audioDir) {
-    SD_listDir(audioDir, true);
-    if(audioFile) audioFile.close(); // same as rewind()
-    if(!SD_MMC.exists(audioDir)) {
-        SerialPrintfln(ANSI_ESC_RED "%s not exist", audioDir);
-        return false;
-    }
-    audioFile = SD_MMC.open(audioDir);
-    if(!audioFile.isDirectory()) {
-        SerialPrintfln(ANSI_ESC_RED "%s is not a directory", audioDir);
-        return false;
-    }
     return true;
 }
 
@@ -1495,28 +1491,6 @@ boolean isPlaylist(File file){
     return false;
 }
 
-File getNextAudioFile() {
-    File file;
-    while(true) {
-        if(!audioFile) {
-            SerialPrintfln(ANSI_ESC_BLUE "no audiofiles found");
-            break;
-        }
-        file = audioFile.openNextFile();
-        if(!file) {
-            audioFile.close();
-            SerialPrintfln(ANSI_ESC_BLUE "no more files found");
-            break;
-        }
-        else {
-            if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
-               endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
-                break;
-            }
-        }
-    }
-    return file;
-}
 void processPlaylist(boolean first) {
     static bool f_has_EXTINF = false;
     while(playlistFile.available() > 0) {
@@ -1542,6 +1516,7 @@ void processPlaylist(boolean first) {
             int8_t idx1 = indexOf(_chbuf, ":", 0) + 1;
             int8_t idx2 = indexOf(_chbuf, ",", 0);
             SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
+            clearLogo();
             showFileName(_chbuf + idx2 + 1);
             f_has_EXTINF = true;
             int8_t len = idx2 - idx1;
@@ -1589,8 +1564,6 @@ void processPlaylist(boolean first) {
     webSrv.send("SD_playFile=end of playlist");
     playlistFile.close();
     _f_playlistEnabled = false;
-    clearLogoAndStationname();
-    showFileName(audioFile.name());
     changeState(PLAYER);
 }
 /*****************************************************************************************************************************************************
@@ -1744,6 +1717,7 @@ void stopSong() {
     _f_playlistEnabled = false;
     _f_pauseResume = false;
     _f_playAllFiles = false;
+    _f_playlistNextFile = false;
 }
 
 /*****************************************************************************************************************************************************
@@ -2280,9 +2254,10 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     showVolumeBar();
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
-    if(showFN) showFileName(path + idx + 1);
+    if(showFN) {clearLogo(); showFileName(path + idx + 1);}
     changeState(PLAYERico);
     connecttoFS((const char*)path, resumeFilePos);
+    showFileNumber();
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
         _lastconnectedfile = strdup(path);
@@ -2294,61 +2269,42 @@ void SD_playFolder(const char* folderPath, bool showFN) {
     // Plays all audio files in a given folder. If the specified path is not a folder, the function aborts. Otherwise the first recording file is
     // searched for and called. The flag _f_playAllFiles is set. The next time you call it up, the path doesn't matter, the next audio file is called
     // up... etc. If no further audio file is found, the flag is reset and the function is aborted.
-    char* filePath;
-    File  file;
+    int32_t idx = 0;
     if(!_f_playAllFiles) {
         if(audioFile) audioFile.close(); // maybe audioFile contains old data
-        audioFile = SD_MMC.open(folderPath);
-        if(!audioFile.isDirectory()) {                                                        // as a precaution
-            SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "%s is not a directory", folderPath); // should never occur
-            return;
-        }
+        _cur_AudioFileNr = 0;
         _curAudioFolder = folderPath;
-        while(true) {
-            file = audioFile.openNextFile();
-            if(!file) goto exit;
-            if(isAudio(file)) break;
-            file.close();
-        }
+        _cur_AudioFileNr = 0;
         _f_playAllFiles = true;
         changeState(PLAYERico);
         showVolumeBar();
-        filePath = strdup(file.path());
-        sprintf(_chbuf, "SD_playFolder=%s", filePath);
+        SD_listDir(_curAudioFolder.c_str(), true, true);
+        sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
+        idx = indexOf(_chbuf, "\033[", 1);
+        _chbuf[idx] = '\0';  // remove color and filesize
+        SD_playFile(_chbuf, 0, true);
+        memmove(_chbuf + 14, _chbuf, strlen(_chbuf) + 1);
+        memcpy(_chbuf, "SD_playFolder=", 14);
         webSrv.send(_chbuf);
-        if(showFN) showFileName(file.name());
-        file.close(); // do not open a file twice
-        connecttoFS(filePath);
-        if(filePath) {
-            free(filePath);
-            filePath = NULL;
-        }
         return;
     }
-    while(true) {
-        file = audioFile.openNextFile();
-        if(!file) goto exit;
-        if(isAudio(file)) break;
-        file.close();
+    if(_cur_AudioFileNr + 1 == _SD_content.size()){
+        _f_playAllFiles = false;
+        SerialPrintfln("AUDIO_info:  " ANSI_ESC_CYAN "No other audio files found");
+        webSrv.send("SD_playFolder=No other audio files found");
+        changeState(PLAYER);
+        stopSong();
+        return;
     }
-    filePath = strdup(file.path());
-    sprintf(_chbuf, "SD_playFolder=%s", filePath);
+    _cur_AudioFileNr++;
+    sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
+    idx = indexOf(_chbuf, "\033[", 1);
+    _chbuf[idx] = '\0';  // remove color and filesize
+    SD_playFile(_chbuf, 0, true);
+    memmove(_chbuf + 14, _chbuf, strlen(_chbuf) + 1);
+    memcpy(_chbuf, "SD_playFolder=", 14);
     webSrv.send(_chbuf);
-    if(showFN) showFileName(file.name());
-    file.close();
-    connecttoFS(filePath);
-    if(filePath) {
-        free(filePath);
-        filePath = NULL;
-    }
     return;
-exit:
-    SerialPrintfln("AUDIO_info:  " ANSI_ESC_CYAN "No other audio files found");
-    webSrv.send("SD_playFolder=No other audio files found");
-    _f_playAllFiles = false;
-    audioFile.close();
-    changeState(PLAYER);
-    stopSong();
 }
 
 bool SD_rename(const char* src, const char* dest) {
@@ -2521,6 +2477,7 @@ void changeState(int32_t state){
                 _f_newStreamTitle = true;
             }
             showVUmeter();
+            webSrv.send("changeState=RADIO");
             break;
         }
         case RADIOico:{
@@ -2638,19 +2595,24 @@ void changeState(int32_t state){
                 clearWithOutHeaderFooter();
             }
             showHeadlineItem(PLAYER);
-            _pressBtn[0] = "/btn/Button_First_Yellow.jpg";       _releaseBtn[0] = "/btn/Button_First_Blue.jpg";
+            SD_listDir(_curAudioFolder.c_str(), true, true);
+            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
             _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
+            _pressBtn[3] = "/btn/Button_PlayAll_Yellow.jpg";     _releaseBtn[3] = "/btn/Button_PlayAll_Blue.jpg";
             _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            showFileLogo(state);
+            showFileName(_SD_content[_cur_AudioFileNr]);
+            webSrv.send("changeState=PLAYER");
+            showFileNumber();
             break;
         }
         case PLAYERico:{
-            if(_state == RADIO){
+            if(_state == RADIO || _state == AUDIOFILESLIST){
                 clearWithOutHeaderFooter();
             }
             showHeadlineItem(PLAYERico);
@@ -2905,24 +2867,13 @@ void loop() {
             }
             if(!_timeCounter.timer) {
                 showFooterRSSI(true);
-                if(_state == RADIOico) changeState(RADIO);
-                else if(_state == RADIOmenue)
-                    changeState(RADIO);
-                else if(_state == CLOCKico)
-                    changeState(CLOCK);
-                else if(_state == RADIO && _f_switchToClock) {
-                    changeState(CLOCK);
-                    _f_switchToClock = false;
-                }
-                else if(_state == STATIONSLIST){
-                    changeState(RADIO);
-                }
-                else if(_state == AUDIOFILESLIST){
-                    changeState(PLAYER);
-                }
-                else if(_state == DLNAITEMSLIST){
-                    changeState(DLNA);
-                }
+                if(     _state == RADIOico) { changeState(RADIO); }
+                else if(_state == RADIOmenue) { changeState(RADIO); }
+                else if(_state == CLOCKico) { changeState(CLOCK); }
+                else if(_state == RADIO && _f_switchToClock) { changeState(CLOCK); _f_switchToClock = false; }
+                else if(_state == STATIONSLIST) { changeState(RADIO); }
+                else if(_state == AUDIOFILESLIST) { changeState(PLAYER); }
+                else if(_state == DLNAITEMSLIST) { changeState(DLNA); }
                 else { ; } // all other, do nothing
             }
         }
@@ -2941,6 +2892,13 @@ void loop() {
                 }
                 else { connecttohost(_lastconnectedhost.c_str()); }
             }
+            if(_f_eof && _state == PLAYERico){
+                if(!_f_playlistEnabled && !_f_playAllFiles){
+                    _f_eof = false;
+                    changeState(PLAYER);
+                }
+            }
+
             if((_f_mute == false) && (!_f_sleeping)) {
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
                     String hour = time_s.substring(0, 2);         // extract the hour
@@ -3190,8 +3148,10 @@ void vs1053_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico) {
-        _f_clearLogo = true;
-        _f_clearStationName = true;
+        if(!_f_playAllFiles && ! _f_playlistEnabled){
+            _f_clearLogo = true;
+            _f_clearStationName = true;
+        }
     }
     webSrv.send("SD_playFile=end of audiofile");
     _f_eof = true;
@@ -3201,8 +3161,10 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintfln("end of file: " ANSI_ESC_YELLOW "%s", info);
     if(_state == PLAYER || _state == PLAYERico) {
-        _f_clearLogo = true;
-        _f_clearStationName = true;
+        if(!_f_playAllFiles && ! _f_playlistEnabled){
+            _f_clearLogo = true;
+            _f_clearStationName = true;
+        }
     }
     webSrv.send("SD_playFile=end of audiofile");
     _f_eof = true;
@@ -3213,17 +3175,25 @@ void vs1053_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
-        _f_clearLogo = true;
-        _f_clearStationName = true;
+        if(!_f_playAllFiles && ! _f_playlistEnabled){
+            _f_clearLogo = true;
+            _f_clearStationName = true;
+        }
     }
+    _f_eof = true;
+    _f_isWebConnected = false;
 }
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER || _state == PLAYERico) {
-        _f_clearLogo = true;
-        _f_clearStationName = true;
+        if(!_f_playAllFiles && ! _f_playlistEnabled){
+            _f_clearLogo = true;
+            _f_clearStationName = true;
+        }
     }
+    _f_eof = true;
+    _f_isWebConnected = false;
 }
 //----------------------------------------------------------------------------------------
 void vs1053_lasthost(const char* info) { // really connected URL
@@ -3512,6 +3482,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
                 yPos = AUDIOFILESLIST_1;
             }
+            else if(y > _winFooter.y){
+                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
+                    yPos = AUDIOFILESLIST_1;
+                    btnNr = 100;
+                }
+            }
             break;
         case DLNAITEMSLIST:
             if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
@@ -3563,7 +3539,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case PLAYER_1:      if(btnNr == 0){_releaseNr = 40;} // first audiofile
                             if(btnNr == 1){_releaseNr = 41;} // next audiofile
                             if(btnNr == 2){_releaseNr = 42;} // ready
-                            if(btnNr == 3){_releaseNr = 43;} // unused
+                            if(btnNr == 3){_releaseNr = 43;} // play all files
                             if(btnNr == 4){_releaseNr = 44;} // unused
                             if(btnNr == 5){_releaseNr = 45;} // unused
                             if(btnNr == 6){_releaseNr = 46;} // audiofiles list
@@ -3609,7 +3585,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             break;
         case AUDIOFILESLIST_1: if(btnNr == none) break;
                             _releaseNr = 110;
-                            _fileListPos = btnNr;
+                            if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
+                            else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
                             vTaskDelay(100);
                             break;
         case DLNAITEMSLIST_1: if(btnNr == none) break;
@@ -3624,6 +3601,10 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     // log_w("long pressed %i  %i", x, y);
     if((_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50 || _releaseNr == 90) && _f_mute) {
         fall_asleep();
+    }
+    if(_releaseNr == 110){
+        uint8_t btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+        log_i("longPressed X %i, Y %i, btnNr %i", x, y, btnNr);
     }
 }
 void tp_released(uint16_t x, uint16_t y){
@@ -3640,11 +3621,7 @@ void tp_released(uint16_t x, uint16_t y){
         case  5:    changeBtn_released(5); changeState(STATIONSLIST); break;  //  list stations
 
         /* RADIOmenue ******************************/
-        case 10:    changeState(PLAYER);
-                    setAudioFolder(_curAudioFolder.c_str());
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
-                    break;
+        case 10:    changeState(PLAYER); break;
         case 11:    changeState(DLNA); break;
         case 12:    changeState(CLOCK); break;
         case 13:    changeState(SLEEP); break;
@@ -3665,25 +3642,34 @@ void tp_released(uint16_t x, uint16_t y){
         case 34:    changeState(CLOCK); break;
 
         /* AUDIOPLAYER ******************************/
-        case 40:    changeBtn_released(0); // first audiofile
-                    if(setAudioFolder(_curAudioFolder.c_str()));
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
+        case 40:    changeBtn_released(0); // previous audiofile
+                    if(_cur_AudioFileNr > 0){
+                        _cur_AudioFileNr--;
+                        showFileName(_SD_content[_cur_AudioFileNr]);
+                        showFileNumber();
+                    }
                     break;
         case 41:    changeBtn_released(1); // next audiofile
-                    nextAudioFile = getNextAudioFile();
-                    showFileName(nextAudioFile.name());
+                    if(_cur_AudioFileNr + 1 < _SD_content.size()){
+                        _cur_AudioFileNr++;
+                        showFileName(_SD_content[_cur_AudioFileNr]);
+                        showFileNumber();
+                    }
                     break;
         case 42:    changeState(PLAYERico); showVolumeBar(); // ready
-                    SD_playFile(nextAudioFile.path());
-                    if(_f_isFSConnected && nextAudioFile){
-                        free(_lastconnectedfile);
-                        _lastconnectedfile = strdup(nextAudioFile.path());
-                    } break;
-        case 43:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
+                    sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
+                    {
+                        int32_t idx = indexOf(_chbuf, "\033[", 1);
+                        if(idx == -1) break;  // is folder
+                        _chbuf[idx] = '\0';  // remove color and filesize
+                    }
+                    changeState(PLAYERico);
+                    SD_playFile(_chbuf, 0, true);
+                    break;
+        case 43:    SD_playFolder(_curAudioFolder.c_str(), true); break;
         case 44:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
         case 45:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
-        case 46:    changeState(AUDIOFILESLIST); break;
+        case 46:    SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST);break;
         case 47:    changeBtn_released(0); changeState(RADIO); break; // RADIO
 
         /* AUDIOPLAYERico ******************************/
@@ -3803,7 +3789,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(idx > 1){ // not the first '/'
                                     _curAudioFolder = _curAudioFolder.substring(0, idx);
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str(), true);
+                                    SD_listDir(_curAudioFolder.c_str(), true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3811,19 +3797,21 @@ void tp_released(uint16_t x, uint16_t y){
                             else{
                                 if(fileNr > _SD_content.size()) break;
                                 tft.setTextColor(TFT_CYAN);
-                                tft.writeText((uint8_t*)_SD_content[fileNr - 1], -1, -1, true);
-                                sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[fileNr - 1]);
+                                _cur_AudioFileNr = fileNr - 1;
+                                tft.writeText((uint8_t*)_SD_content[_cur_AudioFileNr], -1, -1, true);
+                                sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
                                 int32_t idx = indexOf(_chbuf, "\033[", 1);
                                 if(idx == -1){ // is folder
-                                    _curAudioFolder += "/" + (String)_SD_content[fileNr - 1];
+                                    _curAudioFolder += "/" + (String)_SD_content[_cur_AudioFileNr];
                                     _fileListNr = 0;
-                                    SD_listDir(_curAudioFolder.c_str(), true);
+                                    SD_listDir(_curAudioFolder.c_str(), true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
                                 else {
                                     _chbuf[idx] = '\0';  // remove color and filesize
-                                    changeState(PLAYER);
+                                    changeState(PLAYERico);
+                                    log_i("fn %s", _chbuf);
                                     SD_playFile(_chbuf, 0, true);
                                 }
                             }
@@ -4043,7 +4031,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "SD_playAllFiles"){   webSrv.send("SD_playFolder=" + param);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
-                                    SD_playFolder(param.c_str(), true);
+                                    _curAudioFolder = param;
+                                    SD_playFolder(_curAudioFolder.c_str(), true);
                                     return;}
 
     if(cmd == "SD_rename"){         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest

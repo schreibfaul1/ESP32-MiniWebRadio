@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 17.09.2023
+ *  Updated on: 23.09.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -491,6 +491,9 @@ function connect() {
                                     else if(val == '24') radiobtn = document.getElementById("h24")
                                     else{console.log("wrong timeFormat ", val); break;}
                                     radiobtn.checked = true;
+                                    break;
+            case "changeState":     if      (val == 'RADIO') showTab1();
+                                    else if (val == 'PLAYER') showTab3();
                                     break;
             default:                console.log('unknown message', msg, val)
         }
