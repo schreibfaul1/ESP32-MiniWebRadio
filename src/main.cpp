@@ -56,10 +56,11 @@ int16_t        _tonelf = 0;               // BassFreq 0...13        VS1053
 int16_t        _toneLP = 0;               // -40 ... +6 (dB)        audioI2S
 int16_t        _toneBP = 0;               // -40 ... +6 (dB)        audioI2S
 int16_t        _toneHP = 0;               // -40 ... +6 (dB)        audioI2S
+int16_t        _cur_AudioFileNr = 0;      // position inside _SD_content (can be temporaly negative)
 uint16_t       _icyBitRate = 0;           // from http response header via event
 uint16_t       _avrBitRate = 0;           // from decoder via getBitRate(true)
 uint16_t       _cur_station = 0;          // current station(nr), will be set later
-uint16_t       _cur_AudioFileNr = 0;      // position inside _SD_content
+
 uint16_t       _sleeptime = 0;            // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations = 0;
 uint32_t       _resumeFilePos = 0;        //
@@ -1149,8 +1150,8 @@ void showFileName(const char* fname) {
 
 void showFileNumber(){
     tft.setFont(_fonts[3]);
-    char buf[10];
-    sprintf(buf, "%03d/%03d", _cur_AudioFileNr + 1, _SD_content.size());
+    char buf[12];
+    sprintf(buf, "%03i/%03d", _cur_AudioFileNr + 1, _SD_content.size());
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_DEEPSKYBLUE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
@@ -1563,7 +1564,7 @@ void processPlaylist(boolean first) {
     SerialPrintfln("end of playlist");
     webSrv.send("SD_playFile=end of playlist");
     playlistFile.close();
-    _f_playlistEnabled = false;
+    stopSong();
     changeState(PLAYER);
 }
 /*****************************************************************************************************************************************************
@@ -1718,6 +1719,7 @@ void stopSong() {
     _f_pauseResume = false;
     _f_playAllFiles = false;
     _f_playlistNextFile = false;
+    _f_eof = false; //as a precaution
 }
 
 /*****************************************************************************************************************************************************
@@ -2272,28 +2274,21 @@ void SD_playFolder(const char* folderPath, bool showFN) {
     int32_t idx = 0;
     if(!_f_playAllFiles) {
         if(audioFile) audioFile.close(); // maybe audioFile contains old data
-        _cur_AudioFileNr = 0;
+        _cur_AudioFileNr = -1;
         _curAudioFolder = folderPath;
-        _cur_AudioFileNr = 0;
         _f_playAllFiles = true;
         changeState(PLAYERico);
         showVolumeBar();
         SD_listDir(_curAudioFolder.c_str(), true, true);
-        sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
-        idx = indexOf(_chbuf, "\033[", 1);
-        _chbuf[idx] = '\0';  // remove color and filesize
-        SD_playFile(_chbuf, 0, true);
-        memmove(_chbuf + 14, _chbuf, strlen(_chbuf) + 1);
-        memcpy(_chbuf, "SD_playFolder=", 14);
-        webSrv.send(_chbuf);
         return;
     }
-    if(_cur_AudioFileNr + 1 == _SD_content.size()){
+    if(_cur_AudioFileNr + 1  == _SD_content.size()){
+        _cur_AudioFileNr = 0;
         _f_playAllFiles = false;
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_CYAN "No other audio files found");
         webSrv.send("SD_playFolder=No other audio files found");
-        changeState(PLAYER);
         stopSong();
+        changeState(PLAYER);
         return;
     }
     _cur_AudioFileNr++;
@@ -2304,6 +2299,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
     memmove(_chbuf + 14, _chbuf, strlen(_chbuf) + 1);
     memcpy(_chbuf, "SD_playFolder=", 14);
     webSrv.send(_chbuf);
+
     return;
 }
 
