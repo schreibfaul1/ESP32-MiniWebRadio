@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 21.Sep.2023
+// updated: 23.Sep.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -175,6 +175,7 @@ void showStationName(String sn);
 void showStationLogo(String ln);
 void showFileLogo(uint8_t state);
 void showFileName(const char* fname);
+void showFileNumber();
 void showStationsList(uint16_t staListNr);
 void display_time(boolean showall = false);
 void display_alarmDays(uint8_t ad, boolean showall=false);
