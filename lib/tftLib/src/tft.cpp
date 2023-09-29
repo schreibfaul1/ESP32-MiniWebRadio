@@ -4820,9 +4820,9 @@ void TP::setVersion(uint8_t v) {
     }
     if (TP_vers == 5) {  // ST7796 4" display
         Xmax = 1922;
-        Xmin = 140;
-        Ymax = 1930;
-        Ymin = 125;
+        Xmin = 103;
+        Ymax = 1950;
+        Ymin = 110;
         xFaktor = float(Xmax - Xmin) / ST7796_WIDTH;
         yFaktor = float(Ymax - Ymin) / ST7796_HEIGHT;
     }
@@ -4846,6 +4846,8 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
 
     _x /= 100;
     _y /= 100;
+
+    // log_w("_x %i, _y %i", _x, _y);
 
     if ((_x < Xmin) || (_x > Xmax)) return false;  // outside the display
     _x = Xmax - _x;
