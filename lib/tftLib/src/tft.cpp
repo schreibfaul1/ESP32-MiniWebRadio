@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Aug 17 2023
+// updated on Sep 29 2023
 
 #include "Arduino.h"
 #include "tft.h"
@@ -4708,7 +4708,7 @@ TP::TP(uint8_t CS, uint8_t IRQ) {
     pinMode(TP_CS, OUTPUT);
     digitalWrite(TP_CS, HIGH);
     pinMode(TP_IRQ, INPUT);
-    TP_SPI = SPISettings(400000, MSBFIRST, SPI_MODE0);  // slower speed
+    TP_SPI = SPISettings(200000, MSBFIRST, SPI_MODE0);  // slower speed
     _rotation = 0;
 }
 //----------------------------------------------------------------------------------------------------------------------
@@ -4730,16 +4730,15 @@ void TP::loop() {
     static uint16_t x1 = 0, y1 = 0;
     static uint16_t x2 = 0, y2 = 0;
     if (!digitalRead(TP_IRQ)) {
-        if(read_TP(x, y)) { x1 = x; y1 = y;}
+        if(!read_TP(x, y)){return;}
+        { x1 = x; y1 = y;}
         if (f_loop) {
-            if (read_TP(x, y)) {
-                f_loop = false;
-                // log_i("tp_pressed x=%d, y=%d", x, y);
-                if (tp_pressed) tp_pressed(x, y);
-                x2 = x; y2 = y;
-                m_pressingTime = millis();
-                m_f_isPressing = true;
-            }
+            f_loop = false;
+            // log_i("tp_pressed x=%d, y=%d", x, y);
+            if (tp_pressed) tp_pressed(x, y);
+            x2 = x; y2 = y;
+            m_pressingTime = millis();
+            m_f_isPressing = true;
         }
         else {
             if(m_f_isPressing){
@@ -4831,30 +4830,35 @@ void TP::setVersion(uint8_t v) {
 //----------------------------------------------------------------------------------------------------------------------
 
 bool TP::read_TP(uint16_t& x, uint16_t& y) {
-    uint16_t _y[3];
-    uint16_t _x[3];
+    uint32_t _y = 0;
+    uint32_t _x = 0;
     uint16_t tmpxy;
-    uint8_t i;
-    if (digitalRead(TP_IRQ)) return false;
-    for (i = 0; i < 3; i++) {
-        x = TP_Send(0xD0);  // x
+    uint8_t i = 0;
 
-        if ((x < Xmin) || (x > Xmax)) return false;  // outside the display
-        x = Xmax - x;
-        _x[i] = x / xFaktor;
+    if(digitalRead(TP_IRQ)) return false; // TP pressed?
 
-        y = TP_Send(0x90);  // y
-        // log_i("TP X=%i, y=%i, Nr=%i",x, y, i);
-        if ((y < Ymin) || (y > Ymax)) return false;  // outside the display
-        y = Ymax - y;
-        _y[i] = y / yFaktor;
+    for (i = 0; i < 100; i++) {
+        _x += TP_Send(0xD0);  // x
+        _y += TP_Send(0x90);  // y
     }
-    if(abs(_x[0] - _x[1]) > 5) return false;
-    if(abs(_x[0] - _x[2]) > 5) return false;
-    if(abs(_y[0] - _y[1]) > 5) return false;
-    if(abs(_y[0] - _y[2]) > 5) return false;
-    x = (_x[0] + _x[1] + _x[2]) / 3;  // take the mean
-    y = (_y[0] + _y[1] + _y[2]) / 3;
+
+    if(digitalRead(TP_IRQ)) return false; // TP must remain pressed as long as the measurement is running
+
+    _x /= 100;
+    _y /= 100;
+
+    if ((_x < Xmin) || (_x > Xmax)) return false;  // outside the display
+    _x = Xmax - _x;
+    _x /= xFaktor;
+
+    if ((_y < Ymin) || (y > Ymax)) return false;  // outside the display
+    _y = Ymax - _y;
+    _y /= yFaktor;
+
+    // log_i("_x %i, _y %i", _x, _y);
+    x = _x;
+    y = _y;
+
     //-------------------------------------------------------------
     if (TP_vers == 0) {  // 320px x 240px
         if (_rotation == 0) {
