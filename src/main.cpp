@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.13a Sep 23/2023                                                                                         ";
+    Version 2.13b Sep 29/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1743,8 +1743,11 @@ void setup() {
     Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
-    if(psramInit()) { Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size()); }
-    else { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio does not work without PSRAM!" ANSI_ESC_WHITE); return;}
+    Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
+    if(!psramInit()) {
+        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio does not work without PSRAM!" ANSI_ESC_WHITE);
+        return;
+    }
     _f_PSRAMfound = true;
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
@@ -3507,11 +3510,11 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case RADIO_1:       changeState(RADIOico); break;
         case RADIOico_1:    changeState(RADIOmenue); break;
         case CLOCK_1:       changeState(CLOCKico);   break;
-        case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; mute();}
+        case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; _timeCounter.timer = 5; mute();}
                             else if(btnNr == 1){_releaseNr =  1; _timeCounter.timer = 5;} // Vol-
                             else if(btnNr == 2){_releaseNr =  2; _timeCounter.timer = 5;} // Vol+
-                            else if(btnNr == 3){_releaseNr =  3; } // station--
-                            else if(btnNr == 4){_releaseNr =  4; } // station++
+                            else if(btnNr == 3){_releaseNr =  3; _timeCounter.timer = 5;} // station--
+                            else if(btnNr == 4){_releaseNr =  4; _timeCounter.timer = 5;} // station++
                             else if(btnNr == 5){_releaseNr =  5; } // list stations
                             else   {SerialPrintfln(ANSI_ESC_YELLOW "invalid button nr: %i", btnNr); break;}
                             changeBtn_pressed(btnNr);
@@ -3613,11 +3616,11 @@ void tp_released(uint16_t x, uint16_t y){
 
     switch(_releaseNr){
         /* RADIOico ******************************/
-        case  0:    /*changeBtn_released(0);*/ break; // Mute
-        case  1:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
-        case  2:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
+        case  0:    /*changeBtn_released(0);*/                               break; // Mute
+        case  1:    changeBtn_released(1); downvolume(); showVolumeBar();    break;  // Vol-
+        case  2:    changeBtn_released(2); upvolume();   showVolumeBar();    break;  // Vol+
         case  3:    changeBtn_released(3); prevStation(); showFooterStaNr(); break;  // previousstation
-        case  4:    changeBtn_released(4); nextStation(); showFooterStaNr(); break;  //  nextstation
+        case  4:    changeBtn_released(4); nextStation(); showFooterStaNr(); break;  // nextstation
         case  5:    changeBtn_released(5); changeState(STATIONSLIST); break;  //  list stations
 
         /* RADIOmenue ******************************/
