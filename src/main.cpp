@@ -1412,7 +1412,7 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
             if(!withoutDirs){
                 _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
                 sprintf(_chbuf + 1, "%s", file.name());
-                _SD_content.push_back(strdup((const char*)_chbuf));
+                _SD_content.push_back(x_ps_strdup((const char*)_chbuf));
             }
         }
         else {
@@ -1420,12 +1420,12 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
                 if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
                     endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
                         sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                        _SD_content.push_back(strdup((const char*) _chbuf));
+                        _SD_content.push_back(x_ps_strdup((const char*) _chbuf));
                 }
             }
             else{
                 sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                _SD_content.push_back(strdup((const char*) _chbuf));
+                _SD_content.push_back(x_ps_strdup((const char*) _chbuf));
             }
         }
     }
@@ -1743,12 +1743,13 @@ void setup() {
     Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
-    Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
     if(!psramInit()) {
-        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio does not work without PSRAM!" ANSI_ESC_WHITE);
-        return;
+        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
     }
-    _f_PSRAMfound = true;
+    else {
+        _f_PSRAMfound = true;
+        Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
+    }
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1988,8 +1989,10 @@ boolean strCompare(const char* str1, char* str2) { // returns true if str1 == st
     return f;
 }
 
-char* ps_strdup(const char* str){
-    char* ps_str = (char*) ps_malloc(strlen(str) + 1);
+char* x_ps_strdup(const char* str){
+    char* ps_str = NULL;
+    if(_f_PSRAMfound){ps_str = (char*) ps_malloc(strlen(str) + 1);}
+    else             {ps_str = (char*)    malloc(strlen(str) + 1);}
     strcpy(ps_str, str);
     return ps_str;
 }
@@ -2107,12 +2110,12 @@ void setStation(uint16_t sta) {
     if(sta > _sum_stations) sta = _cur_station;
     sprintf(_chbuf, "station_%03d", sta);
     String content = stations.getString(_chbuf, " #not_found");
-    // SerialPrintfln("content %s", content.c_str());
+//    SerialPrintfln("content %s", content.c_str());
     _stationName_nvs = content.substring(0, content.indexOf("#"));           // get stationname
     content = content.substring(content.indexOf("#") + 1, content.length()); // get URL
     content.trim();
     free(_stationURL);
-    _stationURL = strdup(content.c_str());
+    _stationURL = x_ps_strdup(content.c_str());
     _homepage = "";
     if(_state == RADIO) clearStreamTitle();
 
@@ -2162,7 +2165,7 @@ void setStationViaURL(const char* url) {
     _stationName_nvs = "";
     _cur_station = 0;
     free(_stationURL);
-    _stationURL = strdup(url);
+    _stationURL = x_ps_strdup(url);
     connecttohost(url);
     StationsItems();
     if(_state == RADIO || _state == RADIOico){
@@ -2263,7 +2266,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     showFileNumber();
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
-        _lastconnectedfile = strdup(path);
+        _lastconnectedfile = x_ps_strdup(path);
         _resumeFilePos = 0;
     }
 }
@@ -2800,7 +2803,6 @@ void showDlnaItemsList(uint8_t level, uint16_t itemNr){
  *                                                                 L O O P                                                                           *
  *****************************************************************************************************************************************************/
 void loop() {
-    if(!_f_PSRAMfound) return;  // Guard:  PSRAM could not be initialized
     if(!_f_ESPfound) return;    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
     webSrv.loop();
@@ -3992,8 +3994,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "DLNA_getContent4"){  _level = 4; DLNA_showContent(param, 4); return;} // search for level 4 content
     if(cmd == "DLNA_getContent5"){  _level = 5; DLNA_showContent(param, 5); return;} // search for level 5 content
 
-    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
-                                    ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
+    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u, PSRAM filled %u, PSRAM free %u",
+                                    ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree(), ESP.getPsramSize() - ESP.getFreePsram(), ESP.getFreePsram());
                                     webSrv.send((String)"test=" + _chbuf);
                                     SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark() * 4);
                                     SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL) * 4);
@@ -4135,7 +4137,7 @@ void dlna_server(uint8_t serverId, size_t serverSize, String IP_addr, uint16_t p
     String msg = "DLNA_Names=" + friendlyName + "," + id;
     webSrv.send(msg);
 
-    _dlna_items.serverFriendlyName.push_back(ps_strdup(friendlyName.c_str()));
+    _dlna_items.serverFriendlyName.push_back(x_ps_strdup(friendlyName.c_str()));
     _dlna_items.serverId.push_back(serverId);
 }
 
@@ -4215,10 +4217,10 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
         return;
     }
     _dlna_items.isReady = false;
-    _dlna_items.name.push_back(ps_strdup(name.c_str()));
-    _dlna_items.id.push_back(ps_strdup(id.c_str()));
+    _dlna_items.name.push_back(x_ps_strdup(name.c_str()));
+    _dlna_items.id.push_back(x_ps_strdup(id.c_str()));
     _dlna_items.size.push_back(size);
-    _dlna_items.uri.push_back(ps_strdup(uri.c_str()));
+    _dlna_items.uri.push_back(x_ps_strdup(uri.c_str()));
     _dlna_items.isDir.push_back(isDir == true);
     _dlna_items.isAudio.push_back(isAudio == true);
 
