@@ -113,6 +113,7 @@ boolean        _f_accessPoint = false;
 boolean        _f_state_isChanging = false;
 boolean        _f_SD_Upload = false;
 boolean        _f_PSRAMfound = false;
+boolean        _f_FFatFound = false;
 boolean        _f_SD_MMCfound = false;
 boolean        _f_ESPfound = false;
 boolean        _f_playAllFiles = false;
@@ -1381,11 +1382,16 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
         return false;
     }
     if(endsWith(scImg, "bmp")) {
-        // log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
         return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
-    if(endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp nor a jpj graphic", scImg);
+    if(endsWith(scImg, "jpg")) {
+        return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
+    }
+    if(endsWith(scImg, "gif")) {
+        return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0);
+    }
+
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpj graphic", scImg);
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************
@@ -1750,6 +1756,13 @@ void setup() {
         _f_PSRAMfound = true;
         Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
     }
+    if(ESP.getFlashChipSize() > 8000000){
+        if(!FFat.begin()){if(!FFat.format()) Serial.printf("FFat Mount Failed\n");}
+        else{
+            Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            _f_FFatFound = true;
+        }
+    }
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -2027,7 +2040,7 @@ void SerialPrintflnCut(const char* item, const char* color, const char* str) {
 }
 
 const char* scaleImage(const char* path) {
-    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))) { // not a image
+    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif"))) { // not a image
         return path;
     }
     static char pathBuff[256];
@@ -2035,17 +2048,11 @@ const char* scaleImage(const char* path) {
     char* pch = strstr(path + 1, "/");
     if(pch) {
         strncpy(pathBuff, path, (pch - path));
-        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else
-            strcat(pathBuff, _prefix);                    // medium pic, 480x320px
+        strcat(pathBuff, _prefix);
         strcat(pathBuff, pch);
     }
     else {
-        strcpy(pathBuff, "/common");
-        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else
-            strcat(pathBuff, _prefix);                    // medium pic, 480x320px
-        strcat(pathBuff, path);
+        return path; // invalid path
     }
     return pathBuff;
 }
@@ -2431,6 +2438,30 @@ void dlna_items_vector_clear_ans_shrink(){
     _dlna_items.isAudio.clear();
 }
 
+boolean copySDtoFFat(const char* path){
+    if(!_f_FFatFound) return false;
+    uint8_t buffer[1024];
+    size_t r = 0, w = 0;
+    size_t len = 0;
+    File file1 = SD_MMC.open(path, "r");
+    File file2 = FFat.open(path, "w");
+    while(true){
+        r = file1.read(buffer, 1024);
+        w = file2.write(buffer, r);
+        if(r != w){
+            file1.close();
+            file2.close();
+            FFat.remove(path);
+            return false;
+        }
+        len += r;
+        if(r == 0) break;
+    }
+    log_i("file length %i, written %i", file1.size(), len);
+    if(file1.size() == len) return true;
+    return false;
+}
+
 /*****************************************************************************************************************************************************
  *                                                            M E N U E / B U T T O N S                                                              *
  *****************************************************************************************************************************************************/
@@ -2489,8 +2520,8 @@ void changeState(int32_t state){
         case RADIOico:{
             showHeadlineItem(RADIOico);
             _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.gif";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.gif";
             _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
             _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
             _pressBtn[5] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[5] = "/btn/Button_List_Green.jpg";
@@ -2498,7 +2529,9 @@ void changeState(int32_t state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             clearTitle();
             showVolumeBar();
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            if(_f_mute) drawImage("/btn/RADIOico2.gif", 0, _winButton.y);
+            else        drawImage("/btn/RADIOico1.gif", 0, _winButton.y);
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2518,7 +2551,8 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            drawImage("/btn/RADIOmenue.gif", 0, _winButton.y);
             clearVolBar();
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
@@ -2576,7 +2610,9 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            // for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            if(_f_mute) drawImage("/btn/CLOCKico2.gif", 0, _winButton.y);
+            else        drawImage("/btn/CLOCKico1.gif", 0, _winButton.y);
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2610,7 +2646,8 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            drawImage("/btn/PLAYER.gif", 0, _winButton.y);
             showFileLogo(state);
             showFileName(_SD_content[_cur_AudioFileNr]);
             webSrv.send("changeState=PLAYER");
@@ -3531,7 +3568,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
-                            if(btnNr == 2){_releaseNr = 22; mute();}
+                            if(btnNr == 2){_releaseNr = 22; _timeCounter.timer = 5; mute();}
                             if(btnNr == 3){_releaseNr = 23; _timeCounter.timer = 5;} // Vol-
                             if(btnNr == 4){_releaseNr = 24; _timeCounter.timer = 5;} // Vol+
                             changeBtn_pressed(btnNr); break;
@@ -4013,7 +4050,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
-                                        webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
+                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
 
     if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());

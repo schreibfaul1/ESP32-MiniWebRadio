@@ -8,6 +8,9 @@
 JPEGDecoder JpegDec;
 SPIClass*   SPItransfer;
 
+#define __malloc_heap_psram(size) \
+    heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)
+
 #define ILI9341_MADCTL_MY   0x80
 #define ILI9341_MADCTL_MX   0x40
 #define ILI9341_MADCTL_MV   0x20
@@ -1242,19 +1245,10 @@ void TFT::writeColor(uint16_t color, uint32_t len){
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::write24BitColor(uint16_t color) {
-    uint8_t r = (color & 0xF800) >> 11;
-    uint8_t g = (color & 0x07E0) >> 5;
-    uint8_t b = color & 0x001F;
-
-    r = (r * 255) / 31;
-    g = (g * 255) / 63;
-    b = (b * 255) / 31;
-
-    spi_TFT->write(r);
-    spi_TFT->write(g);
-    spi_TFT->write(b);
+    spi_TFT->write((color & 0xF800) >> 8); // r
+    spi_TFT->write((color & 0x07E0) >> 3); // g
+    spi_TFT->write((color & 0x001F) << 3); // b
 }
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
@@ -2229,75 +2223,73 @@ boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, u
 /***********************************************************************************************************************
                                                 G I F
 ***********************************************************************************************************************/
-boolean TFT::drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat){
-    //debug=true;
-    int32_t iterations=repeat;
+boolean TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+    // debug=true;
+    int32_t iterations = repeat;
 
-    do{ // repeat this gif
-        gif_file= fs.open(path);
-        if(!gif_file){
+    do { // repeat this gif
+        gif_file = fs.open(path);
+        if(!gif_file) {
             if(tft_info) tft_info("Failed to open file for reading");
             return false;
         }
         GIF_readGifItems();
 
         // check it's a gif
-        if(!gif_GifHeader.startsWith("GIF")){
+        if(!gif_GifHeader.startsWith("GIF")) {
             if(tft_info) tft_info("File is not a gif");
             return false;
         }
         // check dimensions
-        if(debug){
-            log_i("Width: %i, Height: %i,", gif_LogicalScreenWidth, gif_LogicalScreenHeight);
-        }
-        if(gif_LogicalScreenWidth*gif_LogicalScreenHeight>155000){
+        if(debug) { log_i("Width: %i, Height: %i,", gif_LogicalScreenWidth, gif_LogicalScreenHeight); }
+        if(gif_LogicalScreenWidth * gif_LogicalScreenHeight > 155000) {
             if(tft_info) tft_info("!Image is too big!!");
             return false;
         }
 
-        while(GIF_decodeGif(x, y)==true){
-           if(iterations==0) break;
+        while(GIF_decodeGif(x, y) == true) {
+            if(iterations == 0) break;
         } // endwhile
         iterations--;
         gif_file.close();
-    }while(iterations>0);
+    } while(iterations > 0);
+
     GIF_freeMemory();
     // log_i("freeHeap= %i", ESP.getFreeHeap());
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void TFT::GIF_readHeader(){
+void TFT::GIF_readHeader() {
 
-//    7 6 5 4 3 2 1 0        Field Name                    Type
-//     +---------------+
-//   0 |               |       Signature                     3 Bytes
-//     +-             -+
-//   1 |               |
-//     +-             -+
-//   2 |               |
-//     +---------------+
-//   3 |               |       Version                       3 Bytes
-//     +-             -+
-//   4 |               |
-//     +-             -+
-//   5 |               |
-//     +---------------+
-//
-//  i) Signature - Identifies the GIF Data Stream. This field contains
-//     the fixed value 'GIF'.
-//
-// ii) Version - Version number used to format the data stream.
-//     Identifies the minimum set of capabilities necessary to a decoder
-//     to fully process the contents of the Data Stream.
-//
-//     Version Numbers as of 10 July 1990 :       "87a" - May 1987
-//                                                "89a" - July 1989
-//
-    gif_file.readBytes(gif_buffer, 6); //Header
-    gif_buffer[6]=0; gif_GifHeader=gif_buffer;
-    if(debug){
-        log_i("GifHeader: %s", gif_GifHeader.c_str());
-    }
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    //   0 |               |       Signature                     3 Bytes
+    //     +-             -+
+    //   1 |               |
+    //     +-             -+
+    //   2 |               |
+    //     +---------------+
+    //   3 |               |       Version                       3 Bytes
+    //     +-             -+
+    //   4 |               |
+    //     +-             -+
+    //   5 |               |
+    //     +---------------+
+    //
+    //  i) Signature - Identifies the GIF Data Stream. This field contains
+    //     the fixed value 'GIF'.
+    //
+    // ii) Version - Version number used to format the data stream.
+    //     Identifies the minimum set of capabilities necessary to a decoder
+    //     to fully process the contents of the Data Stream.
+    //
+    //     Version Numbers as of 10 July 1990 :       "87a" - May 1987
+    //                                                "89a" - July 1989
+    //
+    gif_file.readBytes(gif_buffer, 6); // Header
+    gif_buffer[6] = 0;
+    gif_GifHeader = gif_buffer;
+    if(debug) { log_i("GifHeader: %s", gif_GifHeader.c_str()); }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2324,19 +2316,19 @@ void TFT::GIF_readLogicalScreenDescriptor(){
 // 6  |               |       Pixel Aspect Ratio            Byte
 //    +---------------+
 //
-    gif_file.readBytes(gif_buffer, 7); //Logical Screen Descriptor
-    gif_LogicalScreenWidth=gif_buffer[0]+256*gif_buffer[1];
-    gif_LogicalScreenHeight=gif_buffer[2]+256*gif_buffer[3];
-    gif_PackedFields=gif_buffer[4];
-    gif_GlobalColorTableFlag=(gif_PackedFields & 0x80);
-    gif_ColorResulution=((gif_PackedFields & 0x70)>>3)+1;
-    gif_SortFlag=(gif_PackedFields & 0x08);
-    gif_SizeOfGlobalColorTable=(gif_PackedFields & 0x07);
-    gif_SizeOfGlobalColorTable=(1<<(gif_SizeOfGlobalColorTable+1));
-    gif_BackgroundColorIndex=gif_buffer[5];
-    gif_PixelAspectRatio=gif_buffer[6];
+    gif_file.readBytes(gif_buffer, 7); // Logical Screen Descriptor
+    gif_LogicalScreenWidth = gif_buffer[0] + 256 * gif_buffer[1];
+    gif_LogicalScreenHeight = gif_buffer[2] + 256 * gif_buffer[3];
+    gif_PackedFields = gif_buffer[4];
+    gif_GlobalColorTableFlag = (gif_PackedFields & 0x80);
+    gif_ColorResulution = ((gif_PackedFields & 0x70) >> 3) + 1;
+    gif_SortFlag = (gif_PackedFields & 0x08);
+    gif_SizeOfGlobalColorTable = (gif_PackedFields & 0x07);
+    gif_SizeOfGlobalColorTable = (1 << (gif_SizeOfGlobalColorTable + 1));
+    gif_BackgroundColorIndex = gif_buffer[5];
+    gif_PixelAspectRatio = gif_buffer[6];
 
-    if(debug){
+    if(debug) {
         log_i("LogicalScreenWidth=%i", gif_LogicalScreenWidth);
         log_i("LogicalScreenHeight=%i", gif_LogicalScreenHeight);
         log_i("PackedFields=%i", gif_PackedFields);
@@ -2382,28 +2374,28 @@ void TFT::GIF_readImageDescriptor(){
 //                            Reserved                      2 Bits
 //                            Size of Local Color Table     3 Bits
 
-    gif_file.readBytes(gif_buffer, 9); //Image Descriptor
-    gif_ImageLeftPosition=gif_buffer[0]+256*gif_buffer[1];
-    gif_ImageTopPosition=gif_buffer[2]+256*gif_buffer[3];
-    gif_ImageWidth=gif_buffer[4]+256*gif_buffer[5];
-    gif_ImageHeight=gif_buffer[6]+256*gif_buffer[7];
-    gif_PackedFields=gif_buffer[8];
-    gif_LocalColorTableFlag=((gif_PackedFields & 0x80)>>7);
-    gif_InterlaceFlag=((gif_PackedFields & 0x40)>>6);
-    gif_SortFlag=((gif_PackedFields & 0x20))>>5;
-    gif_SizeOfLocalColorTable=(gif_PackedFields & 0x07);
-    gif_SizeOfLocalColorTable=(1<<(gif_SizeOfLocalColorTable+1));
+    gif_file.readBytes(gif_buffer, 9); // Image Descriptor
+    gif_ImageLeftPosition = gif_buffer[0] + 256 * gif_buffer[1];
+    gif_ImageTopPosition = gif_buffer[2] + 256 * gif_buffer[3];
+    gif_ImageWidth = gif_buffer[4] + 256 * gif_buffer[5];
+    gif_ImageHeight = gif_buffer[6] + 256 * gif_buffer[7];
+    gif_PackedFields = gif_buffer[8];
+    gif_LocalColorTableFlag = ((gif_PackedFields & 0x80) >> 7);
+    gif_InterlaceFlag = ((gif_PackedFields & 0x40) >> 6);
+    gif_SortFlag = ((gif_PackedFields & 0x20)) >> 5;
+    gif_SizeOfLocalColorTable = (gif_PackedFields & 0x07);
+    gif_SizeOfLocalColorTable = (1 << (gif_SizeOfLocalColorTable + 1));
 
-    if(debug){
-         log_i("ImageLeftPosition=%i", gif_ImageLeftPosition);
-         log_i("ImageTopPosition=%i", gif_ImageTopPosition);
-         log_i("ImageWidth=%i", gif_ImageWidth);
-         log_i("ImageHeight=%i", gif_ImageHeight);
-         log_i("PackedFields=%i", gif_PackedFields);
-         log_i("LocalColorTableFlag=%i", gif_LocalColorTableFlag);
-         log_i("InterlaceFlag=%i", gif_InterlaceFlag);
-         log_i("SortFlag=%i", gif_SortFlag);
-         log_i("SizeOfLocalColorTable=%i", gif_SizeOfLocalColorTable);
+    if(debug) {
+        log_i("ImageLeftPosition=%i", gif_ImageLeftPosition);
+        log_i("ImageTopPosition=%i", gif_ImageTopPosition);
+        log_i("ImageWidth=%i", gif_ImageWidth);
+        log_i("ImageHeight=%i", gif_ImageHeight);
+        log_i("PackedFields=%i", gif_PackedFields);
+        log_i("LocalColorTableFlag=%i", gif_LocalColorTableFlag);
+        log_i("InterlaceFlag=%i", gif_InterlaceFlag);
+        log_i("SortFlag=%i", gif_SortFlag);
+        log_i("SizeOfLocalColorTable=%i", gif_SizeOfLocalColorTable);
     }
 }
 
@@ -2415,6 +2407,8 @@ void TFT::GIF_readLocalColorTable() {
     // the color table will contain 2^(N+1) colors and will take up 3*2^(N+1) bytes.
     // The colors are specified in RGB value triplets.
     gif_LocalColorTable.clear();
+    gif_LocalColorTable.shrink_to_fit();
+    gif_LocalColorTable.reserve(gif_SizeOfLocalColorTable);
     if (gif_LocalColorTableFlag == 1) {
         char rgb_buff[3];
         uint16_t i = 0;
@@ -2485,20 +2479,20 @@ void TFT::GIF_readGraphicControlExtension(){
 //   0  |               |       Block Terminator              Byte
 //      +---------------+
 
-    uint8_t BlockSize=0;
+    uint8_t BlockSize = 0;
     gif_file.readBytes(gif_buffer, 1);
-    BlockSize=gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
+    BlockSize = gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
 
-    if(BlockSize==0) return;
+    if(BlockSize == 0) return;
     gif_file.readBytes(gif_buffer, BlockSize);
-    gif_PackedFields=gif_buffer[0];
-    gif_DisposalMethod=(gif_PackedFields & 0x1C)>>2;
-    gif_UserInputFlag=(gif_PackedFields &  0x02);
-    gif_TransparentColorFlag=gif_PackedFields & 0x01;
-    gif_DelayTime=gif_buffer[1]+256*gif_buffer[2];
-    gif_TransparentColorIndex=gif_buffer[3];
+    gif_PackedFields = gif_buffer[0];
+    gif_DisposalMethod = (gif_PackedFields & 0x1C) >> 2;
+    gif_UserInputFlag = (gif_PackedFields & 0x02);
+    gif_TransparentColorFlag = gif_PackedFields & 0x01;
+    gif_DelayTime = gif_buffer[1] + 256 * gif_buffer[2];
+    gif_TransparentColorIndex = gif_buffer[3];
 
-    if(debug){
+    if(debug) {
         log_i("BlockSize GraphicontrolExtension=%i", BlockSize);
         log_i("DisposalMethod=%i", gif_DisposalMethod);
         log_i("UserInputFlag=%i", gif_UserInputFlag);
@@ -2506,8 +2500,7 @@ void TFT::GIF_readGraphicControlExtension(){
         log_i("DelayTime=%i", gif_DelayTime);
         log_i("TransparentColorIndex=%i", gif_TransparentColorIndex);
     }
-
-     gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
+    gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2553,8 +2546,8 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf){
 // 0  |               |       Block Terminator              Byte
 //    +---------------+
 //
-    uint8_t BlockSize=0, numBytes=0;
-    BlockSize=gif_file.read();
+    uint8_t BlockSize = 0, numBytes = 0;
+    BlockSize = gif_file.read();
     // log_i("BlockSize=%i", BlockSize);
     if(BlockSize>0){
         gif_file.readBytes(gif_buffer, BlockSize);
@@ -2581,7 +2574,7 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf){
         log_i("TextBackgroundColorIndex=%i", gif_TextBackgroundColorIndex);
     }
 
-    numBytes=GIF_readDataSubBlock(buf);
+    numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
@@ -2628,15 +2621,15 @@ uint8_t TFT::GIF_readApplicationExtension(char* buf){
 // 0  |               |       Block Terminator              Byte
 //    +---------------+
 
-    uint8_t BlockSize=0, numBytes=0;
-    BlockSize=gif_file.read();
+    uint8_t BlockSize = 0, numBytes = 0;
+    BlockSize = gif_file.read();
     if(debug){
         log_i("BlockSize=%i", BlockSize);
     }
     if(BlockSize>0){
         gif_file.readBytes(gif_buffer, BlockSize);
     }
-    numBytes=GIF_readDataSubBlock(buf);
+    numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
@@ -2656,10 +2649,10 @@ uint8_t TFT::GIF_readCommentExtension(char *buf){
 //0 |               |       Block Terminator              Byte
 //  +---------------+
 
-    uint8_t numBytes=0;
-    numBytes=GIF_readDataSubBlock(buf);
+    uint8_t numBytes = 0;
+    numBytes = GIF_readDataSubBlock(buf);
     sprintf(chbuf, "GIF: Comment %s", buf);
-    if(tft_info) tft_info(chbuf);
+    // if(tft_info) tft_info(chbuf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
@@ -2778,9 +2771,9 @@ int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
         // The first byte in the sub-block tells you how many bytes of actual data follow. This can be a value from 0
         // (00) it 255 (FF). After you've read those bytes, the next byte you read will tell you now many more bytes of
         // data follow that one. You continue to read until you reach a sub-block that says that zero bytes follow.
-        endWrite();
+    //    endWrite();
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
-        startWrite();
+    //    startWrite();
         // log_i("Dtatblocksize %i", count);
         if (count == 0) done = true;
 
@@ -2805,10 +2798,9 @@ int32_t TFT::GIF_LZWReadByte(boolean init) {
     int32_t code, incode;
     static int32_t firstcode, oldcode;
 
-    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
-    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
-    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1)))
-        gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
+    if(gif_next.capacity()  < (1 << gif_MaxLzwBits))       gif_next.reserve(( 1 << gif_MaxLzwBits) -       gif_next.capacity());
+    if(gif_vals.capacity()  < (1 << gif_MaxLzwBits))       gif_vals.reserve(( 1 << gif_MaxLzwBits) -       gif_vals.capacity());
+    if(gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
@@ -2927,51 +2919,89 @@ int32_t TFT::GIF_LZWReadByte(boolean init) {
     }
     return code;
 }
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
+bool TFT::GIF_ReadImage(uint16_t x, uint16_t y) {
     int32_t  j, color;
-    uint count =0;
-    int32_t  xpos  =x+gif_ImageLeftPosition;
-    int32_t  ypos  =y+gif_ImageTopPosition;
-    int32_t  max   =gif_ImageHeight*gif_ImageWidth;
-
-
-    //if(gif_DisposalMethod==2) not supported yet
-    //if(gif_InterlaceFlag)     not supported yet
+    int32_t  xpos = x + gif_ImageLeftPosition;
+    int32_t  ypos = y + gif_ImageTopPosition;
+    int32_t  max = gif_ImageHeight * gif_ImageWidth;
+    uint16_t i = 0;
+    // if(gif_DisposalMethod==2) not supported yet
+    // if(gif_InterlaceFlag)     not supported yet
 
     // The first byte of Image Block is the LZW minimum code size.
     // This value is used to decode the compressed output codes.
 
-    gif_LZWMinimumCodeSize=gif_file.read();
-    if(debug) {log_i("LZWMinimumCodeSize=%i", gif_LZWMinimumCodeSize);}
+    gif_LZWMinimumCodeSize = gif_file.read();
+    if(debug) { log_i("LZWMinimumCodeSize=%i", gif_LZWMinimumCodeSize); }
 
-    j=GIF_LZWReadByte(true);
-    if (j<0) return false;
+    j = GIF_LZWReadByte(true);
+    if(j < 0) return false;
 
-    count=0;
-    startWrite();
-    while (count!=max){
-        color=GIF_LZWReadByte(false);
+    uint16_t* buf = (uint16_t*)__malloc_heap_psram(max * sizeof(uint16_t));
+    if(!buf) return false;
 
-        if((color==gif_TransparentColorIndex) && gif_TransparentColorFlag)
-            {;} // do nothing
-        else{
-            if(gif_LocalColorTableFlag)
-                writePixel(xpos, ypos, gif_LocalColorTable[color]);
+    while(i < max) {
+        color = GIF_LZWReadByte(false);
+        if((color == gif_TransparentColorIndex) && gif_TransparentColorFlag) { ; } // do nothing
+        else {
+            if(gif_LocalColorTableFlag) buf[i] = gif_LocalColorTable[color];
             else
-                writePixel(xpos, ypos, gif_GlobalColorTable[color]);
+                buf[i] = gif_GlobalColorTable[color];
         }
-        count++;
-        xpos++;
-        if(xpos==(x+gif_ImageWidth+gif_ImageLeftPosition)){ xpos=x+gif_ImageLeftPosition; ypos++;}
+        i++;
+    }
+
+    startWrite();
+    setAddrWindow(xpos, ypos, gif_ImageWidth, gif_ImageHeight);
+    if(_TFTcontroller == ILI9341) {
+        writeCommand(ILI9341_RAMWR); // ILI9341
+        goto write16;
+    }
+    else if(_TFTcontroller == HX8347D) {
+        writeCommand(0x22);
+        goto write16;
+    }
+    else if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+        writeCommand(ILI9486_RAMWR);
+        goto write16;
+    }
+    else if(_TFTcontroller == ILI9488) {
+        writeCommand(ILI9488_RAMWR);
+        goto write24;
+    }
+    else if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
+        writeCommand(ST7796_RAMWR);
+        goto write24;
+    }
+
+write16:
+    i = 0;
+    while(i < max) {
+        spi_TFT->write16(buf[i]);
+        i++;
     }
     endWrite();
+    if(buf) {
+        free(buf);
+        buf = NULL;
+    }
+    return true;
 
-    return false;
+write24:
+    i = 0;
+    while(i < max) {
+        write24BitColor(buf[i]);
+        i++;
+    }
+    endWrite();
+    if(buf) {
+        free(buf);
+        buf = NULL;
+    }
+    return true;
 }
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t TFT::GIF_readGifItems() {
@@ -2980,36 +3010,33 @@ int32_t TFT::GIF_readGifItems() {
     gif_decodeSdFile_firstread=true;
     return 0;
 }
-
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
-    char c=0;
-    static int32_t test=1;
-    char Label=0;
-    if(gif_decodeSdFile_firstread==true) GIF_readGlobalColorTable(); // If exists
-    gif_decodeSdFile_firstread=false;
-    while(c!=';'){                  // Trailer found
+    char           c = 0;
+    static int32_t test = 1;
+    char           Label = 0;
+    if(gif_decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
+    gif_decodeSdFile_firstread = false;
 
-        c=gif_file.read();
+    while(c != ';') { // Trailer found
+        c = gif_file.read();
         // log_i("c= %c",c);
-        if(c=='!'){                 // it is a Extension
-            Label=gif_file.read();      // Label
+        if(c == '!') {               // it is a Extension
+            Label = gif_file.read(); // Label
             GIF_readExtension(Label);
-       }
-       if(c==','){
-           GIF_readImageDescriptor();   // ImgageDescriptor
-           GIF_readLocalColorTable();   // can follow the ImagrDescriptor
-           GIF_ReadImage(x, y); // read Image Data
-           if(debug) {log_i("End ReadImage");}
-
-           test++;
-
-           return true; // more images can follow
-       }
+        }
+        if(c == ',') {
+            GIF_readImageDescriptor(); // ImgageDescriptor
+            GIF_readLocalColorTable(); // can follow the ImagrDescriptor
+            GIF_ReadImage(x, y);       // read Image Data
+            if(debug) { log_i("End ReadImage"); }
+            test++;
+            return true; // more images can follow
+        }
     }
     // for(int32_t i=0; i<bigbuf.size(); i++)  log_i("bigbuf %i=%i", i, bigbuf[i]);
-    if(tft_info) tft_info("GIF: found Trailer");
+    // if(tft_info) tft_info("GIF: found Trailer");
     return false; // no more images to decode
 }
 
