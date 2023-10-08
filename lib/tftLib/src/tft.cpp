@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Sep 29 2023
+// updated on Oct 08 2023
 
 #include "Arduino.h"
 #include "tft.h"
@@ -8,7 +8,8 @@
 JPEGDecoder JpegDec;
 SPIClass*   SPItransfer;
 
-#define TFT_MAX_PIXELS_AT_ONCE  32
+#define __malloc_heap_psram(size) \
+    heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT|MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT|MALLOC_CAP_INTERNAL)
 
 #define ILI9341_MADCTL_MY   0x80
 #define ILI9341_MADCTL_MX   0x40
@@ -25,7 +26,7 @@ SPIClass*   SPItransfer;
 #define ILI9341_RAMWR       0x2C // Memory Write
 #define ILI9341_MADCTL      0x36 // Memory Data Access Control
 #define ILI9341_VSCRSADD    0x37 // Vertical Scrolling Start Address
-//----------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 #define ILI9486_INVOFF      0x20 // Display Inversion OFF
 #define ILI9486_INVON       0x21 // Display Inversion ON
 #define ILI9486_CASET       0x2A // Display On
@@ -40,7 +41,7 @@ SPIClass*   SPItransfer;
 #define ILI9486_MADCTL_MH   0x04 // Bit 2 Parameter MADCTL
 #define ILI9486_WDBVAL      0x51 // Write Display Brightness Value
 #define ILI9486_CDBVAL      0x53 // Write Control Display Value
-//----------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 #define ILI9488_SLPOUT      0x11 // Sleep OUT
 #define ILI9488_INVOFF      0x20 // Display Inversion OFF
 #define ILI9488_INVON       0x21 // Display Inversion ON
@@ -50,7 +51,6 @@ SPIClass*   SPItransfer;
 #define ILI9488_PASET       0x2B // Page Address Set
 #define ILI9488_MADCTL      0x36 // Memory Access Control
 #define ILI9488_COLMOD      0x3A // Interface Pixel Format
-
 #define ILI9488_IFMODE      0xB0 // Interface Mode Control
 #define ILI9488_FRMCTR1     0xB1 // Frame Rate Control
 #define ILI9488_FRMCTR2     0xB2 // Frame Rate Control
@@ -59,13 +59,11 @@ SPIClass*   SPItransfer;
 #define ILI9488_ETMOD       0xB7 // Entry Mode Set
 #define ILI9488_RAMWR       0x2C // Write_memory_start
 #define ILI9488_RAMRD       0x2E // Read_memory_start
-
 #define ILI9488_PWCTR1      0xC0 // Panel Driving Setting
 #define ILI9488_PWCTR2      0xC1 // Display_Timing_Setting for Normal Mode
 #define ILI9488_VMCTR1      0xC5 // Frame Rate and Inversion Control
 #define ILI9488_PGAMCTRL    0xE0 // NV Memory Write
 #define ILI9488_NGAMCTRL    0xE1 // NV Memory Control
-
 #define ILI9488_MADCTL_MY   0x80
 #define ILI9488_MADCTL_MX   0x40
 #define ILI9488_MADCTL_MV   0x20
@@ -75,7 +73,7 @@ SPIClass*   SPItransfer;
 #define ILI9488_MADCTL_MH   0x04
 #define ILI9488_MADCTL_SS   0x02
 #define ILI9488_MADCTL_GS   0x01
-//----------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 #define ST7796_NOP          0x00 // No operation
 #define ST7796_SWRESET      0x01 // Software reset
 #define ST7796_SLPIN        0x10 // Sleep in
@@ -118,8 +116,7 @@ SPIClass*   SPItransfer;
 #define ST7796_MADCTL_RGB   0x00 // Bit 3 Parameter MADCTL
 #define ST7796_MADCTL_BGR   0x08 // Bit 3 Parameter MADCTL
 #define ST7796_MADCTL_MH    0x04 // Bit 2 Parameter MADCTL
-
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::init() {
     startWrite();
@@ -214,62 +211,62 @@ void TFT::init() {
     if(_TFTcontroller == HX8347D) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "HX8347D");
         //Driving ability Setting
-        writeCommand(0xEA); spi_TFT->write(0x00); //PTBA[15:8]
-        writeCommand(0xEB); spi_TFT->write(0x20); //PTBA[7:0]
-        writeCommand(0xEC); spi_TFT->write(0x0C); //STBA[15:8]
-        writeCommand(0xED); spi_TFT->write(0xC4); //STBA[7:0]
-        writeCommand(0xE8); spi_TFT->write(0x40); //OPON[7:0]
-        writeCommand(0xE9); spi_TFT->write(0x38); //OPON1[7:0]
-        writeCommand(0xF1); spi_TFT->write(0x01); //OTPS1B
-        writeCommand(0xF2); spi_TFT->write(0x10); //GEN
-        writeCommand(0x27); spi_TFT->write(0xA3);
+        writeCommand(0xEA); spi_TFT->write(0x00); // PTBA[15:8]
+        writeCommand(0xEB); spi_TFT->write(0x20); // PTBA[7:0]
+        writeCommand(0xEC); spi_TFT->write(0x0C); // STBA[15:8]
+        writeCommand(0xED); spi_TFT->write(0xC4); // STBA[7:0]
+        writeCommand(0xE8); spi_TFT->write(0x40); // OPON[7:0]
+        writeCommand(0xE9); spi_TFT->write(0x38); // OPON1[7:0]
+        writeCommand(0xF1); spi_TFT->write(0x01); // OTPS1B
+        writeCommand(0xF2); spi_TFT->write(0x10); // GEN
+        writeCommand(0x27); spi_TFT->write(0xA3); // Display control 2 register
 
         //Gamma 2.2 Setting
-        writeCommand(0x40); spi_TFT->write(0x01); //
-        writeCommand(0x41); spi_TFT->write(0x00); //
-        writeCommand(0x42); spi_TFT->write(0x00); //
-        writeCommand(0x43); spi_TFT->write(0x10); //
-        writeCommand(0x44); spi_TFT->write(0x0E); //
-        writeCommand(0x45); spi_TFT->write(0x24); //
-        writeCommand(0x46); spi_TFT->write(0x04); //
-        writeCommand(0x47); spi_TFT->write(0x50); //
-        writeCommand(0x48); spi_TFT->write(0x02); //
-        writeCommand(0x49); spi_TFT->write(0x13); //
-        writeCommand(0x4A); spi_TFT->write(0x19); //
-        writeCommand(0x4B); spi_TFT->write(0x19); //
-        writeCommand(0x4C); spi_TFT->write(0x16); //
-        writeCommand(0x50); spi_TFT->write(0x1B); //
-        writeCommand(0x51); spi_TFT->write(0x31); //
-        writeCommand(0x52); spi_TFT->write(0x2F); //
-        writeCommand(0x53); spi_TFT->write(0x3F); //
-        writeCommand(0x54); spi_TFT->write(0x3F); //
-        writeCommand(0x55); spi_TFT->write(0x3E); //
-        writeCommand(0x56); spi_TFT->write(0x2F); //
-        writeCommand(0x57); spi_TFT->write(0x7B); //
-        writeCommand(0x58); spi_TFT->write(0x09); //
-        writeCommand(0x59); spi_TFT->write(0x06); //
-        writeCommand(0x5A); spi_TFT->write(0x06); //
-        writeCommand(0x5B); spi_TFT->write(0x0C); //
-        writeCommand(0x5C); spi_TFT->write(0x1D); //
-        writeCommand(0x5D); spi_TFT->write(0xCC); //
+        writeCommand(0x40); spi_TFT->write(0x01); // Gamma control 1 register
+        writeCommand(0x41); spi_TFT->write(0x00); // Gamma control 2 register
+        writeCommand(0x42); spi_TFT->write(0x00); // Gamma control 3 register
+        writeCommand(0x43); spi_TFT->write(0x10); // Gamma control 4 register
+        writeCommand(0x44); spi_TFT->write(0x0E); // Gamma control 5 register
+        writeCommand(0x45); spi_TFT->write(0x24); // Gamma control 6 register
+        writeCommand(0x46); spi_TFT->write(0x04); // Gamma control 7 register
+        writeCommand(0x47); spi_TFT->write(0x50); // Gamma control 8 register
+        writeCommand(0x48); spi_TFT->write(0x02); // Gamma control 9 register
+        writeCommand(0x49); spi_TFT->write(0x13); // Gamma control 10 register
+        writeCommand(0x4A); spi_TFT->write(0x19); // Gamma control 11 register
+        writeCommand(0x4B); spi_TFT->write(0x19); // Gamma control 12 register
+        writeCommand(0x4C); spi_TFT->write(0x16); // Gamma control 13 register
+        writeCommand(0x50); spi_TFT->write(0x1B); // Gamma control 14 register
+        writeCommand(0x51); spi_TFT->write(0x31); // Gamma control 15 register
+        writeCommand(0x52); spi_TFT->write(0x2F); // Gamma control 16 register
+        writeCommand(0x53); spi_TFT->write(0x3F); // Gamma control 17 register
+        writeCommand(0x54); spi_TFT->write(0x3F); // Gamma control 18 register
+        writeCommand(0x55); spi_TFT->write(0x3E); // Gamma control 19 register
+        writeCommand(0x56); spi_TFT->write(0x2F); // Gamma control 20 register
+        writeCommand(0x57); spi_TFT->write(0x7B); // Gamma control 21 register
+        writeCommand(0x58); spi_TFT->write(0x09); // Gamma control 22 register
+        writeCommand(0x59); spi_TFT->write(0x06); // Gamma control 23 register
+        writeCommand(0x5A); spi_TFT->write(0x06); // Gamma control 24 register
+        writeCommand(0x5B); spi_TFT->write(0x0C); // Gamma control 25 register
+        writeCommand(0x5C); spi_TFT->write(0x1D); // Gamma control 26 register
+        writeCommand(0x5D); spi_TFT->write(0xCC); // Gamma control 27 register
 
         //Power Voltage Setting
-        writeCommand(0x1B); spi_TFT->write(0x1B); //VRH=4.65V
-        writeCommand(0x1A); spi_TFT->write(0x01); //BT (VGH~15V,VGL~-10V,DDVDH~5V)
-        writeCommand(0x24); spi_TFT->write(0x15); //VMH(VCOM High voltage ~3.2V)
-        writeCommand(0x25); spi_TFT->write(0x50); //VML(VCOM Low voltage -1.2V)
+        writeCommand(0x1B); spi_TFT->write(0x1B); // VRH=4.65V
+        writeCommand(0x1A); spi_TFT->write(0x01); // BT (VGH~15V,VGL~-10V,DDVDH~5V)
+        writeCommand(0x24); spi_TFT->write(0x15); // VMH(VCOM High voltage ~3.2V)
+        writeCommand(0x25); spi_TFT->write(0x50); // VML(VCOM Low voltage -1.2V)
 
-        writeCommand(0x23); spi_TFT->write(0x88); //for Flicker adjust //can reload from OTP
+        writeCommand(0x23); spi_TFT->write(0x88); // for Flicker adjust //can reload from OTP
         //Power on Setting
 
         writeCommand(0x18); spi_TFT->write(0x36); // I/P_RADJ,N/P_RADJ, Normal mode 60Hz
-        writeCommand(0x19); spi_TFT->write(0x01); //OSC_EN='1', start Osc
+        writeCommand(0x19); spi_TFT->write(0x01); // OSC_EN='1', start Osc
 
         if(_displayInversion == 0){
-            writeCommand(0x01); spi_TFT->write(0x00); //DP_STB='0', out deep sleep
+            writeCommand(0x01); spi_TFT->write(0x00); // DP_STB='0', out deep sleep
         }
         else{
-            writeCommand(0x01); spi_TFT->write(0x02); //DP_STB='0', out deep sleep, invon = 1
+            writeCommand(0x01); spi_TFT->write(0x02); // DP_STB='0', out deep sleep, invon = 1
         }
 
         writeCommand(0x1F); spi_TFT->write(0x88);// GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
@@ -291,8 +288,8 @@ void TFT::init() {
 
         writeCommand(0x16); spi_TFT->write(0x08); // MY=0, MX=0, MV=0, BGR=1
         //Set GRAM Area
-        writeCommand(0x02); spi_TFT->write(0x00);
-        writeCommand(0x03); spi_TFT->write(0x00); //Column Start
+        writeCommand(0x02); spi_TFT->write(0x00); // Column address start register upper byte
+        writeCommand(0x03); spi_TFT->write(0x00); // Column address start register low byte
         writeCommand(0x04); spi_TFT->write(0x00);
         writeCommand(0x05); spi_TFT->write(0xEF); //Column End
         writeCommand(0x06); spi_TFT->write(0x00);
@@ -693,13 +690,7 @@ void TFT::init() {
 
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
-
-// Pass 8-bit (each) R,G,B, get back 16-bit packed color
-uint16_t TFT::color565(uint8_t r, uint8_t g, uint8_t b) {
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3);
-}
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
     _TFTcontroller = TFTcontroller; //0=ILI9341, 1=HX8347D, 2=ILI9486(a), 3=ILI9486(b), 4= ILI9488, 5=ST7796
@@ -738,7 +729,7 @@ TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
     _freq = 20000000;
     spi_TFT = &SPI;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::setFrequency(uint32_t f){
     if(f>80000000) f=80000000;
@@ -746,7 +737,7 @@ void TFT::setFrequency(uint32_t f){
     spi_TFT->setFrequency(_freq);
     TFT_SPI = SPISettings(_freq, MSBFIRST, SPI_MODE0);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::startWrite(void){
     spi_TFT->beginTransaction(TFT_SPI);
@@ -757,7 +748,7 @@ void TFT::endWrite(void){
     TFT_CS_HIGH();
     spi_TFT->endTransaction();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeCommand(uint16_t cmd){
     TFT_DC_LOW();
@@ -777,7 +768,7 @@ int16_t TFT::height(void) const {
 uint8_t TFT::getRotation(void) const{
     return _rotation;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) {
 
@@ -802,7 +793,7 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
 
     init();  //
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 typedef struct {
         uint8_t madctl;
@@ -833,7 +824,7 @@ const rotation_data_t ili9341_rotations[4] = {
         ILI9341_WIDTH
     }
 };
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::setRotation(uint8_t m) {
     _rotation = m % 4; // can't be higher than 3
@@ -988,7 +979,7 @@ void TFT::setRotation(uint8_t m) {
         endWrite();
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::invertDisplay(boolean i) {
     startWrite();
@@ -998,7 +989,7 @@ void TFT::invertDisplay(boolean i) {
     if(_TFTcontroller == ST7796   || _TFTcontroller == ST7796RPI){writeCommand(i ? ST7796_INVON  : ST7796_INVOFF);}
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::scrollTo(uint16_t y) {
     if(_TFTcontroller != ILI9341) return;
@@ -1007,7 +998,7 @@ void TFT::scrollTo(uint16_t y) {
     spi_TFT->write16(y);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 // void TFT::setBrigthness(uint8_t br){ // not used
 //     startWrite();
@@ -1021,7 +1012,7 @@ void TFT::scrollTo(uint16_t y) {
 /*
  * Transaction API
  * */
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if(_TFTcontroller == ILI9341){  //ILI9341
@@ -1100,7 +1091,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         spi_TFT->write16(h & 0xFF);         // YEND
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 
@@ -1151,7 +1142,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::endBitmap() {
     if(_TFTcontroller == ILI9341){  //ILI9341
@@ -1174,7 +1165,7 @@ void TFT::endBitmap() {
         setRotation(_rotation);
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::startJpeg() {
     startWrite();
@@ -1214,34 +1205,18 @@ void TFT::startJpeg() {
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::endJpeg() {
         setRotation(_rotation);
 }
-//----------------------------------------------------------------------------------------------------------------------
-
-void TFT::pushColor(uint16_t color) {
-    startWrite();
-    if(_TFTcontroller == ILI9488) write16BitColor(color);
-    else if(_TFTcontroller == ST7796) write16BitColor(color);
-    else spi_TFT->write16(color);
-    endWrite();
-}
-//----------------------------------------------------------------------------------------------------------------------
-
-void TFT::writePixel(uint16_t color){
-    if(_TFTcontroller == ILI9488) write16BitColor(color);
-    else if(_TFTcontroller == ST7796) write16BitColor(color);
-    else spi_TFT->write16(color);
-}
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixels(uint16_t * colors, uint32_t len){
     if((_TFTcontroller == ILI9488) || (_TFTcontroller == ST7796)){
         uint32_t i = 0;
         while(len){
-            write16BitColor(*(colors + i));
+            write24BitColor(*(colors + i));
             i++;
             len--;
         }
@@ -1250,55 +1225,47 @@ void TFT::writePixels(uint16_t * colors, uint32_t len){
         spi_TFT->writePixels((uint8_t*)colors , len * 2);
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeColor(uint16_t color, uint32_t len){
-    static uint16_t temp[TFT_MAX_PIXELS_AT_ONCE];
-    size_t blen = (len > TFT_MAX_PIXELS_AT_ONCE)?TFT_MAX_PIXELS_AT_ONCE:len;
-    uint16_t tlen = 0;
-
-    for (uint32_t t=0; t<blen; t++){
-        temp[t] = color;
+    if((_TFTcontroller == ILI9488) || (_TFTcontroller == ST7796)){
+        uint8_t r = (color & 0xF800) >> 8;
+        uint8_t g = (color & 0x07E0) >> 3;
+        uint8_t b = (color & 0x001F) << 3;
+        uint8_t c[3] = {r, g, b};
+        spi_TFT->writePattern(c, 3, len);
     }
-
-    while(len){
-        tlen = (len>blen)?blen:len;
-        writePixels(temp, tlen);
-        len -= tlen;
+    else{
+        uint8_t c[2];
+        c[0] =(color & 0xFF00) >> 8;
+        c[1] = color & 0x00FF;
+        spi_TFT->writePattern(c, 2, len );
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT::write16BitColor(uint16_t color){
-  uint8_t r = (color & 0xF800) >> 11;
-  uint8_t g = (color & 0x07E0) >> 5;
-  uint8_t b = color & 0x001F;
-
-  r = (r * 255) / 31;
-  g = (g * 255) / 63;
-  b = (b * 255) / 31;
-
-  spi_TFT->write(r);
-  spi_TFT->write(g);
-  spi_TFT->write(b);
+void TFT::write24BitColor(uint16_t color) {
+    spi_TFT->write((color & 0xF800) >> 8); // r
+    spi_TFT->write((color & 0x07E0) >> 3); // g
+    spi_TFT->write((color & 0x001F) << 3); // b
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
     if((x < 0) ||(x >= _width) || (y < 0) || (y >= _height)) return;
     setAddrWindow(x,y,1,1);
     switch(_TFTcontroller){
-        case ILI9341:                                writePixel(color);      break;
-        case HX8347D:   writeCommand(0x22);          writePixel(color);      break;
-        case ILI9486a:  writeCommand(ILI9486_RAMWR); writePixel(color);      break;
-        case ILI9486b:  writeCommand(ILI9486_RAMWR); writePixel(color);      break;
-        case ILI9488:   writeCommand(ILI9488_RAMWR); write16BitColor(color); break;
-        case ST7796:    writeCommand(ST7796_RAMWR);  write16BitColor(color); break;
-        case ST7796RPI: writeCommand(ST7796_RAMWR);  writePixel(color);      break;
-        default: if(tft_info) tft_info("unknown tft controller");            break;
+        case ILI9341:                                spi_TFT->write16(color);   break;
+        case HX8347D:   writeCommand(0x22);          spi_TFT->write16(color);   break;
+        case ILI9486a:  writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);   break;
+        case ILI9486b:  writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);   break;
+        case ILI9488:   writeCommand(ILI9488_RAMWR); write24BitColor(color);    break;
+        case ST7796:    writeCommand(ST7796_RAMWR);  write24BitColor(color);    break;
+        case ST7796RPI: writeCommand(ST7796_RAMWR);  spi_TFT->write16(color);   break;
+        default: if(tft_info) tft_info("unknown tft controller");               break;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color){
     if((x >= _width) || (y >= _height)) return;
@@ -1328,17 +1295,17 @@ void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     if(_TFTcontroller == ST7796   || _TFTcontroller == ST7796RPI) writeCommand(ST7796_RAMWR);
     writeColor(color, len);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color){
     writeFillRect(x, y, 1, h, color);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color){
     writeFillRect(x, y, w, 1, color);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     uint32_t freq = _freq;
@@ -1354,14 +1321,14 @@ uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     _freq = freq;
     return r;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawPixel(int16_t x, int16_t y, uint16_t color){
     startWrite();
     writePixel(x, y, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawFastVLine(int16_t x, int16_t y,
         int16_t h, uint16_t color) {
@@ -1369,7 +1336,7 @@ void TFT::drawFastVLine(int16_t x, int16_t y,
     writeFastVLine(x, y, h, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawFastHLine(int16_t x, int16_t y,
         int16_t w, uint16_t color) {
@@ -1377,7 +1344,7 @@ void TFT::drawFastHLine(int16_t x, int16_t y,
     writeFastHLine(x, y, w, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,  uint16_t color) {
 //  int16_t t;
@@ -1465,13 +1432,13 @@ void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,  uint16_t col
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillScreen(uint16_t color) {
     // Update in subclasses if desired!
     fillRect(0, 0, width(), height(), color);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
         uint16_t color) {
@@ -1479,7 +1446,7 @@ void TFT::fillRect(int16_t x, int16_t y, int16_t w, int16_t h,
     writeFillRect(x,y,w,h,color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         int16_t x2, int16_t y2, uint16_t color) {
@@ -1487,7 +1454,7 @@ void TFT::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     drawLine(x1, y1, x2, y2, color);
     drawLine(x2, y2, x0, y0, color);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
         int16_t x2, int16_t y2, uint16_t color) {
@@ -1570,7 +1537,7 @@ void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1,
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color)
 {
@@ -1582,7 +1549,7 @@ void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, 
     writeFastVLine(Xpos + Width-1, Ypos, Height, Color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // smarter version
@@ -1598,7 +1565,7 @@ void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     drawCircleHelper(x + r, y + h - r - 1, r, 8, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
     // smarter version
@@ -1610,7 +1577,7 @@ void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     int16_t f = 1 - r;
@@ -1646,7 +1613,7 @@ void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillCircle(int16_t Xm,       //specify x position.
                      int16_t Ym,       //specify y position.
@@ -1675,7 +1642,7 @@ void TFT::fillCircle(int16_t Xm,       //specify x position.
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
     int16_t f = 1 - r;
@@ -1711,7 +1678,7 @@ void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) {
 
@@ -1721,8 +1688,8 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
     int16_t x = 0;
     int16_t y = r;
 
-    while (x < y) {
-        if (f >= 0) {
+    while(x < y) {
+        if(f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
@@ -1731,17 +1698,17 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         ddF_x += 2;
         f += ddF_x;
 
-        if (cornername & 0x1) {
+        if(cornername & 0x1) {
             writeFastVLine(x0 + x, y0 - y, 2 * y + 1 + delta, color);
             writeFastVLine(x0 + y, y0 - x, 2 * x + 1 + delta, color);
         }
-        if (cornername & 0x2) {
+        if(cornername & 0x2) {
             writeFastVLine(x0 - x, y0 - y, 2 * y + 1 + delta, color);
             writeFastVLine(x0 - y, y0 - x, 2 * x + 1 + delta, color);
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TFT::setCursor(uint16_t x, uint16_t y) {
     if (x >= width()|| y >= height()) return false;
@@ -1791,7 +1758,7 @@ bool TFT::setCursor(uint16_t x, uint16_t y) {
     _f_curPos = true;  //curPos is updated
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, boolean noWrap) {  // a pointer to string
 
@@ -1993,13 +1960,13 @@ size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, b
     endWrite();
     return ch_count;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::write(uint8_t character) {
     /*Code to display letter when given the ASCII code for it*/
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::write(const uint8_t *buffer, size_t size){
     if(_f_cp1251){writeText(UTF8toCp1251(buffer)); return 0;}
@@ -2007,7 +1974,7 @@ size_t TFT::write(const uint8_t *buffer, size_t size){
     if(_f_cp1253){writeText(UTF8toCp1253(buffer)); return 0;}
     writeText(buffer); return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1251(const uint8_t* str){  //cyrillic
     uint16_t i=0, j=0;
@@ -2041,7 +2008,7 @@ const uint8_t* TFT::UTF8toCp1251(const uint8_t* str){  //cyrillic
     buf[j]=0;
     return (buf);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1252(const uint8_t* str){  //WinLatin1
     uint16_t i=0, j=0;
@@ -2062,7 +2029,7 @@ const uint8_t* TFT::UTF8toCp1252(const uint8_t* str){  //WinLatin1
     buf[j]=0;
     return (buf);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
     uint16_t i=0, j=0;
@@ -2111,13 +2078,13 @@ const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
 #define bmpColor16(c)      ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
 #define bmpColor24(c)      (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
 #define bmpColor32(c)      (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpSkipPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesToSkip = (len * bitsPerPixel) / 8;
     file.seek(bytesToSkip, SeekCur);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesPerTransaction = bitsPerPixel * 4;
@@ -2164,7 +2131,7 @@ void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
         wIndex += pixNow;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
                          uint16_t offX, uint16_t offY) {
@@ -2256,78 +2223,76 @@ boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, u
 /***********************************************************************************************************************
                                                 G I F
 ***********************************************************************************************************************/
-boolean TFT::drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat){
-    //debug=true;
-    int32_t iterations=repeat;
+boolean TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+    // debug=true;
+    int32_t iterations = repeat;
 
-    do{ // repeat this gif
-        gif_file= fs.open(path);
-        if(!gif_file){
+    do { // repeat this gif
+        gif_file = fs.open(path);
+        if(!gif_file) {
             if(tft_info) tft_info("Failed to open file for reading");
             return false;
         }
         GIF_readGifItems();
 
         // check it's a gif
-        if(!gif_GifHeader.startsWith("GIF")){
+        if(!gif_GifHeader.startsWith("GIF")) {
             if(tft_info) tft_info("File is not a gif");
             return false;
         }
         // check dimensions
-        if(debug){
-            log_i("Width: %i, Height: %i,", gif_LogicalScreenWidth, gif_LogicalScreenHeight);
-        }
-        if(gif_LogicalScreenWidth*gif_LogicalScreenHeight>155000){
+        if(debug) { log_i("Width: %i, Height: %i,", gif_LogicalScreenWidth, gif_LogicalScreenHeight); }
+        if(gif_LogicalScreenWidth * gif_LogicalScreenHeight > 155000) {
             if(tft_info) tft_info("!Image is too big!!");
             return false;
         }
 
-        while(GIF_decodeGif(x, y)==true){
-           if(iterations==0) break;
+        while(GIF_decodeGif(x, y) == true) {
+            if(iterations == 0) break;
         } // endwhile
         iterations--;
         gif_file.close();
-    }while(iterations>0);
+    } while(iterations > 0);
+
     GIF_freeMemory();
     // log_i("freeHeap= %i", ESP.getFreeHeap());
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------
-void TFT::GIF_readHeader(){
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void TFT::GIF_readHeader() {
 
-//    7 6 5 4 3 2 1 0        Field Name                    Type
-//     +---------------+
-//   0 |               |       Signature                     3 Bytes
-//     +-             -+
-//   1 |               |
-//     +-             -+
-//   2 |               |
-//     +---------------+
-//   3 |               |       Version                       3 Bytes
-//     +-             -+
-//   4 |               |
-//     +-             -+
-//   5 |               |
-//     +---------------+
-//
-//  i) Signature - Identifies the GIF Data Stream. This field contains
-//     the fixed value 'GIF'.
-//
-// ii) Version - Version number used to format the data stream.
-//     Identifies the minimum set of capabilities necessary to a decoder
-//     to fully process the contents of the Data Stream.
-//
-//     Version Numbers as of 10 July 1990 :       "87a" - May 1987
-//                                                "89a" - July 1989
-//
-    gif_file.readBytes(gif_buffer, 6); //Header
-    gif_buffer[6]=0; gif_GifHeader=gif_buffer;
-    if(debug){
-        log_i("GifHeader: %s", gif_GifHeader.c_str());
-    }
+    //      7 6 5 4 3 2 1 0        Field Name                    Type
+    //     +---------------+
+    //   0 |               |       Signature                     3 Bytes
+    //     +-             -+
+    //   1 |               |
+    //     +-             -+
+    //   2 |               |
+    //     +---------------+
+    //   3 |               |       Version                       3 Bytes
+    //     +-             -+
+    //   4 |               |
+    //     +-             -+
+    //   5 |               |
+    //     +---------------+
+    //
+    //  i) Signature - Identifies the GIF Data Stream. This field contains
+    //     the fixed value 'GIF'.
+    //
+    // ii) Version - Version number used to format the data stream.
+    //     Identifies the minimum set of capabilities necessary to a decoder
+    //     to fully process the contents of the Data Stream.
+    //
+    //     Version Numbers as of 10 July 1990 :       "87a" - May 1987
+    //                                                "89a" - July 1989
+    //
+    gif_file.readBytes(gif_buffer, 6); // Header
+    gif_buffer[6] = 0;
+    gif_GifHeader = gif_buffer;
+    if(debug) { log_i("GifHeader: %s", gif_GifHeader.c_str()); }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readLogicalScreenDescriptor(){
 
@@ -2351,19 +2316,19 @@ void TFT::GIF_readLogicalScreenDescriptor(){
 // 6  |               |       Pixel Aspect Ratio            Byte
 //    +---------------+
 //
-    gif_file.readBytes(gif_buffer, 7); //Logical Screen Descriptor
-    gif_LogicalScreenWidth=gif_buffer[0]+256*gif_buffer[1];
-    gif_LogicalScreenHeight=gif_buffer[2]+256*gif_buffer[3];
-    gif_PackedFields=gif_buffer[4];
-    gif_GlobalColorTableFlag=(gif_PackedFields & 0x80);
-    gif_ColorResulution=((gif_PackedFields & 0x70)>>3)+1;
-    gif_SortFlag=(gif_PackedFields & 0x08);
-    gif_SizeOfGlobalColorTable=(gif_PackedFields & 0x07);
-    gif_SizeOfGlobalColorTable=(1<<(gif_SizeOfGlobalColorTable+1));
-    gif_BackgroundColorIndex=gif_buffer[5];
-    gif_PixelAspectRatio=gif_buffer[6];
+    gif_file.readBytes(gif_buffer, 7); // Logical Screen Descriptor
+    gif_LogicalScreenWidth = gif_buffer[0] + 256 * gif_buffer[1];
+    gif_LogicalScreenHeight = gif_buffer[2] + 256 * gif_buffer[3];
+    gif_PackedFields = gif_buffer[4];
+    gif_GlobalColorTableFlag = (gif_PackedFields & 0x80);
+    gif_ColorResulution = ((gif_PackedFields & 0x70) >> 3) + 1;
+    gif_SortFlag = (gif_PackedFields & 0x08);
+    gif_SizeOfGlobalColorTable = (gif_PackedFields & 0x07);
+    gif_SizeOfGlobalColorTable = (1 << (gif_SizeOfGlobalColorTable + 1));
+    gif_BackgroundColorIndex = gif_buffer[5];
+    gif_PixelAspectRatio = gif_buffer[6];
 
-    if(debug){
+    if(debug) {
         log_i("LogicalScreenWidth=%i", gif_LogicalScreenWidth);
         log_i("LogicalScreenHeight=%i", gif_LogicalScreenHeight);
         log_i("PackedFields=%i", gif_PackedFields);
@@ -2376,7 +2341,7 @@ void TFT::GIF_readLogicalScreenDescriptor(){
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readImageDescriptor(){
 
@@ -2409,32 +2374,32 @@ void TFT::GIF_readImageDescriptor(){
 //                            Reserved                      2 Bits
 //                            Size of Local Color Table     3 Bits
 
-    gif_file.readBytes(gif_buffer, 9); //Image Descriptor
-    gif_ImageLeftPosition=gif_buffer[0]+256*gif_buffer[1];
-    gif_ImageTopPosition=gif_buffer[2]+256*gif_buffer[3];
-    gif_ImageWidth=gif_buffer[4]+256*gif_buffer[5];
-    gif_ImageHeight=gif_buffer[6]+256*gif_buffer[7];
-    gif_PackedFields=gif_buffer[8];
-    gif_LocalColorTableFlag=((gif_PackedFields & 0x80)>>7);
-    gif_InterlaceFlag=((gif_PackedFields & 0x40)>>6);
-    gif_SortFlag=((gif_PackedFields & 0x20))>>5;
-    gif_SizeOfLocalColorTable=(gif_PackedFields & 0x07);
-    gif_SizeOfLocalColorTable=(1<<(gif_SizeOfLocalColorTable+1));
+    gif_file.readBytes(gif_buffer, 9); // Image Descriptor
+    gif_ImageLeftPosition = gif_buffer[0] + 256 * gif_buffer[1];
+    gif_ImageTopPosition = gif_buffer[2] + 256 * gif_buffer[3];
+    gif_ImageWidth = gif_buffer[4] + 256 * gif_buffer[5];
+    gif_ImageHeight = gif_buffer[6] + 256 * gif_buffer[7];
+    gif_PackedFields = gif_buffer[8];
+    gif_LocalColorTableFlag = ((gif_PackedFields & 0x80) >> 7);
+    gif_InterlaceFlag = ((gif_PackedFields & 0x40) >> 6);
+    gif_SortFlag = ((gif_PackedFields & 0x20)) >> 5;
+    gif_SizeOfLocalColorTable = (gif_PackedFields & 0x07);
+    gif_SizeOfLocalColorTable = (1 << (gif_SizeOfLocalColorTable + 1));
 
-    if(debug){
-         log_i("ImageLeftPosition=%i", gif_ImageLeftPosition);
-         log_i("ImageTopPosition=%i", gif_ImageTopPosition);
-         log_i("ImageWidth=%i", gif_ImageWidth);
-         log_i("ImageHeight=%i", gif_ImageHeight);
-         log_i("PackedFields=%i", gif_PackedFields);
-         log_i("LocalColorTableFlag=%i", gif_LocalColorTableFlag);
-         log_i("InterlaceFlag=%i", gif_InterlaceFlag);
-         log_i("SortFlag=%i", gif_SortFlag);
-         log_i("SizeOfLocalColorTable=%i", gif_SizeOfLocalColorTable);
+    if(debug) {
+        log_i("ImageLeftPosition=%i", gif_ImageLeftPosition);
+        log_i("ImageTopPosition=%i", gif_ImageTopPosition);
+        log_i("ImageWidth=%i", gif_ImageWidth);
+        log_i("ImageHeight=%i", gif_ImageHeight);
+        log_i("PackedFields=%i", gif_PackedFields);
+        log_i("LocalColorTableFlag=%i", gif_LocalColorTableFlag);
+        log_i("InterlaceFlag=%i", gif_InterlaceFlag);
+        log_i("SortFlag=%i", gif_SortFlag);
+        log_i("SizeOfLocalColorTable=%i", gif_SizeOfLocalColorTable);
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readLocalColorTable() {
     // The size of the local color table can be calculated by the value given in the image descriptor.
@@ -2442,6 +2407,8 @@ void TFT::GIF_readLocalColorTable() {
     // the color table will contain 2^(N+1) colors and will take up 3*2^(N+1) bytes.
     // The colors are specified in RGB value triplets.
     gif_LocalColorTable.clear();
+    gif_LocalColorTable.shrink_to_fit();
+    gif_LocalColorTable.reserve(gif_SizeOfLocalColorTable);
     if (gif_LocalColorTableFlag == 1) {
         char rgb_buff[3];
         uint16_t i = 0;
@@ -2456,7 +2423,7 @@ void TFT::GIF_readLocalColorTable() {
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readGlobalColorTable() {
     // Each GIF has its own color palette. That is, it has a list of all the colors that can be in the image
@@ -2492,7 +2459,7 @@ void TFT::GIF_readGlobalColorTable() {
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_readGraphicControlExtension(){
 
@@ -2512,20 +2479,20 @@ void TFT::GIF_readGraphicControlExtension(){
 //   0  |               |       Block Terminator              Byte
 //      +---------------+
 
-    uint8_t BlockSize=0;
+    uint8_t BlockSize = 0;
     gif_file.readBytes(gif_buffer, 1);
-    BlockSize=gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
+    BlockSize = gif_buffer[0]; // Number of bytes in the block, not including the Block Terminator
 
-    if(BlockSize==0) return;
+    if(BlockSize == 0) return;
     gif_file.readBytes(gif_buffer, BlockSize);
-    gif_PackedFields=gif_buffer[0];
-    gif_DisposalMethod=(gif_PackedFields & 0x1C)>>2;
-    gif_UserInputFlag=(gif_PackedFields &  0x02);
-    gif_TransparentColorFlag=gif_PackedFields & 0x01;
-    gif_DelayTime=gif_buffer[1]+256*gif_buffer[2];
-    gif_TransparentColorIndex=gif_buffer[3];
+    gif_PackedFields = gif_buffer[0];
+    gif_DisposalMethod = (gif_PackedFields & 0x1C) >> 2;
+    gif_UserInputFlag = (gif_PackedFields & 0x02);
+    gif_TransparentColorFlag = gif_PackedFields & 0x01;
+    gif_DelayTime = gif_buffer[1] + 256 * gif_buffer[2];
+    gif_TransparentColorIndex = gif_buffer[3];
 
-    if(debug){
+    if(debug) {
         log_i("BlockSize GraphicontrolExtension=%i", BlockSize);
         log_i("DisposalMethod=%i", gif_DisposalMethod);
         log_i("UserInputFlag=%i", gif_UserInputFlag);
@@ -2533,11 +2500,10 @@ void TFT::GIF_readGraphicControlExtension(){
         log_i("DelayTime=%i", gif_DelayTime);
         log_i("TransparentColorIndex=%i", gif_TransparentColorIndex);
     }
-
-     gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
+    gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readPlainTextExtension(char* buf){
 
@@ -2580,8 +2546,8 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf){
 // 0  |               |       Block Terminator              Byte
 //    +---------------+
 //
-    uint8_t BlockSize=0, numBytes=0;
-    BlockSize=gif_file.read();
+    uint8_t BlockSize = 0, numBytes = 0;
+    BlockSize = gif_file.read();
     // log_i("BlockSize=%i", BlockSize);
     if(BlockSize>0){
         gif_file.readBytes(gif_buffer, BlockSize);
@@ -2608,12 +2574,12 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf){
         log_i("TextBackgroundColorIndex=%i", gif_TextBackgroundColorIndex);
     }
 
-    numBytes=GIF_readDataSubBlock(buf);
+    numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readApplicationExtension(char* buf){
 
@@ -2655,20 +2621,20 @@ uint8_t TFT::GIF_readApplicationExtension(char* buf){
 // 0  |               |       Block Terminator              Byte
 //    +---------------+
 
-    uint8_t BlockSize=0, numBytes=0;
-    BlockSize=gif_file.read();
+    uint8_t BlockSize = 0, numBytes = 0;
+    BlockSize = gif_file.read();
     if(debug){
         log_i("BlockSize=%i", BlockSize);
     }
     if(BlockSize>0){
         gif_file.readBytes(gif_buffer, BlockSize);
     }
-    numBytes=GIF_readDataSubBlock(buf);
+    numBytes = GIF_readDataSubBlock(buf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readCommentExtension(char *buf){
 
@@ -2683,15 +2649,15 @@ uint8_t TFT::GIF_readCommentExtension(char *buf){
 //0 |               |       Block Terminator              Byte
 //  +---------------+
 
-    uint8_t numBytes=0;
-    numBytes=GIF_readDataSubBlock(buf);
+    uint8_t numBytes = 0;
+    numBytes = GIF_readDataSubBlock(buf);
     sprintf(chbuf, "GIF: Comment %s", buf);
-    if(tft_info) tft_info(chbuf);
+    // if(tft_info) tft_info(chbuf);
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t TFT::GIF_readDataSubBlock(char *buf){
 
@@ -2730,7 +2696,7 @@ uint8_t TFT::GIF_readDataSubBlock(char *buf){
     return BlockSize;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::GIF_readExtension(char Label){
     char buf[256];
@@ -2756,7 +2722,7 @@ boolean TFT::GIF_readExtension(char Label){
     return true;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
     //    Assuming a character array of 8 bits per character and using 5 bit codes to be
@@ -2805,9 +2771,9 @@ int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
         // The first byte in the sub-block tells you how many bytes of actual data follow. This can be a value from 0
         // (00) it 255 (FF). After you've read those bytes, the next byte you read will tell you now many more bytes of
         // data follow that one. You continue to read until you reach a sub-block that says that zero bytes follow.
-        endWrite();
+    //    endWrite();
         count = GIF_readDataSubBlock(&DSBbuffer[2]);
-        startWrite();
+    //    startWrite();
         // log_i("Dtatblocksize %i", count);
         if (count == 0) done = true;
 
@@ -2825,17 +2791,16 @@ int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
     return ret;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t TFT::GIF_LZWReadByte(boolean init) {
     static int32_t fresh = false;
     int32_t code, incode;
     static int32_t firstcode, oldcode;
 
-    if (gif_next.capacity() < (1 << gif_MaxLzwBits)) gif_next.reserve((1 << gif_MaxLzwBits) - gif_next.capacity());
-    if (gif_vals.capacity() < (1 << gif_MaxLzwBits)) gif_vals.reserve((1 << gif_MaxLzwBits) - gif_vals.capacity());
-    if (gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1)))
-        gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
+    if(gif_next.capacity()  < (1 << gif_MaxLzwBits))       gif_next.reserve(( 1 << gif_MaxLzwBits) -       gif_next.capacity());
+    if(gif_vals.capacity()  < (1 << gif_MaxLzwBits))       gif_vals.reserve(( 1 << gif_MaxLzwBits) -       gif_vals.capacity());
+    if(gif_stack.capacity() < (1 << (gif_MaxLzwBits + 1))) gif_stack.reserve((1 << (gif_MaxLzwBits + 1)) - gif_stack.capacity());
     gif_next.clear();
     gif_vals.clear();
     gif_stack.clear();
@@ -2954,52 +2919,90 @@ int32_t TFT::GIF_LZWReadByte(boolean init) {
     }
     return code;
 }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
-//----------------------------------------------------------------------------------------------------------------------
-
-bool TFT::GIF_ReadImage(uint16_t x, uint16_t y){
+bool TFT::GIF_ReadImage(uint16_t x, uint16_t y) {
     int32_t  j, color;
-    uint count =0;
-    int32_t  xpos  =x+gif_ImageLeftPosition;
-    int32_t  ypos  =y+gif_ImageTopPosition;
-    int32_t  max   =gif_ImageHeight*gif_ImageWidth;
-
-
-    //if(gif_DisposalMethod==2) not supported yet
-    //if(gif_InterlaceFlag)     not supported yet
+    int32_t  xpos = x + gif_ImageLeftPosition;
+    int32_t  ypos = y + gif_ImageTopPosition;
+    int32_t  max = gif_ImageHeight * gif_ImageWidth;
+    uint16_t i = 0;
+    // if(gif_DisposalMethod==2) not supported yet
+    // if(gif_InterlaceFlag)     not supported yet
 
     // The first byte of Image Block is the LZW minimum code size.
     // This value is used to decode the compressed output codes.
 
-    gif_LZWMinimumCodeSize=gif_file.read();
-    if(debug) {log_i("LZWMinimumCodeSize=%i", gif_LZWMinimumCodeSize);}
+    gif_LZWMinimumCodeSize = gif_file.read();
+    if(debug) { log_i("LZWMinimumCodeSize=%i", gif_LZWMinimumCodeSize); }
 
-    j=GIF_LZWReadByte(true);
-    if (j<0) return false;
+    j = GIF_LZWReadByte(true);
+    if(j < 0) return false;
 
-    count=0;
-    startWrite();
-    while (count!=max){
-        color=GIF_LZWReadByte(false);
+    uint16_t* buf = (uint16_t*)__malloc_heap_psram(max * sizeof(uint16_t));
+    if(!buf) return false;
 
-        if((color==gif_TransparentColorIndex) && gif_TransparentColorFlag)
-            {;} // do nothing
-        else{
-            if(gif_LocalColorTableFlag)
-                writePixel(xpos, ypos, gif_LocalColorTable[color]);
+    while(i < max) {
+        color = GIF_LZWReadByte(false);
+        if((color == gif_TransparentColorIndex) && gif_TransparentColorFlag) { ; } // do nothing
+        else {
+            if(gif_LocalColorTableFlag) buf[i] = gif_LocalColorTable[color];
             else
-                writePixel(xpos, ypos, gif_GlobalColorTable[color]);
+                buf[i] = gif_GlobalColorTable[color];
         }
-        count++;
-        xpos++;
-        if(xpos==(x+gif_ImageWidth+gif_ImageLeftPosition)){ xpos=x+gif_ImageLeftPosition; ypos++;}
+        i++;
+    }
+
+    startWrite();
+    setAddrWindow(xpos, ypos, gif_ImageWidth, gif_ImageHeight);
+    if(_TFTcontroller == ILI9341) {
+        writeCommand(ILI9341_RAMWR); // ILI9341
+        goto write16;
+    }
+    else if(_TFTcontroller == HX8347D) {
+        writeCommand(0x22);
+        goto write16;
+    }
+    else if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+        writeCommand(ILI9486_RAMWR);
+        goto write16;
+    }
+    else if(_TFTcontroller == ILI9488) {
+        writeCommand(ILI9488_RAMWR);
+        goto write24;
+    }
+    else if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
+        writeCommand(ST7796_RAMWR);
+        goto write24;
+    }
+
+write16:
+    i = 0;
+    while(i < max) {
+        spi_TFT->write16(buf[i]);
+        i++;
     }
     endWrite();
+    if(buf) {
+        free(buf);
+        buf = NULL;
+    }
+    return true;
 
-    return false;
+write24:
+    i = 0;
+    while(i < max) {
+        write24BitColor(buf[i]);
+        i++;
+    }
+    endWrite();
+    if(buf) {
+        free(buf);
+        buf = NULL;
+    }
+    return true;
 }
-
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t TFT::GIF_readGifItems() {
     GIF_readHeader();
@@ -3007,40 +3010,37 @@ int32_t TFT::GIF_readGifItems() {
     gif_decodeSdFile_firstread=true;
     return 0;
 }
-
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
-    char c=0;
-    static int32_t test=1;
-    char Label=0;
-    if(gif_decodeSdFile_firstread==true) GIF_readGlobalColorTable(); // If exists
-    gif_decodeSdFile_firstread=false;
-    while(c!=';'){                  // Trailer found
+    char           c = 0;
+    static int32_t test = 1;
+    char           Label = 0;
+    if(gif_decodeSdFile_firstread == true) GIF_readGlobalColorTable(); // If exists
+    gif_decodeSdFile_firstread = false;
 
-        c=gif_file.read();
+    while(c != ';') { // Trailer found
+        c = gif_file.read();
         // log_i("c= %c",c);
-        if(c=='!'){                 // it is a Extension
-            Label=gif_file.read();      // Label
+        if(c == '!') {               // it is a Extension
+            Label = gif_file.read(); // Label
             GIF_readExtension(Label);
-       }
-       if(c==','){
-           GIF_readImageDescriptor();   // ImgageDescriptor
-           GIF_readLocalColorTable();   // can follow the ImagrDescriptor
-           GIF_ReadImage(x, y); // read Image Data
-           if(debug) {log_i("End ReadImage");}
-
-           test++;
-
-           return true; // more images can follow
-       }
+        }
+        if(c == ',') {
+            GIF_readImageDescriptor(); // ImgageDescriptor
+            GIF_readLocalColorTable(); // can follow the ImagrDescriptor
+            GIF_ReadImage(x, y);       // read Image Data
+            if(debug) { log_i("End ReadImage"); }
+            test++;
+            return true; // more images can follow
+        }
     }
     // for(int32_t i=0; i<bigbuf.size(); i++)  log_i("bigbuf %i=%i", i, bigbuf[i]);
-    if(tft_info) tft_info("GIF: found Trailer");
+    // if(tft_info) tft_info("GIF: found Trailer");
     return false; // no more images to decode
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::GIF_freeMemory(){
     gif_next.clear(); gif_next.shrink_to_fit();
@@ -3149,13 +3149,26 @@ void TFT::renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t max
             // open a window onto the screen to paint the pixels into
             startWrite();
                 setAddrWindow(mcu_x, mcu_y, win_w , win_h);
-                if(_TFTcontroller == ILI9341) writeCommand(ILI9341_RAMWR); //ILI9341
-                if(_TFTcontroller == HX8347D) writeCommand(0x22);
-                if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b)  writeCommand(ILI9486_RAMWR);
-                if(_TFTcontroller == ILI9488) writeCommand(ILI9488_RAMWR);
-                if(_TFTcontroller == ST7796   || _TFTcontroller == ST7796RPI) writeCommand(ST7796_RAMWR);
-                // push all the image block pixels to the screen
-                while (mcu_pixels--) writePixel(*pImg++); // Send to TFT 16 bits at a time
+                if     (_TFTcontroller == ILI9341){
+                    writeCommand(ILI9341_RAMWR); //ILI9341
+                    while (mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
+                }
+                else if(_TFTcontroller == HX8347D){
+                    writeCommand(0x22);
+                    while (mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
+                }
+                else if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
+                    writeCommand(ILI9486_RAMWR);
+                    while (mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
+                }
+                else if(_TFTcontroller == ILI9488){
+                    writeCommand(ILI9488_RAMWR);
+                    while (mcu_pixels--) write24BitColor(*pImg++); // Send to TFT 16 bits at a time
+                }
+                else if(_TFTcontroller == ST7796   || _TFTcontroller == ST7796RPI){
+                    writeCommand(ST7796_RAMWR);
+                    while (mcu_pixels--) write24BitColor(*pImg++); // Send to TFT 16 bits at a time
+                }
             endWrite();
         }
 
@@ -3192,7 +3205,7 @@ JPEGDecoder::~JPEGDecoder(){
     if (pImage) delete pImage;
     pImage = NULL;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read,
                                     void* pCallback_data) {
@@ -3200,7 +3213,7 @@ uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pB
     thisPtr->pjpeg_need_bytes_callback(pBuf, buf_size, pBytes_actually_read, pCallback_data);
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read,
                                                void* pCallback_data) {
@@ -3217,7 +3230,7 @@ uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, 
     g_nInFileOfs += n;
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::decode_mcu(void) {
     status = JpegDec.pjpeg_decode_mcu();
@@ -3230,7 +3243,7 @@ int32_t JPEGDecoder::decode_mcu(void) {
     }
     return 1;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::read(void){
     int32_t y, x;
@@ -3293,7 +3306,7 @@ int32_t JPEGDecoder::read(void){
     if(decode_mcu()==-1) is_available = 0 ;
     return 1;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::readSwappedBytes(void) {
     int32_t y, x;
@@ -3356,7 +3369,7 @@ int32_t JPEGDecoder::readSwappedBytes(void) {
     if(decode_mcu()==-1) is_available = 0 ;
     return 1;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
     g_pInFileSd = jpgFile;
@@ -3370,7 +3383,7 @@ int32_t JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
 
     return decodeCommon();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
     jpg_source = JPEG_ARRAY; // We are not processing a file, use arrays
@@ -3379,7 +3392,7 @@ int32_t JPEGDecoder::decodeArray(const uint8_t array[], uint32_t  array_size) {
     g_nInFileSize = array_size;
     return decodeCommon();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 int32_t JPEGDecoder::decodeCommon(void) {
     status = JpegDec.pjpeg_decode_init(&image_info, pjpeg_callback, NULL, 0);
@@ -3413,7 +3426,7 @@ int32_t JPEGDecoder::decodeCommon(void) {
     MCUHeight = image_info.m_MCUHeight;
     return decode_mcu();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::abort(void) {
     mcu_x = 0 ;
@@ -3423,7 +3436,7 @@ void JPEGDecoder::abort(void) {
     pImage = NULL;
     if (jpg_source == JPEG_SD_FILE) if (g_pInFileSd) g_pInFileSd.close();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // JPEGDecoder picojpeg
 int16_t JPEGDecoder::replicateSignBit16(int8_t n){
    switch (n){
@@ -3447,7 +3460,7 @@ int16_t JPEGDecoder::replicateSignBit16(int8_t n){
    }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 void JPEGDecoder::fillInBuf(void) {
     uint8_t status;
     // Reserve a few bytes at the beginning of the buffer for putting back ("stuffing") chars.
@@ -3461,7 +3474,7 @@ void JPEGDecoder::fillInBuf(void) {
         gCallbackStatus = status;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint16_t JPEGDecoder::getBits(uint8_t numBits, uint8_t FFCheck){
    uint8_t origBits = numBits;
@@ -3485,7 +3498,7 @@ uint16_t JPEGDecoder::getBits(uint8_t numBits, uint8_t FFCheck){
    }
    return ret >> (16 - origBits);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint16_t JPEGDecoder::getExtendTest(uint8_t i){
    switch (i){
@@ -3508,7 +3521,7 @@ uint16_t JPEGDecoder::getExtendTest(uint8_t i){
       default: return 0;
    }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 int16_t JPEGDecoder::getExtendOffset(uint8_t i){
 
     #pragma GCC diagnostic push
@@ -3536,7 +3549,7 @@ int16_t JPEGDecoder::getExtendOffset(uint8_t i){
 
    #pragma GCC diagnostic pop
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::huffCreate(const uint8_t* pBits, HuffTable* pHuffTable){
    uint8_t  i = 0, j=0;
@@ -3561,7 +3574,7 @@ void JPEGDecoder::huffCreate(const uint8_t* pBits, HuffTable* pHuffTable){
       if (i > 15) break;
    }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 JPEGDecoder::HuffTable* JPEGDecoder::getHuffTable(uint8_t index){
     // 0-1 = DC
@@ -3574,7 +3587,7 @@ JPEGDecoder::HuffTable* JPEGDecoder::getHuffTable(uint8_t index){
         default: return 0;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t* JPEGDecoder::getHuffVal(uint8_t index){
     // 0-1 = DC
@@ -3587,7 +3600,7 @@ uint8_t* JPEGDecoder::getHuffVal(uint8_t index){
         default: return 0;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::readDHTMarker(void){
     uint8_t bits[16];
     uint16_t left = getBits1(16);
@@ -3621,7 +3634,7 @@ uint8_t JPEGDecoder::readDHTMarker(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 //void JPEGDecoder::createWinogradQuant(int16_t* pQuant);
 uint8_t JPEGDecoder::readDQTMarker(void){
     uint16_t left = getBits1(16);
@@ -3652,7 +3665,7 @@ uint8_t JPEGDecoder::readDQTMarker(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::readSOFMarker(void){
     uint8_t i;
     uint16_t left = getBits1(16);
@@ -3674,7 +3687,7 @@ uint8_t JPEGDecoder::readSOFMarker(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Used to skip unrecognized markers.
 uint8_t JPEGDecoder::skipVariableMarker(void){
     uint16_t left = getBits1(16);
@@ -3683,14 +3696,14 @@ uint8_t JPEGDecoder::skipVariableMarker(void){
     while(left){getBits1(8); left--;}
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Read a define restart interval (DRI) marker.
 uint8_t JPEGDecoder::readDRIMarker(void){
     if (getBits1(16) != 4) return PJPG_BAD_DRI_LENGTH;
     gRestartInterval = getBits1(16);
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Read a start of scan (SOS) marker.
 uint8_t JPEGDecoder::readSOSMarker(void){
     uint8_t i;
@@ -3723,7 +3736,7 @@ uint8_t JPEGDecoder::readSOSMarker(void){
     return 0;
 
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::nextMarker(void){
    uint8_t c;
@@ -3742,7 +3755,7 @@ uint8_t JPEGDecoder::nextMarker(void){
    // If bytes > 0 here, there where extra bytes before the marker (not good).
    return c;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Process markers. Returns when an SOFx, SOI, EOI, or SOS marker is
 // encountered.
 uint8_t JPEGDecoder::processMarkers(uint8_t* pMarker){
@@ -3792,7 +3805,7 @@ uint8_t JPEGDecoder::processMarkers(uint8_t* pMarker){
    }
    return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Finds the start of image (SOI) marker.
 uint8_t JPEGDecoder::locateSOIMarker(void) {
     uint16_t bytesleft;
@@ -3818,7 +3831,7 @@ uint8_t JPEGDecoder::locateSOIMarker(void) {
     if (thischar != 0xFF) return PJPG_NOT_JPEG;
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Find a start of frame (SOF) marker.
 uint8_t JPEGDecoder::locateSOFMarker(void){
     uint8_t c;
@@ -3845,7 +3858,7 @@ uint8_t JPEGDecoder::locateSOFMarker(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Find a start of scan (SOS) marker.
 uint8_t JPEGDecoder::locateSOSMarker(uint8_t* pFoundEOI){
     uint8_t c;
@@ -3861,7 +3874,7 @@ uint8_t JPEGDecoder::locateSOSMarker(uint8_t* pFoundEOI){
     else if (c != M_SOS) return PJPG_UNEXPECTED_MARKER;
     return readSOSMarker();
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::init(void){
     gImageXSize = 0;
@@ -3882,7 +3895,7 @@ uint8_t JPEGDecoder::init(void){
 
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // This method throws back into the stream any bytes that where read
 // into the bit buffer during initial marker scanning.
 void JPEGDecoder::fixInBuffer(void){
@@ -3893,7 +3906,7 @@ void JPEGDecoder::fixInBuffer(void){
     getBits2(8);
     getBits2(8);
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Restart interval processing.
 uint8_t JPEGDecoder::processRestart(void){
     // Let's scan a little bit to find the marker, but not _too_ far.
@@ -3918,7 +3931,7 @@ uint8_t JPEGDecoder::processRestart(void){
     getBits2(8);
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // FIXME: findEOI() is not actually called at the end of the image
 // (it's optional, and probably not needed on embedded devices)
 uint8_t JPEGDecoder::findEOI(void){
@@ -3937,7 +3950,7 @@ uint8_t JPEGDecoder::findEOI(void){
     if(c!=M_EOI) return PJPG_UNEXPECTED_MARKER;
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::checkHuffTables(void){
     uint8_t i;
@@ -3949,7 +3962,7 @@ uint8_t JPEGDecoder::checkHuffTables(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::checkQuantTables(void){
     uint8_t i;
@@ -3959,7 +3972,7 @@ uint8_t JPEGDecoder::checkQuantTables(void){
     }
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::initScan(void){
     uint8_t foundEOI;
@@ -3980,7 +3993,7 @@ uint8_t JPEGDecoder::initScan(void){
     fixInBuffer();
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::initFrame(void){
     if (gCompsInFrame==1){
@@ -4043,13 +4056,13 @@ uint8_t JPEGDecoder::initFrame(void){
     gNumMCUSRemaining = gMaxMCUSPerRow * gMaxMCUSPerCol;
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 // Winograd IDCT: 5 multiplies per row/col, up to 80 muls for the 2D IDCT
 #define PJPG_DCT_SCALE (1U << PJPG_DCT_SCALE_BITS)
 //#define PJPG_DESCALE(x) PJPG_ARITH_SHIFT_RIGHT_N_16(((x) + (1U << (PJPG_DCT_SCALE_BITS - 1))), PJPG_DCT_SCALE_BITS)
 #define PJPG_WFIX(x) ((x) * PJPG_DCT_SCALE + 0.5f)
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // Multiply quantization matrix by the Winograd IDCT scale factors
 void JPEGDecoder::createWinogradQuant(int16_t* pQuant){
     uint8_t i;
@@ -4060,7 +4073,7 @@ void JPEGDecoder::createWinogradQuant(int16_t* pQuant){
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::idctRows(void){
     uint8_t i;
@@ -4120,7 +4133,7 @@ void JPEGDecoder::idctRows(void){
         pSrc += 8;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::idctCols(void){
     uint8_t i;
@@ -4181,7 +4194,7 @@ void JPEGDecoder::idctCols(void){
         pSrc++;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs){   // Cb upsample and accumulate, 4x4 to 8x8
     // Cb - affects G and B
@@ -4212,7 +4225,7 @@ void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs){   // Cb upsample a
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample and accumulate, 4x8 to 8x8
     // Cb - affects G and B
@@ -4236,7 +4249,7 @@ void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample a
         pSrc = pSrc - 4 + 8;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample and accumulate, 8x4 to 8x8
     // Cb - affects G and B
@@ -4261,7 +4274,7 @@ void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs){  // Cb upsample a
         pDstB = pDstB - 8 + 16;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs){   // Cr upsample and accumulate, 4x4 to 8x8
     // Cr - affects R and G
@@ -4291,7 +4304,7 @@ void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs){   // Cr upsample a
         pDstG = pDstG - 8 + 16;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample and accumulate, 4x8 to 8x8
     // Cr - affects R and G
@@ -4315,7 +4328,7 @@ void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample a
         pSrc = pSrc - 4 + 8;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample and accumulate, 8x4 to 8x8
     // Cr - affects R and G
@@ -4341,7 +4354,7 @@ void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs){  // Cr upsample a
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::copyY(uint8_t dstOfs){    // Convert Y to RGB
     uint8_t i;
@@ -4356,7 +4369,7 @@ void JPEGDecoder::copyY(uint8_t dstOfs){    // Convert Y to RGB
         *pBDst++ = c;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::convertCb(uint8_t dstOfs){    // Cb convert to RGB and accumulate
     uint8_t i;
@@ -4375,7 +4388,7 @@ void JPEGDecoder::convertCb(uint8_t dstOfs){    // Cb convert to RGB and accumul
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::convertCr(uint8_t dstOfs){    // Cr convert to RGB and accumulate
     uint8_t i;
@@ -4394,7 +4407,7 @@ void JPEGDecoder::convertCr(uint8_t dstOfs){    // Cr convert to RGB and accumul
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 void JPEGDecoder::transformBlock(uint8_t mcuBlock){
     idctRows();
     idctCols();
@@ -4435,7 +4448,7 @@ void JPEGDecoder::transformBlock(uint8_t mcuBlock){
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void JPEGDecoder::transformBlockReduce(uint8_t mcuBlock){
     uint8_t c = clamp(PJPG_DESCALE(gCoeffBuf[0]) + 128);
@@ -4530,7 +4543,7 @@ void JPEGDecoder::transformBlockReduce(uint8_t mcuBlock){
     }
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuffVal) {
     uint8_t i = 0;
     uint8_t j;
@@ -4556,7 +4569,7 @@ uint8_t JPEGDecoder::huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuf
     return pHuffVal[j];
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::decodeNextMCU(void){
     uint8_t status;
     uint8_t mcuBlock;
@@ -4643,7 +4656,7 @@ uint8_t JPEGDecoder::decodeNextMCU(void){
     return 0;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t JPEGDecoder::pjpeg_decode_mcu() {
     uint8_t status;
     if (gCallbackStatus) return gCallbackStatus;
@@ -4654,7 +4667,7 @@ uint8_t JPEGDecoder::pjpeg_decode_mcu() {
     return 0;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback,
                                        void* pCallback_data, uint8_t reduce) {
@@ -4711,7 +4724,7 @@ TP::TP(uint8_t CS, uint8_t IRQ) {
     TP_SPI = SPISettings(200000, MSBFIRST, SPI_MODE0);  // slower speed
     _rotation = 0;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 uint16_t TP::TP_Send(uint8_t set_val) {
     uint16_t get_val;
@@ -4724,7 +4737,7 @@ uint16_t TP::TP_Send(uint8_t set_val) {
     return get_val >> 4;
 }
 
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TP::loop() {
     static uint16_t x1 = 0, y1 = 0;
@@ -4763,12 +4776,12 @@ void TP::loop() {
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TP::setRotation(uint8_t m){
     _rotation=m;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TP::setVersion(uint8_t v) {
     if (v == 0) TP_vers = 0;
@@ -4827,7 +4840,7 @@ void TP::setVersion(uint8_t v) {
         yFaktor = float(Ymax - Ymin) / ST7796_HEIGHT;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TP::read_TP(uint16_t& x, uint16_t& y) {
     uint32_t _y = 0;
@@ -5009,4 +5022,4 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
 //    log_i("TP_vers %d, Rotation %d, X = %i, Y = %i",TP_vers, _rotation, x, y);
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------

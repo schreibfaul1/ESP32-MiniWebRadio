@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.13b Sep 29/2023                                                                                         ";
+    Version 2.14 Oct 08/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -113,6 +113,7 @@ boolean        _f_accessPoint = false;
 boolean        _f_state_isChanging = false;
 boolean        _f_SD_Upload = false;
 boolean        _f_PSRAMfound = false;
+boolean        _f_FFatFound = false;
 boolean        _f_SD_MMCfound = false;
 boolean        _f_ESPfound = false;
 boolean        _f_playAllFiles = false;
@@ -1381,11 +1382,16 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
         return false;
     }
     if(endsWith(scImg, "bmp")) {
-        // log_i("drawImage %s, x=%i, y=%i, mayWidth=%i, maxHeight=%i", scImg, posX, posY, maxWidth, maxHeigth);
         return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
     }
-    if(endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp nor a jpj graphic", scImg);
+    if(endsWith(scImg, "jpg")) {
+        return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth);
+    }
+    if(endsWith(scImg, "gif")) {
+        return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0);
+    }
+
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpj graphic", scImg);
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************
@@ -1412,7 +1418,7 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
             if(!withoutDirs){
                 _chbuf[0] = 2; // ASCII: start of text, sort set dirs on first position
                 sprintf(_chbuf + 1, "%s", file.name());
-                _SD_content.push_back(strdup((const char*)_chbuf));
+                _SD_content.push_back(x_ps_strdup((const char*)_chbuf));
             }
         }
         else {
@@ -1420,12 +1426,12 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
                 if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") ||
                     endsWith(file.name(), ".flac") || endsWith(file.name(), ".m3u") || endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
                         sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                        _SD_content.push_back(strdup((const char*) _chbuf));
+                        _SD_content.push_back(x_ps_strdup((const char*) _chbuf));
                 }
             }
             else{
                 sprintf(_chbuf, "%s" ANSI_ESC_YELLOW " %d", file.name(), file.size());
-                _SD_content.push_back(strdup((const char*) _chbuf));
+                _SD_content.push_back(x_ps_strdup((const char*) _chbuf));
             }
         }
     }
@@ -1743,12 +1749,20 @@ void setup() {
     Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
-    Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
     if(!psramInit()) {
-        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio does not work without PSRAM!" ANSI_ESC_WHITE);
-        return;
+        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
     }
-    _f_PSRAMfound = true;
+    else {
+        _f_PSRAMfound = true;
+        Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
+    }
+    if(ESP.getFlashChipSize() > 8000000){
+        if(!FFat.begin()){if(!FFat.format()) Serial.printf("FFat Mount Failed\n");}
+        else{
+            Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            _f_FFatFound = true;
+        }
+    }
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1988,8 +2002,10 @@ boolean strCompare(const char* str1, char* str2) { // returns true if str1 == st
     return f;
 }
 
-char* ps_strdup(const char* str){
-    char* ps_str = (char*) ps_malloc(strlen(str) + 1);
+char* x_ps_strdup(const char* str){
+    char* ps_str = NULL;
+    if(_f_PSRAMfound){ps_str = (char*) ps_malloc(strlen(str) + 1);}
+    else             {ps_str = (char*)    malloc(strlen(str) + 1);}
     strcpy(ps_str, str);
     return ps_str;
 }
@@ -2024,7 +2040,7 @@ void SerialPrintflnCut(const char* item, const char* color, const char* str) {
 }
 
 const char* scaleImage(const char* path) {
-    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg"))) { // not a image
+    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif"))) { // not a image
         return path;
     }
     static char pathBuff[256];
@@ -2032,17 +2048,11 @@ const char* scaleImage(const char* path) {
     char* pch = strstr(path + 1, "/");
     if(pch) {
         strncpy(pathBuff, path, (pch - path));
-        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else
-            strcat(pathBuff, _prefix);                    // medium pic, 480x320px
+        strcat(pathBuff, _prefix);
         strcat(pathBuff, pch);
     }
     else {
-        strcpy(pathBuff, "/common");
-        if(TFT_CONTROLLER < 2) strcat(pathBuff, _prefix); // small pic,  320x240px
-        else
-            strcat(pathBuff, _prefix);                    // medium pic, 480x320px
-        strcat(pathBuff, path);
+        return path; // invalid path
     }
     return pathBuff;
 }
@@ -2107,12 +2117,12 @@ void setStation(uint16_t sta) {
     if(sta > _sum_stations) sta = _cur_station;
     sprintf(_chbuf, "station_%03d", sta);
     String content = stations.getString(_chbuf, " #not_found");
-    // SerialPrintfln("content %s", content.c_str());
+//    SerialPrintfln("content %s", content.c_str());
     _stationName_nvs = content.substring(0, content.indexOf("#"));           // get stationname
     content = content.substring(content.indexOf("#") + 1, content.length()); // get URL
     content.trim();
     free(_stationURL);
-    _stationURL = strdup(content.c_str());
+    _stationURL = x_ps_strdup(content.c_str());
     _homepage = "";
     if(_state == RADIO) clearStreamTitle();
 
@@ -2162,7 +2172,7 @@ void setStationViaURL(const char* url) {
     _stationName_nvs = "";
     _cur_station = 0;
     free(_stationURL);
-    _stationURL = strdup(url);
+    _stationURL = x_ps_strdup(url);
     connecttohost(url);
     StationsItems();
     if(_state == RADIO || _state == RADIOico){
@@ -2263,7 +2273,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     showFileNumber();
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
-        _lastconnectedfile = strdup(path);
+        _lastconnectedfile = x_ps_strdup(path);
         _resumeFilePos = 0;
     }
 }
@@ -2428,6 +2438,30 @@ void dlna_items_vector_clear_ans_shrink(){
     _dlna_items.isAudio.clear();
 }
 
+boolean copySDtoFFat(const char* path){
+    if(!_f_FFatFound) return false;
+    uint8_t buffer[1024];
+    size_t r = 0, w = 0;
+    size_t len = 0;
+    File file1 = SD_MMC.open(path, "r");
+    File file2 = FFat.open(path, "w");
+    while(true){
+        r = file1.read(buffer, 1024);
+        w = file2.write(buffer, r);
+        if(r != w){
+            file1.close();
+            file2.close();
+            FFat.remove(path);
+            return false;
+        }
+        len += r;
+        if(r == 0) break;
+    }
+    log_i("file length %i, written %i", file1.size(), len);
+    if(file1.size() == len) return true;
+    return false;
+}
+
 /*****************************************************************************************************************************************************
  *                                                            M E N U E / B U T T O N S                                                              *
  *****************************************************************************************************************************************************/
@@ -2486,8 +2520,8 @@ void changeState(int32_t state){
         case RADIOico:{
             showHeadlineItem(RADIOico);
             _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.gif";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.gif";
             _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
             _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
             _pressBtn[5] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[5] = "/btn/Button_List_Green.jpg";
@@ -2495,7 +2529,9 @@ void changeState(int32_t state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             clearTitle();
             showVolumeBar();
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            if(_f_mute) drawImage("/btn/RADIOico2.gif", 0, _winButton.y);
+            else        drawImage("/btn/RADIOico1.gif", 0, _winButton.y);
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2515,7 +2551,8 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            drawImage("/btn/RADIOmenue.gif", 0, _winButton.y);
             clearVolBar();
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
@@ -2573,7 +2610,9 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            // for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            if(_f_mute) drawImage("/btn/CLOCKico2.gif", 0, _winButton.y);
+            else        drawImage("/btn/CLOCKico1.gif", 0, _winButton.y);
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
             break;
@@ -2607,7 +2646,8 @@ void changeState(int32_t state){
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            drawImage("/btn/PLAYER.gif", 0, _winButton.y);
             showFileLogo(state);
             showFileName(_SD_content[_cur_AudioFileNr]);
             webSrv.send("changeState=PLAYER");
@@ -2800,7 +2840,6 @@ void showDlnaItemsList(uint8_t level, uint16_t itemNr){
  *                                                                 L O O P                                                                           *
  *****************************************************************************************************************************************************/
 void loop() {
-    if(!_f_PSRAMfound) return;  // Guard:  PSRAM could not be initialized
     if(!_f_ESPfound) return;    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
     webSrv.loop();
@@ -3529,7 +3568,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
-                            if(btnNr == 2){_releaseNr = 22; mute();}
+                            if(btnNr == 2){_releaseNr = 22; _timeCounter.timer = 5; mute();}
                             if(btnNr == 3){_releaseNr = 23; _timeCounter.timer = 5;} // Vol-
                             if(btnNr == 4){_releaseNr = 24; _timeCounter.timer = 5;} // Vol+
                             changeBtn_pressed(btnNr); break;
@@ -3992,8 +4031,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "DLNA_getContent4"){  _level = 4; DLNA_showContent(param, 4); return;} // search for level 4 content
     if(cmd == "DLNA_getContent5"){  _level = 5; DLNA_showContent(param, 5); return;} // search for level 5 content
 
-    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u",
-                                    ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree());
+    if(cmd == "test"){              sprintf(_chbuf, "free heap: %u, Inbuff filled: %u, Inbuff free: %u, PSRAM filled %u, PSRAM free %u",
+                                    ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree(), ESP.getPsramSize() - ESP.getFreePsram(), ESP.getFreePsram());
                                     webSrv.send((String)"test=" + _chbuf);
                                     SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark() * 4);
                                     SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL) * 4);
@@ -4011,7 +4050,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
-                                        webSrv.streamfile(SD_MMC, scaleImage("/unknown.jpg"));}
+                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
 
     if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());
@@ -4135,7 +4174,7 @@ void dlna_server(uint8_t serverId, size_t serverSize, String IP_addr, uint16_t p
     String msg = "DLNA_Names=" + friendlyName + "," + id;
     webSrv.send(msg);
 
-    _dlna_items.serverFriendlyName.push_back(ps_strdup(friendlyName.c_str()));
+    _dlna_items.serverFriendlyName.push_back(x_ps_strdup(friendlyName.c_str()));
     _dlna_items.serverId.push_back(serverId);
 }
 
@@ -4215,10 +4254,10 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
         return;
     }
     _dlna_items.isReady = false;
-    _dlna_items.name.push_back(ps_strdup(name.c_str()));
-    _dlna_items.id.push_back(ps_strdup(id.c_str()));
+    _dlna_items.name.push_back(x_ps_strdup(name.c_str()));
+    _dlna_items.id.push_back(x_ps_strdup(id.c_str()));
     _dlna_items.size.push_back(size);
-    _dlna_items.uri.push_back(ps_strdup(uri.c_str()));
+    _dlna_items.uri.push_back(x_ps_strdup(uri.c_str()));
     _dlna_items.isDir.push_back(isDir == true);
     _dlna_items.isAudio.push_back(isAudio == true);
 

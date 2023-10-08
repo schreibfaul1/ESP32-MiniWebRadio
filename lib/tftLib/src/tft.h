@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Aug 17 2023
+// updated on Oct 08 2023
 
 
 #pragma once
@@ -9,6 +9,7 @@
 #include "SPI.h"
 #include "SD.h"
 #include "vector"
+
 using namespace std;
 
 //#include "fonts/Garamond.h"             // default font latin (Western European)
@@ -124,11 +125,9 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         void      fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
         void      drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
         void      fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
-        void      pushColor(uint16_t color);
         boolean   drawBmpFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         boolean   drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
         boolean   drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
-        uint16_t  color565(uint8_t r, uint8_t g, uint8_t b);
         size_t    writeText(const uint8_t *str, int16_t maxWidth = -1, int16_t maxHeight = -1, boolean noWrap = false);
 
         inline void setTextColor(uint16_t  color){_textcolor=color;}
@@ -331,8 +330,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
         // Transaction API not used by GFX
         void      setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-        void      write16BitColor(uint16_t color);
-        void      writePixel(uint16_t color);
+        void      write24BitColor(uint16_t color);
         void      writePixels(uint16_t * colors, uint32_t len);
         void      writeColor(uint16_t color, uint32_t len);
 
