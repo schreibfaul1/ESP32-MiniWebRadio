@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 26.06.2022
+// updated: 12.10.2023
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -356,8 +356,8 @@ void audioTask(void *parameter) {
     struct audioMessage audioRxTaskMessage;
     struct audioMessage audioTxTaskMessage;
 
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT);
-    if(I2S_MCLK != -1) audio.i2s_mclk_pin_select(I2S_MCLK);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, -1, I2S_MCLK);
+    audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
     audio.setVolume(5); // 0...21
 
     while(true){
