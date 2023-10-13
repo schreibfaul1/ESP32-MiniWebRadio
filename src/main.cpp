@@ -655,6 +655,7 @@ void setTFTbrightness(uint8_t duty) {       // duty 0...100 (min...max)
     if(TFT_BL == -1) return;
     ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
     ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
+    //ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
 }
@@ -718,7 +719,7 @@ void urldecode(char* str) {
 
 // clang-format off
 void timer100ms(){
-    static volatile uint8_t ms100 = 0;
+    static uint16_t ms100 = 0;
     _f_100ms = true;
     ms100 ++;
     if(!(ms100 % 10))   _f_1sec  = true;
@@ -768,7 +769,7 @@ void showHeadlineVolume() {
     tft.setTextColor(TFT_DEEPSKYBLUE);
     clearVolume();
 
-    int32_t vol = 0;
+    uint8_t vol = 0;
     if(_f_mute || _f_muteDecrement || _f_muteIncrement) { vol = _mute_volume; }
     else { vol = _cur_volume; }
 
@@ -852,7 +853,7 @@ void showFooterStaNr() {
 void showFooterRSSI(boolean show) {
     static int32_t old_rssi = -1;
     int32_t        new_rssi = -1;
-    int32_t        rssi = WiFi.RSSI(); // Received Signal Strength Indicator
+    int8_t         rssi = WiFi.RSSI(); // Received Signal Strength Indicator
     if(rssi < -1) new_rssi = 4;
     if(rssi < -50) new_rssi = 3;
     if(rssi < -65) new_rssi = 2;
@@ -1648,7 +1649,7 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     String    AccesspointIP = myIP.toString();
     tft.printf("WiFi credentials are not correct\nAccesspoint IP: %s", AccesspointIP.c_str());
     SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
-    int32_t n = WiFi.scanNetworks();
+    int16_t n = WiFi.scanNetworks();
     if(n == 0) {
         SerialPrintfln("setup: ....  no WiFi networks found");
         while(true) { ; }
@@ -1656,7 +1657,7 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     else {
         SerialPrintfln("setup: ....  %d WiFi networks found", n);
         for(int32_t i = 0; i < n; ++i) {
-            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
             _scannedNetworks += WiFi.SSID(i) + '\n';
         }
     }
@@ -1745,8 +1746,8 @@ void setup() {
     Version = Version.substring(0, 30);
     Serial.printf("MiniWebRadio %s\n", Version.c_str());
     Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    Serial.printf("FLASH size %d bytes, speed %d MHz\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed() / 1000000);
-    Serial.printf("CPU speed %d MHz\n", ESP.getCpuFreqMHz());
+    Serial.printf("FLASH size %u bytes, speed %u MHz\n", ESP.getFlashChipSize(), ESP.getFlashChipSpeed() / 1000000);
+    Serial.printf("CPU speed %u MHz\n", ESP.getCpuFreqMHz());
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
     if(!psramInit()) {
@@ -1754,7 +1755,7 @@ void setup() {
     }
     else {
         _f_PSRAMfound = true;
-        Serial.printf("PSRAM total size: %d bytes\n", esp_spiram_get_size());
+        Serial.printf("PSRAM total size: %u bytes\n", ESP.getPsramSize());
     }
     if(ESP.getFlashChipSize() > 8000000){
         if(!FFat.begin()){if(!FFat.format()) Serial.printf("FFat Mount Failed\n");}
@@ -2348,7 +2349,7 @@ bool SD_delete(const char* itemPath) {
     return success;
 }
 
-void IRAM_ATTR headphoneDetect() { // called via interrupt
+void headphoneDetect() { // called via interrupt
     _f_hpChanged = true;
 }
 
@@ -3320,7 +3321,7 @@ void ir_res(uint32_t res) {
     if(_state != RADIO) return;
     if(_f_sleeping == true) return;
     tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth, _winName.h + _winTitle.h, TFT_BLACK);
-    SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%d", res);
+    SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%u", res);
     if(res != 0) {
         setStation(res); // valid between 1 ... 999
         showVUmeter();
@@ -4035,7 +4036,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     ESP.getFreeHeap(), audioInbuffFilled(), audioInbuffFree(), ESP.getPsramSize() - ESP.getFreePsram(), ESP.getFreePsram());
                                     webSrv.send((String)"test=" + _chbuf);
                                     SerialPrintfln("audiotask .. stackHighWaterMark: %u bytes", audioGetStackHighWatermark() * 4);
-                                    SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", uxTaskGetStackHighWaterMark(NULL) * 4);
+                                    SerialPrintfln("looptask ... stackHighWaterMark: %u bytes", (uint32_t)uxTaskGetStackHighWaterMark(NULL) * 4);
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}                                                     // via websocket
@@ -4138,7 +4139,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
     if(CORE_DEBUG_LEVEL > ARDUHAL_LOG_LEVEL_INFO) {
-        SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %d", request.c_str(), contentLength);
+        SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %u", request.c_str(), contentLength);
     }
 
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString

@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Oct 08 2023
+// updated on Oct 13 2023
 
 
 #pragma once
@@ -9,6 +9,7 @@
 #include "SPI.h"
 #include "SD.h"
 #include "vector"
+#include "driver/gpio.h"
 
 using namespace std;
 
@@ -313,14 +314,12 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         //------------TFT-------------------
 
         inline int32_t minimum(int32_t a, int32_t b){if(a < b) return a; else return b;}
-        inline void TFT_DC_HIGH() {if (TFT_DC < 32) {GPIO.out_w1ts = (1 << TFT_DC);}
-                                   else             {GPIO.out1_w1ts.data = (1 << (TFT_DC - 32));}}
-        inline void TFT_DC_LOW()  {if (TFT_DC < 32) {GPIO.out_w1tc = (1 << TFT_DC);}
-                                   else             {GPIO.out1_w1tc.data = (1 << (TFT_DC - 32));}}
-        inline void TFT_CS_HIGH() {if (TFT_CS < 32) {GPIO.out_w1ts = (1 << TFT_CS);}
-                                   else             {GPIO.out1_w1ts.data = (1 << (TFT_CS - 32));}}
-        inline void TFT_CS_LOW()  {if (TFT_CS < 32) {GPIO.out_w1tc = (1 << TFT_CS);}
-                                   else             {GPIO.out1_w1tc.data = (1 << (TFT_CS - 32));}}
+
+        inline void TFT_DC_HIGH() {gpio_set_level((gpio_num_t)TFT_DC, 1);}
+        inline void TFT_DC_LOW()  {gpio_set_level((gpio_num_t)TFT_DC, 0);}
+        inline void TFT_CS_HIGH() {gpio_set_level((gpio_num_t)TFT_CS, 1);}
+        inline void TFT_CS_LOW()  {gpio_set_level((gpio_num_t)TFT_CS, 0);}
+
         inline void _swap_int16_t(int16_t &a, int16_t &b) { int16_t t = a; a = b; b = t; }
         void        init();
         void        writeCommand(uint16_t cmd);
