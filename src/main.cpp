@@ -2040,9 +2040,10 @@ int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_
     return (delta * rise) / run + out_min;
 }
 void SerialPrintflnCut(const char* item, const char* color, const char* str) {
-    if(strlen(str) > 75) {
+    uint8_t maxLength = 100;
+    if(strlen(str) > maxLength) {
         String f = str;
-        SerialPrintfln("%s%s%s ... %s", item, color, f.substring(0, 50).c_str(), f.substring(f.length() - 20, f.length()).c_str());
+        SerialPrintfln("%s%s%s ... %s", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
     }
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
@@ -2325,6 +2326,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
             xchgShuffle(_SD_content.size());
             sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_shuffleArray[_cur_AudioFileNr]]);
         }
+        if(indexOf(_chbuf, ".m3u", 0) > 0) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW "skip playlist %s", _chbuf); return;} // no playlist allowed here
         idx = indexOf(_chbuf, "\033[", 1);
         _chbuf[idx] = '\0';  // remove color and filesize
         SD_playFile(_chbuf, 0, showFN);
@@ -2346,6 +2348,7 @@ void SD_playFolder(const char* folderPath, bool showFN) {
     _cur_AudioFileNr++;
     if(!_f_shuffle){sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);}
     else{sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_shuffleArray[_cur_AudioFileNr]]);}
+    if(indexOf(_chbuf, ".m3u", 0) > 0) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW "skip playlist %s", _chbuf); return;} // no playlist allowed here
     idx = indexOf(_chbuf, "\033[", 1);
     _chbuf[idx] = '\0';  // remove color and filesize
     SD_playFile(_chbuf, 0, showFN);
