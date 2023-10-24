@@ -1,18 +1,18 @@
 // created: 10.Feb.2022
-// updated: 12.Oct.2023
+// updated: 24.Oct.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                //
-#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
-#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define DECODER             0                               // (0)VS1053 , (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
+#define TFT_CONTROLLER      0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TP_VERSION          0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) commFmt MSB MAX98357A PCM5102A CS4344, (1) commFmt LSB PT8211
@@ -49,6 +49,7 @@
 #include "WM8978.h"
 #include "SoapESP32.h"
 #include "Arduino_JSON.h"
+
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -204,6 +205,7 @@ int16_t        strlenUTF8(const char* str);
 int32_t        map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
 void           SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char*    scaleImage(const char* path);
+void           xchgShuffle(uint8_t n);
 void           setVolume(uint8_t vol);
 inline uint8_t getvolume();
 uint8_t        downvolume();

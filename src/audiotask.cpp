@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 12.10.2023
+// updated: 24.10.2023
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -63,8 +63,8 @@ void audioTask(void *parameter) {
         SerialPrintfln(ANSI_ESC_RED "Error: VS1053 not found");
         while(1){};
     }
-    SerialPrintfln("VS1053 chipID = " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", version = "
-                                      ANSI_ESC_CYAN "%d", chipID, vs1053.printVersion());
+    SerialPrintfln("VS1053 chipID = " ANSI_ESC_CYAN "%lu" ANSI_ESC_WHITE ", version = "
+                                      ANSI_ESC_CYAN "%u", (long unsigned)chipID, vs1053.printVersion());
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
@@ -356,7 +356,7 @@ void audioTask(void *parameter) {
     struct audioMessage audioRxTaskMessage;
     struct audioMessage audioTxTaskMessage;
 
-    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, -1, I2S_MCLK);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
     audio.setVolume(5); // 0...21
 
