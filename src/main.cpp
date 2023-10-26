@@ -3538,6 +3538,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
                 yPos = STATIONSLIST_1;
             }
+            else if(y > _winFooter.y){
+                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
+                    yPos = STATIONSLIST_1;
+                    btnNr = 100;
+                }
+            }
             break;
         case AUDIOFILESLIST:
             if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
@@ -3643,6 +3649,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case STATIONSLIST_1:if(btnNr == none) break;
                             _releaseNr = 100;
                             _staListPos = btnNr;
+                            if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
                             vTaskDelay(100);
                             break;
         case AUDIOFILESLIST_1: if(btnNr == none) break;
