@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.16 Oct 24/2023                                                                                         ";
+    Version 2.17 Oct 25/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -63,6 +63,9 @@ uint16_t       _cur_station = 0;          // current station(nr), will be set la
 uint16_t       _cur_AudioFileNr = 0;      // position inside _SD_content
 uint16_t       _sleeptime = 0;            // time in min until MiniWebRadio goes to sleep
 uint16_t       _sum_stations = 0;
+uint16_t       _plsEntries = 0;
+uint16_t       _plsMaxEntries = 0;
+uint16_t       _audioFilesInList = 0;
 uint32_t       _resumeFilePos = 0;        //
 uint32_t       _playlistTime = 0;         // playlist start time millis() for timeout
 uint32_t       _settingsHash = 0;
@@ -134,6 +137,7 @@ String         _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String         _media_downloadIP = "";
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
+std::vector<char*>  _PLS_content;
 
 struct dlna_items{
     std::vector<char*> name{};
@@ -1156,10 +1160,16 @@ void showFileName(const char* fname) {
 
 void showFileNumber(){
     tft.setFont(_fonts[3]);
-    char buf[10];
-    if(!_f_shuffle) {sprintf(buf, "%03d/%03d", _cur_AudioFileNr + 1, _SD_content.size());}
-    else            {sprintf(buf, "%03d/%03d", _shuffleArray[_cur_AudioFileNr] + 1, _SD_content.size());}
-    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_DEEPSKYBLUE, 10, 0, _winFileNr.w, _winFileNr.h);
+    char buf[15];
+    if(_f_playlistEnabled){
+        sprintf(buf, "%03u/%03u", _plsMaxEntries - _plsEntries + 1, _plsMaxEntries);
+        display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
+    }
+    else{
+        if(!_f_shuffle) {sprintf(buf, "%03u/%03u", (unsigned int)_cur_AudioFileNr + 1, (unsigned int)_audioFilesInList);}
+        else            {sprintf(buf, "%03u/%03u", _shuffleArray[_cur_AudioFileNr] + 1, _audioFilesInList);}
+        display_info(buf, _winFileNr.x, _winFileNr.y, TFT_DEEPSKYBLUE, 10, 0, _winFileNr.w, _winFileNr.h);
+    }
 }
 
 void showStationsList(uint16_t staListNr){
@@ -1407,6 +1417,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
 bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ // sort the content of an given directory and lay it in the
     File file;                                                                  // vector _SD_content, add to filename ANSI_ESC_YELLOW and file size
     vector_clear_and_shrink(_SD_content);
+    _audioFilesInList = 0;
     if(audioFile) audioFile.close();
     if(!SD_MMC.exists(path)){
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
@@ -1441,6 +1452,8 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
                 _SD_content.push_back(x_ps_strdup((const char*) _chbuf));
             }
         }
+        if(isAudio(file)) _audioFilesInList++;
+        if(endsWith(file.name(), ".m3u")) _audioFilesInList++;
     }
     for(int i = 0; i < _SD_content.size(); i++){  // easy bubble sort
         for(int j = 1; j < _SD_content.size(); j++){
@@ -1497,6 +1510,14 @@ boolean isAudio(File file){
     return false;
 }
 
+boolean isAudio(const char* path){
+    if(endsWith(path, ".mp3") || endsWith(path, ".aac") || endsWith(path, ".m4a") || endsWith(path, ".wav") ||
+               endsWith(path, ".flac") || endsWith(path, ".opus") || endsWith(path, ".ogg")){
+        return true;
+    }
+    return false;
+}
+
 boolean isPlaylist(File file){
     if(endsWith(file.name(), ".m3u")){
         return true;
@@ -1505,79 +1526,97 @@ boolean isPlaylist(File file){
 }
 
 void processPlaylist(boolean first) {
-    static bool f_has_EXTINF = false;
-    while(playlistFile.available() > 0) {
-        size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 512);
-        _chbuf[bytesRead] = '\0';
-        if(bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
-        if(startsWith(_chbuf, "#")) SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
-        trim(_chbuf);
-        if(first) {
-            _playlistTime = millis();
-            if(startsWith(_chbuf, "#EXTM3U")) {
-                first = false;
-                _f_playlistEnabled = true;
-                continue;
-            }
-            else {
-                SerialPrintfln("Playlist:    " ANSI_ESC_RED "%s is not a valid, #EXTM3U not found", playlistFile.name());
-                playlistFile.close();
-                return;
-            }
-        }
-        if(startsWith(_chbuf, "#EXTINF")) {
-            int8_t idx1 = indexOf(_chbuf, ":", 0) + 1;
-            int8_t idx2 = indexOf(_chbuf, ",", 0);
-            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
-            clearLogo();
-            showFileName(_chbuf + idx2 + 1);
-            f_has_EXTINF = true;
-            int8_t len = idx2 - idx1;
-            if(len > 0 && len < 6) { // song playtime
-                char tmp[7];
-                memcpy(tmp, _chbuf + idx1, len);
-                tmp[len] = '\0';
-                SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
-            }
+    static uint16_t idx = 0;
+    boolean f_has_EXTINF = false;
+    if(first){
+        boolean f_EXTINF_seen = false;
+        _plsEntries = 0;
+        idx = 0;
+        vector_clear_and_shrink(_PLS_content);
+        while(playlistFile.available() > 0) {
+            size_t bytesRead = playlistFile.readBytesUntil('\n', _chbuf, 511);
+            if(bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
+            _chbuf[bytesRead] = '\0';
+            trim(_chbuf);
+            if(startsWith(_chbuf, "#EXTM3U")) continue;
+            if(startsWith(_chbuf, "#EXTINF")) {_PLS_content.push_back(x_ps_strdup((const char*)_chbuf)); f_EXTINF_seen = true; continue;}
+            if(startsWith(_chbuf, "http"))    {_PLS_content.push_back(x_ps_strdup((const char*)_chbuf)); f_EXTINF_seen = false; _plsEntries++; continue;}
+            if(isAudio(_chbuf))               {_PLS_content.push_back(x_ps_strdup((const char*)_chbuf)); f_EXTINF_seen = false; _plsEntries++; continue;}
+            if(f_EXTINF_seen == true) {_PLS_content.pop_back(); f_EXTINF_seen = false;}
             continue;
         }
-        _f_playlistNextFile = false;
-        if(!startsWith(_chbuf, "#")) {
-            if(startsWith(_chbuf, "http")) {
-                SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
-                showVolumeBar();
-                if(!f_has_EXTINF) clearLogoAndStationname();
-                f_has_EXTINF = false;
-                webSrv.send((String) "SD_playFile=" + _chbuf);
-                changeState(PLAYERico);
-                _cur_Codec = 0;
-                _f_isWebConnected = audioConnecttohost(_chbuf);
-                _f_isFSConnected = false;
-            }
-            else {
-                const char* path = playlistFile.path();
-                int32_t         idx = lastIndexOf(path, '/');
-                int32_t         len = strlen(_chbuf);
-                for(int32_t i = len; i > -1; i--) { _chbuf[idx + i + 1] = _chbuf[i]; }
-                strncpy(_chbuf, path, idx + 1);
-                // log_w("pls path %s, %i, %i", _chbuf, idx, len);
-                urldecode(_chbuf);
-                SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
-                webSrv.send((String) "SD_playFile=" + _chbuf);
-                if(!f_has_EXTINF) SD_playFile(_chbuf);
-                else {
-                    f_has_EXTINF = false;
-                    SD_playFile(_chbuf, 0, false);
-                }
-            }
-            return;
+        for(int i = 0; i < _PLS_content.size(); i++){
+            strcpy(_chbuf, _PLS_content[i]);
+            urldecode(_chbuf);
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "%s", _chbuf);
         }
+        if(_plsEntries == 0) return;
+        _f_playlistEnabled = true;
+        _plsMaxEntries = _plsEntries;
     }
-    SerialPrintfln("end of playlist");
-    webSrv.send("SD_playFile=end of playlist");
+
+    if(!_plsEntries) goto exit;
+
+    // now read from vector _PLS_content
+
+    strcpy(_chbuf, _PLS_content[idx]);
+    if(startsWith(_chbuf, "#EXTINF")) {
+        f_has_EXTINF = true;
+        int8_t idx1 = indexOf(_chbuf, ":", 0) + 1;
+        int8_t idx2 = indexOf(_chbuf, ",", 0);
+        SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _chbuf + idx2 + 1);
+        clearLogo();
+        showFileName(_chbuf + idx2 + 1);
+        int8_t len = idx2 - idx1;
+        if(len > 0 && len < 6) { // song playtime
+            char tmp[7];
+            memcpy(tmp, _chbuf + idx1, len);
+            tmp[len] = '\0';
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
+        }
+        idx++;
+        strcpy(_chbuf, _PLS_content[idx]);
+    }
+
+    _f_playlistNextFile = false;
+    if(startsWith(_chbuf, "http")) {
+        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _chbuf);
+        showVolumeBar();
+        if(!f_has_EXTINF) clearLogoAndStationname();
+        f_has_EXTINF = false;
+        webSrv.send((String) "SD_playFile=" + _chbuf);
+        changeState(PLAYERico);
+        _cur_Codec = 0;
+        _f_isWebConnected = audioConnecttohost(_chbuf);
+        _f_isFSConnected = false;
+        showFileNumber();
+    }
+    else {
+        const char* path = playlistFile.path();
+        int32_t         idx = lastIndexOf(path, '/');
+        int32_t         len = strlen(_chbuf);
+        for(int32_t i = len; i > -1; i--) { _chbuf[idx + i + 1] = _chbuf[i]; }
+        strncpy(_chbuf, path, idx + 1);
+        // log_w("pls path %s, %i, %i", _chbuf, idx, len);
+        urldecode(_chbuf);
+        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf);
+        webSrv.send((String) "SD_playFile=" + _chbuf);
+        if(!f_has_EXTINF) {SD_playFile(_chbuf);}
+        else              {f_has_EXTINF = false; SD_playFile(_chbuf, 0, false);}
+    }
+
+    idx++;
+    _plsEntries--;
+    return;
+
+exit:
     playlistFile.close();
+    _plsMaxEntries = 0;
+    SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
+    webSrv.send("SD_playFile=end of playlist");
     _f_playlistEnabled = false;
     changeState(PLAYER);
+    return;
 }
 /*****************************************************************************************************************************************************
  *                                         C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                              *
@@ -3184,6 +3223,7 @@ void audio_info(const char* info) {
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
     {
         SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
+        // SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);
         return;
     }
 }
