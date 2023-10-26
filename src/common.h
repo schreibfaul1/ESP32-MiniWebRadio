@@ -206,7 +206,7 @@ int16_t        strlenUTF8(const char* str);
 int32_t        map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
 void           SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char*    scaleImage(const char* path);
-void           xchgShuffle(uint8_t n);
+void           xchgShuffle(uint16_t n);
 void           setVolume(uint8_t vol);
 inline uint8_t getvolume();
 uint8_t        downvolume();

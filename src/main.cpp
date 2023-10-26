@@ -43,7 +43,7 @@ uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
 uint8_t        _staListPos = 0;
-uint8_t*       _shuffleArray = NULL;
+uint16_t*      _shuffleArray = NULL;
 uint16_t       _staListNr = 0;
 uint8_t        _fileListPos = 0;
 uint16_t       _fileListNr = 0;
@@ -2105,18 +2105,18 @@ const char* scaleImage(const char* path) {
     return pathBuff;
 }
 
-void xchgShuffle(uint8_t n) {// generates a uint8_t array of length n with {0, 1, 2, ... n} and shuffles it
+void xchgShuffle(uint16_t n) {// generates a uint8_t array of length n with {0, 1, 2, ... n} and shuffles it
     if(_shuffleArray){free(_shuffleArray); _shuffleArray = NULL;}
     if(!n)return;
-    _shuffleArray = (uint8_t*)malloc(n);
-    for(uint8_t i = 0; i < n; i++){
+    _shuffleArray = (uint16_t*)malloc(n * sizeof(uint16_t));
+    for(uint16_t i = 0; i < n; i++){
         _shuffleArray[i] = i;
     }
 
-    for(uint8_t i=0; i < n; i++){ // and now shuffle
-        uint8_t randIndex1 = random( 0, n);
-        uint8_t randIndex2 = random( 0, n);
-        uint8_t temp = _shuffleArray[randIndex1];
+    for(uint16_t i = 0; i < n; i++){ // and now shuffle
+        uint16_t randIndex1 = random( 0, n);
+        uint16_t randIndex2 = random( 0, n);
+        uint16_t temp = _shuffleArray[randIndex1];
         _shuffleArray[randIndex1] = _shuffleArray[randIndex2];  //swapping the values
         _shuffleArray[randIndex2] = temp;                       //swapping the values
     }
