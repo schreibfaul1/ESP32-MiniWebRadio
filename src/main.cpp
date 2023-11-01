@@ -27,7 +27,7 @@
 // global variables
 const uint8_t  _max_volume = 21;
 const uint16_t _max_stations = 1000;
-int8_t         _releaseNr = -1;
+int16_t        _releaseNr = -1;
 int8_t         _currentServer = -1;
 uint8_t        _alarmdays = 0;
 uint8_t        _cur_volume = 0;           // will be set from stored preferences
@@ -49,6 +49,7 @@ uint8_t        _fileListPos = 0;
 uint16_t       _fileListNr = 0;
 uint8_t        _itemListPos = 0;          // DLNA items
 uint16_t       _itemListNr = 0;
+int8_t         _newBTmetaData = 0;        // 0 - no new data, 1 - new data, 2 - data in progress (show on display)
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
 int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
@@ -84,6 +85,7 @@ char           _streamTitle[512] = {};
 char*          _lastconnectedfile = nullptr;
 char*          _stationURL = nullptr;
 char*          _JSONstr = nullptr;
+char*          _BT_metaData = nullptr;
 boolean        _f_rtc = false; // true if time from ntp is received
 boolean        _f_100ms = false;
 boolean        _f_1sec = false;
@@ -124,6 +126,8 @@ boolean        _f_playAllFiles = false;
 boolean        _f_clearLogo = false;
 boolean        _f_clearStationName = false;
 boolean        _f_shuffle = false;
+boolean        _f_BTconnected = false;
+boolean        _f_BTstateChanged = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -157,7 +161,7 @@ struct timecounter {
     float factor = 2.0;
 } _timeCounter;
 
-char _hl_item[13][40]{
+char _hl_item[15][40]{
     "   Internet Radio   ", // "* интернет-радио *"  "ραδιόφωνο Internet"
     "   Internet Radio   ", //
     "   Internet Radio   ", //
@@ -171,6 +175,8 @@ char _hl_item[13][40]{
     "        DLNA        ", // Digital Living Network Alliance
     "   Stations List    ",
     "   Audio Files      ",
+    "     DLNA List      ",
+    "     Bluetooth      ",
 };
 
 enum status {
@@ -187,7 +193,9 @@ enum status {
     DLNA = 10,
     STATIONSLIST = 11,
     AUDIOFILESLIST = 12,
-    DLNAITEMSLIST = 13
+    DLNAITEMSLIST = 13,
+    A2DP_SINK = 14,
+    UNDEFINED = 255
 };
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
@@ -1132,8 +1140,10 @@ void showFileLogo(uint8_t state) {
         else
             logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
-    else if(state == DLNA)  { logo = "/common/DLNA.jpg"; }
-    else if(state == PLAYER){ logo = "/common/AudioPlayer.jpg";}
+    else if(state == DLNA)     { logo = "/common/DLNA.jpg"; }
+    else if(state == PLAYER)   { logo = "/common/AudioPlayer.jpg";}
+    else if(state == A2DP_SINK){ _f_BTconnected? logo = "/common/BT.jpg" : logo = "/common/BTnc.jpg";}
+    else if(state == UNDEFINED){ /* do nothing*/ goto exit;}
     else { // _state PLAYER or PLAYERico
         logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
@@ -1142,6 +1152,7 @@ void showFileLogo(uint8_t state) {
         (drawImage("/common/unknown.jpg", 0, _winName.y + 2));
         webSrv.send("stationLogo=");
     }
+exit:
     xSemaphoreGive(mutex_display);
 }
 
@@ -1852,7 +1863,7 @@ void setup() {
     tp.TP_Send(0x90); // Remove any blockage
 
     SerialPrintfln("setup: ....  Init SD card");
-    pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
+    if(IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     pinMode(SD_MMC_D0, INPUT_PULLUP);
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
@@ -1938,7 +1949,8 @@ void setup() {
     tft.fillScreen(TFT_BLACK); // Clear screen
     if(_f_mute) {
         SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume);
-        audioSetVolume(0);
+        if(_state == A2DP_SINK){bt_set_volume( 0);}
+        else                   {audioSetVolume(0);}
         showHeadlineVolume();
     }
     else {
@@ -2125,7 +2137,8 @@ void xchgShuffle(uint16_t n) {// generates a uint8_t array of length n with {0, 
 inline uint8_t getvolume() { return _cur_volume; }
 void           setVolume(uint8_t vol) {
     if(_f_mute == false) {
-        audioSetVolume(vol);
+        if(_state == A2DP_SINK){bt_set_volume( vol);}
+        else                   {audioSetVolume(vol);}
         showHeadlineVolume();
     }
     else { showHeadlineVolume(); }
@@ -2249,7 +2262,7 @@ void setStationViaURL(const char* url) {
 
 void changeBtn_pressed(uint8_t btnNr) { drawImage(_pressBtn[btnNr], btnNr * _winButton.w, _winButton.y); }
 void changeBtn_released(uint8_t btnNr) {
-    if(_state == RADIOico || _state == PLAYERico) {
+    if(_state == RADIOico || _state == PLAYERico || _state == A2DP_SINK) {
         if(_f_mute) _releaseBtn[0] = "/btn/Button_Mute_Red.jpg";
         else
             _releaseBtn[0] = "/btn/Button_Mute_Green.jpg";
@@ -2586,6 +2599,14 @@ void changeState(int32_t state){
                 showLogoAndStationName();
                 showStreamTitle(_streamTitle);
             }
+            else if(_state == A2DP_SINK){
+                _state = UNDEFINED;
+                audioInit();
+                clearWithOutHeaderFooter();
+                connecttohost(_lastconnectedhost.c_str());
+                showLogoAndStationName();
+                showStreamTitle(_streamTitle);
+            }
             else{
                 showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -2625,11 +2646,21 @@ void changeState(int32_t state){
             else{
                 _pressBtn[4]="/btn/Black.jpg";                   _releaseBtn[4]="/btn/Black.jpg";
             }
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
+            #if CONFIG_IDF_TARGET_ESP32
+                _pressBtn[5] = "/btn/BT_Yellow.jpg";             _releaseBtn[5] = "/btn/BT_Green.jpg";
+            #else
+                _pressBtn[5] = "/btn/Black.jpg";                 _releaseBtn[5] = "/btn/Black.jpg";
+            #endif
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            // for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             drawImage("/btn/RADIOmenue.gif", 0, _winButton.y);
+            if(TFT_BL == -1){
+                drawImage(_releaseBtn[4], 4 * _winButton.w, _winButton.y);
+            }
+            #if CONFIG_IDF_TARGET_ESP32
+                drawImage(_releaseBtn[5], 5 * _winButton.w, _winButton.y);
+            #endif
             clearVolBar();
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
@@ -2813,6 +2844,28 @@ void changeState(int32_t state){
             _timeCounter.factor = 1.0;
             break;
         }
+        case A2DP_SINK:{
+            showHeadlineItem(A2DP_SINK);
+            clearBitRate();
+            stopSong();
+            _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
+            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
+            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
+            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
+            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
+            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
+            _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
+            _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
+            clearLogoAndStationname();
+            clearTitle();
+            showFileLogo(state);
+            showVolumeBar();
+            WiFi.setSleep(WIFI_PS_MAX_MODEM);
+            audioTaskDelete();
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            a2dp_sink_init(BT_SINK_NAME, I2S_BCLK, I2S_LRC, I2S_DOUT);
+            break;
+        }
     }
     _state = state;
     _f_state_isChanging = false;
@@ -2924,10 +2977,12 @@ void loop() {
     tp.loop();
     ftpSrv.handleFTP();
     soap.loop();
+
     if(_f_muteDecrement) {
         if(_mute_volume > 0) {
             _mute_volume--;
-            audioSetVolume(_mute_volume);
+            if(_state == A2DP_SINK){bt_set_volume( _mute_volume);}
+            else                   {audioSetVolume(_mute_volume);}
             showHeadlineVolume();
         }
         else {
@@ -2935,7 +2990,8 @@ void loop() {
             _f_muteDecrement = false;
             _f_mute = true;
             webSrv.send("mute=1");
-            if(_state == RADIOico || _state == PLAYERico || _state == DLNA) { drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y); }
+            if(_state == RADIOico || _state == PLAYERico ||
+               _state == DLNA     || _state == A2DP_SINK) { drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y); }
             if(_state == CLOCKico) { drawImage("/btn/Button_Mute_Red.jpg", 2 * _winButton.w, _winButton.y); }
         }
     }
@@ -2943,14 +2999,16 @@ void loop() {
     if(_f_muteIncrement) {
         if(_mute_volume < _cur_volume) {
             _mute_volume++;
-            audioSetVolume(_mute_volume);
+            if(_state == A2DP_SINK){bt_set_volume( _mute_volume);}
+            else                   {audioSetVolume(_mute_volume);}
             showHeadlineVolume();
         }
         else {
             _f_muteIncrement = false;
             _f_mute = false;
             webSrv.send("mute=0");
-            if(_state == RADIOico || _state == PLAYERico) { drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y); }
+            if(_state == RADIOico || _state == PLAYERico ||
+               _state == DLNA     || _state == A2DP_SINK) { drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y); }
             if(_state == CLOCKico) { drawImage("/btn/Button_Mute_Green.jpg", 2 * _winButton.w, _winButton.y); }
         }
     }
@@ -2976,6 +3034,17 @@ void loop() {
             showHeadlineTime(false);
             showFooterRSSI();
             if(_state == CLOCK || _state == CLOCKico) display_time();
+        }
+
+        if(_newBTmetaData > 0){
+            static uint8_t cnt = 0;
+            cnt ++;
+            if(cnt == 2){
+                _newBTmetaData = 2;
+                showFileName(_BT_metaData);
+                cnt = 0;
+                _newBTmetaData = 0;
+            }
         }
 
         if(_timeCounter.timer) {
@@ -3005,7 +3074,8 @@ void loop() {
             if(_f_eof && (_state == RADIO || _f_eof_alarm)) {
                 _f_eof = false;
                 if(_f_eof_alarm) {
-                    audioSetVolume(_cur_volume);
+                    if(_state == A2DP_SINK){bt_set_volume( _cur_volume);}
+                    else                   {audioSetVolume(_cur_volume);}
                     wake_up();
                     _f_eof_alarm = false;
                 }
@@ -3053,7 +3123,8 @@ void loop() {
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 _f_alarm = false;
                 connecttoFS("/ring/alarm_clock.mp3");
-                audioSetVolume(21);
+                if(_state == A2DP_SINK){bt_set_volume( 21);}
+                else                   {audioSetVolume(21);}
             }
             if(_f_hpChanged) {
                 setVolume(_cur_volume);
@@ -3165,6 +3236,12 @@ void loop() {
             SD_playFolder("", true);
         }
     }
+
+    if(_f_BTstateChanged){
+        showFileLogo(A2DP_SINK);
+        _f_BTstateChanged = false;
+    }
+
 }
 /*****************************************************************************************************************************************************
  *                                                                    E V E N T S                                                                    *
@@ -3460,7 +3537,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     enum : int8_t {none = -1,  RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1, PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1, CLOCK_1,
-                               CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1,
+                               CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1, A2DP_SINK_1
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3563,6 +3640,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 yPos = DLNAITEMSLIST_1;
             }
             break;
+        case A2DP_SINK:
+            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
+                yPos = A2DP_SINK_1;
+                btnNr = x / _winButton.w;
+            }
+            break;
         default:
             break;
     }
@@ -3590,6 +3673,9 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
                             if(TFT_BL != -1){
                                 if(btnNr == 4){_releaseNr = 14;} // Brightness
+                            }
+                            if(CONFIG_IDF_TARGET_ESP32 == 1){
+                                if(btnNr == 5){_releaseNr = 15;} // A2DP Sink
                             }
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
@@ -3663,6 +3749,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             _itemListPos = btnNr;
                             vTaskDelay(100);
                             break;
+        case A2DP_SINK_1:   if     (btnNr == 0){_releaseNr = 130; mute();}
+                            else if(btnNr == 1){_releaseNr = 131;} // Vol-
+                            else if(btnNr == 2){_releaseNr = 132;} // Vol+
+                            else if(btnNr == 7){_releaseNr = 137;}  // RADIO
+                            changeBtn_pressed(btnNr); break;
+                            break;
         default:            break;
     }
 }
@@ -3695,6 +3787,7 @@ void tp_released(uint16_t x, uint16_t y){
         case 12:    changeState(CLOCK); break;
         case 13:    changeState(SLEEP); break;
         case 14:    changeState(BRIGHTNESS); break;
+        case 15:    changeState(A2DP_SINK); break;
 
         /* CLOCKico ******************************/
         case 20:    changeState(ALARM); break;
@@ -3903,13 +3996,13 @@ void tp_released(uint16_t x, uint16_t y){
                             _itemListNr += 9;
                             showDlnaItemsList( 0,    _itemListNr);
                         }
-
-
-
-
-
                     } break;
 
+        /* A2DP SINK *********************************/
+        case 130:   /*changeBtn_released(0);*/                               break; // Mute
+        case 131:   changeBtn_released(1); downvolume(); showVolumeBar();    break;  // Vol-
+        case 132:   changeBtn_released(2); upvolume();   showVolumeBar();    break;  // Vol+
+        case 137:   a2dp_sink_deinit(); changeState(RADIO); break;
         default:    break;
     }
     _releaseNr = -1;
@@ -3931,6 +4024,42 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     String  str;
 
+    if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
+
+    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
+                                                        webSrv.show(accesspoint_html, webSrv.TEXT);}
+                                    else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
+                                                        webSrv.show(index_html, webSrv.TEXT);      }
+                                    return;}
+
+    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
+                                    webSrv.show(index_js, webSrv.JS); return;}
+
+    if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
+
+    if(cmd == "test"){              sprintf(_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu",
+                                        (long unsigned)ESP.getFreeHeap(), (long unsigned)audioInbuffFilled(), (long unsigned)audioInbuffFree(),
+                                        (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
+                                    webSrv.send((String)"test=" + _chbuf);
+                                    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audioGetStackHighWatermark() * 4);
+                                    SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
+                                    return;}
+
+    if(cmd == "getmute"){           if(_f_mute) webSrv.send("mute=1");
+                                    else        webSrv.send("mute=0");
+                                    return;}
+
+    if(cmd == "setmute"){           mute();
+                                    return;}
+
+    if(cmd == "upvolume"){          webSrv.send("volume=" + (String)upvolume());  return;}                                                            // via websocket
+
+    if(cmd == "downvolume"){        webSrv.send("volume=" + (String)downvolume()); return;}                                                           // via websocket
+
+// **************************************
+    if(_state == A2DP_SINK) return; //  *
+// **************************************
+
     if(cmd == "homepage"){          webSrv.send("homepage=" + _homepage);
                                     return;}
 
@@ -3941,12 +4070,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else        webSrv.send((String)"settone=" + setTone().c_str());
                                     return;}
 
-    if(cmd == "getmute"){           if(_f_mute) webSrv.send("mute=1");
-                                    else        webSrv.send("mute=0");
-                                    return;}
 
-    if(cmd == "setmute"){           mute();
-                                    return;}
 
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle, webSrv.TEXT);
                                     return;}
@@ -3981,10 +4105,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "upvolume"){          webSrv.send("volume=" + (String)upvolume());  return;}                                                            // via websocket
-
-    if(cmd == "downvolume"){        webSrv.send("volume=" + (String)downvolume()); return;}                                                           // via websocket
-
     if(cmd == "prev_station"){      prevStation(); return;}                                                                                           // via websocket
 
     if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
@@ -3994,17 +4114,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); return;}                                                                         // via websocket
 
     if(cmd == "getnetworks"){       webSrv.send((String)"networks=" + WiFi.SSID().c_str()); return;}                                                  // via websocket
-
-    if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
-
-    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
-                                                        webSrv.show(accesspoint_html, webSrv.TEXT);}
-                                    else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
-                                                        webSrv.show(index_html, webSrv.TEXT);      }
-                                    return;}
-
-    if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
-                                    webSrv.show(index_js, webSrv.JS); return;}
 
     if(cmd == "get_tftSize"){       webSrv.send(_tftSize? "tftSize=m": "tftSize=s"); return;}
 
@@ -4018,8 +4127,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
 
     if(cmd == "get_decoder"){       webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
-
-    if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
     if(cmd == "change_state"){      if(_state != CLOCK) changeState(param.toInt()); return;}
 
@@ -4057,14 +4164,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "DLNA_getContent3"){  _level = 3; DLNA_showContent(param, 3); return;} // search for level 3 content
     if(cmd == "DLNA_getContent4"){  _level = 4; DLNA_showContent(param, 4); return;} // search for level 4 content
     if(cmd == "DLNA_getContent5"){  _level = 5; DLNA_showContent(param, 5); return;} // search for level 5 content
-
-    if(cmd == "test"){              sprintf(_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu",
-                                        (long unsigned)ESP.getFreeHeap(), (long unsigned)audioInbuffFilled(), (long unsigned)audioInbuffFree(),
-                                        (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
-                                    webSrv.send((String)"test=" + _chbuf);
-                                    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audioGetStackHighWatermark() * 4);
-                                    SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
-                                    return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=" + String(_scannedNetworks)); return;}                                                     // via websocket
 
@@ -4288,7 +4387,27 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
     _dlna_items.uri.push_back(x_ps_strdup(uri.c_str()));
     _dlna_items.isDir.push_back(isDir == true);
     _dlna_items.isAudio.push_back(isAudio == true);
+}
 
+void bt_info(const char* info){
+    if(startsWith(info, "AVRC")){SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    if(startsWith(info, "SampleRate")){SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+}
 
+void bt_state(const char* info){
+    SerialPrintfln("BT state:    " ANSI_ESC_ORANGE "%s", info);
+//    if(endsWith(info, "Started"))    {if(_state == A2DP_SINK){ _f_BTconnected = true;  _f_BTstateChanged = true;}}
+//    if(endsWith(info, "Suspended"))  {if(_state == A2DP_SINK){ _f_BTconnected = false; _f_BTstateChanged = true;}}
+//    if(endsWith(info, "Stopped"))    {if(_state == A2DP_SINK){ _f_BTconnected = false; _f_BTstateChanged = true;}}
+    if(endsWith(info, "Connected"))    {if(_state == A2DP_SINK){ _f_BTconnected = true;  _f_BTstateChanged = true; }}
+    if(endsWith(info, "Disconnected")) {if(_state == A2DP_SINK){ _f_BTconnected = false; _f_BTstateChanged = true; }}
+}
 
+void bt_metadata(const char* md, uint8_t id){ // id_ 1 - TITLE, 2 - ARTIST, 4 - ALBUM, 8 - GENRE
+    if(id > 2) return;
+    if(_newBTmetaData > 1) return; // show data is in progress
+    if(_newBTmetaData == 0){if(_BT_metaData){free(_BT_metaData); _BT_metaData = NULL;}}
+    if(_BT_metaData == NULL){_BT_metaData = (char*)malloc(strlen(md) + 1); strcpy(_BT_metaData, md);}
+    else{_BT_metaData = (char*)realloc(_BT_metaData, strlen(_BT_metaData) + strlen(md) + 4); strcat(_BT_metaData, " - "); strcat(_BT_metaData, md);}
+    _newBTmetaData = 1;
 }

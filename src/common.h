@@ -1,18 +1,25 @@
 // created: 10.Feb.2022
 // updated: 24.Oct.2023
 
+// BT Version
+// must have 8MB Flash
+// in menuconfig:  enable BT + BT classic
+// disable IRAM in WiFi and LWIP
+
+
+
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                //
 #define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
-#define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_ROTATION        1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TFT_ROTATION        3                               // 1 or 3 (landscape)
+#define TFT_FREQUENCY       80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) commFmt MSB MAX98357A PCM5102A CS4344, (1) commFmt LSB PT8211
@@ -21,6 +28,7 @@
 #define FTP_PASSWORD        "esp32"
 #define CONN_TIMEOUT        500                             // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL    2000                            // encrypted connection timeout in ms (https://...)
+#define BT_SINK_NAME        "MiniWebRadio"                  // ESP32 only
 
 /**********************************************************************************************************************/
 
@@ -49,6 +57,10 @@
 #include "WM8978.h"
 #include "SoapESP32.h"
 #include "Arduino_JSON.h"
+
+#if CONFIG_IDF_TARGET_ESP32 == 1
+#include "a2dp_sink.h"
+#endif
 
 
 #ifdef CONFIG_IDF_TARGET_ESP32
@@ -241,6 +253,7 @@ void           showDlnaItemsList(uint8_t level, uint16_t itemNr);
 
 //prototypes (audiotask.cpp)
 void audioInit();
+void audioTaskDelete();
 void audioSetVolume(uint8_t vol);
 uint8_t audioGetVolume();
 uint32_t audioGetBitRate();
