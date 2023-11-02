@@ -8,24 +8,25 @@
 
 #include "a2dp_sink.h"
 
-SemaphoreHandle_t     s_mutex_bt_message;
-xQueueHandle          s_bt_app_task_queue      = NULL;;
-xTaskHandle           s_bt_app_task_handle     = NULL;
-esp_a2d_audio_state_t s_audio_state            = ESP_A2D_AUDIO_STATE_STOPPED;
-const char           *s_a2d_conn_state_str[4]  = {"Disconnected", "Connecting", "Connected", "Disconnecting"};
-const char           *s_a2d_audio_state_str[3] = {"Suspended", "Stopped", "Started"};
-esp_a2d_mct_t         s_audio_type             = 0;
-uint8_t              *s_bda                    = NULL;
-String                s_BT_sink_name           = "";
-i2s_port_t            s_i2s_port = I2S_NUM_0;
-i2s_config_t          s_i2s_config;
-i2s_pin_config_t      s_pin_config;
-char*                 s_chbuf = NULL;
-uint8_t               s_vol = 64;
-int8_t                s_BCLK = 27;
-int8_t                s_LRC = 26;
-int8_t                s_DOUT = 25;
-
+xQueueHandle               s_bt_app_task_queue = NULL;
+xTaskHandle                s_bt_app_task_handle = NULL;
+esp_a2d_audio_state_t      s_audio_state = ESP_A2D_AUDIO_STATE_STOPPED;
+const char*                s_a2d_conn_state_str[4] = {"Disconnected", "Connecting", "Connected", "Disconnecting"};
+const char*                s_a2d_audio_state_str[3] = {"Suspended", "Stopped", "Started"};
+esp_a2d_mct_t              s_audio_type = 0;
+uint8_t*                   s_bda = NULL;
+String                     s_BT_sink_name = "";
+i2s_port_t                 s_i2s_port = I2S_NUM_0;
+i2s_config_t               s_i2s_config;
+i2s_pin_config_t           s_pin_config;
+char*                      s_chbuf = NULL;
+uint8_t                    s_vol = 64;
+int8_t                     s_BCLK = 27;
+int8_t                     s_LRC = 26;
+int8_t                     s_DOUT = 25;
+esp_spp_mode_t             s_esp_spp_mode = ESP_SPP_MODE_CB;
+esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap_set = {0};
+esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap = {0};
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void config_i2s(uint16_t buf_count, uint16_t buf_len) {
 
@@ -77,10 +78,8 @@ esp_a2d_mct_t get_audio_type() {
 bool bt_app_work_dispatch(app_callback_t p_cback, uint16_t event, void *p_params, int param_len){
 
     if(bt_info){
-        //xSemaphoreTake(s_mutex_bt_message, 100);
         sprintf(s_chbuf, "event 0x%x, param len %d", event, param_len);
         bt_info(s_chbuf);
-        //xSemaphoreGive(s_mutex_bt_message);
     }
 
     app_msg_t msg;
@@ -103,10 +102,8 @@ bool bt_app_work_dispatch(app_callback_t p_cback, uint16_t event, void *p_params
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_app_work_dispatched(app_msg_t *msg){
     if(bt_info){
-        //xSemaphoreTake(s_mutex_bt_message, 500);
         sprintf(s_chbuf, "event 0x%x, sig 0x%x dispatched", msg->event, msg->sig);
         bt_info(s_chbuf);
-        //xSemaphoreGive(s_mutex_bt_message);
     }
     if (msg->cb) {
         msg->cb(msg->event, msg->param);
@@ -115,10 +112,8 @@ void bt_app_work_dispatched(app_msg_t *msg){
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool bt_app_send_msg(app_msg_t *msg){
     if(bt_info){
-        //xSemaphoreTake(s_mutex_bt_message, 500);
         sprintf(s_chbuf, "send msg: event 0x%x, sig 0x%x", msg->event, msg->sig);
         bt_info(s_chbuf);
-        //xSemaphoreGive(s_mutex_bt_message);
     }
     if (msg == NULL) {
         return false;
@@ -138,19 +133,15 @@ void bt_app_task_handler(void *arg){
             switch (msg.sig) {
                 case APP_SIG_WORK_DISPATCH:
                     if(bt_info){
-                        //xSemaphoreTake(s_mutex_bt_message, 500);
                         sprintf(s_chbuf, "task handler: APP_SIG_WORK_DISPATCH sig: %u", msg.sig);
                         bt_info(s_chbuf);
-                        //xSemaphoreGive(s_mutex_bt_message);
                     }
                     bt_app_work_dispatched(&msg);
                     break;
                 default:
                     if(bt_info){
-                        //xSemaphoreTake(s_mutex_bt_message, 500);
                         sprintf(s_chbuf, "task handler: unhandled sig: 0%x", msg.sig);
                         bt_info(s_chbuf);
-                        //xSemaphoreGive(s_mutex_bt_message);
                     }
                     break;
             } // switch (msg.sig)
@@ -184,10 +175,8 @@ void bt_app_alloc_meta_buffer(esp_avrc_ct_cb_param_t *param){
     memcpy(attr_text, rc->meta_rsp.attr_text, rc->meta_rsp.attr_length);
     attr_text[rc->meta_rsp.attr_length] = 0;
     if(bt_info){
-        //xSemaphoreTake(s_mutex_bt_message, 100);
         sprintf(s_chbuf, "metadata: attr_text= %s", attr_text);
         bt_info(s_chbuf);
-        //xSemaphoreGive(s_mutex_bt_message);
     }
     rc->meta_rsp.attr_text = attr_text;
 }
@@ -196,48 +185,60 @@ void bt_app_rc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param
     switch (event) {
         case ESP_AVRC_CT_METADATA_RSP_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 bt_info("ESP_AVRC_CT_METADATA_RSP_EVT");
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_alloc_meta_buffer(param);
             bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
             break;
         case ESP_AVRC_CT_CONNECTION_STATE_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 bt_info("ESP_AVRC_CT_CONNECTION_STATE_EVT");
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
             break;
         case ESP_AVRC_CT_PASSTHROUGH_RSP_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 bt_info("ESP_AVRC_CT_PASSTHROUGH_RSP_EVT");
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
             break;
         case ESP_AVRC_CT_CHANGE_NOTIFY_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 bt_info("ESP_AVRC_CT_CHANGE_NOTIFY_EVT");
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
             break;
         case ESP_AVRC_CT_REMOTE_FEATURES_EVT: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 bt_info("ESP_AVRC_CT_REMOTE_FEATURES_EVT");
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
             break;
+        case ESP_AVRC_CT_GET_RN_CAPABILITIES_RSP_EVT: {
+            bt_app_work_dispatch(bt_av_hdl_avrc_evt, event, param, sizeof(esp_avrc_ct_cb_param_t));
+            break;
+        }
         }
         default:
             log_e("Invalid AVRC event: %d", event);
+            break;
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_app_rc_tg_cb(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param){
+    ESP_LOGD(BT_AV_TAG, "%s", __func__);
+    switch (event) {
+        case ESP_AVRC_TG_CONNECTION_STATE_EVT:
+        case ESP_AVRC_TG_REMOTE_FEATURES_EVT:
+        case ESP_AVRC_TG_PASSTHROUGH_CMD_EVT:
+        case ESP_AVRC_TG_SET_ABSOLUTE_VOLUME_CMD_EVT:
+        case ESP_AVRC_TG_REGISTER_NOTIFICATION_EVT:
+        case ESP_AVRC_TG_SET_PLAYER_APP_VALUE_EVT:{
+        //    app_work_dispatch(ccall_av_hdl_avrc_tg_evt, event, param, sizeof(esp_avrc_tg_cb_param_t));
+            break;
+        }
+        default:
+            log_e("Unsupported AVRC event: %d", event);
             break;
     }
 }
@@ -248,78 +249,58 @@ void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
     case ESP_A2D_CONNECTION_STATE_EVT: {
         a2d = (esp_a2d_cb_param_t *)(p_param);
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 500);
             sprintf(s_chbuf, "ESP_A2D_CONNECTION_STATE_EVT %i", event);
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
-        uint8_t *bda = a2d->conn_stat.remote_bda;
         s_bda = a2d->conn_stat.remote_bda;
         if(bt_state){
-            //xSemaphoreTake(s_mutex_bt_message, 500);
             sprintf(s_chbuf, "A2DP connection state: %s", s_a2d_conn_state_str[a2d->conn_stat.state]);
             bt_state(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
+        }
+        if(a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
+            esp_err_t esp_err = esp_bt_gap_read_remote_name(a2d->conn_stat.remote_bda);
+            if (esp_err!=ESP_OK){
+                log_w("esp_bt_gap_read_remote_name");
+            }
+            esp_bt_gap_read_rssi_delta(a2d->conn_stat.remote_bda);
         }
         break;
     }
     case ESP_A2D_AUDIO_STATE_EVT: {
         a2d = (esp_a2d_cb_param_t *)(p_param);
         if(bt_state){
-            //xSemaphoreTake(s_mutex_bt_message, 500);
             sprintf(s_chbuf, "A2DP audio state: %s", s_a2d_audio_state_str[a2d->audio_stat.state]);
             bt_state(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
         s_audio_state = a2d->audio_stat.state;
         if (ESP_A2D_AUDIO_STATE_STARTED == a2d->audio_stat.state) {
-            ;
+            bt_av_new_track();
         }
         break;
     }
     case ESP_A2D_AUDIO_CFG_EVT: {
-        if(bt_info){
-            // //xSemaphoreTake(s_mutex_bt_message, 500);
-            // sprintf(s_chbuf, "ESP_A2D_AUDIO_CFG_EVT %i", event);
-            // bt_info(s_chbuf);
-            // //xSemaphoreGive(s_mutex_bt_message);
-        }
         esp_a2d_cb_param_t *esp_a2d_callback_param = (esp_a2d_cb_param_t *)(p_param);
         s_audio_type = esp_a2d_callback_param->audio_cfg.mcc.type;
         a2d = (esp_a2d_cb_param_t *)(p_param);
-        if(bt_info){
-            // //xSemaphoreTake(s_mutex_bt_message, 500);
-            // sprintf(s_chbuf, "a2dp audio_cfg, codec type");// %d", a2d->audio_cfg.mcc.type);
-            // bt_info(s_chbuf);
-            // //xSemaphoreGive(s_mutex_bt_message);
-        }
         // for now only SBC stream is supported
         if (a2d->audio_cfg.mcc.type == ESP_A2D_MCT_SBC) {
             s_i2s_config.sample_rate = 16000;
             char oct0 = a2d->audio_cfg.mcc.cie.sbc[0];
             if (oct0 & (0x01 << 6)) {
                 s_i2s_config.sample_rate = 32000;
-                // //xSemaphoreTake(s_mutex_bt_message, 500);
                 if(bt_info) {bt_info("SampleRate: 32000 Hz");}
-                // //xSemaphoreGive(s_mutex_bt_message);
             } else if (oct0 & (0x01 << 5)) {
                 s_i2s_config.sample_rate = 44100;
-                // //xSemaphoreTake(s_mutex_bt_message, 500);
                 if(bt_info) {bt_info("SampleRate: 44100 Hz");}
-                // //xSemaphoreGive(s_mutex_bt_message);
             } else if (oct0 & (0x01 << 4)) {
                 s_i2s_config.sample_rate = 48000;
-                // //xSemaphoreTake(s_mutex_bt_message, 500);
                 if(bt_info) {bt_info("SampleRate: 48000 Hz");}
-                // //xSemaphoreGive(s_mutex_bt_message);
             }
             i2s_set_clk(s_i2s_port, s_i2s_config.sample_rate, s_i2s_config.bits_per_sample, (i2s_channel_t)2);
             if(bt_info){
-                // //xSemaphoreTake(s_mutex_bt_message, 500);
-                // sprintf(s_chbuf, "configure audio player [%02x-%02x-%02x-%02x]", a2d->audio_cfg.mcc.cie.sbc[0], a2d->audio_cfg.mcc.cie.sbc[1],
-                //                                                                  a2d->audio_cfg.mcc.cie.sbc[2], a2d->audio_cfg.mcc.cie.sbc[3]);
-                // bt_info(s_chbuf);
-                // //xSemaphoreGive(s_mutex_bt_message);
+                sprintf(s_chbuf, "configure audio player [%02x-%02x-%02x-%02x]", a2d->audio_cfg.mcc.cie.sbc[0], a2d->audio_cfg.mcc.cie.sbc[1],
+                                                                                 a2d->audio_cfg.mcc.cie.sbc[2], a2d->audio_cfg.mcc.cie.sbc[3]);
+                bt_info(s_chbuf);
             }
         }
         break;
@@ -331,21 +312,62 @@ void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_av_new_track(){
+    log_e("new track");
     //Register notifications and request metadata
     esp_avrc_ct_send_metadata_cmd(0, ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST | ESP_AVRC_MD_ATTR_ALBUM | ESP_AVRC_MD_ATTR_GENRE);
     esp_avrc_ct_send_register_notification_cmd(1, ESP_AVRC_RN_TRACK_CHANGE, 0);
+    esp_avrc_ct_send_register_notification_cmd(2, ESP_AVRC_RN_NOW_PLAYING_CHANGE,  1);
+ }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_av_previous_track(){
+    esp_avrc_ct_send_passthrough_cmd(1, ESP_AVRC_PT_CMD_BACKWARD, ESP_AVRC_PT_CMD_STATE_PRESSED);
+    vTaskDelay(300/portTICK_PERIOD_MS);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t event_parameter){
+void bt_av_next_track(){
+    esp_avrc_ct_send_passthrough_cmd(1, ESP_AVRC_PT_CMD_FORWARD, ESP_AVRC_PT_CMD_STATE_PRESSED);
+    vTaskDelay(300/portTICK_PERIOD_MS);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_av_pause_track(){
+    esp_avrc_ct_send_passthrough_cmd(1, ESP_AVRC_PT_CMD_PAUSE, ESP_AVRC_PT_CMD_STATE_PRESSED);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_av_resume_track(){
+    esp_avrc_ct_send_passthrough_cmd(1, ESP_AVRC_PT_CMD_PLAY, ESP_AVRC_PT_CMD_STATE_PRESSED);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void av_playback_changed(){
+    if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap, ESP_AVRC_RN_PLAY_STATUS_CHANGE)) {
+        esp_avrc_ct_send_register_notification_cmd(APP_RC_CT_TL_RN_PLAYBACK_CHANGE, ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t* event_parameter){
     switch (event_id) {
         case ESP_AVRC_RN_TRACK_CHANGE:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "ESP_AVRC_RN_TRACK_CHANGE %d",event_id);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_av_new_track();
+            break;
+        case ESP_AVRC_RN_NOW_PLAYING_CHANGE:
+            if(bt_info){
+                sprintf(s_chbuf, "ESP_AVRC_RN_NOW_PLAYING_CHANGE %d",event_id);
+                bt_info(s_chbuf);
+            }
+            break;
+        case ESP_AVRC_RN_PLAY_STATUS_CHANGE:
+            if(bt_info){
+                sprintf(s_chbuf, "ESP_AVRC_RN_PLAY_STATUS_CHANGE %d, param %d",event_id, event_parameter->playback);
+                bt_info(s_chbuf);
+            }
+
+            break;
+        case ESP_AVRC_RN_PLAY_POS_CHANGED:
+            log_i("Play position changed: %d-ms", event_parameter->play_pos);
+            //  av_play_pos_changed();
             break;
         default:
             log_e("unhandled evt %d", event_id);
@@ -353,7 +375,7 @@ void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t event_parame
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){
+void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){ // Audio Video Remote Control
 
     esp_avrc_ct_cb_param_t *rc = (esp_avrc_ct_cb_param_t *)(p_param);
     switch (event) {
@@ -361,32 +383,27 @@ void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){
             uint8_t *bda = rc->conn_stat.remote_bda;
             s_bda = rc->conn_stat.remote_bda;
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 500);
                 sprintf(s_chbuf, "AVRC conn_state evt: state %d, [%02x:%02x:%02x:%02x:%02x:%02x]",
                                                                   rc->conn_stat.connected, bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             if (rc->conn_stat.connected) {
-                bt_av_new_track();
+                esp_avrc_ct_send_get_rn_capabilities_cmd(APP_RC_CT_TL_GET_CAPS);
+                esp_avrc_ct_send_register_notification_cmd(1, ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
             }
             break;
         }
         case ESP_AVRC_CT_PASSTHROUGH_RSP_EVT: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "AVRC passthrough rsp: key_code 0x%x, key_state %u", rc->psth_rsp.key_code, rc->psth_rsp.key_state);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             break;
         }
         case ESP_AVRC_CT_METADATA_RSP_EVT: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "AVRC metadata rsp: attribute id 0x%x, %s", (uint32_t)rc->meta_rsp.attr_id, rc->meta_rsp.attr_text);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             if(bt_metadata){bt_metadata((const char*)rc->meta_rsp.attr_text, rc->meta_rsp.attr_id);}
             free(rc->meta_rsp.attr_text);
@@ -394,23 +411,31 @@ void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){
         }
         case ESP_AVRC_CT_CHANGE_NOTIFY_EVT: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "AVRC event notification: %u", rc->change_ntf.event_id); //, rc->change_ntf.event_parameter);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
-            bt_av_notify_evt_handler(rc->change_ntf.event_id, rc->change_ntf.event_parameter);
+            bt_av_notify_evt_handler(rc->change_ntf.event_id, &rc->change_ntf.event_parameter);
             break;
         }
         case ESP_AVRC_CT_REMOTE_FEATURES_EVT: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "AVRC remote features 0x%x", rc->rmt_feats.feat_mask);
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             break;
         }
+        case ESP_AVRC_CT_GET_RN_CAPABILITIES_RSP_EVT: {
+            if(bt_info){
+                sprintf(s_chbuf, "remote rn_cap: count %d, bitmask 0x%x", rc->get_rn_caps_rsp.cap_count, rc->get_rn_caps_rsp.evt_set.bits);
+                bt_info(s_chbuf);
+            }
+            //s_avrc_peer_rn_cap.bits = rc->get_rn_caps_rsp.evt_set.bits;
+            //bt_av_new_track();
+            //av_playback_changed();
+            //av_play_pos_changed();
+            break;
+        }
+        case ESP_AVRC_CT_SET_ABSOLUTE_VOLUME_RSP_EVT:{ /*!< set absolute volume response event */} break;
         default:
             log_e("unhandled evt %d", event);
             break;
@@ -422,17 +447,14 @@ void bt_av_hdl_stack_evt(uint16_t event, void *p_param){
     switch (event) {
         case BT_APP_EVT_STACK_UP: {
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "av_hdl_stack_evt %s","BT_APP_EVT_STACK_UP");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             /* set up device name */
             res = esp_bt_dev_set_device_name(s_BT_sink_name.c_str());
             if(res != ESP_OK){
                 log_e("esp_bt_dev_set_device_name error");
             }
-
             /* initialize A2DP sink */
             res = esp_a2d_register_callback(bt_app_a2d_cb);
             if(res != ESP_OK){
@@ -443,14 +465,11 @@ void bt_av_hdl_stack_evt(uint16_t event, void *p_param){
             if(res != ESP_OK){
                 log_e("esp_a2d_sink_register_data_callback error");
             }
-
             res = esp_a2d_sink_init();
             if(res != ESP_OK){
                 if(res == ESP_ERR_INVALID_STATE){log_e("esp_a2d_sink_init invalid state");}
                 else {log_e("esp_a2d_sink_init error");}
             }
-
-
             /* set discoverable and connectable mode, wait to be connected */
             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
             break;
@@ -465,22 +484,19 @@ void bt_app_a2d_cb(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param){
     switch (event) {
         case ESP_A2D_CONNECTION_STATE_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "ESP_A2D_CONNECTION_STATE_EVT");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             bt_app_work_dispatch(bt_av_hdl_a2d_evt, event, param, sizeof(esp_a2d_cb_param_t));
             break;
         case ESP_A2D_AUDIO_STATE_EVT:
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "ESP_A2D_AUDIO_STATE_EVT");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             s_audio_state = param->audio_stat.state;
             bt_app_work_dispatch(bt_av_hdl_a2d_evt,event, param, sizeof(esp_a2d_cb_param_t));
+        //    bt_av_new_track();
             break;
         case ESP_A2D_AUDIO_CFG_EVT: {
 
@@ -489,10 +505,8 @@ void bt_app_a2d_cb(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param){
         }
         case ESP_A2D_PROF_STATE_EVT:{ // indicate a2dp init&deinit complete
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "ESP_A2D_PROF_STATE_EVT");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
             break;
         }
@@ -532,6 +546,75 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len) {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param){
+    switch (event) {
+        case ESP_BT_GAP_DISC_RES_EVT:{ /*!< Device discovery result event */} break;
+        case ESP_BT_GAP_DISC_STATE_CHANGED_EVT:{ /*!< Discovery state changed event */} break;
+        case ESP_BT_GAP_RMT_SRVCS_EVT:{  /*!< Get remote services event */ } break;
+        case ESP_BT_GAP_RMT_SRVC_REC_EVT:{/*!< Get remote service record event */} break;
+        case ESP_BT_GAP_AUTH_CMPL_EVT: {
+            if (param->auth_cmpl.stat == ESP_BT_STATUS_SUCCESS) {log_i("authentication success: %s", param->auth_cmpl.device_name);}
+            else {                                               log_i("authentication failed, status:%d", param->auth_cmpl.stat);}
+            break;
+        }
+        case ESP_BT_GAP_PIN_REQ_EVT: {
+            //    memcpy(peer_bd_addr, param->pin_req.bda, ESP_BD_ADDR_LEN);
+            //    log_i("partner address: %s", to_str(peer_bd_addr));
+            }
+            break;
+        case ESP_BT_GAP_CFM_REQ_EVT: {
+            //    memcpy(peer_bd_addr, param->cfm_req.bda, ESP_BD_ADDR_LEN);
+            //    log_i("partner address: %s", to_str(peer_bd_addr));
+            //    log_i("ESP_BT_GAP_CFM_REQ_EVT Please confirm the passkey: %d", param->cfm_req.num_val);
+            //    pin_code_int = param->key_notif.passkey;
+            //    pin_code_request = Confirm;
+            }
+            break;
+        case ESP_BT_GAP_KEY_NOTIF_EVT: {
+            //    log_i("ESP_BT_GAP_KEY_NOTIF_EVT passkey:%d", param->key_notif.passkey);
+            //    pin_code_int = param->key_notif.passkey;
+            //    pin_code_request = Reply;
+            }
+            break;
+        case ESP_BT_GAP_KEY_REQ_EVT: {
+            //    log_i("ESP_BT_GAP_KEY_REQ_EVT Please enter passkey!");
+            //    pin_code_request = Reply;
+            }
+            break;
+        case ESP_BT_GAP_READ_RSSI_DELTA_EVT: {
+            esp_bt_gap_cb_param_t::read_rssi_delta_param last_rssi_delta;
+            last_rssi_delta = param->read_rssi_delta;
+            log_w("last rssi delta %i", last_rssi_delta.rssi_delta);
+            }
+            break;
+        case ESP_BT_GAP_CONFIG_EIR_DATA_EVT:{  /*!< Config EIR data event */} break;
+        case ESP_BT_GAP_SET_AFH_CHANNELS_EVT:{/*!< Set AFH channels event */} break;
+        case ESP_BT_GAP_READ_REMOTE_NAME_EVT: {
+            // log_i("ESP_BT_GAP_READ_REMOTE_NAME_EVT stat:%d", param->read_rmt_name.stat);
+            if (param->read_rmt_name.stat == ESP_BT_STATUS_SUCCESS ) {
+                if(bt_info){
+                    sprintf(s_chbuf, "remote name: %s", param->read_rmt_name.rmt_name);
+                    bt_info(s_chbuf);
+                }
+            }
+            }
+            break;
+        case ESP_BT_GAP_MODE_CHG_EVT: {
+            //    log_i("ESP_BT_GAP_MODE_CHG_EVT");
+           }
+           break;
+        case ESP_BT_GAP_REMOVE_BOND_DEV_COMPLETE_EVT:{/*!< remove bond device complete event */} break;
+        case ESP_BT_GAP_QOS_CMPL_EVT:{ /*!< QOS complete event */} break;
+        case ESP_BT_GAP_ACL_CONN_CMPL_STAT_EVT:{ /*!< ACL connection complete status event */} break;
+        case ESP_BT_GAP_EVT_MAX:{} break;
+        default: {
+            log_e("unknown event: %d", event);
+            break;
+        }
+    }
+    return;
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 bool a2dp_sink_deinit(){
     esp_err_t res;
 
@@ -539,10 +622,8 @@ bool a2dp_sink_deinit(){
     if(res != ESP_OK){log_e("a2dp sink deinit failed"); goto exit;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "avrc deinit okay");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -550,10 +631,8 @@ bool a2dp_sink_deinit(){
     if(res != ESP_OK){log_e("avrc deinit failed"); goto exit;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "avrc deinit okay");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -561,10 +640,8 @@ bool a2dp_sink_deinit(){
     if(res != ESP_OK){log_e("Failed to disable bluedroid"); goto exit;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "bluedroid disabled");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -572,10 +649,8 @@ bool a2dp_sink_deinit(){
     if(res !=  ESP_OK){if(bt_info) bt_info("Failed to deinit bluedroid"); goto exit;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "bluedroid deinit okay");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -588,10 +663,8 @@ bool a2dp_sink_deinit(){
     if(res != ESP_OK){if(bt_info) bt_info("Failed to disable bt controller");}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "bt controller disable okay");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -603,10 +676,8 @@ bool a2dp_sink_deinit(){
         if(res != ESP_OK){if(bt_info) bt_info("Failed to deinit bt controller");}
         else{
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "bt controller deinit okay");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
         }
     }
@@ -614,22 +685,18 @@ bool a2dp_sink_deinit(){
     if(res != ESP_OK){if(bt_info) bt_info("esp_bt_controller_mem_release failed");}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "esp_bt_controller_mem_release okay");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
     if(bt_state) bt_state("BT disabled");
     if(s_chbuf){free(s_chbuf); s_chbuf = NULL;}
-    vSemaphoreDelete(s_mutex_bt_message);
     config_i2s(16, 512);
     return true;
 
 exit:
     if(s_chbuf){free(s_chbuf); s_chbuf = NULL;}
-    vSemaphoreDelete(s_mutex_bt_message);
     return false;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -645,23 +712,17 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
     if(s_chbuf){free(s_chbuf); s_chbuf = NULL;}
     s_chbuf = (char*)malloc(512);
     if(!s_chbuf) log_e("oom");
-    s_mutex_bt_message = xSemaphoreCreateMutex();
     s_BT_sink_name = deviceName;
 
-
     if(bt_info){
-        //xSemaphoreTake(s_mutex_bt_message, 100);
         sprintf(s_chbuf, "Device name will be set to '%s'", s_BT_sink_name.c_str());
         bt_info(s_chbuf);
-        //xSemaphoreGive(s_mutex_bt_message);
     }
     if(!btStart()) {log_e("Failed to initialize controller"); return false;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "bt controller initialized");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
 
@@ -671,10 +732,8 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
         if(res != ESP_OK) {log_e("Failed to initialize bluedroid"); return false;}
         else{
             if(bt_info){
-                //xSemaphoreTake(s_mutex_bt_message, 100);
                 sprintf(s_chbuf, "bluedroid initialized");
                 bt_info(s_chbuf);
-                //xSemaphoreGive(s_mutex_bt_message);
             }
         }
     }
@@ -682,16 +741,29 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
     if(res != ESP_OK) {log_e("Failed to enable bluedroid"); return false;}
     else{
         if(bt_info){
-            //xSemaphoreTake(s_mutex_bt_message, 100);
             sprintf(s_chbuf, "bluedroid enabled");
             bt_info(s_chbuf);
-            //xSemaphoreGive(s_mutex_bt_message);
         }
     }
+//  res = esp_spp_init(s_esp_spp_mode); // disabled in menuconfig
+    res = esp_bt_gap_register_callback(bt_app_gap_cb);
 
     /* initialize AVRCP controller */
     esp_avrc_ct_init();
-    esp_avrc_ct_register_callback(bt_app_rc_ct_cb);
+    res = esp_avrc_ct_register_callback(bt_app_rc_ct_cb);
+    if(res != ESP_OK){log_e("AVRCP controller not initialized!");}
+
+    /* initialize AVRCP target */ // not used yet
+    //res = esp_avrc_tg_init();
+    //if(res == ESP_OK){
+    //    esp_avrc_tg_register_callback(bt_app_rc_tg_cb);
+    //     // add request to ESP_AVRC_RN_VOLUME_CHANGE
+    //    esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_SET, &s_avrc_peer_rn_cap_set, ESP_AVRC_RN_VOLUME_CHANGE);
+    //     if(esp_avrc_tg_set_rn_evt_cap(&s_avrc_peer_rn_cap_set) != ESP_OK){
+    //         log_e("esp_avrc_tg_set_rn_evt_cap failed");
+    //     }
+    //}
+    //else{log_e("esp_avrc_tg_init failed");}
 
     bt_app_task_start_up(); // create application task
     bt_app_work_dispatch(bt_av_hdl_stack_evt, BT_APP_EVT_STACK_UP, NULL, 0);

@@ -2851,9 +2851,9 @@ void changeState(int32_t state){
             _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
-            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
+            _pressBtn[3] = "/btn/Button_Pause_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Pause_Blue.jpg";
+            _pressBtn[4] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[4] = "/btn/Button_Previous_Blue.jpg";
+            _pressBtn[5] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[5] = "/btn/Button_Next_Blue.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
             clearLogoAndStationname();
@@ -3752,7 +3752,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case A2DP_SINK_1:   if     (btnNr == 0){_releaseNr = 130; mute();}
                             else if(btnNr == 1){_releaseNr = 131;} // Vol-
                             else if(btnNr == 2){_releaseNr = 132;} // Vol+
-                            else if(btnNr == 7){_releaseNr = 137;}  // RADIO
+                            else if(btnNr == 3){_releaseNr = 133;} // pause/resume
+                            else if(btnNr == 4){_releaseNr = 134;} // previous track
+                            else if(btnNr == 5){_releaseNr = 135;} // next track
+                            else if(btnNr == 7){_releaseNr = 137;} // RADIO
                             changeBtn_pressed(btnNr); break;
                             break;
         default:            break;
@@ -4000,8 +4003,24 @@ void tp_released(uint16_t x, uint16_t y){
 
         /* A2DP SINK *********************************/
         case 130:   /*changeBtn_released(0);*/                               break; // Mute
-        case 131:   changeBtn_released(1); downvolume(); showVolumeBar();    break;  // Vol-
-        case 132:   changeBtn_released(2); upvolume();   showVolumeBar();    break;  // Vol+
+        case 131:   changeBtn_released(1); downvolume(); showVolumeBar();    break; // Vol-
+        case 132:   changeBtn_released(2); upvolume();   showVolumeBar();    break; // Vol+
+        case 133:   if(!_f_pauseResume){_f_pauseResume = true; // toggle pause/resume an set the flag
+                            _pressBtn[3] = "/btn/Button_Right_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Right_Blue.jpg";
+                            SerialPrintfln("BT Speaker:  " ANSI_ESC_GREEN "Audio file is paused");}
+                    else {_f_pauseResume = false;
+                            _pressBtn[3] = "/btn/Button_Pause_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Pause_Blue.jpg";
+                            SerialPrintfln("BT Speaker:  "  ANSI_ESC_GREEN "Audio file is resumed");}
+                    drawImage(_releaseBtn[3], 3 * _winButton.w,  _winButton.y);
+                    if(_f_pauseResume) bt_av_pause_track();
+                    else               bt_av_resume_track();
+                    break; // pause/resume
+        case 134:   changeBtn_released(4); bt_av_previous_track();
+                    SerialPrintfln("BT Speaker:  " ANSI_ESC_GREEN "previous track");
+                    break; // previous track
+        case 135:   changeBtn_released(5); bt_av_next_track();
+                    SerialPrintfln("BT Speaker:  " ANSI_ESC_GREEN "next track");
+                    break; // next track
         case 137:   a2dp_sink_deinit(); changeState(RADIO); break;
         default:    break;
     }
@@ -4390,8 +4409,10 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
 }
 
 void bt_info(const char* info){
-    if(startsWith(info, "AVRC")){SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
-    if(startsWith(info, "SampleRate")){SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    // if(startsWith(info, "AVRC"))       {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    // if(startsWith(info, "SampleRate")) {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    // if(startsWith(info, "remote"))     {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);
 }
 
 void bt_state(const char* info){
