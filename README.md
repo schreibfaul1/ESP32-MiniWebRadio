@@ -1,6 +1,6 @@
 # ESP32-MiniWebRadio V2
 
-![Display](additional_info/MiniWebRadio.jpg)
+![Display](docs/MiniWebRadio.jpg)
 
 MiniWebRadio Features:
 <ul>
@@ -21,6 +21,7 @@ MiniWebRadio Features:
 <li>Supports the Latin, Greek and Cyrillic character sets</li>
 <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine. User can find new stations and then add them to the station list via web UI (with station icon if available) and then save the list and station icon file to the SD card</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
+<li>Bluetooth Speaker mode (ESP32 only)</li>
 </ul><br>
 Required HW:
 <ul>
@@ -34,10 +35,10 @@ Required HW:
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
 Schematic with VS1053<br>
-![Schematic with VS1053](additional_info/MWR_V2_VS1053.jpg)<br>
+![Schematic with VS1053](docs/MWR_V2_VS1053.jpg)<br>
 
 Schematic with external DAC<br>
-![Schematic with external DAC](additional_info/MWR_V2_DAC.jpg)<br>
+![Schematic with external DAC](docs/MWR_V2_DAC.jpg)<br>
 <br>
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio%20V2%20Layout.pdf">Display (Layout)</a>
 
@@ -75,6 +76,6 @@ Codec\Decoder| VS1053B        | PCM5102A, AC101, ES8388, WM8978 |
 | m4a | y  | y |
 | opus | n  | y (celt)  |
 
-![MWR](/additional_info/MWR.jpg)<br>
+![MWR](/docs/MWR.jpg)<br>
 <br>
 
