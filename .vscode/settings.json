@@ -17,5 +17,5 @@
         "neaacdec.h": "c"
     },
     "commentTranslate.source": "intellsmi.deepl-translate-deepl",
-    "C_Cpp.default.compilerPath": "/usr/bin/gcc-12"
+    "C_Cpp.default.compilerPath": "/home/wolle/.platformio/packages/toolchain-xtensa-esp32@8.4.0+2021r2-patch5/bin/xtensa-esp32-elf-gcc"
 }

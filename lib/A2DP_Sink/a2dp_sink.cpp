@@ -13,6 +13,7 @@ xTaskHandle                s_bt_app_task_handle = NULL;
 esp_a2d_audio_state_t      s_audio_state = ESP_A2D_AUDIO_STATE_STOPPED;
 const char*                s_a2d_conn_state_str[4] = {"Disconnected", "Connecting", "Connected", "Disconnecting"};
 const char*                s_a2d_audio_state_str[3] = {"Suspended", "Stopped", "Started"};
+esp_a2d_cb_param_t        *s_a2d = NULL;
 esp_a2d_mct_t              s_audio_type = 0;
 uint8_t*                   s_bda = NULL;
 String                     s_BT_sink_name = "";
@@ -20,6 +21,7 @@ i2s_port_t                 s_i2s_port = I2S_NUM_0;
 i2s_config_t               s_i2s_config;
 i2s_pin_config_t           s_pin_config;
 char*                      s_chbuf = NULL;
+boolean                    s_f_a2dp_sink_active = false;
 uint8_t                    s_vol = 64;
 int8_t                     s_BCLK = 27;
 int8_t                     s_LRC = 26;
@@ -27,6 +29,8 @@ int8_t                     s_DOUT = 25;
 esp_spp_mode_t             s_esp_spp_mode = ESP_SPP_MODE_CB;
 esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap_set = {0};
 esp_avrc_rn_evt_cap_mask_t s_avrc_peer_rn_cap = {0};
+
+esp_a2d_cb_param_t::a2d_conn_stat_param s_a2d_conn_stat;
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void config_i2s(uint16_t buf_count, uint16_t buf_len) {
 
@@ -244,36 +248,36 @@ void bt_app_rc_tg_cb(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
-    esp_a2d_cb_param_t *a2d = NULL;
     switch (event) {
     case ESP_A2D_CONNECTION_STATE_EVT: {
-        a2d = (esp_a2d_cb_param_t *)(p_param);
+        s_a2d = (esp_a2d_cb_param_t *)(p_param);
         if(bt_info){
             sprintf(s_chbuf, "ESP_A2D_CONNECTION_STATE_EVT %i", event);
             bt_info(s_chbuf);
         }
-        s_bda = a2d->conn_stat.remote_bda;
+        s_bda = s_a2d->conn_stat.remote_bda;
         if(bt_state){
-            sprintf(s_chbuf, "A2DP connection state: %s", s_a2d_conn_state_str[a2d->conn_stat.state]);
+            sprintf(s_chbuf, "A2DP connection state: %s", s_a2d_conn_state_str[s_a2d->conn_stat.state]);
             bt_state(s_chbuf);
         }
-        if(a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
-            esp_err_t esp_err = esp_bt_gap_read_remote_name(a2d->conn_stat.remote_bda);
-            if (esp_err!=ESP_OK){
-                log_w("esp_bt_gap_read_remote_name");
-            }
-            esp_bt_gap_read_rssi_delta(a2d->conn_stat.remote_bda);
+        if(s_a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
+            // esp_err_t esp_err = esp_bt_gap_read_remote_name(s_a2d->conn_stat.remote_bda);
+            // if (esp_err!=ESP_OK){
+            //     log_w("esp_bt_gap_read_remote_name");
+            // }
+            s_a2d_conn_stat = s_a2d->conn_stat;
+            esp_bt_gap_read_rssi_delta(s_a2d_conn_stat.remote_bda);
         }
         break;
     }
     case ESP_A2D_AUDIO_STATE_EVT: {
-        a2d = (esp_a2d_cb_param_t *)(p_param);
+        s_a2d = (esp_a2d_cb_param_t *)(p_param);
         if(bt_state){
-            sprintf(s_chbuf, "A2DP audio state: %s", s_a2d_audio_state_str[a2d->audio_stat.state]);
+            sprintf(s_chbuf, "A2DP audio state: %s", s_a2d_audio_state_str[s_a2d->audio_stat.state]);
             bt_state(s_chbuf);
         }
-        s_audio_state = a2d->audio_stat.state;
-        if (ESP_A2D_AUDIO_STATE_STARTED == a2d->audio_stat.state) {
+        s_audio_state = s_a2d->audio_stat.state;
+        if (ESP_A2D_AUDIO_STATE_STARTED == s_a2d->audio_stat.state) {
             bt_av_new_track();
         }
         break;
@@ -281,11 +285,11 @@ void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
     case ESP_A2D_AUDIO_CFG_EVT: {
         esp_a2d_cb_param_t *esp_a2d_callback_param = (esp_a2d_cb_param_t *)(p_param);
         s_audio_type = esp_a2d_callback_param->audio_cfg.mcc.type;
-        a2d = (esp_a2d_cb_param_t *)(p_param);
+        s_a2d = (esp_a2d_cb_param_t *)(p_param);
         // for now only SBC stream is supported
-        if (a2d->audio_cfg.mcc.type == ESP_A2D_MCT_SBC) {
+        if (s_a2d->audio_cfg.mcc.type == ESP_A2D_MCT_SBC) {
             s_i2s_config.sample_rate = 16000;
-            char oct0 = a2d->audio_cfg.mcc.cie.sbc[0];
+            char oct0 = s_a2d->audio_cfg.mcc.cie.sbc[0];
             if (oct0 & (0x01 << 6)) {
                 s_i2s_config.sample_rate = 32000;
                 if(bt_info) {bt_info("SampleRate: 32000 Hz");}
@@ -298,8 +302,8 @@ void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
             }
             i2s_set_clk(s_i2s_port, s_i2s_config.sample_rate, s_i2s_config.bits_per_sample, (i2s_channel_t)2);
             if(bt_info){
-                sprintf(s_chbuf, "configure audio player [%02x-%02x-%02x-%02x]", a2d->audio_cfg.mcc.cie.sbc[0], a2d->audio_cfg.mcc.cie.sbc[1],
-                                                                                 a2d->audio_cfg.mcc.cie.sbc[2], a2d->audio_cfg.mcc.cie.sbc[3]);
+                sprintf(s_chbuf, "configure audio player [%02x-%02x-%02x-%02x]", s_a2d->audio_cfg.mcc.cie.sbc[0], s_a2d->audio_cfg.mcc.cie.sbc[1],
+                                                                                 s_a2d->audio_cfg.mcc.cie.sbc[2], s_a2d->audio_cfg.mcc.cie.sbc[3]);
                 bt_info(s_chbuf);
             }
         }
@@ -312,11 +316,13 @@ void bt_av_hdl_a2d_evt(uint16_t event, void *p_param){
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_av_new_track(){
-    log_e("new track");
+    if(bt_state){bt_state("new track");}
     //Register notifications and request metadata
     esp_avrc_ct_send_metadata_cmd(0, ESP_AVRC_MD_ATTR_TITLE | ESP_AVRC_MD_ATTR_ARTIST | ESP_AVRC_MD_ATTR_ALBUM | ESP_AVRC_MD_ATTR_GENRE);
     esp_avrc_ct_send_register_notification_cmd(1, ESP_AVRC_RN_TRACK_CHANGE, 0);
-    esp_avrc_ct_send_register_notification_cmd(2, ESP_AVRC_RN_NOW_PLAYING_CHANGE,  1);
+    esp_avrc_ct_send_register_notification_cmd(2, ESP_AVRC_RN_NOW_PLAYING_CHANGE,  0);
+    esp_avrc_ct_send_register_notification_cmd(3, ESP_AVRC_RN_PLAY_POS_CHANGED, 0);
+    esp_avrc_ct_send_register_notification_cmd(4, ESP_AVRC_RN_VOLUME_CHANGE,  0);
  }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_av_previous_track(){
@@ -337,10 +343,9 @@ void bt_av_resume_track(){
     esp_avrc_ct_send_passthrough_cmd(1, ESP_AVRC_PT_CMD_PLAY, ESP_AVRC_PT_CMD_STATE_PRESSED);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void av_playback_changed(){
-    if (esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_TEST, &s_avrc_peer_rn_cap, ESP_AVRC_RN_PLAY_STATUS_CHANGE)) {
-        esp_avrc_ct_send_register_notification_cmd(APP_RC_CT_TL_RN_PLAYBACK_CHANGE, ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
-    }
+void bt_av_get_last_RSSI_delta(){
+    if(!s_f_a2dp_sink_active) return;
+    if(s_a2d_conn_stat.remote_bda){esp_bt_gap_read_rssi_delta(s_a2d_conn_stat.remote_bda);}
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t* event_parameter){
@@ -366,9 +371,16 @@ void bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t* event_param
 
             break;
         case ESP_AVRC_RN_PLAY_POS_CHANGED:
-            log_i("Play position changed: %d-ms", event_parameter->play_pos);
-            //  av_play_pos_changed();
+            if(bt_info){
+                sprintf(s_chbuf, "Play position changed: %d-ms", event_parameter->play_pos);
+                bt_info(s_chbuf);
+            }
             break;
+        case ESP_AVRC_RN_VOLUME_CHANGE:
+            if(bt_state){
+                sprintf(s_chbuf, "Volume changed: %d", event_parameter->volume);
+                bt_state(s_chbuf);
+            }
         default:
             log_e("unhandled evt %d", event_id);
             break;
@@ -389,7 +401,7 @@ void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){ // Audio Video Remote Co
             }
             if (rc->conn_stat.connected) {
                 esp_avrc_ct_send_get_rn_capabilities_cmd(APP_RC_CT_TL_GET_CAPS);
-                esp_avrc_ct_send_register_notification_cmd(1, ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
+            //    esp_avrc_ct_send_register_notification_cmd(1, ESP_AVRC_RN_PLAY_STATUS_CHANGE, 0);
             }
             break;
         }
@@ -429,10 +441,7 @@ void bt_av_hdl_avrc_evt(uint16_t event, void *p_param){ // Audio Video Remote Co
                 sprintf(s_chbuf, "remote rn_cap: count %d, bitmask 0x%x", rc->get_rn_caps_rsp.cap_count, rc->get_rn_caps_rsp.evt_set.bits);
                 bt_info(s_chbuf);
             }
-            //s_avrc_peer_rn_cap.bits = rc->get_rn_caps_rsp.evt_set.bits;
-            //bt_av_new_track();
-            //av_playback_changed();
-            //av_play_pos_changed();
+            s_avrc_peer_rn_cap.bits = rc->get_rn_caps_rsp.evt_set.bits;
             break;
         }
         case ESP_AVRC_CT_SET_ABSOLUTE_VOLUME_RSP_EVT:{ /*!< set absolute volume response event */} break;
@@ -584,7 +593,11 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param){
         case ESP_BT_GAP_READ_RSSI_DELTA_EVT: {
             esp_bt_gap_cb_param_t::read_rssi_delta_param last_rssi_delta;
             last_rssi_delta = param->read_rssi_delta;
-            log_w("last rssi delta %i", last_rssi_delta.rssi_delta);
+            // if(bt_info){
+            //     sprintf(s_chbuf, "last rssi delta %i", last_rssi_delta.rssi_delta);
+            //     bt_info(s_chbuf);
+            // }
+            if(bt_rssi){bt_rssi(last_rssi_delta.rssi_delta);}
             }
             break;
         case ESP_BT_GAP_CONFIG_EIR_DATA_EVT:{  /*!< Config EIR data event */} break;
@@ -617,6 +630,7 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param){
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool a2dp_sink_deinit(){
     esp_err_t res;
+    s_f_a2dp_sink_active = false;
 
     res = esp_a2d_sink_deinit();
     if(res != ESP_OK){log_e("a2dp sink deinit failed"); goto exit;}
@@ -692,6 +706,8 @@ bool a2dp_sink_deinit(){
 
     if(bt_state) bt_state("BT disabled");
     if(s_chbuf){free(s_chbuf); s_chbuf = NULL;}
+    s_a2d = NULL;
+    *s_a2d_conn_stat.remote_bda = 0;
     config_i2s(16, 512);
     return true;
 
@@ -707,6 +723,8 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
     s_DOUT = DOUT;
 
     i2s_driver_uninstall((i2s_port_t)0);
+    s_a2d = NULL;
+    *s_a2d_conn_stat.remote_bda = 0;
 
     esp_err_t res;
     if(s_chbuf){free(s_chbuf); s_chbuf = NULL;}
@@ -778,5 +796,6 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
 
     config_i2s(8, 64);
     if(bt_state) bt_state("BT enabled");
+    s_f_a2dp_sink_active = true;
     return true;
 }

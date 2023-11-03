@@ -33,6 +33,7 @@
 
 extern __attribute__((weak)) void bt_info(const char*);
 extern __attribute__((weak)) void bt_state(const char*);
+extern __attribute__((weak)) void bt_rssi(int8_t);
 extern __attribute__((weak)) void bt_metadata(const char* md, uint8_t id);
 
 typedef void (* app_callback_t) (uint16_t event, void *param);
@@ -68,6 +69,7 @@ void                  bt_av_previous_track();
 void                  bt_av_next_track();
 void                  bt_av_pause_track();
 void                  bt_av_resume_track();
+void                  bt_av_get_last_RSSI_delta();
 void                  bt_av_notify_evt_handler(uint8_t event_id, esp_avrc_rn_param_t* event_parameter);
 void                  bt_av_hdl_avrc_evt(uint16_t event, void* p_param);
 void                  bt_av_hdl_stack_evt(uint16_t event, void* p_param);

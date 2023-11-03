@@ -49,6 +49,7 @@ uint8_t        _fileListPos = 0;
 uint16_t       _fileListNr = 0;
 uint8_t        _itemListPos = 0;          // DLNA items
 uint16_t       _itemListNr = 0;
+int8_t         _rssi_bt = -127;
 int8_t         _newBTmetaData = 0;        // 0 - no new data, 1 - new data, 2 - data in progress (show on display)
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
 int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
@@ -266,9 +267,10 @@ struct w_v {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  
 struct w_m {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
 struct w_s {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
-struct w_r {uint16_t x = 120; uint16_t y = 220; uint16_t w =  24; uint16_t h =  20;} const _winRSSID;
-struct w_u {uint16_t x = 144; uint16_t y = 220; uint16_t w =  36; uint16_t h =  20;} const _winBitRate;
-struct w_a {uint16_t x = 180; uint16_t y = 220; uint16_t w = 160; uint16_t h =  20;} const _winIPaddr;
+struct w_r {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
+struct w_k {uint16_t x = 155; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID_bt;
+struct w_u {uint16_t x = 150; uint16_t y = 220; uint16_t w =  36; uint16_t h =  20;} const _winBitRate;
+struct w_a {uint16_t x = 186; uint16_t y = 220; uint16_t w = 134; uint16_t h =  20;} const _winIPaddr;
 struct w_b {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
 struct w_o {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
@@ -330,8 +332,9 @@ struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  
 struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 110; uint16_t h =  30;} const _winVolume;
 struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
-struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  30; uint16_t h =  30;} const _winRSSID;
-struct w_u {uint16_t x = 202; uint16_t y = 290; uint16_t w =  58; uint16_t h =  30;} const _winBitRate;
+struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
+struct w_k {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
+struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  56; uint16_t h =  30;} const _winBitRate;
 struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
 struct w_b {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
@@ -889,28 +892,75 @@ void showFooterRSSI(boolean show) {
     if(show && !_timeCounter.timer) {
         switch(new_rssi) {
         case 4: {
-            drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y);
+            drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y + 2);
             break;
         }
         case 3: {
-            drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y);
+            drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y + 2);
             break;
         }
         case 2: {
-            drawImage("/common/RSSI2.bmp", _winRSSID.x, _winRSSID.y);
+            drawImage("/common/RSSI2.bmp", _winRSSID.x, _winRSSID.y + 2);
             break;
         }
         case 1: {
-            drawImage("/common/RSSI1.bmp", _winRSSID.x, _winRSSID.y);
+            drawImage("/common/RSSI1.bmp", _winRSSID.x, _winRSSID.y + 2);
             break;
         }
         case 0: {
-            drawImage("/common/RSSI0.bmp", _winRSSID.x, _winRSSID.y);
+            drawImage("/common/RSSI0.bmp", _winRSSID.x, _winRSSID.y + 2);
             break;
         }
         }
     }
 }
+
+void showFooterRSSI_bt(int8_t rssi) {
+    if(_state != A2DP_SINK) return;  //guard
+    boolean show = false;
+    static int32_t old_rssi = -1;
+    int32_t        new_rssi = -1;
+    if(rssi <   1) new_rssi = 4;
+    if(rssi < -10) new_rssi = 3;
+    if(rssi < -35) new_rssi = 2;
+    if(rssi < -55) new_rssi = 1;
+    if(rssi < -85) new_rssi = 0;
+
+    if(new_rssi != old_rssi) {
+        old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
+        if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
+            static int32_t tmp_rssi = 0;
+            if((abs(rssi - tmp_rssi) > 3)) { SerialPrintfln("BT_rssi:     RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
+            tmp_rssi = rssi;
+        }
+        show = true;
+    }
+    if(show && !_timeCounter.timer) {
+        switch(new_rssi) {
+        case 4: {
+            drawImage("/common/RSSI4_bt.bmp", _winRSSID_bt.x, _winRSSID_bt.y + 2);
+            break;
+        }
+        case 3: {
+            drawImage("/common/RSSI3_bt.bmp", _winRSSID_bt.x, _winRSSID_bt.y + 2);
+            break;
+        }
+        case 2: {
+            drawImage("/common/RSSI2_bt.bmp", _winRSSID_bt.x, _winRSSID_bt.y + 2);
+            break;
+        }
+        case 1: {
+            drawImage("/common/RSSI1_bt.bmp", _winRSSID_bt.x, _winRSSID_bt.y + 2);
+            break;
+        }
+        case 0: {
+            drawImage("/common/RSSI0_bt.bmp", _winRSSID_bt.x, _winRSSID_bt.y + 2);
+            break;
+        }
+        }
+    }
+}
+
 void showFooterBitRate(uint16_t br) {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     clearBitRate();
@@ -925,7 +975,7 @@ void showFooterBitRate(uint16_t br) {
     }
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_LAVENDER);
-    uint8_t space = 6;
+    uint8_t space = 2;
     if(strlen(sbr) < 4) space += 5;
     tft.setCursor(_winBitRate.x + space, _winBitRate.y + 2);
     tft.print(sbr);
@@ -1142,8 +1192,8 @@ void showFileLogo(uint8_t state) {
     }
     else if(state == DLNA)     { logo = "/common/DLNA.jpg"; }
     else if(state == PLAYER)   { logo = "/common/AudioPlayer.jpg";}
-    else if(state == A2DP_SINK){ _f_BTconnected? logo = "/common/BT.jpg" : logo = "/common/BTnc.jpg";}
-    else if(state == UNDEFINED){ /* do nothing*/ goto exit;}
+    else if(state == A2DP_SINK){_f_BTconnected? logo = "/common/BT.jpg" : logo = "/common/BTnc.jpg";}
+    else if(state == UNDEFINED){ clearLogo(); goto exit;}
     else { // _state PLAYER or PLAYERico
         logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
@@ -2449,7 +2499,8 @@ void fall_asleep() {
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     playlistFile.close();
-    audioStopSong();
+    if(_state == A2DP_SINK){_state = UNDEFINED; a2dp_sink_deinit();}
+    else{                   audioStopSong();}
     if(_state != CLOCK) {
         clearAll();
         setTFTbrightness(0);
@@ -2468,18 +2519,27 @@ void fall_asleep() {
 void wake_up() {
     if(_f_sleeping == true || _f_eof_alarm) { // awake
         _f_sleeping = false;
+        setCpuFrequencyMhz(240);
         SerialPrintfln("awake");
         _f_mute = true;
         mute();
         clearAll();
         setTFTbrightness(_brightness);
-        setCpuFrequencyMhz(240);
         WiFi.disconnect(false); // Reconnect the network
         wifiMulti.run();
-        SerialPrintfln("START WIFI");
+        Serial.print("START WIFI   ");
         while(WiFi.status() != WL_CONNECTED) {
             delay(100);
-            SerialPrintfln(".");
+            Serial.print(".");
+        }
+        Serial.println("");
+        SerialPrintfln("WiFi connected");
+        if(_state == A2DP_SINK || _state == UNDEFINED) {
+            changeState(RADIO);
+            showFooter();
+            showHeadlineTime();
+            showHeadlineVolume();
+               return;
         }
         connecttohost(_lastconnectedhost.c_str());
         showFooter();
@@ -2599,9 +2659,9 @@ void changeState(int32_t state){
                 showLogoAndStationName();
                 showStreamTitle(_streamTitle);
             }
-            else if(_state == A2DP_SINK){
-                _state = UNDEFINED;
+            else if(_state == A2DP_SINK || _state == UNDEFINED){
                 audioInit();
+                audioSetVolume(_cur_volume);
                 clearWithOutHeaderFooter();
                 connecttohost(_lastconnectedhost.c_str());
                 showLogoAndStationName();
@@ -3051,7 +3111,7 @@ void loop() {
             _timeCounter.timer--;
             if(_timeCounter.timer < 10){
                 sprintf(_chbuf, "/common/tc%02d.bmp", uint8_t(_timeCounter.timer * _timeCounter.factor));
-                drawImage(_chbuf, _winRSSID.x, _winRSSID.y);
+                drawImage(_chbuf, _winRSSID.x, _winRSSID.y + 2);
             }
             if(!_timeCounter.timer) {
                 showFooterRSSI(true);
@@ -3074,8 +3134,8 @@ void loop() {
             if(_f_eof && (_state == RADIO || _f_eof_alarm)) {
                 _f_eof = false;
                 if(_f_eof_alarm) {
-                    if(_state == A2DP_SINK){bt_set_volume( _cur_volume);}
-                    else                   {audioSetVolume(_cur_volume);}
+                    if(_state == A2DP_SINK || _state == UNDEFINED){bt_set_volume( _cur_volume);}
+                    else                                         {audioSetVolume(_cur_volume);}
                     wake_up();
                     _f_eof_alarm = false;
                 }
@@ -3117,14 +3177,14 @@ void loop() {
 
             if(_f_alarm) {
                 clearAll();
+                if(_state == A2DP_SINK){a2dp_sink_deinit(); audioInit(); _state = UNDEFINED;}
                 showFileName("ALARM");
                 drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
                 setTFTbrightness(_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 _f_alarm = false;
                 connecttoFS("/ring/alarm_clock.mp3");
-                if(_state == A2DP_SINK){bt_set_volume( 21);}
-                else                   {audioSetVolume(21);}
+                audioSetVolume(21);
             }
             if(_f_hpChanged) {
                 setVolume(_cur_volume);
@@ -3185,6 +3245,10 @@ void loop() {
             //    if(br) t = (fs * 8)/ br;
             //    log_w("Br %d, Dur %ds", br, t);
         }
+        if(_state == A2DP_SINK){ // update BT RSSI
+            showFooterRSSI_bt(_rssi_bt);
+            bt_av_get_last_RSSI_delta();
+        }
     }
 
     if(_f_10sec == true) {
@@ -3237,11 +3301,10 @@ void loop() {
         }
     }
 
-    if(_f_BTstateChanged){
-        showFileLogo(A2DP_SINK);
+    if(_f_BTstateChanged){ // BT connected to disconnected and vice versa
+        if(_state == A2DP_SINK) showFileLogo(_state);
         _f_BTstateChanged = false;
     }
-
 }
 /*****************************************************************************************************************************************************
  *                                                                    E V E N T S                                                                    *
@@ -4409,10 +4472,11 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
 }
 
 void bt_info(const char* info){
-    // if(startsWith(info, "AVRC"))       {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
-    // if(startsWith(info, "SampleRate")) {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
-    // if(startsWith(info, "remote"))     {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
-    SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);
+    if(startsWith(info, "AVRC meta"))  {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    if(startsWith(info, "SampleRate")) {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    if(startsWith(info, "remote"))     {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    if(startsWith(info, "Play"))       {SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);}
+    // SerialPrintfln("BT info:     " ANSI_ESC_GREEN "%s", info);
 }
 
 void bt_state(const char* info){
@@ -4431,4 +4495,9 @@ void bt_metadata(const char* md, uint8_t id){ // id_ 1 - TITLE, 2 - ARTIST, 4 - 
     if(_BT_metaData == NULL){_BT_metaData = (char*)malloc(strlen(md) + 1); strcpy(_BT_metaData, md);}
     else{_BT_metaData = (char*)realloc(_BT_metaData, strlen(_BT_metaData) + strlen(md) + 4); strcat(_BT_metaData, " - "); strcat(_BT_metaData, md);}
     _newBTmetaData = 1;
+}
+
+void bt_rssi(int8_t rssi_delta){
+   //log_w("rssi %i", rssi_delta);
+   _rssi_bt = rssi_delta;
 }
