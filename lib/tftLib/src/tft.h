@@ -10,20 +10,12 @@
 #include "SD.h"
 #include "vector"
 #include "driver/gpio.h"
+#include "fonts/fontsdef.h"
+#include "fonts/TimesNewRoman.h"
+#include "fonts/Garamond.h"
+#include "fonts/BigNumbers.h"
 
 using namespace std;
-
-//#include "fonts/Garamond.h"             // default font latin (Western European)
-//#include "fonts/Baskerville_Old_Face.h" // CP1252
-//#include "fonts/Courier_New.h"          // CP1252
-//#include "fonts/Garamond_cyrillic.h"    // CP1251
-//#include "fonts/Garamond_greek.h"       // CP1253
-//#include "fonts/Monotype_Corsiva.h"     // CP1252
-//#include "fonts/Old_English_Text_MT.h"  // CP1252
-//#include "fonts/Script_MT_Bold.h"       // CP1252
-#include "fonts/misc.h"                 // optional
-#include "fonts/Times_New_Roman.h"      // latin, greek, cyrillic with all extensions
-
 
 
 extern __attribute__((weak)) void tft_info(const char*);
@@ -96,8 +88,39 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_WHITE           0xFFFF // 255, 255, 255
 #define TFT_YELLOW          0xFFE0 // 255, 255,   0
 
+#define TFT_TIMES_NEW_ROMAN_15   (1)
+#define TFT_TIMES_NEW_ROMAN_16   (2)
+#define TFT_TIMES_NEW_ROMAN_18   (3)
+#define TFT_TIMES_NEW_ROMAN_21   (4)
+#define TFT_TIMES_NEW_ROMAN_25   (5)
+#define TFT_TIMES_NEW_ROMAN_27   (6)
+#define TFT_TIMES_NEW_ROMAN_34   (7)
+#define TFT_TIMES_NEW_ROMAN_38   (8)
+#define TFT_TIMES_NEW_ROMAN_43   (9)
+#define TFT_TIMES_NEW_ROMAN_56   (10)
+#define TFT_TIMES_NEW_ROMAN_66   (11)
+#define TFT_BIG_NUMBERS          (12)
 
-class TFT : public Print {
+
+#define TFT_GARAMOND_15          (21)
+#define TFT_GARAMOND_16          (22)
+#define TFT_GARAMOND_18          (23)
+#define TFT_GARAMOND_21          (24)
+#define TFT_GARAMOND_25          (25)
+#define TFT_GARAMOND_27          (26)
+#define TFT_GARAMOND_34          (27)
+#define TFT_GARAMOND_38          (28)
+#define TFT_GARAMOND_43          (29)
+#define TFT_GARAMOND_56          (30)
+#define TFT_GARAMOND_66          (31)
+
+
+#define TFT_ALIGN_RIGHT          (1)
+#define TFT_ALIGN_LEFT           (2)
+#define TFT_ALIGN_CENTER         (3)
+
+
+class TFT{
     protected:
     File gif_file;
     public:
@@ -106,12 +129,9 @@ class TFT : public Print {
         void      begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk);
         void      setFrequency(uint32_t f);
         void      setRotation(uint8_t r);
-        bool      setCursor(uint16_t x, uint16_t y);
-        void      invertDisplay(boolean i);
+        void      invertDisplay(bool i);
         void      scrollTo(uint16_t y);
 
-virtual size_t    write(uint8_t);
-virtual size_t    write(const uint8_t *buffer, size_t size);
 
         // Recommended Non-Transaction
         void      drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
@@ -126,78 +146,16 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         void      fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
         void      drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
         void      fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
-        boolean   drawBmpFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
-        boolean   drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
-        boolean   drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
-        size_t    writeText(const uint8_t *str, int16_t maxWidth = -1, int16_t maxHeight = -1, boolean noWrap = false);
+        bool      drawBmpFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
+        bool      drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
+        bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
+        void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
+        size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
 
-        inline void setTextColor(uint16_t  color){_textcolor=color;}
-        inline void setFont(const uint16_t* font){_font=font;
-            #ifdef TIMES_NEW_ROMAN_H_
-                                                // if((_font==Times_New_Roman15x14)||
-                                                //    (_font==Times_New_Roman21x17)||
-                                                //    (_font==Times_New_Roman27x21)||
-                                                //    (_font==Times_New_Roman34x27)||
-                                                //    (_font==Times_New_Roman38x31)||
-                                                //    (_font==Times_New_Roman43x35)||
-                                                //    (_font==Times_New_Roman56x46)||
-                                                //    (_font==Times_New_Roman66x53)){
-                                                //     _f_utf8=true; _f_cp1251=false; _f_cp1252=false; _f_cp1253=false;// font can handle UTF-8
-                                                // }
-                                                // else _f_utf8=false;
-                                                _f_utf8=true; _f_cp1251=false; _f_cp1252=false; _f_cp1253=false;// font can handle UTF-8
-            #endif //TIMES_NEW_ROMAN_H_
-            #ifdef GARAMOND_H_
-                                                if((_font==Garamond15x18)||
-                                                   (_font==Garamond17x21)||
-                                                   (_font==Garamond19x24)||
-                                                   (_font==Garamond27x33)||
-                                                   (_font==Garamond34x42)||
-                                                   (_font==Garamond44x54)||
-                                                   (_font==Garamond88x108)){
-                                                    _f_utf8=false; _f_cp1251=false; _f_cp1252=true; _f_cp1253=false;// font can handle CP1252
-                                                 }
-                                                 else _f_cp1252=false;
-            #endif //GARAMOND_H_
-            #ifdef GARAMOND_CYRILLIC_H_
-                                                if((_font==Garamond18x18cyrillic)||
-                                                   (_font==Garamond21x21cyrillic)||
-                                                   (_font==Garamond23x24cyrillic)||
-                                                   (_font==Garamond32x33cyrillic)||
-                                                   (_font==Garamond41x42cyrillic)||
-                                                   (_font==Garamond53x54cyrillic)||
-                                                   (_font==Garamond107x108cyrillic)){
-                                                    _f_utf8=false; _f_cp1251=true; _f_cp1252=false; _f_cp1253=false;// font can handle CP1251
-                                                }
-                                                else _f_cp1251=false;
-            #endif //GARAMOND_CYRILLIC_H_
-            #ifdef GARAMOND_GREEK_H_
-                                                if((_font==Garamond15x13greek)||
-                                                   (_font==Garamond17x16greek)||
-                                                   (_font==Garamond19x17greek)||
-                                                   (_font==Garamond27x25greek)||
-                                                   (_font==Garamond35x31greek)||
-                                                   (_font==Garamond44x41greek)||
-                                                   (_font==Garamond85x80greek)){
-                                                    _f_utf8=false; _f_cp1251=false; _f_cp1252=false; _f_cp1253=true;// font can handle CP1253
-                                                }
-                                                else _f_cp1253=false;
-            #endif //GARAMOND_GREEK_H_
-
-        }
-        inline void setTextSize(uint8_t size){
-            #ifdef GARAMOND_H_
-                                                if(size==1) _font=Garamond15x18;
-                                                if(size==2) _font=Garamond17x21;
-                                                if(size==3) _font=Garamond19x24;
-                                                if(size==4) _font=Garamond27x33;
-                                                if(size==5) _font=Garamond34x42;
-                                                if(size==6) _font=Garamond44x54;
-                                                if(size==7) _font=Garamond88x108;
-            #endif //GARAMOND_H_
-        }
+        inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor; fillScreen(BGcolor);}
+        inline void setTextColor(uint16_t FGcolor){_textColor = FGcolor;}
+        void setFont(uint16_t font);
         inline void setTextOrientation(uint16_t orientation=0){_textorientation=orientation;} //0 h other v
-//      inline void setUTF8decoder(boolean UTF8){if(UTF8==true) _f_utf8=true; else _f_utf8=false;} // obsolete, will be set automatically
         int16_t height(void) const;
         int16_t width(void) const;
         uint8_t getRotation(void) const;
@@ -206,36 +164,43 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
         enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6};
         uint8_t _TFTcontroller = ILI9341;
-
         SPISettings     TFT_SPI;                     // SPI settings for this slave
         SPIClass*       spi_TFT = NULL;             // use in class TP
-    private:
+
+        typedef struct{
+        	const uint8_t* glyph_bitmap;
+        	const lv_font_fmt_txt_glyph_dsc_t* glyph_dsc;
+        	const lv_font_fmt_txt_cmap_t* cmaps;
+        	      uint32_t  range_start;
+        	      uint16_t  range_length;
+        		  uint16_t  line_height;
+        		  uint16_t  font_height;
+        		  uint16_t  base_line;
+                  uint16_t* lookup_table;
+        } fonts_t;
+        fonts_t   _current_font;
+        uint8_t   _font = TFT_TIMES_NEW_ROMAN_15;
+
+
         uint32_t  _freq;
         uint16_t  _height;
         uint16_t  _width;
         uint8_t   _rotation;
         uint8_t   _displayInversion;
-        uint16_t  _curX=0;
-        int16_t   _curY=0;
-        uint16_t  _textcolor = TFT_BLACK;
+        uint16_t  _backGroundColor = TFT_WHITE;
+        uint16_t  _textColor = TFT_BLACK;
         uint8_t   _textorientation=0;
-        boolean   _f_utf8=false;
-        boolean   _f_cp1251=false;
-        boolean   _f_cp1252=false;
-        boolean   _f_cp1253=false;
-        const uint16_t * _font = nullptr;
-        boolean   _f_curPos=false;
-        uint8_t  TFT_DC  = 21;    /* Data or Command */
-        uint8_t  TFT_CS  = 22;    /* SPI Chip select */
-        uint8_t  TFT_SCK = 18;
-        uint8_t  TFT_MISO= 19;
-        uint8_t  TFT_MOSI= 23;
+        uint8_t   _TFT_DC  = 21;    /* Data or Command */
+        uint8_t   _TFT_CS  = 22;    /* SPI Chip select */
+        uint8_t   _TFT_SCK = 18;
+        uint8_t   _TFT_MISO= 19;
+        uint8_t   _TFT_MOSI= 23;
         uint8_t  buf[1024];
         char     chbuf[256];
 
     //    ------------GIF-------------------
 
-        boolean debug=false;
+        bool debug=false;
 
         vector<unsigned short>  gif_next;
         vector<uint8_t>         gif_vals;
@@ -245,14 +210,14 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
 
         const uint8_t gif_MaxLzwBits = 12;
 
-        boolean gif_decodeSdFile_firstread=false;
-        boolean gif_GlobalColorTableFlag=false;
-        boolean gif_LocalColorTableFlag=false;
-        boolean gif_SortFlag=false;
-        boolean gif_TransparentColorFlag=false;
-        boolean gif_UserInputFlag=false;
-        boolean gif_ZeroDataBlock=0;
-        boolean gif_InterlaceFlag=false;
+        bool gif_decodeSdFile_firstread=false;
+        bool gif_GlobalColorTableFlag=false;
+        bool gif_LocalColorTableFlag=false;
+        bool gif_SortFlag=false;
+        bool gif_TransparentColorFlag=false;
+        bool gif_UserInputFlag=false;
+        bool gif_ZeroDataBlock=0;
+        bool gif_InterlaceFlag=false;
 
         char gif_buffer[15];
         char gif_DSBbuffer[256]; // DataSubBlock
@@ -295,7 +260,7 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint16_t gif_TextGridHeight=0;
 
         int32_t     GIF_readGifItems();
-        boolean GIF_decodeGif(uint16_t x, uint16_t y);
+        bool    GIF_decodeGif(uint16_t x, uint16_t y);
         void    GIF_freeMemory();
         void    GIF_readHeader();
         void    GIF_readLogicalScreenDescriptor();
@@ -307,26 +272,23 @@ virtual size_t    write(const uint8_t *buffer, size_t size);
         uint8_t GIF_readApplicationExtension(char* buf);
         uint8_t GIF_readCommentExtension(char *buf);
         uint8_t GIF_readDataSubBlock(char *buf);
-        boolean GIF_readExtension(char Label);
-        int32_t     GIF_GetCode(int32_t code_size, int32_t flag);
-        int32_t     GIF_LZWReadByte(boolean init);
+        bool    GIF_readExtension(char Label);
+        int32_t GIF_GetCode(int32_t code_size, int32_t flag);
+        int32_t GIF_LZWReadByte(bool init);
         bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
         //------------TFT-------------------
 
         inline int32_t minimum(int32_t a, int32_t b){if(a < b) return a; else return b;}
 
-        inline void TFT_DC_HIGH() {gpio_set_level((gpio_num_t)TFT_DC, 1);}
-        inline void TFT_DC_LOW()  {gpio_set_level((gpio_num_t)TFT_DC, 0);}
-        inline void TFT_CS_HIGH() {gpio_set_level((gpio_num_t)TFT_CS, 1);}
-        inline void TFT_CS_LOW()  {gpio_set_level((gpio_num_t)TFT_CS, 0);}
+        inline void TFT_DC_HIGH() {gpio_set_level((gpio_num_t)_TFT_DC, 1);}
+        inline void TFT_DC_LOW()  {gpio_set_level((gpio_num_t)_TFT_DC, 0);}
+        inline void TFT_CS_HIGH() {gpio_set_level((gpio_num_t)_TFT_CS, 1);}
+        inline void TFT_CS_LOW()  {gpio_set_level((gpio_num_t)_TFT_CS, 0);}
 
         inline void _swap_int16_t(int16_t &a, int16_t &b) { int16_t t = a; a = b; b = t; }
         void        init();
         void        writeCommand(uint16_t cmd);
-        const uint8_t* UTF8toCp1251(const uint8_t* str);
-        const uint8_t* UTF8toCp1252(const uint8_t* str);
-        const uint8_t* UTF8toCp1253(const uint8_t* str);
 
         // Transaction API not used by GFX
         void      setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
@@ -674,8 +636,6 @@ private:
 
 //-----------------------------------------------------------------------------------------------------------------------
 
-
-
 //Calibration
 //x,y | Ux,Uy  0  ,0     | 1913,1940
 //x,y | Ux,Uy  240,0     |  150,1940
@@ -684,22 +644,19 @@ private:
 // the outcome of this is   x: (1913-150)/240 = 7,3458mV pixel
 //                          y: (1944-220)/320 = 5,3875mV pixel
 
-
-
-
 class TP : public TFT {
     public:
 
-        TP(uint8_t TP_CS, uint8_t TP_IRQ);
+        TP(uint8_t _TP_CS, uint8_t _TP_IRQ);
         void loop();
         void setRotation(uint8_t m);
         void setVersion(uint8_t v);
     private:
         SPISettings TP_SPI;
-        uint8_t TP_CS, TP_IRQ;
-        uint16_t x=0, y=0;
-        uint8_t _rotation;
-        boolean f_loop=false;
+        uint8_t     _TP_CS, _TP_IRQ;
+        uint16_t    x=0, y=0;
+        uint8_t     _rotation;
+        bool        f_loop=false;
         //const uint8_t TP_Dummy=0x80; //nur Startbit für XPT2046
         float xFaktor;
         float yFaktor;
@@ -711,8 +668,8 @@ class TP : public TFT {
         uint8_t  TP_vers = 0;
 
         uint32_t m_pressingTime = 0;
-        boolean  m_f_isPressing = false;
-        boolean  m_f_longPressed = false;
+        bool     m_f_isPressing = false;
+        bool     m_f_longPressed = false;
 
     public:
         uint16_t TP_Send(uint8_t set_val);

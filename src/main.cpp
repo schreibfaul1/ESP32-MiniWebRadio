@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.17 Oct 25/2023                                                                                         ";
+    Version 2.18 Nov 12/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -77,7 +77,7 @@ const char*    _pressBtn[8];
 const char*    _releaseBtn[8];
 char           _chbuf[512];
 char           _fName[256];
-char           _myIP[25];
+char           _myIP[25] = {0};
 char           _path[128];
 char           _prefix[5] = "/s";
 char           _commercial[25];
@@ -163,21 +163,21 @@ struct timecounter {
 } _timeCounter;
 
 char _hl_item[15][40]{
-    "   Internet Radio   ", // "* интернет-радио *"  "ραδιόφωνο Internet"
-    "   Internet Radio   ", //
-    "   Internet Radio   ", //
-    "        Clock       ", // Clock "** часы́ **"  "** ρολόι **"
-    "        Clock       ", //
-    "     Brightness     ", // Brightness яркость λάμψη
-    "    Audio player    ", // "** цифрово́й плеер **"
-    "    Audio player    ", //
-    "    Alarm (hh:mm)   ", // Alarm
-    "  Off Timer (h:mm)  ", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-    "        DLNA        ", // Digital Living Network Alliance
-    "   Stations List    ",
-    "   Audio Files      ",
-    "     DLNA List      ",
-    "     Bluetooth      ",
+    "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
+    "Internet Radio",   //
+    "Internet Radio",   //
+    "Clock",            // Clock "** часы́ **"  "** ρολόι **"
+    "Clock",            //
+    "Brightness",       // Brightness яркость λάμψη
+    "Audio player",     // "** цифрово́й плеер **"
+    "Audio player",     //
+    "Alarm (hh:mm)",    // Alarm
+    "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+    "DLNA",             // Digital Living Network Alliance
+    "Stations List",
+    "Audio Files",
+    "DLNA List",
+    "Bluetooth",
 };
 
 enum status {
@@ -247,10 +247,10 @@ SemaphoreHandle_t mutex_display;
 //  | Footer                                    |       _hFooter=20px
 //  +-------------------------------------------+ 240
 //                                             320
-const unsigned short* _fonts[7] = {
-    Times_New_Roman15x14, Times_New_Roman21x17, Times_New_Roman27x21,
-    Times_New_Roman34x27, Times_New_Roman38x31, Times_New_Roman43x35,
-    Big_Numbers133x156  // ASCII 32...64 only
+
+const uint8_t _fonts[9] = { TFT_TIMES_NEW_ROMAN_15, TFT_TIMES_NEW_ROMAN_16, TFT_TIMES_NEW_ROMAN_21, TFT_TIMES_NEW_ROMAN_25,
+                            TFT_TIMES_NEW_ROMAN_27, TFT_TIMES_NEW_ROMAN_34, TFT_TIMES_NEW_ROMAN_38, TFT_TIMES_NEW_ROMAN_43,
+                            TFT_BIG_NUMBERS,  // ASCII 0x20...03F only
 };
 
 struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
@@ -269,8 +269,8 @@ struct w_s {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  
 struct w_p {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
 struct w_k {uint16_t x = 155; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID_bt;
-struct w_u {uint16_t x = 150; uint16_t y = 220; uint16_t w =  36; uint16_t h =  20;} const _winBitRate;
-struct w_a {uint16_t x = 186; uint16_t y = 220; uint16_t w = 134; uint16_t h =  20;} const _winIPaddr;
+struct w_u {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
+struct w_a {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
 struct w_b {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
 struct w_o {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
@@ -312,11 +312,11 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 //  +-------------------------------------------+ 320
 //                                             480
 
-const unsigned short* _fonts[7] = {
-    Times_New_Roman27x21, Times_New_Roman34x27, Times_New_Roman38x31,
-    Times_New_Roman43x35, Times_New_Roman56x46, Times_New_Roman66x53,
-    Big_Numbers133x156  // ASCII 32...64 only
+const uint8_t _fonts[9] = { TFT_TIMES_NEW_ROMAN_21, TFT_TIMES_NEW_ROMAN_25, TFT_TIMES_NEW_ROMAN_27, TFT_TIMES_NEW_ROMAN_34,
+                            TFT_TIMES_NEW_ROMAN_38, TFT_TIMES_NEW_ROMAN_43, TFT_TIMES_NEW_ROMAN_56, TFT_TIMES_NEW_ROMAN_66,
+                            TFT_BIG_NUMBERS,  // ASCII 0x20...03F only
 };
+
 
 struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
 struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
@@ -334,8 +334,8 @@ struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  
 struct w_p {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
 struct w_k {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
-struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  56; uint16_t h =  30;} const _winBitRate;
-struct w_a {uint16_t x = 260; uint16_t y = 290; uint16_t w = 220; uint16_t h =  30;} const _winIPaddr;
+struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  66; uint16_t h =  30;} const _winBitRate;
+struct w_a {uint16_t x = 270; uint16_t y = 290; uint16_t w = 210; uint16_t h =  30;} const _winIPaddr;
 struct w_b {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -794,15 +794,16 @@ void showHeadlineVolume() {
     else { vol = _cur_volume; }
 
     sprintf(_chbuf, "Vol %02d", vol);
-    tft.setCursor(_winVolume.x + 6, _winVolume.y + 2);
-    tft.print(_chbuf);
+    tft.writeText(_chbuf, _winVolume.x + 6,  _winVolume.y, _winVolume.w, _winVolume.h);
     xSemaphoreGive(mutex_display);
 }
 void showHeadlineTime(bool complete) {
     static char oldtime[8];                                 // hhmmss
     char        newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
-    uint8_t     pos_s[8] = {0, 9, 17, 21, 30, 38, 41, 50};  // display 320x240
+    uint8_t     pos_s[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
     uint8_t     pos_m[8] = {0, 13, 26, 32, 45, 58, 64, 77}; // display 480x320
+    uint8_t*    pos = NULL;
+    uint8_t     w = 0;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
@@ -821,14 +822,15 @@ void showHeadlineTime(bool complete) {
             char ch[2] = {0, 0};
             ch[0] = newtime[i];
             if(TFT_CONTROLLER < 2) { // 320x240
-                tft.fillRect(_winTime.x + pos_s[i], _winTime.y, 9, _winTime.h, TFT_BLACK);
-                tft.setCursor(_winTime.x + pos_s[i], _winTime.y + 2);
+                pos = pos_s;
+                w = 9;
             }
             else { // 480x320
-                tft.fillRect(_winTime.x + pos_m[i], _winTime.y, 13, _winTime.h, TFT_BLACK);
-                tft.setCursor(_winTime.x + pos_m[i], _winTime.y + 2);
+                pos = pos_m;
+                w = 13;
             }
-            tft.print(ch);
+            tft.fillRect(_winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_BLACK);
+            tft.writeText(ch, _winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_ALIGN_LEFT, true);
             oldtime[i] = newtime[i];
         }
     }
@@ -841,19 +843,17 @@ void showHeadlineItem(uint8_t idx) { // radio, clock, audioplayer...
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
     clearItem();
-    tft.setCursor(_winItem.x + 6, _winItem.y + 2);
-    tft.print(_hl_item[idx]);
+    tft.writeText(_hl_item[idx], _winItem.x + 6, _winItem.y, _winItem.w, _winItem.h);
     xSemaphoreGive(mutex_display);
 }
 void showFooterIPaddr() {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
-    char myIP[30] = "myIP:";
-    strcpy(myIP + 5, _myIP);
+    char myIP[30] = "IP:";
+    strcpy(myIP + 3, _myIP);
     tft.setFont(_fonts[1]);
     tft.setTextColor(TFT_GREENYELLOW);
     clearIPaddr();
-    tft.setCursor(_winIPaddr.x + 6, _winIPaddr.y + 2);
-    tft.print(myIP);
+    tft.writeText(myIP, _winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_ALIGN_RIGHT, true);
     xSemaphoreGive(mutex_display);
 }
 void showFooterStaNr() {
@@ -865,9 +865,9 @@ void showFooterStaNr() {
     clearStaNr();
     drawImage("/common/STA.bmp", _winStaNr.x, _winStaNr.y);
     tft.setFont(_fonts[1]);
-    tft.setCursor(_winStaNr.x + offset, _winStaNr.y + 2);
     tft.setTextColor(TFT_LAVENDER);
-    tft.printf("%03d", _cur_station);
+    char buf[10]; sprintf(buf, "%03d", _cur_station);
+    tft.writeText(buf, _winStaNr.x + offset, _winStaNr.y, _winStaNr.w, _winStaNr.h);
     xSemaphoreGive(mutex_display);
 }
 void showFooterRSSI(boolean show) {
@@ -917,6 +917,7 @@ void showFooterRSSI(boolean show) {
 
 void showFooterRSSI_bt(int8_t rssi) {
     if(_state != A2DP_SINK) return;  //guard
+    if(_f_BTconnected == false && rssi != -100) return; // -100 means disconnected event, set level to 0
     boolean show = false;
     static int32_t old_rssi = -1;
     int32_t        new_rssi = -1;
@@ -977,8 +978,7 @@ void showFooterBitRate(uint16_t br) {
     tft.setTextColor(TFT_LAVENDER);
     uint8_t space = 2;
     if(strlen(sbr) < 4) space += 5;
-    tft.setCursor(_winBitRate.x + space, _winBitRate.y + 2);
-    tft.print(sbr);
+    tft.writeText(sbr,_winBitRate.x + space, _winBitRate.y, _winBitRate.w, _winBitRate.h);
     xSemaphoreGive(mutex_display);
 }
 
@@ -1006,8 +1006,7 @@ void updateSleepTime(boolean noDecrement) { // decrement and show new value in f
         drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
         tft.setTextColor(TFT_RED);
     }
-    tft.setCursor(_winSleep.x + offset, _winSleep.y + 2);
-    tft.print(Slt);
+    tft.writeText(Slt, _winSleep.x + offset, _winSleep.y, _winSleep.w, _winSleep.h);
 
     xSemaphoreGive(mutex_display);
     if(sleep) { // fall asleep
@@ -1104,9 +1103,7 @@ void showFooter() { // stationnumber, sleeptime, IPaddress
 void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
-    tft.setCursor(xPos + margin_l, yPos);                     // Prepare to show the info
-    // SerialPrintfln("cursor x=%d, y=%d, winHeight=%d", xPos+indent, yPos, winHeight);
-    uint16_t ch_written = tft.writeText((const uint8_t*)str, winWidth - margin_r, winHeight);
+    uint16_t ch_written = tft.writeText(str, xPos + margin_l, yPos, winWidth - margin_r, winHeight, false);
     if(ch_written < strlenUTF8(str)) {
         // If this message appears, there is not enough space on the display to write the entire text,
         // a part of the text has been cut off
@@ -1161,7 +1158,9 @@ void showLogoAndStationName() {
 void showStationName(String sn) {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     switch(strlenUTF8(sn.c_str())) {
-    case 0 ... 20: tft.setFont(_fonts[5]); break;
+    case 0  ...  8: tft.setFont(_fonts[7]); break;
+    case 9  ... 11: tft.setFont(_fonts[6]); break;
+    case 12 ... 20: tft.setFont(_fonts[5]); break;
     case 21 ... 32: tft.setFont(_fonts[4]); break;
     case 33 ... 45: tft.setFont(_fonts[3]); break;
     case 46 ... 60: tft.setFont(_fonts[2]); break;
@@ -1238,16 +1237,15 @@ void showStationsList(uint16_t staListNr){
     if(_sum_stations < 11) staListNr = 0;
     else if(staListNr + 9 > _max_stations) staListNr = _max_stations - 9;
     showHeadlineItem(STATIONSLIST);
-    tft.setFont(_fonts[1]);
+    tft.setFont(_fonts[0]);
     uint8_t lineHight = _winWoHF.h / 10;
     for(uint8_t pos = 0; pos < 10; pos++){
         if(pos + staListNr + 1 > _sum_stations) break;
-        tft.setCursor(10, _winFooter.h + (pos) * lineHight) ;
         sprintf(_chbuf, "station_%03d", pos + staListNr  + 1);
         String content = stations.getString(_chbuf, " #not_found");
         content.replace('#','\0');
         sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_WHITE "%s\n",pos + staListNr  + 1, content.c_str());
-        tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+       tft.writeText(_chbuf, 10, _winFooter.h + (pos) * lineHight, _dispWidth -10 ,lineHight, TFT_ALIGN_LEFT, true, true);
     }
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
@@ -1533,31 +1531,31 @@ bool SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){ 
 }
 
 void showAudioFilesList(uint16_t fileListNr){ // on tft
+
+    auto triangleUp   = [&](int16_t x, int16_t y, uint8_t s){tft.fillTriangle(x + s, y + 0, x +  0, y + 2*s, x + 2*s, y + 2*s , TFT_RED);};
+    auto triangleDown = [&](int16_t x, int16_t y, uint8_t s){tft.fillTriangle(x + 0, y + 0, x + 2*s, y +  0, x +  s, y + 2*s , TFT_RED);};
+
     clearWithOutHeaderFooter();
     if(_SD_content.size() < 10) fileListNr = 0;
     showHeadlineItem(AUDIOFILESLIST);
-    tft.setCursor(10, _winFooter.h) ;
-    tft.setTextColor(TFT_ORANGE);
-    tft.writeText((uint8_t*)_curAudioFolder.c_str(), -1,-1, true);
-    tft.setTextColor(TFT_WHITE);
-    tft.setFont(_fonts[1]);
+    tft.setFont(_fonts[0]);
     uint8_t lineHight = _winWoHF.h / 10;
+    tft.setTextColor(TFT_ORANGE);
+    tft.writeText(_curAudioFolder.c_str(), 10, _winHeader.h,  _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+    tft.setTextColor(TFT_WHITE);
     for(uint8_t pos = 1; pos < 10; pos++){
         if(pos == 1 && fileListNr > 0){
-            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
             tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText((uint8_t*)"˄");
+            triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
         }
         if(pos == 9 && fileListNr + 9 < _SD_content.size()){
-            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
             tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText((uint8_t*)"˅");
+            triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
         }
         if(fileListNr + pos > _SD_content.size()) break;
-        tft.setCursor(20, _winFooter.h + (pos) * lineHight);
         if(indexOf(_SD_content[pos + fileListNr - 1 ], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
-        else tft.setTextColor(TFT_WHITE);                                                     // is file
-        tft.writeText((uint8_t*)_SD_content[pos + fileListNr - 1 ], -1, -1, true);
+        else tft.setTextColor(TFT_WHITE);                                                             // is file
+        tft.writeText(_SD_content[pos + fileListNr - 1 ], 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
     }
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
@@ -1745,7 +1743,6 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     clearAll();
     tft.setFont(_fonts[4]);
     tft.setTextColor(TFT_YELLOW);
-    tft.setCursor(25, 80);
     setTFTbrightness(80);
     _f_accessPoint = true;
     WiFi.mode(WIFI_STA);
@@ -1753,7 +1750,9 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     WiFi.softAP("MiniWebRadio");
     IPAddress myIP = WiFi.softAPIP();
     String    AccesspointIP = myIP.toString();
-    tft.printf("WiFi credentials are not correct\nAccesspoint IP: %s", AccesspointIP.c_str());
+    char buf[100];
+    sprintf(buf, "WiFi credentials are not correct\nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
+    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, true, false);
     SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
     int16_t n = WiFi.scanNetworks();
     if(n == 0) {
@@ -1907,6 +1906,7 @@ void setup() {
 
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
+    tft.setBackGoundColor(TFT_BLACK);
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     tp.TP_Send(0xD0);
@@ -1921,10 +1921,9 @@ void setup() {
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
-        tft.setFont(_fonts[5]);
+        tft.setFont(_fonts[6]);
         tft.setTextColor(TFT_YELLOW);
-        tft.setCursor(50, 100);
-        tft.print("SD Card Mount Failed");
+        tft.writeText("SD Card Mount Failed", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, false, false);
         setTFTbrightness(80);
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         return;
@@ -1943,10 +1942,9 @@ void setup() {
     File file = SD_MMC.open("/stations.csv");
     if(!file) {
         clearAll();
-        tft.setFont(_fonts[5]);
+        tft.setFont(_fonts[6]);
         tft.setTextColor(TFT_YELLOW);
-        tft.setCursor(50, 100);
-        tft.print("stations.csv not found");
+        tft.writeText("stations.csv not found", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, false, false);
         setTFTbrightness(80);
         SerialPrintfln(ANSI_ESC_RED "stations.csv not found");
         while(1) {}; // endless loop, MiniWebRadio does not work without stations.csv
@@ -1961,7 +1959,6 @@ void setup() {
     }
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
-
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
 
     setRTC(_TZString.c_str());
@@ -2994,28 +2991,25 @@ void showDlnaItemsList(uint8_t level, uint16_t itemNr){
     }
     log_i("level %d, itemsSize %d", level, itemsSize);
     showHeadlineItem(DLNA);
-    tft.setCursor(10, _winFooter.h) ;
     tft.setTextColor(TFT_ORANGE);
-    if(level > 0)  tft.writeText((uint8_t*)_dlna_items.path[0], -1,-1, true);
+    if(level > 0){;} // todo  tft.writeText((uint8_t*)_dlna_items.path[0], -1,-1, true);
     tft.setTextColor(TFT_WHITE);
     tft.setFont(_fonts[1]);
     uint8_t lineHight = _winWoHF.h / 10;
     for(uint8_t pos = 1; pos < 10; pos++){
         if(pos == 1 && itemNr > 0){
-            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
             tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText((uint8_t*)"˄");
+            tft.writeText("˄", 0, _winFooter.h + (pos) * lineHight, 20, 20);  // todo addrWindow w h does not matter
         }
         if(pos == 9 && itemNr + 9 < itemsSize){
-            tft.setCursor(0, _winFooter.h + (pos) * lineHight);
             tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText((uint8_t*)"˅");
+            tft.writeText("˅", 0, _winFooter.h + (pos) * lineHight, 20, 20);  // todo addrWindow w h does not matter
         }
         if(itemNr + pos > itemsSize) break;
-        tft.setCursor(20, _winFooter.h + (pos) * lineHight);
+// todo      tft.setCursor(20, _winFooter.h + (pos) * lineHight);
         if(level == 0){
             tft.setTextColor(TFT_LIME);
-            tft.writeText((uint8_t*)_dlna_items.serverFriendlyName[(pos - 1) + itemNr], -1, -1, true);
+// todo            tft.writeText((uint8_t*)_dlna_items.serverFriendlyName[(pos - 1) + itemNr], -1, -1, true);
         }
         else{
             //    if(indexOf(_SD_content[pos + itemNr - 1 ], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
@@ -3303,6 +3297,7 @@ void loop() {
 
     if(_f_BTstateChanged){ // BT connected to disconnected and vice versa
         if(_state == A2DP_SINK) showFileLogo(_state);
+        if(_f_BTconnected == false) showFooterRSSI_bt(-100);
         _f_BTstateChanged = false;
     }
 }
@@ -3549,10 +3544,11 @@ void ir_number(uint16_t num) {
     if(_f_sleeping) return;
     if(!_f_irNumberSeen) tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth, _winName.h + _winTitle.h, TFT_BLACK);
     _f_irNumberSeen = true;
-    tft.setFont(_fonts[6]);
+    tft.setFont(_fonts[8]);
     tft.setTextColor(TFT_GOLD);
-    tft.setCursor(_irNumber_x, _irNumber_y);
-    tft.print(num);
+    char buf[10];
+    itoa(num, buf, 10);
+    tft.writeText(buf, 40, _irNumber_y, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, false, true);
 }
 void ir_key(uint8_t key) {
     if(_f_sleeping == true && key != 10) return;
@@ -3737,9 +3733,9 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(TFT_BL != -1){
                                 if(btnNr == 4){_releaseNr = 14;} // Brightness
                             }
-                            if(CONFIG_IDF_TARGET_ESP32 == 1){
+                            # if CONFIG_IDF_TARGET_ESP32 == 1
                                 if(btnNr == 5){_releaseNr = 15;} // A2DP Sink
-                            }
+                            #endif
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
@@ -3798,8 +3794,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case STATIONSLIST_1:if(btnNr == none) break;
                             _releaseNr = 100;
                             _staListPos = btnNr;
-                            if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
-                            vTaskDelay(100);
+
                             break;
         case AUDIOFILESLIST_1: if(btnNr == none) break;
                             _releaseNr = 110;
@@ -3976,13 +3971,22 @@ void tp_released(uint16_t x, uint16_t y){
                                 SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
                                 break;
                             }
-                            uint8_t lineHight = _winWoHF.h / 10;
-                            tft.setCursor(10, _winFooter.h + (staListPos) * lineHight);
-                            sprintf(_chbuf, "station_%03d", staNr);
-                            String content = stations.getString(_chbuf, " #not_found");
-                            int32_t idx = content.indexOf("#");
-                            sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
-                            tft.writeText((uint8_t*)_chbuf, -1, -1, true);
+                            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                                tft.setFont(_fonts[0]);
+                                uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
+                                uint16_t staNr = _staListNr + staListPos + 1;
+                                if(staNr > _sum_stations){
+                                    SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
+                                    break;
+                                }
+                                uint8_t lineHight = _winWoHF.h / 10;
+                                sprintf(_chbuf, "station_%03d", staNr);
+                                String content = stations.getString(_chbuf, " #not_found");
+                                int32_t idx = content.indexOf("#");
+                                sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
+                                tft.writeText(_chbuf, 10, _winHeader.h + (staListPos * lineHight), _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+                                vTaskDelay(500);
+                            }
                             _timeCounter.timer = 0;
                             showFooterRSSI(true);
                             setStation(staNr);
@@ -4011,7 +4015,6 @@ void tp_released(uint16_t x, uint16_t y){
                                 break;
                             }
                             uint8_t lineHight = _winWoHF.h / 10;
-                            tft.setCursor(20, _winFooter.h + (fileListPos) * lineHight);
                             if(fileListPos == 0) {
                                 int32_t idx = _curAudioFolder.lastIndexOf("/");
                                 if(idx > 1){ // not the first '/'
@@ -4026,7 +4029,9 @@ void tp_released(uint16_t x, uint16_t y){
                                 if(fileNr > _SD_content.size()) break;
                                 tft.setTextColor(TFT_CYAN);
                                 _cur_AudioFileNr = fileNr - 1;
-                                tft.writeText((uint8_t*)_SD_content[_cur_AudioFileNr], -1, -1, true);
+                                tft.setFont(_fonts[0]);
+                                tft.writeText(_SD_content[_cur_AudioFileNr], 20, _winFooter.h + (fileListPos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+                                vTaskDelay(500);
                                 sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
                                 int32_t idx = indexOf(_chbuf, "\033[", 1);
                                 if(idx == -1){ // is folder

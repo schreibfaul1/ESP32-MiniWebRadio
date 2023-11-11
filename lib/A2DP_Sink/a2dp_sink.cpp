@@ -6,6 +6,8 @@
  *      Author: Wolle
  */
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #include "a2dp_sink.h"
 
 xQueueHandle               s_bt_app_task_queue = NULL;
@@ -799,3 +801,5 @@ bool a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT){
     s_f_a2dp_sink_active = true;
     return true;
 }
+
+#endif  /* CONFIG_IDF_TARGET_ESP32  */

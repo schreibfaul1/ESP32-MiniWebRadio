@@ -9,6 +9,8 @@
 #ifndef A2DP_SINK_H_
 #define A2DP_SINK_H_
 
+#if CONFIG_IDF_TARGET_ESP32
+
 #include <Arduino.h>
 
 #include "esp_bt.h"
@@ -77,5 +79,8 @@ void                  bt_app_a2d_cb(esp_a2d_cb_event_t event, esp_a2d_cb_param_t
 void                  bt_app_a2d_data_cb(const uint8_t* data, uint32_t len);
 bool                  a2dp_sink_deinit();
 bool                  a2dp_sink_init(String deviceName, int8_t BCLK, int8_t LRC, int8_t DOUT);
+
+
+#endif /* CONFIG_IDF_TARGET_ESP32 */
 
 #endif /* A2DP_SINK_H_ */

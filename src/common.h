@@ -272,3 +272,19 @@ uint32_t audioGetFileSize();
 uint32_t audioGetFilePosition();
 uint16_t audioGetVUlevel();
 void audioCommFMT(bool commFMT);
+
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+
+// dummy functions (simulate ESP32 bluetooth)
+
+static inline void bt_set_volume(int v){;}
+static inline void a2dp_sink_init(const char* s, int a, int b, int c){;}
+static inline void a2dp_sink_deinit(){;}
+static inline void bt_av_get_last_RSSI_delta(){;}
+static inline void bt_av_pause_track(){;}
+static inline void bt_av_resume_track(){;}
+static inline void bt_av_previous_track(){;}
+static inline void bt_av_next_track(){;}
+
+#endif
