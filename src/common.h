@@ -1,13 +1,6 @@
 // created: 10.Feb.2022
 // updated: 24.Oct.2023
 
-// BT Version
-// must have 8MB Flash
-// in menuconfig:  enable BT + BT classic
-// disable IRAM in WiFi and LWIP
-
-
-
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 
@@ -86,7 +79,6 @@
         #define VS1053_SCK    12  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
     #else
         #define I2S_DOUT      25
-        #define I2S_DIN       -1  // pin not used
         #define I2S_BCLK      27
         #define I2S_LRC       26
         #define I2S_MCLK       0  // mostly not used
@@ -121,10 +113,9 @@
         #define VS1053_SCK    21  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
     #else
         #define I2S_DOUT       9
-        #define I2S_DIN       -1
         #define I2S_BCLK       3
         #define I2S_LRC        1
-        #define I2S_MCLK       0
+        #define I2S_MCLK      -1
     #endif
         #define I2C_DATA      -1  // some DACs are controlled via I2C
         #define I2C_CLK       -1

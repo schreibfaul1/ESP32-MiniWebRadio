@@ -1863,7 +1863,7 @@ void setup() {
         _f_PSRAMfound = true;
         Serial.printf("PSRAM total size: %lu bytes\n", (long unsigned)ESP.getPsramSize());
     }
-    if(ESP.getFlashChipSize() > 8000000){
+    if(ESP.getFlashChipSize() > 80000000){
         if(!FFat.begin()){if(!FFat.format()) Serial.printf("FFat Mount Failed\n");}
         else{
             Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
@@ -1932,6 +1932,9 @@ void setup() {
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
+    if(ESP.getFlashChipSize() >80000000){
+        FFat.begin();
+    }
     defaultsettings(); // first init
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else
@@ -3454,26 +3457,26 @@ void audio_eof_stream(const char* info) {
 void vs1053_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
-    SerialPrintflnCut("lastURL: ..  %s", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
+    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
     webSrv.send("stationURL=" + _lastconnectedhost);
 }
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
-    SerialPrintflnCut("lastURL: ..  %s", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
+    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
     webSrv.send("stationURL=" + _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void vs1053_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
-        SerialPrintflnCut("icy-url: ..  %s", ANSI_ESC_WHITE, info);
+        SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
 void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
-        SerialPrintflnCut("icy-url: ..  %s", ANSI_ESC_WHITE, info);
+        SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
