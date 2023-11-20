@@ -2063,7 +2063,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y){ // lambda
         uint16_t glyphPos = _current_font.lookup_table[utfPosArr[idx]];
         uint16_t adv_w = _current_font.glyph_dsc[glyphPos].adv_w / 16;
-        uint16_t bitmap_index = _current_font.glyph_dsc[glyphPos].bitmap_index;
+        uint32_t bitmap_index = _current_font.glyph_dsc[glyphPos].bitmap_index;
         uint16_t box_w  = _current_font.glyph_dsc[glyphPos].box_w;
         uint16_t box_h  = _current_font.glyph_dsc[glyphPos].box_h;
         int16_t  ofs_x = _current_font.glyph_dsc[glyphPos].ofs_x;

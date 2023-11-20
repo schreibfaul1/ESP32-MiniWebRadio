@@ -9,11 +9,10 @@
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
 
-    HW decoder VS1053 or
-    SW decoder with external DAC over I2S
 
     SD_MMC is mandatory
     IR remote is optional
+    BT Transmitter is optional
 
 *****************************************************************************************************************************************************/
 
@@ -52,10 +51,6 @@ uint16_t       _itemListNr = 0;
 int8_t         _rssi_bt = -127;
 int8_t         _newBTmetaData = 0;        // 0 - no new data, 1 - new data, 2 - data in progress (show on display)
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
-int16_t        _toneha = 0;               // BassFreq 0...15        VS1053
-int16_t        _tonehf = 0;               // TrebleGain 0...14      VS1053
-int16_t        _tonela = 0;               // BassGain 0...15        VS1053
-int16_t        _tonelf = 0;               // BassFreq 0...13        VS1053
 int16_t        _toneLP = 0;               // -40 ... +6 (dB)        audioI2S
 int16_t        _toneBP = 0;               // -40 ... +6 (dB)        audioI2S
 int16_t        _toneHP = 0;               // -40 ... +6 (dB)        audioI2S
@@ -379,10 +374,6 @@ boolean defaultsettings(){
         jObject["sumstations"]       = (uint16_t) 0;
         jObject["Timezone_Name"]     = (String)   "Europe/Berlin";
         jObject["Timezone_String"]   = (String)   "CET-1CEST,M3.5.0,M10.5.0/3";
-        jObject["toneha"]            = (int16_t)  0; // BassFreq 0...15        VS1053
-        jObject["tonehf"]            = (int16_t)  8; // TrebleGain 0...14      VS1053
-        jObject["tonela"]            = (int16_t)  8; // BassGain 0...15        VS1053
-        jObject["tonelf"]            = (int16_t)  9; // BassFreq 0...13        VS1053
         jObject["toneLP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
         jObject["toneBP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
         jObject["toneHP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
@@ -405,10 +396,6 @@ boolean defaultsettings(){
     _sleeptime          = (uint16_t)    jV["sleeptime"];
     _cur_station        = (uint16_t)    jV["station"];
     _sum_stations       = (uint16_t)    jV["sumstations"];
-    _toneha             = (int16_t)     jV["toneha"];
-    _tonehf             = (int16_t)     jV["tonehf"];
-    _tonela             = (int16_t)     jV["tonela"];
-    _tonelf             = (int16_t)     jV["tonelf"];
     _toneLP             = (int16_t)     jV["toneLP"];
     _toneBP             = (int16_t)     jV["toneBP"];
     _toneHP             = (int16_t)     jV["toneHP"];
@@ -556,10 +543,6 @@ void updateSettings(){
     jObject["lastconnectedhost"] = (String)   _lastconnectedhost;
     jObject["station"]           = (uint16_t) _cur_station;
     jObject["sumstations"]       = (uint16_t) _sum_stations;
-    jObject["toneha"]            = (int16_t)  _toneha; // BassFreq 0...15        VS1053
-    jObject["tonehf"]            = (int16_t)  _tonehf; // TrebleGain 0...14      VS1053
-    jObject["tonela"]            = (int16_t)  _tonela; // BassGain 0...15        VS1053
-    jObject["tonelf"]            = (int16_t)  _tonelf; // BassFreq 0...13        VS1053
     jObject["toneLP"]            = (int16_t)  _toneLP; // -40 ... +6 (dB)        audioI2S
     jObject["toneBP"]            = (int16_t)  _toneBP; // -40 ... +6 (dB)        audioI2S
     jObject["toneHP"]            = (int16_t)  _toneHP; // -40 ... +6 (dB)        audioI2S
@@ -1158,9 +1141,9 @@ void showLogoAndStationName() {
 void showStationName(String sn) {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     switch(strlenUTF8(sn.c_str())) {
-    case 0  ...  8: tft.setFont(_fonts[7]); break;
-    case 9  ... 11: tft.setFont(_fonts[6]); break;
-    case 12 ... 20: tft.setFont(_fonts[5]); break;
+    case 0  ...  8: tft.setFont(_fonts[7]); log_e("fonts7"); break;
+    case 9  ... 11: tft.setFont(_fonts[6]); log_e("fonts6"); break;
+    case 12 ... 20: tft.setFont(_fonts[5]); log_e("fonts5"); break;
     case 21 ... 32: tft.setFont(_fonts[4]); break;
     case 33 ... 45: tft.setFont(_fonts[3]); break;
     case 46 ... 60: tft.setFont(_fonts[2]); break;
@@ -1875,7 +1858,7 @@ void setup() {
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("   ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V2     *    ");
+    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V3     *    ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
     SerialPrintfln("   ");
     if(startsWith(chipModel, "ESP32-D")) { ; } // ESP32-D    ...  okay
@@ -1940,7 +1923,7 @@ void setup() {
     else
         setTFTbrightness(5);
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
-    drawImage("/common/MiniWebRadioV2.jpg", 0, 0); // Welcomescreen
+    drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
     File file = SD_MMC.open("/stations.csv");
     if(!file) {
@@ -2012,9 +1995,7 @@ void setup() {
     if(_cur_station > 0) setStation(_cur_station);
     else { setStationViaURL(_lastconnectedhost.c_str()); }
 
-    if(DECODER == 0) setTone(); // HW Decoder
-    else
-        setI2STone();           // SW Decoder
+    setI2STone();
     showFooter();
     soap.seekServer();
     _numServers = soap.getServerCount();
@@ -2357,17 +2338,6 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
         }
         if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
-}
-
-String setTone() { // vs1053
-    uint8_t ha = _toneha;
-    uint8_t hf = _tonehf;
-    uint8_t la = _tonela;
-    uint8_t lf = _tonelf;
-    audioSetTone(ha, hf, la, lf);
-    sprintf(_chbuf, "toneha=%i\ntonehf=%i\ntonela=%i\ntonelf=%i\n", ha, hf, la, lf);
-    String tone = String(_chbuf);
-    return tone;
 }
 
 String setI2STone() {
@@ -3307,35 +3277,7 @@ void loop() {
 /*****************************************************************************************************************************************************
  *                                                                    E V E N T S                                                                    *
  *****************************************************************************************************************************************************/
-// Events from vs1053_ext or audioI2S library
-void vs1053_info(const char* info) {
-    if(startsWith(info, "Request")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(startsWith(info, "FLAC")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        return;
-    }
-    if(endsWith(info, "Stream lost")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(startsWith(info, "authent")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        return;
-    }
-    if(startsWith(info, "StreamTitle=")) { return; }
-    if(startsWith(info, "HTTP/") && info[9] > '3') {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
-    {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        return;
-    }
-}
+// Events from audioI2S library
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {
         SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
@@ -3366,22 +3308,12 @@ void audio_info(const char* info) {
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_showstation(const char* info) {
-    _stationName_air = info;
-    if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    if(!_cur_station) _f_newLogoAndStation = true;
-}
 void audio_showstation(const char* info) {
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) _f_newLogoAndStation = true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_showstreamtitle(const char* info) {
-    strcpy(_streamTitle, info);
-    if(!_f_irNumberSeen) _f_newStreamTitle = true;
-    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
-}
 void audio_showstreamtitle(const char* info) {
     strcpy(_streamTitle, info);
     if(!_f_irNumberSeen) _f_newStreamTitle = true;
@@ -3399,22 +3331,8 @@ void show_ST_commercial(const char* info) {
     _f_newCommercial = true;
     SerialPrintfln("StreamTitle: %s", info);
 }
-void vs1053_commercial(const char* info) { show_ST_commercial(info); }
 void audio_commercial(const char* info) { show_ST_commercial(info); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_eof_mp3(const char* info) { // end of mp3 file (filename)
-    if(startsWith(info, "alarm")) _f_eof_alarm = true;
-    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER || _state == PLAYERico) {
-        if(!_f_playAllFiles && ! _f_playlistEnabled){
-            _f_clearLogo = true;
-            _f_clearStationName = true;
-        }
-    }
-    webSrv.send("SD_playFile=end of audiofile");
-    _f_eof = true;
-    _f_isFSConnected = false;
-}
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -3429,18 +3347,6 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     _f_isFSConnected = false;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_eof_stream(const char* info) {
-    _f_isWebConnected = false;
-    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER || _state == PLAYERico) {
-        if(!_f_playAllFiles && ! _f_playlistEnabled){
-            _f_clearLogo = true;
-            _f_clearStationName = true;
-        }
-    }
-    _f_eof = true;
-    _f_isWebConnected = false;
-}
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -3454,12 +3360,6 @@ void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_lasthost(const char* info) { // really connected URL
-    if(_f_playlistEnabled) return;
-    _lastconnectedhost = info;
-    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
-    webSrv.send("stationURL=" + _lastconnectedhost);
-}
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
@@ -3467,13 +3367,6 @@ void audio_lasthost(const char* info) { // really connected URL
     webSrv.send("stationURL=" + _lastconnectedhost);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
-    if(strlen(info) > 5) {
-        SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
-        _homepage = String(info);
-        if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
-    }
-}
 void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
         SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
@@ -3482,15 +3375,8 @@ void audio_icyurl(const char* info) { // if the Radio has a homepage, this event
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
 void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-void vs1053_icydescription(const char* info) {
-    strcpy(_icyDescription, info);
-    _f_newIcyDescription = true;
-    if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
-}
-
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
@@ -3498,12 +3384,6 @@ void audio_icydescription(const char* info) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_bitrate(const char* info) {
-    if(!strlen(info)) return; // guard
-    _icyBitRate = str2int(info) / 1000;
-    _f_newBitRate = true;
-    SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
-}
-void vs1053_bitrate(const char* info) {
     if(!strlen(info)) return; // guard
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
@@ -4156,8 +4036,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "to_listen"){         StationsItems(); // via websocket, return the name and number of the current station
                                     return;}
 
-    if(cmd == "gettone"){           if(DECODER) webSrv.send((String)"settone=" + setI2STone().c_str());
-                                    else        webSrv.send((String)"settone=" + setTone().c_str());
+    if(cmd == "gettone"){           webSrv.send((String)"settone=" + setI2STone().c_str());
                                     return;}
 
 
@@ -4165,22 +4044,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle, webSrv.TEXT);
                                     return;}
 
-    if(cmd == "toneha"){            _toneha = param.toInt();                           // vs1053 treble gain
-                                    setTone();
-                                    char lp[40] = "tone=Treble Gain set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
-                                    webSrv.send(lp); return;}
-    if(cmd == "tonehf"){            _tonehf = param.toInt();                           // vs1053 treble frequency
-                                    setTone();
-                                    char lp[40] = "tone=Treble Frecquency set to "; strcat(lp, param.c_str()); strcat(lp, "KHz");
-                                    webSrv.send(lp); return;}
-    if(cmd == "tonela"){            _tonela = param.toInt();                           // vs1053 bass gain
-                                    setTone();
-                                    char lp[40] = "tone=Bass Gain set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
-                                    webSrv.send(lp); return;}
-    if(cmd == "tonelf"){            _tonelf = param.toInt();                           // vs1053 bass frequency
-                                    setTone();
-                                    char lp[40] = "tone=Bass Frecquency set to "; strcat(lp, param.c_str()); strcat(lp, "KHz");
-                                    webSrv.send(lp); return;}
     if(cmd == "LowPass"){           _toneLP = param.toInt();                           // audioI2S tone
                                     char lp[30] = "tone=Lowpass set to "; strcat(lp, param.c_str()); strcat(lp, "dB");
                                     webSrv.send(lp); setI2STone(); return;}
@@ -4216,9 +4079,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
 
-    if(cmd == "get_decoder"){       webSrv.send( DECODER? "decoder=s": "decoder=h"); return;}
-
-    if(cmd == "change_state"){      if(_state != CLOCK) changeState(param.toInt()); return;}
+     if(cmd == "change_state"){      if(_state != CLOCK) changeState(param.toInt()); return;}
 
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=audiofile stopped");
                                     if(playlistFile) playlistFile.close();
@@ -4267,6 +4128,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "File not found " ANSI_ESC_RED "\"%s\"", str.c_str());
                                         webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
 

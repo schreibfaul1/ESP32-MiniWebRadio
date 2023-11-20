@@ -6,16 +6,16 @@
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                //
-#define DECODER             1                               // (0)VS1053 , (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
-#define TFT_CONTROLLER      3                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
+#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_ROTATION        3                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          3                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         3                               // 1 or 3 (landscape)
+#define TFT_ROTATION        1                               // 1 or 3 (landscape)
+#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
-#define I2S_COMM_FMT        0                               // (0) commFmt MSB MAX98357A PCM5102A CS4344, (1) commFmt LSB PT8211
+#define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY     80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000 not every SD Card will run at 80MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
@@ -58,70 +58,67 @@
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
-        #define TFT_CS        22
-        #define TFT_DC        21
-        #define TFT_BL        32  // at -1 the brightness menu is not displayed
-        #define TP_IRQ        39  // VN
-        #define TP_CS          5
-        #define SD_MMC_D0      2  // cannot be changed
-        #define SD_MMC_CLK    14  // cannot be changed
-        #define SD_MMC_CMD    15  // cannot be changed
-        #define IR_PIN        35
-        #define TFT_MOSI      23  // TFT and TP (VSPI)
-        #define TFT_MISO      19  // TFT and TP (VSPI)
-        #define TFT_SCK       18  // TFT and TP (VSPI)
-    #if DECODER == 0
-        #define VS1053_CS     33
-        #define VS1053_DCS     4
-        #define VS1053_DREQ   36
-        #define VS1053_MOSI   13  // VS1053     (HSPI)
-        #define VS1053_MISO   34  // VS1053     (HSPI)
-        #define VS1053_SCK    12  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
-    #else
-        #define I2S_DOUT      25
-        #define I2S_BCLK      27
-        #define I2S_LRC       26
-        #define I2S_MCLK       0  // mostly not used
-    #endif
-        #define I2C_DATA      -1  // some DACs are controlled via I2C
-        #define I2C_CLK       -1
-        #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT     -1
-        #define AMP_ENABLED   -1
+        #define TFT_CS           22
+        #define TFT_DC           21
+        #define TFT_BL           32  // at -1 the brightness menu is not displayed
+        #define TP_IRQ           39  // VN
+        #define TP_CS             5
+        #define SD_MMC_D0         2  // cannot be changed
+        #define SD_MMC_CLK       14  // cannot be changed
+        #define SD_MMC_CMD       15  // cannot be changed
+        #define IR_PIN           35  // IR Receiver (if available)
+        #define TFT_MOSI         23  // TFT and TP (VSPI)
+        #define TFT_MISO         19  // TFT and TP (VSPI)
+        #define TFT_SCK          18  // TFT and TP (VSPI)
+
+        #define I2S_DOUT         25
+        #define I2S_BCLK         27
+        #define I2S_LRC          26
+        #define I2S_MCLK          0  // mostly not used
+
+        #define I2C_DATA         -1  // some DACs are controlled via I2C
+        #define I2C_CLK          -1
+        #define SD_DETECT        -1  // some pins on special boards: Lyra, Olimex, A1S ...
+        #define HP_DETECT        -1
+        #define AMP_ENABLED      -1
+
+        #define BT_EMITTER_RX    35  // TX pin - KCX Bluetooth Transmitter (if available)
+        #define BT_EMITTER_TX    36  // RX pin - KCX Bluetooth Transmitter (if available)
+        #define BT_EMITTER_LINK  34  // high if connected
+        #define BT_EMITTER_MODE  13  // high transmit - low receive
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     // Digital I/O used
-        #define TFT_CS         8
-        #define TFT_DC        12
-        #define TFT_BL        10 // at -1 the brightness menu is not displayed
-        #define TP_IRQ        39
-        #define TP_CS         15
-        #define SD_MMC_D0     11
-        #define SD_MMC_CLK    13
-        #define SD_MMC_CMD    14
-        #define IR_PIN         4
-        #define TFT_MOSI      18  // TFT and TP (FSPI)
-        #define TFT_MISO       2  // TFT and TP (FSPI)
-        #define TFT_SCK       17  // TFT and TP (FSPI)
-    #if DECODER == 0
-        #define VS1053_CS     48
-        #define VS1053_DCS    16
-        #define VS1053_DREQ   38
-        #define VS1053_MOSI   20  // VS1053     (HSPI)
-        #define VS1053_MISO   19  // VS1053     (HSPI)
-        #define VS1053_SCK    21  // VS1053     (HSPI) (sometimes we need a 1k resistor against ground)
-    #else
-        #define I2S_DOUT       9
-        #define I2S_BCLK       3
-        #define I2S_LRC        1
-        #define I2S_MCLK      -1
-    #endif
-        #define I2C_DATA      -1  // some DACs are controlled via I2C
-        #define I2C_CLK       -1
-        #define SD_DETECT     -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT     -1
-        #define AMP_ENABLED   -1
+        #define TFT_CS            8
+        #define TFT_DC           12
+        #define TFT_BL           10 // at -1 the brightness menu is not displayed
+        #define TP_IRQ           39
+        #define TP_CS            15
+        #define SD_MMC_D0        11
+        #define SD_MMC_CLK       13
+        #define SD_MMC_CMD       14
+        #define IR_PIN            4  // IR Receiver (if available)
+        #define TFT_MOSI         18  // TFT and TP (FSPI)
+        #define TFT_MISO          2  // TFT and TP (FSPI)
+        #define TFT_SCK          17  // TFT and TP (FSPI)
+
+        #define I2S_DOUT          9
+        #define I2S_BCLK          3
+        #define I2S_LRC           1
+        #define I2S_MCLK          0
+
+        #define I2C_DATA         -1  // some DACs are controlled via I2C
+        #define I2C_CLK          -1
+        #define SD_DETECT        -1  // some pins on special boards: Lyra, Olimex, A1S ...
+        #define HP_DETECT        -1
+        #define AMP_ENABLED      -1
+
+        #define BT_EMITTER_RX    -1  // TX pin - KCX Bluetooth Transmitter (if available)
+        #define BT_EMITTER_TX    -1  // RX pin - KCX Bluetooth Transmitter (if available)
+        #define BT_EMITTER_LINK  -1  // high if connected
+        #define BT_EMITTER_MODE  -1  // high transmit - low receive
+
 #endif
 
 /**********************************************************************************************************************/
@@ -222,7 +219,6 @@ void           setStationViaURL(const char* url);
 void           changeBtn_pressed(uint8_t btnNr);
 void           changeBtn_released(uint8_t btnNr);
 void           savefile(const char* fileName, uint32_t contentLength);
-String         setTone();
 String         setI2STone();
 void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
 void           SD_playFolder(const char* folderPath, bool showFN);

@@ -162,12 +162,6 @@ const char index_html[] PROGMEM = R"=====(
         #div-logo-m{
           display: none;
         }
-        #div-tone-s{
-          display: none;  /* audioI2S SW decoder */
-        }
-        #div-tone-h{
-          display: none;  /* vs1053 HW decoder */
-        }
         canvas {
             left : 0;
             margin-left : 0;
@@ -309,7 +303,6 @@ var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', '
 var trebleVal = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7]
 
 var tft_size = 0        // (0)320x240, (1)480x320
-var audio_decoder  = 0  // (0)vs1053,  (1)SW_Decoder
 
 // ---- websocket section------------------------
 
@@ -334,7 +327,6 @@ function connect() {
     socket.onopen = function () {
         console.log("Websocket connected")
         socket.send('get_tftSize')
-        socket.send('get_decoder')
         socket.send('to_listen')
         socket.send("getmute")
         socket.send("get_timeAnnouncement")
@@ -423,16 +415,6 @@ function connect() {
                                                         document.getElementById('canvas').height = 128;
                                                         console.log("tftSize is m");
                                     }
-                                    break
-            case  "decoder":        if(val == 'h')  { audio_decoder = 0; // vs1053 HW decoder
-                                                        document.getElementById('div-tone-s').style.display = 'none';
-                                                        document.getElementById('div-tone-h').style.display = 'block';
-                                                        console.log("vs1053");
-                                    }
-                                    if(val == 's')  { audio_decoder = 1; // audioI2S SW decoder
-                                                        document.getElementById('div-tone-h').style.display = 'none';
-                                                        document.getElementById('div-tone-s').style.display = 'block';
-                                                        console.log("audioI2S");}
                                     break
             case  "volume":         resultstr1.value = "Volume is now " + val;
                                     break
@@ -1655,7 +1637,7 @@ function chIRcmd(btn){  // IR command, value changed
         <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 29">
         <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="lazy" alt="Image 30">
         <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="lazy" alt="Image 30">
-        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
+        <img src="SD/common/MiniWebRadioV3.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
     </div>
 
     <div id="dialog">
@@ -1724,46 +1706,6 @@ function chIRcmd(btn){  // IR command, value changed
             </div>
             <div id="div-logo-m" style="flex: 0 0 210px;">
                 <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
-            </div>
-            <div id="div-tone-h" style="flex:1; justify-content: center;">
-                <div style="width: 380px; height:108px;">
-                    <label class="sdr_lbl_left">Treble Gain:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 25px;">
-                        <input type="range" min="0" max="15" value="8" id="TrebleGain"
-                        onmouseup="slider_TG_mouseUp()"
-                        ontouchend="slider_TG_mouseUp()"
-                        oninput="slider_TG_change()">
-                    </div>
-                    <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-                    <label class="sdr_lbl_left">Treble Freq:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="1" max="15" value="8" id="TrebleFreq"
-                        onmouseup="slider_TF_mouseUp()"
-                        ontouchend="slider_TF_mouseUp()"
-                        oninput="slider_TF_change()">
-                    </div>
-                    <label id="label_TF_value" class="sdr_lbl_right">00</label>
-                    <label class="sdr_lbl_measure">KHz</label>
-                    <label class="sdr_lbl_left">Bass Gain:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="0" max="15" value="8" id="BassGain"
-                        onmouseup="slider_BG_mouseUp()"
-                        ontouchend="slider_BG_mouseUp()"
-                        oninput="slider_BG_change()">
-                    </div>
-                    <label id="label_BG_value" class="sdr_lbl_right">+00</label>
-                    <label class="sdr_lbl_measure">dB</label>
-                    <label class="sdr_lbl_left">Bass Freq:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="2" max="15" value="6" id="BassFreq"
-                        onmouseup="slider_BF_mouseUp()"
-                        ontouchend="slider_BF_mouseUp()"
-                        oninput="slider_BF_change()">
-                    </div>
-                    <label  id="label_BF_value" class="sdr_lbl_right">000</label>
-                    <label class="sdr_lbl_measure">Hz</label>
-                </div>
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -2096,8 +2038,8 @@ function chIRcmd(btn){  // IR command, value changed
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content6">
-        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
-            external DAC. This project is documented on
+        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and  external DAC.
+         This project is documented on
             <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
             Author: Wolle (schreibfaul1)
         </p>
@@ -2106,7 +2048,7 @@ function chIRcmd(btn){  // IR command, value changed
         <table>
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+                    <img src="SD/common/MiniWebRadioV3.png" alt="MiniWebRadioV3" border="3">
                 </td>
                 <td>
                     <div style="display: flex;">
