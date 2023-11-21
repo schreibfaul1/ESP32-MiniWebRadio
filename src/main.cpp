@@ -307,11 +307,7 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 //  +-------------------------------------------+ 320
 //                                             480
 
-const uint8_t _fonts[9] = { TFT_TIMES_NEW_ROMAN_21, TFT_TIMES_NEW_ROMAN_25, TFT_TIMES_NEW_ROMAN_27, TFT_TIMES_NEW_ROMAN_34,
-                            TFT_TIMES_NEW_ROMAN_38, TFT_TIMES_NEW_ROMAN_43, TFT_TIMES_NEW_ROMAN_56, TFT_TIMES_NEW_ROMAN_66,
-                            TFT_BIG_NUMBERS,  // ASCII 0x20...03F only
-};
-
+const uint8_t _fonts[9] = {21, 25, 27, 34, 38, 43, 56, 66, 156};  // ASCII 0x20...03F only
 
 struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
 struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;

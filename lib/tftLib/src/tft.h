@@ -13,6 +13,7 @@
 #include "fonts/fontsdef.h"
 #include "fonts/TimesNewRoman.h"
 #include "fonts/Garamond.h"
+#include "fonts/FreeSerifItalic.h"
 #include "fonts/BigNumbers.h"
 
 using namespace std;
@@ -88,32 +89,14 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_WHITE           0xFFFF // 255, 255, 255
 #define TFT_YELLOW          0xFFE0 // 255, 255,   0
 
-#define TFT_TIMES_NEW_ROMAN_15   (1)
-#define TFT_TIMES_NEW_ROMAN_16   (2)
-#define TFT_TIMES_NEW_ROMAN_18   (3)
-#define TFT_TIMES_NEW_ROMAN_21   (4)
-#define TFT_TIMES_NEW_ROMAN_25   (5)
-#define TFT_TIMES_NEW_ROMAN_27   (6)
-#define TFT_TIMES_NEW_ROMAN_34   (7)
-#define TFT_TIMES_NEW_ROMAN_38   (8)
-#define TFT_TIMES_NEW_ROMAN_43   (9)
-#define TFT_TIMES_NEW_ROMAN_56   (10)
-#define TFT_TIMES_NEW_ROMAN_66   (11)
-#define TFT_BIG_NUMBERS          (12)
 
-
-#define TFT_GARAMOND_15          (21)
-#define TFT_GARAMOND_16          (22)
-#define TFT_GARAMOND_18          (23)
-#define TFT_GARAMOND_21          (24)
-#define TFT_GARAMOND_25          (25)
-#define TFT_GARAMOND_27          (26)
-#define TFT_GARAMOND_34          (27)
-#define TFT_GARAMOND_38          (28)
-#define TFT_GARAMOND_43          (29)
-#define TFT_GARAMOND_56          (30)
-#define TFT_GARAMOND_66          (31)
-
+#if TFT_FONT == 1
+#define TFT_TIMES_NEW_ROMAN
+#elif TFT_FONT == 2
+#define TFT_FREE_SERIF_ITALIC
+#else
+#define TFT_GARAMOND // if nothing is choosen
+#endif
 
 #define TFT_ALIGN_RIGHT          (1)
 #define TFT_ALIGN_LEFT           (2)
@@ -179,7 +162,7 @@ class TFT{
                   uint16_t* lookup_table;
         } fonts_t;
         fonts_t   _current_font;
-        uint8_t   _font = TFT_TIMES_NEW_ROMAN_15;
+        uint8_t   _font;
 
 
         uint32_t  _freq;
