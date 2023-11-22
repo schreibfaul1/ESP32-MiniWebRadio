@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 2.18 Nov 12/2023                                                                                         ";
+    Version 3.00 Nov 21/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -243,10 +243,8 @@ SemaphoreHandle_t mutex_display;
 //  +-------------------------------------------+ 240
 //                                             320
 
-const uint8_t _fonts[9] = { TFT_TIMES_NEW_ROMAN_15, TFT_TIMES_NEW_ROMAN_16, TFT_TIMES_NEW_ROMAN_21, TFT_TIMES_NEW_ROMAN_25,
-                            TFT_TIMES_NEW_ROMAN_27, TFT_TIMES_NEW_ROMAN_34, TFT_TIMES_NEW_ROMAN_38, TFT_TIMES_NEW_ROMAN_43,
-                            TFT_BIG_NUMBERS,  // ASCII 0x20...03F only
-};
+const uint8_t _fonts[9] = { 15, 16, 21, 25, 27, 34, 38, 43, 156};
+
 
 struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
 struct w_l {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;} const _winLogo;
@@ -3421,13 +3419,13 @@ void ir_res(uint32_t res) {
 void ir_number(uint16_t num) {
     if(_state != RADIO) return;
     if(_f_sleeping) return;
-    if(!_f_irNumberSeen) tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth, _winName.h + _winTitle.h, TFT_BLACK);
     _f_irNumberSeen = true;
+    tft.fillRect(_winLogo.x, _winLogo.y, _dispWidth, _winName.h + _winTitle.h, TFT_BLACK);
     tft.setFont(_fonts[8]);
     tft.setTextColor(TFT_GOLD);
     char buf[10];
     itoa(num, buf, 10);
-    tft.writeText(buf, 40, _irNumber_y, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, false, true);
+    tft.writeText(buf, 0, _irNumber_y, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, false, true);
 }
 void ir_key(uint8_t key) {
     if(_f_sleeping == true && key != 10) return;
