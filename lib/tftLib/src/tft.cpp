@@ -1713,7 +1713,6 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
 void TFT::setFont(uint16_t font){
 
 #ifdef TFT_TIMES_NEW_ROMAN
-log_e("new roman");
     switch(font){
         case 15:
             _current_font.cmaps = cmaps_Times15;

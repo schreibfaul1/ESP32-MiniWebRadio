@@ -317,7 +317,7 @@ function ping() {
         console.log("send ping")
         tm = setTimeout(function () {
             toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
-        }, 10000)
+        }, 20000)
     }
 }
 
@@ -1276,7 +1276,7 @@ var category
 function addStationsToGrid () {
     showDetailsDialog('Add', {})
     $('#txtStreamURL').val($('#streamurl').val())
-    $('#txtStationName').val($('#stationname').val())
+    $('#txtStationName').val($('#stations option:selected').text().trim())
 }
 
 function loadJSON (path, success, error) {

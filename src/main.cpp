@@ -1135,9 +1135,9 @@ void showLogoAndStationName() {
 void showStationName(String sn) {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     switch(strlenUTF8(sn.c_str())) {
-    case 0  ...  8: tft.setFont(_fonts[7]); log_e("fonts7"); break;
-    case 9  ... 11: tft.setFont(_fonts[6]); log_e("fonts6"); break;
-    case 12 ... 20: tft.setFont(_fonts[5]); log_e("fonts5"); break;
+    case 0  ...  8: tft.setFont(_fonts[7]); break;
+    case 9  ... 11: tft.setFont(_fonts[6]); break;
+    case 12 ... 20: tft.setFont(_fonts[5]); break;
     case 21 ... 32: tft.setFont(_fonts[4]); break;
     case 33 ... 45: tft.setFont(_fonts[3]); break;
     case 46 ... 60: tft.setFont(_fonts[2]); break;
