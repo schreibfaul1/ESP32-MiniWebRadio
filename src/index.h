@@ -2048,7 +2048,7 @@ function chIRcmd(btn){  // IR command, value changed
         <table>
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="SD/common/MiniWebRadioV3.png" alt="MiniWebRadioV3" border="3">
+                    <img src="SD/png/MiniWebRadioV3.png" alt="MiniWebRadioV3" border="3">
                 </td>
                 <td>
                     <div style="display: flex;">
