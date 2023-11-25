@@ -3,24 +3,15 @@
 
   Copyright (c) 2021 Thomas Jentzsch
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without restriction,
-  including without limitation the rights to use, copy, modify, merge,
-  publish, distribute, sublicense, and/or sell copies of the Software,
-  and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction,
+  including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished
+  to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
-  ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+  OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 /*
@@ -30,21 +21,11 @@
 #include "SoapESP32.h"
 #include "MiniXPath.h"
 
-#ifdef USE_ETHERNET
-    // usage of Wiznet W5x00 Ethernet board/shield instead of builtin WiFi
-    #define claimSPI()            \
-        if(m_SPIsem && *m_SPIsem) \
-            while(xSemaphoreTake(*m_SPIsem, 10) != pdTRUE)
-    #define releaseSPI() \
-        if(m_SPIsem && *m_SPIsem) xSemaphoreGive(*m_SPIsem)
-#else
-    // usage of builtin WiFi
-    #define claimSPI()
-    #define releaseSPI()
-#endif
+// usage of builtin WiFi
+#define claimSPI()
+#define releaseSPI()
 
-enum eXpath
-{
+enum eXpath {
     xpFriendlyName = 0,
     xpServiceType,
     xpControlUrl,
@@ -64,188 +45,200 @@ enum eXpath
     xpResource
 };
 
-xPathParser_t xmlParserPaths[] = {
-    {.num = 3, .tagNames = {"root", "device", "friendlyName"}},
-    {.num = 5, .tagNames = {"root", "device", "serviceList", "service", "serviceType"}},
-    {.num = 5, .tagNames = {"root", "device", "serviceList", "service", "controlURL"}},
-    {.num = 6, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "container"}},
-    {.num = 6,
-     .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "Result", "DIDL-Lite", "container"}},
-    {.num = 6,
-     .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "container"}},
-    {.num = 6, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "item"}},
-    {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "Result", "DIDL-Lite", "item"}},
-    {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "item"}},
-    {.num = 4, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "NumberReturned"}},
-    {.num = 4, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "NumberReturned"}},
-    {.num = 4, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "NumberReturned"}},
-    {.num = 1, .tagNames = {"dc:title"}},
-    {.num = 1, .tagNames = {"upnp:album"}},
-    {.num = 1, .tagNames = {"upnp:artist"}},
-    {.num = 1, .tagNames = {"upnp:class"}},
-    {.num = 1, .tagNames = {"res"}}};
+xPathParser_t xmlParserPaths[] = {{.num = 3, .tagNames = {"root", "device", "friendlyName"}},
+                                  {.num = 5, .tagNames = {"root", "device", "serviceList", "service", "serviceType"}},
+                                  {.num = 5, .tagNames = {"root", "device", "serviceList", "service", "controlURL"}},
+                                  {.num = 6, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "container"}},
+                                  {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "Result", "DIDL-Lite", "container"}},
+                                  {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "container"}},
+                                  {.num = 6, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "item"}},
+                                  {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "Result", "DIDL-Lite", "item"}},
+                                  {.num = 6, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "Result", "DIDL-Lite", "item"}},
+                                  {.num = 4, .tagNames = {"s:Envelope", "s:Body", "u:BrowseResponse", "NumberReturned"}},
+                                  {.num = 4, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "m:BrowseResponse", "NumberReturned"}},
+                                  {.num = 4, .tagNames = {"SOAP-ENV:Envelope", "SOAP-ENV:Body", "u:BrowseResponse", "NumberReturned"}},
+                                  {.num = 1, .tagNames = {"dc:title"}},
+                                  {.num = 1, .tagNames = {"upnp:album"}},
+                                  {.num = 1, .tagNames = {"upnp:artist"}},
+                                  {.num = 1, .tagNames = {"upnp:class"}},
+                                  {.num = 1, .tagNames = {"res"}}};
 
 const char *fileTypes[] = {"other", "audio", "picture", "video", ""};
 
-//
-// helper function, find the first occurrence of substring "what" in string "s", ignore case
-//
-#if !defined(__GNU_VISIBLE)
-char *strcasestr(const char *s, const char *what) {
-    char   c, sc;
-    size_t len;
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// SoapESP32 Class Constructor
+SoapESP32::SoapESP32() {
+    m_state = IDLE;
+    m_clientDataConOpen = false;
+    m_clientDataAvailable = 0;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// SoapESP32 Class Destructor
+SoapESP32::~SoapESP32() {
+    dlnaServer_clear_and_shrink();
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// searching local network for media servers that offer media content
+bool SoapESP32::seekServer(){
+    if(WiFi.status() != WL_CONNECTED) return false; // guard
+    dlnaServer_clear_and_shrink();
+    uint8_t ret = m_udp.beginMulticast(IPAddress(SSDP_MULTICAST_IP), 8888); // 8888: local port)
+    if(!ret){m_udp.stop(); log_e("error sending SSDP multicast packets"); return false;}
+    if(!m_udp.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT)) {log_e("udp beginPacket error"); return false;}
+    if(!m_udp.write((const uint8_t*)SSDP_M_SEARCH_TX, sizeof(SSDP_M_SEARCH_TX) - 1)){log_e("udp write error"); return false;}
+    if(!m_udp.endPacket()){log_e("endPacket error"); return false;}
+    m_state = SEEK_SERVER;
+    m_timeStamp = millis();
+    m_timeout = 2000; // waiting time after multicast
+    return true;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// called if a media server answered our SSDP multicast query
+void SoapESP32::parseDlnaServer(uint16_t len){
+    if(len > 511) len = 511; // guard
+    char tmpBuffer[512] = {0};
+    m_udp.read(tmpBuffer, len); // read packet into the buffer
+    tmpBuffer[len] = '\0'; // terminate
+    char* p = strcasestr(tmpBuffer, "Location: http");
+    if(!p) return;
+    int idx1 = indexOf(p, "://",  0) + 3;  // pos IP
+    int idx2 = indexOf(p, ":",  idx1);      // pos ':'
+    int idx3 = indexOf(p, "/",  idx2);      // pos '/'
+    int idx4 = indexOf(p, "\r", idx3);      // pos '\r'
+    *(p + idx2) = '\0';
+    *(p + idx3) = '\0';
+    *(p + idx4) = '\0';
+    m_dlnaServer.ip.push_back(strdup(p + idx1));
+    m_dlnaServer.port.push_back(atoi(p + idx2 + 1));
+    m_dlnaServer.location.push_back(strdup(p + idx3 + 1));
+    m_dlnaServer.controlURL.push_back(strdup(""));
+    m_dlnaServer.friendlyName.push_back(strdup(""));
+    m_dlnaServer.size++;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// check and examine a discovered media servers for service ContentDirectory
+bool SoapESP32::getServerItems(uint8_t srvNr){
 
-    if((c = *what++) != 0) {
-        c = tolower((unsigned char)c);
-        len = strlen(what);
-        do {
-            do {
-                if((sc = *s++) == 0) return (NULL);
-            } while((char)tolower((unsigned char)sc) != c);
-        } while(strncasecmp(s, what, len) != 0);
-        s--;
+    uint64_t     contentSize;
+    bool         chunked = false, gotFriendlyName = false, gotServiceType = false;
+    String       result((char *)0);
+    MiniXPath    xPath;
+
+    // try to establish connection to server and send GET request
+    if(!soapGet(m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr], m_dlnaServer.location[srvNr])) goto end;
+    // reading HTTP header
+    if(!soapReadHttpHeader(&contentSize, &chunked)) { goto end_stop_error; }
+    if(!chunked && contentSize == 0) {
+        log_e("announced XML size is 0, we can stop here");
+        goto end_stop_error;
     }
 
-    return ((char *)s);
-}
-#endif
+    // scan XML block for description: friendly name, service type "ContentDirectory" & associated control URL
+    xPath.reset();
+    xPath.setPath(xmlParserPaths[xpFriendlyName].tagNames, xmlParserPaths[xpFriendlyName].num);
+    while(true) {
+        int32_t ret = soapReadXML(chunked);
 
-//
-// SoapESP32 Class Constructor
-//
-#ifdef USE_ETHERNET
-SoapESP32::SoapESP32(EthernetClient *client, EthernetUDP *udp, SemaphoreHandle_t *sem)
-    : m_client(client),
-      m_udp(udp),
-      m_SPIsem(sem),
-      m_clientDataConOpen(false),
-      m_clientDataAvailable(0)
-#else
-SoapESP32::SoapESP32(WiFiClient *client, WiFiUDP *udp)
-    : m_client(client),
-      m_udp(udp),
-      m_clientDataConOpen(false),
-      m_clientDataAvailable(0)
-#endif
-{
-}
-
-//
-// broadcast 3 WOL packets carrying a specified MAC address
-// parameter is a pointer to a C string in the format "00:1:23:Aa:bC:D4" as an unusual example
-//
-#define WOL_PACKET_SIZE 102
-bool SoapESP32::wakeUpServer(const char *macAddress) {
-    uint8_t packetBuffer[WOL_PACKET_SIZE];
-    int32_t     mac[6];
-    char    lower[20];
-
-    if(strlen(macAddress) > 10 && strlen(macAddress) < 18) {
-        int32_t i;
-        for(i = 0; i < strlen(macAddress); i++) { lower[i] = tolower(macAddress[i]); }
-        lower[i] = 0;
-        if(sscanf(lower, "%x:%x:%x:%x:%x:%x%*c", &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]) != 6) {
-            log_e("could not parse parameter MAC \"%s\"", macAddress);
-            return false;
+        if(ret < 0) {
+            log_w("soapReadXML() returned: %d", ret);
+            goto end_stop_error;
         }
-        // build WOL udp packet: 6 bytes 0xFF followed by 16 x mac of target device
-        memset(packetBuffer, 0xFF, sizeof(packetBuffer));
-        for(i = 6; i < WOL_PACKET_SIZE; i++) { packetBuffer[i] = (uint8_t) * (mac + (i % 6)); }
-        // broadcast 3 WOL packets (destination IP 255.255.255.255, port 9)
-        for(i = 0; i < 3; i++) {
-            claimSPI();
-            m_udp->begin(9);
-            int32_t ret = m_udp->beginPacket(IPAddress(255, 255, 255, 255), 9);
-            releaseSPI();
-            if(ret) {
-                claimSPI();
-                m_udp->write(packetBuffer, WOL_PACKET_SIZE);
-                m_udp->endPacket();
-                m_udp->stop();
-                releaseSPI();
+
+        if(!gotFriendlyName) {
+            if(xPath.getValue((char)ret, &result)) {
+                const char* friendlyName = (result.length() > 0) ? result.c_str() : "Server name not provided";
+                m_dlnaServer.friendlyName[srvNr] = strdup(friendlyName);
+                gotFriendlyName = true;
+                // we got friendly name and now set xPath for service type which comes next
+                xPath.setPath(xmlParserPaths[xpServiceType].tagNames, xmlParserPaths[xpServiceType].num);
                 continue;
             }
-            break;
         }
-        if(i == 3) return true;
+        else if(!gotServiceType) {
+            if(xPath.getValue((char)ret, &result)) {
+                if(strstr(result.c_str(), UPNP_URN_SCHEMA_CONTENT_DIRECTORY)) {
+                    log_d("server offers service: %s", UPNP_URN_SCHEMA_CONTENT_DIRECTORY);
+                    gotServiceType = true;
+                    // We got service type and now set xPath for control url (follows in same <service> block)
+                    xPath.setPath(xmlParserPaths[xpControlUrl].tagNames, xmlParserPaths[xpControlUrl].num);
+                    continue;
+                }
+            }
+        }
+        else if(xPath.getValue((char)ret, &result)) {
+            // we finally got all infos we need
+            char* tmp = NULL;
+            uint16_t idx = 0;
+            if(endsWith(m_dlnaServer.location[srvNr], "/")){
+                tmp = (char*)malloc(strlen(m_dlnaServer.location[srvNr]) + result.length() + 1);
+                strcpy(tmp, m_dlnaServer.location[srvNr]); // location string becomes first part of controlURL
+                strcat(tmp, result.c_str());
+            }
+            else{
+                tmp = strdup(result.c_str());
+            }
+            if(startsWith(tmp, "http://")) { // remove "http://ip:port/" from begin of string
+               idx = indexOf(tmp, "/", 7) + 1;
+            }
+            m_dlnaServer.controlURL[srvNr] = strdup(tmp + idx);
+            if(tmp){free(tmp); tmp = NULL;}
+                goto end_stop;
+        }
     }
-    else { log_e("parameter MAC is invalid"); }
-
-    return false;
+    end_stop_error:
+        if(dlna_info) dlna_info("this Server does not deliver media content");
+        return 0;
+    end_stop:
+        m_client.stop();
+        if(dlna_server) dlna_server(srvNr, m_dlnaServer.size, m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr], m_dlnaServer.friendlyName[srvNr], m_dlnaServer.controlURL[srvNr]);
+    end:
+    ;
+    return m_dlnaServer.size;
 }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // helper function, client timed read
 //
-int32_t SoapESP32::soapClientTimedRead() {
-    int32_t           c;
+int32_t SoapESP32::soapClientTimedRead(void) {
+    int32_t  c;
     uint32_t startMillis = millis();
 
     do {
-        claimSPI();
-        c = m_client->read();
-        releaseSPI();
+        c = m_client.read();
+
         if(c >= 0) { return c; }
     } while(millis() - startMillis < SERVER_READ_TIMEOUT);
 
     return -1;  // read timeout
 }
-
-//
-// send SSDP/UDP multicast packets
-// WiFi/Ethernet libraries handle port parameter differently !
-//
-bool SoapESP32::soapUDPmulticast(uint8_t repeats) {
-    if(!m_udp) return false;
-
-#ifdef USE_ETHERNET
-    claimSPI();
-    uint8_t ret = m_udp->beginMulticast(IPAddress(SSDP_MULTICAST_IP), 1900);  // 1900: multicast dest port
-    releaseSPI();
-#else
-    uint8_t ret = m_udp->beginMulticast(IPAddress(SSDP_MULTICAST_IP), 8888);  // 8888: local port
-#endif
-    if(ret) {
-        // creating socket ok
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bool SoapESP32::soapUDPmulticast(uint8_t repeats) {                          // send SSDP/UDP multicast packets
+    uint8_t ret = m_udp.beginMulticast(IPAddress(SSDP_MULTICAST_IP), 8888);  // 8888: local port
+    if(ret) {                                                                // creating socket ok
         uint8_t i = 0;
         while(true) {
-            claimSPI();
-            if(!m_udp->beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT) ||
-               !m_udp->write((const uint8_t *)SSDP_M_SEARCH_TX, sizeof(SSDP_M_SEARCH_TX) - 1) || !m_udp->endPacket()) {
-                releaseSPI();
-                break;
-            }
-            releaseSPI();
+            if(!m_udp.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT) || !m_udp.write((const uint8_t *)SSDP_M_SEARCH_TX, sizeof(SSDP_M_SEARCH_TX) - 1) || !m_udp.endPacket()) { break; }
             if(++i > repeats) return true;
         }
     }
-    claimSPI();
-    m_udp->stop();
-    releaseSPI();
+    m_udp.stop();
     log_e("error sending SSDP multicast packets");
-
     return false;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//
-// SSDP/UDP search for media servers in local network
-//
-bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int32_t msWait) {
-    int32_t       i, port;
+bool SoapESP32::soapSSDPquery(int32_t msWait) {  // SSDP/UDP search for media servers in local network
+    int32_t   i, port;
     size_t    len;
     IPAddress ip;
     char      tmpBuffer[SSDP_TMP_BUFFER_SIZE], location[SSDP_LOCATION_BUF_SIZE] = "", address[20];
 
-    // send SSDP multicast packets (parameter: nr of repeats)
-    if(!soapUDPmulticast(1)) return false;
+    if(!soapUDPmulticast(1)) return false;  // send SSDP multicast packets (parameter: nr of repeats)
 
     // evaluate incoming SSDP packets (M-SEARCH replies) & NOTIFY packets if we catch them by chance
     uint32_t start = millis();
     do {
         delay(25);
-        claimSPI();
-        len = m_udp->parsePacket();
-        releaseSPI();
+        len = m_udp.parsePacket();
         if(len) {
             char *p;
 
@@ -253,18 +246,21 @@ bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int32_t msWait) {
             log_d("received SSDP packet within %d ms: packet size: %d", millis() - start, len);
             memset(tmpBuffer, 0, SSDP_TMP_BUFFER_SIZE);  // clear buffer
             if(len >= SSDP_TMP_BUFFER_SIZE) len = SSDP_TMP_BUFFER_SIZE - 1;
-            claimSPI();
-            m_udp->read(tmpBuffer, len);  // read packet into the buffer
-            releaseSPI();
+            m_udp.read(tmpBuffer, len);  // read packet into the buffer
+
             log_v("SSDP packet content:\n%s", tmpBuffer);
 
             // scan SSDP packet
-            if(  // M-SEARCH reply packets
-                (strstr(tmpBuffer, HTTP_HEADER_200_OK) && ((p = strcasestr(tmpBuffer, SSDP_LOCATION)) != NULL) &&
-                 strcasestr(tmpBuffer, SSDP_SERVICE_TYPE)) ||
-                // NOTIFY packets sent out regularly by media servers (we ignore ssdp:byebye's)
-                (strstr(tmpBuffer, SSDP_NOTIFICATION) && ((p = strcasestr(tmpBuffer, SSDP_LOCATION)) != NULL) &&
-                 strcasestr(tmpBuffer, SSDP_NOTIFICATION_TYPE) && strcasestr(tmpBuffer, SSDP_NOTIFICATION_SUB_TYPE))) {
+            uint8_t scan = 0;
+            if(strstr(tmpBuffer, HTTP_HEADER_200_OK)) scan += 1;
+            if(strcasestr(tmpBuffer, SSDP_LOCATION)) scan += 2;
+            if(strcasestr(tmpBuffer, SSDP_SERVICE_TYPE)) scan += 4;
+            if(strstr(tmpBuffer, SSDP_NOTIFICATION)) scan += 8;
+            if(strcasestr(tmpBuffer, SSDP_NOTIFICATION_TYPE)) scan += 16;
+            if(strcasestr(tmpBuffer, SSDP_NOTIFICATION_SUB_TYPE)) scan += 32;
+
+            if(scan == 0b00000111 || scan == 0b00111010) {  // M-SEARCH reply packets
+                p = strcasestr(tmpBuffer, SSDP_LOCATION);
                 char format[30];
 
                 strtok(p, "\r\n");
@@ -277,28 +273,27 @@ bool SoapESP32::soapSSDPquery(soapServerVect_t *result, int32_t msWait) {
                 if(!strlen(location)) log_d("empty location string!");
 
                 // avoid multiple entries of same server (identical ip & port)
-                for(i = 0; i < result->size(); i++) {
-                    if(result->operator[](i).ip == ip && result->operator[](i).port == port) break;
+                for(i = 0; i < m_dlnaServer.size; i++) {
+                    if(!strcmp(m_dlnaServer.ip[i], ip.toString().c_str()) && m_dlnaServer.port[i] == port) break;
                 }
-                if(i < result->size()) continue;
+                if(i < m_dlnaServer.size) continue;
 
                 // new server found: add it to list
-                soapServer_t srv = {.ip = ip,
-                                    .port = (uint16_t)port,
-                                    .location = location,
-                                    .friendlyName = "",
-                                    .controlURL = "" };
-                result->push_back(srv);
+                m_dlnaServer.controlURL.push_back((char*)"");
+                m_dlnaServer.friendlyName.push_back((char*)"");
+                m_dlnaServer.ip.push_back(strdup(ip.toString().c_str()));
+                m_dlnaServer.location.push_back(strdup(location));
+                m_dlnaServer.port.push_back((uint16_t)port);
+                m_dlnaServer.size++;
             }
         }
     } while((millis() - start) < msWait);
 
-    claimSPI();
-    m_udp->stop();
-    releaseSPI();
+    m_udp.stop();
 
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // read & evaluate HTTP header
@@ -309,9 +304,9 @@ bool SoapESP32::soapReadHttpHeader(uint64_t *contentLength, bool *chunked) {
     char  *p, tmpBuffer[TMP_BUFFER_SIZE_200];
 
     // first line contains status code
-    claimSPI();
-    len = m_client->readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);  // returns length without terminator '\n'
-    releaseSPI();
+
+    len = m_client.readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);  // returns length without terminator '\n'
+
     tmpBuffer[len] = 0;
     if(!strstr(tmpBuffer, HTTP_HEADER_200_OK)) {
         log_e("header line: %s", tmpBuffer);
@@ -327,13 +322,12 @@ bool SoapESP32::soapReadHttpHeader(uint64_t *contentLength, bool *chunked) {
     *contentLength = 0;
     if(chunked) *chunked = false;
     while(true) {
-        claimSPI();
-        int32_t av = m_client->available();
-        releaseSPI();
+        int32_t av = m_client.available();
+
         if(!av) break;
-        claimSPI();
-        len = m_client->readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
-        releaseSPI();
+
+        len = m_client.readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
+
         tmpBuffer[len] = 0;
         log_v("header line: %s", tmpBuffer);
         if(len == 1) break;  // End of header: finishing line contains only "\r\n"
@@ -359,16 +353,16 @@ bool SoapESP32::soapReadHttpHeader(uint64_t *contentLength, bool *chunked) {
 
     return ok;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // read XML data, de-chunk if needed & replace predefined XML entities that spoil MiniXPath
 //
-const replaceWith_t replaceWith[] = {{"&lt;", '<'},      {"&gt;", '>'},        {"&quot;", '"'},
-                                     {"&amp;amp;", '&'}, {"&amp;apos;", '\''}, {"&amp;quot;", '\''}};
+const replaceWith_t replaceWith[] = {{"&lt;", '<'}, {"&gt;", '>'}, {"&quot;", '"'}, {"&amp;amp;", '&'}, {"&amp;apos;", '\''}, {"&amp;quot;", '\''}};
 
 int32_t SoapESP32::soapReadXML(bool chunked, bool replace) {
-    bool match;
-    int32_t  i, c = -10;
+    bool    match;
+    int32_t i, c = -10;
 
     if(!replace || (replace && (m_xmlReplaceState == xmlPassthrough))) {
     GET_MORE:
@@ -385,9 +379,9 @@ int32_t SoapESP32::soapReadXML(bool chunked, bool replace) {
                 char tmpBuffer[10];
 
                 // next line contains chunk size
-                claimSPI();
-                int32_t len = m_client->readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
-                releaseSPI();
+
+                int32_t len = m_client.readBytesUntil('\n', tmpBuffer, sizeof(tmpBuffer) - 1);
+
                 if(len < 2) {
                     return -2;  // we expect at least 1 digit chunk size + '\r'
                 }
@@ -453,155 +447,28 @@ int32_t SoapESP32::soapReadXML(bool chunked, bool replace) {
     // Serial.printf("%c", (char)c);
     return c;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-//
-// searching local network for media servers that offer media content
-// returns number of servers found
-//
-uint8_t SoapESP32::seekServer() {
-    soapServerVect_t rcvd;
 
-    // delete old server list
-    m_server.clear();
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    if(dlna_info) dlna_info("SSDP search for media servers started");
-    soapSSDPquery(&rcvd);
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    sprintf(m_chbuf, "SSDP query discovered %d media servers", rcvd.size());
-    if(dlna_info) dlna_info(m_chbuf);
 
-    if(rcvd.size() == 0) return 0;  // return if none detected
 
-    // if(dlna_info) dlna_info("checking all discovered media servers for service ContentDirectory");
 
-    int32_t          j = 0;
-    uint64_t     contentSize;
-    bool         chunked, gotFriendlyName, gotServiceType;
-    String       result((char *)0);
-    MiniXPath    xPath;
-    soapServer_t srv;
 
-    // examine all media servers that answered our SSDP multicast query
-    while(j < rcvd.size()) {
-        // try to establish connection to server and send GET request
-        if(!soapGet(rcvd[j].ip, rcvd[j].port, rcvd[j].location.c_str())) goto end;
 
-        if(dlna_info){
-            sprintf(m_chbuf, "connected successfully to %s:%d", rcvd[j].ip.toString().c_str(), rcvd[j].port);
-            dlna_info(m_chbuf);
-        }
 
-        // ok, connection established
-        srv = {.ip = rcvd[j].ip,
-               .port = rcvd[j].port,
-               .location = rcvd[j].location,
-               .friendlyName = "",
-               .controlURL = "" };
 
-        gotFriendlyName = false;
-        gotServiceType = false;
 
-        // reading HTTP header
-        if(!soapReadHttpHeader(&contentSize, &chunked)) { goto end_stop_error; }
-        if(!chunked && contentSize == 0) {
-            log_w("announced XML size: 0, we can stop here");
-            goto end_stop_error;
-        }
 
-        // scan XML block for description: friendly name, service type "ContentDirectory" & associated control URL
-        xPath.reset();
-        xPath.setPath(xmlParserPaths[xpFriendlyName].tagNames, xmlParserPaths[xpFriendlyName].num);
-        while(true) {
-            int32_t ret = soapReadXML(chunked);
-            if(ret < 0) {
-                log_w("soapReadXML() returned: %d", ret);
-                goto end_stop_error;
-            }
 
-            if(!gotFriendlyName) {
-                if(xPath.getValue((char)ret, &result)) {
-                    srv.friendlyName = (result.length() > 0) ? result : "Server name not provided";
-                    log_d("scanned friendly name: %s", srv.friendlyName.c_str());
-                    gotFriendlyName = true;
-                    // we got friendly name and now set xPath for service type which comes next
-                    xPath.setPath(xmlParserPaths[xpServiceType].tagNames, xmlParserPaths[xpServiceType].num);
-                    continue;
-                }
-            }
-            else if(!gotServiceType) {
-                if(xPath.getValue((char)ret, &result)) {
-                    if(strstr(result.c_str(), UPNP_URN_SCHEMA_CONTENT_DIRECTORY)) {
-                        log_d("server offers service: %s", UPNP_URN_SCHEMA_CONTENT_DIRECTORY);
-                        gotServiceType = true;
-                        // We got service type and now set xPath for control url (follows in same <service> block)
-                        xPath.setPath(xmlParserPaths[xpControlUrl].tagNames, xmlParserPaths[xpControlUrl].num);
-                        continue;
-                    }
-                }
-            }
-            else if(xPath.getValue((char)ret, &result)) {
-                // we finally got all infos we need
-                if(srv.location.endsWith("/"))
-                    srv.controlURL = srv.location;  // location string becomes first part of controlURL
-                srv.controlURL += result;
-                if(srv.controlURL.startsWith("http://")) {
-                    // remove "http://ip:port/" from begin of string
-                    srv.controlURL.replace("http://", "");
-                    srv.controlURL = srv.controlURL.substring(srv.controlURL.indexOf("/") + 1);
-                }
-                log_d("assigned controlURL: %s", srv.controlURL.c_str());
-                // if(dlna_info) dlna_info("ok, this server delivers media content");
-                m_server.push_back(srv);  // add server to server list
-                goto end_stop;
-            }
-        }
-    end_stop_error:
-        if(dlna_info) dlna_info("this Server does not deliver media content");
-    end_stop:
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
-    end:
-        j++;
-    }
 
-    return m_server.size();
-}
-
-//
-// add a server manually to server list
-//
-bool SoapESP32::addServer(IPAddress ip, uint16_t port, const char *controlURL, const char *name) {
-    soapServer_t srv;
-    int32_t          i;
-
-    // just some basic checks
-    if(!ip || !port || !name || strlen(name) == 0 || !controlURL || strlen(controlURL) == 0) {
-        log_e("at least on parameter is invalid");
-        return false;
-    }
-
-    // refuse entry in list in case of identical ip & port
-    for(i = 0; i < m_server.size(); i++) {
-        if(m_server.operator[](i).ip == ip && m_server.operator[](i).port == port) break;
-    }
-    if(i < m_server.size()) return false;
-
-    srv.ip = ip;
-    srv.port = port;
-    srv.controlURL = controlURL;
-    srv.friendlyName = name;
-
-    // add server to list
-    m_server.push_back(srv);
-
-    return true;
-}
-
-//
 // erase all entries in server list
 //
-void SoapESP32::clearServerList() { m_server.clear(); }
+void SoapESP32::clearServerList() { dlnaServer_clear_and_shrink();}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // helper function: scan for certain attribute
@@ -609,8 +476,7 @@ void SoapESP32::clearServerList() { m_server.clear(); }
 bool SoapESP32::soapScanAttribute(const String *attributes, String *result, const char *what) {
     int32_t begin, end;
 
-    if((begin = attributes->indexOf(what)) >= 0 &&
-       (end = attributes->indexOf("\"", begin + strlen(what) + 1)) >= begin + strlen(what) + 1) {
+    if((begin = attributes->indexOf(what)) >= 0 && (end = attributes->indexOf("\"", begin + strlen(what) + 1)) >= begin + strlen(what) + 1) {
         *result = attributes->substring(begin + strlen(what) + 1, end);
         if(result->length() > 0) return true;
     }
@@ -620,12 +486,13 @@ bool SoapESP32::soapScanAttribute(const String *attributes, String *result, cons
 
     return false;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // scan <container> content in SOAP answer
 //
 bool SoapESP32::soapScanContainer(const String *parentId, const String *attributes, const String *container) {
-    int32_t          i = 0;
+    int32_t      i = 0;
     soapObject_t info;
     String       str((char *)0);
 
@@ -700,13 +567,14 @@ bool SoapESP32::soapScanContainer(const String *parentId, const String *attribut
 
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // scan <item> content in SOAP answer
 //
 bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, const String *item) {
     soapObject_t info;
-    int32_t          i = 0, port;
+    int32_t      i = 0, port;
     char         address[20];
     IPAddress    ip;
     String       str((char *)0);
@@ -839,31 +707,31 @@ bool SoapESP32::soapScanItem(const String *parentId, const String *attributes, c
     if(dlna_item) dlna_item(false, info.name, info.id, info.size, info.uri, false, info.fileType == fileTypeAudio);
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // browse a SOAP container object (directory) on a media server for content
 //
-bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into directory content list
-                               const uint16_t maxCount)       // limits number of objects in result list
+bool SoapESP32::browseServer1(const uint32_t startingIndex,  // offset into directory content list
+                              const uint16_t maxCount)       // limits number of objects in result list
 {
-    if(m_currentServer >= m_server.size()) {
-        if(m_currentServer == 255) return false; // is -1, nothing is choosen
+    if(m_currentServer >= m_dlnaServer.size) {
+        if(m_currentServer == 255) return false;  // is -1, nothing is choosen
         log_e("invalid server number: %d", m_currentServer);
         return false;
     }
 
     // evaluate SOAP answer
-    static uint64_t  contentSize = 0;
-    static bool      chunked = false;
-    static int32_t       count = 0;
-    static int32_t       countContainer = 0;
-    static int32_t       countItem = 0;
-    static String    str = "";
-    static String    strAttribute = "";
-    static bool      browseServerLoop = false;
+    static uint64_t contentSize = 0;
+    static bool     chunked = false;
+    static int32_t  count = 0;
+    static int32_t  countContainer = 0;
+    static int32_t  countItem = 0;
+    static String   str = "";
+    static String   strAttribute = "";
+    static bool     browseServerLoop = false;
 
-    if(m_firstCall){
-
+    if(m_firstCall) {
         m_firstCall = false;
         contentSize = 0;
         chunked = false;
@@ -872,29 +740,24 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
         countItem = 0;
         browseServerLoop = true;
 
-        if(dlna_info){sprintf(m_chbuf, "new search on server: \"%s\", objectId: \"%s\"",
-                                       m_server[m_currentServer].friendlyName.c_str(), m_objectId.c_str());
+        if(dlna_info) {
+            sprintf(m_chbuf, "new search on server: \"%s\", objectId: \"%s\"", m_dlnaServer.friendlyName[m_currentServer], m_objectId.c_str());
             dlna_info(m_chbuf);
         }
-        if(startingIndex != SOAP_DEFAULT_BROWSE_STARTING_INDEX)
-            log_d("special browse parameter \"startingIndex\": %d", startingIndex);
+        if(startingIndex != SOAP_DEFAULT_BROWSE_STARTING_INDEX) log_d("special browse parameter \"startingIndex\": %d", startingIndex);
         if(maxCount != SOAP_DEFAULT_BROWSE_MAX_COUNT) log_d("special browse parameter \"maxCount\": %d", maxCount);
         // send SOAP browse request
-        if(!soapPost(m_server[m_currentServer].ip, m_server[m_currentServer].port,
-            m_server[m_currentServer].controlURL.c_str(), m_objectId.c_str(), startingIndex, maxCount)) {
-            return false;
-        }
-        log_v("connected successfully to server %s:%d", m_server[m_currentServer].ip.toString().c_str(),
-            m_server[m_currentServer].port);
+        if(!soapPost(m_dlnaServer.ip[m_currentServer],  m_dlnaServer.port[m_currentServer], m_dlnaServer.controlURL[m_currentServer], m_objectId.c_str(), startingIndex, maxCount)) { return false; }
+        log_v("connected successfully to server %s:%d", m_dlnaServer.ip[m_currentServer], m_dlnaServer.port[m_currentServer]);
 
         if(!allocate_MiniXPath()) return false;
 
         // reading HTTP header
         if(!soapReadHttpHeader(&contentSize, &chunked)) {
             log_e("HTTP Header not ok or reply status not 200");
-            claimSPI();
-            m_client->stop();
-            releaseSPI();
+
+            m_client.stop();
+
             release_MiniXPath();
             return false;
         }
@@ -907,22 +770,16 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
 
         // HTTP header ok, now scan XML/SOAP reply
         m_xPathContainer->setPath(xmlParserPaths[xpBrowseContainer].tagNames, xmlParserPaths[xpBrowseContainer].num);
-        m_xPathContainerAlt1->setPath(xmlParserPaths[xpBrowseContainerAlt1].tagNames,
-                                   xmlParserPaths[xpBrowseContainerAlt1].num);
-        m_xPathContainerAlt2->setPath(xmlParserPaths[xpBrowseContainerAlt2].tagNames,
-                                   xmlParserPaths[xpBrowseContainerAlt2].num);
+        m_xPathContainerAlt1->setPath(xmlParserPaths[xpBrowseContainerAlt1].tagNames, xmlParserPaths[xpBrowseContainerAlt1].num);
+        m_xPathContainerAlt2->setPath(xmlParserPaths[xpBrowseContainerAlt2].tagNames, xmlParserPaths[xpBrowseContainerAlt2].num);
         m_xPathItem->setPath(xmlParserPaths[xpBrowseItem].tagNames, xmlParserPaths[xpBrowseItem].num);
         m_xPathItemAlt1->setPath(xmlParserPaths[xpBrowseItemAlt1].tagNames, xmlParserPaths[xpBrowseItemAlt1].num);
         m_xPathItemAlt2->setPath(xmlParserPaths[xpBrowseItemAlt2].tagNames, xmlParserPaths[xpBrowseItemAlt2].num);
-        m_xPathNumberReturned->setPath(xmlParserPaths[xpBrowseNumberReturned].tagNames,
-                                    xmlParserPaths[xpBrowseNumberReturned].num);
-        m_xPathNumberReturnedAlt1->setPath(xmlParserPaths[xpBrowseNumberReturnedAlt1].tagNames,
-                                        xmlParserPaths[xpBrowseNumberReturnedAlt1].num);
-        m_xPathNumberReturnedAlt2->setPath(xmlParserPaths[xpBrowseNumberReturnedAlt2].tagNames,
-                                        xmlParserPaths[xpBrowseNumberReturnedAlt2].num);
+        m_xPathNumberReturned->setPath(xmlParserPaths[xpBrowseNumberReturned].tagNames, xmlParserPaths[xpBrowseNumberReturned].num);
+        m_xPathNumberReturnedAlt1->setPath(xmlParserPaths[xpBrowseNumberReturnedAlt1].tagNames, xmlParserPaths[xpBrowseNumberReturnedAlt1].num);
+        m_xPathNumberReturnedAlt2->setPath(xmlParserPaths[xpBrowseNumberReturnedAlt2].tagNames, xmlParserPaths[xpBrowseNumberReturnedAlt2].num);
         return true;
     }
-
 
     if(browseServerLoop) {
         int32_t ret = soapReadXML(chunked, true);  // de-chunk data stream and replace XML-entities (if found)
@@ -934,8 +791,7 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
         // Serial.print((char)ret);
         //
         // only one will return a result
-        if(m_xPathContainer->getValue((char)ret, &str, &strAttribute, true) ||
-           m_xPathContainerAlt1->getValue((char)ret, &str, &strAttribute, true) ||
+        if(m_xPathContainer->getValue((char)ret, &str, &strAttribute, true) || m_xPathContainerAlt1->getValue((char)ret, &str, &strAttribute, true) ||
            m_xPathContainerAlt2->getValue((char)ret, &str, &strAttribute, true)) {
             log_v("container attribute (length=%d): %s", strAttribute.length(), strAttribute.c_str());
             log_v("container (length=%d): %s", str.length(), str.c_str());
@@ -943,8 +799,7 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
             // TEST
             delay(1);  // resets task switcher watchdog, just in case it's needed
         }
-        if(m_xPathItem->getValue((char)ret, &str, &strAttribute, true) ||
-           m_xPathItemAlt1->getValue((char)ret, &str, &strAttribute, true) ||
+        if(m_xPathItem->getValue((char)ret, &str, &strAttribute, true) || m_xPathItemAlt1->getValue((char)ret, &str, &strAttribute, true) ||
            m_xPathItemAlt2->getValue((char)ret, &str, &strAttribute, true)) {
             log_v("item attribute (length=%d): %s", strAttribute.length(), strAttribute.c_str());
             log_v("item (length=%d): %s", str.length(), str.c_str());
@@ -952,29 +807,26 @@ bool SoapESP32::browseServer1( const uint32_t startingIndex,  // offset into dir
             // TEST
             delay(1);  // resets task switcher watchdog, just in case it's needed
         }
-        if(m_xPathNumberReturned->getValue((char)ret, &str) || m_xPathNumberReturnedAlt1->getValue((char)ret, &str) ||
-           m_xPathNumberReturnedAlt2->getValue((char)ret, &str)) {
+        if(m_xPathNumberReturned->getValue((char)ret, &str) || m_xPathNumberReturnedAlt1->getValue((char)ret, &str) || m_xPathNumberReturnedAlt2->getValue((char)ret, &str)) {
             count = str.toInt();
             log_d("announced number of folders and/or files: %d", count);
 
             browseServerLoop = false;
-            return true; // numberReturned comes last, so we can break here
+            return true;  // numberReturned comes last, so we can break here
         }
         return true;
     }
 
     if(count == 0) { log_i("XML scanned, no elements announced"); }
     else if(count != (countContainer + countItem)) {
-        log_w(
-            "XML scanned, elements announced %d != found %d (possible reason: empty file or vital attributes missing)",
-            count, countContainer + countItem);
+        log_w("XML scanned, elements announced %d != found %d (possible reason: empty file or vital attributes missing)", count, countContainer + countItem);
     }
 
 end_stop:
-    claimSPI();
-    m_client->stop();
-    releaseSPI();
-    if(dlna_info){
+
+    m_client.stop();
+
+    if(dlna_info) {
         sprintf(m_chbuf, "found %d folders and %d files", countContainer, countItem);
         dlna_info(m_chbuf);
     }
@@ -982,7 +834,7 @@ end_stop:
     if(dlna_folder) dlna_folder(true);
     if(dlna_item) dlna_item(true, "", "", 0, "", true, false);
 
-    // TEST
+        // TEST
 #if CORE_DEBUG_LEVEL > 3
     delay(10);  // allow pending serial monitor output to be sent, can be massive when verbose
 #elif CORE_DEBUG_LEVEL > 0
@@ -990,31 +842,33 @@ end_stop:
 #endif
     release_MiniXPath();
     if(browseServerLoop) return false;
-    m_status = IDLE;
+    m_state = IDLE;
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------
-bool SoapESP32::allocate_MiniXPath(){
-    m_xPathContainer = new MiniXPath;
-    m_xPathContainerAlt1= new MiniXPath;
-    m_xPathContainerAlt2= new MiniXPath;
-    m_xPathItem= new MiniXPath;
-    m_xPathItemAlt1= new MiniXPath;
-    m_xPathItemAlt2= new MiniXPath;
-    m_xPathNumberReturned= new MiniXPath;
-    m_xPathNumberReturnedAlt1= new MiniXPath;
-    m_xPathNumberReturnedAlt2= new MiniXPath;
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    if(!m_xPathContainer || !m_xPathContainerAlt1 || !m_xPathContainerAlt2 || !m_xPathItem || !m_xPathItemAlt1 ||
-       !m_xPathItemAlt2  || !m_xPathNumberReturned || !m_xPathNumberReturnedAlt1 || !m_xPathNumberReturnedAlt2){
+bool SoapESP32::allocate_MiniXPath() {
+    m_xPathContainer = new MiniXPath;
+    m_xPathContainerAlt1 = new MiniXPath;
+    m_xPathContainerAlt2 = new MiniXPath;
+    m_xPathItem = new MiniXPath;
+    m_xPathItemAlt1 = new MiniXPath;
+    m_xPathItemAlt2 = new MiniXPath;
+    m_xPathNumberReturned = new MiniXPath;
+    m_xPathNumberReturnedAlt1 = new MiniXPath;
+    m_xPathNumberReturnedAlt2 = new MiniXPath;
+
+    if(!m_xPathContainer || !m_xPathContainerAlt1 || !m_xPathContainerAlt2 || !m_xPathItem || !m_xPathItemAlt1 || !m_xPathItemAlt2 || !m_xPathNumberReturned || !m_xPathNumberReturnedAlt1 ||
+       !m_xPathNumberReturnedAlt2) {
         log_e("oom");
         release_MiniXPath();
         return false;
     }
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void SoapESP32::release_MiniXPath(){
+void SoapESP32::release_MiniXPath() {
     delete m_xPathContainer;
     delete m_xPathContainerAlt1;
     delete m_xPathContainerAlt2;
@@ -1025,7 +879,8 @@ void SoapESP32::release_MiniXPath(){
     delete m_xPathNumberReturnedAlt1;
     delete m_xPathNumberReturnedAlt2;
 }
-//----------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 //
 // request object (file) from media server
 //
@@ -1035,37 +890,35 @@ bool SoapESP32::readStart(soapObject_t *object, size_t *size) {
     if(object->isDirectory) return false;
     m_clientDataAvailable = 0;
 
-    log_v("server ip: %s, port: %d, uri: \"%s\"", object->downloadIp.toString().c_str(), object->downloadPort,
-          object->uri.c_str());
+    log_v("server ip: %s, port: %d, uri: \"%s\"", object->downloadIp.toString().c_str(), object->downloadPort, object->uri.c_str());
 
     // just to make sure old connection is closed
     if(m_clientDataConOpen) {
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+        m_client.stop();
+
         m_clientDataConOpen = false;
         log_w("client data connection to media server was still open. Closed now.");
     }
 
     // establish connection to server and send GET request
-    if(!soapGet(object->downloadIp, object->downloadPort, object->uri.c_str())) { return false; }
+    if(!soapGet(object->downloadIp.toString().c_str(), object->downloadPort, object->uri.c_str())) { return false; }
 
     // connection established, read HTTP header
     if(!soapReadHttpHeader(&contentSize)) {
         // error returned
         log_e("soapReadHttpHeader() was unsuccessful.");
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+
+        m_client.stop();
+
         return false;
     }
 
     // max allowed file size for download is 4.2GB (SIZE_MAX)
     if(contentSize > (uint64_t)SIZE_MAX) {
         log_e("file too big for download. Maximum allowed file size is 4.2GB.");
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+
+        m_client.stop();
+
         return false;
     }
 
@@ -1073,9 +926,9 @@ bool SoapESP32::readStart(soapObject_t *object, size_t *size) {
     if(m_clientDataAvailable == 0) {
         // no data available
         log_e("announced file size: 0 !");
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+
+        m_client.stop();
+
         return false;
     }
 
@@ -1085,13 +938,12 @@ bool SoapESP32::readStart(soapObject_t *object, size_t *size) {
     }
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
-// read up to size bytes from server and place them into buf
-// returnes number of bytes read or -1 in case nothing was read (default read timeout is 3s)
+// read up to size bytes from server and place them into buf returnes number of bytes read or -1 in case nothing was read (default read timeout is 3s)
 // Remarks:
-// - older WiFi library versions & the Ethernet library return -1 if connection is still up but
-//   momentarily no data available and return 0 in case of EOF. Newer WiFi versions return 0 in
+// - older WiFi library versions & the Ethernet library return -1 if connection is still up but momentarily no data available and return 0 in case of EOF. Newer WiFi versions return 0 in
 //   both cases, so we need to treat -1 & 0 equally.
 // - timeout checking is vital because client.read() can return 0 for ages in case of WiFi problems
 //
@@ -1100,14 +952,14 @@ int32_t SoapESP32::read(uint8_t *buf, size_t size, uint32_t timeout) {
     if(!buf || !size || !m_clientDataConOpen) return -1;  // clearly an error
     if(!m_clientDataAvailable) return 0;                  // most probably EOF
 
-    int32_t      res = -1;
+    int32_t  res = -1;
     uint32_t start = millis();
 
     while(1) {
         // if (m_clientDataAvailable < size) size = m_clientDataAvailable;
-        claimSPI();
-        res = m_client->read(buf, size);
-        releaseSPI();
+
+        res = m_client.read(buf, size);
+
         if(res > 0) {
             // got at least 1 byte from server
             m_clientDataAvailable -= res;
@@ -1122,6 +974,7 @@ int32_t SoapESP32::read(uint8_t *buf, size_t size, uint32_t timeout) {
 
     return res;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
 // read a single byte from server, return -1 in case of error
@@ -1137,35 +990,32 @@ int32_t SoapESP32::read(void) {
 //
 void SoapESP32::readStop() {
     if(m_clientDataConOpen) {
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+        m_client.stop();
+
         m_clientDataConOpen = false;
         log_d("client data connection to media server closed");
     }
     m_clientDataAvailable = 0;
 }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // HTTP GET request
 //
-bool SoapESP32::soapGet(const IPAddress ip, const uint16_t port, const char *uri) {
+bool SoapESP32::soapGet(const char* ip, const uint16_t port, const char *uri) {
     if(m_clientDataConOpen) {
         // should not happen...probably buggy main
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+
+        m_client.stop();
+
         m_clientDataConOpen = false;
         log_w("client data connection to media server was still open. Closed now.");
     }
 
     for(int32_t i = 0;;) {
-        claimSPI();
-        bool ret = m_client->connect(ip, port);
-        releaseSPI();
+        bool ret = m_client.connect(ip, port);
+
         if(ret) break;
         if(++i >= 3) {
-            log_e("error connecting to server ip=%s, port=%d", ip.toString().c_str(), port);
+            log_e("error connecting to server ip=%s, port=%d", ip, port);
             return false;
         }
         delay(100);
@@ -1185,28 +1035,25 @@ bool SoapESP32::soapGet(const IPAddress ip, const uint16_t port, const char *uri
     str += buffer;
     log_d("%s:%d %s", ip.toString().c_str(), port, buffer);
     str += "\r\n";
-    snprintf(buffer, length, HEADER_HOST, ip.toString().c_str(), port);
+    snprintf(buffer, length, HEADER_HOST, ip, port);
     str += buffer;
     str += HEADER_CONNECTION_CLOSE;
     str += HEADER_USER_AGENT;
     str += HEADER_EMPTY_LINE;  // empty line marks end of HTTP header
 
     // send request to server
-    claimSPI();
-    m_client->print(str);
-    releaseSPI();
+
+    m_client.print(str);
 
     // give server some time to answer
     uint32_t start = millis();
     while(true) {
-        claimSPI();
-        int32_t av = m_client->available();
-        releaseSPI();
+        int32_t av = m_client.available();
+
         if(av) break;
         if(millis() > (start + SERVER_RESPONSE_TIMEOUT)) {
-            claimSPI();
-            m_client->stop();
-            releaseSPI();
+            m_client.stop();
+
             log_e("GET: no reply from server for %d ms", SERVER_RESPONSE_TIMEOUT);
             free(buffer);
             return false;
@@ -1216,28 +1063,25 @@ bool SoapESP32::soapGet(const IPAddress ip, const uint16_t port, const char *uri
 
     return true;
 }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // HTTP POST request
 //
-bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *uri, const char *objectId,
-                         const uint32_t startingIndex, const uint16_t maxCount) {
+bool SoapESP32::soapPost(const char* ip, const uint16_t port, const char *uri, const char *objectId, const uint32_t startingIndex, const uint16_t maxCount) {
     if(m_clientDataConOpen) {
         // should not get here...probably buggy main
-        claimSPI();
-        m_client->stop();
-        releaseSPI();
+
+        m_client.stop();
+
         m_clientDataConOpen = false;
         log_w("client data connection to media server was still open. Closed now.");
     }
 
     for(int32_t i = 0;;) {
-        claimSPI();
-        int32_t ret = m_client->connect(ip, (uint16_t)port);
-        releaseSPI();
+        int32_t ret = m_client.connect(ip, (uint16_t)port);
+
         if(ret) break;
         if(++i >= 2) {
-            log_e("error connecting to server ip=%s, port=%d", ip.toString().c_str(), port);
+            log_e("error connecting to server ip=%s, port=%d", ip, port);
             return false;
         }
         delay(100);
@@ -1262,14 +1106,11 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
     messageLength += sizeof(SOAP_BODY_START) - 1;
     messageLength += sizeof(SOAP_BROWSE_START) - 1;
     messageLength += sizeof(SOAP_OBJECTID_START) - 1 + strlen(objectId) + sizeof(SOAP_OBJECTID_END) - 1;
-    messageLength +=
-        sizeof(SOAP_BROWSEFLAG_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_FLAG) - 1 + sizeof(SOAP_BROWSEFLAG_END) - 1;
-    messageLength +=
-        sizeof(SOAP_FILTER_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_FILTER) - 1 + sizeof(SOAP_FILTER_END) - 1;
+    messageLength += sizeof(SOAP_BROWSEFLAG_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_FLAG) - 1 + sizeof(SOAP_BROWSEFLAG_END) - 1;
+    messageLength += sizeof(SOAP_FILTER_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_FILTER) - 1 + sizeof(SOAP_FILTER_END) - 1;
     messageLength += sizeof(SOAP_STARTINGINDEX_START) - 1 + strlen(index) + sizeof(SOAP_STARTINGINDEX_END) - 1;
     messageLength += sizeof(SOAP_REQUESTEDCOUNT_START) - 1 + strlen(count) + sizeof(SOAP_REQUESTEDCOUNT_END) - 1;
-    messageLength += sizeof(SOAP_SORTCRITERIA_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_SORT_CRITERIA) - 1 +
-                     sizeof(SOAP_SORTCRITERIA_END) - 1;
+    messageLength += sizeof(SOAP_SORTCRITERIA_START) - 1 + sizeof(SOAP_DEFAULT_BROWSE_SORT_CRITERIA) - 1 + sizeof(SOAP_SORTCRITERIA_END) - 1;
     messageLength += sizeof(SOAP_BROWSE_END) - 1;
     messageLength += sizeof(SOAP_BODY_END) - 1;
     messageLength += sizeof(SOAP_ENVELOPE_END) - 1;
@@ -1279,7 +1120,7 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
     str += buffer;
     log_d("%s:%d %s", ip.toString().c_str(), port, buffer);
     str += "\r\n";
-    snprintf(buffer, length, HEADER_HOST, ip.toString().c_str(), port);  // 29 bytes max
+    snprintf(buffer, length, HEADER_HOST, ip, port);  // 29 bytes max
     str += buffer;
     // TEST
     str += "CACHE-CONTROL: no-cache\r\nPRAGMA: no-cache\r\n";
@@ -1321,21 +1162,18 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
 
     // send request to server
     log_v("send request to server:\n%s", str.c_str());
-    claimSPI();
-    m_client->print(str);
-    releaseSPI();
+
+    m_client.print(str);
 
     // wait for a reply until timeout
     uint32_t start = millis();
     while(true) {
-        claimSPI();
-        int32_t av = m_client->available();
-        releaseSPI();
+        int32_t av = m_client.available();
+
         if(av) break;
         if(millis() > (start + SERVER_RESPONSE_TIMEOUT)) {
-            claimSPI();
-            m_client->stop();
-            releaseSPI();
+            m_client.stop();
+
             log_e("POST: no reply from server within %d ms", SERVER_RESPONSE_TIMEOUT);
             free(buffer);
             return false;
@@ -1345,74 +1183,107 @@ bool SoapESP32::soapPost(const IPAddress ip, const uint16_t port, const char *ur
 
     return true;
 }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // returns number of usable media servers in our list
 //
-uint8_t SoapESP32::getServerCount(void) { return m_server.size(); }
-
-//
+uint8_t SoapESP32::getServerCount(void) { return m_dlnaServer.size; }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // returns infos about a media servers from our internal list
 //
 bool SoapESP32::getServerInfo(uint8_t srv, soapServer_t *serverInfo) {
-    if(srv >= m_server.size()) return false;
-    *serverInfo = m_server[srv];
+    if(srv >= m_dlnaServer.size) return false;
+    serverInfo->controlURL = m_dlnaServer.controlURL[srv];
+    serverInfo->friendlyName = m_dlnaServer.friendlyName[srv];
+    serverInfo->ip = m_dlnaServer.ip[srv];
+    serverInfo->location = m_dlnaServer.location[srv];
+    serverInfo->port = m_dlnaServer.port[srv];
     return true;
 }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // returns number of available/remaining bytes
 //
 size_t SoapESP32::available() { return m_clientDataConOpen ? m_clientDataAvailable : 0; }
-
-//
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // returns pointer to string (item type name)
 //
-const char *SoapESP32::getFileTypeName(eFileType fileType) {
-    return (fileTypeAudio <= fileType && fileType <= fileTypeVideo) ? fileTypes[fileType] : fileTypes[fileTypeOther];
-}
+const char *SoapESP32::getFileTypeName(eFileType fileType) { return (fileTypeAudio <= fileType && fileType <= fileTypeVideo) ? fileTypes[fileType] : fileTypes[fileTypeOther]; }
 
-void SoapESP32::loop(){
-    if(!m_status) return;
-    switch(m_status){
-        case GET_SERVER_INFO:
-                    if(m_idx >= m_server.size()) {m_status = IDLE; m_idx = 0; break;}
-                    if(dlna_server){ dlna_server(m_idx, m_server.size(),
-                                                 m_server[m_idx].ip.toString(),
-                                                 m_server[m_idx].port,
-                                                 m_server[m_idx].friendlyName,
-                                                 m_server[m_idx].controlURL);
-                    }
-                    m_idx++;
-                    break;
-        case BROWSE_SERVER:
-                    if(m_currentServer == 255) break; // is -1, no server selected
-                    if(!browseServer1()){m_status = IDLE; log_e("something went wrong"); break;}
-                    break;
-        default: break;
-    }
-    return;
-}
 
-bool SoapESP32::listServer(){ // returns a list via event 'dlna_server()'
-    if(!m_server.size()) return false;
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+bool SoapESP32::listServer() {  // returns a list via event 'dlna_server()'
+    if(!m_dlnaServer.size) return false;
     m_idx = 0;
-    m_status = GET_SERVER_INFO;
+    m_state = GET_SERVER_INFO;
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SoapESP32::browseServer(const uint8_t srv, const char *objectId){
+bool SoapESP32::browseServer(const uint8_t srv, const char *objectId) {
     m_currentServer = srv;
     m_objectId = objectId;
     m_firstCall = true;
-    m_status = BROWSE_SERVER;
+    m_state = BROWSE_SERVER;
     return true;
 }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-uint16_t SoapESP32::getMediaDownloadPort(){
-    return m_downloadPort;
-}
+uint16_t SoapESP32::getMediaDownloadPort() { return m_downloadPort; }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-String SoapESP32::getMediaDownloadIP(){
-    return m_server[m_currentServer].ip.toString();
+String SoapESP32::getMediaDownloadIP() { return m_dlnaServer.ip[m_currentServer]; }
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// state machine
+void SoapESP32::loop() {
+    switch(m_state) {
+        static uint8_t cnt = 0;
+        case IDLE:
+            break;
+        case SEEK_SERVER:
+            if(m_timeStamp + m_timeout > millis()){
+                size_t len = m_udp.parsePacket();
+                if(len){
+                    parseDlnaServer(len);
+                }
+                cnt = 0;
+            }
+            else{
+                m_udp.stop();
+                m_state = GET_SERVER_ITEMS;
+                cnt = 0;
+            }
+            break;
+        case GET_SERVER_ITEMS:
+            if(cnt < m_dlnaServer.size){
+                if(getServerItems(cnt)){
+                    m_timeStamp = millis();
+                    m_timeout = 500;
+                    cnt++;
+                }
+                return;
+            }
+            cnt = 0;
+            m_state = IDLE;
+            break;
+        case GET_SERVER_INFO:
+            if(m_idx >= m_dlnaServer.size) {
+                m_state = IDLE;
+                m_idx = 0;
+                break;
+            }
+            if(dlna_server) { dlna_server(m_idx, m_dlnaServer.size, m_dlnaServer.ip[m_idx], m_dlnaServer.port[m_idx], m_dlnaServer.friendlyName[m_idx], m_dlnaServer.controlURL[m_idx]); }
+            m_idx++;
+            break;
+        case BROWSE_SERVER:
+            if(m_currentServer == 255) break;  // is -1, no server selected
+            if(!browseServer1()) {
+                m_state = IDLE;
+                log_e("something went wrong");
+                break;
+            }
+            break;
+        default:
+            break;
+    }
+    return;
 }

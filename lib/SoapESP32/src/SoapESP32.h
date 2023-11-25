@@ -3,45 +3,25 @@
 
   Copyright (c) 2021 Thomas Jentzsch
 
-  Permission is hereby granted, free of charge, to any person
-  obtaining a copy of this software and associated documentation
-  files (the "Software"), to deal in the Software without restriction,
-  including without limitation the rights to use, copy, modify, merge,
-  publish, distribute, sublicense, and/or sell copies of the Software,
-  and to permit persons to whom the Software is furnished to do so,
-  subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-  The above copyright notice and this permission notice shall be
-  included in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
-  ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-  CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+  IN THE SOFTWARE.
 */
 
 #ifndef SoapESP32_h
 #define SoapESP32_h
 
 #include <Arduino.h>
-#include "MiniXPath.h"
+#include <WiFi.h>
 #include <vector>
-
-// Please uncomment if you use an Ethernet board/shield instead of builtin WiFi
-// #define USE_ETHERNET
-
-#if defined(ethernet_h_) && !defined(USE_ETHERNET)
-    #warning "== ATTENTION == Did you forget to define USE_ETHERNET ?????  Please read Readme.md !!!!!"
-#endif
-
-#ifdef USE_ETHERNET
-    #include <Ethernet.h>
-#else
-    #include <WiFi.h>
-#endif
+#include "MiniXPath.h"
 
 #define TMP_BUFFER_SIZE_200  200
 #define TMP_BUFFER_SIZE_400  400
@@ -59,8 +39,8 @@
 #define SSDP_CONTROL_URL_BUF_SIZE 200
 #define SSDP_TMP_BUFFER_SIZE      500
 #define SSDP_M_SEARCH_TX                                                                       \
-    "M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 3\r\n" \
-    "ST: urn:schemas-upnp-org:device:MediaServer:1\r\n\r\n"
+	"M-SEARCH * HTTP/1.1\r\nHOST: 239.255.255.250:1900\r\nMAN: \"ssdp:discover\"\r\nMX: 3\r\n" \
+	"ST: urn:schemas-upnp-org:device:MediaServer:1\r\n\r\n"
 
 #define SSDP_LOCATION              "Location: http://"
 #define SSDP_SERVICE_TYPE          "ST: urn:schemas-upnp-org:device:MediaServer:1"
@@ -84,8 +64,8 @@
 
 // SOAP tag data
 #define SOAP_ENVELOPE_START                                              \
-    "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " \
-    "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
+	"<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " \
+	"s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
 #define SOAP_ENVELOPE_END         "</s:Envelope>\r\n\r\n"
 #define SOAP_BODY_START           "<s:Body>"
 #define SOAP_BODY_END             "</s:Body>\r\n"
@@ -125,144 +105,206 @@
 #define DIDL_ATTR_SAMPLEFREQU "sampleFrequency="
 
 extern __attribute__((weak)) void dlna_info(const char *);
-extern __attribute__((weak)) void dlna_server(uint8_t serverId, size_t serverSize, String IP_addr, uint16_t port,
-                                              String friendlyName, String controlURL);
+extern __attribute__((weak)) void dlna_server(uint8_t serverId, size_t serverSize, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL);
 extern __attribute__((weak)) void dlna_folder(bool lastItem, String name = "", String id = "", size_t childCount = 0);
 extern __attribute__((weak)) void dlna_file(bool lastItem, String name = "", String id = "", size_t size = 0, String uri = "", bool isAudio = false);
 extern __attribute__((weak)) void dlna_item(bool lastItem, String name, String id, size_t size, String uri, bool isDir, bool isAudio);
 
 // for replacing predefined XML entities in server reply
-enum eXmlReplaceState
+enum eXmlReplaceState { xmlPassthrough = 0, xmlAmpDetected, xmlTakeFromBuffer };
+struct replaceWith_t
 {
-    xmlPassthrough = 0,
-    xmlAmpDetected,
-    xmlTakeFromBuffer
-};
-struct replaceWith_t {
     const char *replace;
     const char  with;
 };
 
 // defines the data content of a reported item (file/stream)
-enum eFileType{
-    fileTypeOther = 0,
-    fileTypeAudio,
-    fileTypeImage,
-    fileTypeVideo
-};
+enum eFileType { fileTypeOther = 0, fileTypeAudio, fileTypeImage, fileTypeVideo };
 
 // info collection of a single SOAP object (<container> or <item>)
-struct soapObject_t {
-    bool      isDirectory;  // true if directory
-    uint64_t  size;         // directory child count or item size, zero in case of missing size/child count attribute
-    bool      sizeMissing;  // true in case server did not provide size
-    int32_t       bitrate;      // bitrate (music files only)
-    int32_t       sampleFrequency;  // sample frequency (music files only)
-    bool      searchable;       // only used for directories, some media servers don't provide it
-    eFileType fileType;         // audio, picture, movie, stream or other
-    String    parentId;         // parent directory id
-    String    id;               // unique id of directory/file on media server
-    String    name;             // directory name or file name
-    String    artist;           // for music files
-    String    album;            // for music files (sometimes folder name when picture file)
-    String    uri;              // item URI on server, needed for download with GET
-    IPAddress downloadIp;       // download IP can differ from server IP
-    uint16_t  downloadPort;     // download port can differ from server control port
+struct soapObject_t
+{
+	bool      isDirectory;      // true if directory
+	uint64_t  size;             // directory child count or item size, zero in case of missing size/child count attribute
+	bool      sizeMissing;      // true in case server did not provide size
+	int32_t   bitrate;          // bitrate (music files only)
+	int32_t   sampleFrequency;  // sample frequency (music files only)
+	bool      searchable;       // only used for directories, some media servers don't provide it
+	eFileType fileType;         // audio, picture, movie, stream or other
+	String    parentId;         // parent directory id
+	String    id;               // unique id of directory/file on media server
+	String    name;             // directory name or file name
+	String    artist;           // for music files
+	String    album;            // for music files (sometimes folder name when picture file)
+	String    uri;              // item URI on server, needed for download with GET
+	IPAddress downloadIp;       // download IP can differ from server IP
+	uint16_t  downloadPort;     // download port can differ from server control port
 };
 typedef std::vector<soapObject_t> soapObjectVect_t;
 
 // keeps vital infos of each media server
-struct soapServer_t {
-    IPAddress ip;
-    uint16_t  port;
-    String    location;
-    String    friendlyName;
-    String    controlURL;
-};
-typedef std::vector<soapServer_t> soapServerVect_t;
+typedef struct _soapServer {
+    const char*  ip;
+    uint16_t     port;
+    const char*  location;
+    const char*  friendlyName;
+    const char*  controlURL;
+}soapServer_t;
+
+
+
+
+
+
+
+
 
 // SoapESP32 class
 class SoapESP32 {
-
-  public:
-#ifdef USE_ETHERNET
-    SoapESP32(EthernetClient *client, EthernetUDP *udp = NULL, SemaphoreHandle_t *sem = NULL);
-#else
-    SoapESP32(WiFiClient *client, WiFiUDP *udp = NULL);
-#endif
-    bool        wakeUpServer(const char *macWOL);
-    void        clearServerList(void);
-    bool        addServer(IPAddress ip, uint16_t port, const char *controlURL, const char *name = "My Media Server");
-    uint8_t     seekServer(void);
-    uint8_t     getServerCount(void);
-    bool        getServerInfo(uint8_t srv, soapServer_t *serverInfo);
-    bool        readStart(soapObject_t *object, size_t *size);
-    int32_t         read(uint8_t *buf, size_t size, uint32_t timeout = SERVER_READ_TIMEOUT);
-    int32_t         read(void);
-    void        readStop(void);
-    size_t      available(void);
-    const char *getFileTypeName(eFileType fileType);
+  private:
+	WiFiClient m_client;
+	WiFiUDP    m_udp;
 
   private:
-#ifdef USE_ETHERNET
-    EthernetClient    *m_client;  // pointer to EthernetClient object
-    EthernetUDP       *m_udp;     // pointer to EthernetUDP object
-    SemaphoreHandle_t *m_SPIsem;  // only needed if we use Ethernet lib instead of builtin WiFi
-#else
-    WiFiClient *m_client;  // pointer to WiFiClient object
-    WiFiUDP    *m_udp;     // pointer to WiFiUDP object
-#endif
+    typedef struct _dlnaServer {
+        uint16_t size;
+        std::vector<char*>     ip;
+        std::vector<uint16_t>  port;
+        std::vector<char*>     location;
+        std::vector<char*>     friendlyName;
+        std::vector<char*>     controlURL;
+    } dlnaServer_t;
+    dlnaServer_t m_dlnaServer;
 
-    enum : int32_t{IDLE = 0, GET_SERVER_INFO = 1, BROWSE_SERVER = 2};
+  public:
+	SoapESP32();
+    ~SoapESP32();
+	void        clearServerList(void);
+	bool        seekServer(void);
+	uint8_t     getServerCount(void);
+	bool        getServerInfo(uint8_t srv, soapServer_t *serverInfo);
+	bool        readStart(soapObject_t *object, size_t *size);
+	int32_t     read(uint8_t *buf, size_t size, uint32_t timeout = SERVER_READ_TIMEOUT);
+	int32_t     read(void);
+	void        readStop(void);
+	size_t      available(void);
+	const char *getFileTypeName(eFileType fileType);
+
+  private:
+    enum : int32_t { IDLE, SEEK_SERVER, GET_SERVER_ITEMS, GET_SERVER_INFO, BROWSE_SERVER };
 
     bool             m_clientDataConOpen;    // marker: socket open for reading file
-    size_t           m_clientDataAvailable;  // file read count
-    soapServerVect_t m_server;               // list of usable media servers in local network
-    int32_t              m_xmlChunkCount;    // nr of bytes left of chunk (0 = end of chunk, next line delivers chunk size)
-    eXmlReplaceState m_xmlReplaceState;  // state machine for replacing XML entities
-    uint8_t          m_xmlReplaceOffset;
-    char             m_xmlReplaceBuffer[15];  // Fits longest string in replaceWith[] array
-    uint8_t          m_status = IDLE;
-    uint8_t          m_idx = 0; // universal counter
-    char             m_chbuf[512]; //universal use
-    uint8_t          m_currentServer = 0;
-    String           m_objectId = "";
-    bool             m_firstCall = false;
-    uint16_t         m_downloadPort = 0;
+	size_t           m_clientDataAvailable;  // file read count
+	int32_t          m_xmlChunkCount;        // nr of bytes left of chunk (0 = end of chunk, next line delivers chunk size)
+	eXmlReplaceState m_xmlReplaceState;      // state machine for replacing XML entities
+	uint8_t          m_xmlReplaceOffset;
+	char             m_xmlReplaceBuffer[15];  // Fits longest string in replaceWith[] array
+    uint8_t          m_state = IDLE;
+    uint32_t         m_timeStamp = 0;
+    uint16_t         m_timeout = 0;
+	uint8_t          m_idx = 0;     // universal counter
+	char             m_chbuf[512];  // universal use
+	uint8_t          m_currentServer = 0;
+	String           m_objectId = "";
+	bool             m_firstCall = false;
+	uint16_t         m_downloadPort = 0;
 
+	MiniXPath *m_xPathContainer;
+	MiniXPath *m_xPathContainerAlt1;
+	MiniXPath *m_xPathContainerAlt2;
+	MiniXPath *m_xPathItem;
+	MiniXPath *m_xPathItemAlt1;
+	MiniXPath *m_xPathItemAlt2;
+	MiniXPath *m_xPathNumberReturned;
+	MiniXPath *m_xPathNumberReturnedAlt1;
+	MiniXPath *m_xPathNumberReturnedAlt2;
 
-    MiniXPath* m_xPathContainer;
-    MiniXPath* m_xPathContainerAlt1;
-    MiniXPath* m_xPathContainerAlt2;
-    MiniXPath* m_xPathItem;
-    MiniXPath* m_xPathItemAlt1;
-    MiniXPath* m_xPathItemAlt2;
-    MiniXPath* m_xPathNumberReturned;
-    MiniXPath* m_xPathNumberReturnedAlt1;
-    MiniXPath* m_xPathNumberReturnedAlt2;
+    void    parseDlnaServer(uint16_t len);
+    bool    getServerItems(uint8_t srvNr);
+    bool    soapGet(const char* ip, const uint16_t port, const char *uri);
+	bool    soapPost(const char* ip, const uint16_t port, const char *uri, const char *objectId, const uint32_t startingIndex, const uint16_t maxCount);
+	bool    browseServer1(const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX, const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);
+	int32_t soapClientTimedRead(void);
+	bool    soapUDPmulticast(uint8_t repeats = 0);
+	bool    soapSSDPquery(int32_t msWait = SSDP_MAX_REPLY_TIMEOUT);
+	bool    soapReadHttpHeader(uint64_t *contentLength, bool *chunked = NULL);
+	int32_t soapReadXML(bool chunked = false, bool replace = false);
+	bool    soapScanAttribute(const String *attributes, String *result, const char *searchFor);
+	bool    soapScanContainer(const String *parentId, const String *attributes, const String *container);
+	bool    soapScanItem(const String *parentId, const String *attributes, const String *item);
+	bool    allocate_MiniXPath();
+	void    release_MiniXPath();
 
+  public:
+	void     loop();
+	bool     listServer();
+	bool     browseServer(const uint8_t srv, const char *objectId);
+	uint16_t getMediaDownloadPort();
+	String   getMediaDownloadIP();
 
-    bool browseServer1(const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX,
-                       const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);
-    int32_t  soapClientTimedRead(void);
-    bool soapUDPmulticast(uint8_t repeats = 0);
-    bool soapSSDPquery(std::vector<soapServer_t> *rcvd, int32_t msWait = SSDP_MAX_REPLY_TIMEOUT);
-    bool soapGet(const IPAddress ip, const uint16_t port, const char *uri);
-    bool soapPost(const IPAddress ip, const uint16_t port, const char *uri, const char *objectId,
-                  const uint32_t startingIndex, const uint16_t maxCount);
-    bool soapReadHttpHeader(uint64_t *contentLength, bool *chunked = NULL);
-    int32_t  soapReadXML(bool chunked = false, bool replace = false);
-    bool soapScanAttribute(const String *attributes, String *result, const char *searchFor);
-    bool soapScanContainer(const String *parentId, const String *attributes, const String *container);
-    bool soapScanItem(const String *parentId, const String *attributes, const String *item);
-    bool allocate_MiniXPath();
-    void release_MiniXPath();
-public:
-    void loop();
-    bool listServer();
-    bool browseServer(const uint8_t srv, const char *objectId);
-    uint16_t getMediaDownloadPort();
-    String getMediaDownloadIP();
+  private:
+    void vector_clear_and_shrink(std::vector<char *> &vec) {
+        uint size = vec.size();
+        for(int32_t i = 0; i < size; i++) {
+            if(vec[i]) {
+                free(vec[i]);
+                vec[i] = NULL;
+            }
+        }
+        vec.clear();
+        vec.shrink_to_fit();
+    }
+
+    void dlnaServer_clear_and_shrink() {
+        m_dlnaServer.size = 0;
+        vector_clear_and_shrink(m_dlnaServer.ip);
+        m_dlnaServer.port.clear();
+        m_dlnaServer.port.shrink_to_fit();
+        vector_clear_and_shrink(m_dlnaServer.location);
+        vector_clear_and_shrink(m_dlnaServer.friendlyName);
+        vector_clear_and_shrink(m_dlnaServer.controlURL);
+    }
+
+    int32_t indexOf(const char *haystack, const char *needle, int32_t startIndex) {
+        const char *p = haystack;
+        for(; startIndex > 0; startIndex--)
+            if(*p++ == '\0') return -1;
+        char *pos = strstr(p, needle);
+        if(pos == nullptr) return -1;
+        return pos - haystack;
+    }
+
+    bool startsWith(const char *base, const char *searchString) {
+        char c;
+        while((c = *searchString++) != '\0')
+            if(c != *base++) return false;
+        return true;
+    }
+
+    bool endsWith(const char *base, const char *searchString) {
+        int32_t slen = strlen(searchString);
+        if(slen == 0) return false;
+        const char *p = base + strlen(base);
+    //  while(p > base && isspace(*p)) p--;  // rtrim
+        p -= slen;
+        if(p < base) return false;
+        return (strncmp(p, searchString, slen) == 0);
+    }
+
+    void trimInclControl(char* s) {
+    // fb   trim in place
+    char* pe;
+    char* p = s;
+    while(*p <= 0x20) p++; // left
+    pe = p;                 // right
+    while(*pe != '\0') pe++;
+    do { pe--; } while((pe > p) && (*pe <= 20));
+    if(p == s) { *++pe = '\0'; }
+    else { // move
+        while(p <= pe) *s++ = *p++;
+        *s = '\0';
+    }
+}
 };
 
 #endif

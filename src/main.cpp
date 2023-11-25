@@ -209,7 +209,7 @@ File        playlistFile;
 FtpServer   ftpSrv;
 WiFiClient  client;
 WiFiUDP     udp;
-SoapESP32   soap(&client, &udp);
+SoapESP32   soap;
 
 #if DECODER == 2 // ac101
 AC101 dac;
@@ -4240,14 +4240,14 @@ void dlna_info(const char* info) {
     SerialPrintfln("DLNA_info:   " ANSI_ESC_WHITE "%s", info); // infos
 }
 
-void dlna_server(uint8_t serverId, size_t serverSize, String IP_addr, uint16_t port, String friendlyName, String controlURL) {
-    SerialPrintfln("DLNA_server: [%d][%d] %s : %d %s -> %s", serverId, serverSize, IP_addr.c_str(), port, friendlyName.c_str(), controlURL.c_str());
+void dlna_server(uint8_t serverId, size_t serverSize, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL){
+    SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s -> %s", serverId, IP_addr, port, friendlyName, controlURL);
     char id[4];
     itoa(serverId, id, 10);
-    String msg = "DLNA_Names=" + friendlyName + "," + id;
+    String msg = "DLNA_Names=" + (String)friendlyName + "," + id;
     webSrv.send(msg);
 
-    _dlna_items.serverFriendlyName.push_back(x_ps_strdup(friendlyName.c_str()));
+    _dlna_items.serverFriendlyName.push_back(x_ps_strdup(friendlyName));
     _dlna_items.serverId.push_back(serverId);
 }
 
@@ -4320,7 +4320,7 @@ void dlna_item(bool lastItem, String name, String id, size_t size, String uri, b
         int32_t s = _dlna_items.name.size();
 
         for(int32_t i = 0; i < s;  i++){
-            log_w("name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", _dlna_items.name[i], _dlna_items.id[i], _dlna_items.size[i], _dlna_items.uri[i], _dlna_items.isDir[i], _dlna_items.isAudio[i]);
+        //  log_w("name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", _dlna_items.name[i], _dlna_items.id[i], _dlna_items.size[i], _dlna_items.uri[i], _dlna_items.isDir[i], _dlna_items.isAudio[i]);
         }
 
         dlna_items_vector_clear_ans_shrink();
