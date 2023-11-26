@@ -73,6 +73,8 @@ PlatformIO is definitely recommended as the IDE.
 | opus |  y (celt)  |
 <br>
 ___________________________________________________________
+
+
 ## Known problems
 ### SD Card
 In the simplest case, the SD card is connected directly to the ESP32
