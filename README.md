@@ -71,7 +71,8 @@ PlatformIO is definitely recommended as the IDE.
 | vorbis | y (<=196Kbit/s)  |
 | m4a | y |
 | opus |  y (celt)  |
-
+<br>
+___________________________________________________________
 ## Known problems
 ### SD Card
 In the simplest case, the SD card is connected directly to the ESP32
@@ -80,8 +81,24 @@ In the simplest case, the SD card is connected directly to the ESP32
 Some SD card adapters for displays use series resistors. These are useless and in many cases harmful. Therefore, it is better to remove them and replace them with solder bridges.<br>
 ![Display Resistors](docs/Display_resistors.jpg)<br>
 If an ESP32 is used, any existing pull-up resistor at pin D0 must be removed (ESP32 - bootstrap pin). This will be added again later via SW. This is not necessary with the ESP32-S3.
-(Photo from the ESPuino forum)![SD Card Adapter ESP32](docs/ESP32_SD_Card_PullUp.jpg)<br>
+(Photo from the <a href="https://forum.espuino.de/"> ESPuino </a>forum)![SD Card Adapter ESP32](docs/ESP32_SD_Card_PullUp.jpg)<br>
+
+### Display
+Many displays can be used without any problems. If the touchpad does not work, it may be that the TFT controller does not enable the SPI bus. This is the case with my ILI9488 display. Then MISO of the TFT controller must not be connected.<br>
+![ILI9488 Display](docs/ILI9488_pins.jpg)<br>
+
+### DAC
+On some PCM5102 boards the solder bridges are missing on the back.<br>
+![PCM5102A Board](docs/PCM5102A.png)<br>
+This is how the DAC CS4344 is connected:<br>
+![CS4344 Board](docs/DAC_CS434.jpg)<br>
+If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
+<br>
+___________________________________________________________
+<br>
 
 ![MWR](/docs/MWR.jpg)<br>
 <br>
+
+
 
