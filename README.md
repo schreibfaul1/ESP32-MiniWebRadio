@@ -72,8 +72,8 @@ PlatformIO is definitely recommended as the IDE.
 | m4a | y |
 | opus |  y (celt)  |
 <br>
-___________________________________________________________
-
+____
+<br>
 
 ## Known problems
 ### SD Card
