@@ -71,8 +71,12 @@ PlatformIO is definitely recommended as the IDE.
 | vorbis | y (<=196Kbit/s)  |
 | m4a | y |
 | opus |  y (celt)  |
+
+
 <br>
-____
+
+___
+
 <br>
 
 ## Known problems
