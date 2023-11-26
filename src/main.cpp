@@ -1106,7 +1106,7 @@ void showStreamTitle(const char* streamtitle) {
     case 131 ... 200: tft.setFont(_fonts[1]); break;
     default: tft.setFont(_fonts[0]); break;
     }
-    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 5, 5, _winSTitle.w, _winSTitle.h);
+    display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 2, 10, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
 }
 void showVUmeter() {

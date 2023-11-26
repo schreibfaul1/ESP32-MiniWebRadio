@@ -1,4 +1,4 @@
-# ESP32-MiniWebRadio V2
+# ESP32-MiniWebRadio V3
 
 ![Display](docs/MiniWebRadio.jpg)
 
@@ -25,27 +25,23 @@ MiniWebRadio Features:
 </ul><br>
 Required HW:
 <ul>
-<li>ESP32 or ESP32-S3 board with PSRAM</li><li>Decoder module VS1053 or external DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
+<li>ESP32 or ESP32-S3 board with PSRAM</li><li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 <li>IR receiver + IR remote controller (optional)
-<li>Note: if using a VS1053, VS1053_SCK may need a 1k resistor connected to ground in order to boot</li>
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
-Schematic with VS1053<br>
-![Schematic with VS1053](docs/MWR_V2_VS1053.jpg)<br>
-
-Schematic with external DAC<br>
-![Schematic with external DAC](docs/MWR_V2_DAC.jpg)<br>
+Schematic<br>
+![Schematic with external DAC](docs/MiniWebRadioV3_schematic.jpg)<br>
 <br>
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio%20V2%20Layout.pdf">Display (Layout)</a>
 
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/How%20to%20install.pdf">How to install:</a>
 PlatformIO is definitely recommended as the IDE.
 
-#### New in V2:
+#### Some features:
 
 - The audioprocess works in its own task and is decoupled. If a VS1053 is used, it must have its own SPI bus (VS1053 uses HSPI - TFT uses VSPI). This prevents dropouts when drawing on the display or when the website is loading.
 - The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/SD_Card_Adapter_for_SD_MMC_.jpg">SD card adapter</a> must not have any resistors as pull-ups or in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
@@ -65,16 +61,26 @@ PlatformIO is definitely recommended as the IDE.
 
 <br>
 
-Codec\Decoder| VS1053B        | PCM5102A, AC101, ES8388, WM8978 |
-|----------|----------|----------|
-| mp3 | y| y |
-| aac | y | y |
-| aacp (HLS) | y  | mono |
-| wav | y | y  |
-| flac | with plugin | blocksize max 8192 bytes |
-| vorbis | y  | y (<=196Kbit/s)  |
-| m4a | y  | y |
-| opus | n  | y (celt)  |
+|Codec|                          |
+|-----|--------------------------|
+| mp3 | y |
+| aac | y |
+| aacp (HLS) | mono |
+| wav | y |
+| flac | blocksize max 8192 bytes |
+| vorbis | y (<=196Kbit/s)  |
+| m4a | y |
+| opus |  y (celt)  |
+
+## Known problems
+### SD Card
+In the simplest case, the SD card is connected directly to the ESP32
+<br>
+![SD Card Pinout](docs/SD_Card_Pinout.jpg)<br>
+Some SD card adapters for displays use series resistors. These are useless and in many cases harmful. Therefore, it is better to remove them and replace them with solder bridges.<br>
+![Display Resistors](docs/Display_resistors.jpg)<br>
+If an ESP32 is used, any existing pull-up resistor at pin D0 must be removed (ESP32 - bootstrap pin). This will be added again later via SW. This is not necessary with the ESP32-S3.
+(Photo from the ESPuino forum)![SD Card Adapter ESP32](docs/ESP32_SD_Card_PullUp.jpg)<br>
 
 ![MWR](/docs/MWR.jpg)<br>
 <br>
