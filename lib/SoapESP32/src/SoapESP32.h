@@ -30,9 +30,11 @@
 // network communication timeouts
 #define SERVER_RESPONSE_TIMEOUT 4000  // ms
 #define SERVER_READ_TIMEOUT     4000  // ms
+#define SEEK_TIMEOUT            5000
 
 // SSDP UDP - seeking media servers
 #define SSDP_MULTICAST_IP         239, 255, 255, 250
+#define SSDP_LOCAL_PORT           8888
 #define SSDP_MULTICAST_PORT       1900
 #define SSDP_MAX_REPLY_TIMEOUT    4000  // ms
 #define SSDP_LOCATION_BUF_SIZE    150
@@ -175,12 +177,14 @@ class SoapESP32 {
         std::vector<char*>     controlURL;
     } dlnaServer_t;
     dlnaServer_t m_dlnaServer;
+    std::vector<char*> m_content;
 
   public:
 	SoapESP32();
     ~SoapESP32();
 	void        clearServerList(void);
 	bool        seekServer(void);
+    int8_t      getServer();
 	uint8_t     getServerCount(void);
 	bool        getServerInfo(uint8_t srv, soapServer_t *serverInfo);
 	bool        readStart(soapObject_t *object, size_t *size);
@@ -191,8 +195,14 @@ class SoapESP32 {
 	const char *getFileTypeName(eFileType fileType);
 
   private:
-    enum : int32_t { IDLE, SEEK_SERVER, GET_SERVER_ITEMS, GET_SERVER_INFO, BROWSE_SERVER };
+    enum {IDLE, SEEK_SERVER, GET_SERVER_ITEMS, READ_HTTP_HEADER, GET_SERVER_INFO, BROWSE_SERVER };
 
+    bool        m_PSRAMfound = false;
+    bool        m_chunked = false ;
+    char*       m_chbuf = NULL;
+    uint16_t    m_chbufSize = 0;
+    uint32_t    m_contentlength = 0;
+    uint32_t    m_chunkcount = 0;
     bool             m_clientDataConOpen;    // marker: socket open for reading file
 	size_t           m_clientDataAvailable;  // file read count
 	int32_t          m_xmlChunkCount;        // nr of bytes left of chunk (0 = end of chunk, next line delivers chunk size)
@@ -203,7 +213,6 @@ class SoapESP32 {
     uint32_t         m_timeStamp = 0;
     uint16_t         m_timeout = 0;
 	uint8_t          m_idx = 0;     // universal counter
-	char             m_chbuf[512];  // universal use
 	uint8_t          m_currentServer = 0;
 	String           m_objectId = "";
 	bool             m_firstCall = false;
@@ -219,8 +228,11 @@ class SoapESP32 {
 	MiniXPath *m_xPathNumberReturnedAlt1;
 	MiniXPath *m_xPathNumberReturnedAlt2;
 
-    void    parseDlnaServer(uint16_t len);
-    bool    getServerItems(uint8_t srvNr);
+    void parseDlnaServer(uint16_t len);
+    bool getServerItems(uint8_t srvNr);
+    bool srvGet(uint8_t srvNr);
+    bool readHttpHeader();
+    bool readContent();
     bool    soapGet(const char* ip, const uint16_t port, const char *uri);
 	bool    soapPost(const char* ip, const uint16_t port, const char *uri, const char *objectId, const uint32_t startingIndex, const uint16_t maxCount);
 	bool    browseServer1(const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX, const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);

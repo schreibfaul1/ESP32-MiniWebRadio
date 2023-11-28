@@ -71,35 +71,64 @@ SoapESP32::SoapESP32() {
     m_state = IDLE;
     m_clientDataConOpen = false;
     m_clientDataAvailable = 0;
+    m_dlnaServer.size = 0;
+    if(!psramInit()) {
+        m_chbuf = (char*)malloc(512);
+        m_chbufSize = 512;
+    }
+    else {
+        m_PSRAMfound = true;
+        m_chbuf = (char*)ps_malloc(2048);
+        m_chbufSize = 2048;
+    }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // SoapESP32 Class Destructor
-SoapESP32::~SoapESP32() {
+SoapESP32::~SoapESP32(){
     dlnaServer_clear_and_shrink();
+    vector_clear_and_shrink(m_content);
+    if(m_chbuf){free(m_chbuf); m_chbuf = NULL;}
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // searching local network for media servers that offer media content
 bool SoapESP32::seekServer(){
     if(WiFi.status() != WL_CONNECTED) return false; // guard
     dlnaServer_clear_and_shrink();
-    uint8_t ret = m_udp.beginMulticast(IPAddress(SSDP_MULTICAST_IP), 8888); // 8888: local port)
-    if(!ret){m_udp.stop(); log_e("error sending SSDP multicast packets"); return false;}
-    if(!m_udp.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT)) {log_e("udp beginPacket error"); return false;}
-    if(!m_udp.write((const uint8_t*)SSDP_M_SEARCH_TX, sizeof(SSDP_M_SEARCH_TX) - 1)){log_e("udp write error"); return false;}
-    if(!m_udp.endPacket()){log_e("endPacket error"); return false;}
+    m_dlnaServer.size = 0;
+    uint8_t ret = 0;
+    ret = m_udp.beginMulticast(IPAddress(SSDP_MULTICAST_IP), SSDP_LOCAL_PORT);
+    if(!ret){
+        m_udp.stop(); log_e("error sending SSDP multicast packets");
+        return false;
+    }
+    ret = m_udp.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT);
+    if(!ret){
+        log_e("udp beginPacket error");
+        return false;
+    }
+    ret = m_udp.write((const uint8_t*)SSDP_M_SEARCH_TX, sizeof(SSDP_M_SEARCH_TX) - 1);
+    if(!ret){
+        log_e("udp write error");
+        return false;
+    }
+    ret = m_udp.endPacket();
+    if(!ret){
+        log_e("endPacket error");
+        return false;
+    }
     m_state = SEEK_SERVER;
     m_timeStamp = millis();
-    m_timeout = 2000; // waiting time after multicast
+    m_timeout = SEEK_TIMEOUT;
     return true;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // called if a media server answered our SSDP multicast query
 void SoapESP32::parseDlnaServer(uint16_t len){
-    if(len > 511) len = 511; // guard
-    char tmpBuffer[512] = {0};
-    m_udp.read(tmpBuffer, len); // read packet into the buffer
-    tmpBuffer[len] = '\0'; // terminate
-    char* p = strcasestr(tmpBuffer, "Location: http");
+    if(len > m_chbufSize - 1) len = m_chbufSize - 1; // guard
+    memset(m_chbuf, 0, m_chbufSize);
+    vTaskDelay(200);
+    m_udp.read(m_chbuf, len); // read packet into the buffer
+    char* p = strcasestr(m_chbuf, "Location: http");
     if(!p) return;
     int idx1 = indexOf(p, "://",  0) + 3;  // pos IP
     int idx2 = indexOf(p, ":",  idx1);      // pos ':'
@@ -108,92 +137,265 @@ void SoapESP32::parseDlnaServer(uint16_t len){
     *(p + idx2) = '\0';
     *(p + idx3) = '\0';
     *(p + idx4) = '\0';
+    for(int i = 0; i< m_dlnaServer.size; i++){
+        if(strcmp(m_dlnaServer.ip[i], p + idx1) == 0){log_i("sameIP"); return;}
+    }
     m_dlnaServer.ip.push_back(strdup(p + idx1));
     m_dlnaServer.port.push_back(atoi(p + idx2 + 1));
     m_dlnaServer.location.push_back(strdup(p + idx3 + 1));
-    m_dlnaServer.controlURL.push_back(strdup(""));
-    m_dlnaServer.friendlyName.push_back(strdup(""));
+    m_dlnaServer.controlURL.push_back(NULL);
+    m_dlnaServer.friendlyName.push_back(NULL);
     m_dlnaServer.size++;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bool SoapESP32::srvGet(uint8_t srvNr){
+    bool ret;
+    uint8_t cnt = 0;
+    m_client.stop();
+    ret = m_client.connect(m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr]);
+    if(!ret){
+        log_e("The server %s:%d is not responding", m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr]);
+        return false;
+    }
+    while(true){
+        if(m_client.connected()) break;
+        delay(100);
+        cnt++;
+        if(cnt == 10){
+            log_e("The server %s:%d refuses the connection", m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr]);
+            return false;
+        }
+    }
+    // assemble HTTP header
+    sprintf(m_chbuf, "GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n",
+                      m_dlnaServer.location[srvNr], m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr]);
+    m_client.print(m_chbuf);
+    cnt = 0;
+    while(true){
+        if(m_client.available()) break;
+        delay(100);
+        cnt++;
+        if(cnt == 10){
+            log_e("The server %s:%d is not responding after request", m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr]);
+            return false;
+        }
+    }
+    return true;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bool SoapESP32::readHttpHeader(){
+
+    bool ct_seen = false;
+    m_timeStamp  = millis();
+    m_timeout    = 2500; // ms
+
+    while(true){  // outer while
+        uint16_t pos = 0;
+        if((m_timeStamp + m_timeout) < millis()) {
+            log_e("timeout");
+            goto error;
+        }
+        while(m_client.available()) {
+            uint8_t b = m_client.read();
+            if(b == '\n') {
+                if(!pos) {  // empty line received, is the last line of this responseHeader
+                    goto exit;
+                }
+                break;
+            }
+            if(b == '\r') m_chbuf[pos] = 0;
+            if(b < 0x20) continue;
+            m_chbuf[pos] = b;
+            pos++;
+            if(pos == m_chbufSize -1) {
+                pos--;
+                continue;
+            }
+            if(pos == m_chbufSize - 2) {
+                m_chbuf[pos] = '\0';
+                log_i("responseHeaderline overflow");
+            }
+        } // inner while
+        int16_t posColon = indexOf(m_chbuf, ":", 0);  // lowercase all letters up to the colon
+        if(posColon >= 0) {
+            for(int i = 0; i < posColon; i++) { m_chbuf[i] = toLowerCase(m_chbuf[i]); }
+        }
+        if(startsWith(m_chbuf, "content-length:")){
+            const char* c_cl = (m_chbuf + 15);
+            int32_t     i_cl = atoi(c_cl);
+            m_contentlength = i_cl;
+        //    log_i("content-length: %lu", (long unsigned int)m_contentlength);
+        }
+        else if(startsWith(m_chbuf, "content-type:")) {  // content-type: text/html; charset=UTF-8
+            // log_i("cT: %s", rhl);
+            int idx = indexOf(m_chbuf + 13, ";", 0);
+            if(idx > 0) m_chbuf[13 + idx] = '\0';
+            if(indexOf(m_chbuf + 13, "text/xml", 0) > 0) ct_seen = true;
+            else if(indexOf(m_chbuf + 13, "text/html", 0) > 0) ct_seen = true;
+            else{
+                log_e("content type expected: text/xml or text/html, got %s", m_chbuf + 13);
+                goto exit; // wrong content type
+            }
+        }
+        else if((startsWith(m_chbuf, "transfer-encoding:"))) {
+            if(endsWith(m_chbuf, "chunked") || endsWith(m_chbuf, "Chunked")) {  // Station provides chunked transfer
+                m_chunked = true;
+                log_i("chunked data transfer");
+                m_chunkcount = 0;  // Expect chunkcount in DATA
+            }
+        }
+        else { ; }
+    //    log_w("%s", m_chbuf);
+    } // outer while
+
+exit:
+    if(!m_contentlength) log_e("contentlength is not given");
+    if(!ct_seen) log_e("content type not found");
+    return true;
+
+error:
+    return false;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+bool SoapESP32::readContent(){
+
+    m_timeStamp  = millis();
+    m_timeout    = 2500; // ms
+    uint32_t idx = 0;
+    uint8_t lastChar = 0;
+    uint8_t b = 0;
+    vector_clear_and_shrink(m_content);
+
+    while(true){  // outer while
+        uint16_t pos = 0;
+        if((m_timeStamp + m_timeout) < millis()) {
+            log_e("timeout");
+            goto error;
+        }
+        while(m_client.available()) {
+            if(lastChar){
+                b = lastChar;
+                lastChar = 0;
+            }
+            else{
+                b = m_client.read();
+                idx++;
+            }
+            if(b == '\n') {
+                m_chbuf[pos] = '\0';
+                break;
+            }
+            if(b == '<' &&  m_chbuf[pos - 1] == '>'){
+                lastChar = '<';
+                m_chbuf[pos] = '\0';
+                break; // simulate new line
+            }
+            if(b == '\r') m_chbuf[pos] = 0;
+            if(b < 0x20) continue;
+            m_chbuf[pos] = b;
+            pos++;
+            if(pos == m_chbufSize -1) {
+                pos--;
+                continue;
+            }
+            if(pos == m_chbufSize - 2) {
+                m_chbuf[pos] = '\0';
+                log_i("line overflow");
+            }
+        }
+//        log_i("%s", m_chbuf);
+        m_content.push_back(strdup(m_chbuf));
+        if(idx == m_contentlength) break;
+        if(!m_client.available()){
+            if(m_chunked == true) break; // ok
+            if(m_contentlength)   break; // ok
+            goto error; // not ok
+        }
+    }
+    m_client.stop();
+    return true;
+
+error:
+    m_client.stop();
+    return false;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // check and examine a discovered media servers for service ContentDirectory
 bool SoapESP32::getServerItems(uint8_t srvNr){
+    if(m_dlnaServer.size == 0) return 0;  // return if none detected
 
-    uint64_t     contentSize;
-    bool         chunked = false, gotFriendlyName = false, gotServiceType = false;
-    String       result((char *)0);
-    MiniXPath    xPath;
 
-    // try to establish connection to server and send GET request
-    if(!soapGet(m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr], m_dlnaServer.location[srvNr])) goto end;
-    // reading HTTP header
-    if(!soapReadHttpHeader(&contentSize, &chunked)) { goto end_stop_error; }
-    if(!chunked && contentSize == 0) {
-        log_e("announced XML size is 0, we can stop here");
-        goto end_stop_error;
-    }
+    bool gotFriendlyName = false;
+    bool gotServiceType  = false;
+    bool URNschemaFound  = false;
 
-    // scan XML block for description: friendly name, service type "ContentDirectory" & associated control URL
-    xPath.reset();
-    xPath.setPath(xmlParserPaths[xpFriendlyName].tagNames, xmlParserPaths[xpFriendlyName].num);
-    while(true) {
-        int32_t ret = soapReadXML(chunked);
-
-        if(ret < 0) {
-            log_w("soapReadXML() returned: %d", ret);
-            goto end_stop_error;
-        }
+    for(int i = 0; i < m_content.size(); i++){
+        uint16_t idx = 0;
+        while(*(m_content[i] + idx) == 0x20) idx++;  // same as trim left
+        char* content = m_content[i] + idx;
 
         if(!gotFriendlyName) {
-            if(xPath.getValue((char)ret, &result)) {
-                const char* friendlyName = (result.length() > 0) ? result.c_str() : "Server name not provided";
-                m_dlnaServer.friendlyName[srvNr] = strdup(friendlyName);
+            if(startsWith(content, "<friendlyName>")){
+                uint16_t pos = indexOf(content, "<", 14);
+                *(content + pos) = '\0';
+                if(strlen(content) == 0){
+                    m_dlnaServer.friendlyName[srvNr] = (char*)"Server name not provided";
+                }
+                else{
+                    m_dlnaServer.friendlyName[srvNr] = strdup(content + 14);
+                }
                 gotFriendlyName = true;
-                // we got friendly name and now set xPath for service type which comes next
-                xPath.setPath(xmlParserPaths[xpServiceType].tagNames, xmlParserPaths[xpServiceType].num);
-                continue;
+                log_w("%s", m_dlnaServer.friendlyName[srvNr]);
             }
         }
-        else if(!gotServiceType) {
-            if(xPath.getValue((char)ret, &result)) {
-                if(strstr(result.c_str(), UPNP_URN_SCHEMA_CONTENT_DIRECTORY)) {
-                    log_d("server offers service: %s", UPNP_URN_SCHEMA_CONTENT_DIRECTORY);
+        if(!gotServiceType) {
+            if(indexOf(content, "urn:schemas-upnp-org:service:ContentDirectory:1", 0) > 0){URNschemaFound = true; continue;}
+            if(URNschemaFound){
+                if(startsWith(content, "<controlURL>")){
+                    uint16_t pos = indexOf(content, "<", 12);
+                    *(content + pos) = '\0';
+                    m_dlnaServer.controlURL[srvNr] = strdup(content + 13);
                     gotServiceType = true;
-                    // We got service type and now set xPath for control url (follows in same <service> block)
-                    xPath.setPath(xmlParserPaths[xpControlUrl].tagNames, xmlParserPaths[xpControlUrl].num);
-                    continue;
+                //    log_w("%s", m_dlnaServer.controlURL[srvNr]);
                 }
             }
         }
-        else if(xPath.getValue((char)ret, &result)) {
-            // we finally got all infos we need
-            char* tmp = NULL;
-            uint16_t idx = 0;
-            if(endsWith(m_dlnaServer.location[srvNr], "/")){
-                tmp = (char*)malloc(strlen(m_dlnaServer.location[srvNr]) + result.length() + 1);
-                strcpy(tmp, m_dlnaServer.location[srvNr]); // location string becomes first part of controlURL
-                strcat(tmp, result.c_str());
-            }
+        if(startsWith(content, "<presentationURL>")){
+            uint16_t pos = indexOf(content, "<", 17);
+            *(content + pos) = '\0';
+            char* presentationURL = strdup(content + 17);
+        //    log_w("presentationURL %s", presentationURL);
+            if(!startsWith(presentationURL, "http://")) continue;
+            int8_t posColon = (indexOf(presentationURL, ":", 8));
+            if(posColon > 0){ // we have ip and port
+                presentationURL[posColon] = '\0';
+                free(m_dlnaServer.ip[srvNr]);
+                m_dlnaServer.ip[srvNr] = strdup(presentationURL + 7); // replace serverIP with presentationURL(IP)
+                m_dlnaServer.port[srvNr] = atoi(presentationURL + posColon + 1);
+            } // only ip is given
             else{
-                tmp = strdup(result.c_str());
+                free(m_dlnaServer.ip[srvNr]);
+                m_dlnaServer.ip[srvNr] = strdup(presentationURL + 7);
             }
-            if(startsWith(tmp, "http://")) { // remove "http://ip:port/" from begin of string
-               idx = indexOf(tmp, "/", 7) + 1;
-            }
-            m_dlnaServer.controlURL[srvNr] = strdup(tmp + idx);
-            if(tmp){free(tmp); tmp = NULL;}
-                goto end_stop;
+            if(presentationURL){free(presentationURL); presentationURL = NULL;}
         }
     }
-    end_stop_error:
-        if(dlna_info) dlna_info("this Server does not deliver media content");
-        return 0;
-    end_stop:
-        m_client.stop();
-        if(dlna_server) dlna_server(srvNr, m_dlnaServer.size, m_dlnaServer.ip[srvNr], m_dlnaServer.port[srvNr], m_dlnaServer.friendlyName[srvNr], m_dlnaServer.controlURL[srvNr]);
-    end:
-    ;
-    return m_dlnaServer.size;
+
+    // we finally got all infos we need
+    uint16_t idx = 0;
+    if(m_dlnaServer.location[srvNr] && endsWith(m_dlnaServer.location[srvNr], "/")){
+        char* tmp = (char*)malloc(strlen(m_dlnaServer.location[srvNr]) + strlen(m_dlnaServer.controlURL[srvNr]) + 1);
+        strcpy(tmp, m_dlnaServer.location[srvNr]); // location string becomes first part of controlURL
+        strcat(tmp, m_dlnaServer.controlURL[srvNr]);
+        free(m_dlnaServer.controlURL[srvNr]);
+        m_dlnaServer.controlURL[srvNr] = tmp;
+        free(tmp);
+    }
+    if(m_dlnaServer.controlURL[srvNr] && startsWith(m_dlnaServer.controlURL[srvNr], "http://")) { // remove "http://ip:port/" from begin of string
+        idx = indexOf(m_dlnaServer.controlURL[srvNr], "/", 7);
+        memcpy(m_dlnaServer.controlURL[srvNr], m_dlnaServer.controlURL[srvNr] + idx + 1, strlen(m_dlnaServer.controlURL[srvNr]) + 1 - idx);
+    }
+    return true;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // helper function, client timed read
@@ -372,6 +574,7 @@ int32_t SoapESP32::soapReadXML(bool chunked, bool replace) {
                 // timeout or connection closed
                 return -1;
             }
+        //    printf("%c", c);
         }
         else {
             // de-chunk XML data
@@ -1067,6 +1270,7 @@ bool SoapESP32::soapGet(const char* ip, const uint16_t port, const char *uri) {
 // HTTP POST request
 //
 bool SoapESP32::soapPost(const char* ip, const uint16_t port, const char *uri, const char *objectId, const uint32_t startingIndex, const uint16_t maxCount) {
+
     if(m_clientDataConOpen) {
         // should not get here...probably buggy main
 
@@ -1235,32 +1439,37 @@ String SoapESP32::getMediaDownloadIP() { return m_dlnaServer.ip[m_currentServer]
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // state machine
 void SoapESP32::loop() {
+    static uint8_t cnt = 0;
+    bool res;
     switch(m_state) {
-        static uint8_t cnt = 0;
         case IDLE:
             break;
         case SEEK_SERVER:
             if(m_timeStamp + m_timeout > millis()){
                 size_t len = m_udp.parsePacket();
                 if(len){
-                    parseDlnaServer(len);
+                    parseDlnaServer(len); // registers all media servers that respond within the time until the timeout
                 }
                 cnt = 0;
             }
             else{
                 m_udp.stop();
                 m_state = GET_SERVER_ITEMS;
-                cnt = 0;
             }
             break;
         case GET_SERVER_ITEMS:
             if(cnt < m_dlnaServer.size){
-                if(getServerItems(cnt)){
-                    m_timeStamp = millis();
-                    m_timeout = 500;
-                    cnt++;
-                }
-                return;
+                log_w("%s, %i, %s", m_dlnaServer.ip[cnt], m_dlnaServer.port[cnt], m_dlnaServer.location[cnt]);
+                res = srvGet(cnt);
+                if(!res){log_e("error in srvGet"); break;}
+                res = readHttpHeader();
+                if(!res){log_e("error in readHttpHeader"); break;}
+                res = readContent();
+                if(!res){log_e("error in readContent"); break;}
+
+                getServerItems(cnt);
+                cnt++;
+                break;
             }
             cnt = 0;
             m_state = IDLE;
@@ -1271,6 +1480,8 @@ void SoapESP32::loop() {
                 m_idx = 0;
                 break;
             }
+            if(!m_dlnaServer.friendlyName[m_idx])m_dlnaServer.friendlyName[m_idx] = "";
+            if(!m_dlnaServer.controlURL[m_idx])m_dlnaServer.controlURL[m_idx] = "";
             if(dlna_server) { dlna_server(m_idx, m_dlnaServer.size, m_dlnaServer.ip[m_idx], m_dlnaServer.port[m_idx], m_dlnaServer.friendlyName[m_idx], m_dlnaServer.controlURL[m_idx]); }
             m_idx++;
             break;

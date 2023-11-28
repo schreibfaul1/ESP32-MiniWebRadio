@@ -3372,6 +3372,10 @@ void audio_icyurl(const char* info) { // if the Radio has a homepage, this event
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size){
+    SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size);
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
