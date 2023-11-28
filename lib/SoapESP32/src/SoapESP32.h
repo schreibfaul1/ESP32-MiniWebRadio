@@ -187,7 +187,6 @@ class SoapESP32 {
     int8_t      getServer();
 	uint8_t     getServerCount(void);
 	bool        getServerInfo(uint8_t srv, soapServer_t *serverInfo);
-	bool        readStart(soapObject_t *object, size_t *size);
 	int32_t     read(uint8_t *buf, size_t size, uint32_t timeout = SERVER_READ_TIMEOUT);
 	int32_t     read(void);
 	void        readStop(void);
@@ -233,7 +232,6 @@ class SoapESP32 {
     bool srvGet(uint8_t srvNr);
     bool readHttpHeader();
     bool readContent();
-    bool    soapGet(const char* ip, const uint16_t port, const char *uri);
 	bool    soapPost(const char* ip, const uint16_t port, const char *uri, const char *objectId, const uint32_t startingIndex, const uint16_t maxCount);
 	bool    browseServer1(const uint32_t startingIndex = SOAP_DEFAULT_BROWSE_STARTING_INDEX, const uint16_t maxCount = SOAP_DEFAULT_BROWSE_MAX_COUNT);
 	int32_t soapClientTimedRead(void);

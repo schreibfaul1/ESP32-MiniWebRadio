@@ -1085,65 +1085,6 @@ void SoapESP32::release_MiniXPath() {
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //
-// request object (file) from media server
-//
-bool SoapESP32::readStart(soapObject_t *object, size_t *size) {
-    uint64_t contentSize;
-
-    if(object->isDirectory) return false;
-    m_clientDataAvailable = 0;
-
-    log_v("server ip: %s, port: %d, uri: \"%s\"", object->downloadIp.toString().c_str(), object->downloadPort, object->uri.c_str());
-
-    // just to make sure old connection is closed
-    if(m_clientDataConOpen) {
-        m_client.stop();
-
-        m_clientDataConOpen = false;
-        log_w("client data connection to media server was still open. Closed now.");
-    }
-
-    // establish connection to server and send GET request
-    if(!soapGet(object->downloadIp.toString().c_str(), object->downloadPort, object->uri.c_str())) { return false; }
-
-    // connection established, read HTTP header
-    if(!soapReadHttpHeader(&contentSize)) {
-        // error returned
-        log_e("soapReadHttpHeader() was unsuccessful.");
-
-        m_client.stop();
-
-        return false;
-    }
-
-    // max allowed file size for download is 4.2GB (SIZE_MAX)
-    if(contentSize > (uint64_t)SIZE_MAX) {
-        log_e("file too big for download. Maximum allowed file size is 4.2GB.");
-
-        m_client.stop();
-
-        return false;
-    }
-
-    m_clientDataAvailable = (size_t)contentSize;
-    if(m_clientDataAvailable == 0) {
-        // no data available
-        log_e("announced file size: 0 !");
-
-        m_client.stop();
-
-        return false;
-    }
-
-    m_clientDataConOpen = true;
-    if(size) {                          // pointer valid ?
-        *size = m_clientDataAvailable;  // return size of file
-    }
-    return true;
-}
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-//
 // read up to size bytes from server and place them into buf returnes number of bytes read or -1 in case nothing was read (default read timeout is 3s)
 // Remarks:
 // - older WiFi library versions & the Ethernet library return -1 if connection is still up but momentarily no data available and return 0 in case of EOF. Newer WiFi versions return 0 in
@@ -1200,72 +1141,7 @@ void SoapESP32::readStop() {
     }
     m_clientDataAvailable = 0;
 }
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-// HTTP GET request
-//
-bool SoapESP32::soapGet(const char* ip, const uint16_t port, const char *uri) {
-    if(m_clientDataConOpen) {
-        // should not happen...probably buggy main
 
-        m_client.stop();
-
-        m_clientDataConOpen = false;
-        log_w("client data connection to media server was still open. Closed now.");
-    }
-
-    for(int32_t i = 0;;) {
-        bool ret = m_client.connect(ip, port);
-
-        if(ret) break;
-        if(++i >= 3) {
-            log_e("error connecting to server ip=%s, port=%d", ip, port);
-            return false;
-        }
-        delay(100);
-    }
-
-    // memory allocation for assembling HTTP header
-    size_t length = strlen(uri) + 25;
-    char  *buffer = (char *)malloc(length);
-    if(!buffer) {
-        log_e("malloc() couldn't allocate memory");
-        return false;
-    }
-    String str((char *)0);
-
-    // assemble HTTP header
-    snprintf(buffer, length, "GET /%s %s", uri, HTTP_VERSION);
-    str += buffer;
-    log_d("%s:%d %s", ip.toString().c_str(), port, buffer);
-    str += "\r\n";
-    snprintf(buffer, length, HEADER_HOST, ip, port);
-    str += buffer;
-    str += HEADER_CONNECTION_CLOSE;
-    str += HEADER_USER_AGENT;
-    str += HEADER_EMPTY_LINE;  // empty line marks end of HTTP header
-
-    // send request to server
-
-    m_client.print(str);
-
-    // give server some time to answer
-    uint32_t start = millis();
-    while(true) {
-        int32_t av = m_client.available();
-
-        if(av) break;
-        if(millis() > (start + SERVER_RESPONSE_TIMEOUT)) {
-            m_client.stop();
-
-            log_e("GET: no reply from server for %d ms", SERVER_RESPONSE_TIMEOUT);
-            free(buffer);
-            return false;
-        }
-    }
-    free(buffer);
-
-    return true;
-}
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // HTTP POST request
 //
@@ -1365,7 +1241,7 @@ bool SoapESP32::soapPost(const char* ip, const uint16_t port, const char *uri, c
     str += SOAP_ENVELOPE_END;
 
     // send request to server
-    log_v("send request to server:\n%s", str.c_str());
+    log_w("send request to server:\n%s", str.c_str());
 
     m_client.print(str);
 
@@ -1480,8 +1356,8 @@ void SoapESP32::loop() {
                 m_idx = 0;
                 break;
             }
-            if(!m_dlnaServer.friendlyName[m_idx])m_dlnaServer.friendlyName[m_idx] = "";
-            if(!m_dlnaServer.controlURL[m_idx])m_dlnaServer.controlURL[m_idx] = "";
+            if(!m_dlnaServer.friendlyName[m_idx])m_dlnaServer.friendlyName[m_idx] = (char*)"";
+            if(!m_dlnaServer.controlURL[m_idx])m_dlnaServer.controlURL[m_idx] = (char*)"";
             if(dlna_server) { dlna_server(m_idx, m_dlnaServer.size, m_dlnaServer.ip[m_idx], m_dlnaServer.port[m_idx], m_dlnaServer.friendlyName[m_idx], m_dlnaServer.controlURL[m_idx]); }
             m_idx++;
             break;
