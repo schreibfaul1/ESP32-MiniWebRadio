@@ -13,7 +13,7 @@ extern RTIME rtc;
 extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
-                 INBUFF_FREE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
+                 INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
                  GET_FILEPOSITION, GET_VULEVEL};
 
 struct audioMessage{
@@ -107,6 +107,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == INBUFF_FREE){
                 audioTxTaskMessage.cmd = INBUFF_FREE;
                 audioTxTaskMessage.ret = audio.inBufferFree();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == INBUFF_SIZE){
+                audioTxTaskMessage.cmd = INBUFF_SIZE;
+                audioTxTaskMessage.ret = audio.inBufferSize();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == ISRUNNING){
@@ -258,6 +263,13 @@ uint32_t audioInbuffFree(){
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
+
+uint32_t audioInbuffSize(){
+    audioTxMessage.cmd = INBUFF_SIZE;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
 
 boolean audioIsRunning(){
     audioTxMessage.cmd = ISRUNNING;

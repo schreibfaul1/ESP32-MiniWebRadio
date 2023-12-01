@@ -4289,6 +4289,7 @@ void dlna_folder(bool lastItem, String name, String id, size_t childCount) { // 
 }
 
 void dlna_file(bool lastItem, String name, String id, size_t size, String uri, bool isAudio) { // list files
+log_w("%s, %s, %s", name.c_str(), id.c_str(), uri.c_str());
     static JSONVar myObject;
     static uint8_t i = 0, j = 0;
     if(lastItem) {
