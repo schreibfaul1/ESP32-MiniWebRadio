@@ -151,7 +151,7 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/unknown.jpg);
+            background-image : url(SD/common//unknown.jpg);
             width : 128px;
             height : 128px;
             margin-top: 5px;

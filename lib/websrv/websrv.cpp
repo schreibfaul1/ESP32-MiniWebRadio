@@ -151,17 +151,18 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(String msg, uint8_t opcode) {  // sends text messages via websocket
-    return send(msg.c_str(), opcode);
+boolean WebSrv::send(const char* cmd, String msg, uint8_t opcode) {  // sends text messages via websocket
+    return send(cmd, msg.c_str(), opcode);
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(const char *msg, uint8_t opcode) {  // sends text messages via websocket
+boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sends text messages via websocket
     uint8_t headerLen = 2;
 
     if(!hasclient_WS) {
 //      log_e("can't send, websocketserver not connected");
         return false;
     }
+    size_t cmdLen = strlen(cmd);
     size_t msgLen = strlen(msg);
 
     if(msgLen > UINT16_MAX) {
@@ -177,16 +178,17 @@ boolean WebSrv::send(const char *msg, uint8_t opcode) {  // sends text messages 
 
     buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
     if(msgLen < 126) {
-        buff[1] = (128 * mask) + msgLen;
+        buff[1] = (128 * mask) + cmdLen + msgLen ;
     }
     else {
         headerLen = 4;
         buff[1] = (128 * mask) + 126;
-        buff[2] = (msgLen >> 8) & 0xFF;
-        buff[3] = msgLen & 0xFF;
+        buff[2] = ((cmdLen + msgLen) >> 8) & 0xFF;
+        buff[3] = (cmdLen + msgLen) & 0xFF;
     }
 
     webSocketClient.write(buff, headerLen);
+    webSocketClient.write(cmd, cmdLen);
     webSocketClient.write(msg, msgLen);
 
     return true;
