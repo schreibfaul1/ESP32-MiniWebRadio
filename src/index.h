@@ -360,7 +360,7 @@ function connect() {
         if (n >= 0) {
             var msg  = socketMsg.substring(0, n)
             var val  = socketMsg.substring(n + 1)
-            // console.log("para ",msg, " val ",val)
+        //    console.log("para ",msg, " val ",val)
         }
         else {
             msg = socketMsg
@@ -433,20 +433,10 @@ function connect() {
                                     if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
                                     break
 
-            case "clearDLNA":       clearDLNAServerList(0)
-                                    break
-
             case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
                                     break
-            case "Level1":          show_DLNA_Content(val, 1)
-                                    break
-            case "Level2":          show_DLNA_Content(val, 2)
-                                    break
-            case "Level3":          show_DLNA_Content(val, 3)
-                                    break
-            case "Level4":          show_DLNA_Content(val, 4)
-                                    break
-            case "Level5":          show_DLNA_Content(val, 5)
+            case "dlnaContent":     console.log(val)
+                                    show_DLNA_Content(val)
                                     break
             case "networks":        var networks = val.split('\n')
                                     select = document.getElementById('ssid')
@@ -672,6 +662,8 @@ function uploadTextFile (fileName, content) {
 }
 
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
+var dlnaLevel = 0
+
 function clearDLNAServerList(level){
     console.log('clear DLNA server list, level=', level)
     var select
@@ -701,76 +693,95 @@ function clearDLNAServerList(level){
 }
 
 function addDLNAServer(val){
-    var server = val.split(",")
+    console.log(val)
+    var obj = JSON.parse(val);
     var select = document.getElementById('server')
-    var option = new Option(server[0], server[1]); // e.g. "Wolles-FRITZBOX Mediaserver,1"  (friendlyName, ServerIdx)
-    console.log(server[0], server[1]);
-    select.appendChild(option);
-}
-function show_DLNA_Content(val, level){
-    var select
-    if(level == 1) select = document.getElementById('level1')
-    if(level == 2) select = document.getElementById('level2')
-    if(level == 3) select = document.getElementById('level3')
-    if(level == 4) select = document.getElementById('level4')
-    if(level == 5) select = document.getElementById('level5')
-    if(select.options.length == 0){
-        var option = new Option("Select level " + level.toString())
+    for(var i = 0; i < Object.keys(obj).length; i++){
+        var option = new Option(obj[i].friendlyName, obj[i].srvId); // e.g. "Wolles-FRITZBOX Mediaserver,1"  (friendlyName, ServerIdx)
+        console.log(obj[i].friendlyName, obj[i].srvId);
         select.appendChild(option);
     }
-    content = JSON.parse(val)
-    for (var i = 0; i < content.length; i++){
-        var isDir = content[i].isDir
-        var n
-        var c
+}
+function show_DLNA_Content(val){
+    var select
+    if(dlnaLevel == 1) select = document.getElementById('level1')
+    if(dlnaLevel == 2) select = document.getElementById('level2')
+    if(dlnaLevel == 3) select = document.getElementById('level3')
+    if(dlnaLevel == 4) select = document.getElementById('level4')
+    if(dlnaLevel == 5) select = document.getElementById('level5')
+    if(select.options.length == 0){
+        var option = new Option("Select level " + dlnaLevel.toString())
+        select.appendChild(option);
+    }
+    console.log(val)
+    var obj = JSON.parse(val);
+    for(var i = 0; i < Object.keys(obj).length; i++){
+        console.log(i)
+        var objectId = obj[i].objectId
+        var title = obj[i].title
+        var itemURL = obj[i].itemURL
+        var isAudio = obj[i].isAudio
+        var itemSize = obj[i].itemSize
+        var childCount = obj[i].childCount
+
+        var isDir
+        if(itemURL== "?") isDir = true
+        else              isDir = false
+
         if(isDir){
-            n = content[i].name.concat('\xa0\xa0', '\(' + content[i].size + '\)'); // more than one space
-            c = 'D=' + content[i].id // is directory
+            n = title.concat('\xa0\xa0', '\(' + childCount + '\)'); // more than one space
+        }
+        else {
+            n = title.concat('\xa0\xa0', '\(' + itemSize + '\)'); // more than one space
+        }
+        if(isAudio == "true"){
+            var option = new Option(n, itemURL);
+            option.style.color = "blue"
         }
         else{
-            n = content[i].name + '\xa0\xa0' + content[i].size;
-            c = 'F=' + content[i].id // is file, id is uri
+            var option = new Option(n, objectId);
+            if(!isDir){
+                option.style.color = "red"
+            }
         }
-        if(content[i].isAudio){
-            var option = new Option(n, c); // e.g.
-            option.style.color = "black"
-        }
-        else{
-            var option = new Option(n); // e.g.
-            option.style.color = "red"
-        }
-        console.log(n, c);
+        console.log(n, objectId);
         select.appendChild(option);
     }
 }
 function selectserver (presctrl) { // preset, select a server, root, level0
-    socket.send('DLNA_getContent0=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
     clearDLNAServerList(1)
-    console.log('DLNA_getContent0=' + presctrl.value)
+    dlnaLevel = 1
+    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l1 (presctrl) { // preset, select root
-    socket.send('DLNA_getContent1=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
     clearDLNAServerList(2)
-    console.log('DLNA_getContent1=' + presctrl.value)
+    dlnaLevel = 2
+    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l2 (presctrl) { // preset, select level 1
-    socket.send('DLNA_getContent2=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
     clearDLNAServerList(3)
-    console.log('DLNA_getContent2=' + presctrl.value)
+    dlnaLevel = 3
+    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l3 (presctrl) { // preset, select level 2
-    socket.send('DLNA_getContent3=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
     clearDLNAServerList(4)
-    console.log('DLNA_getContent3=' + presctrl.value)
+    dlnaLevel = 4
+    console.log('DLNA_getContent=' + presctrl.value)
  }
  function select_l4 (presctrl) { // preset, select level 3
-    socket.send('DLNA_getContent4=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
     clearDLNAServerList(5)
-    console.log('DLNA_getContent4=' + presctrl.value)
+    dlnaLevel = 5
+    console.log('DLNA_getContent=' + presctrl.value)
  }
  function select_l5 (presctrl) { // preset, select level 4
-    socket.send('DLNA_getContent5=' + presctrl.value)
-    console.log('DLNA_getContent5=' + presctrl.value)
+    socket.send('DLNA_getContent=' + presctrl.value)
+    console.log('DLNA_getContent=' + presctrl.value)
+    dlnaLevel = 6
  }
 
 // ----------------------------------- TAB RADIO ------------------------------------

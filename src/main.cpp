@@ -40,6 +40,7 @@ uint8_t        _VUleftCh = 0;             // VU meter left channel
 uint8_t        _VUrightCh = 0;            // VU meter right channel
 uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
+uint8_t        _dlnaSrvNr = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
 uint8_t        _staListPos = 0;
 uint16_t*      _shuffleArray = NULL;
@@ -63,6 +64,7 @@ uint16_t       _sum_stations = 0;
 uint16_t       _plsEntries = 0;
 uint16_t       _plsMaxEntries = 0;
 uint16_t       _audioFilesInList = 0;
+uint16_t       _totalNumbertReturned = 0;
 uint32_t       _resumeFilePos = 0;        //
 uint32_t       _playlistTime = 0;         // playlist start time millis() for timeout
 uint32_t       _settingsHash = 0;
@@ -82,6 +84,7 @@ char*          _lastconnectedfile = nullptr;
 char*          _stationURL = nullptr;
 char*          _JSONstr = nullptr;
 char*          _BT_metaData = nullptr;
+char*          _dlnaObjId = NULL;
 boolean        _f_rtc = false; // true if time from ntp is received
 boolean        _f_100ms = false;
 boolean        _f_1sec = false;
@@ -124,6 +127,7 @@ boolean        _f_clearStationName = false;
 boolean        _f_shuffle = false;
 boolean        _f_BTconnected = false;
 boolean        _f_BTstateChanged = false;
+boolean        _f_dlnaBrowseServer = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -209,7 +213,7 @@ File        playlistFile;
 FtpServer   ftpSrv;
 WiFiClient  client;
 WiFiUDP     udp;
-SoapESP32   soap;
+DLNA_ESP32  dlna;
 
 #if DECODER == 2 // ac101
 AC101 dac;
@@ -1991,8 +1995,7 @@ void setup() {
 
     setI2STone();
     showFooter();
-    soap.seekServer();
-    _numServers = soap.getServerCount();
+    dlna.seekServer();
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
 }
@@ -2906,20 +2909,15 @@ int32_t DLNA_setCurrentServer(String serverName) {
     return serverNum;
 }
 
-void DLNA_showServer() {      // Show connection details of all discovered, usable media servers
-    webSrv.send("clearDLNA"); // delete server list
-    soap.listServer();        // -> event dlna_server()
-}
-
 void DLNA_browseServer(String objectId, uint8_t level) {
     // Here the user selects the DLNA server whose content he wants to see, level 0 is root
     if(level == 0) { _currentServer = objectId.toInt(); }
-    soap.browseServer(_currentServer, objectId.c_str());
+//    soap.browseServer(_currentServer, objectId.c_str());
 }
 
 void DLNA_getFileItems(String uri) {
-    String   _media_downloadIP = soap.getMediaDownloadIP();
-    uint16_t _media_downloadPort = soap.getMediaDownloadPort();
+//    String   _media_downloadIP = soap.getMediaDownloadIP();
+ //   uint16_t _media_downloadPort = soap.getMediaDownloadPort();
 
     log_v("uri: %s", uri.c_str());
     log_v("downloadIP: %s", _media_downloadIP.c_str());
@@ -2930,18 +2928,11 @@ void DLNA_getFileItems(String uri) {
     _f_isWebConnected = audioConnecttohost(URL.c_str());
     _f_isFSConnected = false;
 }
-void DLNA_showContent(String objectId, uint8_t level) {
+const char* DLNA_showContent(String objectId, uint8_t level) {
     audioStopSong();
-    log_v("obkId=%s", objectId.c_str());
-    if(level == 0) { DLNA_browseServer(objectId, level); }
-    if(objectId.startsWith("D=")) {
-        objectId = objectId.substring(2);
-        DLNA_browseServer(objectId, level);
-    }
-    if(objectId.startsWith("F=")) {
-        objectId = objectId.substring(2);
-        DLNA_getFileItems(objectId);
-    }
+    log_i("obkId = %s", objectId.c_str());
+    dlna.browseServer(0, objectId.c_str());
+    return dlna.stringifyServer();
 }
 
 void showDlnaItemsList(uint8_t level, uint16_t itemNr){
@@ -2996,7 +2987,7 @@ void loop() {
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
-    soap.loop();
+    dlna.loop();
 
     if(_f_muteDecrement) {
         if(_mute_volume > 0) {
@@ -3032,6 +3023,11 @@ void loop() {
             if(_state == CLOCKico) { drawImage("/btn/Button_Mute_Green.jpg", 2 * _winButton.w, _winButton.y); }
         }
     }
+    if(_f_dlnaBrowseServer){
+        _f_dlnaBrowseServer = false;
+        dlna.browseServer(_dlnaSrvNr, _dlnaObjId,_totalNumbertReturned);
+    }
+
     if(!_f_sleeping) {
         if(_f_newBitRate) {
             showFooterBitRate(_icyBitRate);
@@ -4105,13 +4101,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     if(   param == "false") _f_timeAnnouncement = false;
                                     return;}
 
-    if(cmd == "DLNA_getServer")  {  DLNA_showServer(); return;}
-    if(cmd == "DLNA_getContent0"){  _level = 0; DLNA_showContent(param, 0); return;}
-    if(cmd == "DLNA_getContent1"){  _level = 1; DLNA_showContent(param, 1); return;} // search for level 1 content
-    if(cmd == "DLNA_getContent2"){  _level = 2; DLNA_showContent(param, 2); return;} // search for level 2 content
-    if(cmd == "DLNA_getContent3"){  _level = 3; DLNA_showContent(param, 3); return;} // search for level 3 content
-    if(cmd == "DLNA_getContent4"){  _level = 4; DLNA_showContent(param, 4); return;} // search for level 4 content
-    if(cmd == "DLNA_getContent5"){  _level = 5; DLNA_showContent(param, 5); return;} // search for level 5 content
+    if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); return;}
+
+    if(cmd == "DLNA_getContent") {  if(strlen(param.c_str()) == 1){ _dlnaSrvNr = param.toInt(); dlna.browseServer(_dlnaSrvNr, param.c_str());}
+                                    else if(param.startsWith("http")) connecttohost(param.c_str());
+                                    else {dlna.browseServer(_dlnaSrvNr, param.c_str());}
+                                    if(_dlnaObjId){free(_dlnaObjId); _dlnaObjId = NULL;} _dlnaObjId = strdup(param.c_str());
+                                    _totalNumbertReturned = 0;
+                                    return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                     // via websocket
 
@@ -4239,104 +4236,31 @@ void WEBSRV_onInfo(const char* info) {
 }
 
 // Events from DLNA
-void dlna_info(const char* info) {
-    SerialPrintfln("DLNA_info:   " ANSI_ESC_WHITE "%s", info); // infos
+void dlna_info(const char* info){
+    SerialPrintfln("DLNA_info   : %s", info);
 }
 
-void dlna_server(uint8_t serverId, size_t serverSize, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL){
-    SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s -> %s", serverId, IP_addr, port, friendlyName, controlURL);
-    char id[4];
-    itoa(serverId, id, 10);
-    String msg = (String)friendlyName + "," + id;
-    webSrv.send("DLNA_Names=", msg);
-
-    _dlna_items.serverFriendlyName.push_back(x_ps_strdup(friendlyName));
-    _dlna_items.serverId.push_back(serverId);
+void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL){
+     SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s", serverId, IP_addr, port, friendlyName);
 }
 
-void dlna_folder(bool lastItem, String name, String id, size_t childCount) { // list folders
-    static JSONVar myObject;
-    static uint8_t i = 0, j = 0;
-    if(lastItem) {
-        i = 0;
-        if(!j) return;
-    }
-    if(lastItem || j == 10) {
-        j = 0;
-        String msg = "Level" + String(_level + 1, 10) + "=" + JSON.stringify(myObject);
-        webSrv.send("", msg);
-        myObject = "";
-        return;
-    }
-    if(lastItem || j == 10) {
-        j = 0;
-        String msg = "Level" + String(_level + 1, 10) + "=" + JSON.stringify(myObject);
-        webSrv.send("", msg);
-        myObject = "";
-        return;
-    }
-    if(i < 10) { SerialPrintfln("DLNA_folder: " ANSI_ESC_ORANGE "\"%s\", id: \"%s\", childCount: %d", name.c_str(), id.c_str(), childCount); }
-    if(i == 10) { SerialPrintfln("DLNA_folder: " ANSI_ESC_ORANGE "more entries follows"); }
-    myObject[j]["name"] = name.c_str();
-    myObject[j]["isDir"] = 1;
-    myObject[j]["id"] = id.c_str();
-    myObject[j]["size"] = childCount;
-    myObject[j]["isAudio"] = true;
-    i++;
-    j++;
+void dlna_seekReady(uint8_t numberOfServer){
+    SerialPrintfln("DLNA_server:  %i media server found", numberOfServer);
 }
 
-void dlna_file(bool lastItem, String name, String id, size_t size, String uri, bool isAudio) { // list files
-log_w("%s, %s, %s", name.c_str(), id.c_str(), uri.c_str());
-    static JSONVar myObject;
-    static uint8_t i = 0, j = 0;
-    if(lastItem) {
-        i = 0;
-        if(!j) return;
-    }
-    if(lastItem || j == 10) {
-        j = 0;
-        String msg = "Level" + String(_level + 1, 10) + "=" + JSON.stringify(myObject);
-        webSrv.send("", msg);
-        myObject = "";
-        return;
-    }
-    if(i < 10) {
-        if(isAudio) { SerialPrintfln("DLNA_file:   " ANSI_ESC_GREEN "\"%s\"", name.c_str()); }
-        else { SerialPrintfln("DLNA_file:   " ANSI_ESC_ORANGE "\"%s\"", name.c_str()); }
-    }
-    if(i == 10) { SerialPrintfln("DLNA_file:   " ANSI_ESC_GREEN "more entries follows"); }
-
-    myObject[j]["name"] = name.c_str();
-    myObject[j]["isDir"] = 0;
-    myObject[j]["id"] = uri.c_str();
-    myObject[j]["size"] = size;
-    myObject[j]["isAudio"] = isAudio;
-    i++;
-    j++;
+void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* itemURL){
+  SerialPrintfln("DLNA_server:  " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i", title, childCount, itemSize);
 }
 
-void dlna_item(bool lastItem, String name, String id, size_t size, String uri, bool isDir, bool isAudio){
-    //log_w("lastItem %i, name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", lastItem, name.c_str(), id.c_str(), size, uri.c_str(), isDir, isAudio);
-    if(lastItem){
-        _dlna_items.isReady = true;
-
-        int32_t s = _dlna_items.name.size();
-
-        for(int32_t i = 0; i < s;  i++){
-        //  log_w("name %s, id %s, size %d, uri %s, isDir %i, isAudio %i", _dlna_items.name[i], _dlna_items.id[i], _dlna_items.size[i], _dlna_items.uri[i], _dlna_items.isDir[i], _dlna_items.isAudio[i]);
+void dlna_browseReady(uint16_t numbertReturned, uint16_t totalMatches){
+    SerialPrintfln("DLNA_server:  returned %i from %i", numbertReturned+ _totalNumbertReturned, totalMatches);
+    webSrv.send("dlnaContent=", dlna.stringifyContent());
+    if(numbertReturned == 50){  // next round
+        _totalNumbertReturned += numbertReturned;
+        if(_totalNumbertReturned < totalMatches && _totalNumbertReturned < 500){
+            _f_dlnaBrowseServer = true;
         }
-
-        dlna_items_vector_clear_ans_shrink();
-        return;
     }
-    _dlna_items.isReady = false;
-    _dlna_items.name.push_back(x_ps_strdup(name.c_str()));
-    _dlna_items.id.push_back(x_ps_strdup(id.c_str()));
-    _dlna_items.size.push_back(size);
-    _dlna_items.uri.push_back(x_ps_strdup(uri.c_str()));
-    _dlna_items.isDir.push_back(isDir == true);
-    _dlna_items.isAudio.push_back(isAudio == true);
 }
 
 void bt_info(const char* info){

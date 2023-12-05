@@ -111,7 +111,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == INBUFF_SIZE){
                 audioTxTaskMessage.cmd = INBUFF_SIZE;
-                audioTxTaskMessage.ret = audio.inBufferSize();
+                audioTxTaskMessage.ret = 0;//audio.inBufferSize();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == ISRUNNING){
