@@ -584,6 +584,7 @@ function showTab4 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    clearDLNAServerList(0)
     socket.send('DLNA_getServer')
     socket.send("change_state=" + "10")
 }
