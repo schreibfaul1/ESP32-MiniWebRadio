@@ -213,7 +213,7 @@ File        playlistFile;
 FtpServer   ftpSrv;
 WiFiClient  client;
 WiFiUDP     udp;
-DLNA_ESP32  dlna;
+DLNA_Client dlna;
 
 #if DECODER == 2 // ac101
 AC101 dac;
@@ -4237,7 +4237,7 @@ void WEBSRV_onInfo(const char* info) {
 
 // Events from DLNA
 void dlna_info(const char* info){
-    SerialPrintfln("DLNA_info   : %s", info);
+    SerialPrintfln("DLNA_info:    %s", info);
 }
 
 void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL){
@@ -4245,15 +4245,15 @@ void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const cha
 }
 
 void dlna_seekReady(uint8_t numberOfServer){
-    SerialPrintfln("DLNA_server:  %i media server found", numberOfServer);
+    SerialPrintfln("DLNA_server: %i media server found", numberOfServer);
 }
 
 void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* itemURL){
-  SerialPrintfln("DLNA_server:  " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i", title, childCount, itemSize);
+  SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i", title, childCount, itemSize);
 }
 
 void dlna_browseReady(uint16_t numbertReturned, uint16_t totalMatches){
-    SerialPrintfln("DLNA_server:  returned %i from %i", numbertReturned+ _totalNumbertReturned, totalMatches);
+    SerialPrintfln("DLNA_server: returned %i from %i", numbertReturned+ _totalNumbertReturned, totalMatches);
     webSrv.send("dlnaContent=", dlna.stringifyContent());
     if(numbertReturned == 50){  // next round
         _totalNumbertReturned += numbertReturned;

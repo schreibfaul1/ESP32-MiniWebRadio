@@ -49,7 +49,7 @@
 #include "ES8388.h"
 #include "WM8978.h"
 #include "Arduino_JSON.h"
-#include "dlna.h"
+#include "DLNAClient.h"
 
 #if CONFIG_IDF_TARGET_ESP32 == 1
 #include "a2dp_sink.h"
