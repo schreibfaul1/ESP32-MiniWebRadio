@@ -4103,14 +4103,15 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); return;}
 
-    if(cmd == "DLNA_getContent") {  if(strlen(param.c_str()) == 1){ _dlnaSrvNr = param.toInt(); dlna.browseServer(_dlnaSrvNr, param.c_str());}
-                                    else if(param.startsWith("http")) connecttohost(param.c_str());
-                                    else {dlna.browseServer(_dlnaSrvNr, param.c_str());}
+    if(cmd == "DLNA_getRoot")    {  _dlnaSrvNr = param.toInt(); dlna.browseServer(_dlnaSrvNr, "0"); return;}
+
+    if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); return;}
                                     if(_dlnaObjId){free(_dlnaObjId); _dlnaObjId = NULL;} _dlnaObjId = strdup(param.c_str());
                                     _totalNumbertReturned = 0;
+                                    dlna.browseServer(_dlnaSrvNr, _dlnaObjId);
                                     return;}
 
-    if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                     // via websocket
+    if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);

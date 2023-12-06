@@ -750,7 +750,7 @@ function show_DLNA_Content(val){
     }
 }
 function selectserver (presctrl) { // preset, select a server, root, level0
-    socket.send('DLNA_getContent=' + presctrl.value)
+    socket.send('DLNA_getRoot=' + presctrl.value)
     clearDLNAServerList(1)
     dlnaLevel = 1
     console.log('DLNA_getContent=' + presctrl.value)
