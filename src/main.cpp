@@ -128,6 +128,7 @@ boolean        _f_shuffle = false;
 boolean        _f_BTconnected = false;
 boolean        _f_BTstateChanged = false;
 boolean        _f_dlnaBrowseServer = false;
+boolean        _f_BT_EMITTER_found = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -1820,15 +1821,17 @@ void stopSong() {
 void setup() {
     Serial.begin(115200);
     Serial.print("\n\n");
+    Serial2.begin(115200,SERIAL_8N1, BT_EMITTER_TX, BT_EMITTER_RX);
+    Serial2.print("AT+GMR?\r\n");
     const char* chipModel = ESP.getChipModel();
     uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t     avMinor = ESP_ARDUINO_VERSION_MINOR;
     uint8_t     avPatch = ESP_ARDUINO_VERSION_PATCH;
     Serial.printf("ESP32 Chip: %s\n", chipModel);
     Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
-    uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
-    uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
-    uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
+    uint8_t    idfMajor = ESP_IDF_VERSION_MAJOR;
+    uint8_t    idfMinor = ESP_IDF_VERSION_MINOR;
+    uint8_t    idfPatch = ESP_IDF_VERSION_PATCH;
     Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
     Version = Version.substring(0, 30);
     Serial.printf("MiniWebRadio %s\n", Version.c_str());
@@ -1998,6 +2001,9 @@ void setup() {
     dlna.seekServer();
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
+    pinMode(BT_EMITTER_LINK, INPUT);
+    pinMode(BT_EMITTER_MODE, OUTPUT);
+    digitalWrite(BT_EMITTER_MODE, HIGH); // TX mode
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2976,6 +2982,34 @@ void showDlnaItemsList(uint8_t level, uint16_t itemNr){
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
 }
+/*****************************************************************************************************************************************************
+ *                                                        B T  -  E M I T T E R                                                                      *
+ *****************************************************************************************************************************************************/
+
+void BT_Emitter_Loop(){
+    int idx =0;
+    if(!Serial2.available()) return;
+    vTaskDelay(20);
+    while(Serial2.available()){
+      char ch = Serial2.read();
+      if (ch == -1) break;
+      if(ch == '\n') break;
+      if(ch < 0x20) {continue;}
+      _chbuf[idx] = ch;
+      idx++;
+    }
+    if(idx){
+        _chbuf[idx] = '\0';
+        if(indexOf(_chbuf, "KCX_BT", 0) > 0){
+            SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "KCX BT EMITTER found");
+            _f_BT_EMITTER_found = true;
+            Serial2.write("AT+RESET\r\n");
+        }
+        else{
+            SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);;
+        }
+    }
+}
 
 /*****************************************************************************************************************************************************
  *                                                                 L O O P                                                                           *
@@ -2988,6 +3022,9 @@ void loop() {
     tp.loop();
     ftpSrv.handleFTP();
     dlna.loop();
+    BT_Emitter_Loop();
+
+
 
     if(_f_muteDecrement) {
         if(_mute_volume > 0) {
@@ -3361,6 +3398,12 @@ void audio_icyurl(const char* info) { // if the Radio has a homepage, this event
         SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
         _homepage = String(info);
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
+    }
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_icylogo(const char* info) { // if the Radio has a homepage, this event is calling
+    if(strlen(info) > 5) {
+        SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, info);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------

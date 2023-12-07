@@ -1313,15 +1313,15 @@ function loadJSON (path, success, error) {
 
 function selectcategory (presctrl) { // tab Search: preset, select a category
 
-  if(presctrl.value == "bycountry")  {loadJSON('https://at1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
-  if(presctrl.value == "bylanguage") {loadJSON('https://at1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
-  if(presctrl.value == "bytag")      {loadJSON('https://at1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
+  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
+  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
+  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
-  if(category == "country")  loadJSON('https://at1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://at1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://at1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
+  if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
 
 }
 
