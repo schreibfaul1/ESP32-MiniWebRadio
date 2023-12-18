@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00b Dez 02/2023                                                                                         ";
+    Version 3.00c Dec 18/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -27,7 +27,7 @@
 const uint8_t  _max_volume = 21;
 const uint16_t _max_stations = 1000;
 int16_t        _releaseNr = -1;
-int8_t         _currentServer = -1;
+int8_t         _currDLNAsrvNr = -1;
 uint8_t        _alarmdays = 0;
 uint8_t        _cur_volume = 0;           // will be set from stored preferences
 uint8_t        _ringvolume = _max_volume; //
@@ -40,7 +40,6 @@ uint8_t        _VUleftCh = 0;             // VU meter left channel
 uint8_t        _VUrightCh = 0;            // VU meter right channel
 uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
-uint8_t        _dlnaSrvNr = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
 uint8_t        _staListPos = 0;
 uint16_t*      _shuffleArray = NULL;
@@ -48,7 +47,8 @@ uint16_t       _staListNr = 0;
 uint8_t        _fileListPos = 0;
 uint16_t       _fileListNr = 0;
 uint8_t        _itemListPos = 0;          // DLNA items
-uint16_t       _itemListNr = 0;
+uint16_t       _dlnaItemNr = 0;
+uint8_t        _dlnaLevel = 0;
 int8_t         _rssi_bt = -127;
 int8_t         _newBTmetaData = 0;        // 0 - no new data, 1 - new data, 2 - data in progress (show on display)
 int16_t        _alarmtime = 0;            // in minutes (23:59 = 23 *60 + 59)
@@ -65,6 +65,7 @@ uint16_t       _plsEntries = 0;
 uint16_t       _plsMaxEntries = 0;
 uint16_t       _audioFilesInList = 0;
 uint16_t       _totalNumbertReturned = 0;
+uint16_t       _dlnaMaxItems = 0;
 uint32_t       _resumeFilePos = 0;        //
 uint32_t       _playlistTime = 0;         // playlist start time millis() for timeout
 uint32_t       _settingsHash = 0;
@@ -84,51 +85,51 @@ char*          _lastconnectedfile = nullptr;
 char*          _stationURL = nullptr;
 char*          _JSONstr = nullptr;
 char*          _BT_metaData = nullptr;
-char*          _dlnaObjId = NULL;
-boolean        _f_rtc = false; // true if time from ntp is received
-boolean        _f_100ms = false;
-boolean        _f_1sec = false;
-boolean        _f_10sec = false;
-boolean        _f_1min = false;
-boolean        _f_mute = false;
-boolean        _f_sleeping = false;
-boolean        _f_isWebConnected = false;
-boolean        _f_isFSConnected = false;
-boolean        _f_eof = false;
-boolean        _f_eof_alarm = false;
-boolean        _f_semaphore = false;
-boolean        _f_alarm = false;
-boolean        _f_irNumberSeen = false;
-boolean        _f_newIcyDescription = false;
-boolean        _f_newStreamTitle = false;
-boolean        _f_newBitRate = false;
-boolean        _f_newLogoAndStation = false;
-boolean        _f_newCommercial = false;
-boolean        _f_volBarVisible = false;
-boolean        _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
-boolean        _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
-boolean        _f_muteIncrement = false;    // if set increase Volume (from 0 to _cur_volume)
-boolean        _f_muteDecrement = false;    // if set decrease Volume (from _cur_volume to 0)
-boolean        _f_timeAnnouncement = false; // time announcement every full hour
-boolean        _f_playlistEnabled = false;
-boolean        _f_playlistNextFile = false;
-boolean        _f_logoUnknown = false;
-boolean        _f_pauseResume = false;
-boolean        _f_accessPoint = false;
-boolean        _f_state_isChanging = false;
-boolean        _f_SD_Upload = false;
-boolean        _f_PSRAMfound = false;
-boolean        _f_FFatFound = false;
-boolean        _f_SD_MMCfound = false;
-boolean        _f_ESPfound = false;
-boolean        _f_playAllFiles = false;
-boolean        _f_clearLogo = false;
-boolean        _f_clearStationName = false;
-boolean        _f_shuffle = false;
-boolean        _f_BTconnected = false;
-boolean        _f_BTstateChanged = false;
-boolean        _f_dlnaBrowseServer = false;
-boolean        _f_BT_EMITTER_found = false;
+bool           _f_rtc = false; // true if time from ntp is received
+bool           _f_100ms = false;
+bool           _f_1sec = false;
+bool           _f_10sec = false;
+bool           _f_1min = false;
+bool           _f_mute = false;
+bool           _f_sleeping = false;
+bool           _f_isWebConnected = false;
+bool           _f_isFSConnected = false;
+bool           _f_eof = false;
+bool           _f_eof_alarm = false;
+bool           _f_semaphore = false;
+bool           _f_alarm = false;
+bool           _f_irNumberSeen = false;
+bool           _f_newIcyDescription = false;
+bool           _f_newStreamTitle = false;
+bool           _f_newBitRate = false;
+bool           _f_newLogoAndStation = false;
+bool           _f_newCommercial = false;
+bool           _f_volBarVisible = false;
+bool           _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
+bool           _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
+bool           _f_muteIncrement = false;    // if set increase Volume (from 0 to _cur_volume)
+bool           _f_muteDecrement = false;    // if set decrease Volume (from _cur_volume to 0)
+bool           _f_timeAnnouncement = false; // time announcement every full hour
+bool           _f_playlistEnabled = false;
+bool           _f_playlistNextFile = false;
+bool           _f_logoUnknown = false;
+bool           _f_pauseResume = false;
+bool           _f_accessPoint = false;
+bool           _f_state_isChanging = false;
+bool           _f_SD_Upload = false;
+bool           _f_PSRAMfound = false;
+bool           _f_FFatFound = false;
+bool           _f_SD_MMCfound = false;
+bool           _f_ESPfound = false;
+bool           _f_playAllFiles = false;
+bool           _f_clearLogo = false;
+bool           _f_clearStationName = false;
+bool           _f_shuffle = false;
+bool           _f_BTconnected = false;
+bool           _f_BTstateChanged = false;
+bool           _f_dlnaBrowseServer = false;
+bool           _f_dlnaWaitForResponse = false;
+bool           _f_BT_EMITTER_found = false;
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -143,24 +144,15 @@ String         _media_downloadIP = "";
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
 std::vector<char*>  _PLS_content;
-
-struct dlna_items{
-    std::vector<char*> name{};
-    std::vector<uint8_t> isDir; // contains boolean
-    std::vector<char*> id{};
-    std::vector<size_t> size;
-    std::vector<char*> uri{};
-    std::vector<uint8_t> isAudio; // contains boolean
-    std::vector<char*> serverFriendlyName{};
-    std::vector<uint8_t> serverId;
-    boolean isReady = true;
-    std::vector<char*> path{};
-    uint8_t level = 0;
-} _dlna_items;
 struct timecounter {
     uint8_t timer = 0;
     float factor = 2.0;
 } _timeCounter;
+
+struct dlnaHistory {
+    char* objId = NULL;
+    char* name = NULL;
+} _dlnaHistory[10];
 
 char _hl_item[15][40]{
     "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
@@ -614,37 +606,6 @@ const char* SD_stringifyDirContent(String path) {
     }
     _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
     return _JSONstr;
-}
-
-// Sends a list of the content of a directory as JSON file
-String DLNA_dirContent(String path) {
-    // File root, file;
-    // JSONVar jObject, jArr;
-    // int32_t i = 0;
-    // if(path =="") path = "/";
-    // root = SD_MMC.open(path.c_str());
-
-    // if (!root.isDirectory()) {
-    //     SerialPrintfln("FileExplorer:" ANSI_ESC_RED "%s is not a directory", path.c_str());
-    //     return "";
-    // }
-    // while (true) {
-    //     file = root.openNextFile();
-    //     if(!file) break;
-    //     if (startsWith(file.name() , "/.")) continue;  // ignore hidden folders
-    //     jArr["name"] = (String)file.name();
-    //     jArr["dir"]  = (boolean)file.isDirectory();
-    //     jObject[i]   = jArr;
-    //     i++;
-    // }
-    // file.close();
-    // root.close();
-    // if(i){
-    //     String jO = JSON.stringify(jObject);
-    //     // log_i("%s", jO.c_str());
-    //     return jO;
-    // }
-    return "";
 }
 
 /*****************************************************************************************************************************************************
@@ -1998,6 +1959,9 @@ void setup() {
 
     setI2STone();
     showFooter();
+    _dlnaLevel = 0;
+    _dlnaHistory[0].name = strdup("Media Server");
+    _dlnaHistory[0].objId = strdup("");
     dlna.seekServer();
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
@@ -2551,15 +2515,6 @@ void vector_clear_and_shrink(vector<char*>&vec){
     vec.shrink_to_fit();
 }
 
-void dlna_items_vector_clear_ans_shrink(){
-    vector_clear_and_shrink(_dlna_items.name);
-    vector_clear_and_shrink(_dlna_items.id);
-    vector_clear_and_shrink(_dlna_items.uri);
-    _dlna_items.size.clear();
-    _dlna_items.isDir.clear();
-    _dlna_items.isAudio.clear();
-}
-
 boolean copySDtoFFat(const char* path){
     if(!_f_FFatFound) return false;
     uint8_t buffer[1024];
@@ -2855,10 +2810,7 @@ void changeState(int32_t state){
             _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
             _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
             _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
-
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
-        // todo   _pressBtn[3] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[3] = "/btn/Button_List_Green.jpg";
-
+            _pressBtn[3] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[3] = "/btn/Button_List_Green.jpg";
             _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
             _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
@@ -2871,7 +2823,7 @@ void changeState(int32_t state){
             break;
         }
         case DLNAITEMSLIST:{
-            showDlnaItemsList(_dlna_items.level, 0);
+            showDlnaItemsList(_currDLNAsrvNr, "");
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
@@ -2906,20 +2858,6 @@ void changeState(int32_t state){
 /*****************************************************************************************************************************************************
  *                                                                D L N A                                                                            *
  *****************************************************************************************************************************************************/
-int32_t DLNA_setCurrentServer(String serverName) {
-    int32_t serverNum = -1;
-    for(int32_t i = 0; i < _names.size(); i++) {
-        if(_names[i] == serverName) serverNum = i;
-    }
-    _currentServer = serverNum;
-    return serverNum;
-}
-
-void DLNA_browseServer(String objectId, uint8_t level) {
-    // Here the user selects the DLNA server whose content he wants to see, level 0 is root
-    if(level == 0) { _currentServer = objectId.toInt(); }
-//    soap.browseServer(_currentServer, objectId.c_str());
-}
 
 void DLNA_getFileItems(String uri) {
 //    String   _media_downloadIP = soap.getMediaDownloadIP();
@@ -2936,49 +2874,57 @@ void DLNA_getFileItems(String uri) {
 }
 const char* DLNA_showContent(String objectId, uint8_t level) {
     audioStopSong();
-    log_i("obkId = %s", objectId.c_str());
+    log_i("objId = %s", objectId.c_str());
     dlna.browseServer(0, objectId.c_str());
     return dlna.stringifyServer();
 }
 
-void showDlnaItemsList(uint8_t level, uint16_t itemNr){
+void showDlnaItemsList(uint16_t itemListNr, const char* parentName){
+
+    uint16_t itemsSize  = 0;
+    DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
+    DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
+    if(_dlnaLevel == 0){itemsSize = dlnaServer.size; itemListNr = 0;}      // DLNA Serverlist
+    else {              itemsSize = srvContent.size; }                     // DLNA Contentlist
+
+    auto triangleUp   = [&](int16_t x, int16_t y, uint8_t s){tft.fillTriangle(x + s, y + 0, x +  0, y + 2*s, x + 2*s, y + 2*s , TFT_RED);};
+    auto triangleDown = [&](int16_t x, int16_t y, uint8_t s){tft.fillTriangle(x + 0, y + 0, x + 2*s, y +  0, x +  s, y + 2*s , TFT_RED);};
+
     clearWithOutHeaderFooter();
-    uint16_t itemsSize = 0;
-    if(level == 0){                                  // show DLNA server names
-        itemsSize = _dlna_items.serverFriendlyName.size();
-        if(itemsSize < 10) itemNr = 0;
-    }
-    else{
-        itemsSize = _dlna_items.name.size();
-        if(itemsSize < 10) itemNr = 0; // show DLNA items
-    }
-    log_i("level %d, itemsSize %d", level, itemsSize);
     showHeadlineItem(DLNA);
+    tft.setFont(_fonts[0]);
+    uint8_t  lineHight  = _winWoHF.h / 10;
     tft.setTextColor(TFT_ORANGE);
-    if(level > 0){;} // todo  tft.writeText((uint8_t*)_dlna_items.path[0], -1,-1, true);
+    tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winHeader.h,  _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
     tft.setTextColor(TFT_WHITE);
-    tft.setFont(_fonts[1]);
-    uint8_t lineHight = _winWoHF.h / 10;
     for(uint8_t pos = 1; pos < 10; pos++){
-        if(pos == 1 && itemNr > 0){
-            tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText("˄", 0, _winFooter.h + (pos) * lineHight, 20, 20);  // todo addrWindow w h does not matter
+        if(pos == 1 && itemListNr > 0){
+            triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
         }
-        if(pos == 9 && itemNr + 9 < itemsSize){
-            tft.setTextColor(TFT_AQUAMARINE);
-            tft.writeText("˅", 0, _winFooter.h + (pos) * lineHight, 20, 20);  // todo addrWindow w h does not matter
+        if(pos == 9 && itemListNr + 9 < _dlnaMaxItems){
+            triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
         }
-        if(itemNr + pos > itemsSize) break;
-// todo      tft.setCursor(20, _winFooter.h + (pos) * lineHight);
-        if(level == 0){
-            tft.setTextColor(TFT_LIME);
-// todo            tft.writeText((uint8_t*)_dlna_items.serverFriendlyName[(pos - 1) + itemNr], -1, -1, true);
+        if(pos > 9) break;
+        if(pos > itemsSize) break;
+        if(_dlnaLevel == 0){
+            tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
         }
         else{
-            //    if(indexOf(_SD_content[pos + itemNr - 1 ], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
-            //    else tft.setTextColor(TFT_WHITE);                                                     // is file
+            if(startsWith(srvContent.itemURL[pos - 1], "http")){
+                if(srvContent.isAudio[pos - 1] == true){
+                    sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.itemSize[pos - 1]);
+                }
+                else {
+                    sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.itemSize[pos - 1]);
+                }
+            }
+            else{
+                sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+            }
+            tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
         }
     }
+
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
 }
@@ -3062,7 +3008,7 @@ void loop() {
     }
     if(_f_dlnaBrowseServer){
         _f_dlnaBrowseServer = false;
-        dlna.browseServer(_dlnaSrvNr, _dlnaObjId,_totalNumbertReturned);
+        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId,_totalNumbertReturned);
     }
 
     if(!_f_sleeping) {
@@ -3974,17 +3920,80 @@ void tp_released(uint16_t x, uint16_t y){
                     } break;
         /* DLNAITEMSLIST *********************************/
         case 120:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+                        DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
+                        DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
+                        uint16_t itemSize = 0;
+                        if(_dlnaLevel == 0) itemSize = dlnaServer.size;
+                        else                itemSize = srvContent.size;
                         uint8_t itemListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
                         if(_itemListPos + 2 < itemListPos){               // wipe down
-                            if(_itemListNr == 0) break;
-                            if(_itemListNr >  9) _itemListNr -= 9;
-                            else _itemListNr = 0;
-                            showDlnaItemsList( 0,   _itemListNr);
+                            if(_dlnaItemNr == 0) break;
+                            if(_dlnaItemNr >  9) _dlnaItemNr -= 9;
+                            else _dlnaItemNr = 0;
+                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                            _f_dlnaWaitForResponse = true;
+                            break;
                         }
                         else if(itemListPos + 2 < _itemListPos){          // wipe up
-                            if(_itemListNr + 9 >= _SD_content.size()) break;
-                            _itemListNr += 9;
-                            showDlnaItemsList( 0,    _itemListNr);
+                            if(_dlnaItemNr + 9 >= _dlnaMaxItems) break;
+                            _dlnaItemNr += 9;
+                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                            _f_dlnaWaitForResponse = true;
+                            break;
+                        }
+                        else if(itemListPos == _itemListPos){            // no wipe
+                            uint16_t itemNr = _dlnaItemNr + itemListPos;
+                            if(itemNr > itemSize){
+                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
+                                break;
+                            }
+                            uint8_t lineHight = _winWoHF.h / 10;
+                            if(itemListPos == 0) {
+                                if(_dlnaLevel == 0) break;
+                                tft.setFont(_fonts[0]);
+                                tft.setTextColor(TFT_CYAN);
+                                tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winFooter.h, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+                                _dlnaLevel--;
+                                dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 10);
+                                _f_dlnaWaitForResponse = true;
+                                break;
+                            }
+                            else{
+                                if(itemListPos > itemSize) break;
+                                tft.setTextColor(TFT_CYAN);
+                                uint8_t pos = itemListPos;
+                                tft.setFont(_fonts[0]);
+                                if(_dlnaLevel == 0){  // server list
+                                    tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+                                    _currDLNAsrvNr = pos - 1;
+                                    _dlnaLevel++;
+                                    if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
+                                    _dlnaHistory[_dlnaLevel].name = strdup(dlnaServer.friendlyName[pos - 1]);
+                                    dlna.browseServer(_currDLNAsrvNr, "0", 0 , 10);
+                                    _f_dlnaWaitForResponse = true;
+                                }
+                                else {  // content list
+                                    if(startsWith(srvContent.itemURL[pos - 1], "http")){ // is file
+                                        if(srvContent.isAudio[pos - 1]){
+                                            changeState(DLNA);
+                                            _f_isWebConnected = audioConnecttohost(srvContent.itemURL[pos - 1]);
+                                        }
+                                    }
+                                    else{ // is folder
+                                        sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                                        tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+                                        _dlnaLevel++;
+                                        if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;}
+                                        _dlnaHistory[_dlnaLevel].objId = strdup(srvContent.objectId[pos -1]);
+                                        if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
+                                        _dlnaHistory[_dlnaLevel].name = strdup(srvContent.title[pos - 1]);
+                                        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                                        _f_dlnaWaitForResponse = true;
+                                    }
+                                }
+                            }
+                            _timeCounter.timer = 0;
+                            showFooterRSSI(true);
                         }
                     } break;
 
@@ -4144,14 +4153,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     if(   param == "false") _f_timeAnnouncement = false;
                                     return;}
 
-    if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); return;}
+    if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); _currDLNAsrvNr = -1; return;}
 
-    if(cmd == "DLNA_getRoot")    {  _dlnaSrvNr = param.toInt(); dlna.browseServer(_dlnaSrvNr, "0"); return;}
+    if(cmd == "DLNA_getRoot")    {  _currDLNAsrvNr = param.toInt(); dlna.browseServer(_currDLNAsrvNr, "0"); return;}
 
     if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); return;}
-                                    if(_dlnaObjId){free(_dlnaObjId); _dlnaObjId = NULL;} _dlnaObjId = strdup(param.c_str());
+                                    if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = strdup(param.c_str());
                                     _totalNumbertReturned = 0;
-                                    dlna.browseServer(_dlnaSrvNr, _dlnaObjId);
+                                    dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
@@ -4298,12 +4307,19 @@ void dlna_browseResult(const char* objectId, const char* parentId, uint16_t chil
 
 void dlna_browseReady(uint16_t numbertReturned, uint16_t totalMatches){
     SerialPrintfln("DLNA_server: returned %i from %i", numbertReturned+ _totalNumbertReturned, totalMatches);
-    webSrv.send("dlnaContent=", dlna.stringifyContent());
+    _dlnaMaxItems = totalMatches;
     if(numbertReturned == 50){  // next round
         _totalNumbertReturned += numbertReturned;
         if(_totalNumbertReturned < totalMatches && _totalNumbertReturned < 500){
             _f_dlnaBrowseServer = true;
         }
+    }
+    if(_f_dlnaWaitForResponse){
+        _f_dlnaWaitForResponse = false;
+        showDlnaItemsList(_dlnaItemNr, _dlnaHistory[_dlnaLevel].name);
+    }
+    else{
+        webSrv.send("dlnaContent=", dlna.stringifyContent());
     }
 }
 

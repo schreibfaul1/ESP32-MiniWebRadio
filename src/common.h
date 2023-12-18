@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 24.Oct.2023
+// updated: 18.Dec.2023
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -164,7 +164,6 @@ void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
 void           vector_clear_and_shrink(vector<char*>& vec);
-void           dlna_items_vector_clear_ans_shrink();
 boolean        copySDtoFFat(const char* path);
 void           updateSleepTime(boolean noDecrement = false);
 void           showVolumeBar();
@@ -231,11 +230,9 @@ void           connecttohost(const char* host);
 void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
-int32_t        DLNA_setCurrentServer(String serverName);
-void           DLNA_browseServer(String objectId, uint8_t level);
 void           DLNA_getFileItems(String uri);
 const char*    DLNA_showContent(String objectId, uint8_t level);
-void           showDlnaItemsList(uint8_t level, uint16_t itemNr);
+void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
 
 //prototypes (audiotask.cpp)
 void audioInit();
