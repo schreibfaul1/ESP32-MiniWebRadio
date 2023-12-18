@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00c Dec 18/2023                                                                                         ";
+    Version 3.00d Dec 18/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1589,8 +1589,7 @@ void processPlaylist(boolean first) {
         webSrv.send("SD_playFile=", _chbuf);
         changeState(PLAYERico);
         _cur_Codec = 0;
-        _f_isWebConnected = audioConnecttohost(_chbuf);
-        _f_isFSConnected = false;
+        connecttohost(_chbuf);
         showFileNumber();
     }
     else {
@@ -2869,8 +2868,7 @@ void DLNA_getFileItems(String uri) {
     String URL = "http://" + _media_downloadIP + ":" + _media_downloadPort + "/" + uri;
     // log_i("URL=%s", URL.c_str());
     _cur_Codec = 0;
-    _f_isWebConnected = audioConnecttohost(URL.c_str());
-    _f_isFSConnected = false;
+    connecttohost(URL.c_str());
 }
 const char* DLNA_showContent(String objectId, uint8_t level) {
     audioStopSong();
@@ -3976,7 +3974,8 @@ void tp_released(uint16_t x, uint16_t y){
                                     if(startsWith(srvContent.itemURL[pos - 1], "http")){ // is file
                                         if(srvContent.isAudio[pos - 1]){
                                             changeState(DLNA);
-                                            _f_isWebConnected = audioConnecttohost(srvContent.itemURL[pos - 1]);
+                                            connecttohost(srvContent.itemURL[pos - 1]);
+                                            showFileName(srvContent.title[pos - 1]);
                                         }
                                     }
                                     else{ // is folder
@@ -4157,7 +4156,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "DLNA_getRoot")    {  _currDLNAsrvNr = param.toInt(); dlna.browseServer(_currDLNAsrvNr, "0"); return;}
 
-    if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); return;}
+    if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); showFileName(arg.c_str()); return;}
                                     if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = strdup(param.c_str());
                                     _totalNumbertReturned = 0;
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);

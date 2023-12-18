@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 23.09.2023
+ *  Updated on: 18.12.2023
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -756,32 +756,37 @@ function selectserver (presctrl) { // preset, select a server, root, level0
     console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l1 (presctrl) { // preset, select root
-    socket.send('DLNA_getContent=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(2)
     dlnaLevel = 2
-    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l2 (presctrl) { // preset, select level 1
-    socket.send('DLNA_getContent=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(3)
     dlnaLevel = 3
-    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l3 (presctrl) { // preset, select level 2
-    socket.send('DLNA_getContent=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(4)
     dlnaLevel = 4
-    console.log('DLNA_getContent=' + presctrl.value)
  }
  function select_l4 (presctrl) { // preset, select level 3
-    socket.send('DLNA_getContent=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(5)
     dlnaLevel = 5
-    console.log('DLNA_getContent=' + presctrl.value)
  }
  function select_l5 (presctrl) { // preset, select level 4
-    socket.send('DLNA_getContent=' + presctrl.value)
-    console.log('DLNA_getContent=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 6
  }
 
