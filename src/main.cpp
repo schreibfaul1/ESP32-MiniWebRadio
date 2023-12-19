@@ -2858,25 +2858,6 @@ void changeState(int32_t state){
  *                                                                D L N A                                                                            *
  *****************************************************************************************************************************************************/
 
-void DLNA_getFileItems(String uri) {
-//    String   _media_downloadIP = soap.getMediaDownloadIP();
- //   uint16_t _media_downloadPort = soap.getMediaDownloadPort();
-
-    log_v("uri: %s", uri.c_str());
-    log_v("downloadIP: %s", _media_downloadIP.c_str());
-    log_v("downloadport: %d", _media_downloadPort);
-    String URL = "http://" + _media_downloadIP + ":" + _media_downloadPort + "/" + uri;
-    // log_i("URL=%s", URL.c_str());
-    _cur_Codec = 0;
-    connecttohost(URL.c_str());
-}
-const char* DLNA_showContent(String objectId, uint8_t level) {
-    audioStopSong();
-    log_i("objId = %s", objectId.c_str());
-    dlna.browseServer(0, objectId.c_str());
-    return dlna.stringifyServer();
-}
-
 void showDlnaItemsList(uint16_t itemListNr, const char* parentName){
 
     uint16_t itemsSize  = 0;
