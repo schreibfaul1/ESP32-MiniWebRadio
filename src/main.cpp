@@ -1961,6 +1961,7 @@ void setup() {
     _dlnaLevel = 0;
     _dlnaHistory[0].name = strdup("Media Server");
     _dlnaHistory[0].objId = strdup("");
+    _dlnaHistory[1].objId = strdup("0");
     dlna.seekServer();
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
@@ -2931,7 +2932,18 @@ void BT_Emitter_Loop(){
             Serial2.write("AT+RESET\r\n");
         }
         else{
-            SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);;
+            static bool f_scan = false;
+            if(isAscii(_chbuf[0]) > 0){
+                if(startsWith(_chbuf, "SCAN..")){
+                    if(!f_scan)
+                    SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
+                    f_scan = true;
+                }
+                else{
+                    f_scan = false;
+                    SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
+                }
+            }
         }
     }
 }
@@ -3306,6 +3318,9 @@ void audio_eof_stream(const char* info) {
             _f_clearLogo = true;
             _f_clearStationName = true;
         }
+    }
+    if(_state == DLNA){
+        showFileName("");
     }
     _f_eof = true;
     _f_isWebConnected = false;
@@ -4270,6 +4285,11 @@ void WEBSRV_onInfo(const char* info) {
 
 // Events from DLNA
 void dlna_info(const char* info){
+    if(endsWith(info, "is not responding after request")){  // timeout
+        _f_dlnaBrowseServer = false;
+        _dlnaLevel--;
+        showDlnaItemsList(_dlnaItemNr, _dlnaHistory[_dlnaLevel].name);
+    }
     SerialPrintfln("DLNA_info:    %s", info);
 }
 
