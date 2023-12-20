@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00d Dec 18/2023                                                                                         ";
+    Version 3.00e Dec 20/2023                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -64,7 +64,7 @@ uint16_t       _sum_stations = 0;
 uint16_t       _plsEntries = 0;
 uint16_t       _plsMaxEntries = 0;
 uint16_t       _audioFilesInList = 0;
-uint16_t       _totalNumbertReturned = 0;
+uint16_t       _totalNumberReturned = 0;
 uint16_t       _dlnaMaxItems = 0;
 uint32_t       _resumeFilePos = 0;        //
 uint32_t       _playlistTime = 0;         // playlist start time millis() for timeout
@@ -2999,7 +2999,7 @@ void loop() {
     }
     if(_f_dlnaBrowseServer){
         _f_dlnaBrowseServer = false;
-        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId,_totalNumbertReturned);
+        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId,_totalNumberReturned);
     }
 
     if(!_f_sleeping) {
@@ -4156,7 +4156,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); showFileName(arg.c_str()); return;}
                                     if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = strdup(param.c_str());
-                                    _totalNumbertReturned = 0;
+                                    _totalNumberReturned = 0;
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
 
@@ -4307,12 +4307,12 @@ void dlna_browseResult(const char* objectId, const char* parentId, uint16_t chil
   SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i", title, childCount, itemSize);
 }
 
-void dlna_browseReady(uint16_t numbertReturned, uint16_t totalMatches){
-    SerialPrintfln("DLNA_server: returned %i from %i", numbertReturned+ _totalNumbertReturned, totalMatches);
+void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches){
+    SerialPrintfln("DLNA_server: returned %i from %i", numberReturned+ _totalNumberReturned, totalMatches);
     _dlnaMaxItems = totalMatches;
-    if(numbertReturned == 50){  // next round
-        _totalNumbertReturned += numbertReturned;
-        if(_totalNumbertReturned < totalMatches && _totalNumbertReturned < 500){
+    if(numberReturned == 50){  // next round
+        _totalNumberReturned += numberReturned;
+        if(_totalNumberReturned < totalMatches && _totalNumberReturned < 500){
             _f_dlnaBrowseServer = true;
         }
     }
