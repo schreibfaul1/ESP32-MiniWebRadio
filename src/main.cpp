@@ -3924,20 +3924,20 @@ void tp_released(uint16_t x, uint16_t y){
                             if(_dlnaItemNr == 0) break;
                             if(_dlnaItemNr >  9) _dlnaItemNr -= 9;
                             else _dlnaItemNr = 0;
-                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
                             _f_dlnaWaitForResponse = true;
                             break;
                         }
                         else if(itemListPos + 2 < _itemListPos){          // wipe up
                             if(_dlnaItemNr + 9 >= _dlnaMaxItems) break;
                             _dlnaItemNr += 9;
-                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
                             _f_dlnaWaitForResponse = true;
                             break;
                         }
                         else if(itemListPos == _itemListPos){            // no wipe
                             uint16_t itemNr = _dlnaItemNr + itemListPos;
-                            if(itemNr > itemSize){
+                            if(itemNr % 9 > itemSize){
                                 SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
                                 break;
                             }
@@ -3948,7 +3948,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 tft.setTextColor(TFT_CYAN);
                                 tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winFooter.h, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
                                 _dlnaLevel--;
-                                dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 10);
+                                dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
                                 _f_dlnaWaitForResponse = true;
                                 break;
                             }
@@ -3963,14 +3963,16 @@ void tp_released(uint16_t x, uint16_t y){
                                     _dlnaLevel++;
                                     if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
                                     _dlnaHistory[_dlnaLevel].name = strdup(dlnaServer.friendlyName[pos - 1]);
-                                    dlna.browseServer(_currDLNAsrvNr, "0", 0 , 10);
+                                    dlna.browseServer(_currDLNAsrvNr, "0", 0 , 9);
                                     _f_dlnaWaitForResponse = true;
                                 }
                                 else {  // content list
                                     if(startsWith(srvContent.itemURL[pos - 1], "http")){ // is file
                                         if(srvContent.isAudio[pos - 1]){
-                                            changeState(DLNA);
+                                            sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                                            tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
                                             connecttohost(srvContent.itemURL[pos - 1]);
+                                            changeState(DLNA);
                                             showFileName(srvContent.title[pos - 1]);
                                         }
                                     }
@@ -3982,7 +3984,7 @@ void tp_released(uint16_t x, uint16_t y){
                                         _dlnaHistory[_dlnaLevel].objId = strdup(srvContent.objectId[pos -1]);
                                         if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
                                         _dlnaHistory[_dlnaLevel].name = strdup(srvContent.title[pos - 1]);
-                                        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 10);
+                                        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
                                         _f_dlnaWaitForResponse = true;
                                     }
                                 }
