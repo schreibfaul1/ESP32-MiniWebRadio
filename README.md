@@ -36,7 +36,7 @@ Control is via the display touchscreen or a web page in a browser, no additional
 Schematic<br>
 ![Schematic with external DAC](docs/MiniWebRadioV3_schematic.jpg)<br>
 <br>
-<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio%20V2%20Layout.pdf">Display (Layout)</a>
+<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/MiniWebRadio%20V3%20Layout.pdf">Display (Layout)</a>
 
 <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/How%20to%20install.pdf">How to install:</a>
 PlatformIO is definitely recommended as the IDE.
