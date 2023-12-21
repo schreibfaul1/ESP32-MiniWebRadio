@@ -3557,6 +3557,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
                 yPos = DLNAITEMSLIST_1;
             }
+            else if(y > _winFooter.y){
+                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
+                    yPos = DLNAITEMSLIST_1;
+                    btnNr = 100;
+                }
+            }
             break;
         case A2DP_SINK:
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
@@ -3663,6 +3669,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             break;
         case DLNAITEMSLIST_1: if(btnNr == none) break;
                             _releaseNr = 120;
+                            if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
+                            else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
                             _itemListPos = btnNr;
                             vTaskDelay(100);
                             break;
