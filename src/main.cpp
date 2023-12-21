@@ -3984,6 +3984,7 @@ void tp_released(uint16_t x, uint16_t y){
                                         _dlnaHistory[_dlnaLevel].objId = strdup(srvContent.objectId[pos -1]);
                                         if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
                                         _dlnaHistory[_dlnaLevel].name = strdup(srvContent.title[pos - 1]);
+                                        _dlnaItemNr = 0; // new folder? reset dlnaItemNr
                                         dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
                                         _f_dlnaWaitForResponse = true;
                                     }
