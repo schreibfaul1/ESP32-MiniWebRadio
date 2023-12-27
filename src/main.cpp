@@ -375,9 +375,9 @@ boolean defaultsettings(){
     }
 
     File file = SD_MMC.open("/settings.json","r", false);
-    char*  jO = x_ps_calloc(512, 1);
-    char tmp[50];
-    file.readBytes(jO, 512);
+    char*  jO = x_ps_calloc(1024, 1);
+    char* tmp = x_ps_malloc(512);
+    file.readBytes(jO, 1024);
     _settingsHash = simpleHash(jO);
 
     auto parseJson = [&](const char* s) { // lambda, inner function
@@ -411,6 +411,8 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
 
+    if(jO) {free(jO);   jO = NULL;}
+    if(tmp){free(tmp); tmp = NULL;}
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
