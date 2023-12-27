@@ -48,7 +48,6 @@
 #include "AC101.h"
 #include "ES8388.h"
 #include "WM8978.h"
-#include "Arduino_JSON.h"
 #include "DLNAClient.h"
 
 #if CONFIG_IDF_TARGET_ESP32 == 1
@@ -200,6 +199,8 @@ int32_t        indexOf(const char* base, const char* str, int32_t startIndex);
 int32_t        lastIndexOf(const char* haystack, const char needle);
 boolean        strCompare(char* str1, char* str2);
 boolean        strCompare(const char* str1, char* str2);
+char*          x_ps_malloc(uint16_t len);
+char*          x_ps_calloc(uint16_t len, uint8_t size);
 char*          x_ps_strdup(const char* str);
 int16_t        strlenUTF8(const char* str);
 int32_t        map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);

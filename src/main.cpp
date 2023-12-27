@@ -351,52 +351,65 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 boolean defaultsettings(){
     if(!SD_MMC.exists("/settings.json")){
         File file = SD_MMC.open("/settings.json","w", true);
-        JSONVar jObject;
-        jObject["volume"]            = (uint8_t)  12; // 0...21
-        jObject["ringvolume"]        = (uint8_t)  21;
-        jObject["alarmtime"]         = (uint16_t) 0;
-        jObject["alarm_weekdays"]    = (uint8_t)  0;
-        jObject["timeAnnouncing"]    = (bool)     true;
-        jObject["mute"]              = (bool)     false; // no mute
-        jObject["brightness"]        = (uint8_t)  100;  // 0...100
-        jObject["sleeptime"]         = (uint16_t) 0;
-        jObject["lastconnectedhost"] = (String)   "";
-        jObject["station"]           = (uint16_t) 1;
-        jObject["sumstations"]       = (uint16_t) 0;
-        jObject["Timezone_Name"]     = (String)   "Europe/Berlin";
-        jObject["Timezone_String"]   = (String)   "CET-1CEST,M3.5.0,M10.5.0/3";
-        jObject["toneLP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
-        jObject["toneBP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
-        jObject["toneHP"]            = (int16_t)  0; // -40 ... +6 (dB)        audioI2S
-        jObject["timeFormat"]        = (int8_t)   24;
-        String jO = JSON.stringify(jObject);
+        char*  jO = x_ps_malloc(512); // JSON Object
+        strcpy(jO, "{");
+        strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...21
+        strcat(jO, "\"ringvolume\":");        strcat(jO, "21,");
+        strcat(jO, "\"alarmtime\":");         strcat(jO, "0,");
+        strcat(jO, "\"alarm_weekdays\":");    strcat(jO, "0,");
+        strcat(jO, "\"timeAnnouncing\":");    strcat(jO, "\"true\",");
+        strcat(jO, "\"mute\":");              strcat(jO, "\"false\","); // no mute
+        strcat(jO, "\"brightness\":");        strcat(jO, "100,");  // 0...100
+        strcat(jO, "\"sleeptime\":");         strcat(jO, "0,");
+        strcat(jO, "\"lastconnectedhost\":"); strcat(jO, "\"\",");
+        strcat(jO, "\"station\":");           strcat(jO, "1,");
+        strcat(jO, "\"sumstations\":");       strcat(jO, "0,");
+        strcat(jO, "\"Timezone_Name\":");     strcat(jO, "\"Europe/Berlin\",");
+        strcat(jO, "\"Timezone_String\":");   strcat(jO, "\"CET-1CEST,M3.5.0,M10.5.0/3\",");
+        strcat(jO, "\"toneLP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
+        strcat(jO, "\"toneBP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
+        strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
+        strcat(jO, "\"timeFormat\":");        strcat(jO, "24}");
         file.print(jO);
+        if(jO){free(jO); jO = NULL;}
     }
 
     File file = SD_MMC.open("/settings.json","r", false);
-    String jO = file.readString();
-    _settingsHash = simpleHash(jO.c_str());
-    JSONVar jV = JSON.parse(jO);
-    _cur_volume         = (uint8_t)     jV["volume"];
-    _ringvolume         = (uint8_t)     jV["ringvolume"];
-    _alarmtime          = (uint16_t)    jV["alarmtime"];
-    _alarmdays          = (uint8_t)     jV["alarm_weekdays"];
-    _f_timeAnnouncement = (bool)        jV["timeAnnouncing"];
-    _f_mute             = (bool)        jV["mute"];
-    _brightness         = (uint8_t)     jV["brightness"];
-    _sleeptime          = (uint16_t)    jV["sleeptime"];
-    _cur_station        = (uint16_t)    jV["station"];
-    _sum_stations       = (uint16_t)    jV["sumstations"];
-    _toneLP             = (int16_t)     jV["toneLP"];
-    _toneBP             = (int16_t)     jV["toneBP"];
-    _toneHP             = (int16_t)     jV["toneHP"];
-    _timeFormat         = (uint8_t)     jV["timeFormat"];
+    char*  jO = x_ps_calloc(512, 1);
+    char tmp[50];
+    file.readBytes(jO, 512);
+    _settingsHash = simpleHash(jO);
 
-    bool f_updateSettings = false;
-    if(!(const char*)jV["Timezone_Name"]     ) f_updateSettings = true;  else _TZName             = (const char*) jV["Timezone_Name"];
-    if(!(const char*)jV["Timezone_String"]   ) f_updateSettings = true;  else _TZString           = (const char*) jV["Timezone_String"];
-    if(!(const char*) jV["lastconnectedhost"]) f_updateSettings = true;  else _lastconnectedhost  = (const char*) jV["lastconnectedhost"];
-    if(f_updateSettings) updateSettings();
+    auto parseJson = [&](const char* s) { // lambda, inner function
+        int16_t pos1 = 0, pos2 = 0, pos3 = 0;
+        pos1 = indexOf(jO, s, 0);
+        pos2 = indexOf(jO, ":", pos1) + 1;
+        pos3 = indexOf(jO, ",", pos2);
+        if(pos3 < 0) pos3 = indexOf(jO, "}", pos2);
+        if(pos1 < 0) {log_e("index %s not found", s); return "";}
+        if(jO[pos2] == '\"'){pos2++; pos3--;}  // remove \" embraced strings
+        strncpy(tmp, jO + pos2, pos3 - pos2);
+        tmp[pos3 - pos2] = '\0';
+        return (const char*)tmp;
+    };
+
+    _cur_volume          = atoi(   parseJson("\"volume\":"));
+    _ringvolume          = atoi(   parseJson("\"ringvolume\":"));
+    _alarmtime           = atoi(   parseJson("\"alarmtime\":"));
+    _alarmdays           = atoi(   parseJson("\"alarm_weekdays\":"));
+    _f_timeAnnouncement  = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
+    _f_mute              = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
+    _brightness          = atoi(   parseJson("\"brightness\":"));
+    _sleeptime           = atoi(   parseJson("\"sleeptime\":"));
+    _cur_station         = atoi(   parseJson("\"station\":"));
+    _sum_stations        = atoi(   parseJson("\"sumstations\":"));
+    _toneLP              = atoi(   parseJson("\"toneLP\":"));
+    _toneBP              = atoi(   parseJson("\"toneBP\":"));
+    _toneHP              = atoi(   parseJson("\"toneHP\":"));
+    _timeFormat          = atoi(   parseJson("\"timeFormat\":"));
+    _TZName              =         parseJson("\"Timezone_Name\":");
+    _TZString            =         parseJson("\"Timezone_String\":");
+    _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
@@ -522,35 +535,37 @@ void loadIRbuttonsFromNVS() {
 // clang-format off
 void updateSettings(){
     if(!_lastconnectedhost)_lastconnectedhost = "";
-    JSONVar jObject;
-    jObject["volume"]            = (uint8_t)  _cur_volume;
-    jObject["ringvolume"]        = (uint8_t)  _ringvolume;
-    jObject["alarmtime"]         = (uint16_t) _alarmtime;
-    jObject["alarm_weekdays"]    = (uint8_t)  _alarmdays;
-    jObject["timeAnnouncing"]    = (bool)     _f_timeAnnouncement;
-    jObject["mute"]              = (bool)     _f_mute;
-    jObject["brightness"]        = (uint8_t)  _brightness;
-    jObject["sleeptime"]         = (uint16_t) _sleeptime;
-    jObject["lastconnectedhost"] = (String)   _lastconnectedhost;
-    jObject["station"]           = (uint16_t) _cur_station;
-    jObject["sumstations"]       = (uint16_t) _sum_stations;
-    jObject["toneLP"]            = (int16_t)  _toneLP; // -40 ... +6 (dB)        audioI2S
-    jObject["toneBP"]            = (int16_t)  _toneBP; // -40 ... +6 (dB)        audioI2S
-    jObject["toneHP"]            = (int16_t)  _toneHP; // -40 ... +6 (dB)        audioI2S
-    jObject["Timezone_Name"]     = (String)   _TZName;
-    jObject["Timezone_String"]   = (String)   _TZString;
-    jObject["timeFormat"]        = (uint8_t)  _timeFormat;
+    char*  jO = x_ps_malloc(512 + _lastconnectedhost.length()); // JSON Object
+    char tmp[40 + _lastconnectedhost.length()];
+    strcpy(jO, "{");
+    sprintf(tmp,  "\"volume\":%i", _cur_volume);                                strcat(jO, tmp);
+    sprintf(tmp, ",\"ringvolume\":%i", _ringvolume);                            strcat(jO, tmp);
+    sprintf(tmp, ",\"alarmtime\":%i", _alarmtime);                              strcat(jO, tmp);
+    sprintf(tmp, ",\"alarm_weekdays\":%i", _alarmdays);                         strcat(jO, tmp);
+    strcat(jO,   ",\"timeAnnouncing\":"); (_f_timeAnnouncement == true) ?       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    strcat(jO,   ",\"mute\":");           (_f_mute == true)             ?       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    sprintf(tmp, ",\"brightness\":%i", _brightness);                            strcat(jO, tmp);
+    sprintf(tmp, ",\"sleeptime\":%i", _sleeptime);                              strcat(jO, tmp);
+    sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _lastconnectedhost.c_str());  strcat(jO, tmp);
+    sprintf(tmp, ",\"station\":%i", _cur_station);                              strcat(jO, tmp);
+    sprintf(tmp, ",\"sumstations\":%i", _sum_stations);                         strcat(jO, tmp);
+    sprintf(tmp, ",\"Timezone_Name\":\"%s\"", _TZName.c_str());                 strcat(jO, tmp);
+    sprintf(tmp, ",\"Timezone_String\":\"%s\"", _TZString.c_str());             strcat(jO, tmp);
+    sprintf(tmp, ",\"toneLP\":%i", _toneLP);                                    strcat(jO, tmp);
+    sprintf(tmp, ",\"toneBP\":%i", _toneBP);                                    strcat(jO, tmp);
+    sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                    strcat(jO, tmp);
+    sprintf(tmp, ",\"timeFormat\":%i}", _timeFormat);                           strcat(jO, tmp);
 
-    String jO = JSON.stringify(jObject);
-    if(_settingsHash != simpleHash(jO.c_str())) {
+    if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
         if(!file) {
             log_e("file \"settings.json\" not found");
             return;
         }
         file.print(jO);
-        _settingsHash = simpleHash(jO.c_str());
+        _settingsHash = simpleHash(jO);
     }
+    if(jO){free(jO); jO = NULL;}
 }
 // clang-format on
 
@@ -2060,6 +2075,20 @@ boolean strCompare(const char* str1, char* str2) { // returns true if str1 == st
     return f;
 }
 
+char* x_ps_malloc(uint16_t len){
+    char* ps_str = NULL;
+    if(_f_PSRAMfound){ps_str = (char*) ps_malloc(len);}
+    else             {ps_str = (char*)    malloc(len);}
+    return ps_str;
+}
+
+char* x_ps_calloc(uint16_t len, uint8_t size){
+    char* ps_str = NULL;
+    if(_f_PSRAMfound){ps_str = (char*) ps_calloc(len, size);}
+    else             {ps_str = (char*)    calloc(len, size);}
+    return ps_str;
+}
+
 char* x_ps_strdup(const char* str){
     char* ps_str = NULL;
     if(_f_PSRAMfound){ps_str = (char*) ps_malloc(strlen(str) + 1);}
@@ -2929,7 +2958,8 @@ void BT_Emitter_Loop(){
         if(indexOf(_chbuf, "KCX_BT", 0) > 0){
             SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "KCX BT EMITTER found");
             _f_BT_EMITTER_found = true;
-            Serial2.write("AT+RESET\r\n");
+            // Serial2.write("AT+RESET\r\n");
+            SerialPrintfln("%s", _chbuf);
         }
         else{
             static bool f_scan = false;
