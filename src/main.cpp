@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00e Dec 20/2023                                                                                         ";
+    Version 3.00f Jan 04/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -2923,14 +2923,24 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName){
         else{
             if(startsWith(srvContent.itemURL[pos - 1], "http")){
                 if(srvContent.isAudio[pos - 1] == true){
-                    sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.itemSize[pos - 1]);
+                    if(srvContent.duration[pos - 1][0] != '?'){
+                        sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)",srvContent.title[pos - 1], srvContent.duration[pos - 1]);
+                    }
+                    else {
+                        sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.itemSize[pos - 1]);
+                    }
                 }
                 else {
                     sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.itemSize[pos - 1]);
                 }
             }
             else{
-                sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                if(srvContent.childCount[pos - 1] == 0){
+                    sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]);
+                }
+                else{
+                    sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                }
             }
             tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
         }
@@ -4009,7 +4019,7 @@ void tp_released(uint16_t x, uint16_t y){
                                 else {  // content list
                                     if(startsWith(srvContent.itemURL[pos - 1], "http")){ // is file
                                         if(srvContent.isAudio[pos - 1]){
-                                            sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                                            sprintf(_chbuf, "%s",srvContent.title[pos - 1]);
                                             tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
                                             connecttohost(srvContent.itemURL[pos - 1]);
                                             changeState(DLNA);
@@ -4017,7 +4027,12 @@ void tp_released(uint16_t x, uint16_t y){
                                         }
                                     }
                                     else{ // is folder
-                                        sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                                        if(srvContent.childCount[pos - 1] == 0){
+                                            sprintf(_chbuf, "%s",srvContent.title[pos - 1]);
+                                        }
+                                        else{
+                                            sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
+                                        }
                                         tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
                                         _dlnaLevel++;
                                         if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;}
