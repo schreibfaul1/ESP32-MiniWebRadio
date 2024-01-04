@@ -4344,8 +4344,8 @@ void dlna_seekReady(uint8_t numberOfServer){
     SerialPrintfln("DLNA_server: %i media server found", numberOfServer);
 }
 
-void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* itemURL){
-  SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i", title, childCount, itemSize);
+void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* duration, const char* itemURL){
+  SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i, duration %s", title, childCount, itemSize, duration);
 }
 
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches){
