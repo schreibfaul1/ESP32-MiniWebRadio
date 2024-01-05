@@ -690,6 +690,9 @@ function clearDLNAServerList(level){
         case 5:
             select = document.getElementById('level5')
             select.options.length = 0;
+        case 6:
+            select = document.getElementById('level6')
+            select.options.length = 0;
     }
 }
 
@@ -703,6 +706,7 @@ function addDLNAServer(val){
         select.appendChild(option);
     }
 }
+
 function show_DLNA_Content(val){
     var select
     if(dlnaLevel == 1) select = document.getElementById('level1')
@@ -710,6 +714,7 @@ function show_DLNA_Content(val){
     if(dlnaLevel == 3) select = document.getElementById('level3')
     if(dlnaLevel == 4) select = document.getElementById('level4')
     if(dlnaLevel == 5) select = document.getElementById('level5')
+    if(dlnaLevel == 6) select = document.getElementById('level6')
     if(select.options.length == 0){
         var option = new Option("Select level " + dlnaLevel.toString())
         select.appendChild(option);
@@ -724,16 +729,28 @@ function show_DLNA_Content(val){
         var isAudio = obj[i].isAudio
         var itemSize = obj[i].itemSize
         var childCount = obj[i].childCount
+        var duration = obj[i].dur
 
         var isDir
         if(itemURL== "?") isDir = true
         else              isDir = false
 
+        var n = ""
         if(isDir){
-            n = title.concat('\xa0\xa0', '\(' + childCount + '\)'); // more than one space
+            if(childCount != "0"){
+                n = title.concat('\xa0\xa0', '\(' + childCount + '\)'); // more than one space
+            }
+            else {
+                n = title
+            }
         }
         else {
-            n = title.concat('\xa0\xa0', '\(' + itemSize + '\)'); // more than one space
+            if(duration[0] == '?'){
+                n = title.concat('\xa0\xa0', '\(' + itemSize + '\)'); // more than one space
+            }
+            else {
+                n = title.concat('\xa0\xa0', '\(' + duration + '\)'); // more than one space
+            }
         }
         if(isAudio == "true"){
             var option = new Option(n, itemURL);
@@ -749,6 +766,7 @@ function show_DLNA_Content(val){
         select.appendChild(option);
     }
 }
+
 function selectserver (presctrl) { // preset, select a server, root, level0
     socket.send('DLNA_getRoot=' + presctrl.value)
     clearDLNAServerList(1)
@@ -788,6 +806,12 @@ function select_l3 (presctrl) { // preset, select level 2
     socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 6
+ }
+  function select_l6 (presctrl) { // preset, select level 5
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    dlnaLevel = 7
  }
 
 // ----------------------------------- TAB RADIO ------------------------------------
@@ -1923,6 +1947,9 @@ function chIRcmd(btn){  // IR command, value changed
                     <option value="-1"> </option>
                 </select>
                 <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l6(this)" id="level6">
                     <option value="-1"> </option>
                 </select>
             </div>
