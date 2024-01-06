@@ -11,6 +11,7 @@ SpaceInEmptyParentheses: false
 SpacesInParentheses: false
 UseTab: Never
 IndentPPDirectives: BeforeHash
+IndentCaseLabels: true
 IncludeBlocks: Merge
 Cpp11BracedListStyle: true
 
@@ -18,7 +19,7 @@ AllowShortBlocksOnASingleLine: true
 AllowShortCaseLabelsOnASingleLine: true
 AllowShortEnumsOnASingleLine: true
 AllowShortFunctionsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
