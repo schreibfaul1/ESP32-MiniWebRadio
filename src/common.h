@@ -232,6 +232,14 @@ void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
+uint8_t        KCX_BT_getVolume();
+void           KCX_BT_setVolume(uint8_t volume);
+void           KCX_BT_PauseResume();
+bool           KCX_BT_isPause();
+bool           KCX_BT_getMode();
+void           KCX_BT_setMode(bool mode);
+void           KCX_BT_addLink(const char* Name, const char* MACAdd);
+void           KCX_BT_delAllLinks();
 
 //prototypes (audiotask.cpp)
 void audioInit();

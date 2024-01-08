@@ -42,6 +42,7 @@ uint8_t        _numServers = 0;           //
 uint8_t        _level = 0;
 uint8_t        _timeFormat = 24;          // 24 or 12
 uint8_t        _staListPos = 0;
+uint8_t        _KCX_Volume = 31;
 uint16_t*      _shuffleArray = NULL;
 uint16_t       _staListNr = 0;
 uint8_t        _fileListPos = 0;
@@ -81,10 +82,12 @@ char           _prefix[5] = "/s";
 char           _commercial[25];
 char           _icyDescription[512] = {};
 char           _streamTitle[512] = {};
-char*          _lastconnectedfile = nullptr;
-char*          _stationURL = nullptr;
-char*          _JSONstr = nullptr;
-char*          _BT_metaData = nullptr;
+char*          _lastconnectedfile = NULL;
+char*          _stationURL = NULL;
+char*          _JSONstr = NULL;
+char*          _BT_metaData = NULL;
+char*          _KCX_Vers = NULL;
+char*          _KCX_Autolink = NULL;
 bool           _f_rtc = false; // true if time from ntp is received
 bool           _f_100ms = false;
 bool           _f_1sec = false;
@@ -129,7 +132,8 @@ bool           _f_BTconnected = false;
 bool           _f_BTstateChanged = false;
 bool           _f_dlnaBrowseServer = false;
 bool           _f_dlnaWaitForResponse = false;
-bool           _f_BT_EMITTER_found = false;
+bool           _f_KCX_BT_EMITTER_found = false;
+bool           _f_KCX_BT_mode = true; // true TX, false RX
 String         _station = "";
 String         _stationName_nvs = "";
 String         _stationName_air = "";
@@ -1799,7 +1803,6 @@ void setup() {
     Serial.begin(115200);
     Serial.print("\n\n");
     Serial2.begin(115200,SERIAL_8N1, BT_EMITTER_TX, BT_EMITTER_RX);
-    Serial2.print("AT+GMR?\r\n");
     const char* chipModel = ESP.getChipModel();
     uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t     avMinor = ESP_ARDUINO_VERSION_MINOR;
@@ -1984,7 +1987,8 @@ void setup() {
     ticker100ms.attach(0.1, timer100ms);
     pinMode(BT_EMITTER_LINK, INPUT);
     pinMode(BT_EMITTER_MODE, OUTPUT);
-    digitalWrite(BT_EMITTER_MODE, HIGH); // TX mode
+    digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode); // high -> TX mode
+    Serial2.print("AT+\r\n");
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2956,6 +2960,7 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName){
 void BT_Emitter_Loop(){
     int idx =0;
     if(!Serial2.available()) return;
+    static bool f_scan = false;
     vTaskDelay(20);
     while(Serial2.available()){
       char ch = Serial2.read();
@@ -2967,27 +2972,83 @@ void BT_Emitter_Loop(){
     }
     if(idx){
         _chbuf[idx] = '\0';
-        if(indexOf(_chbuf, "KCX_BT", 0) > 0){
+        if(strcmp(_chbuf, "OK+") == 0){
+            _f_KCX_BT_EMITTER_found = true;
             SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "KCX BT EMITTER found");
-            _f_BT_EMITTER_found = true;
-            // Serial2.write("AT+RESET\r\n");
-            SerialPrintfln("%s", _chbuf);
+            Serial2.write("AT+GMR?\r\n");
+            return;
+        }
+        if(startsWith(_chbuf, "OK+VERS:")){
+            _KCX_Vers = strdup(_chbuf + 8);
+            SerialPrintfln("BT-Emitter:  Version " ANSI_ESC_YELLOW  "%s", _KCX_Vers);
+            Serial2.write("AT+VMLINK?\r\n");
+            return;
+        }
+        if(startsWith(_chbuf, "SCAN..")){
+            if(!f_scan){
+                SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
+                f_scan = true;
+            //    Serial2.write("AT+VOL?\r\n");
+            }
+            return;
+        }
+        if(startsWith(_chbuf, "OK+VOL=")){
+            _KCX_Volume = atoi(_chbuf + 7);
+            SerialPrintfln("BT-Emitter:  Volume " ANSI_ESC_CYAN "%02d", _KCX_Volume);
+           return;
+        }
+        if(startsWith(_chbuf, "POWER ON")){
+            SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
+            Serial2.write("AT+BT_MODE?\r\n");
+            return;
+        }
+        if(startsWith(_chbuf, "Auto_link_Add:")){
+            if(_KCX_Autolink){free(_KCX_Autolink); _KCX_Autolink = NULL;}
+            _KCX_Autolink = strdup(_chbuf + 14);
+            SerialPrintfln("BT-Emitter:  Autolink " ANSI_ESC_YELLOW "%s", _KCX_Autolink);
+            return;
+        }
+        if(startsWith(_chbuf, "OK+BT_")){
+            SerialPrintfln("BT-Emitter:  Mode " ANSI_ESC_YELLOW "%s", _chbuf + 6);
+            if(     strcmp(_chbuf + 6, "EMITTER")  == 0) _f_KCX_BT_mode = true;
+            else if(strcmp(_chbuf + 6, "RECEIVER") == 0) _f_KCX_BT_mode = false;
+            else log_e("unknown BT answer  %s", _chbuf);
+            return;
         }
         else{
-            static bool f_scan = false;
-            if(isAscii(_chbuf[0]) > 0){
-                if(startsWith(_chbuf, "SCAN..")){
-                    if(!f_scan)
-                    SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
-                    f_scan = true;
-                }
-                else{
-                    f_scan = false;
-                    SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
-                }
-            }
+            f_scan = false;
+                SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
         }
     }
+}
+
+uint8_t KCX_BT_getVolume(){
+    return _KCX_Volume;
+}
+void KCX_BT_setVolume(uint8_t volume){ // 00 ... 31
+    char tmp[20];
+    sprintf(tmp, "AT+VOL=%02d\r\n", volume);
+    Serial2.write(tmp);
+}
+void KCX_BT_PauseResume(){
+    ;
+}
+bool KCX_BT_isPause(){
+    return false;
+}
+bool KCX_BT_getMode(){
+    return _f_KCX_BT_mode;
+}
+void KCX_BT_setMode(bool mode){ // true TX, false RX
+    _f_KCX_BT_mode = mode;
+    digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode);
+    Serial2.write("AT+RESET\r\n");
+}
+void KCX_BT_addLink(const char* Name, const char* MACAdd){
+    ;
+}
+void KCX_BT_delAllLinks(){
+    ;
 }
 
 /*****************************************************************************************************************************************************
