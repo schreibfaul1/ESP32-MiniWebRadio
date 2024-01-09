@@ -2926,12 +2926,16 @@ void BT_Emitter_Loop() {
         return;
     }
     static bool f_scan = false;
-    vTaskDelay(20);
-    while(Serial2.available()) {
+    uint32_t t = millis() + 500;
+    while(true) {
+        if(t < millis()){
+            log_e("timeout while reading from KCX_BT_Emitter");
+            break;
+        }
         char ch = Serial2.read();
-        if(ch == -1) break;
+        if(ch == -1) continue;
         if(ch == '\n') break;
-        if(ch < 0x20) { continue; }
+        if(!isascii(ch)){ continue; }
         _chbuf[idx] = ch;
         idx++;
     }
