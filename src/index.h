@@ -518,6 +518,7 @@ function showTab1 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -537,6 +538,7 @@ function showTab2 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -555,6 +557,7 @@ function showTab3 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
@@ -578,6 +581,7 @@ function showTab4 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -598,6 +602,7 @@ function showTab5 () {
     document.getElementById('tab-content5').style.display = 'block'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -615,6 +620,7 @@ function showTab6 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'block'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -634,6 +640,7 @@ function showTab7 () {  // Remote Control
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'block'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -641,6 +648,25 @@ function showTab7 () {  // Remote Control
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
 }
+
+function showTab8 () {  // KCX BT Emitter
+    console.log('tab-content8 (Remote Control)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'block'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+}
+
 
 function uploadTextFile (fileName, content) {
     var fd = new FormData()
@@ -2104,6 +2130,15 @@ function chIRcmd(btn){  // IR command, value changed
                         </div>
                     </div>
                     <br>
+                    <div style="display: flex;">
+                        <div style="width=64px; height=64px;">
+                            <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab8()">
+                        </div>
+                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
+                            <p> KCX_BT_Emitter Settings </p>
+                        </div>
+                    </div>
+                    <br>
                     <fieldset>
                         <legend> 12-hour and 24-hour time format </legend>
                         <div>
@@ -2261,6 +2296,11 @@ function chIRcmd(btn){  // IR command, value changed
            Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
     </div>
 <!--===============================================================================================================================================-->
+    <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
+
+    </div>
+<!--===============================================================================================================================================-->
+
 </div>
 
 <script src="index.js"></script>

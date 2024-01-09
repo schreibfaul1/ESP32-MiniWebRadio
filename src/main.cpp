@@ -2953,7 +2953,7 @@ void BT_Emitter_Loop() {
             if(!f_scan) {
                 SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
                 f_scan = true;
-                //    Serial2.write("AT+VOL?\r\n");
+            //    Serial2.write("AT+POWER_OFF\r\n");
             }
             return;
         }
@@ -2983,6 +2983,12 @@ void BT_Emitter_Loop() {
             else log_e("unknown BT answer  %s", _chbuf);
             return;
         }
+        if(startsWith(_chbuf, "Name More than 10")){
+            log_e("more than 10 names are not allowed");
+        }
+        if(startsWith(_chbuf, "Addr More than 10")){
+            log_e("more than 10 MAC Ardesses are not allowed");
+        }
         else {
             f_scan = false;
             SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
@@ -3004,7 +3010,17 @@ void KCX_BT_setMode(bool mode) { // true TX, false RX
     digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode);
     Serial2.write("AT+RESET\r\n");
 }
-void KCX_BT_addLink(const char* Name, const char* MACAdd) { ; }
+void KCX_BT_addLinkName(const char* Name){
+    char tmp[strlen(Name) + 20];
+    sprintf(tmp, "AT+ADDLINKNAME=%s\r\n", Name);
+    Serial2.write(tmp);
+}
+void KCX_BT_addLinkAddr(const char* Name){
+    char tmp[strlen(Name) + 20];
+    sprintf(tmp, "AT+ADDLINKADD=%s\r\n", Name);
+    log_i("%s", tmp);
+    Serial2.write(tmp);
+}
 void KCX_BT_delAllLinks() {
     ;
 }

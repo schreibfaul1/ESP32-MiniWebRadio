@@ -238,7 +238,8 @@ void           KCX_BT_PauseResume();
 bool           KCX_BT_isPause();
 bool           KCX_BT_getMode();
 void           KCX_BT_setMode(bool mode);
-void           KCX_BT_addLink(const char* Name, const char* MACAdd);
+void           KCX_BT_addLinkName(const char* Name);
+void           KCX_BT_addLinkAddr(const char* Name);
 void           KCX_BT_delAllLinks();
 bool           KCX_BT_isConnected();
 void IRAM_ATTR KCX_BT_changeStatus(); // link -> connected, not connected
