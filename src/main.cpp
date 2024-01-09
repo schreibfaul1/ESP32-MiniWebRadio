@@ -134,6 +134,8 @@ bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
 bool                _f_KCX_BT_EMITTER_found = false;
 bool                _f_KCX_BT_mode = true; // true TX, false RX
+bool                _f_KCX_BT_statusChanged = false;
+bool                _f_KCX_BT_status = false; // 0 disconnected, 1 connected
 String              _station = "";
 String              _stationName_nvs = "";
 String              _stationName_air = "";
@@ -1955,6 +1957,8 @@ void setup() {
     pinMode(BT_EMITTER_LINK, INPUT);
     pinMode(BT_EMITTER_MODE, OUTPUT);
     digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode); // high -> TX mode
+    attachInterrupt(BT_EMITTER_LINK, KCX_BT_changeStatus, CHANGE);
+    _f_KCX_BT_statusChanged = true; // set first status
     Serial2.print("AT+\r\n");
 }
 /*****************************************************************************************************************************************************
@@ -2912,7 +2916,15 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
 
 void BT_Emitter_Loop() {
     int idx = 0;
-    if(!Serial2.available()) return;
+    if(!Serial2.available()){
+        if(_f_KCX_BT_statusChanged){
+            _f_KCX_BT_statusChanged = false;
+            _f_KCX_BT_status = digitalRead(BT_EMITTER_LINK);
+            if(_f_KCX_BT_status == 0){ SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected");}
+            else                     { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected");}
+        }
+        return;
+    }
     static bool f_scan = false;
     vTaskDelay(20);
     while(Serial2.available()) {
@@ -2961,7 +2973,7 @@ void BT_Emitter_Loop() {
                 _KCX_Autolink = NULL;
             }
             _KCX_Autolink = strdup(_chbuf + 14);
-            SerialPrintfln("BT-Emitter:  Autolink " ANSI_ESC_YELLOW "%s", _KCX_Autolink);
+            SerialPrintfln("BT-Emitter:  Autolink -> " ANSI_ESC_YELLOW "%s", _KCX_Autolink);
             return;
         }
         if(startsWith(_chbuf, "OK+BT_")) {
@@ -2993,7 +3005,17 @@ void KCX_BT_setMode(bool mode) { // true TX, false RX
     Serial2.write("AT+RESET\r\n");
 }
 void KCX_BT_addLink(const char* Name, const char* MACAdd) { ; }
-void KCX_BT_delAllLinks() { ; }
+void KCX_BT_delAllLinks() {
+    ;
+}
+bool KCX_BT_isConnected(){
+    return _f_KCX_BT_status;
+}
+
+
+void IRAM_ATTR KCX_BT_changeStatus(){
+    _f_KCX_BT_statusChanged = true;
+}
 
 /*****************************************************************************************************************************************************
  *                                                                 L O O P                                                                           *
