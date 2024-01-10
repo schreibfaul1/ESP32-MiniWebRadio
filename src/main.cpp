@@ -1659,6 +1659,12 @@ bool connectToWiFi() {
     }
     wifiMulti.run();
 
+    uint32_t t = millis() + 3000;
+    while(!WiFi.isConnected()){
+        vTaskDelay(10);
+        if(t < millis()){log_e("WiFi timeout"); break;}
+    }
+
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
         WiFi.setSleep(false);
@@ -2917,6 +2923,7 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
 void BT_Emitter_Loop() {
     int idx = 0;
     if(!Serial2.available()){
+        if(!_f_KCX_BT_EMITTER_found) return;
         if(_f_KCX_BT_statusChanged){
             _f_KCX_BT_statusChanged = false;
             _f_KCX_BT_status = digitalRead(BT_EMITTER_LINK);
