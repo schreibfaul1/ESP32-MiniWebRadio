@@ -112,6 +112,10 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
+        #tab-content8 {
+            display : none;
+            margin : 20px;
+        }
         .button {
             width : 80px;
             height : 30px;
@@ -2297,6 +2301,104 @@ function chIRcmd(btn){  // IR command, value changed
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
+        <table>
+            <tr>
+            <th></th>
+            <th> BT MAC address </th>
+            <th></th>
+            <th> BT Name </th>
+            </tr>
+
+            <tr>
+            <td> 0 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_0" onchange="chIRcmd(0)"  onclick=""  onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> 10 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_10" onchange="chIRcmd(10)" onclick="" onkeyup=""></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 1 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_1" onchange="chIRcmd(1)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> 11 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_11" onchange="setIRcmd(11)" onclick="" onkeyup=""></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 2 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_2" onchange="chIRcmd(2)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> 12 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_12" onchange="chIRcmd(12)" onclick="" onkeyup=""></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 3 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_3" onchange="chIRcmd(3)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> 13 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_13" onchange="chIRcmd(13)" onclick="" onkeyup=""></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 4 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_4" onchange="chIRcmd(4)" onclick="" onkeyup="chIRcmd(4)"></td>
+            <td class="table_cell1"> </td>
+            <td> 14 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_14" onchange="chIRcmd(14)" onclick="" onkeyup="chIRcmd(14)"></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 5 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_5" onchange="chIRcmd(5)" onclick="" onkeyup="chIRcmd(5)"></td>
+            <td class="table_cell1"> </td>
+            <td> 15 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_15" onchange="chIRcmd(15)" onclick="" onkeyup="chIRcmd(15)"></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 6 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_6" onchange="chIRcmd(6)" onclick="" onkeyup="chIRcmd(6)"></td>
+            <td class="table_cell1"> </td>
+            <td> 16 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_16" onchange="chIRcmd(16)" onclick="" onkeyup="chIRcmd(16)"></td>
+            <td class="table_cell2"> </td>
+            </tr>
+
+            <tr>
+            <td> 7 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_7" onchange="chIRcmd(7)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+
+            <tr>
+            <td> 8 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_8" onchange="chIRcmd(8)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+
+            <tr>
+            <td> 9 </td>
+            <td> <input type="text" class="boxstyle_s" id="bt_name_9" onchange="chIRcmd(9)" onclick="" onkeyup=""></td>
+            <td class="table_cell1"> </td>
+            <td> </td>
+            <td> </td>
+            <td> </td>
+            </tr>
+        </table>
 
     </div>
 <!--===============================================================================================================================================-->

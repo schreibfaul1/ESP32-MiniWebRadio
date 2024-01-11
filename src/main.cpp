@@ -2936,7 +2936,7 @@ void BT_Emitter_Loop() {
     uint32_t t = millis() + 500;
     while(true) {
         if(t < millis()){
-            log_e("timeout while reading from KCX_BT_Emitter");
+            if(_f_KCX_BT_EMITTER_found) log_e("timeout while reading from KCX_BT_Emitter");
             break;
         }
         char ch = Serial2.read();
