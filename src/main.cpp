@@ -1659,7 +1659,7 @@ bool connectToWiFi() {
     }
     wifiMulti.run();
 
-    uint32_t t = millis() + 3000;
+    uint32_t t = millis() + 5000;
     while(!WiFi.isConnected()){
         vTaskDelay(10);
         if(t < millis()){log_e("WiFi timeout"); break;}

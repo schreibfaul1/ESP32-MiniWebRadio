@@ -113,7 +113,7 @@
         #define HP_DETECT        -1
         #define AMP_ENABLED      -1
 
-        #define BT_EMITTER_RX    48  // TX pin - KCX Bluetooth Transmitter (if available)
+        #define BT_EMITTER_RX    45  // TX pin - KCX Bluetooth Transmitter (if available)
         #define BT_EMITTER_TX    38  // RX pin - KCX Bluetooth Transmitter (if available)
         #define BT_EMITTER_LINK  19  // high if connected
         #define BT_EMITTER_MODE  20  // high transmit - low receive
