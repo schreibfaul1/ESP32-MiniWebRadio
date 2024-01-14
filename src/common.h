@@ -81,10 +81,10 @@
         #define HP_DETECT        -1
         #define AMP_ENABLED      -1
 
-        #define BT_EMITTER_RX    33  // TX pin - KCX Bluetooth Transmitter (if available)
-        #define BT_EMITTER_TX    36  // RX pin - KCX Bluetooth Transmitter (if available)
-        #define BT_EMITTER_LINK  34  // high if connected
-        #define BT_EMITTER_MODE  13  // high transmit - low receive
+        #define BT_EMITTER_RX    33  // TX pin - KCX Bluetooth Transmitter (-1 if not available)
+        #define BT_EMITTER_TX    36  // RX pin - KCX Bluetooth Transmitter (-1 if not available)
+        #define BT_EMITTER_LINK  34  // high if connected                  (-1 if not available)
+        #define BT_EMITTER_MODE  13  // high transmit - low receive        (-1 if not available)
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -113,10 +113,10 @@
         #define HP_DETECT        -1
         #define AMP_ENABLED      -1
 
-        #define BT_EMITTER_RX    45  // TX pin - KCX Bluetooth Transmitter (if available)
-        #define BT_EMITTER_TX    38  // RX pin - KCX Bluetooth Transmitter (if available)
-        #define BT_EMITTER_LINK  19  // high if connected
-        #define BT_EMITTER_MODE  20  // high transmit - low receive
+        #define BT_EMITTER_RX    45  // TX pin - KCX Bluetooth Transmitter (-1 if not available)
+        #define BT_EMITTER_TX    38  // RX pin - KCX Bluetooth Transmitter (-1 if not available)
+        #define BT_EMITTER_LINK  19  // high if connected                  (-1 if not available)
+        #define BT_EMITTER_MODE  20  // high transmit - low receive        (-1 if not available)
 
 #endif
 

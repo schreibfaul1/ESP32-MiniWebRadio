@@ -150,6 +150,9 @@ String              _media_downloadIP = "";
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
 std::vector<char*>  _PLS_content;
+std::vector<char*>  _KCX_BT_names;
+std::vector<char*>  _KCX_BT_addr;
+
 struct timecounter {
     uint8_t timer = 0;
     float   factor = 2.0;
@@ -417,11 +420,19 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
 
-    if(jO) {free(jO);   jO = NULL;}
-    if(tmp){free(tmp); tmp = NULL;}
+
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
+
+    for(uint8_t i = 0; i < 10; i++){
+        sprintf(tmp, "KCX_BT_scAdr_%02d", i);
+        if(!pref.isKey(tmp)) pref.putString(tmp, "");
+    }
+    if(!pref.isKey("KCX_BT_scanPtr")) pref.putShort("KCX_BT_scanPtr", 0);
+
+    if(jO) {free(jO);   jO = NULL;}
+    if(tmp){free(tmp); tmp = NULL;}
     return true;
 }
 // clang-format on
@@ -1781,7 +1792,6 @@ void stopSong() {
 void setup() {
     Serial.begin(115200);
     Serial.print("\n\n");
-    Serial2.begin(115200, SERIAL_8N1, BT_EMITTER_TX, BT_EMITTER_RX);
     const char* chipModel = ESP.getChipModel();
     uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
     uint8_t     avMinor = ESP_ARDUINO_VERSION_MINOR;
@@ -1960,12 +1970,15 @@ void setup() {
     dlna.seekServer();
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
-    pinMode(BT_EMITTER_LINK, INPUT);
-    pinMode(BT_EMITTER_MODE, OUTPUT);
-    digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode); // high -> TX mode
-    attachInterrupt(BT_EMITTER_LINK, KCX_BT_changeStatus, CHANGE);
-    _f_KCX_BT_statusChanged = true; // set first status
-    Serial2.print("AT+\r\n");
+    if(BT_EMITTER_RX != -1){
+        Serial2.begin(115200, SERIAL_8N1, BT_EMITTER_TX, BT_EMITTER_RX);
+        pinMode(BT_EMITTER_LINK, INPUT_PULLUP);
+        pinMode(BT_EMITTER_MODE, OUTPUT);
+        digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode); // high -> TX mode
+        attachInterrupt(BT_EMITTER_LINK, KCX_BT_changeStatus, CHANGE);
+        _f_KCX_BT_statusChanged = true; // set first status
+        Serial2.print("AT+\r\n");
+    }
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2921,6 +2934,8 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
  *****************************************************************************************************************************************************/
 
 void BT_Emitter_Loop() {
+    if(BT_EMITTER_RX == -1) return;
+
     int idx = 0;
     if(!Serial2.available()){
         if(!_f_KCX_BT_EMITTER_found) return;
@@ -2954,6 +2969,7 @@ void BT_Emitter_Loop() {
             Serial2.write("AT+GMR?\r\n");
             return;
         }
+        if(!_f_KCX_BT_EMITTER_found) return;
         if(startsWith(_chbuf, "OK+VERS:")) {
             _KCX_Vers = strdup(_chbuf + 8);
             SerialPrintfln("BT-Emitter:  Version " ANSI_ESC_YELLOW "%s", _KCX_Vers);
@@ -2994,6 +3010,36 @@ void BT_Emitter_Loop() {
             else log_e("unknown BT answer  %s", _chbuf);
             return;
         }
+        if(startsWith(_chbuf, "MEM_MacAdd")) {
+            SerialPrintfln("BT-Emitter:  MEM_MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 10);
+            _KCX_BT_names.push_back(strdup(_chbuf + 14));
+            return;
+        }
+        if(startsWith(_chbuf, "MEM_Name")) {
+            SerialPrintfln("BT-Emitter:  MEM_Name -> " ANSI_ESC_YELLOW "%s", _chbuf + 8);
+            _KCX_BT_addr.push_back(strdup(_chbuf + 12));
+            return;
+        }
+
+        if(startsWith(_chbuf, "MacAdd")) {
+            SerialPrintfln("BT-Emitter:  MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 7);
+            char tmp[25];
+            for(uint8_t i = 0; i < 10; i++){
+                sprintf(tmp, "KCX_BT_scAdr_%02d", i);
+                if(strcmp(_chbuf + 7, pref.getString(tmp, "").c_str()) == 0){
+                    // log_i("found");
+                    return;
+                }
+            }
+            uint8_t ptr = pref.getShort("KCX_BT_scanPtr", 0);
+            sprintf(tmp, "KCX_BT_scAdr_%02d", ptr); // scanned MAC address
+            pref.putString(tmp, _chbuf + 7); // write in next free or overwrite the oldest
+            ptr++;
+            if(ptr == 10) ptr = 0;
+            pref.putShort("KCX_BT_scanPtr", ptr);
+            return;
+        }
+
         if(startsWith(_chbuf, "Name More than 10")){
             log_e("more than 10 names are not allowed");
         }
