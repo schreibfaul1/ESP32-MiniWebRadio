@@ -160,6 +160,17 @@ const char index_html[] PROGMEM = R"=====(
             height : 128px;
             margin-top: 5px;
         }
+        #label-bt-logo {
+            margin-left : 40px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            background-image : url(SD/png/BTnc.png);
+            width : 128px;
+            height : 128px;
+            margin-top: 5px;
+        }
         #div-logo-s{
           display: none;
         }
@@ -471,6 +482,10 @@ function connect() {
             case "changeState":     if      (val == 'RADIO') showTab1();
                                     else if (val == 'PLAYER') showTab3();
                                     break;
+            case "isBTconnected":   console.log(msg, val)
+                                    if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
+                                    if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
+                                    break
             default:                console.log('unknown message', msg, val)
         }
     }
@@ -669,6 +684,7 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send('isBTconnected')
 }
 
 
@@ -2301,6 +2317,9 @@ function chIRcmd(btn){  // IR command, value changed
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
+        <div id="div-BT-logo" style="flex: 0 0 210px;">
+            <label for="label-logo" id="label-bt-logo" onclick="socket.send('isBTconnected')"> </label>
+        </div>
         <table>
             <tr>
             <th></th>

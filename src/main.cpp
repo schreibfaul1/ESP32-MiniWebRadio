@@ -2929,9 +2929,9 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
 }
-/*****************************************************************************************************************************************************
- *                                                        B T  -  E M I T T E R                                                                      *
- *****************************************************************************************************************************************************/
+/*******************************************************************************************************************************************************************************************************
+ *                                                                                   B T  -  E M I T T E R                                                                                             *
+ ******************************************************************************************************************************************************************************************************/
 
 void BT_Emitter_Loop() {
     if(BT_EMITTER_RX == -1) return;
@@ -2942,8 +2942,8 @@ void BT_Emitter_Loop() {
         if(_f_KCX_BT_statusChanged){
             _f_KCX_BT_statusChanged = false;
             _f_KCX_BT_status = digitalRead(BT_EMITTER_LINK);
-            if(_f_KCX_BT_status == 0){ SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected");}
-            else                     { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected");}
+            if(_f_KCX_BT_status == 0){ SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected"); webSrv.send("isBTconnected=", "0");}
+            else                     { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected"); webSrv.send("isBTconnected=", "1");}
         }
         return;
     }
@@ -4398,6 +4398,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    webSrv.reply(buf, webSrv.TEXT); return;}
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
+
+    if(cmd == "isBTconnected"){    if(_f_KCX_BT_status) webSrv.send("isBTconnected=", "1"); else webSrv.send("isBTconnected=", "0"); return;}
+
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
