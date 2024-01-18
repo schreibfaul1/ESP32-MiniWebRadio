@@ -2937,13 +2937,53 @@ void BT_Emitter_Loop() {
     if(BT_EMITTER_RX == -1) return;
 
     int idx = 0;
+    static uint8_t btAddNum = 0;   // log BT_ADD_NUM=02
+    static uint8_t btNameNum = 0;  // log BT_NAME_NUM=06
+
+    if(btNameNum + btAddNum > 0 && _KCX_BT_names.size() + _KCX_BT_addr.size() ==  btNameNum + btAddNum){
+        // "AT+VMLINK" returns:
+        // "OK+VMLINK"
+        // "BT_ADD_NUM=01"              --> save in btAddNum
+        // "BT_NAME_NUM=01"             --> save in btNameNum
+        // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
+        // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
+        uint16_t JSONstrLength = 0;
+        if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
+        if(_f_PSRAMfound) { _JSONstr = (char*)ps_malloc(2); }
+        else             { _JSONstr = (char*)malloc(2);}
+        JSONstrLength += 2;
+        memcpy(_JSONstr, "[\0", 2);
+        // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
+        for(int i = 0; i < 10; i++) {
+            int a = 0, b = 0;
+            if(_KCX_BT_names.size() > i) a = strlen(_KCX_BT_names[i]);
+            if(_KCX_BT_addr.size()  > i) b = strlen(_KCX_BT_addr[i]);
+            JSONstrLength += 22 + a  + b;  // {"name":"a","addr":"b"},
+            if(_f_PSRAMfound) { _JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength); }
+            else           { _JSONstr = (char*)realloc(_JSONstr, JSONstrLength); }
+            strcat(_JSONstr, "{\"name\":\"");
+            if(a) strcat(_JSONstr, _KCX_BT_names[i]);
+            else  strcat(_JSONstr, "");
+            strcat(_JSONstr, "\",\"addr\":\"");
+            if(b) strcat(_JSONstr, _KCX_BT_addr[i]);
+            else  strcat(_JSONstr, "");
+            strcat(_JSONstr, "\"},");
+        }
+        _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
+        _JSONstr[JSONstrLength - 1] = '\0'; // and terminate
+        webSrv.send("KCX_BT_MEM=", _JSONstr);
+        btNameNum = 0;
+        btAddNum = 0;
+        return;
+    }
+
     if(!Serial2.available()){
         if(!_f_KCX_BT_EMITTER_found) return;
         if(_f_KCX_BT_statusChanged){
             _f_KCX_BT_statusChanged = false;
             _f_KCX_BT_status = digitalRead(BT_EMITTER_LINK);
-            if(_f_KCX_BT_status == 0){ SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected"); webSrv.send("isBTconnected=", "0");}
-            else                     { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected"); webSrv.send("isBTconnected=", "1");}
+            if(_f_KCX_BT_status == 0){ SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected"); webSrv.send("KCX_BT_connected=", "0");}
+            else                     { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected"); webSrv.send("KCX_BT_connected=", "1");}
         }
         return;
     }
@@ -2956,13 +2996,16 @@ void BT_Emitter_Loop() {
         }
         char ch = Serial2.read();
         if(ch == -1) continue;
-        if(ch == '\n') break;
+        if(ch == '\n'){
+            _chbuf[idx] = '\0';
+            // log_i("%s", _chbuf);
+            break;
+        }
         if(!isascii(ch)){ continue; }
         _chbuf[idx] = ch;
         idx++;
     }
     if(idx) {
-        _chbuf[idx] = '\0';
         if(strcmp(_chbuf, "OK+") == 0) {
             _f_KCX_BT_EMITTER_found = true;
             SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "KCX BT EMITTER found");
@@ -3010,17 +3053,6 @@ void BT_Emitter_Loop() {
             else log_e("unknown BT answer  %s", _chbuf);
             return;
         }
-        if(startsWith(_chbuf, "MEM_MacAdd")) {
-            SerialPrintfln("BT-Emitter:  MEM_MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 10);
-            _KCX_BT_names.push_back(strdup(_chbuf + 14));
-            return;
-        }
-        if(startsWith(_chbuf, "MEM_Name")) {
-            SerialPrintfln("BT-Emitter:  MEM_Name -> " ANSI_ESC_YELLOW "%s", _chbuf + 8);
-            _KCX_BT_addr.push_back(strdup(_chbuf + 12));
-            return;
-        }
-
         if(startsWith(_chbuf, "MacAdd")) {
             SerialPrintfln("BT-Emitter:  MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 7);
             char tmp[25];
@@ -3045,6 +3077,26 @@ void BT_Emitter_Loop() {
         }
         if(startsWith(_chbuf, "Addr More than 10")){
             log_e("more than 10 MAC Ardesses are not allowed");
+        }
+        if(startsWith(_chbuf, "BT_ADD_NUM=")){
+            btAddNum = str2int(_chbuf + 11);
+            vector_clear_and_shrink(_KCX_BT_addr);
+            return;
+        }
+        if(startsWith(_chbuf, "BT_NAME_NUM=")){
+            btNameNum = str2int(_chbuf + 12);
+            vector_clear_and_shrink(_KCX_BT_names);
+            return;
+        }
+        if(startsWith(_chbuf, "MEM_MacAdd")) {
+            SerialPrintfln("BT-Emitter:  MEM_MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 10);
+            _KCX_BT_addr.push_back(strdup(_chbuf + 14));
+            return;
+        }
+        if(startsWith(_chbuf, "MEM_Name")) {
+            SerialPrintfln("BT-Emitter:  MEM_Name -> " ANSI_ESC_YELLOW "%s", _chbuf + 8);
+            _KCX_BT_names.push_back(strdup(_chbuf + 12));
+            return;
         }
         else {
             f_scan = false;
@@ -3084,7 +3136,6 @@ void KCX_BT_delAllLinks() {
 bool KCX_BT_isConnected(){
     return _f_KCX_BT_status;
 }
-
 
 void IRAM_ATTR KCX_BT_changeStatus(){
     _f_KCX_BT_statusChanged = true;
@@ -4399,8 +4450,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
 
-    if(cmd == "isBTconnected"){    if(_f_KCX_BT_status) webSrv.send("isBTconnected=", "1"); else webSrv.send("isBTconnected=", "0"); return;}
+    if(cmd == "KCX_BT_connected"){ if(_f_KCX_BT_status) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
 
+    if(cmd == "KCX_BT_getItems"){  Serial2.write("AT+VMLINK?\r\n"); return;}
+
+    if(cmd == "KCX_BT_putItems"){  Serial2.write("AT+ADDLINKNAME=MyName\r\n"); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);

@@ -411,111 +411,111 @@ function connect() {
         }
 
         switch(msg) {
-            case "pong":            clearTimeout(tm)
-                                    console.log("pong")
-                                    toastr.clear()
-                                    break
-            case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                                                    resultstr1.value = "mute on"
-                                                    console.log("mute on")}
-                                    if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
-                                                    resultstr1.value = "mute off"
-                                                    console.log("mute off")}
-                                    break
-            case "tone":            resultstr1.value = val  // text shown in resultstr1 as info
-                                    break
-            case "settone":         lines = val.split('\n')
-                                    for (i = 0; i < (lines.length - 1); i++) {
-                                      parts = lines[i].split('=')
-                                      setSlider(parts[0], parts[1])
-                                    }
-                                    break
-            case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
-                                    break
-            case "stationURL":      station.value = val
-                                    break
-            case "stationLogo":     if(tft_size == 0) showLogo('label-logo-s', val)
-                                    if(tft_size == 1) showLogo('label-logo-m', val)
-                                    break
-            case "streamtitle":     cmd.value = val
-                                    break
-            case "homepage":        window.open(val, '_blank') // show the station homepage
-                                    break
-            case "icy_description": resultstr1.value = val
-                                    break
-            case "AudioFileList":   getAudioFileList(val)
-                                    break
-            case "tftSize":         if(val == 's')  { tft_size = 0; // 320x240px
-                                                        document.getElementById('div-logo-m').style.display = 'none';
-                                                        document.getElementById('div-logo-s').style.display = 'block';
-                                                        document.getElementById('canvas').width  = 96;
-                                                        document.getElementById('canvas').height = 96;
-                                                        console.log("tftSize is s");
-                                    }
-                                    if(val == 'm')  { tft_size = 1;
-                                                        document.getElementById('div-logo-s').style.display = 'none';
-                                                        document.getElementById('div-logo-m').style.display = 'block';
-                                                        document.getElementById('canvas').width  = 128;
-                                                        document.getElementById('canvas').height = 128;
-                                                        console.log("tftSize is m");
-                                    }
-                                    break
-            case  "volume":         resultstr1.value = "Volume is now " + val;
-                                    break
-            case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
-                                    break
-            case  "SD_playFolder":  resultstr3.value = "play all: " + val;
-                                    console.log("Audiofolder: ", val);
-                                    break
-            case  "stopfile":       resultstr3.value = val;
-                                    break
-            case  "resumefile":     resultstr3.value = val;
-                                    break
-
-            case  "timeAnnouncement": console.log("timeAnnouncement=" + val)
-                                    if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
-                                    if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
-                                    break
-
-            case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
-                                    break
-            case "dlnaContent":     console.log(val)
-                                    show_DLNA_Content(val)
-                                    break
-            case "networks":        var networks = val.split('\n')
-                                    select = document.getElementById('ssid')
-                                    for (i = 0; i < (networks.length); i++) {
-                                        opt = document.createElement('OPTION')
-                                        opt.value = i
-                                        console.log(networks[i])
-                                        opt.text = networks[i]
-                                        select.add(opt)
-                                    }
-                                    break
-            case "test":            resultstr1.value = val
-                                    break
-            case "IR_address":      if(IR_addr != val){
-                                        IR_addr = val
-                                        ir_address.value=val
-                                        socket.send("setIRadr=" + val)
-                                    }
-                                    break
-            case "IR_command":      ir_command.value=val
-                                    break
-            case "timeFormat":      var radiobtn;
-                                    if     (val == '12') radiobtn = document.getElementById("h12")
-                                    else if(val == '24') radiobtn = document.getElementById("h24")
-                                    else{console.log("wrong timeFormat ", val); break;}
-                                    radiobtn.checked = true;
-                                    break;
-            case "changeState":     if      (val == 'RADIO') showTab1();
-                                    else if (val == 'PLAYER') showTab3();
-                                    break;
-            case "isBTconnected":   console.log(msg, val)
-                                    if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
-                                    if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
-                                    break
-            default:                console.log('unknown message', msg, val)
+            case "pong":                clearTimeout(tm)
+                                        console.log("pong")
+                                        toastr.clear()
+                                        break
+            case "mute":                if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                                                        resultstr1.value = "mute on"
+                                                        console.log("mute on")}
+                                        if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
+                                                        resultstr1.value = "mute off"
+                                                        console.log("mute off")}
+                                        break
+            case "tone":                resultstr1.value = val  // text shown in resultstr1 as info
+                                        break
+            case "settone":             lines = val.split('\n')
+                                        for (i = 0; i < (lines.length - 1); i++) {
+                                          parts = lines[i].split('=')
+                                          setSlider(parts[0], parts[1])
+                                        }
+                                        break
+            case "stationNr":           document.getElementById('preset').selectedIndex = Number(val)
+                                        break
+            case "stationURL":          station.value = val
+                                        break
+            case "stationLogo":         if(tft_size == 0) showLogo('label-logo-s', val)
+                                        if(tft_size == 1) showLogo('label-logo-m', val)
+                                        break
+            case "streamtitle":         cmd.value = val
+                                        break
+            case "homepage":            window.open(val, '_blank') // show the station homepage
+                                        break
+            case "icy_description":     resultstr1.value = val
+                                        break
+            case "AudioFileList":       getAudioFileList(val)
+                                        break
+            case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
+                                                            document.getElementById('div-logo-m').style.display = 'none';
+                                                            document.getElementById('div-logo-s').style.display = 'block';
+                                                            document.getElementById('canvas').width  = 96;
+                                                            document.getElementById('canvas').height = 96;
+                                                            console.log("tftSize is s");
+                                        }
+                                        if(val == 'm')  { tft_size = 1;
+                                                            document.getElementById('div-logo-s').style.display = 'none';
+                                                            document.getElementById('div-logo-m').style.display = 'block';
+                                                            document.getElementById('canvas').width  = 128;
+                                                            document.getElementById('canvas').height = 128;
+                                                            console.log("tftSize is m");
+                                        }
+                                        break
+            case  "volume":             resultstr1.value = "Volume is now " + val;
+                                        break
+            case  "SD_playFile":        resultstr3.value = "Audiofile is " + val;
+                                        break
+            case  "SD_playFolder":      resultstr3.value = "play all: " + val;
+                                        console.log("Audiofolder: ", val);
+                                        break
+            case  "stopfile":           resultstr3.value = val;
+                                        break
+            case  "resumefile":         resultstr3.value = val;
+                                        break
+            case  "timeAnnouncement":   console.log("timeAnnouncement=" + val)
+                                        if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
+                                        if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
+                                        break
+            case "DLNA_Names":          addDLNAServer(val) // add to Serverlist
+                                        break
+            case "dlnaContent":         console.log(val)
+                                        show_DLNA_Content(val)
+                                        break
+            case "networks":            var networks = val.split('\n')
+                                        select = document.getElementById('ssid')
+                                        for (i = 0; i < (networks.length); i++) {
+                                            opt = document.createElement('OPTION')
+                                            opt.value = i
+                                            console.log(networks[i])
+                                            opt.text = networks[i]
+                                            select.add(opt)
+                                        }
+                                        break
+            case "test":                resultstr1.value = val
+                                        break
+            case "IR_address":          if(IR_addr != val){
+                                            IR_addr = val
+                                            ir_address.value=val
+                                            socket.send("setIRadr=" + val)
+                                        }
+                                        break
+            case "IR_command":          ir_command.value=val
+                                        break
+            case "timeFormat":          var radiobtn;
+                                        if     (val == '12') radiobtn = document.getElementById("h12")
+                                        else if(val == '24') radiobtn = document.getElementById("h24")
+                                        else{console.log("wrong timeFormat ", val); break;}
+                                        radiobtn.checked = true;
+                                        break;
+            case "changeState":         if      (val == 'RADIO') showTab1();
+                                        else if (val == 'PLAYER') showTab3();
+                                        break;
+            case "KCX_BT_connected":    console.log(msg, val)
+                                        if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
+                                        if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
+                                        break
+            case "KCX_BT_MEM":          console.log('KCX MEM', val)
+                                        break;
+            default:                    console.log('unknown message', msg, val)
         }
     }
 }
@@ -713,7 +713,7 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send('isBTconnected')
+    socket.send('KCX_BT_connected')
 }
 
 
@@ -2348,7 +2348,7 @@ function chIRcmd(btn){  // IR command, value changed
     <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
         <div style="display:flex">
             <div id="div-BT-logo" style="flex: 0 0 150px;">
-                <label for="label-logo" id="label-bt-logo" onclick="socket.send('isBTconnected')"> </label>
+                <label for="label-logo" id="label-bt-logo" onclick="socket.send('KCX_BT_connected')"> </label>
             </div>
             <div style="flex: 1 0; position: relative;  padding-top: 20px;">
             <div style="height: 223px; overflow-x: hidden; overflow-y: auto; width: 640px;" >
@@ -2441,7 +2441,7 @@ function chIRcmd(btn){  // IR command, value changed
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
                 <button class="button buttonblue"
-                   onclick=""
+                   onclick="socket.send('KCX_BT_getMode')"
                    onmousedown="this.style.backgroundColor='#D62C1A'"
                    ontouchstart="this.style.backgroundColor='#D62C1A'"
                    onmouseup="this.style.backgroundColor='blue'"
@@ -2451,7 +2451,7 @@ function chIRcmd(btn){  // IR command, value changed
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
                 <button class="button buttongreen"
-                    onclick=""
+                    onclick="socket.send('KCX_BT_putItems')"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"
@@ -2460,7 +2460,7 @@ function chIRcmd(btn){  // IR command, value changed
                 </button>
                 &nbsp;
                 <button class="button buttongreen"
-                    onclick=""
+                    onclick="socket.send('KCX_BT_getItems')"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"
