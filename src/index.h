@@ -513,7 +513,7 @@ function connect() {
                                         if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
                                         if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
                                         break
-            case "KCX_BT_MEM":          console.log('KCX MEM', val)
+            case "KCX_BT_MEM":          load_BT_items(val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -929,99 +929,12 @@ function setstation () { // Radio: button play - Enter a streamURL here....
     socket.send("stationURL=" + theUrl)
 }
 
-function selectItemByValue (elmnt, value) { // tab Radio: load and set tones
-    var sel = document.getElementById(elmnt)
-    for (var i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value === value) {
-            sel.selectedIndex = i
-        }
-    }
-}
-
 function setSlider (elmnt, value) {
-    if (elmnt === 'toneha') slider_TG_set(value)
-    if (elmnt === 'tonehf') slider_TF_set(value)
-    if (elmnt === 'tonela') slider_BG_set(value)
-    if (elmnt === 'tonelf') slider_BF_set(value)
     v = Math.trunc((40 + parseInt(value, 10)) /3)
     console.log("setSlider", elmnt, value)
     if (elmnt === 'LowPass' ) slider_LP_set(v)
     if (elmnt === 'BandPass') slider_BP_set(v)
     if (elmnt === 'HighPass') slider_HP_set(v)
-}
-
-function slider_TG_mouseUp () { // Slider Treble Gain   mouseupevent
-    handlectrl('toneha', trebleVal[TrebleGain.value])
-    // console.log('Treble Gain=%i',Number(TrebleGain.value));
-}
-
-function slider_TG_change () { //  Slider Treble Gain  changeevent
-    console.log('Treble Gain=%i', Number(TrebleGain.value))
-    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
-}
-
-function slider_TG_set (value) { // set Slider Treble Gain
-    var val = Number(value)
-    if (val < 8) val = val + 8
-    else val = val - 8
-    document.getElementById('TrebleGain').value = val
-    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
-    console.log('Treble Gain=%i', val)
-}
-
-function slider_TF_mouseUp () { // Slider Treble Freq   mouseupevent
-    handlectrl('tonehf', TrebleFreq.value)
-    // console.log('Treble Freq=%i', Number(TrebleFreq.value));
-}
-
-function slider_TF_change () { //  Slider Treble Freq  changeevent
-    console.log('Treble Freq=%i', Number(TrebleFreq.value))
-    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
-}
-
-function slider_TF_set (value) { // set Slider Treble Freq
-    var val = Number(value)
-    document.getElementById('TrebleFreq').value = val
-    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
-    console.log('Treble Freq=%i', val)
-}
-
-function slider_BG_mouseUp () { // Slider Bass Gain   mouseupevent
-    handlectrl('tonela', BassGain.value)
-    // console.log('Bass Gain=%i', Number(BassGain.value));
-}
-
-function slider_BG_change () { //  Slider Bass Gain  changeevent
-    var sign = ''
-    if (BassGain.value !== '0') sign = '+'
-    console.log('Bass Gain=%i', Number(BassGain.value))
-    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
-}
-
-function slider_BG_set (value) { // set Slider Bass Gain
-    var val = Number(value)
-    var sign = ''
-    if (BassGain.value !== '0') sign = '+'
-    document.getElementById('BassGain').value = val
-    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
-    console.log('Bass Gain=%i', val)
-}
-
-function slider_BF_mouseUp () { // Slider Bass Gain   mouseupevent
-    handlectrl('tonelf', BassFreq.value)
-    // console.log('Bass Freq=%i', Number(BassFreq.value));
-}
-
-function slider_BF_change () { //  Slider Bass Gain  changeevent
-    console.log('Bass Freq=%i', Number(BassFreq.value))
-    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
-}
-
-function slider_BF_set (value) { // set Slider Bass Gain
-    var val = Number(value)
-    document.getElementById('BassFreq').value = val
-    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
-    console.log('Bass Freq=%i', val)
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
@@ -1715,6 +1628,108 @@ function chIRcmd(btn){  // IR command, value changed
     return
 }
 
+// -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
+
+function load_BT_items(jsonstr){
+    console.log('KCX MEM', jsonstr)
+    var jsonData = JSON.parse(jsonstr)
+    for (var i = 0; i < jsonData.length; i++) {
+        var obj = jsonData[i]
+        var addr, name
+        switch(i){
+            case 0:     addr = document.getElementById('bt_name_0')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_0')
+                        name.value = obj.name
+                        break
+            case 1:     addr = document.getElementById('bt_name_1')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_1')
+                        name.value = obj.name
+                        break
+            case 2:     addr = document.getElementById('bt_name_2')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_2')
+                        name.value = obj.name
+                        break
+            case 3:     addr = document.getElementById('bt_name_3')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_3')
+                        name.value = obj.name
+                        break
+            case 4:     addr = document.getElementById('bt_name_4')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_4')
+                        name.value = obj.name
+                        break
+            case 5:     addr = document.getElementById('bt_name_5')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_5')
+                        name.value = obj.name
+                        break
+            case 6:     addr = document.getElementById('bt_name_6')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_6')
+                        name.value = obj.name
+                        break
+            case 7:     addr = document.getElementById('bt_name_7')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_7')
+                        name.value = obj.name
+                        break
+            case 8:     addr = document.getElementById('bt_name_8')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_8')
+                        name.value = obj.name
+                        break
+            case 9:     addr = document.getElementById('bt_name_9')
+                        addr.value = obj.addr
+                        name = document.getElementById('bt_addr_9')
+                        name.value = obj.name
+                        break
+        }
+    }
+}
+
+function save_BT_items(){
+    var addr = [], name = []
+    for (var i = 0; i < 10; i++) {
+        switch(i){
+            case 0:     addr[0] = document.getElementById('bt_name_0').value
+                        name[0] = document.getElementById('bt_addr_0').value
+                        break
+            case 1:     addr[1] = document.getElementById('bt_name_1').value
+                        name[1] = document.getElementById('bt_addr_1').value
+                        break
+            case 2:     addr[2] = document.getElementById('bt_name_2').value
+                        name[2] = document.getElementById('bt_addr_2').value
+                        break
+            case 3:     addr[3] = document.getElementById('bt_name_3').value
+                        name[3] = document.getElementById('bt_addr_3').value
+                        break
+            case 4:     addr[4] = document.getElementById('bt_name_4').value
+                        name[4] = document.getElementById('bt_addr_4').value
+                        break
+            case 5:     addr[5] = document.getElementById('bt_name_5').value
+                        name[5] = document.getElementById('bt_addr_5').value
+                        break
+            case 6:     addr[6] = document.getElementById('bt_name_6').value
+                        name[6] = document.getElementById('bt_addr_6').value
+                        break
+            case 7:     addr[7] = document.getElementById('bt_name_7').value
+                        name[7] = document.getElementById('bt_addr_7').value
+                        break
+            case 8:     addr[8] = document.getElementById('bt_name_8').value
+                        name[8] = document.getElementById('bt_addr_8').value
+                        break
+            case 9:     addr[9] = document.getElementById('bt_name_9').value
+                        name[9] = document.getElementById('bt_addr_9').value
+                        break
+        }
+    }
+    console.log("name[5]", name[5])
+}
+
 </script>
 
 <body id="BODY">
@@ -2367,70 +2382,70 @@ function chIRcmd(btn){  // IR command, value changed
                     <td class="table_cell1"> 0 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_0" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_10" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_0" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 1 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_1" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_11" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_1" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 2 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_2" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_12" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_2" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 3 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_3" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_13" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_3" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 4 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_4" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_14" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_4" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 5 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_5" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_15" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_5" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 6 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_6" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_16" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_6" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 7 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_7" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_17" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_7" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 8 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_8" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_18" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_8" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 9 </td>
                     <td> <input type="text" class="boxstyle_m" id="bt_name_9" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_19" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" id="bt_addr_9" onchange="" onclick="" onkeyup=""></td>
                     </tr>
                     </tbody>
                 </table>
@@ -2451,7 +2466,7 @@ function chIRcmd(btn){  // IR command, value changed
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
                 <button class="button buttongreen"
-                    onclick="socket.send('KCX_BT_putItems')"
+                    onclick="save_BT_items()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"
