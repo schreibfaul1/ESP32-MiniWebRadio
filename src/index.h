@@ -1634,98 +1634,16 @@ function load_BT_items(jsonstr){
     console.log('KCX MEM', jsonstr)
     var jsonData = JSON.parse(jsonstr)
     for (var i = 0; i < jsonData.length; i++) {
-        var obj = jsonData[i]
-        var addr, name
-        switch(i){
-            case 0:     addr = document.getElementById('bt_name_0')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_0')
-                        name.value = obj.name
-                        break
-            case 1:     addr = document.getElementById('bt_name_1')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_1')
-                        name.value = obj.name
-                        break
-            case 2:     addr = document.getElementById('bt_name_2')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_2')
-                        name.value = obj.name
-                        break
-            case 3:     addr = document.getElementById('bt_name_3')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_3')
-                        name.value = obj.name
-                        break
-            case 4:     addr = document.getElementById('bt_name_4')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_4')
-                        name.value = obj.name
-                        break
-            case 5:     addr = document.getElementById('bt_name_5')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_5')
-                        name.value = obj.name
-                        break
-            case 6:     addr = document.getElementById('bt_name_6')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_6')
-                        name.value = obj.name
-                        break
-            case 7:     addr = document.getElementById('bt_name_7')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_7')
-                        name.value = obj.name
-                        break
-            case 8:     addr = document.getElementById('bt_name_8')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_8')
-                        name.value = obj.name
-                        break
-            case 9:     addr = document.getElementById('bt_name_9')
-                        addr.value = obj.addr
-                        name = document.getElementById('bt_addr_9')
-                        name.value = obj.name
-                        break
-        }
+        document.getElementsByName('bt_name')[i].value = jsonData[i].addr
+        document.getElementsByName('bt_addr')[i].value = jsonData[i].name
     }
 }
 
 function save_BT_items(){
     var addr = [], name = []
     for (var i = 0; i < 10; i++) {
-        switch(i){
-            case 0:     addr[0] = document.getElementById('bt_name_0').value
-                        name[0] = document.getElementById('bt_addr_0').value
-                        break
-            case 1:     addr[1] = document.getElementById('bt_name_1').value
-                        name[1] = document.getElementById('bt_addr_1').value
-                        break
-            case 2:     addr[2] = document.getElementById('bt_name_2').value
-                        name[2] = document.getElementById('bt_addr_2').value
-                        break
-            case 3:     addr[3] = document.getElementById('bt_name_3').value
-                        name[3] = document.getElementById('bt_addr_3').value
-                        break
-            case 4:     addr[4] = document.getElementById('bt_name_4').value
-                        name[4] = document.getElementById('bt_addr_4').value
-                        break
-            case 5:     addr[5] = document.getElementById('bt_name_5').value
-                        name[5] = document.getElementById('bt_addr_5').value
-                        break
-            case 6:     addr[6] = document.getElementById('bt_name_6').value
-                        name[6] = document.getElementById('bt_addr_6').value
-                        break
-            case 7:     addr[7] = document.getElementById('bt_name_7').value
-                        name[7] = document.getElementById('bt_addr_7').value
-                        break
-            case 8:     addr[8] = document.getElementById('bt_name_8').value
-                        name[8] = document.getElementById('bt_addr_8').value
-                        break
-            case 9:     addr[9] = document.getElementById('bt_name_9').value
-                        name[9] = document.getElementById('bt_addr_9').value
-                        break
-        }
+        addr[i] = document.getElementsByName('bt_name')[i].value
+        name[i] = document.getElementsByName('bt_addr')[i].value
     }
     console.log("name[5]", name[5])
 }
@@ -2380,72 +2298,72 @@ function save_BT_items(){
                     <tbody>
                     <tr>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_0" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_0" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_1" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_1" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_2" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_2" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_3" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_3" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_4" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_4" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_5" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_5" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_6" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_6" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_7" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_7" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_8" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_8" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_name_9" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" id="bt_addr_9" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
                     </tr>
                     </tbody>
                 </table>
