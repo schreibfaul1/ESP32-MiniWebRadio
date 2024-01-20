@@ -1640,12 +1640,15 @@ function load_BT_items(jsonstr){
 }
 
 function save_BT_items(){
-    var addr = [], name = []
+    var jArr = new Array();
     for (var i = 0; i < 10; i++) {
-        addr[i] = document.getElementsByName('bt_name')[i].value
-        name[i] = document.getElementsByName('bt_addr')[i].value
+        jArr[i] = {}
+        jArr[i]['addr'] = document.getElementsByName('bt_name')[i].value
+        jArr[i]['name'] = document.getElementsByName('bt_addr')[i].value
     }
-    console.log("name[5]", name[5])
+    var jsonStr = JSON.stringify(jArr)
+    socket.send("KCX_BT_MEM=" + jsonStr)
+    console.log("KCX_BT_MEM=", jsonStr)
 }
 
 </script>

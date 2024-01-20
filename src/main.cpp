@@ -4456,6 +4456,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "KCX_BT_putItems"){  Serial2.write("AT+ADDLINKNAME=MyName\r\n"); return;}
 
+    if(cmd == "KCX_BT_MEM"){  log_i("%s", param.c_str());  return;}
+
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
 }
