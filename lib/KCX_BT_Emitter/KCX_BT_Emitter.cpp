@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 
+ *  updated on: 23.01.2024
  *      Author: Wolle
  */
 
@@ -167,6 +167,10 @@ void KCX_BT_Emitter::handle1sEvent(){
 }
 
 void KCX_BT_Emitter::writeCommand(const char* cmd){
+    if(!m_f_btEmitter_found){
+        if(strcmp(cmd, "AT+") == 0) Serial2.printf("%s%s", cmd, "\r\n");
+        return;
+    }
     sprintf(m_msgbuf, "new command " ANSI_ESC_GREEN "%s", cmd);
     if(kcx_bt_info) kcx_bt_info(m_msgbuf);
     if(m_f_bt_inUse) {stillInUse(cmd); return;}

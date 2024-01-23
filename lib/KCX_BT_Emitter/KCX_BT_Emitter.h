@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 
+ *  updated on: 23.01.2024
  *      Author: Wolle
  */
 
