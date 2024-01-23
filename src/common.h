@@ -49,6 +49,7 @@
 #include "ES8388.h"
 #include "WM8978.h"
 #include "DLNAClient.h"
+#include "KCX_BT_Emitter.h"
 
 #if CONFIG_IDF_TARGET_ESP32 == 1
 #include "a2dp_sink.h"
@@ -242,7 +243,10 @@ void           KCX_BT_addLinkName(const char* Name);
 void           KCX_BT_addLinkAddr(const char* Name);
 void           KCX_BT_delAllLinks();
 bool           KCX_BT_isConnected();
+void           KCX_BT_writeItems2Vect(const char* jsonItems);
+void           KCX_BT_add_Mem_Items(bool first = false);
 void IRAM_ATTR KCX_BT_changeStatus(); // link -> connected, not connected
+
 
 //prototypes (audiotask.cpp)
 void     audioInit();

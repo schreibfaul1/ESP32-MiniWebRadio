@@ -513,7 +513,7 @@ function connect() {
                                         if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
                                         if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
                                         break
-            case "KCX_BT_MEM":          load_BT_items(val)
+            case "KCX_BT_MEM":          show_BT_items(val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -1630,7 +1630,7 @@ function chIRcmd(btn){  // IR command, value changed
 
 // -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
 
-function load_BT_items(jsonstr){
+function show_BT_items(jsonstr){
     console.log('KCX MEM', jsonstr)
     var jsonData = JSON.parse(jsonstr)
     for (var i = 0; i < jsonData.length; i++) {
@@ -1649,6 +1649,14 @@ function save_BT_items(){
     var jsonStr = JSON.stringify(jArr)
     socket.send("KCX_BT_MEM=" + jsonStr)
     console.log("KCX_BT_MEM=", jsonStr)
+}
+
+function get_BT_items(){
+    for (var i = 0; i < 10; i++) {
+        document.getElementsByName('bt_name')[i].value = ""
+        document.getElementsByName('bt_addr')[i].value = ""
+    }
+    socket.send('KCX_BT_getItems')
 }
 
 </script>
@@ -2396,7 +2404,7 @@ function save_BT_items(){
                 </button>
                 &nbsp;
                 <button class="button buttongreen"
-                    onclick="socket.send('KCX_BT_getItems')"
+                    onclick="get_BT_items()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"

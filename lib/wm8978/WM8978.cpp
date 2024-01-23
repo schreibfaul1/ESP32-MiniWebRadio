@@ -21,43 +21,35 @@ static uint16_t REGVAL_TBL[58] =
   0X0001, 0X0001
 };
 
-//WM8978写寄存器
-//reg:寄存器地址
-//val:要写入寄存器的值
-//返回值:0,成功;
-//其他,错误代码
-uint8_t WM8978::Write_Reg(uint8_t reg, uint16_t val)
-{
-  char buf[2];
-  buf[0] = (reg << 1) | ((val >> 8) & 0X01);
-  buf[1] = val & 0XFF;
-  Wire.beginTransmission(WM8978_ADDR); //发送数据到设备号为4的从机
-  Wire.write((const uint8_t*)buf, 2);
-  Wire.endTransmission();    // 停止发送
-  REGVAL_TBL[reg] = val; //保存寄存器值到本地
-  return 0;
+uint8_t WM8978::Write_Reg(uint8_t reg, uint16_t val) {
+    char buf[2];
+    buf[0] = (reg << 1) | ((val >> 8) & 0X01);
+    buf[1] = val & 0XFF;
+    Wire.beginTransmission(WM8978_ADDR);
+    Wire.write((const uint8_t*)buf, 2);
+    Wire.endTransmission();
+    REGVAL_TBL[reg] = val;
+    return 0;
 }
 
-//WM8978 init
-//返回值:0,初始化正常
-//    其他,错误代码
-uint8_t WM8978::Init(void)
-{
-  uint8_t res;
-  res = Write_Reg(0, 0);  //软复位WM8978
-  if (res)return 1;     //发送指令失败,WM8978异常
-  //以下为通用设置
-  Write_Reg(1, 0X1B); //R1,MICEN设置为1(MIC使能),BIASEN设置为1(模拟器工作),VMIDSEL[1:0]设置为:11(5K)
-  Write_Reg(2, 0X1B0);  //R2,ROUT1,LOUT1输出使能(耳机可以工作),BOOSTENR,BOOSTENL使能
-  Write_Reg(3, 0X6C); //R3,LOUT2,ROUT2输出使能(喇叭工作),RMIX,LMIX使能
-  Write_Reg(6, 0);    //R6,MCLK由外部提供
-  Write_Reg(43, 1 << 4);  //R43,INVROUT2反向,驱动喇叭
-  Write_Reg(47, 1 << 8);  //R47设置,PGABOOSTL,左通道MIC获得20倍增益
-  Write_Reg(48, 1 << 8);  //R48设置,PGABOOSTR,右通道MIC获得20倍增益
-  Write_Reg(49, 1 << 1);  //R49,TSDEN,开启过热保护
-  Write_Reg(10, 1 << 3);  //R10,SOFTMUTE关闭,128x采样,最佳SNR
-  Write_Reg(14, 1 << 3 | 1 << 8);  //R14,ADC 128x采样率 and enable high pass filter (3.7Hz cut-off)
-  return 0;
+// WM8978 init
+// return value:0, normal initialization
+uint8_t WM8978::Init(void) {
+    uint8_t res;
+    res = Write_Reg(0, 0); // 软复位WM8978
+    if(res) return 1;      // 发送指令失败,WM8978异常
+    // the following are common settings
+    Write_Reg(1, 0X1B);             // R1,MICEN设置为1(MIC使能),BIASEN设置为1(模拟器工作),VMIDSEL[1:0]设置为:11(5K)
+    Write_Reg(2, 0X1B0);            // R2,ROUT1,LOUT1输出使能(耳机可以工作),BOOSTENR,BOOSTENL使能
+    Write_Reg(3, 0X6C);             // R3,LOUT2,ROUT2输出使能(喇叭工作),RMIX,LMIX使能
+    Write_Reg(6, 0);                // R6,MCLK provided externally
+    Write_Reg(43, 1 << 4);          // R43,INVROUT2 Reverse, drive speaker
+    Write_Reg(47, 1 << 8);          // R47 set up, PGABOOSTL, other, error code
+    Write_Reg(48, 1 << 8);          // R48 set up, PGABOOSTR, the right channel MIC gets 20 times gain
+    Write_Reg(49, 1 << 1);          // R49,TSDEN,开启过热保护
+    Write_Reg(10, 1 << 3);          // R10,SOFTMUTE关闭,128x采样,最佳SNR
+    Write_Reg(14, 1 << 3 | 1 << 8); // R14,ADC 128x采样率 and enable high pass filter (3.7Hz cut-off)
+    return 0;
 }
 
 // WM8978 read register
