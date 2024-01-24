@@ -42,7 +42,6 @@ uint8_t             _numServers = 0; //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
 uint8_t             _staListPos = 0;
-uint8_t             _KCX_Volume = 31;
 uint16_t*           _shuffleArray = NULL;
 uint16_t            _staListNr = 0;
 uint8_t             _fileListPos = 0;
@@ -86,8 +85,6 @@ char*               _lastconnectedfile = NULL;
 char*               _stationURL = NULL;
 char*               _JSONstr = NULL;
 char*               _BT_metaData = NULL;
-char*               _KCX_Vers = NULL;
-char*               _KCX_Autolink = NULL;
 bool                _f_rtc = false; // true if time from ntp is received
 bool                _f_100ms = false;
 bool                _f_1sec = false;
@@ -132,10 +129,6 @@ bool                _f_BTconnected = false;
 bool                _f_BTstateChanged = false;
 bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
-bool                _f_KCX_BT_EMITTER_found = false;
-bool                _f_KCX_BT_mode = true; // true TX, false RX
-bool                _f_KCX_BT_statusChanged = false;
-bool                _f_KCX_BT_status = false; // 0 disconnected, 1 connected
 String              _station = "";
 String              _stationName_nvs = "";
 String              _stationName_air = "";
@@ -150,8 +143,6 @@ String              _media_downloadIP = "";
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
 std::vector<char*>  _PLS_content;
-std::vector<char*>  _KCX_BT_names;
-std::vector<char*>  _KCX_BT_addr;
 
 struct timecounter {
     uint8_t timer = 0;
@@ -425,12 +416,6 @@ boolean defaultsettings(){
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
-
-    for(uint8_t i = 0; i < 10; i++){
-        sprintf(tmp, "KCX_BT_scAdr_%02d", i);
-        if(!pref.isKey(tmp)) pref.putString(tmp, "");
-    }
-    if(!pref.isKey("KCX_BT_scanPtr")) pref.putShort("KCX_BT_scanPtr", 0);
 
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
@@ -2922,251 +2907,6 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
     _timeCounter.timer = 10;
     _timeCounter.factor = 1.0;
 }
-/*******************************************************************************************************************************************************************************************************
- *                                                                                   B T  -  E M I T T E R                                                                                             *
- ******************************************************************************************************************************************************************************************************/
-
-void BT_Emitter_Loop() {
-    if(BT_EMITTER_RX == -1) return;
-
-    int idx = 0;
-    // static uint8_t btAddNum = 0;       // log BT_ADD_NUM=02
-    // static uint8_t btNameNum = 0;      // log BT_NAME_NUM=06
-    // static bool    f_memWrite = false; // read or wirite KCX mem items (addr and names)
-
-    // if(!f_memWrite && btNameNum + btAddNum > 0 && _KCX_BT_names.size() + _KCX_BT_addr.size() ==  btNameNum + btAddNum){
-    //     // "AT+VMLINK" returns:
-    //     // "OK+VMLINK"
-    //     // "BT_ADD_NUM=01"              --> save in btAddNum
-    //     // "BT_NAME_NUM=01"             --> save in btNameNum
-    //     // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
-    //     // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
-    //     uint16_t JSONstrLength = 0;
-    //     if(_JSONstr){free(_JSONstr); _JSONstr = NULL;}
-    //     if(_f_PSRAMfound) { _JSONstr = (char*)ps_malloc(2); }
-    //     else              { _JSONstr = (char*)malloc(2);}
-    //     JSONstrLength += 2;
-    //     memcpy(_JSONstr, "[\0", 2);
-    //     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
-    //     for(int i = 0; i < 10; i++) {
-    //         int a = 0, b = 0;
-    //         if(_KCX_BT_names.size() > i) a = strlen(_KCX_BT_names[i]);
-    //         if(_KCX_BT_addr.size()  > i) b = strlen(_KCX_BT_addr[i]);
-    //         JSONstrLength += 22 + a  + b;  // {"name":"a","addr":"b"},
-    //         if(_f_PSRAMfound) { _JSONstr = (char*)ps_realloc(_JSONstr, JSONstrLength); }
-    //         else           { _JSONstr = (char*)realloc(_JSONstr, JSONstrLength); }
-    //         strcat(_JSONstr, "{\"name\":\"");
-    //         if(a) strcat(_JSONstr, _KCX_BT_names[i]);
-    //         else  strcat(_JSONstr, "");
-    //         strcat(_JSONstr, "\",\"addr\":\"");
-    //         if(b) strcat(_JSONstr, _KCX_BT_addr[i]);
-    //         else  strcat(_JSONstr, "");
-    //         strcat(_JSONstr, "\"},");
-    //     }
-    //     _JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
-    //     _JSONstr[JSONstrLength - 1] = '\0'; // and terminate
-    //     webSrv.send("KCX_BT_MEM=", _JSONstr);
-    //     btNameNum = 0;
-    //     btAddNum = 0;
-    //     return;
-    // }
-
-
-
-    if(idx) {
-
-        if(!_f_KCX_BT_EMITTER_found) return;
-        // if(startsWith(_chbuf, "OK+VERS:")) {
-        //     _KCX_Vers = strdup(_chbuf + 8);
-        //     SerialPrintfln("BT-Emitter:  Version " ANSI_ESC_YELLOW "%s", _KCX_Vers);
-        //     Serial2.write("AT+VMLINK?\r\n");
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "SCAN..")) {
-        //     if(!f_scan) {
-        //         SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
-        //         f_scan = true;
-        //     //    Serial2.write("AT+POWER_OFF\r\n");
-        //     }
-        //     return;
-        }
-        if(startsWith(_chbuf, "OK+VOL=")) {
-            _KCX_Volume = atoi(_chbuf + 7);
-            SerialPrintfln("BT-Emitter:  Volume " ANSI_ESC_CYAN "%02d", _KCX_Volume);
-            return;
-        }
-        // if(startsWith(_chbuf, "POWER ON")) {
-        //     SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
-        //     Serial2.write("AT+BT_MODE?\r\n");
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "Auto_link_Add:")) {
-        //     if(_KCX_Autolink) {
-        //         free(_KCX_Autolink);
-        //         _KCX_Autolink = NULL;
-        //     }
-        //     _KCX_Autolink = strdup(_chbuf + 14);
-        //     SerialPrintfln("BT-Emitter:  Autolink -> " ANSI_ESC_YELLOW "%s", _KCX_Autolink);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "OK+BT_")) {
-        //     SerialPrintfln("BT-Emitter:  Mode " ANSI_ESC_YELLOW "%s", _chbuf + 6);
-        //     if(strcmp(_chbuf + 6, "EMITTER") == 0) _f_KCX_BT_mode = true;
-        //     else if(strcmp(_chbuf + 6, "RECEIVER") == 0) _f_KCX_BT_mode = false;
-        //     else log_e("unknown BT answer  %s", _chbuf);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "MacAdd")) {
-        //     SerialPrintfln("BT-Emitter:  MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 7);
-        //     char tmp[25];
-        //     for(uint8_t i = 0; i < 10; i++){
-        //         sprintf(tmp, "KCX_BT_scAdr_%02d", i);
-        //         if(strcmp(_chbuf + 7, pref.getString(tmp, "").c_str()) == 0){
-        //             // log_i("found");
-        //             return;
-        //         }
-        //     }
-        //     uint8_t ptr = pref.getShort("KCX_BT_scanPtr", 0);
-        //     sprintf(tmp, "KCX_BT_scAdr_%02d", ptr); // scanned MAC address
-        //     pref.putString(tmp, _chbuf + 7); // write in next free or overwrite the oldest
-        //     ptr++;
-        //     if(ptr == 10) ptr = 0;
-        //     pref.putShort("KCX_BT_scanPtr", ptr);
-        //     return;
-        // }
-
-        // if(startsWith(_chbuf, "Name More than 10")){
-        //     log_e("more than 10 names are not allowed");
-        // }
-        // if(startsWith(_chbuf, "Addr More than 10")){
-        //     log_e("more than 10 MAC Ardesses are not allowed");
-        // }
-        // if(startsWith(_chbuf, "BT_ADD_NUM=")){
-        //     btAddNum = str2int(_chbuf + 11);
-        //     vector_clear_and_shrink(_KCX_BT_addr);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "BT_NAME_NUM=")){
-        //     btNameNum = str2int(_chbuf + 12);
-        //     vector_clear_and_shrink(_KCX_BT_names);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "MEM_MacAdd")) {
-        //     if(f_memWrite){  // write KCX mem items
-        //         KCX_BT_add_Mem_Items();
-        //     }
-        //     else{            // read KCX mem items
-        //         _KCX_BT_addr.push_back(strdup(_chbuf + 14));
-        //     }
-        //     SerialPrintfln("BT-Emitter:  MEM_MacAdd -> " ANSI_ESC_YELLOW "%s", _chbuf + 10);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "MEM_Name")) {
-        //     if(f_memWrite){  // write KCX mem items
-        //         KCX_BT_add_Mem_Items();
-        //     }
-        //     else{            // read KCX mem items
-        //         _KCX_BT_names.push_back(strdup(_chbuf + 12));
-        //     }
-        //     SerialPrintfln("BT-Emitter:  MEM_Name -> " ANSI_ESC_YELLOW "%s", _chbuf + 8);
-        //     return;
-        // }
-        // if(startsWith(_chbuf, "Delete_Vmlink")){
-        //     SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "all vmlinks deleted");
-        //     Serial2.write("AT+ADDLINKNAME=myName\r\n");
-        //     f_memWrite = true;
-        //     KCX_BT_add_Mem_Items(true);
-        // }
-        else {
-        //    f_scan = false;
-            SerialPrintfln("BT-Emitter:  " ANSI_ESC_YELLOW "%s", _chbuf);
-        }
-    }
-//}
-
-uint8_t KCX_BT_getVolume() { return _KCX_Volume; }
-void    KCX_BT_setVolume(uint8_t volume) { // 00 ... 31
-    char tmp[20];
-    sprintf(tmp, "AT+VOL=%02d\r\n", volume);
-    Serial2.write(tmp);
-}
-void KCX_BT_PauseResume() { ; }
-bool KCX_BT_isPause() { return false; }
-bool KCX_BT_getMode() { return _f_KCX_BT_mode; }
-void KCX_BT_setMode(bool mode) { // true TX, false RX
-    _f_KCX_BT_mode = mode;
-    digitalWrite(BT_EMITTER_MODE, _f_KCX_BT_mode);
-    Serial2.write("AT+RESET\r\n");
-}
-// void KCX_BT_addLinkName(const char* Name){
-//     char tmp[strlen(Name) + 20];
-//     sprintf(tmp, "AT+ADDLINKNAME=%s\r\n", Name);
-//     Serial2.write(tmp);
-// }
-// void KCX_BT_addLinkAddr(const char* Name){
-//     char tmp[strlen(Name) + 20];
-//     sprintf(tmp, "AT+ADDLINKADD=%s\r\n", Name);
-//     log_i("%s", tmp);
-//     Serial2.write(tmp);
-// }
-void KCX_BT_delAllLinks() {
-    Serial2.write("AT+DELVMLINK\r\n");
-}
-bool KCX_BT_isConnected(){
-    return _f_KCX_BT_status;
-}
-void KCX_BT_writeItems2Vect(const char* jsonItems){
-    if(!jsonItems) return;
-    // e.g. jsonItems [{"addr":"82435181cc6a","name":"MyName1"},{"addr":"82435181cc6b","name":"MyName2"},...,{"addr":"addr9","name":"MyName9"}]
-    vector_clear_and_shrink(_KCX_BT_names);
-    vector_clear_and_shrink(_KCX_BT_addr);
-    int idx1 = 0;
-    int idx2 = 0;
-    while(true){
-        idx1 = indexOf(jsonItems, "\"name\":", idx1);
-        if(idx1 < 0) break;
-        idx1 += 8;
-        idx2 = indexOf(jsonItems,"\"",  idx1);
-        _KCX_BT_names.push_back(strndup(jsonItems + idx1, idx2 - idx1));
-    }
-    idx1 = 0;
-    idx2 = 0;
-    while(true){
-        idx1 = indexOf(jsonItems, "\"addr\":", idx1);
-        if(idx1 < 0) break;
-        idx1 += 8;
-        idx2 = indexOf(jsonItems,"\"",  idx1);
-        _KCX_BT_addr.push_back(strndup(jsonItems + idx1, idx2 - idx1));
-    }
-    KCX_BT_delAllLinks();
-    for(int i = 0; i < _KCX_BT_names.size(); i++){
-        log_i("%s", _KCX_BT_names[i]);
-    }
-    for(int i = 0; i < _KCX_BT_addr.size(); i++){
-        log_i("%s", _KCX_BT_addr[i]);
-    }
-}
-void KCX_BT_add_Mem_Items(bool first){
-    static uint8_t btNameNum = 0;
-    static uint8_t btAddNum = 0;
-    if(first){
-        btNameNum = 0;
-        btAddNum = 0;
-    }
-    if(btNameNum < _KCX_BT_names.size()){
-        btNameNum++;
-        return;
-    }
-    if(btAddNum < _KCX_BT_names.size()){
-        btAddNum++;
-        return;
-    }
-//    f_memWrite = false;
-    return;
-}
-void IRAM_ATTR KCX_BT_changeStatus(){
-    _f_KCX_BT_statusChanged = true;
-}
 
 /*****************************************************************************************************************************************************
  *                                                                 L O O P                                                                           *
@@ -4477,13 +4217,16 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
 
-    if(cmd == "KCX_BT_connected"){ if(_f_KCX_BT_status) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
+    if(cmd == "KCX_BT_connected"){ if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
 
-    if(cmd == "KCX_BT_getItems"){  Serial2.write("AT+VMLINK?\r\n"); return;}
+    if(cmd == "KCX_BT_getItems"){  bt_emitter.deleteVMlinks(); return;} // test
 
-    if(cmd == "KCX_BT_putItems"){  Serial2.write("AT+ADDLINKNAME=MyName\r\n"); return;}
+    //if(cmd == "KCX_BT_putItems"){  Serial2.write("AT+ADDLINKNAME=MyName\r\n"); return;}
 
-    if(cmd == "KCX_BT_MEM"){       KCX_BT_writeItems2Vect(param.c_str()); return;}
+    //if(cmd == "KCX_BT_MEM"){       KCX_BT_writeItems2Vect(param.c_str()); return;}
+    if(cmd == "KCX_BT_MEM"){       bt_emitter.stringifyScannedItems(); return;   }
+
+    if(cmd == "KCX_BT_getMode"){   bt_emitter.addLinkName("testName"); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
@@ -4580,16 +4323,19 @@ void bt_rssi(int8_t rssi_delta) {
 
 void kcx_bt_info(const char* info){
     SerialPrintfln("BT-Emitter:  %s", info);
-}
-void kcx_bt_status(bool status) {
-    if(status) { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected"); }
-    else       { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected"); }
-}
-
-void kcx_bt_items(const char* jsonItems){
-    SerialPrintfln("scanned %s", jsonItems);
+    if(startsWith(info, "scanned:")){
+        const char* s = bt_emitter.stringifyScannedItems();
+        log_i("%s", s);
+        webSrv.send("KCX_BT_SCANNED=", s);
+    }
 }
 
-void kcx_bt_scanned(const char* items){
-    SerialPrintfln(items);
+void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
+    if(status) { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected");     webSrv.send("KCX_BT_connected=", "1"); }
+    else       { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected");  webSrv.send("KCX_BT_connected=", "0"); }
+}
+
+void kcx_bt_items(const char* jsonItems){ // Every time an item (name or address) was added, a JSON string is passed here
+    SerialPrintfln("bt_items %s", jsonItems);
+    webSrv.send("KCX_BT_MEM=", jsonItems);
 }

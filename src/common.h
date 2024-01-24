@@ -233,20 +233,6 @@ void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
-uint8_t        KCX_BT_getVolume();
-void           KCX_BT_setVolume(uint8_t volume);
-void           KCX_BT_PauseResume();
-bool           KCX_BT_isPause();
-bool           KCX_BT_getMode();
-void           KCX_BT_setMode(bool mode);
-void           KCX_BT_addLinkName(const char* Name);
-void           KCX_BT_addLinkAddr(const char* Name);
-void           KCX_BT_delAllLinks();
-bool           KCX_BT_isConnected();
-void           KCX_BT_writeItems2Vect(const char* jsonItems);
-void           KCX_BT_add_Mem_Items(bool first = false);
-void IRAM_ATTR KCX_BT_changeStatus(); // link -> connected, not connected
-
 
 //prototypes (audiotask.cpp)
 void     audioInit();

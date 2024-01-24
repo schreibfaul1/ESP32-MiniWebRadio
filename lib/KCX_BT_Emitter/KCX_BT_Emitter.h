@@ -15,7 +15,6 @@
 extern __attribute__((weak)) void kcx_bt_info(const char*);
 extern __attribute__((weak)) void kcx_bt_status(bool);
 extern __attribute__((weak)) void kcx_bt_items(const char*);
-extern __attribute__((weak)) void kcx_bt_scanned(const char*);
 
 #define ANSI_ESC_BLACK      "\033[30m"
 #define ANSI_ESC_RED        "\033[31m"
@@ -41,21 +40,23 @@ class KCX_BT_Emitter{
     volatile bool m_f_ticker1s;
 
 public:
-    KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
-    ~KCX_BT_Emitter();
-    void begin();
-    void loop();
-    void deleteVMlinks(); // all saved VM links will be deleted, return: "Delete_Vmlink"
-    void addLinkName(const char* name);   // up to 10 names can be saved
-    void addLinkAddr(const char* addr);   // up to 10 MAC addresses can be saved
-    bool isConnected(){return m_f_status;}
-    uint8_t getVolume(){return m_bt_volume;}
-    void setVolume(uint8_t vol);
+  KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
+  ~KCX_BT_Emitter();
+  void        begin();
+  void        loop();
+  void        deleteVMlinks();               // all saved VM links will be deleted, return: "Delete_Vmlink"
+  void        addLinkName(const char* name); // up to 10 names can be saved
+  void        addLinkAddr(const char* addr); // up to 10 MAC addresses can be saved
+  bool        isConnected() { return m_f_status; }
+  uint8_t     getVolume() { return m_bt_volume; }
+  void        setVolume(uint8_t vol);
+  const char* stringifyScannedItems();
 
 private:
     Ticker   tck1s;
     std::vector<char*>  m_bt_names;
     std::vector<char*>  m_bt_addr;
+    std::vector<char*>  m_bt_scannedItems;
     int8_t   BT_EMITTER_LINK = -1;
     int8_t   BT_EMITTER_MODE = -1;
     int8_t   BT_EMITTER_RX   = -1;
@@ -79,7 +80,8 @@ private:
     char*    m_lastCommand = NULL;
     char*    m_lastMsg = NULL;
     char*    m_autoLink = NULL;
-    char*    m_JSONstr = NULL;
+    char*    m_jsonMemItemsStr = NULL;
+    char*    m_jsonScanItemsStr = NULL;
 
     void     readCmd();
     void     detectOKcmd();
@@ -110,6 +112,15 @@ private:
         if(c != *base++) return false;
         return true;
     }
+
+    int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
+    const char* p = haystack;
+    for(; startIndex > 0; startIndex--)
+        if(*p++ == '\0') return -1;
+    char* pos = strstr(p, needle);
+    if(pos == nullptr) return -1;
+    return pos - haystack;
+}
 
     void vector_clear_and_shrink(std::vector<char*>& vec) {
         uint size = vec.size();

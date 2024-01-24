@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 20.01.2024
+ *  updated on: 24.01.2024
  *      Author: Wolle
  */
 
@@ -177,7 +177,7 @@ boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sen
     uint8_t mask = 0;
 
     buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
-    if(msgLen < 126) {
+    if(msgLen + cmdLen < 126) {
         buff[1] = (128 * mask) + cmdLen + msgLen ;
     }
     else {

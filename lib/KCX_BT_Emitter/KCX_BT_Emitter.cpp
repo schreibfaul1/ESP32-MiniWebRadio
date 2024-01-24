@@ -26,7 +26,7 @@ KCX_BT_Emitter::~KCX_BT_Emitter(){
     if(m_lastMsg){free(m_lastMsg); m_lastMsg = NULL;}
     if(m_autoLink){free(m_autoLink); m_autoLink = NULL;}
     if(m_lastCommand){free(m_lastCommand); m_lastCommand = NULL;}
-    if(m_JSONstr){free(m_JSONstr); m_JSONstr = NULL;}
+    if(m_jsonMemItemsStr){free(m_jsonMemItemsStr); m_jsonMemItemsStr = NULL;}
     vector_clear_and_shrink(m_bt_addr);
     vector_clear_and_shrink(m_bt_names);
 }
@@ -102,7 +102,7 @@ void KCX_BT_Emitter::detectOKcmd(){
 }
 
 void KCX_BT_Emitter::parseATcmds(){
-log_i("%s", m_chbuf);
+//  log_i("%s", m_chbuf);
     if(startsWith(m_chbuf, "OK+VERS:"))         { bt_Version(); return;}
     if(startsWith(m_chbuf, "POWER ON"))         { cmd_PowerOn(); return;}
     if(startsWith(m_chbuf, "OK+BT"))            { cmd_Mode(); return;}
@@ -189,6 +189,7 @@ void KCX_BT_Emitter::bt_Version(){
 }
 
 void KCX_BT_Emitter::timeout(){
+    if(!m_f_btEmitter_found) return;
     if(kcx_bt_info) kcx_bt_info(ANSI_ESC_RED "timeout while reading from KCX_BT_Emitter");
 }
 
@@ -280,7 +281,17 @@ void KCX_BT_Emitter::cmd_MemName(){
 }
 
 void KCX_BT_Emitter::cmd_scannedItems(){
-    if(kcx_bt_scanned) kcx_bt_scanned(m_chbuf);
+    bool f_insert = true;
+    for(uint i = 0; i < m_bt_scannedItems.size(); i++){
+        if(strcmp(m_bt_scannedItems[i], m_chbuf) == 0){
+           f_insert = false;
+        }
+    }
+    if(f_insert){
+        m_bt_scannedItems.insert(m_bt_scannedItems.begin(), strdup(m_chbuf));
+        sprintf(m_msgbuf, "scanned: " ANSI_ESC_YELLOW "%s", m_bt_scannedItems[0]);
+        if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+    }
 }
 
 // -------------------------- user commands -----------------------------------
@@ -303,42 +314,75 @@ void KCX_BT_Emitter::setVolume(uint8_t vol){
 
 
 // -------------------------- JSON relevant ----------------------------------
-void KCX_BT_Emitter::stringifyMemItems(){
-        // "AT+VMLINK" returns:
-        // "OK+VMLINK"
-        // "BT_ADD_NUM=01"              --> save in btAddNum
-        // "BT_NAME_NUM=01"             --> save in btNameNum
-        // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
-        // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
-        uint16_t JSONstrLength = 0;
-        if(m_JSONstr){free(m_JSONstr); m_JSONstr = NULL;}
-        if(m_f_PSRAMfound) { m_JSONstr = (char*)ps_malloc(2); }
-        else              { m_JSONstr = (char*)malloc(2);}
-        JSONstrLength += 2;
-        memcpy(m_JSONstr, "[\0", 2);
-        // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
-        for(int i = 0; i < 10; i++) {
-            int a = 0, b = 0;
-            if(m_bt_names.size() > i) a = strlen(m_bt_names[i]);
-            if(m_bt_addr.size()  > i) b = strlen(m_bt_addr[i]);
-            JSONstrLength += 22 + a  + b;  // {"name":"a","addr":"b"},
-            if(m_f_PSRAMfound) { m_JSONstr = (char*)ps_realloc(m_JSONstr, JSONstrLength); }
-            else           { m_JSONstr = (char*)realloc(m_JSONstr, JSONstrLength); }
-            strcat(m_JSONstr, "{\"name\":\"");
-            if(a) strcat(m_JSONstr, m_bt_names[i]);
-            else  strcat(m_JSONstr, "");
-            strcat(m_JSONstr, "\",\"addr\":\"");
-            if(b) strcat(m_JSONstr, m_bt_addr[i]);
-            else  strcat(m_JSONstr, "");
-            strcat(m_JSONstr, "\"},");
-        }
-        m_JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
-        m_JSONstr[JSONstrLength - 1] = '\0'; // and terminate
-        if(kcx_bt_items) kcx_bt_items(m_JSONstr);
-        return;
+void KCX_BT_Emitter::stringifyMemItems() {
+    // "AT+VMLINK" returns:
+    // "OK+VMLINK"
+    // "BT_ADD_NUM=01"              --> save in btAddNum
+    // "BT_NAME_NUM=01"             --> save in btNameNum
+    // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
+    // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
+    uint16_t JSONstrLength = 0;
+    if(m_jsonMemItemsStr) {
+        free(m_jsonMemItemsStr);
+        m_jsonMemItemsStr = NULL;
     }
+    if(m_f_PSRAMfound) { m_jsonMemItemsStr = (char*)ps_malloc(2); }
+    else { m_jsonMemItemsStr = (char*)malloc(2); }
+    JSONstrLength += 2;
+    memcpy(m_jsonMemItemsStr, "[\0", 2);
+    // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
+    for(int i = 0; i < 10; i++) {
+        int a = 0, b = 0;
+        if(m_bt_names.size() > i) a = strlen(m_bt_names[i]);
+        if(m_bt_addr.size() > i) b = strlen(m_bt_addr[i]);
+        JSONstrLength += 22 + a + b; // {"name":"a","addr":"b"},
+        if(m_f_PSRAMfound) { m_jsonMemItemsStr = (char*)ps_realloc(m_jsonMemItemsStr, JSONstrLength); }
+        else { m_jsonMemItemsStr = (char*)realloc(m_jsonMemItemsStr, JSONstrLength); }
+        strcat(m_jsonMemItemsStr, "{\"name\":\"");
+        if(a) strcat(m_jsonMemItemsStr, m_bt_names[i]);
+        else strcat(m_jsonMemItemsStr, "");
+        strcat(m_jsonMemItemsStr, "\",\"addr\":\"");
+        if(b) strcat(m_jsonMemItemsStr, m_bt_addr[i]);
+        else strcat(m_jsonMemItemsStr, "");
+        strcat(m_jsonMemItemsStr, "\"},");
+    }
+    m_jsonMemItemsStr[JSONstrLength - 2] = ']';  // replace comma by square bracket close
+    m_jsonMemItemsStr[JSONstrLength - 1] = '\0'; // and terminate
+    if(kcx_bt_items) kcx_bt_items(m_jsonMemItemsStr);
+    return;
+}
 
-
+const char* KCX_BT_Emitter::stringifyScannedItems(){ // returns the last three scanned BT devices as jsonStr
+    uint16_t JSONstrLength = 0;
+    if(m_jsonScanItemsStr){free(m_jsonScanItemsStr); m_jsonScanItemsStr = NULL;}
+    JSONstrLength += 2;
+    if(m_f_PSRAMfound) { m_jsonScanItemsStr = (char*)ps_malloc(2); }
+    else               { m_jsonScanItemsStr = (char*)malloc(2);}
+    memcpy(m_jsonScanItemsStr, "[\0", 2);
+    // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6b"},{name":"btthirdName","addr":"82435181cc6c"}]
+    for(int i = 0; i < 3; i++) {
+        int a = 0, idx1 = 0, idx2 = 0;
+        if(m_bt_scannedItems.size() > i){
+            a = strlen(m_bt_scannedItems[i]) - 13;     // MacAdd:82435181cc6a,Name:VHM-314
+            if(a < 12) {log_e("wrong scanned items %s", m_bt_scannedItems[i]); return "null";} // can't be, MacAddr must have 12 chars
+            idx1 = indexOf(m_bt_scannedItems[i], ":", 0);
+            idx2 = indexOf(m_bt_scannedItems[i], ",", idx1);
+        }
+        JSONstrLength += 22 + a; // {"name":"a","addr":"b"},
+        if(m_f_PSRAMfound) { m_jsonScanItemsStr = (char*)ps_realloc(m_jsonScanItemsStr, JSONstrLength); }
+        else { m_jsonScanItemsStr = (char*)realloc(m_jsonScanItemsStr, JSONstrLength); }
+        strcat(m_jsonScanItemsStr, "{\"addr\":\"");
+        if(a) strncat(m_jsonScanItemsStr, m_bt_scannedItems[i] + idx1 + 1, idx2 - idx1 - 1);
+        else strcat(m_jsonScanItemsStr, "");
+        strcat(m_jsonScanItemsStr, "\",\"name\":\"");
+        if(a) strcat(m_jsonScanItemsStr, m_bt_scannedItems[i] + idx2 + 1 + 5);
+        else strcat(m_jsonScanItemsStr, "");
+        strcat(m_jsonScanItemsStr, "\"},");
+    }
+    m_jsonScanItemsStr[JSONstrLength - 2] = ']';  // replace comma by square bracket close
+    m_jsonScanItemsStr[JSONstrLength - 1] = '\0'; // and terminate
+    return m_jsonScanItemsStr;
+}
 
 //-------------------------interrupt handling ---------------------------------
 void KCX_BT_Emitter::isr0(){
@@ -359,3 +403,37 @@ void KCX_BT_Emitter::handleInterrupt(){
 void KCX_BT_Emitter::handleTicker(){
     m_f_ticker1s = true;
 }
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+// void KCX_BT_writeItems2Vect(const char* jsonItems){
+//     if(!jsonItems) return;
+//     // e.g. jsonItems [{"addr":"82435181cc6a","name":"MyName1"},{"addr":"82435181cc6b","name":"MyName2"},...,{"addr":"addr9","name":"MyName9"}]
+//     vector_clear_and_shrink(_KCX_BT_names);
+//     vector_clear_and_shrink(_KCX_BT_addr);
+//     int idx1 = 0;
+//     int idx2 = 0;
+//     while(true){
+//         idx1 = indexOf(jsonItems, "\"name\":", idx1);
+//         if(idx1 < 0) break;
+//         idx1 += 8;
+//         idx2 = indexOf(jsonItems,"\"",  idx1);
+//         _KCX_BT_names.push_back(strndup(jsonItems + idx1, idx2 - idx1));
+//     }
+//     idx1 = 0;
+//     idx2 = 0;
+//     while(true){
+//         idx1 = indexOf(jsonItems, "\"addr\":", idx1);
+//         if(idx1 < 0) break;
+//         idx1 += 8;
+//         idx2 = indexOf(jsonItems,"\"",  idx1);
+//         _KCX_BT_addr.push_back(strndup(jsonItems + idx1, idx2 - idx1));
+//     }
+//     KCX_BT_delAllLinks();
+//     for(int i = 0; i < _KCX_BT_names.size(); i++){
+//         log_i("%s", _KCX_BT_names[i]);
+//     }
+//     for(int i = 0; i < _KCX_BT_addr.size(); i++){
+//         log_i("%s", _KCX_BT_addr[i]);
+//     }
+// }

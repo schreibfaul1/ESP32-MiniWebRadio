@@ -116,8 +116,8 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
-        .button {
-            width : 80px;
+        .button_80x30 {
+            width : 120px;
             height : 30px;
             background-color : #128F76;
             border : none;
@@ -130,13 +130,27 @@ const char index_html[] PROGMEM = R"=====(
             border-radius : 5px;
             margin : 4px 2px;
         }
+        .button_20x36 {
+            width : 20px;
+            height : 36px;
+            background-color : #128F76;
+            border : none;
+            color : #FFF;
+            text-align : center;
+            text-decoration : none;
+            display : inline-block;
+            font-size : 16px;
+            cursor : pointer;
+            border-radius : 5px;
+            margin-top: 3px;
+            margin-left: 0px;
+            margin-right: 10px;
+        }
         .buttonblue {
             background-color : blue;
-            width : 120px;
         }
         .buttongreen {
             background-color : #128F76;
-            width : 120px;
         }
         #label-logo-s {
             margin-left : 20px;
@@ -260,6 +274,21 @@ const char index_html[] PROGMEM = R"=====(
             border-width: thin;
             border-radius: 5px;
             margin-bottom: 4px;
+        }
+        .boxstyle_200x36 {
+            height : 36px;
+            width : 200px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 2px;
+            background-color: white;
+            font-size : 16px;
+            line-height : normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius : 5px;
+            margin-right: 0px;
         }
         .table_cell1 {
             padding-top : 0;
@@ -514,6 +543,8 @@ function connect() {
                                         if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
                                         break
             case "KCX_BT_MEM":          show_BT_items(val)
+                                        break;
+            case "KCX_BT_SCANNED":      console.log(msg, val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -1864,7 +1895,7 @@ function get_BT_items(){
         <center>
             <div id="jsGrid"></div>
             <br>
-            <button class="button buttongreen"
+            <button class="button_80x30 buttongreen"
                     onclick="saveGridFileToSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -1873,7 +1904,7 @@ function get_BT_items(){
                     title="Save to SD">Save
             </button>
             &nbsp;
-            <button class="button buttongreen"
+            <button class="button_80x30 buttongreen"
                     onclick="loadGridFileFromSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -1882,9 +1913,9 @@ function get_BT_items(){
                     id="loadSD" title="Load from SD">Load
             </button>
             &nbsp;
-            <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+            <button class="button_80x30 buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
             &nbsp;
-            <button class="button buttonblue"
+            <button class="button_80x30 buttonblue"
                     onclick="javascript:document.getElementById('file').click();"
                     title="Load from PC">load xlsx
             </button>
@@ -2267,7 +2298,7 @@ function get_BT_items(){
             </tr>
         </table>
         <br>
-        <button class="button buttongreen"
+        <button class="button_80x30 buttongreen"
                 onclick="socket.send('saveIRbuttons')"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2276,7 +2307,7 @@ function get_BT_items(){
                 title="Save IR buttons">Save
         </button>
         &nbsp;
-        <button class="button buttongreen"
+        <button class="button_80x30 buttongreen"
                 onclick="loadIRbuttons()"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2309,72 +2340,72 @@ function get_BT_items(){
                     <tbody>
                     <tr>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" onchange="" onclick="" onkeyup=""></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     </tr>
                     </tbody>
                 </table>
@@ -2384,7 +2415,7 @@ function get_BT_items(){
         <br>
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
-                <button class="button buttonblue"
+                <button class="button_80x30 buttonblue"
                    onclick="socket.send('KCX_BT_getMode')"
                    onmousedown="this.style.backgroundColor='#D62C1A'"
                    ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2394,7 +2425,7 @@ function get_BT_items(){
                 </button>
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
-                <button class="button buttongreen"
+                <button class="button_80x30 buttongreen"
                     onclick="save_BT_items()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2403,7 +2434,7 @@ function get_BT_items(){
                     id="loadSD" title="Save MAC addresses and BT Names to KCX_BT_Emitter">Save
                 </button>
                 &nbsp;
-                <button class="button buttongreen"
+                <button class="button_80x30 buttongreen"
                     onclick="get_BT_items()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2416,11 +2447,73 @@ function get_BT_items(){
         <br>
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
-                Last scanned BT_MAC_Addresses and BT_Names
-                <input type="text" class="boxstyle_l" id="bt_item_1" onchange="" onclick="" onkeyup="">
-                <input type="text" class="boxstyle_l" id="bt_item_1" onchange="" onclick="" onkeyup="">
-                <input type="text" class="boxstyle_l" id="bt_item_1" onchange="" onclick="" onkeyup="">
-                <input type="text" class="boxstyle_l" id="bt_item_1" onchange="" onclick="" onkeyup="">
+                <table>
+                    <thead>
+                    <tr>
+                    <th style="">BT Name</th>
+                    <th style=""></th>
+                    <th style="">BT MAC address</th>
+                    <th style=""></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName1" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName2" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName3" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName4" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName5" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName6" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    </tbody>
+                </table>
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
                 <img src="SD/png/Button_Volume_Down_Blue.png" alt="BT_Vol_down"
