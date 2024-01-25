@@ -104,22 +104,28 @@ void KCX_BT_Emitter::detectOKcmd(){
 
 void KCX_BT_Emitter::parseATcmds(){
 //  log_i("%s", m_chbuf);
-    if(startsWith(m_chbuf, "OK+VERS:"))         { bt_Version(); return;}
-    if(startsWith(m_chbuf, "POWER ON"))         { cmd_PowerOn(); return;}
-    if(startsWith(m_chbuf, "OK+BT"))            { cmd_Mode(); return;}
-    if(startsWith(m_chbuf, "Auto_link_Add:"))   { cmd_AutoLink(); return;}
-    if(startsWith(m_chbuf, "OK+VOL"))           { cmd_Volume(); return;}
-    if(startsWith(m_chbuf, "Delete_Vmlink"))    { cmd_Delete(); return;}
-    if(startsWith(m_chbuf, "BT_ADD_NUM"))       { cmd_AddNum(); return;}
-    if(startsWith(m_chbuf, "BT_NAME_NUM"))      { cmd_NameNum(); return;}
-    if(startsWith(m_chbuf, "MEM_Name"))         { cmd_MemName(); return;}
-    if(startsWith(m_chbuf, "MEM_MacAdd"))       { cmd_MemAddr(); return;}
-    if(startsWith(m_chbuf, "MacAdd"))           { cmd_scannedItems(); return;}
+    if(startsWith(m_chbuf, "OK+VERS:"))         { bt_Version();        goto exit;}
+    if(startsWith(m_chbuf, "POWER ON"))         { cmd_PowerOn();       goto exit;}
+    if(startsWith(m_chbuf, "OK+BT"))            { cmd_Mode();          goto exit;}
+    if(startsWith(m_chbuf, "Auto_link_Add:"))   { cmd_AutoLink();      goto exit;}
+    if(startsWith(m_chbuf, "OK+VOL"))           { cmd_Volume();        goto exit;}
+    if(startsWith(m_chbuf, "Delete_Vmlink"))    { cmd_Delete();        goto exit;}
+    if(startsWith(m_chbuf, "BT_ADD_NUM"))       { cmd_AddNum();        goto exit;}
+    if(startsWith(m_chbuf, "BT_NAME_NUM"))      { cmd_NameNum();       goto exit;}
+    if(startsWith(m_chbuf, "MEM_Name"))         { cmd_MemName();       goto exit;}
+    if(startsWith(m_chbuf, "MEM_MacAdd"))       { cmd_MemAddr();       goto exit;}
+    if(startsWith(m_chbuf, "MacAdd"))           { cmd_scannedItems();  goto exit;}
+    if(startsWith(m_chbuf, "OK+NAME"))          { cmd_connectedName(); goto exit;}
+    if(startsWith(m_chbuf, "OK+MAC"))           { cmd_connectedAddr(); goto exit;}
+    if(startsWith(m_chbuf, "OK+PAUSE"))         { cmd_statePause();    goto exit;}
+    if(startsWith(m_chbuf, "OK+PLAY"))          { cmd_statePlay();     goto exit;}
+
 
     if(startsWith(m_chbuf, "Name More than 10")){ warning("more than 10 names are not allowed"); return;}
     if(startsWith(m_chbuf, "Addr More than 10")){ warning("more than 10 MAC Ardesses are not allowed"); return;}
     if(startsWith(m_chbuf, "CMD ERR!"))         { cmd_Wrong(); return;}
 
+exit:
     if(m_lastMsg && strcmp(m_chbuf, m_lastMsg) == 0) return;
     else{
         if(m_lastMsg){free(m_lastMsg); m_lastMsg = NULL;} // don't repeat messages twice
@@ -149,23 +155,23 @@ void KCX_BT_Emitter::handle1sEvent(){
         m_f_bt_inUse = false;
     }
 
-    if(m_f_status != digitalRead(BT_EMITTER_LINK)){
-        m_f_status = digitalRead(BT_EMITTER_LINK);
+    if(m_timeCounter == 1) { writeCommand("AT+GMR?");     return;}  // get version
+    if(m_timeCounter == 3) { writeCommand("AT+VMLINK?");  return;}  // get all mem vmlinks
+    if(m_timeCounter == 5) { writeCommand("AT+VOL?");     return;}  // get volume (in receiver mode 0 ... 31)
+    if(m_timeCounter == 7) { writeCommand("AT+BT_MODE?"); return;}  // transmitter or receiver
+//  if(m_timeCounter == 9) { writeCommand("AT+PAUSE?");   return;}
+
+    if(m_f_linkChanged){
+        m_f_linkChanged = false;
+        if(digitalRead(BT_EMITTER_LINK) == HIGH) m_f_status = BT_CONNECTED;
+        else m_f_status = BT_NOT_CONNECTED;
         if(kcx_bt_status) kcx_bt_status(m_f_status);
+        if(m_f_status == BT_CONNECTED && m_f_bt_mode == BT_MODE_RECEIVER) {writeCommand("AT+NAME?"); return;}
     }
-    if(m_timeCounter == 1) { writeCommand("AT+GMR?");}     // get version
-    if(m_timeCounter == 3) { writeCommand("AT+VMLINK?");}  // get all mem vmlinks
-//    if(m_timeCounter == 3) { writeCommand("AT+PAUSE?");}
-    if(m_timeCounter == 5) { writeCommand("AT+VOL?");}     // get volume (in receiver mode 0 ... 31)
-    if(m_timeCounter == 7) { writeCommand("AT+BT_MODE?");} // transmitter or receiver
-    if(m_timeCounter == 9) { writeCommand("AT+PAUSE?");}
-
-//    if(m_timeCounter == 9) { addLinkAddr("1234");}
-//    if(m_timeCounter == 11) { addLinkName("myName");}
-
-//    if(m_timeCounter == 13) { writeCommand("AT+VMLINK?");}  // get all mem vmlinks
-//    if(m_timeCounter == 13) { writeCommand("AT+DELVMLINK");}
-//    if(m_timeCounter == 13) { addLinkName("myName");}
+    if(m_f_getMacAddr){ // in RECEIVER mode after AT+NAME?
+        m_f_getMacAddr = false;
+        writeCommand("AT+MAC?");
+    }
 }
 
 void KCX_BT_Emitter::writeCommand(const char* cmd){
@@ -313,6 +319,26 @@ void KCX_BT_Emitter::cmd_scannedItems(){
         if(kcx_bt_scanItems) kcx_bt_scanItems(s);
     }
 }
+void KCX_BT_Emitter::cmd_connectedName(){
+    sprintf(m_msgbuf, "connected with name: " ANSI_ESC_YELLOW "%s", m_chbuf + 8);
+    if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+    m_f_getMacAddr = true;
+}
+
+void KCX_BT_Emitter::cmd_connectedAddr(){
+    sprintf(m_msgbuf, "connected with MAC addr: " ANSI_ESC_YELLOW "%s", m_chbuf + 7);
+    if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+}
+
+void KCX_BT_Emitter::cmd_statePause(){
+    m_f_bt_state = BT_PAUSE;
+    if(kcx_bt_info) kcx_bt_info(ANSI_ESC_YELLOW "PLAY -> PAUSE");
+}
+
+void KCX_BT_Emitter::cmd_statePlay(){
+    m_f_bt_state = BT_PLAY;
+    if(kcx_bt_info) kcx_bt_info(ANSI_ESC_YELLOW "PAUSE -> PLAY");
+}
 
 // -------------------------- user commands -----------------------------------
 void KCX_BT_Emitter::deleteVMlinks(){
@@ -442,35 +468,3 @@ void KCX_BT_Emitter::handleTicker(){
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-
-// void KCX_BT_writeItems2Vect(const char* jsonItems){
-//     if(!jsonItems) return;
-//     // e.g. jsonItems [{"addr":"82435181cc6a","name":"MyName1"},{"addr":"82435181cc6b","name":"MyName2"},...,{"addr":"addr9","name":"MyName9"}]
-//     vector_clear_and_shrink(_KCX_BT_names);
-//     vector_clear_and_shrink(_KCX_BT_addr);
-//     int idx1 = 0;
-//     int idx2 = 0;
-//     while(true){
-//         idx1 = indexOf(jsonItems, "\"name\":", idx1);
-//         if(idx1 < 0) break;
-//         idx1 += 8;
-//         idx2 = indexOf(jsonItems,"\"",  idx1);
-//         _KCX_BT_names.push_back(strndup(jsonItems + idx1, idx2 - idx1));
-//     }
-//     idx1 = 0;
-//     idx2 = 0;
-//     while(true){
-//         idx1 = indexOf(jsonItems, "\"addr\":", idx1);
-//         if(idx1 < 0) break;
-//         idx1 += 8;
-//         idx2 = indexOf(jsonItems,"\"",  idx1);
-//         _KCX_BT_addr.push_back(strndup(jsonItems + idx1, idx2 - idx1));
-//     }
-//     KCX_BT_delAllLinks();
-//     for(int i = 0; i < _KCX_BT_names.size(); i++){
-//         log_i("%s", _KCX_BT_names[i]);
-//     }
-//     for(int i = 0; i < _KCX_BT_addr.size(); i++){
-//         log_i("%s", _KCX_BT_addr[i]);
-//     }
-// }

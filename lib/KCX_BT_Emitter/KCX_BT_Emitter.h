@@ -42,20 +42,24 @@ class KCX_BT_Emitter{
     volatile bool m_f_ticker1s;
 
 public:
-  KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
-  ~KCX_BT_Emitter();
-  void        begin();
-  void        loop();
-  void        deleteVMlinks();               // all saved VM links will be deleted, return: "Delete_Vmlink"
-  void        getVMlinks();                  // get all saved VM links
-  void        addLinkName(const char* name); // up to 10 names can be saved
-  void        addLinkAddr(const char* addr); // up to 10 MAC addresses can be saved
-  bool        isConnected() { return m_f_status; }
-  uint8_t     getVolume() { return m_bt_volume; }
-  void        setVolume(uint8_t vol);
-  const char* getMode();
-  void        changeMode();
-  const char* stringifyScannedItems();
+    KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
+    ~KCX_BT_Emitter();
+    void        begin();
+    void        loop();
+    void        deleteVMlinks();               // all saved VM links will be deleted, return: "Delete_Vmlink"
+    void        getVMlinks();                  // get all saved VM links
+    void        addLinkName(const char* name); // up to 10 names can be saved
+    void        addLinkAddr(const char* addr); // up to 10 MAC addresses can be saved
+    bool        isConnected() { return m_f_status; }
+    uint8_t     getVolume() { return m_bt_volume; }
+    void        setVolume(uint8_t vol);
+    const char* getMode();
+    void        changeMode();
+    const char* stringifyScannedItems();
+
+    enum  btmode { BT_MODE_RECEIVER = 0, BT_MODE_EMITTER = 1 };
+    enum  btconn { BT_NOT_CONNECTED = 0, BT_CONNECTED = 1};
+    enum  btstate{ BT_PAUSE = 0,         BT_PLAY = 1};
 
 private:
     Ticker   tck1s;
@@ -67,12 +71,14 @@ private:
     int8_t   BT_EMITTER_RX   = -1;
     int8_t   BT_EMITTER_TX   = -1;
     bool     m_f_PSRAMfound = false;
-    bool     m_f_status = false;   // connected or not
+    bool     m_f_status = BT_NOT_CONNECTED;  // connected or not
     bool     m_f_btEmitter_found = false;
     bool     m_f_waitForBtEmitter = false;
-    bool     m_f_bt_mode = false;  // 0: BT_EMITTER, 1: BT_RECEIVER
-    bool     m_f_bt_inUse = false; // waiting for response
-    bool     m_f_powerOn = false;  // waiting for POWER ON after reset
+    bool     m_f_bt_mode = BT_MODE_EMITTER;  // 0: BT_MODE_EMITTER, 1: BT_MODE_RECEIVER
+    bool     m_f_bt_state = BT_PLAY;         // 0: BT_PAUSE, 1: BT_PLAY
+    bool     m_f_bt_inUse = false;           // waiting for response
+    bool     m_f_powerOn = false;            // waiting for POWER ON after reset
+    bool     m_f_getMacAddr = false;
     char*    m_chbuf;
     char*    m_msgbuf;
     uint32_t m_timeStamp = 0;
@@ -109,7 +115,11 @@ private:
     void     cmd_NameNum();
     void     cmd_MemName();
     void     cmd_MemAddr();
+    void     cmd_connectedName();
+    void     cmd_connectedAddr();
     void     cmd_scannedItems();
+    void     cmd_statePause();
+    void     cmd_statePlay();
     void     stringifyMemItems();
 
     bool startsWith(const char* base, const char* searchString) {
