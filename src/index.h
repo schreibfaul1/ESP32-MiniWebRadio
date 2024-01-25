@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.12.2023
+ *  Updated on: 25.01.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -152,6 +152,9 @@ const char index_html[] PROGMEM = R"=====(
         .buttongreen {
             background-color : #128F76;
         }
+        .buttonred {
+            background-color : red;
+        }
         #label-logo-s {
             margin-left : 20px;
             border-color: black;
@@ -184,6 +187,19 @@ const char index_html[] PROGMEM = R"=====(
             width : 128px;
             height : 128px;
             margin-top: 5px;
+        }
+        #label-bt-mode {
+            margin-left : 4px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            width : 128px;
+            height : 38px;
+            margin-top: 6px;
+            font-size : 18px;
+            font-weight: bold;
+            text-align: center;
         }
         #div-logo-s{
           display: none;
@@ -542,9 +558,12 @@ function connect() {
                                         if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
                                         if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
                                         break
-            case "KCX_BT_MEM":          show_BT_items(val)
+            case "KCX_BT_MEM":          show_BT_memItems(val)
                                         break;
-            case "KCX_BT_SCANNED":      console.log(msg, val)
+            case "KCX_BT_SCANNED":      show_BT_scannedItems(val)
+                                        break;
+            case "KCX_BT_MODE":         if(val ==="TX") document.getElementById('label-bt-mode').innerHTML= "EMITTER"
+                                        if(val ==="RX") document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -744,7 +763,10 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send('KCX_BT_connected')
+    socket.send('KCX_BT_connected')  // is connected?
+    socket.send('KCX_BT_scanned')    // get scanned items
+    socket.send('KCX_BT_mem')        // get saved items
+    socket.send('KCX_BT_getMode')    // get mode (TX or RX)
 }
 
 
@@ -1661,33 +1683,68 @@ function chIRcmd(btn){  // IR command, value changed
 
 // -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
 
-function show_BT_items(jsonstr){
+function show_BT_memItems(jsonstr){
     console.log('KCX MEM', jsonstr)
     var jsonData = JSON.parse(jsonstr)
     for (var i = 0; i < jsonData.length; i++) {
-        document.getElementsByName('bt_name')[i].value = jsonData[i].addr
-        document.getElementsByName('bt_addr')[i].value = jsonData[i].name
+        document.getElementsByName('bt_addr')[i].value = jsonData[i].addr
+        document.getElementsByName('bt_name')[i].value = jsonData[i].name
     }
 }
 
-function save_BT_items(){
-    var jArr = new Array();
-    for (var i = 0; i < 10; i++) {
-        jArr[i] = {}
-        jArr[i]['addr'] = document.getElementsByName('bt_name')[i].value
-        jArr[i]['name'] = document.getElementsByName('bt_addr')[i].value
+function addScannedName(i){
+    var scannedName
+    if(i == 0) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    if(i == 1) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    if(i == 2) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    console.log("scannedName", scannedName)
+    if(scannedName === ""){
+        alert("choosen BT name is empty")
+        return
     }
-    var jsonStr = JSON.stringify(jArr)
-    socket.send("KCX_BT_MEM=" + jsonStr)
-    console.log("KCX_BT_MEM=", jsonStr)
+    for (var a = 0; a < 10; a++) {
+        if(scannedName === document.getElementsByName('bt_name')[a].value){
+            alert("BT name \"" + scannedName + "\" already exists in the list")
+            return
+        }
+    }
+    socket.send('KCX_BT_addName=' + scannedName)
 }
 
-function get_BT_items(){
+function addScannedAddr(i){
+    var scannedAddr
+    if(i == 0) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    if(i == 1) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    if(i == 2) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    console.log("scannedAddr", scannedAddr)
+    if(scannedAddr === ""){
+        alert("choosen MAC address is empty")
+        return
+    }
+    for (var a = 0; a < 10; a++) {
+        if(scannedAddr === document.getElementsByName('bt_addr')[a].value){
+            alert("MAC address \"" + scannedAddr + "\" already exists in the list")
+            return
+        }
+    }
+    socket.send('KCX_BT_addAddr=' + scannedAddr)
+}
+
+function show_BT_scannedItems(jsonstr){
+    console.log('KCX_BT_SCANNED', jsonstr)
+    var jsonData = JSON.parse(jsonstr)
+    for (var i = 0; i < jsonData.length; i++) {
+        document.getElementsByName('bt_scan_name')[i].value = jsonData[i].name
+        document.getElementsByName('bt_scan_addr')[i].value = jsonData[i].addr
+    }
+}
+
+function clear_BT_memItems(){
     for (var i = 0; i < 10; i++) {
-        document.getElementsByName('bt_name')[i].value = ""
         document.getElementsByName('bt_addr')[i].value = ""
+        document.getElementsByName('bt_name')[i].value = ""
     }
-    socket.send('KCX_BT_getItems')
+    socket.send('KCX_BT_clearItems')
 }
 
 </script>
@@ -2324,6 +2381,7 @@ function get_BT_items(){
         <div style="display:flex">
             <div id="div-BT-logo" style="flex: 0 0 150px;">
                 <label for="label-logo" id="label-bt-logo" onclick="socket.send('KCX_BT_connected')"> </label>
+                <label for="label-logo" id="label-bt-mode"> unknown </label>
             </div>
             <div style="flex: 1 0; position: relative;  padding-top: 20px;">
             <div style="height: 223px; overflow-x: hidden; overflow-y: auto; width: 640px;" >
@@ -2331,81 +2389,81 @@ function get_BT_items(){
                     <thead>
                     <tr>
                     <th style="height: 0;"></th>
-                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> BT MAC address </div></th>
+                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> saved BT MAC address </div></th>
                     <th style="height: 0;"></th>
-                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> BT Name </div></th>
+                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> saved BT Name </div></th>
                     </tr>
                     </thead>
 
                     <tbody>
                     <tr>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 0 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 1 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 2 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 3 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 4 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 5 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 6 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
                     <td class="table_cell1"> 7 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 8 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
-                    <td class="table_cell1"> 8 </td>
                     <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 8 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
 
                     <tr>
                     <td class="table_cell1"> 9 </td>
-                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
-                    <td class="table_cell1"> 9 </td>
                     <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 9 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
                     </tr>
                     </tbody>
                 </table>
@@ -2416,31 +2474,23 @@ function get_BT_items(){
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
                 <button class="button_80x30 buttonblue"
-                   onclick="socket.send('KCX_BT_getMode')"
+                   onclick="socket.send('KCX_BT_changeMode')"
                    onmousedown="this.style.backgroundColor='#D62C1A'"
                    ontouchstart="this.style.backgroundColor='#D62C1A'"
                    onmouseup="this.style.backgroundColor='blue'"
                    ontouchend="this.style.backgroundColor='blue'"
-                   id="BT Mode" title="receive <---> tramsmit">BT Mode
+                   id="BT Mode" title="receive <---> transmit">BT Mode
                 </button>
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
-                <button class="button_80x30 buttongreen"
-                    onclick="save_BT_items()"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    id="loadSD" title="Save MAC addresses and BT Names to KCX_BT_Emitter">Save
-                </button>
                 &nbsp;
-                <button class="button_80x30 buttongreen"
-                    onclick="get_BT_items()"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    id="loadSD" title="Load MAC addresses and BT Names from KCX_BT_Emitter">Load
+                <button class="button_80x30 buttonred"
+                    onclick="clear_BT_memItems()"
+                    onmousedown="this.style.backgroundColor='black'"
+                    ontouchstart="this.style.backgroundColor='black'"
+                    onmouseup="this.style.backgroundColor='red'"
+                    ontouchend="this.style.backgroundColor='red'"
+                    id="loadSD" title="cleat all saved items">Clear
                 </button>
             </div>
         </div>
@@ -2450,25 +2500,25 @@ function get_BT_items(){
                 <table>
                     <thead>
                     <tr>
-                    <th style="">BT Name</th>
+                    <th style=""> scanned BT MAC address</th>
                     <th style=""></th>
-                    <th style="">BT MAC address</th>
+                    <th style=""> scanned BT Name </th>
                     <th style=""></th>
                     </tr>
                     </thead>
 
                     <tbody>
                     <tr>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(0)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"
                                                                                        ontouchend="this.style.backgroundColor='#128F76'"
                                                                                        id="addName1" title="add BT Name to the table">+
                                                                                        </button></td>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(0)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"
@@ -2477,16 +2527,16 @@ function get_BT_items(){
                                                                                        </button></td>
                     </tr>
                     <tr>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(1)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"
                                                                                        ontouchend="this.style.backgroundColor='#128F76'"
                                                                                        id="addName3" title="add BT Name to the table">+
                                                                                        </button></td>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(1)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"
@@ -2495,16 +2545,16 @@ function get_BT_items(){
                                                                                        </button></td>
                     </tr>
                     <tr>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(2)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"
                                                                                        ontouchend="this.style.backgroundColor='#128F76'"
                                                                                        id="addName5" title="add BT Name to the table">+
                                                                                        </button></td>
-                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
-                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick=""
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(2)"
                                                                                        onmousedown="this.style.backgroundColor='#D62C1A'"
                                                                                        ontouchstart="this.style.backgroundColor='#D62C1A'"
                                                                                        onmouseup="this.style.backgroundColor='#128F76'"

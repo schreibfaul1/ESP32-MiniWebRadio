@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 23.01.2024
+ *  updated on: 25.01.2024
  *      Author: Wolle
  */
 
@@ -14,7 +14,9 @@
 
 extern __attribute__((weak)) void kcx_bt_info(const char*);
 extern __attribute__((weak)) void kcx_bt_status(bool);
-extern __attribute__((weak)) void kcx_bt_items(const char*);
+extern __attribute__((weak)) void kcx_bt_memItems(const char*);
+extern __attribute__((weak)) void kcx_bt_scanItems(const char*);
+extern __attribute__((weak)) void kcx_bt_modeChanged(const char*);
 
 #define ANSI_ESC_BLACK      "\033[30m"
 #define ANSI_ESC_RED        "\033[31m"
@@ -45,11 +47,14 @@ public:
   void        begin();
   void        loop();
   void        deleteVMlinks();               // all saved VM links will be deleted, return: "Delete_Vmlink"
+  void        getVMlinks();                  // get all saved VM links
   void        addLinkName(const char* name); // up to 10 names can be saved
   void        addLinkAddr(const char* addr); // up to 10 MAC addresses can be saved
   bool        isConnected() { return m_f_status; }
   uint8_t     getVolume() { return m_bt_volume; }
   void        setVolume(uint8_t vol);
+  const char* getMode();
+  void        changeMode();
   const char* stringifyScannedItems();
 
 private:
@@ -67,6 +72,7 @@ private:
     bool     m_f_waitForBtEmitter = false;
     bool     m_f_bt_mode = false;  // 0: BT_EMITTER, 1: BT_RECEIVER
     bool     m_f_bt_inUse = false; // waiting for response
+    bool     m_f_powerOn = false;  // waiting for POWER ON after reset
     char*    m_chbuf;
     char*    m_msgbuf;
     uint32_t m_timeStamp = 0;

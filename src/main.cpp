@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00g Jan 07/2024                                                                                         ";
+    Version 3.00h Jan 25/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -4219,14 +4219,19 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "KCX_BT_connected"){ if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
 
-    if(cmd == "KCX_BT_getItems"){  bt_emitter.deleteVMlinks(); return;} // test
+    if(cmd == "KCX_BT_clearItems"){bt_emitter.deleteVMlinks(); return;}
 
-    //if(cmd == "KCX_BT_putItems"){  Serial2.write("AT+ADDLINKNAME=MyName\r\n"); return;}
+    if(cmd == "KCX_BT_addName"){   bt_emitter.addLinkName(param.c_str()); return;}
 
-    //if(cmd == "KCX_BT_MEM"){       KCX_BT_writeItems2Vect(param.c_str()); return;}
-    if(cmd == "KCX_BT_MEM"){       bt_emitter.stringifyScannedItems(); return;   }
+    if(cmd == "KCX_BT_addAddr"){   bt_emitter.addLinkAddr(param.c_str()); return;}
 
-    if(cmd == "KCX_BT_getMode"){   bt_emitter.addLinkName("testName"); return;}
+    if(cmd == "KCX_BT_mem"){       bt_emitter.getVMlinks(); return;}
+
+    if(cmd == "KCX_BT_scanned"){   webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
+
+    if(cmd == "KCX_BT_getMode"){   webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
+
+    if(cmd == "KCX_BT_changeMode"){bt_emitter.changeMode(); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
@@ -4323,11 +4328,6 @@ void bt_rssi(int8_t rssi_delta) {
 
 void kcx_bt_info(const char* info){
     SerialPrintfln("BT-Emitter:  %s", info);
-    if(startsWith(info, "scanned:")){
-        const char* s = bt_emitter.stringifyScannedItems();
-        log_i("%s", s);
-        webSrv.send("KCX_BT_SCANNED=", s);
-    }
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
@@ -4335,7 +4335,17 @@ void kcx_bt_status(bool status) { // is always called when the status changes fr
     else       { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected");  webSrv.send("KCX_BT_connected=", "0"); }
 }
 
-void kcx_bt_items(const char* jsonItems){ // Every time an item (name or address) was added, a JSON string is passed here
-    SerialPrintfln("bt_items %s", jsonItems);
+void kcx_bt_memItems(const char* jsonItems){ // Every time an item (name or address) was added, a JSON string is passed here
+    // SerialPrintfln("bt_memItems %s", jsonItems);
     webSrv.send("KCX_BT_MEM=", jsonItems);
+}
+
+void kcx_bt_scanItems(const char* jsonItems){ // Every time an item (name and address) was scanned, a JSON string is passed here
+    // SerialPrintfln("bt_scanItems %s", jsonItems);
+    webSrv.send("KCX_BT_SCANNED=", jsonItems);
+}
+
+void kcx_bt_modeChanged(const char* m){ // Every time the mode has changed
+    if(strcmp("RX", m) == 0) {webSrv.send("KCX_BT_MODE=RX");}
+    if(strcmp("TX", m) == 0) {webSrv.send("KCX_BT_MODE=TX");}
 }

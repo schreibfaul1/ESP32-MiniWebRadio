@@ -2,7 +2,7 @@
  * KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 23.01.2024
+ *  updated on: 25.01.2024
  *      Author: Wolle
  */
 
@@ -53,6 +53,7 @@ void KCX_BT_Emitter::begin(){
     m_f_btEmitter_found = false;
     m_bt_add_num = 0;
     m_bt_name_num = 0;
+    m_f_powerOn = true;
 }
 
 void KCX_BT_Emitter::loop(){
@@ -153,17 +154,18 @@ void KCX_BT_Emitter::handle1sEvent(){
         if(kcx_bt_status) kcx_bt_status(m_f_status);
     }
     if(m_timeCounter == 1) { writeCommand("AT+GMR?");}     // get version
-//    if(m_timeCounter == 3) { writeCommand("AT+VMLINK?");}  // get all mem vmlinks
-    if(m_timeCounter == 3) { writeCommand("AT+PAUSE?");}
+    if(m_timeCounter == 3) { writeCommand("AT+VMLINK?");}  // get all mem vmlinks
+//    if(m_timeCounter == 3) { writeCommand("AT+PAUSE?");}
     if(m_timeCounter == 5) { writeCommand("AT+VOL?");}     // get volume (in receiver mode 0 ... 31)
     if(m_timeCounter == 7) { writeCommand("AT+BT_MODE?");} // transmitter or receiver
+    if(m_timeCounter == 9) { writeCommand("AT+PAUSE?");}
 
-    if(m_timeCounter == 9) { addLinkAddr("1234");}
-    if(m_timeCounter == 11) { addLinkName("myName");}
+//    if(m_timeCounter == 9) { addLinkAddr("1234");}
+//    if(m_timeCounter == 11) { addLinkName("myName");}
 
 //    if(m_timeCounter == 13) { writeCommand("AT+VMLINK?");}  // get all mem vmlinks
 //    if(m_timeCounter == 13) { writeCommand("AT+DELVMLINK");}
-    if(m_timeCounter == 13) { addLinkName("myName");}
+//    if(m_timeCounter == 13) { addLinkName("myName");}
 }
 
 void KCX_BT_Emitter::writeCommand(const char* cmd){
@@ -217,14 +219,30 @@ void KCX_BT_Emitter::cmd_Wrong(){
 
 void KCX_BT_Emitter::cmd_PowerOn(){
     if(kcx_bt_info) kcx_bt_info("POWER ON");
+    m_f_powerOn = true;
+    writeCommand("AT+BT_MODE?");
 }
 
-void KCX_BT_Emitter::cmd_Mode(){
-    if(     strcmp(m_chbuf + 6, "EMITTER")  == 0) m_f_bt_mode = false;
-    else if(strcmp(m_chbuf + 6, "RECEIVER") == 0) m_f_bt_mode = true;
-    else {log_e("unknown BT answer  %s", m_chbuf); return;}
+void KCX_BT_Emitter::cmd_Mode() {
     sprintf(m_msgbuf, "Mode -> " ANSI_ESC_YELLOW "%s", m_chbuf + 6);
     if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+
+    if(strcmp(m_chbuf + 6, "EMITTER") == 0) {
+        if(!m_f_bt_mode) { // mode has changed
+            if(kcx_bt_modeChanged) kcx_bt_modeChanged("TX");
+        }
+        m_f_bt_mode = true;
+    }
+    else if(strcmp(m_chbuf + 6, "RECEIVER") == 0) {
+        if(m_f_bt_mode) { // mode has changed
+            if(kcx_bt_modeChanged) kcx_bt_modeChanged("RX");
+        }
+        m_f_bt_mode = false;
+    }
+    else {
+        log_e("unknown BT answer  %s", m_chbuf);
+        return;
+    }
     m_f_bt_inUse = false; // task completed
 }
 
@@ -261,7 +279,7 @@ void KCX_BT_Emitter::cmd_NameNum(){
 }
 
 void KCX_BT_Emitter::cmd_MemAddr(){
-    m_bt_names.push_back(strdup(m_chbuf + 12));
+    m_bt_addr.push_back(strdup(m_chbuf + 14));
     if(kcx_bt_info) kcx_bt_info(m_chbuf);
     m_bt_add_cnt++;
     if(m_bt_add_num + m_bt_name_num == m_bt_add_cnt + m_bt_name_cnt){
@@ -291,12 +309,17 @@ void KCX_BT_Emitter::cmd_scannedItems(){
         m_bt_scannedItems.insert(m_bt_scannedItems.begin(), strdup(m_chbuf));
         sprintf(m_msgbuf, "scanned: " ANSI_ESC_YELLOW "%s", m_bt_scannedItems[0]);
         if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+        const char* s = stringifyScannedItems();
+        if(kcx_bt_scanItems) kcx_bt_scanItems(s);
     }
 }
 
 // -------------------------- user commands -----------------------------------
 void KCX_BT_Emitter::deleteVMlinks(){
     writeCommand("AT+DELVMLINK");
+}
+void KCX_BT_Emitter::getVMlinks(){
+    writeCommand("AT+VMLINK?");
 }
 void KCX_BT_Emitter::addLinkName(const char* name){
     sprintf(m_chbuf, "AT+ADDLINKNAME=%s", name);
@@ -312,6 +335,20 @@ void KCX_BT_Emitter::setVolume(uint8_t vol){
     writeCommand(m_chbuf);
 }
 
+const char* KCX_BT_Emitter::getMode(){ // returns RX or TX
+    if(m_f_bt_mode) return("RX");
+    return("TX");
+}
+
+void KCX_BT_Emitter::changeMode(){
+    if(!m_f_powerOn){
+        warning("mode can't be changed, waiting for \"POWER ON\"");
+        return;
+    }
+    digitalWrite(BT_EMITTER_MODE, !m_f_bt_mode);
+    writeCommand("AT+RESET");
+    m_f_powerOn = false;
+}
 
 // -------------------------- JSON relevant ----------------------------------
 void KCX_BT_Emitter::stringifyMemItems() {
@@ -348,7 +385,7 @@ void KCX_BT_Emitter::stringifyMemItems() {
     }
     m_jsonMemItemsStr[JSONstrLength - 2] = ']';  // replace comma by square bracket close
     m_jsonMemItemsStr[JSONstrLength - 1] = '\0'; // and terminate
-    if(kcx_bt_items) kcx_bt_items(m_jsonMemItemsStr);
+    if(kcx_bt_memItems) kcx_bt_memItems(m_jsonMemItemsStr);
     return;
 }
 
