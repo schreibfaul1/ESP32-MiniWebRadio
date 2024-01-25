@@ -4216,22 +4216,17 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    webSrv.reply(buf, webSrv.TEXT); return;}
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
-
     if(cmd == "KCX_BT_connected"){ if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
-
     if(cmd == "KCX_BT_clearItems"){bt_emitter.deleteVMlinks(); return;}
-
     if(cmd == "KCX_BT_addName"){   bt_emitter.addLinkName(param.c_str()); return;}
-
     if(cmd == "KCX_BT_addAddr"){   bt_emitter.addLinkAddr(param.c_str()); return;}
-
     if(cmd == "KCX_BT_mem"){       bt_emitter.getVMlinks(); return;}
-
     if(cmd == "KCX_BT_scanned"){   webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
-
     if(cmd == "KCX_BT_getMode"){   webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
-
     if(cmd == "KCX_BT_changeMode"){bt_emitter.changeMode(); return;}
+    if(cmd == "KCX_BT_pause"){     bt_emitter.pauseResume(); return;}
+    if(cmd == "KCX_BT_downvolume"){bt_emitter.downvolume(); return;}
+    if(cmd == "KCX_BT_upvolume"){  bt_emitter.upvolume(); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
@@ -4346,6 +4341,12 @@ void kcx_bt_scanItems(const char* jsonItems){ // Every time an item (name and ad
 }
 
 void kcx_bt_modeChanged(const char* m){ // Every time the mode has changed
-    if(strcmp("RX", m) == 0) {webSrv.send("KCX_BT_MODE=RX");}
-    if(strcmp("TX", m) == 0) {webSrv.send("KCX_BT_MODE=TX");}
+    if(strcmp("RX", m) == 0) {
+        webSrv.send("KCX_BT_MODE=RX");
+        if(_f_mute == false) mute();
+    }
+    if(strcmp("TX", m) == 0) {
+        webSrv.send("KCX_BT_MODE=TX");
+        if(_f_mute == true) mute();
+    }
 }

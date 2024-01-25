@@ -25,11 +25,15 @@ MiniWebRadio Features:
 </ul><br>
 Required HW:
 <ul>
-<li>ESP32 or ESP32-S3 board with PSRAM</li><li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
+<li>ESP32 or ESP32-S3 board __with PSRAM__</li>
+<li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
-<li>IR receiver + IR remote controller (optional)
 </ul><br>
+Optional HW:
+<ul>
+<li>IR receiver + IR remote controller according to the NFC protocol<li>
+<li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices in the sending or receiving direction<li>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 

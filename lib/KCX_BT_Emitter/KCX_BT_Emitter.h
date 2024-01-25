@@ -55,6 +55,9 @@ public:
     void        setVolume(uint8_t vol);
     const char* getMode();
     void        changeMode();
+    void        pauseResume();
+    void        downvolume();
+    void        upvolume();
     const char* stringifyScannedItems();
 
     enum  btmode { BT_MODE_RECEIVER = 0, BT_MODE_EMITTER = 1 };

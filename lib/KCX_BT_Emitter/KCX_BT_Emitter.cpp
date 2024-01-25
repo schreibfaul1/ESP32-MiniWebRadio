@@ -104,6 +104,9 @@ void KCX_BT_Emitter::detectOKcmd(){
 
 void KCX_BT_Emitter::parseATcmds(){
 //  log_i("%s", m_chbuf);
+
+
+
     if(startsWith(m_chbuf, "OK+VERS:"))         { bt_Version();        goto exit;}
     if(startsWith(m_chbuf, "POWER ON"))         { cmd_PowerOn();       goto exit;}
     if(startsWith(m_chbuf, "OK+BT"))            { cmd_Mode();          goto exit;}
@@ -120,19 +123,17 @@ void KCX_BT_Emitter::parseATcmds(){
     if(startsWith(m_chbuf, "OK+PAUSE"))         { cmd_statePause();    goto exit;}
     if(startsWith(m_chbuf, "OK+PLAY"))          { cmd_statePlay();     goto exit;}
 
-
     if(startsWith(m_chbuf, "Name More than 10")){ warning("more than 10 names are not allowed"); return;}
     if(startsWith(m_chbuf, "Addr More than 10")){ warning("more than 10 MAC Ardesses are not allowed"); return;}
     if(startsWith(m_chbuf, "CMD ERR!"))         { cmd_Wrong(); return;}
 
-exit:
-    if(m_lastMsg && strcmp(m_chbuf, m_lastMsg) == 0) return;
-    else{
-        if(m_lastMsg){free(m_lastMsg); m_lastMsg = NULL;} // don't repeat messages twice
-        m_lastMsg = x_ps_strdup(m_chbuf);
-        if(kcx_bt_info) kcx_bt_info(m_lastMsg);
-        m_f_bt_inUse = false; // task completed
+    if(m_lastMsg && strcmp(m_chbuf, m_lastMsg) != 0){
+        if(kcx_bt_info) kcx_bt_info(m_chbuf);
     }
+exit:
+    if(m_lastMsg){free(m_lastMsg); m_lastMsg = NULL;} // don't repeat messages twice
+    m_lastMsg = x_ps_strdup(m_chbuf);
+    m_f_bt_inUse = false; // task completed
 }
 
 void KCX_BT_Emitter::handle1sEvent(){
@@ -159,7 +160,6 @@ void KCX_BT_Emitter::handle1sEvent(){
     if(m_timeCounter == 3) { writeCommand("AT+VMLINK?");  return;}  // get all mem vmlinks
     if(m_timeCounter == 5) { writeCommand("AT+VOL?");     return;}  // get volume (in receiver mode 0 ... 31)
     if(m_timeCounter == 7) { writeCommand("AT+BT_MODE?"); return;}  // transmitter or receiver
-//  if(m_timeCounter == 9) { writeCommand("AT+PAUSE?");   return;}
 
     if(m_f_linkChanged){
         m_f_linkChanged = false;
@@ -180,7 +180,7 @@ void KCX_BT_Emitter::writeCommand(const char* cmd){
         return;
     }
     sprintf(m_msgbuf, "new command " ANSI_ESC_GREEN "%s", cmd);
-    if(kcx_bt_info) kcx_bt_info(m_msgbuf);
+//    if(kcx_bt_info) kcx_bt_info(m_msgbuf);
     if(m_f_bt_inUse) {stillInUse(cmd); return;}
     m_f_bt_inUse = true;
     if(m_lastCommand){free(m_lastCommand); m_lastCommand = NULL;}
@@ -362,7 +362,7 @@ void KCX_BT_Emitter::setVolume(uint8_t vol){
 }
 
 const char* KCX_BT_Emitter::getMode(){ // returns RX or TX
-    if(m_f_bt_mode) return("RX");
+    if(m_f_bt_mode == BT_MODE_RECEIVER) return("RX");
     return("TX");
 }
 
@@ -376,6 +376,31 @@ void KCX_BT_Emitter::changeMode(){
     m_f_powerOn = false;
 }
 
+void KCX_BT_Emitter::pauseResume(){
+    writeCommand("AT+PAUSE");
+}
+
+void KCX_BT_Emitter::downvolume(){
+    int v = m_bt_volume;
+    v--;
+    if(v < 0){
+        v = 0;
+        warning("The volume is already 0");
+    } 
+    sprintf(m_chbuf, "AT+VOL=%02d", v);
+    writeCommand(m_chbuf);
+}
+
+void KCX_BT_Emitter::upvolume(){
+    int v = m_bt_volume;
+    v++;
+    if(v > 31){
+        v = 31;
+        warning("The maximum volume has been reached");
+    }
+    sprintf(m_chbuf, "AT+VOL=%02d", v);
+    writeCommand(m_chbuf);
+}
 // -------------------------- JSON relevant ----------------------------------
 void KCX_BT_Emitter::stringifyMemItems() {
     // "AT+VMLINK" returns:

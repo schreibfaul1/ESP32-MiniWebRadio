@@ -183,7 +183,7 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/png/BTnc.png);
+            background-image : url(SD/png/BT.png);
             width : 128px;
             height : 128px;
             margin-top: 5px;
@@ -399,6 +399,7 @@ var socket = undefined
 var host = location.hostname
 var tm
 var IR_addr = ""
+var bt_RxTx = 'TX'
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -555,15 +556,23 @@ function connect() {
                                         else if (val == 'PLAYER') showTab3();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
-                                        if(val == '0') showLogo('label-bt-logo', '/png/BTnc.png')
-                                        if(val == '1') showLogo('label-bt-logo', '/png/BT.png')
+                                        if(val == '0') showLogo('label-bt-logo', '/png/BT.png')
+                                        if(val == '1' && bt_RxTx == 'TX') showLogo('label-bt-logo', '/png/BT_TX.png')
+                                        if(val == '1' && bt_RxTx == 'RX') showLogo('label-bt-logo', '/png/BT_RX.png')
                                         break
             case "KCX_BT_MEM":          show_BT_memItems(val)
                                         break;
             case "KCX_BT_SCANNED":      show_BT_scannedItems(val)
                                         break;
-            case "KCX_BT_MODE":         if(val ==="TX") document.getElementById('label-bt-mode').innerHTML= "EMITTER"
-                                        if(val ==="RX") document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
+            case "KCX_BT_MODE":         console.log(msg, val)
+                                        if(val ==="TX"){
+                                            document.getElementById('label-bt-mode').innerHTML= "EMITTER"
+                                            bt_RxTx = 'TX'
+                                        }
+                                        if(val ==="RX"){
+                                            document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
+                                            bt_RxTx = 'RX'
+                                        }
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -2571,19 +2580,19 @@ function clear_BT_memItems(){
                     ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
-                    onclick="socket.send('BT_downvolume')">
+                    onclick="socket.send('KCX_BT_downvolume')">
                 <img src="SD/png/Button_Volume_Up_Blue.png" alt="BT_Vol_up"
                     onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                     ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
-                    onclick="socket.send('BT_upvolume')">
+                    onclick="socket.send('KCX_BT_upvolume')">
                 <img src="SD/png/Button_Pause_Blue.png" alt="BT_Pause"
                     onmousedown="this.src='SD/png/Button_Pause_Yellow.png'"
                     ontouchstart="this.src='SD/png/Button_Pause_Yellow.png'"
                     onmouseup="this.src='SD/png/Button_Pause_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Pause_Blue.png'"
-                    onclick="socket.send('')">
+                    onclick="socket.send('KCX_BT_pause')">
             </div>
         </div>
     </div>
