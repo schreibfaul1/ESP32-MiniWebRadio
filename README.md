@@ -99,6 +99,11 @@ On some PCM5102 boards the solder bridges are missing on the back.<br>
 This is how the DAC CS4344 is connected:<br>
 ![CS4344 Board](docs/DAC_CS434.jpg)<br>
 If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
+
+### KCX_BT_EMITTER
+The RT pin is not part of the soldering strip, but is located in the middle of the right side.<br>
+![PCM5102A Board](docs/KCX_BT_EMITTER_pins.jpg)<br>
+
 <br>
 ___________________________________________________________
 <br>
