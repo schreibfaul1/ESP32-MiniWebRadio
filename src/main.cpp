@@ -1957,6 +1957,9 @@ void setup() {
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
     bt_emitter.begin();
+    bt_emitter.userCommand("AT+GMR?");      // get version
+    bt_emitter.userCommand("AT+VOL?");      // get volume (in receiver mode 0 ... 31)
+    bt_emitter.userCommand("AT+BT_MODE?");  // transmitter or receiver
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -4321,8 +4324,8 @@ void bt_rssi(int8_t rssi_delta) {
     _rssi_bt = rssi_delta;
 }
 
-void kcx_bt_info(const char* info){
-    SerialPrintfln("BT-Emitter:  %s", info);
+void kcx_bt_info(const char* info, const char* val){
+    SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
