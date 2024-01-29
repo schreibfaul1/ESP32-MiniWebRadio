@@ -3328,6 +3328,8 @@ void RTIME_info(const char* info) { SerialPrintfln("rtime_info:  %s", info); }
 // Events from tft library
 void tft_info(const char* info) { SerialPrintfln("tft_info: .  %s", info); }
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// Events from IR Library
 void ir_code(uint8_t addr, uint8_t cmd) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "0x%02x, " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02x", addr, cmd);
     char buf[20];
@@ -3336,8 +3338,7 @@ void ir_code(uint8_t addr, uint8_t cmd) {
     sprintf(buf, "0x%02x", cmd);
     webSrv.send("IR_command=", buf);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Events from IR Library
+
 void ir_res(uint32_t res) {
     _f_irNumberSeen = false;
     if(_state != RADIO) return;
@@ -4329,8 +4330,8 @@ void kcx_bt_info(const char* info, const char* val){
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
-    if(status) { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Connected");     webSrv.send("KCX_BT_connected=", "1"); }
-    else       { SerialPrintfln("BT-Emitter:  Status -> " ANSI_ESC_YELLOW "Disconnected");  webSrv.send("KCX_BT_connected=", "0"); }
+    if(status) { webSrv.send("KCX_BT_connected=", "1"); }
+    else       { webSrv.send("KCX_BT_connected=", "0"); }
 }
 
 void kcx_bt_memItems(const char* jsonItems){ // Every time an item (name or address) was added, a JSON string is passed here
