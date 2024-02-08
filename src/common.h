@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 18.Dec.2023
+// updated: 08.Feb 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -13,6 +13,8 @@
 #define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
 #define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
+#define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
 #define AUDIOTASK_CORE      1                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211

@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00h Jan 25/2024                                                                                         ";
+    Version 3.00i Feb 08/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1847,6 +1847,7 @@ void setup() {
     tft.setBackGoundColor(TFT_BLACK);
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
     tp.TP_Send(0xD0);
     tp.TP_Send(0x90); // Remove any blockage
 

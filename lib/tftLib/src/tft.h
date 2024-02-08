@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Oct 13 2023
+// updated on Feb 08 2024
 
 
 #pragma once
@@ -632,14 +632,18 @@ class TP : public TFT {
 
         TP(uint8_t _TP_CS, uint8_t _TP_IRQ);
         void loop();
-        void setRotation(uint8_t m);
         void setVersion(uint8_t v);
+        void setRotation(uint8_t m);
+        void setMirror(bool h, bool v);
     private:
         SPISettings TP_SPI;
         uint8_t     _TP_CS, _TP_IRQ;
         uint16_t    x=0, y=0;
         uint8_t     _rotation;
         bool        f_loop=false;
+        bool        m_mirror_h = false;
+        bool        m_mirror_v = false;
+
         //const uint8_t TP_Dummy=0x80; //nur Startbit für XPT2046
         float xFaktor;
         float yFaktor;
@@ -653,6 +657,8 @@ class TP : public TFT {
         uint32_t m_pressingTime = 0;
         bool     m_f_isPressing = false;
         bool     m_f_longPressed = false;
+
+        enum tpVers{TP_ILI9341_0 = 0, TP_ILI9341_1 = 1, TP_HX8347D_0 = 2, TP_ILI9486_0 = 3, TP_ILI9488_0 = 4, TP_ST7796_0 = 5};
 
     public:
         uint16_t TP_Send(uint8_t set_val);
