@@ -3306,6 +3306,15 @@ void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_G
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+void audio_oggimage(File& audiofile, std::vector<uint32_t> vec){ //OGG blockpicture
+    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
+    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
+    for(int i = 0; i < vec.size(); i += 2) {
+        SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07i, len %05i", i / 2, vec[i], vec[i + 1]);
+    }
+    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
