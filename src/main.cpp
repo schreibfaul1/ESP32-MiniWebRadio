@@ -71,6 +71,7 @@ uint32_t            _playlistTime = 0;  // playlist start time millis() for time
 uint32_t            _settingsHash = 0;
 uint32_t            _audioFileSize = 0;
 uint32_t            _media_downloadPort = 0;
+uint8_t             _resetResaon = (esp_reset_reason_t) ESP_RST_UNKNOWN;
 const char*         _pressBtn[8];
 const char*         _releaseBtn[8];
 char                _chbuf[512];
@@ -1809,6 +1810,22 @@ void setup() {
             _f_FFatFound = true;
         }
     }
+    const char* rr = NULL;
+    _resetResaon = esp_reset_reason();
+    switch(_resetResaon){
+        case ESP_RST_UNKNOWN:    rr = "Reset reason can not be determined";
+        case ESP_RST_POWERON:    rr = "Reset due to power-on event";
+        case ESP_RST_EXT:        rr = "Reset by external pin (not applicable for ESP32)";
+        case ESP_RST_SW:         rr = "Software reset via esp_restart";
+        case ESP_RST_PANIC:      rr = "Software reset due to exception/panic";
+        case ESP_RST_INT_WDT:    rr = "Reset (software or hardware) due to interrupt watchdog";
+        case ESP_RST_TASK_WDT:   rr = "Reset due to task watchdog";
+        case ESP_RST_WDT:        rr = "Reset due to other watchdogs";
+        case ESP_RST_DEEPSLEEP:  rr = "Reset after exiting deep sleep mode";
+        case ESP_RST_BROWNOUT:   rr = "Brownout reset (software or hardware)";
+        case ESP_RST_SDIO:       rr = "Reset over SDIO";
+    }
+    Serial.printf("RESET_REASON: %s", rr);
     Serial.print("\n\n");
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
@@ -1945,8 +1962,10 @@ void setup() {
     }
 
     showHeadlineItem(RADIO);
-    if(_cur_station > 0) setStation(_cur_station);
-    else { setStationViaURL(_lastconnectedhost.c_str()); }
+    if(_resetResaon == ESP_RST_POWERON || _resetResaon == ESP_RST_SW || _resetResaon == ESP_RST_SDIO || _resetResaon == ESP_RST_DEEPSLEEP){
+        if(_cur_station > 0) setStation(_cur_station);
+        else { setStationViaURL(_lastconnectedhost.c_str()); }
+    }
 
     setI2STone();
     showFooter();
@@ -3313,7 +3332,7 @@ void audio_oggimage(File& audiofile, std::vector<uint32_t> vec){ //OGG blockpict
         SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07i, len %05i", i / 2, vec[i], vec[i + 1]);
     }
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
-}
+} 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
