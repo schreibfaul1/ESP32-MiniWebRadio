@@ -1814,17 +1814,17 @@ void setup() {
     const char* rr = NULL;
     _resetResaon = esp_reset_reason();
     switch(_resetResaon){
-        case ESP_RST_UNKNOWN:    rr = "Reset reason can not be determined";
-        case ESP_RST_POWERON:    rr = "Reset due to power-on event";
-        case ESP_RST_EXT:        rr = "Reset by external pin (not applicable for ESP32)";
-        case ESP_RST_SW:         rr = "Software reset via esp_restart";
-        case ESP_RST_PANIC:      rr = "Software reset due to exception/panic";
-        case ESP_RST_INT_WDT:    rr = "Reset (software or hardware) due to interrupt watchdog";
-        case ESP_RST_TASK_WDT:   rr = "Reset due to task watchdog";
-        case ESP_RST_WDT:        rr = "Reset due to other watchdogs";
-        case ESP_RST_DEEPSLEEP:  rr = "Reset after exiting deep sleep mode";
-        case ESP_RST_BROWNOUT:   rr = "Brownout reset (software or hardware)";
-        case ESP_RST_SDIO:       rr = "Reset over SDIO";
+        case ESP_RST_UNKNOWN:    rr = "Reset reason can not be determined"; break;
+        case ESP_RST_POWERON:    rr = "Reset due to power-on event"; break;
+        case ESP_RST_EXT:        rr = "Reset by external pin (not applicable for ESP32)"; break;
+        case ESP_RST_SW:         rr = "Software reset via esp_restart"; break;
+        case ESP_RST_PANIC:      rr = "Software reset due to exception/panic"; break;
+        case ESP_RST_INT_WDT:    rr = "Reset (software or hardware) due to interrupt watchdog"; break;
+        case ESP_RST_TASK_WDT:   rr = "Reset due to task watchdog"; break;
+        case ESP_RST_WDT:        rr = "Reset due to other watchdogs"; break;
+        case ESP_RST_DEEPSLEEP:  rr = "Reset after exiting deep sleep mode"; break;
+        case ESP_RST_BROWNOUT:   rr = "Brownout reset (software or hardware)"; break;
+        case ESP_RST_SDIO:       rr = "Reset over SDIO"; break;
     }
     Serial.printf("RESET_REASON: %s", rr);
     Serial.print("\n\n");
@@ -2916,13 +2916,13 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
             if(startsWith(srvContent.itemURL[pos - 1], "http")) {
                 if(srvContent.isAudio[pos - 1] == true) {
                     if(srvContent.duration[pos - 1][0] != '?') { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", srvContent.title[pos - 1], srvContent.duration[pos - 1]); }
-                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%d)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
+                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
                 }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
+                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
             }
             else {
                 if(srvContent.childCount[pos - 1] == 0) { sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]); }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%d)", srvContent.title[pos - 1], srvContent.childCount[pos - 1]); }
+                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.childCount[pos - 1]); }
             }
             tft.writeText(_chbuf, 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
         }
@@ -3330,10 +3330,10 @@ void audio_oggimage(File& audiofile, std::vector<uint32_t> vec){ //OGG blockpict
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
     for(int i = 0; i < vec.size(); i += 2) {
-        SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07i, len %05i", i / 2, vec[i], vec[i + 1]);
+        SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07d, len %05d", i / 2, vec[i], vec[i + 1]);
     }
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
-} 
+}
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
@@ -4307,7 +4307,7 @@ void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const cha
 void dlna_seekReady(uint8_t numberOfServer) { SerialPrintfln("DLNA_server: %i media server found", numberOfServer); }
 
 void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* duration, const char* itemURL) {
-    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i, itemSize %i, duration %s", title, childCount, itemSize, duration);
+    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %d, itemSize %d, duration %s", title, childCount, itemSize, duration);
 }
 
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
