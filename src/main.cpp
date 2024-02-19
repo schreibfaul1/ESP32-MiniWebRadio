@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00k Feb 11/2024                                                                                         ";
+    Version 3.00m Feb 19/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1821,7 +1821,7 @@ void setup() {
         case ESP_RST_PANIC:      rr = "Software reset due to exception/panic"; break;
         case ESP_RST_INT_WDT:    rr = "Reset (software or hardware) due to interrupt watchdog"; break;
         case ESP_RST_TASK_WDT:   rr = "Reset due to task watchdog"; break;
-        case ESP_RST_WDT:        rr = "Reset due to other watchdogs"; break;
+        case ESP_RST_WDT:        rr = "Reset due to other watchdogs"; _resetResaon = 1; break;
         case ESP_RST_DEEPSLEEP:  rr = "Reset after exiting deep sleep mode"; break;
         case ESP_RST_BROWNOUT:   rr = "Brownout reset (software or hardware)"; break;
         case ESP_RST_SDIO:       rr = "Reset over SDIO"; break;
@@ -1963,10 +1963,20 @@ void setup() {
     }
 
     showHeadlineItem(RADIO);
-    if(_resetResaon == ESP_RST_POWERON || _resetResaon == ESP_RST_SW || _resetResaon == ESP_RST_SDIO || _resetResaon == ESP_RST_DEEPSLEEP){
-        if(_cur_station > 0) setStation(_cur_station);
-        else { setStationViaURL(_lastconnectedhost.c_str()); }
+
+    if(_resetResaon == ESP_RST_POWERON ||    // Simply switch on the operating voltage
+       _resetResaon == ESP_RST_SW ||         // ESP.restart()
+       _resetResaon == ESP_RST_SDIO ||       // The boot button was pressed
+       _resetResaon == ESP_RST_DEEPSLEEP){   // Wake up
+           if(_cur_station > 0) setStation(_cur_station);
+           else { setStationViaURL(_lastconnectedhost.c_str()); }
     }
+    else if(_resetResaon == ESP_RST_INT_WDT)  {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset reason can not be determined");}
+    else if(_resetResaon == ESP_RST_TASK_WDT) {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset due to task watchdog");}
+    else if(_resetResaon == ESP_RST_WDT)      {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset due to other watchdogs");}
+    else if(_resetResaon == ESP_RST_BROWNOUT) {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Brownout reset (software or hardware)");}
+    else if(_resetResaon == ESP_RST_PANIC)    {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset reason can not be determined");}
+    else                                      {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Software reset due to exception/panic");}
 
     setI2STone();
     showFooter();
@@ -2261,7 +2271,7 @@ void StationsItems() {
     if(_cur_station > 0) {
         webSrv.send("stationLogo=", "/logo/" + _stationName_nvs + ".jpg");
         webSrv.send("stationNr=", String(_cur_station));
-        webSrv.send("stationNr=", String(_stationURL));
+        if(_stationURL)webSrv.send("stationNr=", String(_stationURL));
     }
     else {
         webSrv.send("stationLogo=", "/logo/" + _stationName_air + ".jpg");
