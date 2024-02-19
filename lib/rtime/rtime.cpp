@@ -248,21 +248,21 @@ RTIME::RTIME(){
 	now=0;
 }
 RTIME::~RTIME(){
-	sntp_stop();
+	esp_sntp_stop();
 }
 boolean RTIME::begin(String TimeZone){
     if(TimeZone.length() == 0) return false;
     RTIME_TZ=TimeZone;
     if (RTIME_info) RTIME_info("Initializing SNTP");
-    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setoperatingmode((esp_sntp_operatingmode_t) SNTP_OPMODE_POLL);
     char sbuf[20]="pool.ntp.org";
-    sntp_setservername(0, sbuf);
-    sntp_init();
+    esp_sntp_setservername(0, sbuf);
+    esp_sntp_init();
     return obtain_time();
 }
 
 void RTIME::stop(){
-    sntp_stop();
+    esp_sntp_stop();
 }
 
 boolean RTIME::obtain_time(){
