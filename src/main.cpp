@@ -4304,7 +4304,7 @@ void WEBSRV_onInfo(const char* info) {
 void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
         _f_dlnaBrowseServer = false;
-        _dlnaLevel--;
+        if(_dlnaLevel > 0) _dlnaLevel--;
         showDlnaItemsList(_dlnaItemNr, _dlnaHistory[_dlnaLevel].name);
     }
     SerialPrintfln("DLNA_info:    %s", info);
