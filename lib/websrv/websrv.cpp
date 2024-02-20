@@ -272,7 +272,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    sprintf(buff, "File: %s written, FileSize: %d", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize: %ld", path, (unsigned long)contentLength);
     //log_i(buff);
     if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return true;
@@ -319,7 +319,7 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         goto exit;
     }
-    sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize %ld: ", path, (long unsigned int)contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
     if(tBuf) {free(tBuf); tBuf = NULL;}
     return true;
@@ -656,7 +656,7 @@ exit:
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::loop() {
 
-    cmdclient = cmdserver.available();
+    cmdclient = cmdserver.accept();
     if(cmdclient){
         handlehttp();
     }
@@ -669,7 +669,7 @@ void WebSrv::loop() {
     if(!webSocketClient.connected()){
         hasclient_WS = false;
     }
-    if(!hasclient_WS) webSocketClient = webSocketServer.available();
+    if(!hasclient_WS) webSocketClient = webSocketServer.accept();
 
     return;
 }

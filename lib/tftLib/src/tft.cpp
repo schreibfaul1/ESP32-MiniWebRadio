@@ -3074,7 +3074,7 @@ int32_t TFT::GIF_LZWReadByte(bool init) {
 
     static uint8_t* sp;
 
-    register int32_t i;
+    int32_t i;
 
     if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode

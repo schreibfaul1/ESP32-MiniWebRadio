@@ -1941,6 +1941,7 @@ void setup() {
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
+
     if(HP_DETECT != -1) {
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
@@ -1968,29 +1969,27 @@ void setup() {
        _resetResaon == ESP_RST_SW ||         // ESP.restart()
        _resetResaon == ESP_RST_SDIO ||       // The boot button was pressed
        _resetResaon == ESP_RST_DEEPSLEEP){   // Wake up
-           if(_cur_station > 0) setStation(_cur_station);
-           else { setStationViaURL(_lastconnectedhost.c_str()); }
+            vTaskDelay(1500);
+            if(_cur_station > 0) setStation(_cur_station);
+            else { setStationViaURL(_lastconnectedhost.c_str()); }
     }
-    else if(_resetResaon == ESP_RST_INT_WDT)  {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset reason can not be determined");}
-    else if(_resetResaon == ESP_RST_TASK_WDT) {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset due to task watchdog");}
-    else if(_resetResaon == ESP_RST_WDT)      {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset due to other watchdogs");}
-    else if(_resetResaon == ESP_RST_BROWNOUT) {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Brownout reset (software or hardware)");}
-    else if(_resetResaon == ESP_RST_PANIC)    {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Reset reason can not be determined");}
-    else                                      {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "Software reset due to exception/panic");}
+    else {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr);}
 
     setI2STone();
     showFooter();
-    _dlnaLevel = 0;
-    _dlnaHistory[0].name = strdup("Media Server");
-    _dlnaHistory[0].objId = strdup("");
-    _dlnaHistory[1].objId = strdup("0");
-    dlna.seekServer();
+
     showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?");      // get version
     bt_emitter.userCommand("AT+VOL?");      // get volume (in receiver mode 0 ... 31)
     bt_emitter.userCommand("AT+BT_MODE?");  // transmitter or receiver
+
+    _dlnaLevel = 0;
+    _dlnaHistory[0].name = strdup("Media Server");
+    _dlnaHistory[0].objId = strdup("");
+    _dlnaHistory[1].objId = strdup("0");
+    dlna.seekServer();
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
