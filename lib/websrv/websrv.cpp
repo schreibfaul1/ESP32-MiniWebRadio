@@ -24,7 +24,7 @@ String WebSrv::calculateWebSocketResponseKey(String sec_WS_key){
     // output Sec-WebSocket-Accept-Key (used in response message to client)
     uint8_t sha1_result[20];
     String concat = sec_WS_key + WS_sec_conKey;
-    mbedtls_sha1_ret((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
+    mbedtls_sha1((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
     return base64::encode(sha1_result, 20);
 }
 //--------------------------------------------------------------------------------------------------------------

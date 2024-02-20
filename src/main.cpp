@@ -2926,9 +2926,9 @@ void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
             if(startsWith(srvContent.itemURL[pos - 1], "http")) {
                 if(srvContent.isAudio[pos - 1] == true) {
                     if(srvContent.duration[pos - 1][0] != '?') { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", srvContent.title[pos - 1], srvContent.duration[pos - 1]); }
-                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
+                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
                 }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.itemSize[pos - 1]); }
+                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
             }
             else {
                 if(srvContent.childCount[pos - 1] == 0) { sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]); }
@@ -3340,7 +3340,7 @@ void audio_oggimage(File& audiofile, std::vector<uint32_t> vec){ //OGG blockpict
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
     for(int i = 0; i < vec.size(); i += 2) {
-        SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07d, len %05d", i / 2, vec[i], vec[i + 1]);
+        SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07ld, len %05ld", i / 2, (long unsigned int)vec[i], (long unsigned int)vec[i + 1]);
     }
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
 }
@@ -4317,7 +4317,7 @@ void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const cha
 void dlna_seekReady(uint8_t numberOfServer) { SerialPrintfln("DLNA_server: %i media server found", numberOfServer); }
 
 void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* duration, const char* itemURL) {
-    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %d, itemSize %d, duration %s", title, childCount, itemSize, duration);
+    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %d, itemSize %ld, duration %s", title, childCount, (long unsigned int)itemSize, duration);
 }
 
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {

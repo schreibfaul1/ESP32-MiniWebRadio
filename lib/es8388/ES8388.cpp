@@ -147,11 +147,6 @@ bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency)
         res &= write_reg(ES8388_ADDR, ES8388_DACCONTROL3, 0x00);
         res &= write_reg(ES8388_ADDR, ES8388_ADCPOWER, 0x00);
 
-        /* set up MCLK) */
-        #ifdef FUNC_GPIO0_CLK_OUT1
-		    PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO0_U, FUNC_GPIO0_CLK_OUT1);
-        #endif
-        WRITE_PERI_REG(PIN_CTRL, 0xFFF0);
     }
     return res;
 }
