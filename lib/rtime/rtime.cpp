@@ -3,8 +3,8 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 07.07.2023
- * 
+ *  Updated on: 25.02.2024
+ *
  */
 
 #include "rtime.h"
@@ -254,10 +254,11 @@ boolean RTIME::begin(String TimeZone){
     if(TimeZone.length() == 0) return false;
     RTIME_TZ=TimeZone;
     if (RTIME_info) RTIME_info("Initializing SNTP");
-    esp_sntp_setoperatingmode((esp_sntp_operatingmode_t) SNTP_OPMODE_POLL);
-    char sbuf[20]="pool.ntp.org";
-    esp_sntp_setservername(0, sbuf);
-    esp_sntp_init();
+    // in platformio.ini:
+    // -D NTP_Pool_1='"europe.pool.ntp.org"'
+    // -D NTP_Pool_2='"pool.ntp.org"'
+    // -D NTP_Pool_3='"time-a-g.nist.gov"'
+    configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
     return obtain_time();
 }
 
@@ -276,9 +277,6 @@ boolean RTIME::obtain_time(){
         time(&now);
         localtime_r(&now, &timeinfo);
     }
-    //setenv("TZ","CET-1CEST-2,M3.5.0/02:00:00,M10.5.0/03:00:00", 1); // automatic daylight saving time
-    setenv("TZ", RTIME_TZ.c_str(), 1);
-    tzset();
     localtime_r(&now, &timeinfo);
     strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
     if (RTIME_info) RTIME_info(strftime_buf);
@@ -302,7 +300,7 @@ const char* RTIME::gettime_l(){  // Montag, 04. August 2017 13:12:44
 	localtime_r(&now, &timeinfo);
 //    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
 //    log_i( "The current date/time in Beriln is: %s", strftime_buf);
-	sprintf(strftime_buf,"%s, %02d.%s %d %02d:%02d:%02d",   w_day_l[timeinfo.tm_wday].c_str(), 
+	sprintf(strftime_buf,"%s, %02d.%s %d %02d:%02d:%02d",   w_day_l[timeinfo.tm_wday].c_str(),
                                                             timeinfo.tm_mday, month_l[timeinfo.tm_mon].c_str(),
                                                             timeinfo.tm_year+1900,
                                                             timeinfo.tm_hour,
