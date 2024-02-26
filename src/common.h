@@ -5,17 +5,17 @@
 #pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID               "mySSID"                        // Your WiFi credentials here
-#define _PW                 "myWiFiPassword"                //
+#define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
 #define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
-#define DISPLAY_INVERSION   0                               // (0) off (1) on
+#define DISPLAY_INVERSION   1                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
 #define TP_ROTATION         1                               // 1 or 3 (landscape)
-#define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
+#define TP_H_MIRROR         1                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
-#define AUDIOTASK_CORE      1                               // 0 or 1
+#define AUDIOTASK_CORE      0                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY     80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000 not every SD Card will run at 80MHz
@@ -68,10 +68,10 @@
         #define SD_MMC_D0         2  // cannot be changed
         #define SD_MMC_CLK       14  // cannot be changed
         #define SD_MMC_CMD       15  // cannot be changed
-        #define IR_PIN           35  // IR Receiver (if available)
+        #define IR_PIN           -1  // IR Receiver (if available)
         #define TFT_MOSI         23  // TFT and TP (VSPI)
-        #define TFT_MISO         19  // TFT and TP (VSPI)
-        #define TFT_SCK          18  // TFT and TP (VSPI)
+        #define TFT_MISO         35  // TFT and TP (VSPI)
+        #define TFT_SCK          12  // TFT and TP (VSPI)
 
         #define I2S_DOUT         25
         #define I2S_BCLK         27

@@ -15,6 +15,7 @@
 #include "fonts/Garamond.h"
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/BigNumbers.h"
+#include "fonts/Arial.h"
 
 using namespace std;
 
@@ -94,6 +95,8 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_TIMES_NEW_ROMAN
 #elif TFT_FONT == 2
 #define TFT_FREE_SERIF_ITALIC
+#elif TFT_FONT == 3
+#define TFT_ARIAL
 #else
 #define TFT_GARAMOND // if nothing is choosen
 #endif
