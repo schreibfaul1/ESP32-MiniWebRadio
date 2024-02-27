@@ -2131,6 +2131,144 @@ void TFT::setFont(uint16_t font){
 
 #endif
 
+#ifdef TFT_ARIAL
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_Arial15;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial15;
+            _current_font.glyph_dsc = glyph_dsc_Arial15;
+            _current_font.range_start = cmaps_Arial15->range_start;
+            _current_font.range_length = cmaps_Arial15->range_length;
+            _current_font.line_height = cmaps_Arial15->line_height;
+            _current_font.font_height = cmaps_Arial15->font_height;
+            _current_font.base_line = cmaps_Arial15->base_line;
+            _current_font.lookup_table = cmaps_Arial15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_Arial16;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial16;
+            _current_font.glyph_dsc = glyph_dsc_Arial16;
+            _current_font.range_start = cmaps_Arial16->range_start;
+            _current_font.range_length = cmaps_Arial16->range_length;
+            _current_font.line_height = cmaps_Arial16->line_height;
+            _current_font.font_height = cmaps_Arial16->font_height;
+            _current_font.base_line = cmaps_Arial16->base_line;
+            _current_font.lookup_table = cmaps_Arial16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_Arial18;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial18;
+            _current_font.glyph_dsc = glyph_dsc_Arial18;
+            _current_font.range_start = cmaps_Arial18->range_start;
+            _current_font.range_length = cmaps_Arial18->range_length;
+            _current_font.line_height = cmaps_Arial18->line_height;
+            _current_font.font_height = cmaps_Arial18->font_height;
+            _current_font.base_line = cmaps_Arial18->base_line;
+            _current_font.lookup_table = cmaps_Arial18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_Arial21;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial21;
+            _current_font.glyph_dsc = glyph_dsc_Arial21;
+            _current_font.range_start = cmaps_Arial21->range_start;
+            _current_font.range_length = cmaps_Arial21->range_length;
+            _current_font.line_height = cmaps_Arial21->line_height;
+            _current_font.font_height = cmaps_Arial21->font_height;
+            _current_font.base_line = cmaps_Arial21->base_line;
+            _current_font.lookup_table = cmaps_Arial21->lookup_table;
+             break;
+        case 25:
+            _current_font.cmaps = cmaps_Arial25;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial25;
+            _current_font.glyph_dsc = glyph_dsc_Arial25;
+            _current_font.range_start = cmaps_Arial25->range_start;
+            _current_font.range_length = cmaps_Arial25->range_length;
+            _current_font.line_height = cmaps_Arial25->line_height;
+            _current_font.font_height = cmaps_Arial25->font_height;
+            _current_font.base_line = cmaps_Arial25->base_line;
+            _current_font.lookup_table = cmaps_Arial25->lookup_table;
+             break;
+        case 27:
+            _current_font.cmaps = cmaps_Arial27;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial27;
+            _current_font.glyph_dsc = glyph_dsc_Arial27;
+            _current_font.range_start = cmaps_Arial27->range_start;
+            _current_font.range_length = cmaps_Arial27->range_length;
+            _current_font.line_height = cmaps_Arial27->line_height;
+            _current_font.font_height = cmaps_Arial27->font_height;
+            _current_font.base_line = cmaps_Arial27->base_line;
+            _current_font.lookup_table = cmaps_Arial27->lookup_table;
+             break;
+        case 34:
+            _current_font.cmaps = cmaps_Arial34;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial34;
+            _current_font.glyph_dsc = glyph_dsc_Arial34;
+            _current_font.range_start = cmaps_Arial34->range_start;
+            _current_font.range_length = cmaps_Arial34->range_length;
+            _current_font.line_height = cmaps_Arial34->line_height;
+            _current_font.font_height = cmaps_Arial34->font_height;
+            _current_font.base_line = cmaps_Arial34->base_line;
+            _current_font.lookup_table = cmaps_Arial34->lookup_table;
+             break;
+        case 38:
+            _current_font.cmaps = cmaps_Arial38;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial38;
+            _current_font.glyph_dsc = glyph_dsc_Arial38;
+            _current_font.range_start = cmaps_Arial38->range_start;
+            _current_font.range_length = cmaps_Arial38->range_length;
+            _current_font.line_height = cmaps_Arial38->line_height;
+            _current_font.font_height = cmaps_Arial38->font_height;
+            _current_font.base_line = cmaps_Arial38->base_line;
+            _current_font.lookup_table = cmaps_Arial38->lookup_table;
+             break;
+        case 43:
+            _current_font.cmaps = cmaps_Arial43;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial43;
+            _current_font.glyph_dsc = glyph_dsc_Arial43;
+            _current_font.range_start = cmaps_Arial43->range_start;
+            _current_font.range_length = cmaps_Arial43->range_length;
+            _current_font.line_height = cmaps_Arial43->line_height;
+            _current_font.font_height = cmaps_Arial43->font_height;
+            _current_font.base_line = cmaps_Arial43->base_line;
+            _current_font.lookup_table = cmaps_Arial43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_Arial56;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial56;
+            _current_font.glyph_dsc = glyph_dsc_Arial56;
+            _current_font.range_start = cmaps_Arial56->range_start;
+            _current_font.range_length = cmaps_Arial56->range_length;
+            _current_font.line_height = cmaps_Arial56->line_height;
+            _current_font.font_height = cmaps_Arial56->font_height;
+            _current_font.base_line = cmaps_Arial56->base_line;
+            _current_font.lookup_table = cmaps_Arial56->lookup_table;
+            break;
+        case 66:
+           _current_font.cmaps = cmaps_Arial66;
+           _current_font.glyph_bitmap = glyph_bitmap_Arial66;
+           _current_font.glyph_dsc = glyph_dsc_Arial66;
+           _current_font.range_start = cmaps_Arial66->range_start;
+           _current_font.range_length = cmaps_Arial66->range_length;
+           _current_font.line_height = cmaps_Arial66->line_height;
+           _current_font.font_height = cmaps_Arial66->font_height;
+           _current_font.base_line = cmaps_Arial66->base_line;
+           _current_font.lookup_table = cmaps_Arial66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            break;
+    }
+#endif
 
 
 
