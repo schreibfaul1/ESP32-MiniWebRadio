@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
-    Version 3.00m Feb 19/2024                                                                                         ";
+    Version 3.00n Mar 01/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -634,11 +634,14 @@ void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
 #if ESP_IDF_VERSION_MAJOR < 5
     ledcSetup(0, 1200, 8);    // 1200 Hz PWM and 8 bit resolution
     ledcAttachPin(TFT_BL, 0); // Configure variable led, TFT_BL pin to channel 1
-#else
-    ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
-#endif
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
+#else
+    ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+    uint8_t d = round((double)duty * 2.55); // #186
+    ledcWrite(TFT_BL, d);
+#endif
+
 }
 
 inline uint8_t downBrightness() {

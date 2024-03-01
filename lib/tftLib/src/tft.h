@@ -16,6 +16,7 @@
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/BigNumbers.h"
 #include "fonts/Arial.h"
+#include "fonts/Z300.h"
 
 using namespace std;
 
@@ -97,6 +98,8 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_FREE_SERIF_ITALIC
 #elif TFT_FONT == 3
 #define TFT_ARIAL
+#elif TFT_FONT == 4
+#define TFT_Z300
 #else
 #define TFT_GARAMOND // if nothing is choosen
 #endif
