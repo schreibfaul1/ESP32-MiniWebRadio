@@ -68,10 +68,10 @@
         #define SD_MMC_D0         2  // cannot be changed
         #define SD_MMC_CLK       14  // cannot be changed
         #define SD_MMC_CMD       15  // cannot be changed
-        #define IR_PIN           -1  // IR Receiver (if available)
+        #define IR_PIN           35  // IR Receiver (if available)
         #define TFT_MOSI         23  // TFT and TP (VSPI)
-        #define TFT_MISO         35  // TFT and TP (VSPI)
-        #define TFT_SCK          12  // TFT and TP (VSPI)
+        #define TFT_MISO         19  // TFT and TP (VSPI)
+        #define TFT_SCK          18  // TFT and TP (VSPI)
 
         #define I2S_DOUT         25
         #define I2S_BCLK         27
