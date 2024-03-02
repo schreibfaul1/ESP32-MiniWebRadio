@@ -1541,7 +1541,7 @@ function uploadCanvasImage () {
 
 function downloadCanvasImage () {
     var filename
-    var sn = document.getElementById('stationname')
+    var sn = document.getElementById('rb_stationname')
     if (sn.value !== '') filename = sn.value + '.jpg'
     else filename = 'myimage.jpg'
     var lnk = document.createElement('a')
