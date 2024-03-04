@@ -1940,6 +1940,8 @@ void setup() {
     _dlnaHistory[0].name = strdup("Media Server");
     _dlnaHistory[0].objId = strdup("");
     _dlnaHistory[1].objId = strdup("0");
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.begin();
     dlna.seekServer();
 }
 /*****************************************************************************************************************************************************
@@ -2878,6 +2880,7 @@ void loop() {
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
+    ArduinoOTA.handle();
     dlna.loop();
     bt_emitter.loop();
 

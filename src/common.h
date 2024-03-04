@@ -28,6 +28,7 @@
 /**********************************************************************************************************************/
 
 #include <Arduino.h>
+#include <ArduinoOTA.h>
 #include <Preferences.h>
 #include <Ticker.h>
 #include <SPI.h>
