@@ -21,7 +21,6 @@ MiniWebRadio Features:
 <li>Supports the Latin, Greek and Cyrillic character sets</li>
 <li><a href="https://www.radio-browser.info/">Community Radio Browser</a> is integrated as a search engine. User can find new stations and then add them to the station list via web UI (with station icon if available) and then save the list and station icon file to the SD card</li>
 <li>Channel lists can be exported or imported in Excel format (for data backup).</li>
-<li>Bluetooth Speaker mode (ESP32 only)</li>
 </ul><br>
 Required HW:
 <ul>
@@ -33,7 +32,7 @@ Required HW:
 Optional HW:
 <ul>
 <li>IR receiver + IR remote controller according to the NFC protocol</li>
-<li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices in the sending or receiving direction</li>
+<li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices in the sending or receiving direction, a connection with voice assistants such as ALEXA is possible</li>
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
