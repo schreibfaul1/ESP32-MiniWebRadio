@@ -4,6 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                       */String Version="\
+
     Version 3.00o Mar 02/2024                                                                                         ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
@@ -1611,6 +1612,12 @@ bool connectToWiFi() {
     wifiMulti.run(10000);
 
     uint32_t t = millis() + 5000;
+    while(!WiFi.isConnected()){
+        vTaskDelay(10);
+        if(t < millis()){log_e("WiFi timeout"); break;}
+    }
+
+    uint32_t t = millis() + 3000;
     while(!WiFi.isConnected()){
         vTaskDelay(10);
         if(t < millis()){log_e("WiFi timeout"); break;}
