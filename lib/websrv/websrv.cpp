@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 08.07.2023
+ *  updated on: 24.01.2024
  *      Author: Wolle
  */
 
@@ -24,7 +24,7 @@ String WebSrv::calculateWebSocketResponseKey(String sec_WS_key){
     // output Sec-WebSocket-Accept-Key (used in response message to client)
     uint8_t sha1_result[20];
     String concat = sec_WS_key + WS_sec_conKey;
-    mbedtls_sha1_ret((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
+    mbedtls_sha1((unsigned char*)concat.c_str(), concat.length(), (unsigned char*) sha1_result );
     return base64::encode(sha1_result, 20);
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -151,17 +151,18 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(String msg, uint8_t opcode) {  // sends text messages via websocket
-    return send(msg.c_str(), opcode);
+boolean WebSrv::send(const char* cmd, String msg, uint8_t opcode) {  // sends text messages via websocket
+    return send(cmd, msg.c_str(), opcode);
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(const char *msg, uint8_t opcode) {  // sends text messages via websocket
+boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sends text messages via websocket
     uint8_t headerLen = 2;
 
     if(!hasclient_WS) {
 //      log_e("can't send, websocketserver not connected");
         return false;
     }
+    size_t cmdLen = strlen(cmd);
     size_t msgLen = strlen(msg);
 
     if(msgLen > UINT16_MAX) {
@@ -176,17 +177,18 @@ boolean WebSrv::send(const char *msg, uint8_t opcode) {  // sends text messages 
     uint8_t mask = 0;
 
     buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
-    if(msgLen < 126) {
-        buff[1] = (128 * mask) + msgLen;
+    if(msgLen + cmdLen < 126) {
+        buff[1] = (128 * mask) + cmdLen + msgLen ;
     }
     else {
         headerLen = 4;
         buff[1] = (128 * mask) + 126;
-        buff[2] = (msgLen >> 8) & 0xFF;
-        buff[3] = msgLen & 0xFF;
+        buff[2] = ((cmdLen + msgLen) >> 8) & 0xFF;
+        buff[3] = (cmdLen + msgLen) & 0xFF;
     }
 
     webSocketClient.write(buff, headerLen);
+    webSocketClient.write(cmd, cmdLen);
     webSocketClient.write(msg, msgLen);
 
     return true;
@@ -270,7 +272,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         return false;
     }
-    sprintf(buff, "File: %s written, FileSize: %d", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize: %ld", path, (unsigned long)contentLength);
     //log_i(buff);
     if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return true;
@@ -317,7 +319,7 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
         if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
         goto exit;
     }
-    sprintf(buff, "File: %s written, FileSize %d: ", path, contentLength);
+    sprintf(buff, "File: %s written, FileSize %ld: ", path, (long unsigned int)contentLength);
     if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
     if(tBuf) {free(tBuf); tBuf = NULL;}
     return true;
@@ -548,7 +550,7 @@ void WebSrv::parseWsMessage(uint32_t len){
     uint8_t rsv1      = ((buff[0] >> 6) & 0x01); (void)rsv1;
     uint8_t rsv2      = ((buff[0] >> 5) & 0x01); (void)rsv2;
     uint8_t rsv3      = ((buff[0] >> 4) & 0x01); (void)rsv3;
-    uint8_t opcode    = (buff[0]  & 0x0F);
+    uint8_t opcode    = ( buff[0]  & 0x0F);
 
     webSocketClient.readBytes(buff, 1);
     uint8_t mask      = ((buff[0]>>7) & 0x01);
@@ -562,6 +564,10 @@ void WebSrv::parseWsMessage(uint32_t len){
 
     }
 
+    uint16_t msgBuffPtr = 0;
+    msgBuff = x_ps_malloc(paylodLen + 1);
+    if(!msgBuff){log_e("oom"); goto exit;}
+
     (void)headerLen;
 
     if(mask){
@@ -574,7 +580,7 @@ void WebSrv::parseWsMessage(uint32_t len){
     if(opcode == 0x08) {  // denotes a connection close
         hasclient_WS = false;
         webSocketClient.stop();
-        return;
+        goto exit;
     }
 
     if(opcode == 0x09) {  // denotes a ping
@@ -586,69 +592,71 @@ void WebSrv::parseWsMessage(uint32_t len){
     if(opcode == 0x0A) {  // denotes a pong
         if(WEBSRV_onCommand) WEBSRV_onCommand("pong received", "", "");
         if(WEBSRV_onInfo) WEBSRV_onInfo("pong received");
-        return;
+        goto exit;
     }
 
     if(opcode == 0x01) { // denotes a text frame
-        int32_t plen;
+        int32_t plen = 0;
+        uint32_t pll = paylodLen;
         while(paylodLen){
             if(paylodLen > 255){
                 plen = 255;
-                paylodLen -= webSocketClient.readBytes(buff, plen);
+                plen = webSocketClient.readBytes(msgBuff + msgBuffPtr, plen);
+                paylodLen -= plen;
+                msgBuffPtr += plen;
             }
             else{
                 plen = paylodLen;
                 paylodLen = 0;
-                webSocketClient.readBytes(buff, plen);
+                webSocketClient.readBytes(msgBuff + msgBuffPtr, plen);
+                msgBuffPtr += plen;
             }
-            if(mask){
-                for(int32_t i = 0; i < plen; i++){
-                    buff[i] = (buff[i] ^ maskingKey[i % 4]);
-                }
-            }
-            buff[plen] = 0;
-            if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-            if(len < 256){ // can be a command like "mute=1"
-                const char* cmd = buff;
-                const char* param = NULL;
-                const char* arg = NULL;
-                int32_t idx1 = indexOf(buff, '=');
-                if(idx1 > 0){
-                    buff[idx1] = '\0';
-                    const char* cmd = buff;
-                    int32_t offset = idx1 + 1;
-                    int32_t idx2 = lastIndexOf(buff + offset, '&');
-                    if (idx2 > 0){
-                        *(buff + offset + idx2) = '\0';
-                        param = buff + offset;
-                        arg = buff + offset + idx2 + 1;
-                        if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, arg);
-                        buff[0] = 0;
-                        return;
-                    }
-                    else{
-                        param = buff + offset;
-                        if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
-                        buff[0] = 0;
-                        return;
-                    }
-
-                }
-                else{
-                    if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, "", "");
-                    buff[0] = 0;
-                    return;
-                }
-            }
-            if(WEBSRV_onCommand) WEBSRV_onCommand((const char*) buff, "", "");
         }
-        buff[0] = 0;
+        if(mask){
+            for(int32_t i = 0; i < pll; i++){
+                msgBuff[i] = (msgBuff[i] ^ maskingKey[i % 4]);
+            }
+        }
+        msgBuff[pll] = 0;
+        if(WEBSRV_onInfo) WEBSRV_onInfo(msgBuff);
+        const char* cmd = msgBuff;
+        const char* param = NULL;
+        const char* arg = NULL;
+        int32_t idx1 = indexOf(msgBuff, '=');
+        if(idx1 > 0){
+            msgBuff[idx1] = '\0';
+            const char* cmd = msgBuff;
+            int32_t offset = idx1 + 1;
+            int32_t idx2 = lastIndexOf(msgBuff + offset, '&');
+            if (idx2 > 0){
+                *(msgBuff + offset + idx2) = '\0';
+                param = msgBuff + offset;
+                arg = msgBuff + offset + idx2 + 1;
+                if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, arg);
+                goto exit;
+            }
+            else{
+                param = msgBuff + offset;
+                if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
+                goto exit;
+            }
+        }
+        else{
+            if(WEBSRV_onCommand) WEBSRV_onCommand(cmd, "", "");
+            goto exit;
+        }
+        if(WEBSRV_onCommand) WEBSRV_onCommand((const char*) msgBuff, "", "");
     }
+    else{
+        log_e("opcode != 0x01");
+    }
+exit:
+    if(msgBuff){free(msgBuff); msgBuff = NULL;}
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::loop() {
 
-    cmdclient = cmdserver.available();
+    cmdclient = cmdserver.accept();
     if(cmdclient){
         handlehttp();
     }
@@ -661,7 +669,7 @@ void WebSrv::loop() {
     if(!webSocketClient.connected()){
         hasclient_WS = false;
     }
-    if(!hasclient_WS) webSocketClient = webSocketServer.available();
+    if(!hasclient_WS) webSocketClient = webSocketServer.accept();
 
     return;
 }

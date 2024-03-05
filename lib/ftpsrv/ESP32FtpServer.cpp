@@ -92,7 +92,7 @@ int32_t FtpServer::handleFTP() {
 
     if(ftpServer.hasClient()) {
         client.stop();
-        client = ftpServer.available();
+        client = ftpServer.accept();
     }
     if(cmdStatus == 0) {
         if(client.connected()) disconnectClient();
@@ -651,7 +651,7 @@ boolean FtpServer::dataConnect() {
         }
         if(dataServer.hasClient()) {
             data.stop();
-            data = dataServer.available();
+            data = dataServer.accept();
             //if(ftp_debug) ftp_debug("ftpdataserver client....");
         }
     }
@@ -697,7 +697,9 @@ void FtpServer::closeTransfer() {
     else
         client.println("226 File successfully transferred");
 
-    sprintf(chbuf, "Transfer in %u.%03ds with %uKBytes/s ", deltaT / 1000, deltaT % 1000, bytesTransfered / deltaT);
+    sprintf(chbuf, "Transfer in %lu.%03lus with %luKBytes/s ", (long unsigned int)(deltaT / 1000),
+                                                               (long unsigned int)(deltaT % 1000),
+                                                               (long unsigned int)(bytesTransfered / deltaT));
     if(ftp_debug) ftp_debug(chbuf);
     file.close();
     data.stop();

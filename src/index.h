@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 23.09.2023
+ *  Updated on: 25.01.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -112,8 +112,12 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
-        .button {
-            width : 80px;
+        #tab-content8 {
+            display : none;
+            margin : 20px;
+        }
+        .button_80x30 {
+            width : 120px;
             height : 30px;
             background-color : #128F76;
             border : none;
@@ -126,13 +130,30 @@ const char index_html[] PROGMEM = R"=====(
             border-radius : 5px;
             margin : 4px 2px;
         }
+        .button_20x36 {
+            width : 20px;
+            height : 36px;
+            background-color : #128F76;
+            border : none;
+            color : #FFF;
+            text-align : center;
+            text-decoration : none;
+            display : inline-block;
+            font-size : 16px;
+            cursor : pointer;
+            border-radius : 5px;
+            margin-top: 3px;
+            margin-left: 0px;
+            margin-right: 10px;
+        }
         .buttonblue {
             background-color : blue;
-            width : 120px;
         }
         .buttongreen {
             background-color : #128F76;
-            width : 120px;
+        }
+        .buttonred {
+            background-color : red;
         }
         #label-logo-s {
             margin-left : 20px;
@@ -151,22 +172,40 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/unknown.jpg);
+            background-image : url(SD/common//unknown.jpg);
             width : 128px;
             height : 128px;
             margin-top: 5px;
+        }
+        #label-bt-logo {
+            margin-left : 4px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            background-image : url(SD/png/BT.png);
+            width : 128px;
+            height : 128px;
+            margin-top: 5px;
+        }
+        #label-bt-mode {
+            margin-left : 4px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            width : 128px;
+            height : 38px;
+            margin-top: 6px;
+            font-size : 18px;
+            font-weight: bold;
+            text-align: center;
         }
         #div-logo-s{
           display: none;
         }
         #div-logo-m{
           display: none;
-        }
-        #div-tone-s{
-          display: none;  /* audioI2S SW decoder */
-        }
-        #div-tone-h{
-          display: none;  /* vs1053 HW decoder */
         }
         canvas {
             left : 0;
@@ -222,6 +261,50 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: thin;
             border-radius : 5px;
+        }
+        .boxstyle_m {
+            height : 36px;
+            width : 280px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 2px;
+            background-color: white;
+            font-size : 16px;
+            line-height : normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius : 5px;
+        }
+        .boxstyle_l {
+            height : 36px;
+            width : 500px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 2px;
+            background-color: white;
+            font-size : 16px;
+            line-height: normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius: 5px;
+            margin-bottom: 4px;
+        }
+        .boxstyle_200x36 {
+            height : 36px;
+            width : 200px;
+            padding-top : 0;
+            padding-left : 5px;
+            padding-bottom : 2px;
+            background-color: white;
+            font-size : 16px;
+            line-height : normal;
+            border-color: black;
+            border-style: solid;
+            border-width: thin;
+            border-radius : 5px;
+            margin-right: 0px;
         }
         .table_cell1 {
             padding-top : 0;
@@ -309,7 +392,6 @@ var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', '
 var trebleVal = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7]
 
 var tft_size = 0        // (0)320x240, (1)480x320
-var audio_decoder  = 0  // (0)vs1053,  (1)SW_Decoder
 
 // ---- websocket section------------------------
 
@@ -317,6 +399,7 @@ var socket = undefined
 var host = location.hostname
 var tm
 var IR_addr = ""
+var bt_RxTx = 'TX'
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -324,7 +407,7 @@ function ping() {
         console.log("send ping")
         tm = setTimeout(function () {
             toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
-        }, 10000)
+        }, 20000)
     }
 }
 
@@ -334,7 +417,6 @@ function connect() {
     socket.onopen = function () {
         console.log("Websocket connected")
         socket.send('get_tftSize')
-        socket.send('get_decoder')
         socket.send('to_listen')
         socket.send("getmute")
         socket.send("get_timeAnnouncement")
@@ -368,134 +450,131 @@ function connect() {
         if (n >= 0) {
             var msg  = socketMsg.substring(0, n)
             var val  = socketMsg.substring(n + 1)
-            // console.log("para ",msg, " val ",val)
+        //    console.log("para ",msg, " val ",val)
         }
         else {
             msg = socketMsg
         }
 
         switch(msg) {
-            case "pong":            clearTimeout(tm)
-                                    console.log("pong")
-                                    toastr.clear()
-                                    break
-            case "mute":            if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
-                                                    resultstr1.value = "mute on"
-                                                    console.log("mute on")}
-                                    if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
-                                                    resultstr1.value = "mute off"
-                                                    console.log("mute off")}
-                                    break
-            case "tone":            resultstr1.value = val  // text shown in resultstr1 as info
-                                    break
-            case "settone":         lines = val.split('\n')
-                                    for (i = 0; i < (lines.length - 1); i++) {
-                                      parts = lines[i].split('=')
-                                      setSlider(parts[0], parts[1])
-                                    }
-                                    break
-            case "stationNr":       document.getElementById('preset').selectedIndex = Number(val)
-                                    break
-            case "stationURL":      station.value = val
-                                    break
-            case "stationLogo":     if(tft_size == 0) showLogo('label-logo-s', val)
-                                    if(tft_size == 1) showLogo('label-logo-m', val)
-                                    break
-            case "streamtitle":     cmd.value = val
-                                    break
-            case "homepage":        window.open(val, '_blank') // show the station homepage
-                                    break
-            case "icy_description": resultstr1.value = val
-                                    break
-            case "AudioFileList":   getAudioFileList(val)
-                                    break
-            case "tftSize":         if(val == 's')  { tft_size = 0; // 320x240px
-                                                        document.getElementById('div-logo-m').style.display = 'none';
-                                                        document.getElementById('div-logo-s').style.display = 'block';
-                                                        document.getElementById('canvas').width  = 96;
-                                                        document.getElementById('canvas').height = 96;
-                                                        console.log("tftSize is s");
-                                    }
-                                    if(val == 'm')  { tft_size = 1;
-                                                        document.getElementById('div-logo-s').style.display = 'none';
-                                                        document.getElementById('div-logo-m').style.display = 'block';
-                                                        document.getElementById('canvas').width  = 128;
-                                                        document.getElementById('canvas').height = 128;
-                                                        console.log("tftSize is m");
-                                    }
-                                    break
-            case  "decoder":        if(val == 'h')  { audio_decoder = 0; // vs1053 HW decoder
-                                                        document.getElementById('div-tone-s').style.display = 'none';
-                                                        document.getElementById('div-tone-h').style.display = 'block';
-                                                        console.log("vs1053");
-                                    }
-                                    if(val == 's')  { audio_decoder = 1; // audioI2S SW decoder
-                                                        document.getElementById('div-tone-h').style.display = 'none';
-                                                        document.getElementById('div-tone-s').style.display = 'block';
-                                                        console.log("audioI2S");}
-                                    break
-            case  "volume":         resultstr1.value = "Volume is now " + val;
-                                    break
-            case  "SD_playFile":    resultstr3.value = "Audiofile is " + val;
-                                    break
-            case  "SD_playFolder":  resultstr3.value = "play all: " + val;
-                                    console.log("Audiofolder: ", val);
-                                    break
-            case  "stopfile":       resultstr3.value = val;
-                                    break
-            case  "resumefile":     resultstr3.value = val;
-                                    break
-
-            case  "timeAnnouncement": console.log("timeAnnouncement=" + val)
-                                    if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
-                                    if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
-                                    break
-
-            case "clearDLNA":       clearDLNAServerList(0)
-                                    break
-
-            case "DLNA_Names":      addDLNAServer(val) // add to Serverlist
-                                    break
-            case "Level1":          show_DLNA_Content(val, 1)
-                                    break
-            case "Level2":          show_DLNA_Content(val, 2)
-                                    break
-            case "Level3":          show_DLNA_Content(val, 3)
-                                    break
-            case "Level4":          show_DLNA_Content(val, 4)
-                                    break
-            case "Level5":          show_DLNA_Content(val, 5)
-                                    break
-            case "networks":        var networks = val.split('\n')
-                                    select = document.getElementById('ssid')
-                                    for (i = 0; i < (networks.length); i++) {
-                                        opt = document.createElement('OPTION')
-                                        opt.value = i
-                                        console.log(networks[i])
-                                        opt.text = networks[i]
-                                        select.add(opt)
-                                    }
-                                    break
-            case "test":            resultstr1.value = val
-                                    break
-            case "IR_address":      if(IR_addr != val){
-                                        IR_addr = val
-                                        ir_address.value=val
-                                        socket.send("setIRadr=" + val)
-                                    }
-                                    break
-            case "IR_command":      ir_command.value=val
-                                    break
-            case "timeFormat":      var radiobtn;
-                                    if     (val == '12') radiobtn = document.getElementById("h12")
-                                    else if(val == '24') radiobtn = document.getElementById("h24")
-                                    else{console.log("wrong timeFormat ", val); break;}
-                                    radiobtn.checked = true;
-                                    break;
-            case "changeState":     if      (val == 'RADIO') showTab1();
-                                    else if (val == 'PLAYER') showTab3();
-                                    break;
-            default:                console.log('unknown message', msg, val)
+            case "pong":                clearTimeout(tm)
+                                        console.log("pong")
+                                        toastr.clear()
+                                        break
+            case "mute":                if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
+                                                        resultstr1.value = "mute on"
+                                                        console.log("mute on")}
+                                        if(val == '0'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Green.png'
+                                                        resultstr1.value = "mute off"
+                                                        console.log("mute off")}
+                                        break
+            case "tone":                resultstr1.value = val  // text shown in resultstr1 as info
+                                        break
+            case "settone":             lines = val.split('\n')
+                                        for (i = 0; i < (lines.length - 1); i++) {
+                                          parts = lines[i].split('=')
+                                          setSlider(parts[0], parts[1])
+                                        }
+                                        break
+            case "stationNr":           document.getElementById('preset').selectedIndex = Number(val)
+                                        break
+            case "stationURL":          station.value = val
+                                        break
+            case "stationLogo":         if(tft_size == 0) showLogo('label-logo-s', val)
+                                        if(tft_size == 1) showLogo('label-logo-m', val)
+                                        break
+            case "streamtitle":         cmd.value = val
+                                        break
+            case "homepage":            window.open(val, '_blank') // show the station homepage
+                                        break
+            case "icy_description":     resultstr1.value = val
+                                        break
+            case "AudioFileList":       getAudioFileList(val)
+                                        break
+            case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
+                                                            document.getElementById('div-logo-m').style.display = 'none';
+                                                            document.getElementById('div-logo-s').style.display = 'block';
+                                                            document.getElementById('canvas').width  = 96;
+                                                            document.getElementById('canvas').height = 96;
+                                                            console.log("tftSize is s");
+                                        }
+                                        if(val == 'm')  { tft_size = 1;
+                                                            document.getElementById('div-logo-s').style.display = 'none';
+                                                            document.getElementById('div-logo-m').style.display = 'block';
+                                                            document.getElementById('canvas').width  = 128;
+                                                            document.getElementById('canvas').height = 128;
+                                                            console.log("tftSize is m");
+                                        }
+                                        break
+            case  "volume":             resultstr1.value = "Volume is now " + val;
+                                        break
+            case  "SD_playFile":        resultstr3.value = "Audiofile is " + val;
+                                        break
+            case  "SD_playFolder":      resultstr3.value = "play all: " + val;
+                                        console.log("Audiofolder: ", val);
+                                        break
+            case  "stopfile":           resultstr3.value = val;
+                                        break
+            case  "resumefile":         resultstr3.value = val;
+                                        break
+            case  "timeAnnouncement":   console.log("timeAnnouncement=" + val)
+                                        if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
+                                        if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
+                                        break
+            case "DLNA_Names":          addDLNAServer(val) // add to Serverlist
+                                        break
+            case "dlnaContent":         console.log(val)
+                                        show_DLNA_Content(val)
+                                        break
+            case "networks":            var networks = val.split('\n')
+                                        select = document.getElementById('ssid')
+                                        for (i = 0; i < (networks.length); i++) {
+                                            opt = document.createElement('OPTION')
+                                            opt.value = i
+                                            console.log(networks[i])
+                                            opt.text = networks[i]
+                                            select.add(opt)
+                                        }
+                                        break
+            case "test":                resultstr1.value = val
+                                        break
+            case "IR_address":          if(IR_addr != val){
+                                            IR_addr = val
+                                            ir_address.value=val
+                                            socket.send("setIRadr=" + val)
+                                        }
+                                        break
+            case "IR_command":          ir_command.value=val
+                                        break
+            case "timeFormat":          var radiobtn;
+                                        if     (val == '12') radiobtn = document.getElementById("h12")
+                                        else if(val == '24') radiobtn = document.getElementById("h24")
+                                        else{console.log("wrong timeFormat ", val); break;}
+                                        radiobtn.checked = true;
+                                        break;
+            case "changeState":         if      (val == 'RADIO') showTab1();
+                                        else if (val == 'PLAYER') showTab3();
+                                        break;
+            case "KCX_BT_connected":    console.log(msg, val)
+                                        if(val == '0') showLogo('label-bt-logo', '/png/BT.png')
+                                        if(val == '1' && bt_RxTx == 'TX') showLogo('label-bt-logo', '/png/BT_TX.png')
+                                        if(val == '1' && bt_RxTx == 'RX') showLogo('label-bt-logo', '/png/BT_RX.png')
+                                        break
+            case "KCX_BT_MEM":          show_BT_memItems(val)
+                                        break;
+            case "KCX_BT_SCANNED":      show_BT_scannedItems(val)
+                                        break;
+            case "KCX_BT_MODE":         console.log(msg, val)
+                                        if(val ==="TX"){
+                                            document.getElementById('label-bt-mode').innerHTML= "EMITTER"
+                                            bt_RxTx = 'TX'
+                                        }
+                                        if(val ==="RX"){
+                                            document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
+                                            bt_RxTx = 'RX'
+                                        }
+                                        break;
+            default:                    console.log('unknown message', msg, val)
         }
     }
 }
@@ -546,6 +625,7 @@ function showTab1 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -565,6 +645,7 @@ function showTab2 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -583,6 +664,7 @@ function showTab3 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
@@ -606,12 +688,14 @@ function showTab4 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    clearDLNAServerList(0)
     socket.send('DLNA_getServer')
     socket.send("change_state=" + "10")
 }
@@ -625,6 +709,7 @@ function showTab5 () {
     document.getElementById('tab-content5').style.display = 'block'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -642,6 +727,7 @@ function showTab6 () {
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'block'
     document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -661,6 +747,7 @@ function showTab7 () {  // Remote Control
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'block'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
@@ -668,6 +755,29 @@ function showTab7 () {  // Remote Control
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
 }
+
+function showTab8 () {  // KCX BT Emitter
+    console.log('tab-content8 (Remote Control)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'block'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send('KCX_BT_connected')  // is connected?
+    socket.send('KCX_BT_scanned')    // get scanned items
+    socket.send('KCX_BT_mem')        // get saved items
+    socket.send('KCX_BT_getMode')    // get mode (TX or RX)
+}
+
 
 function uploadTextFile (fileName, content) {
     var fd = new FormData()
@@ -690,6 +800,8 @@ function uploadTextFile (fileName, content) {
 }
 
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
+var dlnaLevel = 0
+
 function clearDLNAServerList(level){
     console.log('clear DLNA server list, level=', level)
     var select
@@ -715,80 +827,128 @@ function clearDLNAServerList(level){
         case 5:
             select = document.getElementById('level5')
             select.options.length = 0;
+        case 6:
+            select = document.getElementById('level6')
+            select.options.length = 0;
     }
 }
 
 function addDLNAServer(val){
-    var server = val.split(",")
+    console.log(val)
+    var obj = JSON.parse(val);
     var select = document.getElementById('server')
-    var option = new Option(server[0], server[1]); // e.g. "Wolles-FRITZBOX Mediaserver,1"  (friendlyName, ServerIdx)
-    console.log(server[0], server[1]);
-    select.appendChild(option);
+    for(var i = 0; i < Object.keys(obj).length; i++){
+        var option = new Option(obj[i].friendlyName, obj[i].srvId); // e.g. "Wolles-FRITZBOX Mediaserver,1"  (friendlyName, ServerIdx)
+        console.log(obj[i].friendlyName, obj[i].srvId);
+        select.appendChild(option);
+    }
 }
-function show_DLNA_Content(val, level){
+
+function show_DLNA_Content(val){
     var select
-    if(level == 1) select = document.getElementById('level1')
-    if(level == 2) select = document.getElementById('level2')
-    if(level == 3) select = document.getElementById('level3')
-    if(level == 4) select = document.getElementById('level4')
-    if(level == 5) select = document.getElementById('level5')
+    if(dlnaLevel == 1) select = document.getElementById('level1')
+    if(dlnaLevel == 2) select = document.getElementById('level2')
+    if(dlnaLevel == 3) select = document.getElementById('level3')
+    if(dlnaLevel == 4) select = document.getElementById('level4')
+    if(dlnaLevel == 5) select = document.getElementById('level5')
+    if(dlnaLevel == 6) select = document.getElementById('level6')
     if(select.options.length == 0){
-        var option = new Option("Select level " + level.toString())
+        var option = new Option("Select level " + dlnaLevel.toString())
         select.appendChild(option);
     }
-    content = JSON.parse(val)
-    for (var i = 0; i < content.length; i++){
-        var isDir = content[i].isDir
-        var n
-        var c
+    console.log(val)
+    var obj = JSON.parse(val);
+    for(var i = 0; i < Object.keys(obj).length; i++){
+        console.log(i)
+        var objectId = obj[i].objectId
+        var title = obj[i].title
+        var itemURL = obj[i].itemURL
+        var isAudio = obj[i].isAudio
+        var itemSize = obj[i].itemSize
+        var childCount = obj[i].childCount
+        var duration = obj[i].dur
+
+        var isDir
+        if(itemURL== "?") isDir = true
+        else              isDir = false
+
+        var n = ""
         if(isDir){
-            n = content[i].name.concat('\xa0\xa0', '\(' + content[i].size + '\)'); // more than one space
-            c = 'D=' + content[i].id // is directory
+            if(childCount != "0"){
+                n = title.concat('\xa0\xa0', '\(' + childCount + '\)'); // more than one space
+            }
+            else {
+                n = title
+            }
+        }
+        else {
+            if(duration[0] == '?'){
+                n = title.concat('\xa0\xa0', '\(' + itemSize + '\)'); // more than one space
+            }
+            else {
+                n = title.concat('\xa0\xa0', '\(' + duration + '\)'); // more than one space
+            }
+        }
+        if(isAudio == "true"){
+            var option = new Option(n, itemURL);
+            option.style.color = "blue"
         }
         else{
-            n = content[i].name + '\xa0\xa0' + content[i].size;
-            c = 'F=' + content[i].id // is file, id is uri
+            var option = new Option(n, objectId);
+            if(!isDir){
+                option.style.color = "red"
+            }
         }
-        if(content[i].isAudio){
-            var option = new Option(n, c); // e.g.
-            option.style.color = "black"
-        }
-        else{
-            var option = new Option(n); // e.g.
-            option.style.color = "red"
-        }
-        console.log(n, c);
+        console.log(n, objectId);
         select.appendChild(option);
     }
 }
+
 function selectserver (presctrl) { // preset, select a server, root, level0
-    socket.send('DLNA_getContent0=' + presctrl.value)
+    socket.send('DLNA_getRoot=' + presctrl.value)
     clearDLNAServerList(1)
-    console.log('DLNA_getContent0=' + presctrl.value)
+    dlnaLevel = 1
+    console.log('DLNA_getContent=' + presctrl.value)
 }
 function select_l1 (presctrl) { // preset, select root
-    socket.send('DLNA_getContent1=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(2)
-    console.log('DLNA_getContent1=' + presctrl.value)
+    dlnaLevel = 2
 }
 function select_l2 (presctrl) { // preset, select level 1
-    socket.send('DLNA_getContent2=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(3)
-    console.log('DLNA_getContent2=' + presctrl.value)
+    dlnaLevel = 3
 }
 function select_l3 (presctrl) { // preset, select level 2
-    socket.send('DLNA_getContent3=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(4)
-    console.log('DLNA_getContent3=' + presctrl.value)
+    dlnaLevel = 4
  }
  function select_l4 (presctrl) { // preset, select level 3
-    socket.send('DLNA_getContent4=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     clearDLNAServerList(5)
-    console.log('DLNA_getContent4=' + presctrl.value)
+    dlnaLevel = 5
  }
  function select_l5 (presctrl) { // preset, select level 4
-    socket.send('DLNA_getContent5=' + presctrl.value)
-    console.log('DLNA_getContent5=' + presctrl.value)
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    dlnaLevel = 6
+ }
+  function select_l6 (presctrl) { // preset, select level 5
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    dlnaLevel = 7
  }
 
 // ----------------------------------- TAB RADIO ------------------------------------
@@ -831,99 +991,12 @@ function setstation () { // Radio: button play - Enter a streamURL here....
     socket.send("stationURL=" + theUrl)
 }
 
-function selectItemByValue (elmnt, value) { // tab Radio: load and set tones
-    var sel = document.getElementById(elmnt)
-    for (var i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].value === value) {
-            sel.selectedIndex = i
-        }
-    }
-}
-
 function setSlider (elmnt, value) {
-    if (elmnt === 'toneha') slider_TG_set(value)
-    if (elmnt === 'tonehf') slider_TF_set(value)
-    if (elmnt === 'tonela') slider_BG_set(value)
-    if (elmnt === 'tonelf') slider_BF_set(value)
     v = Math.trunc((40 + parseInt(value, 10)) /3)
     console.log("setSlider", elmnt, value)
     if (elmnt === 'LowPass' ) slider_LP_set(v)
     if (elmnt === 'BandPass') slider_BP_set(v)
     if (elmnt === 'HighPass') slider_HP_set(v)
-}
-
-function slider_TG_mouseUp () { // Slider Treble Gain   mouseupevent
-    handlectrl('toneha', trebleVal[TrebleGain.value])
-    // console.log('Treble Gain=%i',Number(TrebleGain.value));
-}
-
-function slider_TG_change () { //  Slider Treble Gain  changeevent
-    console.log('Treble Gain=%i', Number(TrebleGain.value))
-    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
-}
-
-function slider_TG_set (value) { // set Slider Treble Gain
-    var val = Number(value)
-    if (val < 8) val = val + 8
-    else val = val - 8
-    document.getElementById('TrebleGain').value = val
-    document.getElementById('label_TG_value').innerHTML = trebleDB[TrebleGain.value]
-    console.log('Treble Gain=%i', val)
-}
-
-function slider_TF_mouseUp () { // Slider Treble Freq   mouseupevent
-    handlectrl('tonehf', TrebleFreq.value)
-    // console.log('Treble Freq=%i', Number(TrebleFreq.value));
-}
-
-function slider_TF_change () { //  Slider Treble Freq  changeevent
-    console.log('Treble Freq=%i', Number(TrebleFreq.value))
-    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
-}
-
-function slider_TF_set (value) { // set Slider Treble Freq
-    var val = Number(value)
-    document.getElementById('TrebleFreq').value = val
-    document.getElementById('label_TF_value').innerHTML = TrebleFreq.value
-    console.log('Treble Freq=%i', val)
-}
-
-function slider_BG_mouseUp () { // Slider Bass Gain   mouseupevent
-    handlectrl('tonela', BassGain.value)
-    // console.log('Bass Gain=%i', Number(BassGain.value));
-}
-
-function slider_BG_change () { //  Slider Bass Gain  changeevent
-    var sign = ''
-    if (BassGain.value !== '0') sign = '+'
-    console.log('Bass Gain=%i', Number(BassGain.value))
-    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
-}
-
-function slider_BG_set (value) { // set Slider Bass Gain
-    var val = Number(value)
-    var sign = ''
-    if (BassGain.value !== '0') sign = '+'
-    document.getElementById('BassGain').value = val
-    document.getElementById('label_BG_value').innerHTML = sign + BassGain.value
-    console.log('Bass Gain=%i', val)
-}
-
-function slider_BF_mouseUp () { // Slider Bass Gain   mouseupevent
-    handlectrl('tonelf', BassFreq.value)
-    // console.log('Bass Freq=%i', Number(BassFreq.value));
-}
-
-function slider_BF_change () { //  Slider Bass Gain  changeevent
-    console.log('Bass Freq=%i', Number(BassFreq.value))
-    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
-}
-
-function slider_BF_set (value) { // set Slider Bass Gain
-    var val = Number(value)
-    document.getElementById('BassFreq').value = val
-    document.getElementById('label_BF_value').innerHTML = (BassFreq.value - 1) * 10
-    console.log('Bass Freq=%i', val)
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
@@ -1294,7 +1367,7 @@ var category
 function addStationsToGrid () {
     showDetailsDialog('Add', {})
     $('#txtStreamURL').val($('#streamurl').val())
-    $('#txtStationName').val($('#stationname').val())
+    $('#txtStationName').val($('#stations option:selected').text().trim())
 }
 
 function loadJSON (path, success, error) {
@@ -1319,15 +1392,15 @@ function loadJSON (path, success, error) {
 
 function selectcategory (presctrl) { // tab Search: preset, select a category
 
-  if(presctrl.value == "bycountry")  {loadJSON('https://at1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
-  if(presctrl.value == "bylanguage") {loadJSON('https://at1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
-  if(presctrl.value == "bytag")      {loadJSON('https://at1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
+  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries', gotItems, 'jsonp'); category="country"}
+  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
+  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
-  if(category == "country")  loadJSON('https://at1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://at1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://at1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
+  if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountry/'  + presctrl.value, gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
 
 }
 
@@ -1468,7 +1541,7 @@ function uploadCanvasImage () {
 
 function downloadCanvasImage () {
     var filename
-    var sn = document.getElementById('stationname')
+    var sn = document.getElementById('rb_stationname')
     if (sn.value !== '') filename = sn.value + '.jpg'
     else filename = 'myimage.jpg'
     var lnk = document.createElement('a')
@@ -1617,6 +1690,72 @@ function chIRcmd(btn){  // IR command, value changed
     return
 }
 
+// -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
+
+function show_BT_memItems(jsonstr){
+    console.log('KCX MEM', jsonstr)
+    var jsonData = JSON.parse(jsonstr)
+    for (var i = 0; i < jsonData.length; i++) {
+        document.getElementsByName('bt_addr')[i].value = jsonData[i].addr
+        document.getElementsByName('bt_name')[i].value = jsonData[i].name
+    }
+}
+
+function addScannedName(i){
+    var scannedName
+    if(i == 0) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    if(i == 1) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    if(i == 2) scannedName = document.getElementsByName('bt_scan_name')[i].value;
+    console.log("scannedName", scannedName)
+    if(scannedName === ""){
+        alert("choosen BT name is empty")
+        return
+    }
+    for (var a = 0; a < 10; a++) {
+        if(scannedName === document.getElementsByName('bt_name')[a].value){
+            alert("BT name \"" + scannedName + "\" already exists in the list")
+            return
+        }
+    }
+    socket.send('KCX_BT_addName=' + scannedName)
+}
+
+function addScannedAddr(i){
+    var scannedAddr
+    if(i == 0) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    if(i == 1) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    if(i == 2) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
+    console.log("scannedAddr", scannedAddr)
+    if(scannedAddr === ""){
+        alert("choosen MAC address is empty")
+        return
+    }
+    for (var a = 0; a < 10; a++) {
+        if(scannedAddr === document.getElementsByName('bt_addr')[a].value){
+            alert("MAC address \"" + scannedAddr + "\" already exists in the list")
+            return
+        }
+    }
+    socket.send('KCX_BT_addAddr=' + scannedAddr)
+}
+
+function show_BT_scannedItems(jsonstr){
+    console.log('KCX_BT_SCANNED', jsonstr)
+    var jsonData = JSON.parse(jsonstr)
+    for (var i = 0; i < jsonData.length; i++) {
+        document.getElementsByName('bt_scan_name')[i].value = jsonData[i].name
+        document.getElementsByName('bt_scan_addr')[i].value = jsonData[i].addr
+    }
+}
+
+function clear_BT_memItems(){
+    for (var i = 0; i < 10; i++) {
+        document.getElementsByName('bt_addr')[i].value = ""
+        document.getElementsByName('bt_name')[i].value = ""
+    }
+    socket.send('KCX_BT_clearItems')
+}
+
 </script>
 
 <body id="BODY">
@@ -1655,7 +1794,7 @@ function chIRcmd(btn){  // IR command, value changed
         <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 29">
         <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="lazy" alt="Image 30">
         <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="lazy" alt="Image 30">
-        <img src="SD/common/MiniWebRadioV2.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
+        <img src="SD/common/MiniWebRadioV3.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
     </div>
 
     <div id="dialog">
@@ -1724,46 +1863,6 @@ function chIRcmd(btn){  // IR command, value changed
             </div>
             <div id="div-logo-m" style="flex: 0 0 210px;">
                 <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
-            </div>
-            <div id="div-tone-h" style="flex:1; justify-content: center;">
-                <div style="width: 380px; height:108px;">
-                    <label class="sdr_lbl_left">Treble Gain:</label>
-                    <div class="slidecontainer" style="float: left; width: 180px; height: 25px;">
-                        <input type="range" min="0" max="15" value="8" id="TrebleGain"
-                        onmouseup="slider_TG_mouseUp()"
-                        ontouchend="slider_TG_mouseUp()"
-                        oninput="slider_TG_change()">
-                    </div>
-                    <label id="label_TG_value" class="sdr_lbl_right">000,0</label>
-                    <label class="sdr_lbl_measure">dB</label>
-                    <label class="sdr_lbl_left">Treble Freq:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="1" max="15" value="8" id="TrebleFreq"
-                        onmouseup="slider_TF_mouseUp()"
-                        ontouchend="slider_TF_mouseUp()"
-                        oninput="slider_TF_change()">
-                    </div>
-                    <label id="label_TF_value" class="sdr_lbl_right">00</label>
-                    <label class="sdr_lbl_measure">KHz</label>
-                    <label class="sdr_lbl_left">Bass Gain:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="0" max="15" value="8" id="BassGain"
-                        onmouseup="slider_BG_mouseUp()"
-                        ontouchend="slider_BG_mouseUp()"
-                        oninput="slider_BG_change()">
-                    </div>
-                    <label id="label_BG_value" class="sdr_lbl_right">+00</label>
-                    <label class="sdr_lbl_measure">dB</label>
-                    <label class="sdr_lbl_left">Bass Freq:</label>
-                    <div class="slidecontainer" style="float: left; height: 25px;">
-                        <input type="range" min="2" max="15" value="6" id="BassFreq"
-                        onmouseup="slider_BF_mouseUp()"
-                        ontouchend="slider_BF_mouseUp()"
-                        oninput="slider_BF_change()">
-                    </div>
-                    <label  id="label_BF_value" class="sdr_lbl_right">000</label>
-                    <label class="sdr_lbl_measure">Hz</label>
-                </div>
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -1862,7 +1961,7 @@ function chIRcmd(btn){  // IR command, value changed
         <center>
             <div id="jsGrid"></div>
             <br>
-            <button class="button buttongreen"
+            <button class="button_80x30 buttongreen"
                     onclick="saveGridFileToSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -1871,7 +1970,7 @@ function chIRcmd(btn){  // IR command, value changed
                     title="Save to SD">Save
             </button>
             &nbsp;
-            <button class="button buttongreen"
+            <button class="button_80x30 buttongreen"
                     onclick="loadGridFileFromSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -1880,9 +1979,9 @@ function chIRcmd(btn){  // IR command, value changed
                     id="loadSD" title="Load from SD">Load
             </button>
             &nbsp;
-            <button class="button buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+            <button class="button_80x30 buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
             &nbsp;
-            <button class="button buttonblue"
+            <button class="button_80x30 buttonblue"
                     onclick="javascript:document.getElementById('file').click();"
                     title="Load from PC">load xlsx
             </button>
@@ -1964,6 +2063,9 @@ function chIRcmd(btn){  // IR command, value changed
                     <option value="-1"> </option>
                 </select>
                 <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l5(this)" id="level5">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l6(this)" id="level6">
                     <option value="-1"> </option>
                 </select>
             </div>
@@ -2096,8 +2198,8 @@ function chIRcmd(btn){  // IR command, value changed
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content6">
-        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and VS1053 HW decoder or
-            external DAC. This project is documented on
+        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and  external DAC.
+         This project is documented on
             <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
             Author: Wolle (schreibfaul1)
         </p>
@@ -2106,7 +2208,7 @@ function chIRcmd(btn){  // IR command, value changed
         <table>
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="SD/common/MiniWebRadioV2.jpg" alt="MiniWebRadioV2" border="3">
+                    <img src="SD/png/MiniWebRadioV3.png" alt="MiniWebRadioV3" border="3">
                 </td>
                 <td>
                     <div style="display: flex;">
@@ -2115,6 +2217,15 @@ function chIRcmd(btn){  // IR command, value changed
                         </div>
                         <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
                             <p> IR Settings </p>
+                        </div>
+                    </div>
+                    <br>
+                    <div style="display: flex;">
+                        <div style="width=64px; height=64px;">
+                            <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab8()">
+                        </div>
+                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
+                            <p> KCX_BT_Emitter Settings </p>
                         </div>
                     </div>
                     <br>
@@ -2253,7 +2364,7 @@ function chIRcmd(btn){  // IR command, value changed
             </tr>
         </table>
         <br>
-        <button class="button buttongreen"
+        <button class="button_80x30 buttongreen"
                 onclick="socket.send('saveIRbuttons')"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2262,7 +2373,7 @@ function chIRcmd(btn){  // IR command, value changed
                 title="Save IR buttons">Save
         </button>
         &nbsp;
-        <button class="button buttongreen"
+        <button class="button_80x30 buttongreen"
                 onclick="loadIRbuttons()"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2275,6 +2386,218 @@ function chIRcmd(btn){  // IR command, value changed
            Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
     </div>
 <!--===============================================================================================================================================-->
+    <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
+        <div style="display:flex">
+            <div id="div-BT-logo" style="flex: 0 0 150px;">
+                <label for="label-logo" id="label-bt-logo" onclick="socket.send('KCX_BT_connected')"> </label>
+                <label for="label-logo" id="label-bt-mode"> unknown </label>
+            </div>
+            <div style="flex: 1 0; position: relative;  padding-top: 20px;">
+            <div style="height: 223px; overflow-x: hidden; overflow-y: auto; width: 640px;" >
+                <table>
+                    <thead>
+                    <tr>
+                    <th style="height: 0;"></th>
+                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> saved BT MAC address </div></th>
+                    <th style="height: 0;"></th>
+                    <th style="height: 0;"><div style="position: absolute; top: 0; margin-left: 25px;"> saved BT Name </div></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr>
+                    <td class="table_cell1"> 0 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 0 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 1 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 1 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 2 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 2 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 3 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 3 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 4 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 4 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 5 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 5 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 6 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 6 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 7 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 7 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 8 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 8 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+
+                    <tr>
+                    <td class="table_cell1"> 9 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_addr" readonly></td>
+                    <td class="table_cell1"> 9 </td>
+                    <td> <input type="text" class="boxstyle_m" name="bt_name" readonly></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+        <br>
+        <div style="display:flex">
+            <div style="flex: 0 0 150px;">
+                <button class="button_80x30 buttonblue"
+                   onclick="socket.send('KCX_BT_changeMode')"
+                   onmousedown="this.style.backgroundColor='#D62C1A'"
+                   ontouchstart="this.style.backgroundColor='#D62C1A'"
+                   onmouseup="this.style.backgroundColor='blue'"
+                   ontouchend="this.style.backgroundColor='blue'"
+                   id="BT Mode" title="receive <---> transmit">BT Mode
+                </button>
+            </div>
+            <div style="flex: 1 0; padding-left: 20px;">
+                &nbsp;
+                <button class="button_80x30 buttonred"
+                    onclick="clear_BT_memItems()"
+                    onmousedown="this.style.backgroundColor='black'"
+                    ontouchstart="this.style.backgroundColor='black'"
+                    onmouseup="this.style.backgroundColor='red'"
+                    ontouchend="this.style.backgroundColor='red'"
+                    id="loadSD" title="cleat all saved items">Clear
+                </button>
+            </div>
+        </div>
+        <br>
+        <div style="display:flex">
+            <div style="flex: 0 0 150px;">
+                <table>
+                    <thead>
+                    <tr>
+                    <th style=""> scanned BT MAC address</th>
+                    <th style=""></th>
+                    <th style=""> scanned BT Name </th>
+                    <th style=""></th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(0)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName1" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(0)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName2" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(1)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName3" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(1)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName4" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    <tr>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_addr"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedAddr(2)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName5" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    <td> <input type="text" class="boxstyle_200x36" name="bt_scan_name"> </td>
+                    <td class="table_cell1"> <button class="button_20x36 buttongreen"  onclick="addScannedName(2)"
+                                                                                       onmousedown="this.style.backgroundColor='#D62C1A'"
+                                                                                       ontouchstart="this.style.backgroundColor='#D62C1A'"
+                                                                                       onmouseup="this.style.backgroundColor='#128F76'"
+                                                                                       ontouchend="this.style.backgroundColor='#128F76'"
+                                                                                       id="addName6" title="add BT Name to the table">+
+                                                                                       </button></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style="flex: 1 0; padding-left: 20px;">
+                <img src="SD/png/Button_Volume_Down_Blue.png" alt="BT_Vol_down"
+                    onmousedown="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Down_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Down_Blue.png'"
+                    onclick="socket.send('KCX_BT_downvolume')">
+                <img src="SD/png/Button_Volume_Up_Blue.png" alt="BT_Vol_up"
+                    onmousedown="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Volume_Up_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Volume_Up_Blue.png'"
+                    onclick="socket.send('KCX_BT_upvolume')">
+                <img src="SD/png/Button_Pause_Blue.png" alt="BT_Pause"
+                    onmousedown="this.src='SD/png/Button_Pause_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Pause_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Pause_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Pause_Blue.png'"
+                    onclick="socket.send('KCX_BT_pause')">
+            </div>
+        </div>
+    </div>
+<!--===============================================================================================================================================-->
+
 </div>
 
 <script src="index.js"></script>

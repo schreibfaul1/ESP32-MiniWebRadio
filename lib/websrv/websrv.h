@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 06.07.2023
+ *  updated on: 20.01.2024
  *      Author: Wolle
  */
 
@@ -41,6 +41,7 @@ private:
     String          _Version;
     String          contenttype;
     char            buff[256];
+    char*           msgBuff = NULL;
     uint8_t         method;
     String          WS_sec_Key;
     String          WS_resp_Key;
@@ -69,8 +70,8 @@ public:
     void show(const char* pagename, const char* MIMEType, int16_t len=-1);
     void show_not_found();
     boolean streamfile(fs::FS &fs,const char* path);
-    boolean send(String msg, uint8_t opcode = Text_Frame);
-    boolean send(const char* msg, uint8_t opcode = Text_Frame);
+    boolean send(const char* cmd, String msg, uint8_t opcode = Text_Frame);
+    boolean send(const char* cmd, const char* msg = "", uint8_t opcode = Text_Frame);
     void    sendPing();
     void    sendPong();
     boolean uploadfile(fs::FS &fs,const char* path, uint32_t contentLength);
@@ -114,6 +115,16 @@ private:
         const char *p = strrchr(haystack, needle);
         return (p ? p - haystack : -1);
     }
+
+    char* x_ps_malloc(uint16_t len) {
+        char* ps_str = NULL;
+        if(psramFound()){ps_str = (char*) ps_malloc(len);}
+        else            {ps_str = (char*)    malloc(len);}
+        return ps_str;
+}
+
+
+
 //--------------------------------------------------------------------------------------------------------------
 
 

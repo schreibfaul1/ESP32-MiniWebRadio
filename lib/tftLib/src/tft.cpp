@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Oct 08 2023
+// updated on Feb 08 2024
 
 #include "Arduino.h"
 #include "tft.h"
@@ -781,15 +781,15 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
 
 
     String info="";
-    TFT_CS = CS; TFT_DC = DC;
+    _TFT_CS = CS; _TFT_DC = DC;
 
-    pinMode(TFT_DC, OUTPUT);
-    digitalWrite(TFT_DC, LOW);
-    pinMode(TFT_CS, OUTPUT);
-    digitalWrite(TFT_CS, HIGH);
+    pinMode(_TFT_DC, OUTPUT);
+    digitalWrite(_TFT_DC, LOW);
+    pinMode(_TFT_CS, OUTPUT);
+    digitalWrite(_TFT_CS, HIGH);
 
     // log_i("DC=%d, CS=%d, MISO=%d, MOSI=%d, SCK=%d", TFT_DC, TFT_CS, TFT_MISO, TFT_MOSI, TFT_SCK);
-    spi_TFT->begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1);
+    spi_TFT->begin(_TFT_SCK, _TFT_MISO, _TFT_MOSI, -1);
 
     init();  //
 }
@@ -981,7 +981,7 @@ void TFT::setRotation(uint8_t m) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-void TFT::invertDisplay(boolean i) {
+void TFT::invertDisplay(bool i) {
     startWrite();
     if(_TFTcontroller == ILI9341)   {writeCommand(i ? ILI9341_INVON : ILI9341_INVOFF);}
     if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {writeCommand(i ? ILI9486_INVON : ILI9486_INVOFF);}
@@ -1389,7 +1389,7 @@ void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1,  uint16_t col
     // Bresenham's algorithm - thx wikipedia - speed enhanced by Bodmer to use
     // an eficient FastH/V Line draw routine for line segments of 2 pixels or more
     int16_t t;
-    boolean steep = abs(y1 - y0) > abs(x1 - x0);
+    bool steep = abs(y1 - y0) > abs(x1 - x0);
     if (steep) {
         t=x0; x0=y0; y0=t;  // swap (x0, y0);
         t=x1; x1=y1; y1=t;  // swap(x1, y1);
@@ -1710,366 +1710,908 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TFT::setCursor(uint16_t x, uint16_t y) {
-    if (x >= width()|| y >= height()) return false;
-    if(_TFTcontroller == ILI9341) {//ILI9341
-        writeCommand(0x2A); spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF); writeCommand(0x2c); //Column Start
-        writeCommand(0x2B); spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF); writeCommand(0x2c); //Row Start
+void TFT::setFont(uint16_t font){
+
+#ifdef TFT_TIMES_NEW_ROMAN
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_Times15;
+            _current_font.glyph_bitmap = glyph_bitmap_Times15;
+            _current_font.glyph_dsc = glyph_dsc_Times15;
+            _current_font.range_start = cmaps_Times15->range_start;
+            _current_font.range_length = cmaps_Times15->range_length;
+            _current_font.line_height = cmaps_Times15->line_height;
+            _current_font.font_height = cmaps_Times15->font_height;
+            _current_font.base_line = cmaps_Times15->base_line;
+            _current_font.lookup_table = cmaps_Times15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_Times16;
+            _current_font.glyph_bitmap = glyph_bitmap_Times16;
+            _current_font.glyph_dsc = glyph_dsc_Times16;
+            _current_font.range_start = cmaps_Times16->range_start;
+            _current_font.range_length = cmaps_Times16->range_length;
+            _current_font.line_height = cmaps_Times16->line_height;
+            _current_font.font_height = cmaps_Times16->font_height;
+            _current_font.base_line = cmaps_Times16->base_line;
+            _current_font.lookup_table = cmaps_Times16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_Times18;
+            _current_font.glyph_bitmap = glyph_bitmap_Times18;
+            _current_font.glyph_dsc = glyph_dsc_Times18;
+            _current_font.range_start = cmaps_Times18->range_start;
+            _current_font.range_length = cmaps_Times18->range_length;
+            _current_font.line_height = cmaps_Times18->line_height;
+            _current_font.font_height = cmaps_Times18->font_height;
+            _current_font.base_line = cmaps_Times18->base_line;
+            _current_font.lookup_table = cmaps_Times18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_Times21;
+            _current_font.glyph_bitmap = glyph_bitmap_Times21;
+            _current_font.glyph_dsc = glyph_dsc_Times21;
+            _current_font.range_start = cmaps_Times21->range_start;
+            _current_font.range_length = cmaps_Times21->range_length;
+            _current_font.line_height = cmaps_Times21->line_height;
+            _current_font.font_height = cmaps_Times21->font_height;
+            _current_font.base_line = cmaps_Times21->base_line;
+            _current_font.lookup_table = cmaps_Times21->lookup_table;
+            break;
+        case 25:
+            _current_font.cmaps = cmaps_Times25;
+            _current_font.glyph_bitmap = glyph_bitmap_Times25;
+            _current_font.glyph_dsc = glyph_dsc_Times25;
+            _current_font.range_start = cmaps_Times25->range_start;
+            _current_font.range_length = cmaps_Times25->range_length;
+            _current_font.line_height = cmaps_Times25->line_height;
+            _current_font.font_height = cmaps_Times25->font_height;
+            _current_font.base_line = cmaps_Times25->base_line;
+            _current_font.lookup_table = cmaps_Times15->lookup_table;
+            break;
+         case 27:
+            _current_font.cmaps = cmaps_Times27;
+            _current_font.glyph_bitmap = glyph_bitmap_Times27;
+            _current_font.glyph_dsc = glyph_dsc_Times27;
+            _current_font.range_start = cmaps_Times27->range_start;
+            _current_font.range_length = cmaps_Times27->range_length;
+            _current_font.line_height = cmaps_Times27->line_height;
+            _current_font.font_height = cmaps_Times27->font_height;
+            _current_font.base_line = cmaps_Times27->base_line;
+            _current_font.lookup_table = cmaps_Times27->lookup_table;
+            break;
+        case 34:
+            _current_font.cmaps = cmaps_Times34;
+            _current_font.glyph_bitmap = glyph_bitmap_Times34;
+            _current_font.glyph_dsc = glyph_dsc_Times34;
+            _current_font.range_start = cmaps_Times34->range_start;
+            _current_font.range_length = cmaps_Times34->range_length;
+            _current_font.line_height = cmaps_Times34->line_height;
+            _current_font.font_height = cmaps_Times34->font_height;
+            _current_font.base_line = cmaps_Times34->base_line;
+            _current_font.lookup_table = cmaps_Times34->lookup_table;
+            break;
+        case 38:
+            _current_font.cmaps = cmaps_Times38;
+            _current_font.glyph_bitmap = glyph_bitmap_Times38;
+            _current_font.glyph_dsc = glyph_dsc_Times38;
+            _current_font.range_start = cmaps_Times38->range_start;
+            _current_font.range_length = cmaps_Times38->range_length;
+            _current_font.line_height = cmaps_Times38->line_height;
+            _current_font.font_height = cmaps_Times38->font_height;
+            _current_font.base_line = cmaps_Times38->base_line;
+            _current_font.lookup_table = cmaps_Times38->lookup_table;
+            break;
+        case 43:
+            _current_font.cmaps = cmaps_Times43;
+            _current_font.glyph_bitmap = glyph_bitmap_Times43;
+            _current_font.glyph_dsc = glyph_dsc_Times43;
+            _current_font.range_start = cmaps_Times43->range_start;
+            _current_font.range_length = cmaps_Times43->range_length;
+            _current_font.line_height = cmaps_Times43->line_height;
+            _current_font.font_height = cmaps_Times43->font_height;
+            _current_font.base_line = cmaps_Times43->base_line;
+            _current_font.lookup_table = cmaps_Times43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_Times56;
+            _current_font.glyph_bitmap = glyph_bitmap_Times56;
+            _current_font.glyph_dsc = glyph_dsc_Times56;
+            _current_font.range_start = cmaps_Times56->range_start;
+            _current_font.range_length = cmaps_Times56->range_length;
+            _current_font.line_height = cmaps_Times56->line_height;
+            _current_font.font_height = cmaps_Times56->font_height;
+            _current_font.base_line = cmaps_Times56->base_line;
+            _current_font.lookup_table = cmaps_Times56->lookup_table;
+            break;
+        case 66:
+            _current_font.cmaps = cmaps_Times66;
+            _current_font.glyph_bitmap = glyph_bitmap_Times66;
+            _current_font.glyph_dsc = glyph_dsc_Times66;
+            _current_font.range_start = cmaps_Times66->range_start;
+            _current_font.range_length = cmaps_Times66->range_length;
+            _current_font.line_height = cmaps_Times66->line_height;
+            _current_font.font_height = cmaps_Times66->font_height;
+            _current_font.base_line = cmaps_Times66->base_line;
+            _current_font.lookup_table = cmaps_Times66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            log_e("unknown font size for Times New Roman, size is %i", font);
+            break;
     }
-    if(_TFTcontroller == HX8347D) {//HX8347D
-        writeCommand(0x02); spi_TFT->write(x >> 8);  //Column Start
-        writeCommand(0x03); spi_TFT->write(x & 0xFF);
-        writeCommand(0x06); spi_TFT->write(y >> 8);  //Row Start
-        writeCommand(0x07); spi_TFT->write(y & 0xFF);
+#endif
+
+#ifdef TFT_GARAMOND
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_Garamond15;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond15;
+            _current_font.glyph_dsc = glyph_dsc_Garamond15;
+            _current_font.range_start = cmaps_Garamond15->range_start;
+            _current_font.range_length = cmaps_Garamond15->range_length;
+            _current_font.line_height = cmaps_Garamond15->line_height;
+            _current_font.font_height = cmaps_Garamond15->font_height;
+            _current_font.base_line = cmaps_Garamond15->base_line;
+            _current_font.lookup_table = cmaps_Garamond15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_Garamond16;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond16;
+            _current_font.glyph_dsc = glyph_dsc_Garamond16;
+            _current_font.range_start = cmaps_Garamond16->range_start;
+            _current_font.range_length = cmaps_Garamond16->range_length;
+            _current_font.line_height = cmaps_Garamond16->line_height;
+            _current_font.font_height = cmaps_Garamond16->font_height;
+            _current_font.base_line = cmaps_Garamond16->base_line;
+            _current_font.lookup_table = cmaps_Garamond16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_Garamond18;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond18;
+            _current_font.glyph_dsc = glyph_dsc_Garamond18;
+            _current_font.range_start = cmaps_Garamond18->range_start;
+            _current_font.range_length = cmaps_Garamond18->range_length;
+            _current_font.line_height = cmaps_Garamond18->line_height;
+            _current_font.font_height = cmaps_Garamond18->font_height;
+            _current_font.base_line = cmaps_Garamond18->base_line;
+            _current_font.lookup_table = cmaps_Garamond18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_Garamond21;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond21;
+            _current_font.glyph_dsc = glyph_dsc_Garamond21;
+            _current_font.range_start = cmaps_Garamond21->range_start;
+            _current_font.range_length = cmaps_Garamond21->range_length;
+            _current_font.line_height = cmaps_Garamond21->line_height;
+            _current_font.font_height = cmaps_Garamond21->font_height;
+            _current_font.base_line = cmaps_Garamond21->base_line;
+            _current_font.lookup_table = cmaps_Garamond21->lookup_table;
+             break;
+        case 25:
+            _current_font.cmaps = cmaps_Garamond25;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond25;
+            _current_font.glyph_dsc = glyph_dsc_Garamond25;
+            _current_font.range_start = cmaps_Garamond25->range_start;
+            _current_font.range_length = cmaps_Garamond25->range_length;
+            _current_font.line_height = cmaps_Garamond25->line_height;
+            _current_font.font_height = cmaps_Garamond25->font_height;
+            _current_font.base_line = cmaps_Garamond25->base_line;
+            _current_font.lookup_table = cmaps_Garamond25->lookup_table;
+             break;
+        case 27:
+            _current_font.cmaps = cmaps_Garamond27;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond27;
+            _current_font.glyph_dsc = glyph_dsc_Garamond27;
+            _current_font.range_start = cmaps_Garamond27->range_start;
+            _current_font.range_length = cmaps_Garamond27->range_length;
+            _current_font.line_height = cmaps_Garamond27->line_height;
+            _current_font.font_height = cmaps_Garamond27->font_height;
+            _current_font.base_line = cmaps_Garamond27->base_line;
+            _current_font.lookup_table = cmaps_Garamond27->lookup_table;
+             break;
+        case 34:
+            _current_font.cmaps = cmaps_Garamond34;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond34;
+            _current_font.glyph_dsc = glyph_dsc_Garamond34;
+            _current_font.range_start = cmaps_Garamond34->range_start;
+            _current_font.range_length = cmaps_Garamond34->range_length;
+            _current_font.line_height = cmaps_Garamond34->line_height;
+            _current_font.font_height = cmaps_Garamond34->font_height;
+            _current_font.base_line = cmaps_Garamond34->base_line;
+            _current_font.lookup_table = cmaps_Garamond34->lookup_table;
+             break;
+        case 38:
+            _current_font.cmaps = cmaps_Garamond38;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond38;
+            _current_font.glyph_dsc = glyph_dsc_Garamond38;
+            _current_font.range_start = cmaps_Garamond38->range_start;
+            _current_font.range_length = cmaps_Garamond38->range_length;
+            _current_font.line_height = cmaps_Garamond38->line_height;
+            _current_font.font_height = cmaps_Garamond38->font_height;
+            _current_font.base_line = cmaps_Garamond38->base_line;
+            _current_font.lookup_table = cmaps_Garamond38->lookup_table;
+             break;
+        case 43:
+            _current_font.cmaps = cmaps_Garamond43;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond43;
+            _current_font.glyph_dsc = glyph_dsc_Garamond43;
+            _current_font.range_start = cmaps_Garamond43->range_start;
+            _current_font.range_length = cmaps_Garamond43->range_length;
+            _current_font.line_height = cmaps_Garamond43->line_height;
+            _current_font.font_height = cmaps_Garamond43->font_height;
+            _current_font.base_line = cmaps_Garamond43->base_line;
+            _current_font.lookup_table = cmaps_Garamond43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_Garamond56;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond56;
+            _current_font.glyph_dsc = glyph_dsc_Garamond56;
+            _current_font.range_start = cmaps_Garamond56->range_start;
+            _current_font.range_length = cmaps_Garamond56->range_length;
+            _current_font.line_height = cmaps_Garamond56->line_height;
+            _current_font.font_height = cmaps_Garamond56->font_height;
+            _current_font.base_line = cmaps_Garamond56->base_line;
+            _current_font.lookup_table = cmaps_Garamond56->lookup_table;
+            break;
+        case 66:
+           _current_font.cmaps = cmaps_Garamond66;
+           _current_font.glyph_bitmap = glyph_bitmap_Garamond66;
+           _current_font.glyph_dsc = glyph_dsc_Garamond66;
+           _current_font.range_start = cmaps_Garamond66->range_start;
+           _current_font.range_length = cmaps_Garamond66->range_length;
+           _current_font.line_height = cmaps_Garamond66->line_height;
+           _current_font.font_height = cmaps_Garamond66->font_height;
+           _current_font.base_line = cmaps_Garamond66->base_line;
+           _current_font.lookup_table = cmaps_Garamond66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            break;
     }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
-        writeCommand(0x2A);
-        spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF);
-        writeCommand(ILI9486_RAMWR); //Column Start
-        writeCommand(0x2B);
-        spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF);
-        writeCommand(ILI9486_RAMWR); //Row Start
+#endif
+
+#ifdef TFT_FREE_SERIF_ITALIC
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_FreeSerifItalic15;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic15;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic15;
+            _current_font.range_start = cmaps_FreeSerifItalic15->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic15->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic15->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic15->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic15->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_FreeSerifItalic16;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic16;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic16;
+            _current_font.range_start = cmaps_FreeSerifItalic16->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic16->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic16->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic16->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic16->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_FreeSerifItalic18;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic18;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic18;
+            _current_font.range_start = cmaps_FreeSerifItalic18->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic18->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic18->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic18->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic18->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_FreeSerifItalic21;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic21;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic21;
+            _current_font.range_start = cmaps_FreeSerifItalic21->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic21->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic21->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic21->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic21->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic21->lookup_table;
+             break;
+        case 25:
+            _current_font.cmaps = cmaps_FreeSerifItalic25;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic25;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic25;
+            _current_font.range_start = cmaps_FreeSerifItalic25->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic25->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic25->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic25->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic25->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic25->lookup_table;
+             break;
+        case 27:
+            _current_font.cmaps = cmaps_FreeSerifItalic27;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic27;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic27;
+            _current_font.range_start = cmaps_FreeSerifItalic27->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic27->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic27->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic27->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic27->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic27->lookup_table;
+             break;
+        case 34:
+            _current_font.cmaps = cmaps_FreeSerifItalic34;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic34;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic34;
+            _current_font.range_start = cmaps_FreeSerifItalic34->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic34->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic34->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic34->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic34->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic34->lookup_table;
+             break;
+        case 38:
+            _current_font.cmaps = cmaps_FreeSerifItalic38;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic38;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic38;
+            _current_font.range_start = cmaps_FreeSerifItalic38->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic38->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic38->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic38->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic38->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic38->lookup_table;
+             break;
+        case 43:
+            _current_font.cmaps = cmaps_FreeSerifItalic43;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic43;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic43;
+            _current_font.range_start = cmaps_FreeSerifItalic43->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic43->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic43->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic43->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic43->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_FreeSerifItalic56;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic56;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic56;
+            _current_font.range_start = cmaps_FreeSerifItalic56->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic56->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic56->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic56->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic56->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic56->lookup_table;
+            break;
+        case 66:
+           _current_font.cmaps = cmaps_FreeSerifItalic66;
+           _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic66;
+           _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic66;
+           _current_font.range_start = cmaps_FreeSerifItalic66->range_start;
+           _current_font.range_length = cmaps_FreeSerifItalic66->range_length;
+           _current_font.line_height = cmaps_FreeSerifItalic66->line_height;
+           _current_font.font_height = cmaps_FreeSerifItalic66->font_height;
+           _current_font.base_line = cmaps_FreeSerifItalic66->base_line;
+           _current_font.lookup_table = cmaps_FreeSerifItalic66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            break;
     }
-    if(_TFTcontroller == ILI9488){
-        writeCommand(0x2A);
-        spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF);
-        writeCommand(ILI9486_RAMWR); //Column Start
-        writeCommand(0x2B);
-        spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF);
-        writeCommand(ILI9486_RAMWR); //Row Start
+
+#endif
+
+#ifdef TFT_ARIAL
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_Arial15;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial15;
+            _current_font.glyph_dsc = glyph_dsc_Arial15;
+            _current_font.range_start = cmaps_Arial15->range_start;
+            _current_font.range_length = cmaps_Arial15->range_length;
+            _current_font.line_height = cmaps_Arial15->line_height;
+            _current_font.font_height = cmaps_Arial15->font_height;
+            _current_font.base_line = cmaps_Arial15->base_line;
+            _current_font.lookup_table = cmaps_Arial15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_Arial16;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial16;
+            _current_font.glyph_dsc = glyph_dsc_Arial16;
+            _current_font.range_start = cmaps_Arial16->range_start;
+            _current_font.range_length = cmaps_Arial16->range_length;
+            _current_font.line_height = cmaps_Arial16->line_height;
+            _current_font.font_height = cmaps_Arial16->font_height;
+            _current_font.base_line = cmaps_Arial16->base_line;
+            _current_font.lookup_table = cmaps_Arial16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_Arial18;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial18;
+            _current_font.glyph_dsc = glyph_dsc_Arial18;
+            _current_font.range_start = cmaps_Arial18->range_start;
+            _current_font.range_length = cmaps_Arial18->range_length;
+            _current_font.line_height = cmaps_Arial18->line_height;
+            _current_font.font_height = cmaps_Arial18->font_height;
+            _current_font.base_line = cmaps_Arial18->base_line;
+            _current_font.lookup_table = cmaps_Arial18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_Arial21;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial21;
+            _current_font.glyph_dsc = glyph_dsc_Arial21;
+            _current_font.range_start = cmaps_Arial21->range_start;
+            _current_font.range_length = cmaps_Arial21->range_length;
+            _current_font.line_height = cmaps_Arial21->line_height;
+            _current_font.font_height = cmaps_Arial21->font_height;
+            _current_font.base_line = cmaps_Arial21->base_line;
+            _current_font.lookup_table = cmaps_Arial21->lookup_table;
+             break;
+        case 25:
+            _current_font.cmaps = cmaps_Arial25;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial25;
+            _current_font.glyph_dsc = glyph_dsc_Arial25;
+            _current_font.range_start = cmaps_Arial25->range_start;
+            _current_font.range_length = cmaps_Arial25->range_length;
+            _current_font.line_height = cmaps_Arial25->line_height;
+            _current_font.font_height = cmaps_Arial25->font_height;
+            _current_font.base_line = cmaps_Arial25->base_line;
+            _current_font.lookup_table = cmaps_Arial25->lookup_table;
+             break;
+        case 27:
+            _current_font.cmaps = cmaps_Arial27;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial27;
+            _current_font.glyph_dsc = glyph_dsc_Arial27;
+            _current_font.range_start = cmaps_Arial27->range_start;
+            _current_font.range_length = cmaps_Arial27->range_length;
+            _current_font.line_height = cmaps_Arial27->line_height;
+            _current_font.font_height = cmaps_Arial27->font_height;
+            _current_font.base_line = cmaps_Arial27->base_line;
+            _current_font.lookup_table = cmaps_Arial27->lookup_table;
+             break;
+        case 34:
+            _current_font.cmaps = cmaps_Arial34;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial34;
+            _current_font.glyph_dsc = glyph_dsc_Arial34;
+            _current_font.range_start = cmaps_Arial34->range_start;
+            _current_font.range_length = cmaps_Arial34->range_length;
+            _current_font.line_height = cmaps_Arial34->line_height;
+            _current_font.font_height = cmaps_Arial34->font_height;
+            _current_font.base_line = cmaps_Arial34->base_line;
+            _current_font.lookup_table = cmaps_Arial34->lookup_table;
+             break;
+        case 38:
+            _current_font.cmaps = cmaps_Arial38;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial38;
+            _current_font.glyph_dsc = glyph_dsc_Arial38;
+            _current_font.range_start = cmaps_Arial38->range_start;
+            _current_font.range_length = cmaps_Arial38->range_length;
+            _current_font.line_height = cmaps_Arial38->line_height;
+            _current_font.font_height = cmaps_Arial38->font_height;
+            _current_font.base_line = cmaps_Arial38->base_line;
+            _current_font.lookup_table = cmaps_Arial38->lookup_table;
+             break;
+        case 43:
+            _current_font.cmaps = cmaps_Arial43;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial43;
+            _current_font.glyph_dsc = glyph_dsc_Arial43;
+            _current_font.range_start = cmaps_Arial43->range_start;
+            _current_font.range_length = cmaps_Arial43->range_length;
+            _current_font.line_height = cmaps_Arial43->line_height;
+            _current_font.font_height = cmaps_Arial43->font_height;
+            _current_font.base_line = cmaps_Arial43->base_line;
+            _current_font.lookup_table = cmaps_Arial43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_Arial56;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial56;
+            _current_font.glyph_dsc = glyph_dsc_Arial56;
+            _current_font.range_start = cmaps_Arial56->range_start;
+            _current_font.range_length = cmaps_Arial56->range_length;
+            _current_font.line_height = cmaps_Arial56->line_height;
+            _current_font.font_height = cmaps_Arial56->font_height;
+            _current_font.base_line = cmaps_Arial56->base_line;
+            _current_font.lookup_table = cmaps_Arial56->lookup_table;
+            break;
+        case 66:
+           _current_font.cmaps = cmaps_Arial66;
+           _current_font.glyph_bitmap = glyph_bitmap_Arial66;
+           _current_font.glyph_dsc = glyph_dsc_Arial66;
+           _current_font.range_start = cmaps_Arial66->range_start;
+           _current_font.range_length = cmaps_Arial66->range_length;
+           _current_font.line_height = cmaps_Arial66->line_height;
+           _current_font.font_height = cmaps_Arial66->font_height;
+           _current_font.base_line = cmaps_Arial66->base_line;
+           _current_font.lookup_table = cmaps_Arial66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            break;
     }
-    if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI){
-        writeCommand(0x2A);
-        spi_TFT->write(x >> 8);
-        spi_TFT->write(x & 0xFF);
-        writeCommand(ST7796_RAMWR); //Column Start
-        writeCommand(0x2B);
-        spi_TFT->write(y >> 8);
-        spi_TFT->write(y & 0xFF);
-        writeCommand(ST7796_RAMWR); //Row Start
+#endif
+
+#ifdef TFT_Z300
+    switch(font){
+        case 15:
+            _current_font.cmaps = cmaps_Z300_15;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_15;
+            _current_font.glyph_dsc = glyph_dsc_Z300_15;
+            _current_font.range_start = cmaps_Z300_15->range_start;
+            _current_font.range_length = cmaps_Z300_15->range_length;
+            _current_font.line_height = cmaps_Z300_15->line_height;
+            _current_font.font_height = cmaps_Z300_15->font_height;
+            _current_font.base_line = cmaps_Z300_15->base_line;
+            _current_font.lookup_table = cmaps_Z300_15->lookup_table;
+            break;
+        case 16:
+            _current_font.cmaps = cmaps_Z300_16;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_16;
+            _current_font.glyph_dsc = glyph_dsc_Z300_16;
+            _current_font.range_start = cmaps_Z300_16->range_start;
+            _current_font.range_length = cmaps_Z300_16->range_length;
+            _current_font.line_height = cmaps_Z300_16->line_height;
+            _current_font.font_height = cmaps_Z300_16->font_height;
+            _current_font.base_line = cmaps_Z300_16->base_line;
+            _current_font.lookup_table = cmaps_Z300_16->lookup_table;
+            break;
+        case 18:
+            _current_font.cmaps = cmaps_Z300_18;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_18;
+            _current_font.glyph_dsc = glyph_dsc_Z300_18;
+            _current_font.range_start = cmaps_Z300_18->range_start;
+            _current_font.range_length = cmaps_Z300_18->range_length;
+            _current_font.line_height = cmaps_Z300_18->line_height;
+            _current_font.font_height = cmaps_Z300_18->font_height;
+            _current_font.base_line = cmaps_Z300_18->base_line;
+            _current_font.lookup_table = cmaps_Z300_18->lookup_table;
+            break;
+        case 21:
+            _current_font.cmaps = cmaps_Z300_21;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_21;
+            _current_font.glyph_dsc = glyph_dsc_Z300_21;
+            _current_font.range_start = cmaps_Z300_21->range_start;
+            _current_font.range_length = cmaps_Z300_21->range_length;
+            _current_font.line_height = cmaps_Z300_21->line_height;
+            _current_font.font_height = cmaps_Z300_21->font_height;
+            _current_font.base_line = cmaps_Z300_21->base_line;
+            _current_font.lookup_table = cmaps_Z300_21->lookup_table;
+             break;
+        case 25:
+            _current_font.cmaps = cmaps_Z300_25;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_25;
+            _current_font.glyph_dsc = glyph_dsc_Z300_25;
+            _current_font.range_start = cmaps_Z300_25->range_start;
+            _current_font.range_length = cmaps_Z300_25->range_length;
+            _current_font.line_height = cmaps_Z300_25->line_height;
+            _current_font.font_height = cmaps_Z300_25->font_height;
+            _current_font.base_line = cmaps_Z300_25->base_line;
+            _current_font.lookup_table = cmaps_Z300_25->lookup_table;
+             break;
+        case 27:
+            _current_font.cmaps = cmaps_Z300_27;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_27;
+            _current_font.glyph_dsc = glyph_dsc_Z300_27;
+            _current_font.range_start = cmaps_Z300_27->range_start;
+            _current_font.range_length = cmaps_Z300_27->range_length;
+            _current_font.line_height = cmaps_Z300_27->line_height;
+            _current_font.font_height = cmaps_Z300_27->font_height;
+            _current_font.base_line = cmaps_Z300_27->base_line;
+            _current_font.lookup_table = cmaps_Z300_27->lookup_table;
+             break;
+        case 34:
+            _current_font.cmaps = cmaps_Z300_34;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_34;
+            _current_font.glyph_dsc = glyph_dsc_Z300_34;
+            _current_font.range_start = cmaps_Z300_34->range_start;
+            _current_font.range_length = cmaps_Z300_34->range_length;
+            _current_font.line_height = cmaps_Z300_34->line_height;
+            _current_font.font_height = cmaps_Z300_34->font_height;
+            _current_font.base_line = cmaps_Z300_34->base_line;
+            _current_font.lookup_table = cmaps_Z300_34->lookup_table;
+             break;
+        case 38:
+            _current_font.cmaps = cmaps_Z300_38;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_38;
+            _current_font.glyph_dsc = glyph_dsc_Z300_38;
+            _current_font.range_start = cmaps_Z300_38->range_start;
+            _current_font.range_length = cmaps_Z300_38->range_length;
+            _current_font.line_height = cmaps_Z300_38->line_height;
+            _current_font.font_height = cmaps_Z300_38->font_height;
+            _current_font.base_line = cmaps_Z300_38->base_line;
+            _current_font.lookup_table = cmaps_Z300_38->lookup_table;
+             break;
+        case 43:
+            _current_font.cmaps = cmaps_Z300_43;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_43;
+            _current_font.glyph_dsc = glyph_dsc_Z300_43;
+            _current_font.range_start = cmaps_Z300_43->range_start;
+            _current_font.range_length = cmaps_Z300_43->range_length;
+            _current_font.line_height = cmaps_Z300_43->line_height;
+            _current_font.font_height = cmaps_Z300_43->font_height;
+            _current_font.base_line = cmaps_Z300_43->base_line;
+            _current_font.lookup_table = cmaps_Z300_43->lookup_table;
+            break;
+        case 56:
+            _current_font.cmaps = cmaps_Z300_56;
+            _current_font.glyph_bitmap = glyph_bitmap_Z300_56;
+            _current_font.glyph_dsc = glyph_dsc_Z300_56;
+            _current_font.range_start = cmaps_Z300_56->range_start;
+            _current_font.range_length = cmaps_Z300_56->range_length;
+            _current_font.line_height = cmaps_Z300_56->line_height;
+            _current_font.font_height = cmaps_Z300_56->font_height;
+            _current_font.base_line = cmaps_Z300_56->base_line;
+            _current_font.lookup_table = cmaps_Z300_56->lookup_table;
+            break;
+        case 66:
+           _current_font.cmaps = cmaps_Z300_66;
+           _current_font.glyph_bitmap = glyph_bitmap_Z300_66;
+           _current_font.glyph_dsc = glyph_dsc_Z300_66;
+           _current_font.range_start = cmaps_Z300_66->range_start;
+           _current_font.range_length = cmaps_Z300_66->range_length;
+           _current_font.line_height = cmaps_Z300_66->line_height;
+           _current_font.font_height = cmaps_Z300_66->font_height;
+           _current_font.base_line = cmaps_Z300_66->base_line;
+           _current_font.lookup_table = cmaps_Z300_66->lookup_table;
+            break;
+        case 156:
+            _current_font.cmaps = cmaps_BigNumbers;
+            _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
+            _current_font.glyph_dsc = glyph_dsc_BigNumbers;
+            _current_font.range_start = cmaps_BigNumbers->range_start;
+            _current_font.range_length = cmaps_BigNumbers->range_length;
+            _current_font.line_height = cmaps_BigNumbers->line_height;
+            _current_font.font_height = cmaps_BigNumbers->font_height;
+            _current_font.base_line = cmaps_BigNumbers->base_line;
+            _current_font.lookup_table = cmaps_BigNumbers->lookup_table;
+            break;
+        default:
+            break;
     }
-    _curX = x; _curY = y;
-    _f_curPos = true;  //curPos is updated
-    return true;
+#endif
+
+
+
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+/*******************************************************************************************************************************************************************************************************
+ *                                                                                                                                                                                                     *
+ *        ⏫⏫⏫⏫⏫⏫                                       W R I T E    T E X T    R E L A T E D    F U N C T I O N S                                                      ⏫⏫⏫⏫⏫⏫             *
+ *                                                                                                                                                                                                     *
+ * *****************************************************************************************************************************************************************************************************
+*/
+void TFT::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height){
 
-size_t TFT::writeText(const uint8_t *str, int16_t maxWidth, int16_t maxHeight, boolean noWrap) {  // a pointer to string
+    uint16_t nrOfPixels = width * height;
 
-    int16_t sHeight = height();
-    int16_t sWidth =  width();
+    auto bitreader = [&](const uint8_t* bm) {  // lambda
+        static uint16_t bmi = 0;
+        static uint8_t idx = 0;
+        static const uint8_t* bitmap = NULL;
+        if(bm) {bitmap = bm; idx = 0x80; bmi = 0; return (uint16_t)0;}
+        bool bit = *(bitmap + bmi)  & idx;
+        idx >>= 1;
+        if(idx == 0){bmi++; idx = 0x80;}
+        if(bit){return _textColor;}
+        return _backGroundColor;
+    };
 
-    uint16_t wordLength = 0;
-    uint16_t ch_count = 0;
-    while(str[wordLength] !=0 ) wordLength++;  // determine length of text
+    bitreader(bmi);
 
-    static int16_t xC = 64;
-    static int16_t tmp_curX = 0;
-    static int16_t tmp_curY = 0;
-
-    if(_f_curPos==true){tmp_curX=_curX; tmp_curY=_curY; _f_curPos=false;} //new CursorValues?
-
-    int16_t mHeight = maxHeight + _curY;
-    if(maxHeight < 1) mHeight = 1000; // unused, set it larger than display size
-
-    int16_t mWidth  = maxWidth + _curX;
-    if(maxWidth < 1)  mWidth  = 1000; // unused, set it larger than display size
-
-    boolean  f_wrap=false;
-    uint16_t color=_textcolor;
-    int16_t  Xpos=tmp_curX;
-    int16_t  Ypos=tmp_curY;
-    int16_t  Ypos0 = Ypos;
-    int16_t  Xpos0 = Xpos;
-    uint16_t font_char=0;
-    int16_t  i=0;
-    uint16_t j=0;
-    int32_t      a=0;
-    uint16_t font_height = _font[6];
     startWrite();
-
-    while(i != wordLength) {  //until string ends
-        int32_t strw=0;
-        //------------------------------------------------------------------  word wrap
-        a=i+1 ;
-        if(str[i] == 32 && !noWrap) { // space
-            strw=font_height/4; // erstes Leerzeichen
-            uint16_t fi=8;
-            fi=fi + (str[i] - 32) * 4;
-            strw=strw + _font[fi] +1;
-            while((str[a] != 32) && (a < wordLength)) {
-                fi=8;
-                if((_f_utf8)&&(str[a]>=0xC2)){ //next char is UTF-8
-                    uint16_t ch=str[a]; ch<<=8; ch+=str[a+1];
-                        if((ch<0xD4B0)) { // char is in range, is not a armenian char or higher
-                            xC=(str[a]-0xC2)*64;  a++; fi+=(str[a]+xC-32)*4; // UTF-8 decoding
-                        }
-                        else {
-                            fi+=(str[a] - 32) * 4;
-                        }
-                }
-                else {
-                    fi+=(str[a] - 32) * 4;
-                }
-                strw=strw + _font[fi] +1;
-                a++;
-                if(str[a]=='\n') break;  // text defined word wrap recognised
-            }
-            if(_textorientation == 0) {
-                if((Xpos + strw) >= sWidth) f_wrap = true;
-                if((Xpos + strw) >= mWidth) f_wrap = true;
-            }
-            else{
-                if((Ypos+strw) >= sHeight) f_wrap=true;
-            }
+        setAddrWindow(posX, poxY, width , height);
+        if     (_TFTcontroller == ILI9341){
+            writeCommand(ILI9341_RAMWR); //ILI9341
+            while (nrOfPixels--) spi_TFT->write16(bitreader(0)); // Send to TFT 16 bits at a time
         }
-        if(str[i] == '\033' && (i + 4) < wordLength){ // ANSI ESC?
-            if(str[i + 1] == '[' && str[i + 2] == '3'){// ANSI ESCAPE COLOR SEQUENCE found
-                if(str[i + 4] == 'm'){
-                    switch (str[i + 3]) {
-                        case '0':   color = TFT_BLACK;         break; // ANSI_ESC_BLACK
-                        case '1':   color = TFT_RED;           break; // ANSI_ESC_RED
-                        case '2':   color = TFT_GREEN;         break; // ANSI_ESC_GREEN
-                        case '3':   color = TFT_YELLOW;        break; // ANSI_ESC_YELLOW
-                        case '4':   color = TFT_BLUE;          break; // ANSI_ESC_BLUE
-                        case '5':   color = TFT_MAGENTA;       break; // ANSI_ESC_MAGENTA
-                        case '6':   color = TFT_CYAN;          break; // ANSI_ESC_CYAN
-                        case '7':   color = TFT_WHITE;         break; // ANSI_ESC_WHITE
-                        default: log_w("unknown ANSI ESCAPE COLOR SEQUENCE "); break;
-                    }
-                    i += 5;
-                    ch_count += 5;
-                }
-                else log_w("ANSI ESCAPE COLOR SEQUENCE not impl");
-            }
-            continue;
+        else if(_TFTcontroller == HX8347D){
+            writeCommand(0x22);
+            while (nrOfPixels--) spi_TFT->write16(bitreader(0)); // Send to TFT 16 bits at a time
         }
-        //------------------------------------------------------------------ word wrap end
-
-        font_char = str[i];     //die ersten 32 ASCII-Zeichen sind nicht im Zeichensatz enthalten
-        if((str[i]==32) && (f_wrap==true)) { font_char='\n'; f_wrap=false; }
-        if(font_char>=32)       // it is a printable char
-        {
-            if(_f_utf8) {
-                if((font_char>=0xC2)&&(font_char<0xd5)) {
-                    if((font_char==0xd4)&&(str[i+1]>0xAF)) {} // do nothing, it is a armenian character or higher
-                    else {
-                        xC=(font_char-0xC2)*64;  i++; font_char = str[i]+xC; // UTF-8 decoding
-                    }
-                }
-                if((font_char==0xE2)&&(str[i+1]==0x80)) { // general punctuation, three bytes
-                    i+=2;
-                    font_char=32; // set blank
-                }
-            }
-            font_char-=32;
-            uint16_t font_index = 8; // begins at position 8 ever
-            font_index = font_index + font_char * 4;
-            uint16_t char_width = _font[font_index];
-            uint16_t space;
-            if(font_char==0) space=font_height/4; else space=0; //correct spacewidth is 1
-            if(_textorientation==0) {
-                if(noWrap){
-                    if((Xpos + char_width + space) >= sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                    if((Xpos + char_width + space) >= mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                }
-                else{ // wrap is enabled
-                    if((Xpos+char_width+space)>=sWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                    if((Xpos+char_width+space)>=mWidth){Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-
-                }
-                if((Ypos+font_height)>=sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                if((Ypos+font_height)>=mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-            }
-            else {
-                if((Ypos+char_width+space)>sHeight){Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                if((Xpos-font_height)<0){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-            }
-            uint16_t char_bytes = (char_width - 1) / 8 + 1; //number of bytes for a character
-            uint32_t font_offset;
-            font_offset = _font[font_index + 3]; //MSB
-            font_offset <<= 8; // shift left 8 times
-            font_offset += _font[font_index + 2];
-            font_offset <<= 8;
-            font_offset += _font[font_index + 1]; //LSB
-            //ab font_offset stehen die Infos für das Zeichen
-            int16_t n = 0;
-            for (uint16_t k = 0; k < font_height; k++) {
-                for (int16_t m = 0; m < char_bytes; m++) {
-                    uint16_t chTemp = (_font[font_offset + n]);
-                    n++;
-                    if (_textorientation == 0) {
-                        for (j = 0; j < 8; j++) {
-                            if (chTemp & 0x01) {
-                                writePixel(Xpos, Ypos, color);
-                            }
-                            chTemp >>= 1;
-                            Xpos++;
-                            if ((Xpos - Xpos0) == char_width) {
-                                Xpos = Xpos0; Ypos++; break;
-                            }
-                        }
-                    }
-                    else {
-                        for (j = 0; j < 8; j++) {
-                            if (chTemp & 0x01) writePixel(Xpos, Ypos, color);
-                            chTemp >>= 1;
-                            Ypos++;
-
-                            if ((Ypos - Ypos0) == char_width) {
-                                Ypos = Ypos0; Xpos--; break;
-                            }
-                        }
-                    }
-                }
-            }
-            if (_textorientation == 0) {
-                Ypos = Ypos0; Xpos0 = Xpos0 + char_width + 1 + space; Xpos = Xpos0;
-            }
-            else {
-                Xpos = Xpos0; Ypos0 = Ypos0 + char_width + 1 + space; Ypos = Ypos0;
-            }
-        } // end if(font_char>=0)
-        else {  // das ist ein Steuerzeichen
-            //if(str[i]==10) {  //CRLF
-            if(font_char==10){
-                if(_textorientation==0){
-                    {Xpos=_curX; Ypos+=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                }
-                else{
-                    {Ypos=_curY; Xpos-=font_height; Xpos0=Xpos; Ypos0=Ypos;}
-                    if((Ypos+font_height)>sHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                    if((Ypos+font_height)>mHeight){tmp_curX=Xpos; tmp_curY=Ypos; endWrite(); return ch_count;}
-                }
-            }
+        else if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
+            writeCommand(ILI9486_RAMWR);
+            while (nrOfPixels--) spi_TFT->write16(bitreader(0)); // Send to TFT 16 bits at a time
         }
-        i++;
-        ch_count++;
-    } // end while
-    tmp_curX=Xpos;
-    tmp_curY=Ypos;
-
+        else if(_TFTcontroller == ILI9488){
+            writeCommand(ILI9488_RAMWR);
+            while (nrOfPixels--) write24BitColor(bitreader(0)); // Send to TFT 16 bits at a time
+        }
+        else if(_TFTcontroller == ST7796   || _TFTcontroller == ST7796RPI){
+            writeCommand(ST7796_RAMWR);
+            while (nrOfPixels--) write24BitColor(bitreader(0)); // Send to TFT 16 bits at a time
+        }
     endWrite();
-    return ch_count;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-size_t TFT::write(uint8_t character) {
-    /*Code to display letter when given the ASCII code for it*/
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align, bool narrow, bool noWrap){
 
-size_t TFT::write(const uint8_t *buffer, size_t size){
-    if(_f_cp1251){writeText(UTF8toCp1251(buffer)); return 0;}
-    if(_f_cp1252){writeText(UTF8toCp1252(buffer)); return 0;}
-    if(_f_cp1253){writeText(UTF8toCp1253(buffer)); return 0;}
-    writeText(buffer); return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+    uint16_t idx = 0;
+    uint16_t utfPosArr[512] = {0};
+    uint16_t strChLength = 0; // nr. of chars
+    uint16_t ANSIcolor = 0;
+    uint16_t ANSIcolor1 = 0;
+    uint16_t ANSIcolor2 = 0;
+    uint16_t ANSIcolor3 = 0;
+    uint16_t ANSIcolor4 = 0;
+    int16_t  ANSIcolorPos1 = -1;
+    int16_t  ANSIcolorPos2 = -1;
+    int16_t  ANSIcolorPos3 = -1;
+    int16_t  ANSIcolorPos4 = -1;
 
-const uint8_t* TFT::UTF8toCp1251(const uint8_t* str){  //cyrillic
-    uint16_t i=0, j=0;
-    boolean k=false;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i]==0xD0){
-            if((str[i+1]>=0x90)&&(str[i+1]<=0xBF)){
-                buf[j]=str[i+1]+0x30; k=true;
+//-------------------------------------------------------------------------------------------------------------------
+    auto fitInLine = [&](uint16_t begin, uint16_t maxPxLength, uint16_t* usedPxLength) {  // lambda
+        uint16_t idx = begin;
+        uint16_t pxLength = 0;
+        uint16_t lastSpacePos = 0;
+        uint16_t drawableChars = 0;
+        uint16_t lastUsedPxLength = 0;
+        uint16_t glyphPos = 0;
+        while(utfPosArr[idx] != 0){
+            *usedPxLength = pxLength;
+            if(utfPosArr[idx] == 0x20) {lastSpacePos = drawableChars; lastUsedPxLength = pxLength;}
+            glyphPos = _current_font.lookup_table[utfPosArr[idx]];
+            pxLength += _current_font.glyph_dsc[glyphPos].adv_w / 16;
+            if(!narrow) pxLength += _current_font.glyph_dsc[glyphPos].ofs_x;
+            if(pxLength > maxPxLength || utfPosArr[idx] == '\n'){ // force wrap
+                if(noWrap) {return drawableChars;}
+                if(lastSpacePos) {*usedPxLength = lastUsedPxLength; return lastSpacePos;}
+                else return drawableChars;
             }
-            if(str[i+1]==0x81){
-                buf[j]=0xA8; k=true;
+            idx++;
+            drawableChars++;
+            *usedPxLength = pxLength;
+        }
+        return drawableChars;
+    };
+//-------------------------------------------------------------------------------------------------------------------
+    auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y){ // lambda
+        uint16_t glyphPos = _current_font.lookup_table[utfPosArr[idx]];
+        uint16_t adv_w = _current_font.glyph_dsc[glyphPos].adv_w / 16;
+        uint32_t bitmap_index = _current_font.glyph_dsc[glyphPos].bitmap_index;
+        uint16_t box_w  = _current_font.glyph_dsc[glyphPos].box_w;
+        uint16_t box_h  = _current_font.glyph_dsc[glyphPos].box_h;
+        int16_t  ofs_x = _current_font.glyph_dsc[glyphPos].ofs_x;
+        int16_t  ofs_y = _current_font.glyph_dsc[glyphPos].ofs_y;
+        x += ofs_x;
+        y = y + (_current_font.line_height - _current_font.base_line - 1) - box_h - ofs_y;
+        writeInAddrWindow(_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
+        if(!narrow) adv_w += ofs_x;
+        return adv_w;
+    };
+//-------------------------------------------------------------------------------------------------------------------
+    while(str[idx] != 0){
+        if((uint8_t)str[idx] == '\033'){ // ANSI sequence
+            if((uint8_t)str[idx + 1] == '[' && (uint8_t)str[idx + 2] == '3' && (uint8_t)str[idx + 4] == 'm'){
+                switch (str[idx + 3]) {
+                    case '0':   ANSIcolor = TFT_BLACK;         break; // ANSI_ESC_BLACK
+                    case '1':   ANSIcolor = TFT_RED;           break; // ANSI_ESC_RED
+                    case '2':   ANSIcolor = TFT_GREEN;         break; // ANSI_ESC_GREEN
+                    case '3':   ANSIcolor = TFT_YELLOW;        break; // ANSI_ESC_YELLOW
+                    case '4':   ANSIcolor = TFT_BLUE;          break; // ANSI_ESC_BLUE
+                    case '5':   ANSIcolor = TFT_MAGENTA;       break; // ANSI_ESC_MAGENTA
+                    case '6':   ANSIcolor = TFT_CYAN;          break; // ANSI_ESC_CYAN
+                    case '7':   ANSIcolor = TFT_WHITE;         break; // ANSI_ESC_WHITE
+                    default: log_w("unknown ANSI ESCAPE COLOR SEQUENCE "); break;
+                }
+                if(ANSIcolorPos1 == -1){ANSIcolorPos1 = strChLength; ANSIcolor1 = ANSIcolor; idx += 5; continue;}
+                if(ANSIcolorPos2 == -1){ANSIcolorPos2 = strChLength; ANSIcolor2 = ANSIcolor; idx += 5; continue;}
+                if(ANSIcolorPos3 == -1){ANSIcolorPos3 = strChLength; ANSIcolor3 = ANSIcolor; idx += 5; continue;}
+                if(ANSIcolorPos4 == -1){ANSIcolorPos4 = strChLength; ANSIcolor4 = ANSIcolor; idx += 5; continue;}
             }
         }
-        if(str[i]==0xD1){
-            if((str[i+1]>=0x80)&&(str[i+1]<=0x8F)){
-                buf[j]=str[i+1]+0x70; k=true;
+        uint16_t codePoint = 0;
+        if((uint8_t)str[idx] >= 0xE0){
+            if((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99){
+                idx += 3; codePoint = 0x27;   // special sign 0xe28099 (general punctuation)
             }
-            if(str[i+1]==0x91){
-                buf[j]=0xB8; k=true;
-            }
+            else{log_w("char can't displayed 0x%x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1], (uint8_t)str[idx + 2]); idx += 3; codePoint = 0xA4;}
         }
-        if(k==false){
-            buf[j]=str[i];
-            i++; j++;
+        else if((uint8_t)str[idx] == 0xD1 && (uint8_t)str[idx + 1] > 0x9D) {log_w("char can't displayed 0x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1]); idx += 2; codePoint = 0xA4;}
+        else if((uint8_t)str[idx] >  0xD1){log_w("char can't displayed 0x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1]); idx += 2; codePoint = 0xA4;}
+        else if((uint8_t)str[idx] >= 0xC2){ //next char is UTF-8
+            codePoint =((uint8_t)str[idx + 1] + ((uint8_t)str[idx]-0xC2) * 64);
+            if(codePoint > _current_font.range_length) {log_w("char can't displayed 0x%x%x (not in charset)", (uint8_t)str[idx], (uint8_t)str[idx + 1]); codePoint = 0xA4;}
+            idx += 2;
         }
         else{
-           k=false;
-           i+=2; j++;
+            codePoint = (uint8_t)str[idx];
+            if(codePoint > _current_font.range_length) {log_w("char can't displayed 0x%x (not in charset)", (uint8_t)str[idx]); codePoint = 0xA4;}
+            idx++;
         }
+        utfPosArr[strChLength] = codePoint;
+        strChLength++;
     }
-    buf[j]=0;
-    return (buf);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+    if(!strChLength) return 0;
+    //----------------------------------------------------------------------
+    if((win_X + win_W)  > width()) {win_W  = width()  - win_X;} // Limit, right edge of the display
+    if((win_Y + win_H) > height()){win_H = height() - win_Y;} // Limit, bottom of the display
 
-const uint8_t* TFT::UTF8toCp1252(const uint8_t* str){  //WinLatin1
-    uint16_t i=0, j=0;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i]<127){
-            buf[j]=str[i];
-            i++; j++;
-        }
-        else if(str[i]>=192 && str[i]<=195){  // 0xC0, 0xC1, 0xC2, 0xC3
-            buf[j]=(str[i]-192)*64+(str[i+1]-128);
-            i+=2; j++;
-        }
-        else{
-            buf[j]=str[i];
-            i++; j++;
-        }
-    }
-    buf[j]=0;
-    return (buf);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+     idx = 0;
+    uint16_t pX = win_X;
+    uint16_t pY = win_Y;
+    int16_t  pH = win_H;
+    int16_t  pW = win_W;
 
-const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
-    uint16_t i=0, j=0;
-    while((str[i]!=0)&&(i<1024)){
-        if(str[i]<184){
-            buf[j]=str[i];
-            i++; j++;
-        }
-        else if(str[i]==206){  // 0xCE
-            if((str[i+1]>=136)&&(str[i+1]<=191)){ //0xCE88..0xCEBF
-                buf[j]=str[i+1]+48;
-                i+=2; j++;
-            }
-            else{
-                buf[j]=str[i];
-                i+=2; j++;
-            }
-        }
-        else if(str[i]==207){  // 0xCF
-            if((str[i+1]>=128)&&(str[i+1]<=142)){ //0xCF88..0xCF8E
-                buf[j]=str[i+1]+112;
-                i+=2; j++;
-            }
-            else{
-                buf[j]=str[i];
-                i+=2; j++;
-            }
-        }
-        else{
-            buf[j]=str[i];
-            i++; j++;
-        }
-    }
-    buf[j]=0;
-    return (buf);
+    uint16_t charsToDraw = 0;
+    uint16_t usedPxLength = 0;
+    uint16_t charsDrawn = 0;
+
+    while(true){ // outer while
+        if(noWrap && idx) goto exit;
+        if(pH < _current_font.line_height){goto exit;}
+        charsToDraw = fitInLine(idx, pW, &usedPxLength);
+        if(align == TFT_ALIGN_RIGHT){  pX += win_W - usedPxLength;}
+        if(align == TFT_ALIGN_CENTER){ pX += (win_W - usedPxLength) /2;}
+        uint16_t cnt = 0;
+        while(true){ // inner while
+            if(idx == ANSIcolorPos1) {setTextColor(ANSIcolor1); charsDrawn += 4;}
+            if(idx == ANSIcolorPos2) {setTextColor(ANSIcolor2); charsDrawn += 4;}
+            if(idx == ANSIcolorPos3) {setTextColor(ANSIcolor3); charsDrawn += 4;}
+            if(idx == ANSIcolorPos4) {setTextColor(ANSIcolor4); charsDrawn += 4;}
+            if(cnt == 0 && utfPosArr[idx] == 0x20) {idx++; charsDrawn++; continue;}
+            uint16_t res = drawChar(idx, pX, pY);
+            pX += res;
+            pW -= res;
+            idx++;
+            cnt++;
+            charsDrawn++;
+            if(idx == strChLength) goto exit;
+            if(cnt == charsToDraw) break;
+        }// inner while
+        pH -= _current_font.line_height;
+        pY += _current_font.line_height;
+        pX = win_X;
+        pW = win_W;
+    } // outer while
+exit:
+    return charsDrawn;
 }
 
-/***********************************************************************************************************************
-                                              B I T M A P
-***********************************************************************************************************************/
+/*******************************************************************************************************************************************************************************************************
+ *                                                                                                                                                                                                     *
+ *      ⏫⏫⏫⏫⏫⏫                                                           B I T M A P                                                                                  ⏫⏫⏫⏫⏫⏫              *
+ *                                                                                                                                                                                                     *
+ *******************************************************************************************************************************************************************************************************
+ */
 
 #define bmpRead32(d,o) (d[o] | (uint16_t)(d[(o)+1]) << 8 | (uint32_t)(d[(o)+2]) << 16 | (uint32_t)(d[(o)+3]) << 24)
 #define bmpRead16(d,o) (d[o] | (uint16_t)(d[(o)+1]) << 8)
@@ -2078,13 +2620,13 @@ const uint8_t* TFT::UTF8toCp1253(const uint8_t* str){  //Greek
 #define bmpColor16(c)      ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
 #define bmpColor24(c)      (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
 #define bmpColor32(c)      (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpSkipPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesToSkip = (len * bitsPerPixel) / 8;
     file.seek(bytesToSkip, SeekCur);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
     size_t bytesPerTransaction = bitsPerPixel * 4;
@@ -2133,7 +2675,7 @@ void TFT::bmpAddPixels(fs::File &file, uint8_t bitsPerPixel, size_t len){
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
+bool TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
                          uint16_t offX, uint16_t offY) {
     if ((x + maxWidth) > width() || (y + maxHeight) > height()) {
         log_e("Bad dimensions given");
@@ -2223,7 +2765,7 @@ boolean TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, u
 /***********************************************************************************************************************
                                                 G I F
 ***********************************************************************************************************************/
-boolean TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
+bool TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
     // debug=true;
     int32_t iterations = repeat;
 
@@ -2698,7 +3240,7 @@ uint8_t TFT::GIF_readDataSubBlock(char *buf){
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-boolean TFT::GIF_readExtension(char Label){
+bool TFT::GIF_readExtension(char Label){
     char buf[256];
     switch(Label){
         case 0x01 :
@@ -2793,7 +3335,7 @@ int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-int32_t TFT::GIF_LZWReadByte(boolean init) {
+int32_t TFT::GIF_LZWReadByte(bool init) {
     static int32_t fresh = false;
     int32_t code, incode;
     static int32_t firstcode, oldcode;
@@ -2807,7 +3349,7 @@ int32_t TFT::GIF_LZWReadByte(boolean init) {
 
     static uint8_t* sp;
 
-    register int32_t i;
+    int32_t i;
 
     if (init) {
         //    LWZMinCodeSize      ColorCodes      ClearCode       EOICode
@@ -3012,7 +3554,7 @@ int32_t TFT::GIF_readGifItems() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-boolean TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
+bool TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     char           c = 0;
     static int32_t test = 1;
     char           Label = 0;
@@ -3054,7 +3596,7 @@ void TFT::GIF_freeMemory(){
                                                 J P E G
 ***********************************************************************************************************************/
 
-boolean TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
+bool TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight,
                          uint16_t offX, uint16_t offY) {
     if ((x + maxWidth) > width() || (y + maxHeight) > height()) {
         log_e("Bad dimensions given");
@@ -4716,11 +5258,11 @@ uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_byt
 // Code für Touchpad mit XPT2046
 TP::TP(uint8_t CS, uint8_t IRQ) {
     // log_i("TP init CS = %i, IRQ = %i", CS, IRQ);
-    TP_CS = CS;
-    TP_IRQ = IRQ;
-    pinMode(TP_CS, OUTPUT);
-    digitalWrite(TP_CS, HIGH);
-    pinMode(TP_IRQ, INPUT);
+    _TP_CS = CS;
+    _TP_IRQ = IRQ;
+    pinMode(_TP_CS, OUTPUT);
+    digitalWrite(_TP_CS, HIGH);
+    pinMode(_TP_IRQ, INPUT);
     TP_SPI = SPISettings(200000, MSBFIRST, SPI_MODE0);  // slower speed
     _rotation = 0;
 }
@@ -4729,10 +5271,10 @@ TP::TP(uint8_t CS, uint8_t IRQ) {
 uint16_t TP::TP_Send(uint8_t set_val) {
     uint16_t get_val;
     SPItransfer->beginTransaction(TP_SPI);  // Prevent other SPI users
-        digitalWrite(TP_CS, 0);
+        digitalWrite(_TP_CS, 0);
         SPItransfer->write(set_val);
         get_val = SPItransfer->transfer16(0);
-        digitalWrite(TP_CS, 1);
+        digitalWrite(_TP_CS, 1);
     SPItransfer->endTransaction();  // Allow other SPI users
     return get_val >> 4;
 }
@@ -4742,7 +5284,7 @@ uint16_t TP::TP_Send(uint8_t set_val) {
 void TP::loop() {
     static uint16_t x1 = 0, y1 = 0;
     static uint16_t x2 = 0, y2 = 0;
-    if (!digitalRead(TP_IRQ)) {
+    if (!digitalRead(_TP_IRQ)) {
         if(!read_TP(x, y)){return;}
         { x1 = x; y1 = y;}
         if (f_loop) {
@@ -4782,16 +5324,24 @@ void TP::setRotation(uint8_t m){
     _rotation=m;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+void TP::setMirror(bool h, bool v){
+    m_mirror_h = h;
+    m_mirror_v = v;
+}
 
 void TP::setVersion(uint8_t v) {
-    if (v == 0) TP_vers = 0;
-    if (v == 1) TP_vers = 1;
-    if (v == 2) TP_vers = 2;
-    if (v == 3) TP_vers = 3;
-    if (v == 4) TP_vers = 4;
-    if (v == 5) TP_vers = 5;
 
-    if (TP_vers == 0) {  // ILI9341 display
+    switch(v){
+        case 0:  TP_vers = TP_ILI9341_0; break;
+        case 1:  TP_vers = TP_ILI9341_1; break;
+        case 2:  TP_vers = TP_HX8347D_0; break;
+        case 3:  TP_vers = TP_ILI9486_0; break;
+        case 4:  TP_vers = TP_ILI9488_0; break;
+        case 5:  TP_vers = TP_ST7796_0;  break;
+        default: TP_vers = TP_ILI9341_0; break;
+    }
+
+    if (TP_vers == TP_ILI9341_0) {  // ILI9341 display
         Xmax = 1913;     // Values Calibration
         Xmin = 150;
         Ymax = 1944;
@@ -4799,7 +5349,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
     }
-    if (TP_vers == 1) {  // ILI9341 display for RaspberryPI  #70
+    if (TP_vers == TP_ILI9341_1) {  // ILI9341 display for RaspberryPI  #70
         Xmax = 1940;
         Xmin = 90;
         Ymax = 1864;
@@ -4807,7 +5357,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / ILI9341_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9341_HEIGHT;
     }
-    if (TP_vers == 2) {  // Waveshare HX8347D display
+    if (TP_vers == TP_HX8347D_0) {  // Waveshare HX8347D display
         Xmax = 1850;
         Xmin = 170;
         Ymax = 1880;
@@ -4815,7 +5365,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / HX8347D_WIDTH;
         yFaktor = float(Ymax - Ymin) / HX8347D_HEIGHT;
     }
-    if (TP_vers == 3) {  // ILI9486 display for RaspberryPI
+    if (TP_vers == TP_ILI9486_0) {  // ILI9486 display for RaspberryPI
         Xmax = 1922;
         Xmin = 140;
         Ymax = 1930;
@@ -4823,7 +5373,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / ILI9486_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9486_HEIGHT;
     }
-    if (TP_vers == 4) {  // ILI9488 display
+    if (TP_vers == TP_ILI9488_0) {  // ILI9488 display
         Xmax = 1922;
         Xmin = 140;
         Ymax = 1930;
@@ -4831,7 +5381,7 @@ void TP::setVersion(uint8_t v) {
         xFaktor = float(Xmax - Xmin) / ILI9488_WIDTH;
         yFaktor = float(Ymax - Ymin) / ILI9488_HEIGHT;
     }
-    if (TP_vers == 5) {  // ST7796 4" display
+    if (TP_vers == TP_ST7796_0) {  // ST7796 4" display
         Xmax = 1922;
         Xmin = 103;
         Ymax = 1950;
@@ -4848,14 +5398,14 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
     uint16_t tmpxy;
     uint8_t i = 0;
 
-    if(digitalRead(TP_IRQ)) return false; // TP pressed?
+    if(digitalRead(_TP_IRQ)) return false; // TP pressed?
 
     for (i = 0; i < 100; i++) {
         _x += TP_Send(0xD0);  // x
         _y += TP_Send(0x90);  // y
     }
 
-    if(digitalRead(TP_IRQ)) return false; // TP must remain pressed as long as the measurement is running
+    if(digitalRead(_TP_IRQ)) return false; // TP must remain pressed as long as the measurement is running
 
     _x /= 100;
     _y /= 100;
@@ -4870,12 +5420,61 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
     _y = Ymax - _y;
     _y /= yFaktor;
 
+    if(m_mirror_h){
+        switch(TP_vers){
+            case TP_ILI9341_0: // ILI9341
+                    _y = ILI9341_HEIGHT - _y;
+                    break;
+            case TP_ILI9341_1:
+                    _y = ILI9341_HEIGHT - _y;
+                    break;
+            case TP_HX8347D_0:
+                    _y = HX8347D_HEIGHT - _y;
+                    break;
+            case TP_ILI9486_0:
+                    _y = ILI9486_HEIGHT - _y;
+                    break;
+            case TP_ILI9488_0:
+                    _y = ILI9488_HEIGHT - _y;
+                    break;
+            case TP_ST7796_0:
+                    _y = ST7796_HEIGHT - _y;
+            default:
+                break;
+        }
+    }
+
+    if(m_mirror_v){
+        switch(TP_vers){
+            case TP_ILI9341_0: // ILI9341
+                    _x = ILI9341_WIDTH - _x;
+                    break;
+            case TP_ILI9341_1:
+                    _x = ILI9341_WIDTH - _x;
+                    break;
+            case TP_HX8347D_0:
+                    _x = HX8347D_WIDTH - _x;
+                    break;
+            case TP_ILI9486_0:
+                    _x = ILI9486_WIDTH - _x;
+                    break;
+            case TP_ILI9488_0:
+                    _x = ILI9488_WIDTH - _x;
+                    break;
+            case TP_ST7796_0:
+                    _x = ST7796_WIDTH - _x;
+                    break;
+            default:
+                break;
+        }
+    }
+
     // log_i("_x %i, _y %i", _x, _y);
     x = _x;
     y = _y;
 
     //-------------------------------------------------------------
-    if (TP_vers == 0) {  // 320px x 240px
+    if (TP_vers == TP_ILI9341_0) {  // 320px x 240px
         if (_rotation == 0) {
             y = ILI9341_HEIGHT - y;
         }
@@ -4896,7 +5495,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         }
     }
     //-------------------------------------------------------------
-    if (TP_vers == 1) {  // 320px x 240px
+    if (TP_vers == TP_ILI9341_1) {  // 320px x 240px
         if (_rotation == 0) {
             y = ILI9341_HEIGHT - y;
             x = ILI9341_WIDTH - x;
@@ -4918,7 +5517,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         }
     }
     //-------------------------------------------------------------
-    if (TP_vers == 2) {  // 320px x 240px
+    if (TP_vers == TP_HX8347D_0) {  // 320px x 240px
         if (_rotation == 0) {
             ;  // do nothing
         }
@@ -4935,7 +5534,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
             if (x > HX8347D_WIDTH - 1) x = 0;
             if (y > HX8347D_HEIGHT - 1) y = 0;
         }
-        if (_rotation == 3) {
+        if (_rotation == TP_ILI9486_0) {
             tmpxy = y;
             y = x;
             x = HX8347D_HEIGHT - tmpxy;
@@ -4944,7 +5543,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         }
     }
     //-------------------------------------------------------------
-    if (TP_vers == 3) {  // 480px x 320px
+    if (TP_vers == TP_ILI9486_0) {  // 480px x 320px
         if (_rotation == 0) {
             ;  // do nothing
         }
@@ -4970,7 +5569,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         }
     }
     //-------------------------------------------------------------
-    if (TP_vers == 4) {  // ILI 9488 Display V1.0, 480px x 320px
+    if (TP_vers == TP_ILI9488_0) {  // ILI 9488 Display V1.0, 480px x 320px
         if (_rotation == 0) {
             x = ILI9488_WIDTH - x;
         }
@@ -4995,7 +5594,7 @@ bool TP::read_TP(uint16_t& x, uint16_t& y) {
         }
     }
     //-------------------------------------------------------------
-    if (TP_vers == 5) {  // ST7796 Display V1.1, 480px x 320px
+    if (TP_vers == TP_ST7796_0) {  // ST7796 Display V1.1, 480px x 320px
         if (_rotation == 0) {
             x = ST7796_WIDTH - x;
         }
