@@ -33,9 +33,9 @@
     ],
     "name": "AI Thinker (4MB QD FLASH, 8MD QD PSRAM)",
     "upload": {
-      "flash_size": "8MB",
+      "flash_size": "4MB",
       "maximum_ram_size": 327680,
-      "maximum_size": 8388608,
+      "maximum_size": 4194304,
       "use_1200bps_touch": true,
       "wait_for_upload_port": true,
       "require_upload_port": true,
