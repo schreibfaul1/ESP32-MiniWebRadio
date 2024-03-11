@@ -2624,11 +2624,7 @@ void changeState(int32_t state){
             else{
                 _pressBtn[4]="/btn/Black.jpg";                   _releaseBtn[4]="/btn/Black.jpg";
             }
-            #if CONFIG_IDF_TARGET_ESP32
-                _pressBtn[5] = "/btn/BT_Yellow.jpg";             _releaseBtn[5] = "/btn/BT_Green.jpg";
-            #else
-                _pressBtn[5] = "/btn/Black.jpg";                 _releaseBtn[5] = "/btn/Black.jpg";
-            #endif
+            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             // for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
