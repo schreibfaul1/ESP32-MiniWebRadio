@@ -383,7 +383,7 @@ boolean defaultsettings(){
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
         pos1 = indexOf(jO, s, 0);
         pos2 = indexOf(jO, ":", pos1) + 1;
-        pos3 = indexOf(jO, ",", pos2);
+        pos3 = indexOf(jO, ",\"", pos2);
         if(pos3 < 0) pos3 = indexOf(jO, "}", pos2);
         if(pos1 < 0) {log_e("index %s not found", s); return "";}
         if(jO[pos2] == '\"'){pos2++; pos3--;}  // remove \" embraced strings
@@ -3994,6 +3994,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setTimeZone"){       _TZName = param;  _TZString = arg;
                                     SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s", param.c_str(), arg.c_str());
                                     setRTC(_TZString.c_str());
+                                    updateSettings(); // write new TZ items to settings.json
                                     return;}
 
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
