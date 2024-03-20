@@ -42,16 +42,15 @@ Schematic<br>
 <br>
 [Display Layout](docs/MiniWebRadio%20V3%20Layout.pdf)
 
-<a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/How%20to%20install.pdf">How to install:</a>
-PlatformIO is definitely recommended as the IDE.
+[How to install](docs/How%20to%20install.pdf) : PlatformIO is definitely recommended as the IDE.
 
 #### Some features:
 
 - The audioprocess works in its own task and is decoupled. If a VS1053 is used, it must have its own SPI bus (VS1053 uses HSPI - TFT uses VSPI). This prevents dropouts when drawing on the display or when the website is loading.
-- The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/SD_Card_Adapter_for_SD_MMC_.jpg">SD card adapter</a> must not have any resistors as pull-ups or in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
+- The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The [SD card adapter](docs/SD_Card_Adapter_for_SD_MMC_.jpg) must not have any resistors in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
 - Audio can be decoded using software and a DAC instead of VS1053 decoder board. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). DAC (e.g. UDA13348, MAX98357A, PCM5102A) is connected via I2S. AC101, ES8388 and WM8978 (TTGO audioT board) audio decoder boards are also supported
 - 480x320px display supported. The ILI9486 (SPI display from the Raspberry PI) is also supported
-- The SD card files can be accessed via FTP. See settings for <a href="https://github.com/schreibfaul1/ESP32-MiniWebRadio/blob/master/additional_info/Filezilla.pdf">Filezilla</a>. The username and password are 'esp32' (this can be changed in 'common.h')
+- The SD card files can be accessed via FTP. See settings for [Filezilla](docs/Filezilla.pdf). The username and password are 'esp32' (this can be changed in 'common.h')
 - Access Point SSID/password can be set using mobile phone browser - no need to modify source code or networks.csv file on SD card
 - Stations URLs support entry of username and password if the server expects access data, "URL|user|pwd"
 - Can process local playlists in m3u format
