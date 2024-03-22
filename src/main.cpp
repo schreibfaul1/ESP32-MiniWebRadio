@@ -128,6 +128,7 @@ bool                _f_clearStationName = false;
 bool                _f_shuffle = false;
 bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
+bool                _f_dlnaSeekServer = false;
 String              _station = "";
 String              _stationName_nvs = "";
 String              _stationName_air = "";
@@ -628,17 +629,8 @@ const char* SD_stringifyDirContent(String path) {
  *****************************************************************************************************************************************************/
 void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
     if(TFT_BL == -1) return;
-#if ESP_IDF_VERSION_MAJOR < 5
-    ledcSetup(0, 1200, 8);    // 1200 Hz PWM and 8 bit resolution
-    ledcAttachPin(TFT_BL, 0); // Configure variable led, TFT_BL pin to channel 1
-    uint8_t d = round((double)duty * 2.55); // #186
-    ledcWrite(0, d);
-#else
-    ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(TFT_BL, d);
-#endif
-
 }
 
 inline uint8_t downBrightness() {
@@ -1849,6 +1841,7 @@ void setup() {
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings(); // first init
+    ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
@@ -1922,16 +1915,6 @@ void setup() {
 
     showHeadlineItem(RADIO);
 
-    if(_resetResaon == ESP_RST_POWERON ||    // Simply switch on the operating voltage
-       _resetResaon == ESP_RST_SW ||         // ESP.restart()
-       _resetResaon == ESP_RST_SDIO ||       // The boot button was pressed
-       _resetResaon == ESP_RST_DEEPSLEEP){   // Wake up
-            vTaskDelay(1500);
-            if(_cur_station > 0) setStation(_cur_station);
-            else { setStationViaURL(_lastconnectedhost.c_str()); }
-    }
-    else {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr);}
-
     setI2STone();
     showFooter();
 
@@ -1946,9 +1929,19 @@ void setup() {
     _dlnaHistory[0].name = strdup("Media Server");
     _dlnaHistory[0].objId = strdup("");
     _dlnaHistory[1].objId = strdup("0");
+    _f_dlnaSeekServer = true;
+
     ArduinoOTA.setHostname("MiniWebRadio");
     ArduinoOTA.begin();
-    dlna.seekServer();
+
+    if(_resetResaon == ESP_RST_POWERON ||    // Simply switch on the operating voltage
+       _resetResaon == ESP_RST_SW ||         // ESP.restart()
+       _resetResaon == ESP_RST_SDIO ||       // The boot button was pressed
+       _resetResaon == ESP_RST_DEEPSLEEP){   // Wake up
+            if(_cur_station > 0) setStation(_cur_station);
+            else { setStationViaURL(_lastconnectedhost.c_str()); }
+    }
+    else {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr);}
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2937,6 +2930,7 @@ void loop() {
             if(_state != ALARM) updateVUmeter();
         }
     }
+
     if(_f_1sec) {
         _f_1sec = false;
         if(!_f_sleeping) {
@@ -3090,6 +3084,11 @@ void loop() {
             //    uint32_t br = audioGetBitRate();
             //    if(br) t = (fs * 8)/ br;
             //    log_w("Br %d, Dur %ds", br, t);
+        }
+
+        if(_f_dlnaSeekServer){
+            _f_dlnaSeekServer = false;
+            dlna.seekServer();
         }
     }
 
