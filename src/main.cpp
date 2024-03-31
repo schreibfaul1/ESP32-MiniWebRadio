@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.00o Mar 02/2024                                                                                                                       ";
+    Version 3.00p Mar 31/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1728,7 +1728,7 @@ void stopSong() {
  *                                                                    S E T U P                                                                      *
  *****************************************************************************************************************************************************/
 void setup() {
-    Serial.begin(115200);
+    Serial.begin(MONITOR_SPEED);
     Serial.print("\n\n");
     const char* chipModel = ESP.getChipModel();
     uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
