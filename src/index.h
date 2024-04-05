@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 25.01.2024
+ *  Updated on: 05.04.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -385,11 +385,6 @@ var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
   '-16', '-13', '-10', ' -7', ' -4', '  0', ' +3', ' +6']
 
 var I2S_eq_Val = [-40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -4, 0, +3, +6]
-
-var trebleDB = ['-12,0', '-10,5', ' -9,0', ' -7,5', ' -6,0', ' -4,5', ' -3,0', ' -1,5',
-  '  0,0', ' +1,5', ' +3,0', ' +4,5', ' +6,0', ' +7,5', ' +9,0', '+10,5']
-
-var trebleVal = [8, 9, 10, 11, 12, 13, 14, 15, 0, 1, 2, 3, 4, 5, 6, 7]
 
 var tft_size = 0        // (0)320x240, (1)480x320
 
@@ -992,11 +987,11 @@ function setstation () { // Radio: button play - Enter a streamURL here....
 }
 
 function setSlider (elmnt, value) {
-    v = Math.trunc((40 + parseInt(value, 10)) /3)
     console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) slider_LP_set(v)
-    if (elmnt === 'BandPass') slider_BP_set(v)
-    if (elmnt === 'HighPass') slider_HP_set(v)
+    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
+    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
+    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
+    if (elmnt === 'Balance')  slider_BAL_set(value)
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
@@ -1050,7 +1045,24 @@ function slider_HP_set (value) { // set Slider HighPass
     console.log('HighPass=%i', val)
 }
 
-function handlectrl (id, val) { // Radio: treble, bass, freq
+function slider_BAL_mouseUp () { // Slider Balance mouseupevent
+    handlectrl('Balance', Balance.value)
+    console.log('Balance=%i', Number(Balance.value));
+}
+
+function slider_BAL_change () { //  Slider Balance changeevent
+    console.log('Balance=%i', Number(Balance.value))
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+}
+
+function slider_BAL_set (value) { // set Slider Balance
+    var val = Number(value)
+    document.getElementById('Balance').value = val
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+    console.log('Balance=%i', val)
+}
+
+function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
     var theUrl = id + "=" + val
     console.log(theUrl)
     socket.send(theUrl)
@@ -1867,6 +1879,7 @@ function clear_BT_memItems(){
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
+
                     <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="LowPass"
@@ -1876,6 +1889,7 @@ function clear_BT_memItems(){
                     </div>
                     <label id="label_LP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
+
                     <label class="sdr_lbl_left">Band:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="BandPass"
@@ -1885,6 +1899,7 @@ function clear_BT_memItems(){
                     </div>
                     <label id="label_BP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
+
                     <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
                         <input type="range" min="0" max="15" value="13" id="HighPass"
@@ -1894,6 +1909,18 @@ function clear_BT_memItems(){
                     </div>
                     <label id="label_HP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
+
+                    <label class="sdr_lbl_left">Balance:</label>
+                    <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
+                        <input type="range" min="-16" max="16" value="0" id="Balance"
+                        onmouseup="slider_BAL_mouseUp()"
+                        ontouchend="slider_BAL_mouseUp()"
+                        oninput="slider_BAL_change()">
+                    </div>
+                    <label id="label_BAL_value" class="sdr_lbl_right">0</label>
+                    <label class="sdr_lbl_measure"></label>
+
+
                 </div>
             </div>
         </div>

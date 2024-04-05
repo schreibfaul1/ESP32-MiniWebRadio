@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 09.01.2024
+// updated: 05.04.2024
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -91,11 +91,13 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == SETTONE){
                 audioTxTaskMessage.cmd = SETTONE;
-                int8_t lowPass, bandPass, highPass;
+                int8_t lowPass, bandPass, highPass, balance;
                 lowPass  = (audioRxTaskMessage.value1 & 0xFF);
                 bandPass = (audioRxTaskMessage.value1 >>  8) & 0xFF;
                 highPass = (audioRxTaskMessage.value1 >> 16) & 0xFF;
+                balance = (audioRxTaskMessage.value2 & 0xFF) * (-1);
                 audio.setTone(lowPass, bandPass, highPass);
+                audio.setBalance(balance);
                 audioTxTaskMessage.ret = 0;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -240,15 +242,15 @@ uint32_t audioStopSong(){
     return RX.ret;
 }
 
-void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass, int8_t unused){
+void audioSetTone(int8_t lowPass, int8_t bandPass, int8_t highPass, int8_t balance){
     audioTxMessage.cmd = SETTONE;
     audioTxMessage.value1 = (uint8_t)highPass;
     audioTxMessage.value1 <<= 8;
     audioTxMessage.value1 += (uint8_t)bandPass;
     audioTxMessage.value1 <<= 8;
     audioTxMessage.value1 += (uint8_t)lowPass;
+    audioTxMessage.value2 = (uint8_t)balance;
     audioMessage RX = transmitReceive(audioTxMessage);
-    (void)unused;
     (void)RX;
 }
 

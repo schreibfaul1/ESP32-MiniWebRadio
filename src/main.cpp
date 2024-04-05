@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.00p Mar 31/2024                                                                                                                       ";
+    Version 3.01  Apr 05/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -55,6 +55,7 @@ int16_t             _alarmtime = 0;       // in minutes (23:59 = 23 *60 + 59)
 int16_t             _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t            _icyBitRate = 0;      // from http response header via event
 uint16_t            _avrBitRate = 0;      // from decoder via getBitRate(true)
 uint16_t            _cur_station = 0;     // current station(nr), will be set later
@@ -369,6 +370,7 @@ boolean defaultsettings(){
         strcat(jO, "\"toneLP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"toneBP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
+        strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
         strcat(jO, "\"timeFormat\":");        strcat(jO, "24}");
         file.print(jO);
         if(jO){free(jO); jO = NULL;}
@@ -406,6 +408,7 @@ boolean defaultsettings(){
     _toneLP              = atoi(   parseJson("\"toneLP\":"));
     _toneBP              = atoi(   parseJson("\"toneBP\":"));
     _toneHP              = atoi(   parseJson("\"toneHP\":"));
+    _toneBAL             = atoi(   parseJson("\"balance\":"));
     _timeFormat          = atoi(   parseJson("\"timeFormat\":"));
     _TZName              =         parseJson("\"Timezone_Name\":");
     _TZString            =         parseJson("\"Timezone_String\":");
@@ -557,6 +560,7 @@ void updateSettings(){
     sprintf(tmp, ",\"toneLP\":%i", _toneLP);                                    strcat(jO, tmp);
     sprintf(tmp, ",\"toneBP\":%i", _toneBP);                                    strcat(jO, tmp);
     sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                    strcat(jO, tmp);
+    sprintf(tmp, ",\"balance\":%i", _toneBAL);                                  strcat(jO, tmp);
     sprintf(tmp, ",\"timeFormat\":%i}", _timeFormat);                           strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
@@ -2292,11 +2296,12 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
 }
 
 String setI2STone() {
-    int8_t LP = _toneLP;
-    int8_t BP = _toneBP;
-    int8_t HP = _toneHP;
-    audioSetTone(LP, BP, HP);
-    sprintf(_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\n", LP, BP, HP);
+    int8_t LP  = _toneLP;
+    int8_t BP  = _toneBP;
+    int8_t HP  = _toneHP;
+    int8_t BAL = _toneBAL;
+    audioSetTone(LP, BP, HP, BAL);
+    sprintf(_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", LP, BP, HP, BAL);
     String tone = String(_chbuf);
     return tone;
 }
@@ -3957,8 +3962,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "gettone"){           webSrv.send("settone=", setI2STone());
                                     return;}
 
-
-
     if(cmd == "getstreamtitle"){    webSrv.reply(_streamTitle, webSrv.TEXT);
                                     return;}
 
@@ -3973,6 +3976,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "HighPass"){          _toneHP = param.toInt();                           // audioI2S tone
                                     char hp[30] = "Highpass set to "; strcat(hp, param.c_str()); strcat(hp, "dB");
                                     webSrv.send("tone=", hp); setI2STone(); return;}
+
+    if(cmd == "Balance"){           _toneBAL = param.toInt();
+                                    char bal[30] = "Balance set to "; strcat(bal, param.c_str());
+                                    webSrv.send("tone=", bal); setI2STone(); return;}
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
