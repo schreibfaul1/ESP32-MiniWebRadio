@@ -825,6 +825,12 @@ function clearDLNAServerList(level){
         case 6:
             select = document.getElementById('level6')
             select.options.length = 0;
+        case 5:
+            select = document.getElementById('level7')
+            select.options.length = 0;
+        case 6:
+            select = document.getElementById('level8')
+            select.options.length = 0;
     }
 }
 
@@ -939,18 +945,21 @@ function select_l3 (presctrl) { // preset, select level 2
     var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
     socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    clearDLNAServerList(6)
     dlnaLevel = 6
  }
 function select_l6 (presctrl) { // preset, select level 5
     var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
     socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    clearDLNAServerList(7)
     dlnaLevel = 7
  }
 function select_l7 (presctrl) { // preset, select level 6
     var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
     socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    clearDLNAServerList(8)
     dlnaLevel = 8
  }
 function select_l8 (presctrl) { // preset, select level 7
