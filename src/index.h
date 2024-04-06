@@ -671,6 +671,9 @@ function showTab3 () {
     document.getElementById('level3').options.length = 0
     document.getElementById('level4').options.length = 0
     document.getElementById('level5').options.length = 0
+    document.getElementById('level6').options.length = 0
+    document.getElementById('level7').options.length = 0
+    document.getElementById('level8').options.length = 0
     socket.send("change_state=6")
 }
 
