@@ -847,6 +847,7 @@ function show_DLNA_Content(val){
     if(dlnaLevel == 4) select = document.getElementById('level4')
     if(dlnaLevel == 5) select = document.getElementById('level5')
     if(dlnaLevel == 6) select = document.getElementById('level6')
+    if(dlnaLevel == 7) select = document.getElementById('level7')
     if(select.options.length == 0){
         var option = new Option("Select level " + dlnaLevel.toString())
         select.appendChild(option);
@@ -939,11 +940,17 @@ function select_l3 (presctrl) { // preset, select level 2
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 6
  }
-  function select_l6 (presctrl) { // preset, select level 5
+function select_l6 (presctrl) { // preset, select level 5
     var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
     socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 7
+ }
+function select_l7 (presctrl) { // preset, select level 6
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    dlnaLevel = 8
  }
 
 // ----------------------------------- TAB RADIO ------------------------------------
@@ -2094,6 +2101,9 @@ function clear_BT_memItems(){
                     <option value="-1"> </option>
                 </select>
                 <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l6(this)" id="level6">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l7(this)" id="level7">
                     <option value="-1"> </option>
                 </select>
             </div>
