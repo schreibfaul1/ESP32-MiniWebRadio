@@ -848,6 +848,7 @@ function show_DLNA_Content(val){
     if(dlnaLevel == 5) select = document.getElementById('level5')
     if(dlnaLevel == 6) select = document.getElementById('level6')
     if(dlnaLevel == 7) select = document.getElementById('level7')
+    if(dlnaLevel == 8) select = document.getElementById('level8')
     if(select.options.length == 0){
         var option = new Option("Select level " + dlnaLevel.toString())
         select.appendChild(option);
@@ -952,7 +953,12 @@ function select_l7 (presctrl) { // preset, select level 6
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 8
  }
-
+function select_l8 (presctrl) { // preset, select level 7
+    var slectedText = presctrl.options[presctrl.selectedIndex].innerText;
+    socket.send('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
+    dlnaLevel = 9
+ }
 // ----------------------------------- TAB RADIO ------------------------------------
 
 function showLogo(id, src) { // get the bitmap from SD, convert to URL first
@@ -2104,6 +2110,9 @@ function clear_BT_memItems(){
                     <option value="-1"> </option>
                 </select>
                 <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l7(this)" id="level7">
+                    <option value="-1"> </option>
+                </select>
+                <select class="boxstyle" style="width: 100%; margin-top: 5px;" onchange="select_l8(this)" id="level8">
                     <option value="-1"> </option>
                 </select>
             </div>
