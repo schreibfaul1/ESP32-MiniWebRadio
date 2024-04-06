@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 05.04.2024
+ *  Updated on: 06.04.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -666,14 +666,6 @@ function showTab3 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    document.getElementById('level1').options.length = 0
-    document.getElementById('level2').options.length = 0
-    document.getElementById('level3').options.length = 0
-    document.getElementById('level4').options.length = 0
-    document.getElementById('level5').options.length = 0
-    document.getElementById('level6').options.length = 0
-    document.getElementById('level7').options.length = 0
-    document.getElementById('level8').options.length = 0
     socket.send("change_state=6")
 }
 
@@ -801,39 +793,41 @@ function uploadTextFile (fileName, content) {
 var dlnaLevel = 0
 
 function clearDLNAServerList(level){
-    console.log('clear DLNA server list, level=', level)
-    var select
+    for(i = level; i < 9; i++){
+        console.log('clear DLNA server list, level=', i)
+        var select
 
-    switch(level){
-        case 0:
-            select = document.getElementById('server')
-            select.options.length = 0;
-            var option = new Option("Select a DLNA server here")
-            select.appendChild(option);                                     // no break, fall through
-        case 1:
-            select = document.getElementById('level1')
-            select.options.length = 0;
-        case 2:
-            select = document.getElementById('level2')
-            select.options.length = 0;
-        case 3:
-            select = document.getElementById('level3')
-            select.options.length = 0;
-        case 4:
-            select = document.getElementById('level4')
-            select.options.length = 0;
-        case 5:
-            select = document.getElementById('level5')
-            select.options.length = 0;
-        case 6:
-            select = document.getElementById('level6')
-            select.options.length = 0;
-        case 5:
-            select = document.getElementById('level7')
-            select.options.length = 0;
-        case 6:
-            select = document.getElementById('level8')
-            select.options.length = 0;
+        switch(level){
+            case 0:
+                select = document.getElementById('server')
+                select.options.length = 0;
+                var option = new Option("Select a DLNA server here")
+                select.appendChild(option);                                     // no break, fall through
+            case 1:
+                select = document.getElementById('level1')
+                select.options.length = 0;
+            case 2:
+                select = document.getElementById('level2')
+                select.options.length = 0;
+            case 3:
+                select = document.getElementById('level3')
+                select.options.length = 0;
+            case 4:
+                select = document.getElementById('level4')
+                select.options.length = 0;
+            case 5:
+                select = document.getElementById('level5')
+                select.options.length = 0;
+            case 6:
+                select = document.getElementById('level6')
+                select.options.length = 0;
+            case 7:
+                select = document.getElementById('level7')
+                select.options.length = 0;
+            case 8:
+                select = document.getElementById('level8')
+                select.options.length = 0;
+        }
     }
 }
 
