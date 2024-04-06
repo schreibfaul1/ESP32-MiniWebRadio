@@ -1845,7 +1845,7 @@ void setup() {
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings(); // first init
-    ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+    if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");

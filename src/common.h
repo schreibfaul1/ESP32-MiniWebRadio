@@ -23,7 +23,6 @@
 #define FTP_PASSWORD        "esp32"
 #define CONN_TIMEOUT        500                             // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL    2000                            // encrypted connection timeout in ms (https://...)
-#define BT_SINK_NAME        "MiniWebRadio"                  // ESP32 only
 
 /**********************************************************************************************************************/
 
