@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.01  Apr 05/2024                                                                                                                       ";
+    Version 3.01a  Apr 08/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -72,6 +72,8 @@ uint32_t            _playlistTime = 0;  // playlist start time millis() for time
 uint32_t            _settingsHash = 0;
 uint32_t            _audioFileSize = 0;
 uint32_t            _media_downloadPort = 0;
+uint32_t            _audioCurrentTime = 0;
+uint32_t            _audioFileDuration = 0;
 uint8_t             _resetResaon = (esp_reset_reason_t) ESP_RST_UNKNOWN;
 const char*         _pressBtn[8];
 const char*         _releaseBtn[8];
@@ -3037,6 +3039,12 @@ void loop() {
                 if(!digitalRead(HP_DETECT)) { SerialPrintfln("Headphone plugged in"); }
                 else { SerialPrintfln("Headphone unplugged"); }
                 _f_hpChanged = false;
+            }
+            if(audioIsRunning() && _f_isFSConnected){
+                _audioCurrentTime = audioGetCurrentTime();
+                _audioFileDuration = audioGetFileDuration();
+                SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime "  ANSI_ESC_GREEN "%li, "
+                                               ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li", _audioCurrentTime, _audioFileDuration);
             }
         }
         if(_commercial_dur > 0) {

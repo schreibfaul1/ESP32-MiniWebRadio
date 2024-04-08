@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 08.Feb 2024
+// updated: 08.Apr 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -252,3 +252,5 @@ void     audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
 uint32_t audioGetFileSize();
 uint32_t audioGetFilePosition();
 uint16_t audioGetVUlevel();
+uint32_t audioGetFileDuration();
+uint32_t audioGetCurrentTime();

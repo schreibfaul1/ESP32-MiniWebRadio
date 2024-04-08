@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 05.04.2024
+// updated: 08.04.2024
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -14,7 +14,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
-                 GET_FILEPOSITION, GET_VULEVEL};
+                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -152,6 +152,16 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == GET_VULEVEL){
                 audioTxTaskMessage.cmd = GET_VULEVEL;
                 audioTxTaskMessage.ret = audio.getVUlevel();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_AUDIOFILEDURATION){
+                audioTxTaskMessage.cmd = GET_AUDIOFILEDURATION;
+                audioTxTaskMessage.ret = audio.getAudioFileDuration();
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == GET_AUDIOCURRENTTIME){
+                audioTxTaskMessage.cmd = GET_AUDIOCURRENTTIME;
+                audioTxTaskMessage.ret = audio.getAudioCurrentTime();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else{
@@ -316,3 +326,14 @@ uint16_t audioGetVUlevel(){
     return RX.ret;
 }
 
+uint32_t audioGetFileDuration(){
+    audioTxMessage.cmd = GET_AUDIOFILEDURATION;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+uint32_t audioGetCurrentTime(){
+    audioTxMessage.cmd = GET_AUDIOCURRENTTIME;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
