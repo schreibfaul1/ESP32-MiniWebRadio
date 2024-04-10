@@ -1536,6 +1536,13 @@ void processPlaylist(boolean first) {
         connecttohost(_chbuf);
         showFileNumber();
     }
+    else if(startsWith(_chbuf, "file://")){ // root
+        urldecode(_chbuf);
+        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _chbuf + 7);
+        webSrv.send("SD_playFile=", _chbuf + 7);
+        if(!f_has_EXTINF) {SD_playFile(_chbuf + 7);}
+        else              {f_has_EXTINF = false; SD_playFile(_chbuf + 7, 0, false);}
+    }
     else {
         const char* path = playlistFile.path();
         int32_t     idx = lastIndexOf(path, '/');
@@ -3043,8 +3050,9 @@ void loop() {
             if(audioIsRunning() && _f_isFSConnected){
                 _audioCurrentTime = audioGetCurrentTime();
                 _audioFileDuration = audioGetFileDuration();
-                SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime "  ANSI_ESC_GREEN "%li, "
-                                               ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li", _audioCurrentTime, _audioFileDuration);
+                SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime "  ANSI_ESC_GREEN "%li:%02lis, "
+                                               ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
+                                               _audioCurrentTime / 60, _audioCurrentTime % 60, _audioFileDuration / 60, _audioFileDuration % 60);
             }
         }
         if(_commercial_dur > 0) {
