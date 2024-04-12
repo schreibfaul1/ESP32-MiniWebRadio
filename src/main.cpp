@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.01a  Apr 08/2024                                                                                                                       ";
+    Version 3.01b  Apr 12/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -2332,6 +2332,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     if(idx < 0) return;
     if(showFN) {clearLogo(); showFileName(path + idx + 1);}
     changeState(PLAYERico);
+    SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path + idx + 1);
     connecttoFS((const char*)path, resumeFilePos);
     showFileNumber();
     if(_f_isFSConnected) {
@@ -2386,8 +2387,8 @@ void SD_playFolder(const char* folderPath, bool showFN) {
         return;
     }
     _cur_AudioFileNr++;
-    if(!_f_shuffle){sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);}
-    else{sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_shuffleArray[_cur_AudioFileNr]]);}
+    if(!_f_shuffle) {sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);}
+    else            {sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_shuffleArray[_cur_AudioFileNr]]);}
     if(indexOf(_chbuf, ".m3u", 0) > 0) {SerialPrintfln("AUDIO_info:  " ANSI_ESC_YELLOW "skip playlist %s", _chbuf); return;} // no playlist allowed here
     idx = indexOf(_chbuf, "\033[", 1);
     _chbuf[idx] = '\0'; // remove color and filesize
@@ -3157,7 +3158,7 @@ void loop() {
     }
 
     if(_f_playAllFiles) {
-        if(!audioIsRunning() && !_f_pauseResume && !_f_isFSConnected) {
+        if(!audioIsRunning() && !_f_pauseResume) {
             SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next audio file");
             SD_playFolder("", true);
         }
