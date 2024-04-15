@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.01b  Apr 12/2024                                                                                                                       ";
+    Version 3.01c  Apr 15/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1885,7 +1885,7 @@ void setup() {
     setRTC(_TZString.c_str());
 
 #if DECODER > 1 // DAC controlled by I2C
-    if(!dac.begin(I2C_DATA, I2C_CLK)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
+    if(!dac.begin(I2C_DATA, I2C_CLK, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
 #endif
 
     audioInit();
