@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 08.Apr 2024
+// updated: 17.Apr 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -204,7 +204,6 @@ int16_t        strlenUTF8(const char* str);
 int32_t        map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max);
 void           SerialPrintflnCut(const char* item, const char* color, const char* str);
 const char*    scaleImage(const char* path);
-void           xchgShuffle(uint16_t n);
 void           setVolume(uint8_t vol);
 inline uint8_t getvolume();
 uint8_t        downvolume();
@@ -219,10 +218,13 @@ void           changeBtn_released(uint8_t btnNr);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
 void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
-void           SD_playFolder(const char* folderPath, bool showFN);
 bool           SD_rename(const char* src, const char* dest);
 bool           SD_newFolder(const char* folderPathName);
 bool           SD_delete(const char* itemPath);
+bool           preparePlaylistFromFile(const char* path);
+bool           preparePlaylistFromFolder(const char* path);
+void           sortPlayListAlphabetical();
+void           sortPlayListRandom();
 void           processPlaylist(boolean first = false);
 void           changeState(int32_t state);
 void           connecttohost(const char* host);
@@ -232,25 +234,25 @@ void IRAM_ATTR headphoneDetect();
 void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
 
 //prototypes (audiotask.cpp)
-void     audioInit();
-void     audioTaskDelete();
-void     audioSetVolume(uint8_t vol);
-uint8_t  audioGetVolume();
-uint32_t audioGetBitRate();
-boolean  audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
-boolean  audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
-uint32_t audioStopSong();
-void     audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
-uint32_t audioInbuffFilled();
-uint32_t audioInbuffFree();
-uint32_t audioInbuffSize();
-boolean  audioIsRunning();
-uint32_t audioGetStackHighWatermark();
-uint32_t audioGetCodec();
-boolean  audioPauseResume();
-void     audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
-uint32_t audioGetFileSize();
-uint32_t audioGetFilePosition();
-uint16_t audioGetVUlevel();
-uint32_t audioGetFileDuration();
-uint32_t audioGetCurrentTime();
+void           audioInit();
+void           audioTaskDelete();
+void           audioSetVolume(uint8_t vol);
+uint8_t        audioGetVolume();
+uint32_t       audioGetBitRate();
+boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
+boolean        audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
+uint32_t       audioStopSong();
+void           audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
+uint32_t       audioInbuffFilled();
+uint32_t       audioInbuffFree();
+uint32_t       audioInbuffSize();
+boolean        audioIsRunning();
+uint32_t       audioGetStackHighWatermark();
+uint32_t       audioGetCodec();
+boolean        audioPauseResume();
+void           audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
+uint32_t       audioGetFileSize();
+uint32_t       audioGetFilePosition();
+uint16_t       audioGetVUlevel();
+uint32_t       audioGetFileDuration();
+uint32_t       audioGetCurrentTime();
