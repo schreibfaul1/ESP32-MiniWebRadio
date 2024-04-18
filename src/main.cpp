@@ -3134,7 +3134,7 @@ void loop() {
 
     if(_f_playlistEnabled) {
         if(!_f_playlistNextFile) {
-            if(!audioIsRunning() && !_f_pauseResume && !_f_isFSConnected) {
+            if(!audioIsRunning() && !_f_pauseResume) {
                 SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next playlist file");
                 processPlaylist(false);
                 _playlistTime = millis();
