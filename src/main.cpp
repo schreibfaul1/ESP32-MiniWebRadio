@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.01e  Apr 18/2024                                                                                                                       ";
+    Version 3.01f  Apr 18/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -220,7 +220,7 @@ WM8978 dac;
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
 
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
+#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1     // ⏹⏹⏹⏹
 // clang-format off
 //
 //  Display 320x240
@@ -282,7 +282,7 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6   // ⏹⏹⏹⏹
 // clang-format off
 //
 //  Display 480x320
@@ -343,9 +343,10 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
-/*****************************************************************************************************************************************************
- *                                                    D E F A U L T S E T T I N G S                                                                  *
- *****************************************************************************************************************************************************/
+/*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    ║                                                     D E F A U L T S E T T I N G S                                                         ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
+
 // clang-format off
 boolean defaultsettings(){
     if(!SD_MMC.exists("/settings.json")){
@@ -2024,145 +2025,6 @@ void setup() {
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
  *****************************************************************************************************************************************************/
-const char* byte_to_binary(int8_t x) { // e.g. alarmdays
-    static char b[9];
-    b[0] = '\0';
-
-    int32_t z;
-    for(z = 128; z > 0; z >>= 1) { strcat(b, ((x & z) == z) ? "1" : "0"); }
-    return b;
-}
-uint32_t simpleHash(const char* str) {
-    if(str == NULL) return 0;
-    uint32_t hash = 0;
-    for(int32_t i = 0; i < strlen(str); i++) {
-        if(str[i] < 32) continue; // ignore control sign
-        hash += (str[i] - 31) * i * 32;
-    }
-    return hash;
-}
-int32_t str2int(const char* str) {
-    int32_t len = strlen(str);
-    if(len > 0) {
-        for(int32_t i = 0; i < len; i++) {
-            if(!isdigit(str[i])) {
-                log_e("NaN");
-                return 0;
-            }
-        }
-        return stoi(str);
-    }
-    return 0;
-}
-void trim(char* s) {
-    // fb   trim in place
-    char* pe;
-    char* p = s;
-    while(isspace(*p)) p++; // left
-    pe = p;                 // right
-    while(*pe != '\0') pe++;
-    do { pe--; } while((pe > p) && isspace(*pe));
-    if(p == s) { *++pe = '\0'; }
-    else { // move
-        while(p <= pe) *s++ = *p++;
-        *s = '\0';
-    }
-}
-bool startsWith(const char* base, const char* searchString) {
-    char c;
-    while((c = *searchString++) != '\0')
-        if(c != *base++) return false;
-    return true;
-}
-bool endsWith(const char* base, const char* searchString) {
-    int32_t slen = strlen(searchString);
-    if(slen == 0) return false;
-    const char* p = base + strlen(base);
-    //  while(p > base && isspace(*p)) p--;  // rtrim
-    p -= slen;
-    if(p < base) return false;
-    return (strncmp(p, searchString, slen) == 0);
-}
-int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
-    const char* p = haystack;
-    for(; startIndex > 0; startIndex--)
-        if(*p++ == '\0') return -1;
-    char* pos = strstr(p, needle);
-    if(pos == nullptr) return -1;
-    return pos - haystack;
-}
-int32_t lastIndexOf(const char* haystack, const char needle) {
-    const char* p = strrchr(haystack, needle);
-    return (p ? p - haystack : -1);
-}
-boolean strCompare(char* str1, char* str2) { return strCompare((const char*)str1, str2); }
-boolean strCompare(const char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-
-char* x_ps_malloc(uint16_t len) {
-    char* ps_str = NULL;
-    if(_f_PSRAMfound){ps_str = (char*) ps_malloc(len);}
-    else             {ps_str = (char*)    malloc(len);}
-    return ps_str;
-}
-
-char* x_ps_calloc(uint16_t len, uint8_t size) {
-    char* ps_str = NULL;
-    if(_f_PSRAMfound){ps_str = (char*) ps_calloc(len, size);}
-    else             {ps_str = (char*)    calloc(len, size);}
-    return ps_str;
-}
-
-char* x_ps_strdup(const char* str) {
-    char* ps_str = NULL;
-    if(_f_PSRAMfound) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
-    else { ps_str = (char*)malloc(strlen(str) + 1); }
-    strcpy(ps_str, str);
-    return ps_str;
-}
-
-int16_t strlenUTF8(const char* str) { // returns only printable glyphs, all ASCII and UTF-8 until 0xDFBD
-    if(str == NULL) return -1;
-    uint16_t idx = 0;
-    uint16_t cnt = 0;
-    while(*(str + idx) != '\0') {
-        if((*(str + idx) < 0xC0) && (*(str + idx) > 0x1F)) cnt++;
-        if((*(str + idx) == 0xE2) && (*(str + idx + 1) == 0x80)) cnt++; // general punctuation
-        idx++;
-    }
-    return cnt;
-}
-int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    const int32_t run = in_max - in_min;
-    if(run == 0) {
-        log_e("map(): Invalid input range, min == max");
-        return -1; // AVR returns -1, SAM returns 0
-    }
-    const int32_t rise = out_max - out_min;
-    const int32_t delta = x - in_min;
-    return (delta * rise) / run + out_min;
-}
-void SerialPrintflnCut(const char* item, const char* color, const char* str) {
-    uint8_t maxLength = 100;
-    if(strlen(str) > maxLength) {
-        String f = str;
-        SerialPrintfln("%s%s%s ... %s", item, color, f.substring(0, maxLength - 25).c_str(), f.substring(f.length() - 20, f.length()).c_str());
-    }
-    else { SerialPrintfln("%s%s%s", item, color, str); }
-}
 
 const char* scaleImage(const char* path) {
     if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif"))) { // not a image
