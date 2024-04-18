@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 17.Apr 2024
+// updated: 18.Apr 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -132,12 +132,24 @@
 #define ANSI_ESC_BROWN      "\033[38;5;130m"
 #define ANSI_ESC_ORANGE     "\033[38;5;214m"
 
+//__________________________________________________________________________
+static bool ln = false;
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
+ /* line feed */            if(ln){ln = false; Serial.println("");} \
                             Serial.printf("%s ", rtc.gettime_s()); \
                             Serial.printf(__VA_ARGS__); \
                             Serial.printf("\033[0m"); \
                             Serial.println(""); \
                             xSemaphoreGive(mutex_rtc);}
+
+#define SerialPrintfcr(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
+ /* carriage return */      Serial.printf("%s ", rtc.gettime_s()); \
+                            Serial.printf(__VA_ARGS__); \
+                            Serial.printf("\033[0m"); \
+                            Serial.print("  \r"); \
+                            ln = true; \
+                            xSemaphoreGive(mutex_rtc);}
+//⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻⎻
 
 /**********************************************************************************************************************/
 
