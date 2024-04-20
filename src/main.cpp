@@ -2464,23 +2464,12 @@ void changeState(int32_t state){
             _pressBtn[1] = "/btn/Button_DLNA_Yellow.jpg";        _releaseBtn[1] = "/btn/Button_DLNA_Green.jpg";
             _pressBtn[2] = "/btn/Clock_Yellow.jpg";              _releaseBtn[2] = "/btn/Clock_Green.jpg";
             _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
-            if(TFT_BL != -1){
-                _pressBtn[4]="/btn/Bulb_Yellow.jpg";             _releaseBtn[4]="/btn/Bulb_Green.jpg";
-            }
-            else{
-                _pressBtn[4]="/btn/Black.jpg";                   _releaseBtn[4]="/btn/Black.jpg";
-            }
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
+            _pressBtn[4] = "/btn/Bulb_Yellow.jpg";               _releaseBtn[4]=  "/btn/Bulb_Green.jpg";
+            _pressBtn[5] = "/btn/Button_EQ_Yellow.jpg";          _releaseBtn[5] = "/btn/Button_EQ_Green.jpg";
             _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             // for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             drawImage("/btn/RADIOmenue.gif", 0, _winButton.y);
-            if(TFT_BL == -1){
-                drawImage(_releaseBtn[4], 4 * _winButton.w, _winButton.y);
-            }
-            #if CONFIG_IDF_TARGET_ESP32
-                drawImage(_releaseBtn[5], 5 * _winButton.w, _winButton.y);
-            #endif
             clearVolBar();
             _timeCounter.timer = 5;
             _timeCounter.factor = 2.0;
@@ -2557,7 +2546,7 @@ void changeState(int32_t state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             drawImage("/common/Brightness.jpg", 0, _winName.y);
             showBrightnessBar();
-            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case PLAYER:{

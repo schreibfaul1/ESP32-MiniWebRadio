@@ -199,56 +199,56 @@ class TFT{
 
         const uint8_t gif_MaxLzwBits = 12;
 
-        bool gif_decodeSdFile_firstread=false;
-        bool gif_GlobalColorTableFlag=false;
-        bool gif_LocalColorTableFlag=false;
-        bool gif_SortFlag=false;
-        bool gif_TransparentColorFlag=false;
-        bool gif_UserInputFlag=false;
-        bool gif_ZeroDataBlock=0;
-        bool gif_InterlaceFlag=false;
+        bool gif_decodeSdFile_firstread = false;
+        bool gif_GlobalColorTableFlag = false;
+        bool gif_LocalColorTableFlag = false;
+        bool gif_SortFlag = false;
+        bool gif_TransparentColorFlag = false;
+        bool gif_UserInputFlag = false;
+        bool gif_ZeroDataBlock = 0;
+        bool gif_InterlaceFlag = false;
 
         char gif_buffer[15];
         char gif_DSBbuffer[256]; // DataSubBlock
 
-        String gif_GifHeader="";
+        String gif_GifHeader = "";
 
-        uint8_t gif_BackgroundColorIndex=0;
-        uint8_t gif_BlockTerninator=0;
-        uint8_t gif_CharacterCellWidth=0;
-        uint8_t gif_CharacterCellHeight=0;
-        uint8_t gif_CodeSize=0;
-        uint8_t gif_ColorResulution=0;
-        uint8_t gif_DisposalMethod=0;
-        uint8_t gif_ImageSeparator=0;
-        uint8_t gif_lenDatablock=0;
-        uint8_t gif_LZWMinimumCodeSize=0;
-        uint8_t gif_PackedFields=0;
-        uint8_t gif_PixelAspectRatio=0;
-        uint8_t gif_TextBackgroundColorIndex=0;
-        uint8_t gif_TextForegroundColorIndex=0;
-        uint8_t gif_TransparentColorIndex=0;
+        uint8_t gif_BackgroundColorIndex = 0;
+        uint8_t gif_BlockTerninator = 0;
+        uint8_t gif_CharacterCellWidth = 0;
+        uint8_t gif_CharacterCellHeight = 0;
+        uint8_t gif_CodeSize = 0;
+        uint8_t gif_ColorResulution = 0;
+        uint8_t gif_DisposalMethod = 0;
+        uint8_t gif_ImageSeparator = 0;
+        uint8_t gif_lenDatablock = 0;
+        uint8_t gif_LZWMinimumCodeSize = 0;
+        uint8_t gif_PackedFields = 0;
+        uint8_t gif_PixelAspectRatio = 0;
+        uint8_t gif_TextBackgroundColorIndex = 0;
+        uint8_t gif_TextForegroundColorIndex = 0;
+        uint8_t gif_TransparentColorIndex = 0;
 
-        uint16_t gif_ClearCode=0;
-        uint16_t gif_DelayTime=0;
-        uint16_t gif_EOIcode=0; // End Of Information
+        uint16_t gif_ClearCode = 0;
+        uint16_t gif_DelayTime = 0;
+        uint16_t gif_EOIcode = 0; // End Of Information
 
-        uint16_t gif_ImageHeight=0;
-        uint16_t gif_ImageWidth=0;
-        uint16_t gif_ImageLeftPosition=0;
-        uint16_t gif_ImageTopPosition=0;
-        uint16_t gif_LogicalScreenWidth=0;
-        uint16_t gif_LogicalScreenHeight=0;
-        uint16_t gif_MaxCode=0;
-        uint16_t gif_MaxCodeSize=0;
-        uint16_t gif_SizeOfGlobalColorTable=0;
-        uint16_t gif_SizeOfLocalColorTable=0;
-        uint16_t gif_TextGridLeftPosition=0;
-        uint16_t gif_TextGridTopPosition=0;
-        uint16_t gif_TextGridWidth=0;
-        uint16_t gif_TextGridHeight=0;
+        uint16_t gif_ImageHeight = 0;
+        uint16_t gif_ImageWidth = 0;
+        uint16_t gif_ImageLeftPosition = 0;
+        uint16_t gif_ImageTopPosition = 0;
+        uint16_t gif_LogicalScreenWidth = 0;
+        uint16_t gif_LogicalScreenHeight = 0;
+        uint16_t gif_MaxCode = 0;
+        uint16_t gif_MaxCodeSize = 0;
+        uint16_t gif_SizeOfGlobalColorTable = 0;
+        uint16_t gif_SizeOfLocalColorTable = 0;
+        uint16_t gif_TextGridLeftPosition = 0;
+        uint16_t gif_TextGridTopPosition = 0;
+        uint16_t gif_TextGridWidth = 0;
+        uint16_t gif_TextGridHeight = 0;
 
-        int32_t     GIF_readGifItems();
+        int32_t GIF_readGifItems();
         bool    GIF_decodeGif(uint16_t x, uint16_t y);
         void    GIF_freeMemory();
         void    GIF_readHeader();
