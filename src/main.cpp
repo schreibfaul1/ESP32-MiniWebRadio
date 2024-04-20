@@ -154,7 +154,7 @@ struct dlnaHistory {
     char* name = NULL;
 } _dlnaHistory[10];
 
-char _hl_item[15][40]{
+char _hl_item[16][40]{
     "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
     "Internet Radio",   //
     "Internet Radio",   //
@@ -170,6 +170,7 @@ char _hl_item[15][40]{
     "Audio Files",
     "DLNA List",
     "Bluetooth",
+    "Equalizer",
 };
 
 enum status {
@@ -187,6 +188,8 @@ enum status {
     STATIONSLIST = 11,
     AUDIOFILESLIST = 12,
     DLNAITEMSLIST = 13,
+    BLUETOOTH = 14,
+    EQUALIZER = 15,
     UNDEFINED = 255
 };
 
@@ -2650,6 +2653,13 @@ void changeState(int32_t state){
             _timeCounter.factor = 1.0;
             break;
         }
+        case EQUALIZER:{
+            clearWithOutHeaderFooter();
+            showHeadlineItem(EQUALIZER);
+            _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
+            for(int32_t i = 0; i < 1 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
+            break;
+        }
     }
     _state = state;
     _f_state_isChanging = false;
@@ -3207,7 +3217,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     enum : int8_t {none = -1,  RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1, PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1, CLOCK_1,
-                               CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1,
+                               CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1, EQUALIZER_1
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3316,6 +3326,11 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 }
             }
             break;
+        case EQUALIZER:
+            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
+                yPos = EQUALIZER_1;
+                btnNr = x / _winButton.w;
+            }
         default:
             break;
     }
@@ -3341,9 +3356,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 1){_releaseNr = 11;} // DLNA
                             if(btnNr == 2){_releaseNr = 12;} // Clock
                             if(btnNr == 3){_releaseNr = 13;} // Sleep
-                            if(TFT_BL != -1){
-                                if(btnNr == 4){_releaseNr = 14;} // Brightness
-                            }
+                            if(btnNr == 4){_releaseNr = 14;} // Brightness
+                            if(btnNr == 5){_releaseNr = 15;} // Equalizer
                             changeBtn_pressed(btnNr); break;
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
@@ -3417,6 +3431,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             _itemListPos = btnNr;
                             vTaskDelay(100);
                             break;
+        case EQUALIZER_1:   if(btnNr == 0){_releaseNr = 130;
+                            changeBtn_pressed(btnNr); break;}
         default:            break;
     }
 }
@@ -3449,6 +3465,7 @@ void tp_released(uint16_t x, uint16_t y){
         case 12:    changeState(CLOCK); break;
         case 13:    changeState(SLEEP); break;
         case 14:    changeState(BRIGHTNESS); break;
+        case 15:    changeState(EQUALIZER); break;
 
         /* CLOCKico ******************************/
         case 20:    changeState(ALARM); break;
@@ -3740,6 +3757,8 @@ void tp_released(uint16_t x, uint16_t y){
                             showFooterRSSI(true);
                         }
                     } break;
+        /* EQUALIZER *********************************/
+        case 130:   changeState(RADIO); break;
     }
     _releaseNr = -1;
 }
