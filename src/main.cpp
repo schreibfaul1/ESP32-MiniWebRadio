@@ -1679,20 +1679,7 @@ bool connectToWiFi() {
         }
         file.close();
     }
-    WiFi.scanNetworks(false, true, false, 500);
-    wifiMulti.run(10000);
-
-    uint32_t t = millis() + 5000;
-    while(!WiFi.isConnected()){
-        vTaskDelay(10);
-        if(t < millis()){log_e("WiFi timeout"); break;}
-    }
-
-    t = millis() + 3000;
-    while(!WiFi.isConnected()){
-        vTaskDelay(10);
-        if(t < millis()){log_e("WiFi timeout"); break;}
-    }
+    wifiMulti.run();
 
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
