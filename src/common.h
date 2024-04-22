@@ -259,6 +259,7 @@ uint32_t       audioGetFilePosition();
 uint16_t       audioGetVUlevel();
 uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
+bool           audioSetTimeOffset(int16_t timeOffset);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

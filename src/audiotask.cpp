@@ -14,7 +14,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
-                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME};
+                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -164,6 +164,12 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = audio.getAudioCurrentTime();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == SET_TIMEOFFSET){
+                audioTxTaskMessage.cmd = SET_TIMEOFFSET;
+                int16_t timeOffset = (int16_t)(audioRxTaskMessage.value1 & 0xFFFF);
+                audioTxTaskMessage.ret = audio.setTimeOffset(timeOffset);
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else{
                 SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage");
             }
@@ -282,7 +288,6 @@ uint32_t audioInbuffSize(){
     return RX.ret;
 }
 
-
 boolean audioIsRunning(){
     audioTxMessage.cmd = ISRUNNING;
     audioMessage RX = transmitReceive(audioTxMessage);
@@ -334,6 +339,13 @@ uint32_t audioGetFileDuration(){
 
 uint32_t audioGetCurrentTime(){
     audioTxMessage.cmd = GET_AUDIOCURRENTTIME;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+bool audioSetTimeOffset(int16_t timeOffset){
+    audioTxMessage.cmd = SET_TIMEOFFSET;
+    audioTxMessage.value1 = timeOffset;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

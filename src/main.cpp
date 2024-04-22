@@ -3002,6 +3002,25 @@ void loop() {
             if(_playlistTime + 5000 < millis()) _f_playlistNextFile = false;
         }
     }
+
+    if(Serial.available()){ // input: serial terminal
+        String r = Serial.readString();
+        r.replace("\n", "");
+        SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s", r.c_str());
+        if(r.startsWith("p")){
+            bool res = audioPauseResume();
+            if(res) {SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume");}
+            else    {SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible");}
+        }
+        if(r.toInt() != 0){ // is integer?
+            if(audioSetTimeOffset(r.toInt())){
+                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %i", r.toInt());
+            }
+            else{
+                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible");}
+        }
+    }
+
 }
 /*****************************************************************************************************************************************************
  *                                                                    E V E N T S                                                                    *
