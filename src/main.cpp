@@ -312,15 +312,15 @@ struct w_t {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 1
 struct w_c {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
 struct w_f {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
-struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
+struct w_m {uint16_t x = 380; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winTime;
 struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
-struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 110; uint16_t h =  30;} const _winVolume;
+struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winVolume;
 struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
 struct w_k {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
-struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  66; uint16_t h =  30;} const _winBitRate;
-struct w_a {uint16_t x = 270; uint16_t y = 290; uint16_t w = 210; uint16_t h =  30;} const _winIPaddr;
+struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  60; uint16_t h =  30;} const _winBitRate;
+struct w_a {uint16_t x = 264; uint16_t y = 290; uint16_t w = 216; uint16_t h =  30;} const _winIPaddr;
 struct w_b {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -755,7 +755,7 @@ void showHeadlineTime(bool complete) {
     static char oldtime[8]; // hhmmss
     char        newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
     uint8_t     pos_s[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     pos_m[8] = {0, 13, 26, 32, 45, 58, 64, 77}; // display 480x320
+    uint8_t     pos_m[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
     uint8_t*    pos = NULL;
     uint8_t     w = 0;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
