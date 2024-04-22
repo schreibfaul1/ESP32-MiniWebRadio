@@ -346,6 +346,11 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
+slider          highPass;
+slider          bandPass;
+slider          lowPass;
+
+
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
@@ -2656,6 +2661,8 @@ void changeState(int32_t state){
         case EQUALIZER:{
             clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
+            lowPass.begin(70, 70, 200, 30, 0, 100);
+            lowPass.show();
             _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 1 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;

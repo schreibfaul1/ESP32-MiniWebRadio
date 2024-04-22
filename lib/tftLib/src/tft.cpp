@@ -2769,11 +2769,11 @@ bool TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
     // debug=true;
     int32_t iterations = repeat;
 
-    gif_next.clear();
-    gif_vals.clear();
-    gif_stack.clear();
-    gif_GlobalColorTable.clear();
-    gif_LocalColorTable.clear();
+    gif_next.clear();              gif_next.shrink_to_fit();
+    gif_vals.clear();              gif_vals.shrink_to_fit();
+    gif_stack.clear();             gif_stack.shrink_to_fit();
+    gif_GlobalColorTable.clear();  gif_GlobalColorTable.shrink_to_fit();
+    gif_LocalColorTable.clear();   gif_LocalColorTable.shrink_to_fit();
 
     gif_decodeSdFile_firstread = false;
     gif_GlobalColorTableFlag = false;
