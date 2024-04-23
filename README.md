@@ -76,6 +76,11 @@ Schematic<br>
 | opus |  y (celt)  |
 
 ***
+<br>
+
+[self-made devices of the users](https://github.com/schreibfaul1/ESP32-MiniWebRadio/wiki/User-devices)<br>
+
+***
 
 ## Known problems
 ### SD Card

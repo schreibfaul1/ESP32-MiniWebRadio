@@ -22,6 +22,7 @@ using namespace std;
 
 
 extern __attribute__((weak)) void tft_info(const char*);
+extern __attribute__((weak)) void tp_positionXY(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_released(uint16_t x, uint16_t y);

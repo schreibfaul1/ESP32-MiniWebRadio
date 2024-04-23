@@ -235,6 +235,7 @@ void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
+void           placingGraphicObjects();
 
 //prototypes (audiotask.cpp)
 void           audioInit();
@@ -452,6 +453,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 extern TFT tft;
+extern __attribute__((weak)) void graphicObjects(const char* nane, int32_t arg1);
 class slider{
 private:
     int16_t m_x = 0;
@@ -459,42 +461,161 @@ private:
     int16_t m_w = 0;
     int16_t m_h = 0;
     int16_t m_val = 0;
-    uint32_t m_fgColor = 0;
+    int16_t m_minVal = 0;
+    int16_t m_maxVal = 0;
+    uint16_t m_leftStop = 0;
+    uint16_t m_rightStop = 0;
     uint32_t m_bgColor = 0;
-    uint32_t m_leftColor = 0;
-    uint32_t m_rightColor = 0;
-    uint32_t m_slideSpot = 0;
+    uint32_t m_railColor = 0;
+    uint32_t m_spotColor = 0;
+    bool     m_hide = true;
+    uint8_t  m_railHigh = 0;
+    uint16_t m_middle_h = 0;
+    uint16_t m_spotPos = 0;
+    uint8_t  m_spotRadius = 0;
+    char     m_name[10] = {0};
 public:
-    slider(){
-        m_fgColor = TFT_LIGHTGREY;
+    slider(const char* name){
+        m_railHigh = 6;
+        m_spotRadius = 12;
         m_bgColor = TFT_BLACK;
-        m_leftColor = TFT_RED;
-        m_rightColor = TFT_GREEN;
-        m_slideSpot = TFT_RED;
+        m_railColor = TFT_BEIGE;
+        m_spotColor = TFT_RED;
+        uint8_t i = 0;
+        while(name[i] != '\0' && i < 9){
+            m_name[i] = name[i];
+            i++;
+        }
+        m_name[i] = '\0';
     }
     ~slider(){
-
+        ;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
-        m_x = x;
-        m_y = y;
-        m_w = w;
-        m_h = h;
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+        m_leftStop = m_x + m_spotRadius + 10; // x pos left stop
+        m_rightStop = m_x + m_w - m_spotRadius - 10; // x pos right stop
+        m_hide = true;
+        m_middle_h = m_y + (m_h / 2);
+        m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
     }
-    bool setValue(int16_t val){
-        m_val = val;
-        return true; // in range?
+    bool positionXY(uint16_t x, uint16_t y){
+        if(m_hide)  return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+
+        // (x, y) is in range
+        if(x < m_leftStop) x = m_leftStop;
+        if(x > m_rightStop) x = m_rightStop;
+        drawNewSpot(x);
+        return true;
+    }
+    void setValue(int16_t val){
+        if(val < m_minVal) val = m_minVal;
+        if(val > m_maxVal) val = m_maxVal;
+        m_val = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        drawNewSpot(m_val);
     }
     int16_t getValue(){
-        return m_val;
+        return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
     }
     void show(){
-        uint16_t middle_h = m_h / 2;
-        tft.fillRoundRect(m_x, m_y + middle_h, m_w, 5, 2, TFT_BEIGE);
-
+        m_hide = false;
+        tft.fillRoundRect(m_x, m_middle_h - (m_railHigh / 2), m_w, m_railHigh, 2, m_railColor);
+        drawNewSpot(m_spotPos);
     }
     void hide(){
-
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_hide = true;
     }
-
+private:
+    int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+        const int32_t run = in_max - in_min;
+        if(run == 0) {
+            log_e("map(): Invalid input range, min == max");
+            return -1;
+        }
+        const int32_t rise = out_max - out_min;
+        const int32_t delta = x - in_min;
+        return round((float)(delta * rise) / run + out_min);
+    }
+    void drawNewSpot(uint16_t xPos){
+        if(!m_hide){
+            tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius,     2 * m_spotRadius, 2 * m_spotRadius, m_bgColor);
+            tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 1, m_railHigh,   m_railColor);
+            tft.fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
+        }
+        m_spotPos = xPos;
+        int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        if(graphicObjects) graphicObjects((const char*)m_name, val);
+    }
 };
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class textbox{
+private:
+    int16_t m_x = 0;
+    int16_t m_y = 0;
+    int16_t m_w = 0;
+    int16_t m_h = 0;
+    uint8_t m_fontSize = 0;
+    uint32_t m_bgColor = 0;
+    uint32_t m_fgColor = 0;
+    char* m_text = NULL;
+    bool  m_hide = true;
+public:
+    textbox(){
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_fontSize = 1;
+    }
+    ~textbox(){
+        if(m_text){free(m_text); m_text = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+    }
+    void show(){
+        m_hide = false;
+        if(!m_text){char c[] = " "; m_text = c;}
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        tft.setTextColor(m_fgColor);
+        tft.setFont(m_fontSize);
+        uint8_t offset_v = 0;
+        if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
+        tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, TFT_ALIGN_RIGHT);
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_hide = true;
+    }
+    void setFont(uint8_t size){
+        m_fontSize = size;
+        tft.setFont(m_fontSize);
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void writeText(const char* txt){
+        if(m_text){free(m_text); m_text = NULL;}
+        m_text = x_ps_strdup(txt);
+        if(!m_hide){
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            tft.setTextColor(m_fgColor);
+            tft.setFont(m_fontSize);
+            uint8_t offset_v = 0;
+            if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
+            tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, TFT_ALIGN_RIGHT);
+        }
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

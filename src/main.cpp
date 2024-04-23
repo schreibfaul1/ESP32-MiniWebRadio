@@ -304,31 +304,36 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 //  +-------------------------------------------+ 320
 //                                             480
 
-const uint8_t _fonts[9] = {21, 25, 27, 34, 38, 43, 56, 66, 156};  // ASCII 0x20...03F only
+const uint8_t _fonts[9] = {21, 25, 27, 34, 38, 43, 56, 66, 156};
 
-struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
-struct w_l {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
-struct w_n {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 132;} const _winName;
-struct w_e {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
-struct w_j {uint16_t x =   0; uint16_t y = 162; uint16_t w = 130; uint16_t h =  60;} const _winFileNr;
-struct w_t {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
-struct w_c {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
-struct w_g {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
-struct w_f {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
-struct w_m {uint16_t x = 390; uint16_t y =   0; uint16_t w =  90; uint16_t h =  30;} const _winTime;
-struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
-struct w_v {uint16_t x = 280; uint16_t y =   0; uint16_t w = 110; uint16_t h =  30;} const _winVolume;
-struct w_s {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
-struct w_p {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
-struct w_r {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
-struct w_k {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
-struct w_u {uint16_t x = 204; uint16_t y = 290; uint16_t w =  66; uint16_t h =  30;} const _winBitRate;
-struct w_a {uint16_t x = 270; uint16_t y = 290; uint16_t w = 210; uint16_t h =  30;} const _winIPaddr;
-struct w_b {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
-struct w_o {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
-struct w_d {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
-struct w_y {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
-struct w_w {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;} const _winWoHF; // without Header and Footer
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
+struct w_n  {uint16_t x = 130; uint16_t y =  30; uint16_t w = 350; uint16_t h = 132;} const _winName;
+struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 130; uint16_t h =  60;} const _winFileNr;
+struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
+struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
+struct w_m  {uint16_t x = 380; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winTime;
+struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
+struct w_v  {uint16_t x = 280; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winVolume;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
+struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
+struct w_k  {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
+struct w_u  {uint16_t x = 204; uint16_t y = 290; uint16_t w =  60; uint16_t h =  30;} const _winBitRate;
+struct w_a  {uint16_t x = 264; uint16_t y = 290; uint16_t w = 216; uint16_t h =  30;} const _winIPaddr;
+struct w_b  {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
+struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h =  40;} const _winAlarmDays;
+struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
+struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;} const _sdrBAL;       // slider balance in equalizer
+
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
 uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
 uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
@@ -346,9 +351,14 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
-slider          highPass;
-slider          bandPass;
-slider          lowPass;
+slider          sdr_lowPass("sdr_LP");
+slider          sdr_bandPass("sdr_BP");
+slider          sdr_highPass("sdr_HP");
+slider          sdr_balance("sdr_BAL");
+textbox         txt_lowPass;
+textbox         txt_bandPass;
+textbox         txt_highPass;
+textbox         txt_balance;
 
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -763,7 +773,7 @@ void showHeadlineTime(bool complete) {
     static char oldtime[8]; // hhmmss
     char        newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
     uint8_t     pos_s[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     pos_m[8] = {0, 13, 26, 32, 45, 58, 64, 77}; // display 480x320
+    uint8_t     pos_m[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
     uint8_t*    pos = NULL;
     uint8_t     w = 0;
     xSemaphoreTake(mutex_display, portMAX_DELAY);
@@ -2016,6 +2026,8 @@ void setup() {
             else { setStationViaURL(_lastconnectedhost.c_str()); }
     }
     else {SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr);}
+    placingGraphicObjects();
+
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2387,6 +2399,21 @@ boolean copySDtoFFat(const char* path) {
 /*****************************************************************************************************************************************************
  *                                                            M E N U E / B U T T O N S                                                              *
  *****************************************************************************************************************************************************/
+void placingGraphicObjects(){  // and initialize them
+
+// EQUALIZER
+    sdr_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);      sdr_lowPass.setValue(_toneLP);
+    sdr_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);     sdr_bandPass.setValue(_toneBP);
+    sdr_highPass.begin(_sdrHP.x, _sdrHP.y, _sdrHP.w, _sdrHP.h, -40, 6);     sdr_highPass.setValue(_toneHP);
+    sdr_balance.begin(_sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16); sdr_balance.setValue(_toneBAL);
+    txt_lowPass.begin(360, _sdrLP.y, 100, _sdrLP.h);                        txt_lowPass.setFont(_fonts[3]);
+    txt_bandPass.begin(360, _sdrBP.y, 100, _sdrBP.h);                       txt_bandPass.setFont(_fonts[3]);
+    txt_highPass.begin(360, _sdrHP.y, 100, _sdrHP.h);                       txt_highPass.setFont(_fonts[3]);
+    txt_balance.begin(360, _sdrBAL.y, 100, _sdrBAL.h);                      txt_balance.setFont(_fonts[3]);
+}
+
+
+
 // clang-format off
 void changeState(int32_t state){
     if(state == _state) return;  //nothing todo
@@ -2661,8 +2688,20 @@ void changeState(int32_t state){
         case EQUALIZER:{
             clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
-            lowPass.begin(70, 70, 200, 30, 0, 100);
-            lowPass.show();
+            sdr_lowPass.show();
+            sdr_bandPass.show();
+            sdr_highPass.show();
+            sdr_balance.show();
+            drawImage("/common/LowPass.jpg", 20, _sdrLP.y +1);
+            drawImage("/common/BandPass.jpg", 20, _sdrBP.y +1);
+            drawImage("/common/LowPass.jpg", 20, _sdrHP.y +1);
+            drawImage("/common/Balance.jpg", 20, _sdrBAL.y +1);
+            txt_lowPass.show();
+            txt_bandPass.show();
+            txt_highPass.show();
+            txt_balance.show();
+
+
             _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 1 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
@@ -3014,7 +3053,7 @@ void loop() {
         }
         if(r.toInt() != 0){ // is integer?
             if(audioSetTimeOffset(r.toInt())){
-                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %i", r.toInt());
+                SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt());
             }
             else{
                 SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible");}
@@ -3795,6 +3834,16 @@ void tp_long_released(){
     tp_released(0, 0);
 }
 
+void tp_positionXY(uint16_t x, uint16_t y){
+    if(_state == EQUALIZER){
+        if(sdr_lowPass.positionXY(x, y)) return;
+        if(sdr_bandPass.positionXY(x, y)) return;
+        if(sdr_highPass.positionXY(x, y)) return;
+        if(sdr_balance.positionXY(x, y)) return;
+    }
+
+}
+
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
@@ -4123,4 +4172,12 @@ void kcx_bt_modeChanged(const char* m){ // Every time the mode has changed
         webSrv.send("KCX_BT_MODE=TX");
         if(_f_mute == true) mute();
     }
+}
+
+void graphicObjects(const char* name, int32_t arg1){
+    char c[10];
+    if(strcmp(name, "sdr_LP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_lowPass.writeText(c);  _toneLP = arg1;  setI2STone();}
+    if(strcmp(name, "sdr_BP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_bandPass.writeText(c); _toneBP = arg1;  setI2STone();}
+    if(strcmp(name, "sdr_HP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_highPass.writeText(c); _toneHP = arg1;  setI2STone();}
+    if(strcmp(name, "sdr_BAL") == 0){ itoa(arg1, c, 10); strcat(c, " ");   txt_balance.writeText(c);  _toneBAL = arg1; setI2STone();}
 }

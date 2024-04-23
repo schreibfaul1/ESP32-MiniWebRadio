@@ -5301,7 +5301,13 @@ void TP::loop() {
     static uint16_t x2 = 0, y2 = 0;
     if (!digitalRead(_TP_IRQ)) {
         if(!read_TP(x, y)){return;}
+
+        if(x !=x1 && y != y1){
+            if(tp_positionXY) tp_positionXY(x, y);
+        }
+
         { x1 = x; y1 = y;}
+
         if (f_loop) {
             f_loop = false;
             // log_i("tp_pressed x=%d, y=%d", x, y);
