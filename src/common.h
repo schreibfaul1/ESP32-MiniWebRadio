@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 18.Apr 2024
+// updated: 24.Apr 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -453,7 +453,9 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 extern TFT tft;
-extern __attribute__((weak)) void graphicObjects(const char* nane, int32_t arg1);
+extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
+extern __attribute__((weak)) void graphicObjects_OnClick(const char* name);
+extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name);
 class slider{
 private:
     int16_t m_x = 0;
@@ -468,7 +470,8 @@ private:
     uint32_t m_bgColor = 0;
     uint32_t m_railColor = 0;
     uint32_t m_spotColor = 0;
-    bool     m_hide = true;
+    bool     m_enabled = false;
+    bool     m_clicked = false;
     uint8_t  m_railHigh = 0;
     uint16_t m_middle_h = 0;
     uint16_t m_spotPos = 0;
@@ -500,12 +503,12 @@ public:
         m_maxVal = maxVal;
         m_leftStop = m_x + m_spotRadius + 10; // x pos left stop
         m_rightStop = m_x + m_w - m_spotRadius - 10; // x pos right stop
-        m_hide = true;
+        m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(m_hide)  return false;
+        if(!m_enabled)  return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
@@ -514,6 +517,8 @@ public:
         // (x, y) is in range
         if(x < m_leftStop) x = m_leftStop;
         if(x > m_rightStop) x = m_rightStop;
+        if(!m_clicked){ if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);}
+        m_clicked = true;
         drawNewSpot(x);
         return true;
     }
@@ -527,13 +532,23 @@ public:
         return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
     }
     void show(){
-        m_hide = false;
+        m_enabled = true;
         tft.fillRoundRect(m_x, m_middle_h - (m_railHigh / 2), m_w, m_railHigh, 2, m_railColor);
         drawNewSpot(m_spotPos);
     }
+    void disable(){
+        m_enabled = false;
+    }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        m_hide = true;
+        m_enabled = false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
     }
 private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
@@ -547,14 +562,14 @@ private:
         return round((float)(delta * rise) / run + out_min);
     }
     void drawNewSpot(uint16_t xPos){
-        if(!m_hide){
+        if(m_enabled){
             tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius,     2 * m_spotRadius, 2 * m_spotRadius, m_bgColor);
             tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 1, m_railHigh,   m_railColor);
             tft.fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
-        if(graphicObjects) graphicObjects((const char*)m_name, val);
+        if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, val);
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -568,15 +583,20 @@ private:
     uint32_t m_bgColor = 0;
     uint32_t m_fgColor = 0;
     char* m_text = NULL;
-    bool  m_hide = true;
+    char* m_name = NULL;
+    bool  m_enabled = false;
+    bool  m_clicked = false;
 public:
-    textbox(){
+    textbox(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = 1;
     }
     ~textbox(){
         if(m_text){free(m_text); m_text = NULL;}
+        if(m_name){free(m_name); m_name = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -585,7 +605,8 @@ public:
         m_h = h; // high
     }
     void show(){
-        m_hide = false;
+        m_enabled = true;
+        m_clicked = false;
         if(!m_text){char c[] = " "; m_text = c;}
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setTextColor(m_fgColor);
@@ -596,7 +617,10 @@ public:
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        m_hide = true;
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
     }
     void setFont(uint8_t size){
         m_fontSize = size;
@@ -605,10 +629,27 @@ public:
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
+    }
     void writeText(const char* txt){
         if(m_text){free(m_text); m_text = NULL;}
         m_text = x_ps_strdup(txt);
-        if(!m_hide){
+        if(m_enabled){
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             tft.setTextColor(m_fgColor);
             tft.setFont(m_fontSize);
@@ -619,3 +660,94 @@ public:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class button{
+private:
+    int16_t  m_x = 0;
+    int16_t  m_y = 0;
+    int16_t  m_w = 0;
+    int16_t  m_h = 0;
+    uint32_t m_bgColor = 0;
+    char*    m_defaultPicturePath = NULL;
+    char*    m_clickedPicturePath = NULL;
+    char*    m_inactivePicturePath = NULL;
+    bool     m_enabled = false;
+    bool     m_clicked = false;
+    char*    m_name = NULL;
+public:
+    button(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("button");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        setDefaultPicturePath(NULL);
+        setClickedPicturePath(NULL);
+        setInactivePicturePath(NULL);
+    }
+    ~button(){
+        if(m_defaultPicturePath) {free(m_defaultPicturePath);  m_defaultPicturePath = NULL;}
+        if(m_clickedPicturePath) {free(m_clickedPicturePath);  m_clickedPicturePath = NULL;}
+        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    void show(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+            setInactive();
+            return;
+        }
+        drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
+        m_enabled = true;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setInactive(){
+        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        m_enabled = false;
+    }
+    void setDefaultPicturePath(const char* path){
+        if(m_defaultPicturePath){free(m_defaultPicturePath); m_defaultPicturePath = NULL;}
+        if(path) m_defaultPicturePath = x_ps_strdup(path);
+        else m_defaultPicturePath = x_ps_strdup("defaultPicturePath is not set");
+    }
+    void setClickedPicturePath(const char* path){
+        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        if(path) m_clickedPicturePath = x_ps_strdup(path);
+        else m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
+    }
+    void setInactivePicturePath(const char* path){
+        if(m_inactivePicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        if(path) m_inactivePicturePath = x_ps_strdup(path);
+        else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
+    }
+};

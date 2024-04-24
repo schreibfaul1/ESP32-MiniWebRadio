@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.01f  Apr 18/2024                                                                                                                       ";
+    Version 3.01g  Apr 24/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -245,29 +245,34 @@ SemaphoreHandle_t mutex_display;
 const uint8_t _fonts[9] = { 15, 16, 21, 25, 27, 34, 38, 43, 156};
 
 
-struct w_h {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
-struct w_l {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;} const _winLogo;
-struct w_n {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
-struct w_e {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
-struct w_j {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  46;} const _winFileNr;
-struct w_t {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
-struct w_c {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
-struct w_g {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
-struct w_f {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
-struct w_i {uint16_t x =   0; uint16_t y =   0; uint16_t w = 180; uint16_t h =  20;} const _winItem;
-struct w_v {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  20;} const _winVolume;
-struct w_m {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
-struct w_s {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
-struct w_p {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
-struct w_r {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
-struct w_k {uint16_t x = 155; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID_bt;
-struct w_u {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
-struct w_a {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
-struct w_b {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
-struct w_o {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
-struct w_d {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
-struct w_y {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
-struct w_w {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF; // without Header and Footer
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;} const _winLogo;
+struct w_n  {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
+struct w_e  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  46;} const _winFileNr;
+struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
+struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
+struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 180; uint16_t h =  20;} const _winItem;
+struct w_v  {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  20;} const _winVolume;
+struct w_m  {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
+struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
+struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
+struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
+struct w_k  {uint16_t x = 155; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID_bt;
+struct w_u  {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
+struct w_a  {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
+struct w_b  {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
+struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
+struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;} const _sdrHP;        // slider highpass in equalizer
+struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;} const _sdrBAL;       // slider balance in equalizer
+
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
 uint16_t _alarmtimeXPos7S[5] = {2, 75, 148, 173, 246}; // seven segment digits
 uint16_t _alarmtimeXPosFN[6] = {0, 56, 112, 152, 208, 264}; // folded numbers
@@ -351,15 +356,9 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
-slider          sdr_lowPass("sdr_LP");
-slider          sdr_bandPass("sdr_BP");
-slider          sdr_highPass("sdr_HP");
-slider          sdr_balance("sdr_BAL");
-textbox         txt_lowPass;
-textbox         txt_bandPass;
-textbox         txt_highPass;
-textbox         txt_balance;
-
+slider   sdr_lowPass("sdr_LP"), sdr_bandPass("sdr_BP"), sdr_highPass("sdr_HP"), sdr_balance("sdr_BAL");   // EQUALIZER
+textbox  txt_lowPass("txt_LP"), txt_bandPass("txt_BP"), txt_highPass("txt_HP"), txt_balance("txt_BAL");   // EQUALIZER
+button   btn_lowPass("btn_LP"), btn_bandPass("btn_BP"), btn_highPass("btn_HP"), btn_balance("btn_BAL");   // EQUALIZER
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -2401,21 +2400,33 @@ boolean copySDtoFFat(const char* path) {
  *****************************************************************************************************************************************************/
 void placingGraphicObjects(){  // and initialize them
 
+
 // EQUALIZER
     sdr_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);      sdr_lowPass.setValue(_toneLP);
     sdr_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);     sdr_bandPass.setValue(_toneBP);
     sdr_highPass.begin(_sdrHP.x, _sdrHP.y, _sdrHP.w, _sdrHP.h, -40, 6);     sdr_highPass.setValue(_toneHP);
     sdr_balance.begin(_sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16); sdr_balance.setValue(_toneBAL);
-    txt_lowPass.begin(360, _sdrLP.y, 100, _sdrLP.h);                        txt_lowPass.setFont(_fonts[3]);
-    txt_bandPass.begin(360, _sdrBP.y, 100, _sdrBP.h);                       txt_bandPass.setFont(_fonts[3]);
-    txt_highPass.begin(360, _sdrHP.y, 100, _sdrHP.h);                       txt_highPass.setFont(_fonts[3]);
-    txt_balance.begin(360, _sdrBAL.y, 100, _sdrBAL.h);                      txt_balance.setFont(_fonts[3]);
+    txt_lowPass.begin(_sdrLP.x + _sdrLP.w + 2, _sdrLP.y, 80, _sdrLP.h);     txt_lowPass.setFont(_fonts[2]);
+    txt_bandPass.begin(_sdrBP.x + _sdrBP.w + 2, _sdrBP.y, 80, _sdrBP.h);    txt_bandPass.setFont(_fonts[2]);
+    txt_highPass.begin(_sdrHP.x + _sdrHP.w + 2, _sdrHP.y, 80, _sdrHP.h);    txt_highPass.setFont(_fonts[2]);
+    txt_balance.begin(_sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h); txt_balance.setFont(_fonts[2]);
+    btn_lowPass.begin(_sdrLP.x -  60, _sdrLP.y +1, 48, 48);  btn_lowPass.setDefaultPicturePath("/btn/LP_green.jpg");  btn_lowPass.setClickedPicturePath("/btn/LP_yellow.jpg");
+    btn_bandPass.begin(_sdrBP.x - 60, _sdrBP.y +1, 48, 48);  btn_bandPass.setDefaultPicturePath("/btn/BP_green.jpg"); btn_bandPass.setClickedPicturePath("/btn/BP_yellow.jpg");
+    btn_highPass.begin(_sdrHP.x - 60, _sdrHP.y +1, 48, 48);  btn_highPass.setDefaultPicturePath("/btn/HP_green.jpg"); btn_highPass.setClickedPicturePath("/btn/HP_yellow.jpg");
+    btn_balance.begin(_sdrBAL.x - 60, _sdrBAL.y +1, 48, 48); btn_balance.setDefaultPicturePath("/btn/BAL_green.jpg"); btn_balance.setClickedPicturePath("/btn/BAL_yellow.jpg");
+
 }
 
 
 
 // clang-format off
 void changeState(int32_t state){
+    switch(_state){
+        case EQUALIZER: sdr_lowPass.disable(); sdr_bandPass.disable(); sdr_highPass.disable(); sdr_balance.disable();
+                        btn_lowPass.disable(); btn_bandPass.disable(); btn_highPass.disable(); btn_balance.disable();
+                        txt_lowPass.disable(); txt_bandPass.disable(); txt_highPass.disable(); txt_balance.disable();
+                        clearWithOutHeaderFooter(); break;
+    }
     if(state == _state) return;  //nothing todo
     _f_state_isChanging = true;
     _f_volBarVisible = false;
@@ -2688,19 +2699,9 @@ void changeState(int32_t state){
         case EQUALIZER:{
             clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
-            sdr_lowPass.show();
-            sdr_bandPass.show();
-            sdr_highPass.show();
-            sdr_balance.show();
-            drawImage("/common/LowPass.jpg", 20, _sdrLP.y +1);
-            drawImage("/common/BandPass.jpg", 20, _sdrBP.y +1);
-            drawImage("/common/LowPass.jpg", 20, _sdrHP.y +1);
-            drawImage("/common/Balance.jpg", 20, _sdrBAL.y +1);
-            txt_lowPass.show();
-            txt_bandPass.show();
-            txt_highPass.show();
-            txt_balance.show();
-
+            sdr_lowPass.show(); sdr_bandPass.show(); sdr_highPass.show(); sdr_balance.show();
+            btn_lowPass.show(); btn_bandPass.show(); btn_highPass.show(); btn_balance.show();
+            txt_lowPass.show(); txt_bandPass.show(); txt_highPass.show(); txt_balance.show();
 
             _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 1 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
@@ -3392,6 +3393,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
             }
             break;
         case EQUALIZER:
+            if(sdr_lowPass.positionXY(x,y)) return;
+            if(sdr_bandPass.positionXY(x,y)) return;
+            if(sdr_highPass.positionXY(x,y)) return;
+            if(sdr_balance.positionXY(x,y)) return;
+            if(btn_lowPass.positionXY(x, y)) return;
+            if(btn_bandPass.positionXY(x, y)) return;
+            if(btn_highPass.positionXY(x, y)) return;
+            if(btn_balance.positionXY(x, y)) return;
+            if(txt_lowPass.positionXY(x, y)) return;
+            if(txt_bandPass.positionXY(x, y)) return;
+            if(txt_highPass.positionXY(x, y)) return;
+            if(txt_balance.positionXY(x, y)) return;
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
                 yPos = EQUALIZER_1;
                 btnNr = x / _winButton.w;
@@ -3512,6 +3525,21 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     }
 }
 void tp_released(uint16_t x, uint16_t y){
+    switch(_state){
+        case EQUALIZER: if(sdr_lowPass.released()) return;
+                        if(sdr_bandPass.released()) return;
+                        if(sdr_highPass.released()) return;
+                        if(sdr_balance.released()) return;
+                        if(btn_lowPass.released()) return;
+                        if(btn_bandPass.released()) return;
+                        if(btn_highPass.released()) return;
+                        if(btn_balance.released()) return;
+                        if(txt_lowPass.released()) return;
+                        if(txt_bandPass.released()) return;
+                        if(txt_highPass.released()) return;
+                        if(txt_balance.released()) return;
+                        break;
+    }
     // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
@@ -4109,7 +4137,7 @@ void WEBSRV_onInfo(const char* info) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info); // infos for debug
     }
 }
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Events from DLNA
 void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
@@ -4143,7 +4171,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }
 }
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val){
     SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
 }
@@ -4173,11 +4201,25 @@ void kcx_bt_modeChanged(const char* m){ // Every time the mode has changed
         if(_f_mute == true) mute();
     }
 }
-
-void graphicObjects(const char* name, int32_t arg1){
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void graphicObjects_OnChange(const char* name, int32_t arg1){
     char c[10];
-    if(strcmp(name, "sdr_LP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_lowPass.writeText(c);  _toneLP = arg1;  setI2STone();}
-    if(strcmp(name, "sdr_BP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_bandPass.writeText(c); _toneBP = arg1;  setI2STone();}
-    if(strcmp(name, "sdr_HP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_highPass.writeText(c); _toneHP = arg1;  setI2STone();}
-    if(strcmp(name, "sdr_BAL") == 0){ itoa(arg1, c, 10); strcat(c, " ");   txt_balance.writeText(c);  _toneBAL = arg1; setI2STone();}
+    if(strcmp(name, "sdr_LP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_BP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_HP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_BAL") == 0){ itoa(arg1, c, 10); strcat(c, " ");   txt_balance.writeText(c);  _toneBAL = arg1; webSrv.send("settone=", setI2STone()); return;}
+
+    log_d("unused event: graphicObject %s was changed, val %li", name, arg1);
+}
+void graphicObjects_OnClick(const char* name){
+    if(strcmp(name, "btn_LP")  == 0){ sdr_lowPass.setValue(0); return;}
+    if(strcmp(name, "btn_BP")  == 0){ sdr_bandPass.setValue(0); return;}
+    if(strcmp(name, "btn_HP")  == 0){ sdr_highPass.setValue(0); return;}
+    if(strcmp(name, "btn_BAL") == 0){ sdr_balance.setValue(0); return;}
+
+    log_d("unused event: graphicObject %s was clicked", name);
+}
+void graphicObjects_OnRelease(const char* name){
+
+    log_d("unused event: graphicObject %s was released", name);
 }
