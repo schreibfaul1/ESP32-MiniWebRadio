@@ -128,6 +128,7 @@ class TFT{
         void      drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
         void      drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
         void      drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
+        void      readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data);
         void      fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
         void      drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
         void      fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
@@ -279,13 +280,15 @@ class TFT{
         inline void _swap_int16_t(int16_t &a, int16_t &b) { int16_t t = a; a = b; b = t; }
         void        init();
         void        writeCommand(uint16_t cmd);
+        uint16_t    readCommand();
 
         // Transaction API not used by GFX
         void      setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        void      readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
         void      write24BitColor(uint16_t color);
         void      writePixels(uint16_t * colors, uint32_t len);
         void      writeColor(uint16_t color, uint32_t len);
-
+        uint16_t  color565(uint8_t r, uint8_t g, uint8_t b);
 
         // Required Non-Transaction
         void      drawPixel(int16_t x, int16_t y, uint16_t color);

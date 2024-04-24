@@ -7,12 +7,12 @@
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
-#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER      0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
+#define TP_VERSION          0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
 #define AUDIOTASK_CORE      0                               // 0 or 1
@@ -53,6 +53,7 @@
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
 
+extern TFT tft;
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -444,6 +445,38 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline void hardcopy(){
+    const uint8_t bmp320x240[70] = {
+        0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    const uint8_t bmp480x320[70] = {
+        0x42, 0x4D, 0x46, 0xB0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0xE0, 0x01, 0x00, 0x00, 0x40, 0x01,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+    File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
+    if(TFT_CONTROLLER < 2){
+        hc.write(bmp320x240, sizeof(bmp320x240));
+        uint16_t buff[320];
+        for(int i = 240; i > 0; i--){
+            tft.readRect(0, i - 1, 320, 1, buff);
+            hc.write((uint8_t*)buff, 320 * 2);
+        }
+        hc.close();
+    }
+    else{
+        hc.write(bmp480x320, sizeof(bmp480x320));
+        uint16_t buff[480];
+        for(int i = 320; i > 0; i--){
+            tft.readRect(0, i - 1, 480, 1, buff);
+            hc.write((uint8_t*)buff, 480 * 2);
+        }
+        hc.close();
+    }
+}
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 
 
@@ -452,7 +485,6 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 //                                              G R A P H I C   O B J E C T S
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-extern TFT tft;
 extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name);
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name);
@@ -751,3 +783,4 @@ public:
         return true;
     }
 };
+

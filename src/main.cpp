@@ -327,8 +327,8 @@ struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h = 
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
 struct w_k  {uint16_t x = 216; uint16_t y = 290; uint16_t w =  44; uint16_t h =  30;} const _winRSSID_bt;
-struct w_u  {uint16_t x = 204; uint16_t y = 290; uint16_t w =  60; uint16_t h =  30;} const _winBitRate;
-struct w_a  {uint16_t x = 264; uint16_t y = 290; uint16_t w = 216; uint16_t h =  30;} const _winIPaddr;
+struct w_u  {uint16_t x = 204; uint16_t y = 290; uint16_t w =  64; uint16_t h =  30;} const _winBitRate;
+struct w_a  {uint16_t x = 268; uint16_t y = 290; uint16_t w = 212; uint16_t h =  30;} const _winIPaddr;
 struct w_b  {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -3051,6 +3051,10 @@ void loop() {
             bool res = audioPauseResume();
             if(res) {SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume");}
             else    {SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible");}
+        }
+        if(r.startsWith("h")){ // A hardcopy of the display is created and written to the SD card
+            {SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy");}
+            hardcopy();
         }
         if(r.toInt() != 0){ // is integer?
             if(audioSetTimeOffset(r.toInt())){
