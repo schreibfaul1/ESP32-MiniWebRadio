@@ -155,24 +155,12 @@ const char index_html[] PROGMEM = R"=====(
         .buttonred {
             background-color : red;
         }
-        #label-logo-s {
-            margin-left : 20px;
-            border-color: black;
-            border-style: solid;
-            border-width: 2px;
-            display : inline-block;
-            background-image : url(SD/common/unknown.jpg);
-            width : 96px;
-            height : 96px;
-            margin-top: 5px;
-        }
-        #label-logo-m {
+        #label-logo {
             margin-left : 40px;
             border-color: black;
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/common//unknown.jpg);
             width : 128px;
             height : 128px;
             margin-top: 5px;
@@ -201,11 +189,16 @@ const char index_html[] PROGMEM = R"=====(
             font-weight: bold;
             text-align: center;
         }
-        #div-logo-s{
-          display: none;
-        }
-        #div-logo-m{
-          display: none;
+        #label-infopic {
+            margin-left : 4px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            background-image : url(SD/png/MiniWebRadioV3.png);
+            width : 480px;
+            height : 320px;
+            margin-top: 5px;
         }
         canvas {
             left : 0;
@@ -475,9 +468,9 @@ function connect() {
                                         break
             case "stationURL":          station.value = val
                                         break
-            case "stationLogo":         if(tft_size == 0) showLogo('label-logo-s', val)
-                                        if(tft_size == 1) showLogo('label-logo-m', val)
+            case "stationLogo":         showLogo1('label-logo', val)
                                         break
+            case "hardcopy":            showLogo1('label-infopic', val)
             case "streamtitle":         cmd.value = val
                                         break
             case "homepage":            window.open(val, '_blank') // show the station homepage
@@ -487,15 +480,11 @@ function connect() {
             case "AudioFileList":       getAudioFileList(val)
                                         break
             case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
-                                                            document.getElementById('div-logo-m').style.display = 'none';
-                                                            document.getElementById('div-logo-s').style.display = 'block';
                                                             document.getElementById('canvas').width  = 96;
                                                             document.getElementById('canvas').height = 96;
                                                             console.log("tftSize is s");
                                         }
                                         if(val == 'm')  { tft_size = 1;
-                                                            document.getElementById('div-logo-s').style.display = 'none';
-                                                            document.getElementById('div-logo-m').style.display = 'block';
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
                                                             console.log("tftSize is m");
@@ -551,9 +540,9 @@ function connect() {
                                         else if (val == 'PLAYER') showTab3();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
-                                        if(val == '0') showLogo('label-bt-logo', '/png/BT.png')
-                                        if(val == '1' && bt_RxTx == 'TX') showLogo('label-bt-logo', '/png/BT_TX.png')
-                                        if(val == '1' && bt_RxTx == 'RX') showLogo('label-bt-logo', '/png/BT_RX.png')
+                                        if(val == '0') showLogo1('label-bt-logo', '/png/BT.png')
+                                        if(val == '1' && bt_RxTx == 'TX') showLogo1('label-bt-logo', '/png/BT_TX.png')
+                                        if(val == '1' && bt_RxTx == 'RX') showLogo1('label-bt-logo', '/png/BT_RX.png')
                                         break
             case "KCX_BT_MEM":          show_BT_memItems(val)
                                         break;
@@ -967,19 +956,13 @@ function select_l8 (presctrl) { // preset, select level 7
  }
 // ----------------------------------- TAB RADIO ------------------------------------
 
-function showLogo(id, src) { // get the bitmap from SD, convert to URL first
-    src = src.replace(/%/g, '%25') // % must be the first
-    src = src.replace(/\s/g, '%20') // URLs never can have blanks
-    src = src.replace(/'/g, '%27') // must be replace
-    src = src.replace(/\(/g, '%28') // must be replace
-    src = src.replace(/\)/g, '%29') // must be replace
-    src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
-    var timestamp = new Date().getTime()
-    var file
-    if(src == '') file = 'url(SD/unknown.jpg)'
-    else file = 'url(SD' + src + ')'
-    console.log("showLogo id=", id, "file=", file)
-    document.getElementById(id).style.backgroundImage = file
+function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
+    const myImg = document.getElementById(id);
+    if(src == '') src = '/unknown.jpg'
+    src = "/SD" + src
+    src += "?" + new Date().getTime()
+    console.log("showLogo1 id=", id, "src=", src)
+    myImg.src = src;
 }
 
 function test(){
@@ -1890,11 +1873,8 @@ function clear_BT_memItems(){
             </div>
         </div>
         <div style="display: flex;">
-            <div id="div-logo-s" style="flex: 0 0 210px;">
-                <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
-            </div>
-            <div id="div-logo-m" style="flex: 0 0 210px;">
-                <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
+            <div id="div-logo" style="flex: 0 0 210px;">
+                <img id="label-logo" src="SD/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -2261,7 +2241,9 @@ function clear_BT_memItems(){
         <table>
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="SD/png/MiniWebRadioV3.png" onmousedown="this.src='SD/hardcopy.bmp'" alt="MiniWebRadioV3" border="3">
+                    <label for="label-infopic" onclick="socket.send('hardcopy')">
+                        <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
+                    </label>
                 </td>
                 <td>
                     <div style="display: flex;">
@@ -2442,7 +2424,7 @@ function clear_BT_memItems(){
     <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
         <div style="display:flex">
             <div id="div-BT-logo" style="flex: 0 0 150px;">
-                <label for="label-logo" id="label-bt-logo" onclick="socket.send('KCX_BT_connected')"> </label>
+                <img id="label-bt-logo" onclick="socket.send('KCX_BT_connected')">
                 <label for="label-logo" id="label-bt-mode"> unknown </label>
             </div>
             <div style="flex: 1 0; position: relative;  padding-top: 20px;">

@@ -4114,6 +4114,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "KCX_BT_downvolume"){bt_emitter.downvolume(); return;}
     if(cmd == "KCX_BT_upvolume"){  bt_emitter.upvolume(); return;}
 
+    if(cmd == "hardcopy") {SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); hardcopy(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
+
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
 }
