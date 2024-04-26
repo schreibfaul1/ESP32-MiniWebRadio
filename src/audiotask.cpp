@@ -26,6 +26,11 @@ struct audioMessage{
     uint32_t    ret;
 } audioTxMessage, audioRxMessage;
 
+uint8_t  t_volume = 0;
+uint32_t t_millis = 0;
+bool     f_muteIncrement = false;
+bool     f_muteDecrement = false;
+
 QueueHandle_t audioSetQueue = NULL;
 QueueHandle_t audioGetQueue = NULL;
 
@@ -175,6 +180,23 @@ void audioTask(void *parameter) {
             }
         }
         audio.loop();
+
+        if(f_muteDecrement){
+            if(t_millis + 30 < millis()){
+                uint8_t v = audio.getVolume();
+                if (v > 0) audio.setVolume(v - 1);
+                else f_muteDecrement = false;
+                t_millis = millis();
+            }
+        }
+        if(f_muteIncrement){
+            if(t_millis + 30 < millis()){
+                uint8_t v = audio.getVolume();
+                if(v >= t_volume) f_muteIncrement = false;
+                else audio.setVolume(v + 1);
+                t_millis = millis();
+            }
+        }
     }
 }
 
@@ -211,6 +233,7 @@ audioMessage transmitReceive(audioMessage msg){
 }
 
 void audioSetVolume(uint8_t vol){
+    t_volume = vol;
     audioTxMessage.cmd = SET_VOLUME;
     audioTxMessage.value1 = vol;
     audioMessage RX = transmitReceive(audioTxMessage);
@@ -348,4 +371,14 @@ bool audioSetTimeOffset(int16_t timeOffset){
     audioTxMessage.value1 = timeOffset;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
+}
+
+void audioMute(bool setSilent){
+    if(setSilent){ // mute on
+        if(audioGetVolume() > 0) f_muteDecrement = true;
+    }
+    else{ // mute off
+        if(audioGetVolume() == 0) f_muteIncrement = true;
+    }
+    t_millis = millis();
 }

@@ -2708,7 +2708,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     if((win_X + win_W)  > width()) {win_W  = width()  - win_X;} // Limit, right edge of the display
     if((win_Y + win_H) > height()){win_H = height() - win_Y;} // Limit, bottom of the display
 
-     idx = 0;
+    idx = 0;
     uint16_t pX = win_X;
     uint16_t pY = win_Y;
     int16_t  pH = win_H;
@@ -2722,7 +2722,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         if(noWrap && idx) goto exit;
         if(pH < _current_font.line_height){goto exit;}
         charsToDraw = fitInLine(idx, pW, &usedPxLength);
-        if(align == TFT_ALIGN_RIGHT){  pX += win_W - usedPxLength;}
+        if(align == TFT_ALIGN_RIGHT){  pX += win_W - (usedPxLength + 1);}
         if(align == TFT_ALIGN_CENTER){ pX += (win_W - usedPxLength) /2;}
         uint16_t cnt = 0;
         while(true){ // inner while

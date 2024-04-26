@@ -262,6 +262,7 @@ uint16_t       audioGetVUlevel();
 uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
+void           audioMute(bool setSilent);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -508,20 +509,16 @@ private:
     uint16_t m_middle_h = 0;
     uint16_t m_spotPos = 0;
     uint8_t  m_spotRadius = 0;
-    char     m_name[10] = {0};
+    char*    m_name = NULL;
 public:
     slider(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
         m_railHigh = 6;
         m_spotRadius = 12;
         m_bgColor = TFT_BLACK;
         m_railColor = TFT_BEIGE;
         m_spotColor = TFT_RED;
-        uint8_t i = 0;
-        while(name[i] != '\0' && i < 9){
-            m_name[i] = name[i];
-            i++;
-        }
-        m_name[i] = '\0';
     }
     ~slider(){
         ;
@@ -692,7 +689,7 @@ public:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button{
+class button1state{ // click button
 private:
     int16_t  m_x = 0;
     int16_t  m_y = 0;
@@ -706,9 +703,9 @@ private:
     bool     m_clicked = false;
     char*    m_name = NULL;
 public:
-    button(const char* name){
+    button1state(const char* name){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("button");
+        else     m_name = x_ps_strdup("button1state");
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
@@ -716,7 +713,7 @@ public:
         setClickedPicturePath(NULL);
         setInactivePicturePath(NULL);
     }
-    ~button(){
+    ~button1state(){
         if(m_defaultPicturePath) {free(m_defaultPicturePath);  m_defaultPicturePath = NULL;}
         if(m_clickedPicturePath) {free(m_clickedPicturePath);  m_clickedPicturePath = NULL;}
         if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
@@ -783,4 +780,121 @@ public:
         return true;
     }
 };
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class button2state{ // on off switch
+private:
+    int16_t  m_x = 0;
+    int16_t  m_y = 0;
+    int16_t  m_w = 0;
+    int16_t  m_h = 0;
+    uint32_t m_bgColor = 0;
+    char*    m_offPicturePath = NULL;
+    char*    m_onPicturePath = NULL;
+    char*    m_clickedPicturePath = NULL;
+    bool     m_enabled = false;
+    bool     m_clicked = false;
+    bool     m_state = false;
+    char*    m_name = NULL;
+public:
+    button2state(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("button2state");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        setOffPicturePath(NULL);
+        setClickedPicturePath(NULL);
+        setOnPicturePath(NULL);
+    }
+    ~button2state(){
+        if(m_offPicturePath) {free(m_offPicturePath);  m_offPicturePath = NULL;}
+        if(m_onPicturePath) {free(m_onPicturePath);  m_onPicturePath = NULL;}
+        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    void show(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+        //    setInactive();
+            return;
+        }
+        if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+        else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+        m_enabled = true;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setValue(bool val){
+        m_state = val;
+        if(m_enabled) {
+            if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+            else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+        }
+    }
+    bool getValue(){
+        return m_state;
+    }
+    void setOn(){
+        m_state = true;
+    }
+    void setOff(){
+        m_state = false;
+    }
+    // void setInactive(){
+    //     drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+    //     m_enabled = false;
+    // }
+    void setOffPicturePath(const char* path){
+        if(m_offPicturePath){free(m_offPicturePath); m_offPicturePath = NULL;}
+        if(path) m_offPicturePath = x_ps_strdup(path);
+        else m_offPicturePath = x_ps_strdup("defaultPicturePath is not set");
+    }
+    void setClickedPicturePath(const char* path){
+        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        if(path) m_clickedPicturePath = x_ps_strdup(path);
+        else m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
+    }
+    void setOnPicturePath(const char* path){
+        if(m_onPicturePath){free(m_onPicturePath); m_onPicturePath = NULL;}
+        if(path) m_onPicturePath = x_ps_strdup(path);
+        else m_onPicturePath = x_ps_strdup("clickedPicturePath is not set");
+    }
+    // void setInactivePicturePath(const char* path){
+    //     if(m_inactivePicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+    //     if(path) m_inactivePicturePath = x_ps_strdup(path);
+    //     else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    // }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = true;
+        m_state = !m_state;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+        else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
+    }
+};
