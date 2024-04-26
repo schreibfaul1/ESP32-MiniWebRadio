@@ -3530,18 +3530,18 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 }
 void tp_released(uint16_t x, uint16_t y){
     switch(_state){
-        case EQUALIZER: if(sdr_lowPass.released()) return;
-                        if(sdr_bandPass.released()) return;
-                        if(sdr_highPass.released()) return;
-                        if(sdr_balance.released()) return;
-                        if(btn_lowPass.released()) return;
-                        if(btn_bandPass.released()) return;
-                        if(btn_highPass.released()) return;
-                        if(btn_balance.released()) return;
-                        if(txt_lowPass.released()) return;
-                        if(txt_bandPass.released()) return;
-                        if(txt_highPass.released()) return;
-                        if(txt_balance.released()) return;
+        case EQUALIZER: sdr_lowPass.released();
+                        sdr_bandPass.released();
+                        sdr_highPass.released();
+                        sdr_balance.released();
+                        btn_lowPass.released();
+                        btn_bandPass.released();
+                        btn_highPass.released();
+                        btn_balance.released();
+                        txt_lowPass.released();
+                        txt_bandPass.released();
+                        txt_highPass.released();
+                        txt_balance.released();
                         break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
