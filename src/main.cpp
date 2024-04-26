@@ -356,9 +356,10 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
-slider   sdr_lowPass("sdr_LP"), sdr_bandPass("sdr_BP"), sdr_highPass("sdr_HP"), sdr_balance("sdr_BAL");   // EQUALIZER
-textbox  txt_lowPass("txt_LP"), txt_bandPass("txt_BP"), txt_highPass("txt_HP"), txt_balance("txt_BAL");   // EQUALIZER
-button   btn_lowPass("btn_LP"), btn_bandPass("btn_BP"), btn_highPass("btn_HP"), btn_balance("btn_BAL");   // EQUALIZER
+slider   sdr_E_lowPass("sdr_E_LP"), sdr_E_bandPass("sdr_E_BP"), sdr_E_highPass("sdr_E_HP"), sdr_E_balance("sdr_E_BAL");   // EQUALIZER
+textbox  txt_E_lowPass("txt_E_LP"), txt_E_bandPass("txt_E_BP"), txt_E_highPass("txt_E_HP"), txt_E_balance("txt_E_BAL");   // EQUALIZER
+button   btn_E_lowPass("btn_E_LP"), btn_E_bandPass("btn_E_BP"), btn_E_highPass("btn_E_HP"), btn_E_balance("btn_E_BAL");   // EQUALIZER
+button   btn_E_Radio("btn_E_Radio");
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -2402,18 +2403,18 @@ void placingGraphicObjects(){  // and initialize them
 
 
 // EQUALIZER
-    sdr_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);      sdr_lowPass.setValue(_toneLP);
-    sdr_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);     sdr_bandPass.setValue(_toneBP);
-    sdr_highPass.begin(_sdrHP.x, _sdrHP.y, _sdrHP.w, _sdrHP.h, -40, 6);     sdr_highPass.setValue(_toneHP);
-    sdr_balance.begin(_sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16); sdr_balance.setValue(_toneBAL);
-    txt_lowPass.begin(_sdrLP.x + _sdrLP.w + 2, _sdrLP.y, 80, _sdrLP.h);     txt_lowPass.setFont(_fonts[2]);
-    txt_bandPass.begin(_sdrBP.x + _sdrBP.w + 2, _sdrBP.y, 80, _sdrBP.h);    txt_bandPass.setFont(_fonts[2]);
-    txt_highPass.begin(_sdrHP.x + _sdrHP.w + 2, _sdrHP.y, 80, _sdrHP.h);    txt_highPass.setFont(_fonts[2]);
-    txt_balance.begin(_sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h); txt_balance.setFont(_fonts[2]);
-    btn_lowPass.begin(_sdrLP.x -  60, _sdrLP.y +1, 48, 48);  btn_lowPass.setDefaultPicturePath("/btn/LP_green.jpg");  btn_lowPass.setClickedPicturePath("/btn/LP_yellow.jpg");
-    btn_bandPass.begin(_sdrBP.x - 60, _sdrBP.y +1, 48, 48);  btn_bandPass.setDefaultPicturePath("/btn/BP_green.jpg"); btn_bandPass.setClickedPicturePath("/btn/BP_yellow.jpg");
-    btn_highPass.begin(_sdrHP.x - 60, _sdrHP.y +1, 48, 48);  btn_highPass.setDefaultPicturePath("/btn/HP_green.jpg"); btn_highPass.setClickedPicturePath("/btn/HP_yellow.jpg");
-    btn_balance.begin(_sdrBAL.x - 60, _sdrBAL.y +1, 48, 48); btn_balance.setDefaultPicturePath("/btn/BAL_green.jpg"); btn_balance.setClickedPicturePath("/btn/BAL_yellow.jpg");
+    sdr_E_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);      sdr_E_lowPass.setValue(_toneLP);
+    sdr_E_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);     sdr_E_bandPass.setValue(_toneBP);
+    sdr_E_highPass.begin(_sdrHP.x, _sdrHP.y, _sdrHP.w, _sdrHP.h, -40, 6);     sdr_E_highPass.setValue(_toneHP);
+    sdr_E_balance.begin(_sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16); sdr_E_balance.setValue(_toneBAL);
+    txt_E_lowPass.begin(_sdrLP.x + _sdrLP.w + 2, _sdrLP.y, 80, _sdrLP.h);     txt_E_lowPass.setFont(_fonts[2]);
+    txt_E_bandPass.begin(_sdrBP.x + _sdrBP.w + 2, _sdrBP.y, 80, _sdrBP.h);    txt_E_bandPass.setFont(_fonts[2]);
+    txt_E_highPass.begin(_sdrHP.x + _sdrHP.w + 2, _sdrHP.y, 80, _sdrHP.h);    txt_E_highPass.setFont(_fonts[2]);
+    txt_E_balance.begin(_sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h); txt_E_balance.setFont(_fonts[2]);
+    btn_E_lowPass.begin(_sdrLP.x -  60, _sdrLP.y +1, 48, 48);  btn_E_lowPass.setDefaultPicturePath("/btn/LP_green.jpg");  btn_E_lowPass.setClickedPicturePath("/btn/LP_yellow.jpg");
+    btn_E_bandPass.begin(_sdrBP.x - 60, _sdrBP.y +1, 48, 48);  btn_E_bandPass.setDefaultPicturePath("/btn/BP_green.jpg"); btn_E_bandPass.setClickedPicturePath("/btn/BP_yellow.jpg");
+    btn_E_highPass.begin(_sdrHP.x - 60, _sdrHP.y +1, 48, 48);  btn_E_highPass.setDefaultPicturePath("/btn/HP_green.jpg"); btn_E_highPass.setClickedPicturePath("/btn/HP_yellow.jpg");
+    btn_E_balance.begin(_sdrBAL.x - 60, _sdrBAL.y +1, 48, 48); btn_E_balance.setDefaultPicturePath("/btn/BAL_green.jpg"); btn_E_balance.setClickedPicturePath("/btn/BAL_yellow.jpg");
 
 }
 
@@ -2422,9 +2423,9 @@ void placingGraphicObjects(){  // and initialize them
 // clang-format off
 void changeState(int32_t state){
     switch(_state){
-        case EQUALIZER: sdr_lowPass.disable(); sdr_bandPass.disable(); sdr_highPass.disable(); sdr_balance.disable();
-                        btn_lowPass.disable(); btn_bandPass.disable(); btn_highPass.disable(); btn_balance.disable();
-                        txt_lowPass.disable(); txt_bandPass.disable(); txt_highPass.disable(); txt_balance.disable();
+        case EQUALIZER: sdr_E_lowPass.disable(); sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
+                        btn_E_lowPass.disable(); btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable();
+                        txt_E_lowPass.disable(); txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable();
                         clearWithOutHeaderFooter(); break;
     }
     if(state == _state) return;  //nothing todo
@@ -2699,9 +2700,9 @@ void changeState(int32_t state){
         case EQUALIZER:{
             clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
-            sdr_lowPass.show(); sdr_bandPass.show(); sdr_highPass.show(); sdr_balance.show();
-            btn_lowPass.show(); btn_bandPass.show(); btn_highPass.show(); btn_balance.show();
-            txt_lowPass.show(); txt_bandPass.show(); txt_highPass.show(); txt_balance.show();
+            sdr_E_lowPass.show(); sdr_E_bandPass.show(); sdr_E_highPass.show(); sdr_E_balance.show();
+            btn_E_lowPass.show(); btn_E_bandPass.show(); btn_E_highPass.show(); btn_E_balance.show();
+            txt_E_lowPass.show(); txt_E_bandPass.show(); txt_E_highPass.show(); txt_E_balance.show();
 
             _pressBtn[0] = "/btn/Radio_Yellow.jpg";              _releaseBtn[0] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 1 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
@@ -3397,18 +3398,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
             }
             break;
         case EQUALIZER:
-            if(sdr_lowPass.positionXY(x,y)) return;
-            if(sdr_bandPass.positionXY(x,y)) return;
-            if(sdr_highPass.positionXY(x,y)) return;
-            if(sdr_balance.positionXY(x,y)) return;
-            if(btn_lowPass.positionXY(x, y)) return;
-            if(btn_bandPass.positionXY(x, y)) return;
-            if(btn_highPass.positionXY(x, y)) return;
-            if(btn_balance.positionXY(x, y)) return;
-            if(txt_lowPass.positionXY(x, y)) return;
-            if(txt_bandPass.positionXY(x, y)) return;
-            if(txt_highPass.positionXY(x, y)) return;
-            if(txt_balance.positionXY(x, y)) return;
+            if(sdr_E_lowPass.positionXY(x,y)) return;
+            if(sdr_E_bandPass.positionXY(x,y)) return;
+            if(sdr_E_highPass.positionXY(x,y)) return;
+            if(sdr_E_balance.positionXY(x,y)) return;
+            if(btn_E_lowPass.positionXY(x, y)) return;
+            if(btn_E_bandPass.positionXY(x, y)) return;
+            if(btn_E_highPass.positionXY(x, y)) return;
+            if(btn_E_balance.positionXY(x, y)) return;
+            if(txt_E_lowPass.positionXY(x, y)) return;
+            if(txt_E_bandPass.positionXY(x, y)) return;
+            if(txt_E_highPass.positionXY(x, y)) return;
+            if(txt_E_balance.positionXY(x, y)) return;
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
                 yPos = EQUALIZER_1;
                 btnNr = x / _winButton.w;
@@ -3530,18 +3531,18 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 }
 void tp_released(uint16_t x, uint16_t y){
     switch(_state){
-        case EQUALIZER: sdr_lowPass.released();
-                        sdr_bandPass.released();
-                        sdr_highPass.released();
-                        sdr_balance.released();
-                        btn_lowPass.released();
-                        btn_bandPass.released();
-                        btn_highPass.released();
-                        btn_balance.released();
-                        txt_lowPass.released();
-                        txt_bandPass.released();
-                        txt_highPass.released();
-                        txt_balance.released();
+        case EQUALIZER: sdr_E_lowPass.released();
+                        sdr_E_bandPass.released();
+                        sdr_E_highPass.released();
+                        sdr_E_balance.released();
+                        btn_E_lowPass.released();
+                        btn_E_bandPass.released();
+                        btn_E_highPass.released();
+                        btn_E_balance.released();
+                        txt_E_lowPass.released();
+                        txt_E_bandPass.released();
+                        txt_E_highPass.released();
+                        txt_E_balance.released();
                         break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
@@ -3868,10 +3869,10 @@ void tp_long_released(){
 
 void tp_positionXY(uint16_t x, uint16_t y){
     if(_state == EQUALIZER){
-        if(sdr_lowPass.positionXY(x, y)) return;
-        if(sdr_bandPass.positionXY(x, y)) return;
-        if(sdr_highPass.positionXY(x, y)) return;
-        if(sdr_balance.positionXY(x, y)) return;
+        if(sdr_E_lowPass.positionXY(x, y)) return;
+        if(sdr_E_bandPass.positionXY(x, y)) return;
+        if(sdr_E_highPass.positionXY(x, y)) return;
+        if(sdr_E_balance.positionXY(x, y)) return;
     }
 
 }
@@ -4210,18 +4211,18 @@ void kcx_bt_modeChanged(const char* m){ // Every time the mode has changed
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnChange(const char* name, int32_t arg1){
     char c[10];
-    if(strcmp(name, "sdr_LP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
-    if(strcmp(name, "sdr_BP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
-    if(strcmp(name, "sdr_HP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
-    if(strcmp(name, "sdr_BAL") == 0){ itoa(arg1, c, 10); strcat(c, " ");   txt_balance.writeText(c);  _toneBAL = arg1; webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_E_LP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_E_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_E_BP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_E_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_E_HP")  == 0){ itoa(arg1, c, 10); strcat(c, " dB"); txt_E_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
+    if(strcmp(name, "sdr_E_BAL") == 0){ itoa(arg1, c, 10); strcat(c, " ");   txt_E_balance.writeText(c);  _toneBAL = arg1; webSrv.send("settone=", setI2STone()); return;}
 
     log_d("unused event: graphicObject %s was changed, val %li", name, arg1);
 }
 void graphicObjects_OnClick(const char* name){
-    if(strcmp(name, "btn_LP")  == 0){ sdr_lowPass.setValue(0); return;}
-    if(strcmp(name, "btn_BP")  == 0){ sdr_bandPass.setValue(0); return;}
-    if(strcmp(name, "btn_HP")  == 0){ sdr_highPass.setValue(0); return;}
-    if(strcmp(name, "btn_BAL") == 0){ sdr_balance.setValue(0); return;}
+    if(strcmp(name, "btn_E_LP")  == 0){ sdr_E_lowPass.setValue(0); return;}
+    if(strcmp(name, "btn_E_BP")  == 0){ sdr_E_bandPass.setValue(0); return;}
+    if(strcmp(name, "btn_E_HP")  == 0){ sdr_E_highPass.setValue(0); return;}
+    if(strcmp(name, "btn_E_BAL") == 0){ sdr_E_balance.setValue(0); return;}
 
     log_d("unused event: graphicObject %s was clicked", name);
 }
