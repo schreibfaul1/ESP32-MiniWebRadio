@@ -388,6 +388,7 @@ var host = location.hostname
 var tm
 var IR_addr = ""
 var bt_RxTx = 'TX'
+var state = 'RADIO'
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -410,7 +411,7 @@ function connect() {
         socket.send("get_timeAnnouncement")
         socket.send("gettone=")   // Now load the tones (tab Radio)
         socket.send("getnetworks=")
-        socket.send("change_state=" + "0")
+        socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
 
         setInterval(ping, 20000)
@@ -536,8 +537,8 @@ function connect() {
                                         else{console.log("wrong timeFormat ", val); break;}
                                         radiobtn.checked = true;
                                         break;
-            case "changeState":         if      (val == 'RADIO') showTab1();
-                                        else if (val == 'PLAYER') showTab3();
+            case "changeState":         if      (val == 'RADIO' && state != 'RADIO') showTab1();
+                                        else if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
                                         if(val == '0') showLogo1('label-bt-logo', '/png/BT.png')
@@ -601,6 +602,7 @@ toastr.options = {
 }
 
 function showTab1 () {
+    state = 'RADIO'
     console.log('tab-content1 (Radio)')
     document.getElementById('tab-content1').style.display = 'block'
     document.getElementById('tab-content2').style.display = 'none'
@@ -616,11 +618,12 @@ function showTab1 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send("change_state=" + "0")
+    socket.send("change_state=" + "RADIO")
     socket.send("getmute")
 }
 
 function showTab2 () {
+    state = 'STATIONS'
     console.log('tab-content2 (Stations)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'block'
@@ -640,6 +643,7 @@ function showTab2 () {
 }
 
 function showTab3 () {
+    state = 'PLAYER'
     console.log('tab-content3 (Audio Player)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -655,10 +659,11 @@ function showTab3 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send("change_state=6")
+    socket.send("change_state=" + "PLAYER")
 }
 
 function showTab4 () {
+    state = 'DLNA'
     console.log('tab-content4 (DLNA)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -676,10 +681,11 @@ function showTab4 () {
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
     clearDLNAServerList(0)
     socket.send('DLNA_getServer')
-    socket.send("change_state=" + "10")
+    socket.send("change_state=" + "DLNA")
 }
 
 function showTab5 () {
+    state = 'SEARCH'
     console.log('tab-content5 (Search Stations)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -698,6 +704,7 @@ function showTab5 () {
 }
 
 function showTab6 () {
+    state = 'ABOUT'
     console.log('tab-content6 (About)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -718,6 +725,7 @@ function showTab6 () {
 }
 
 function showTab7 () {  // Remote Control
+    state = 'IR'
     console.log('tab-content7 (Remote Control)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -736,6 +744,7 @@ function showTab7 () {  // Remote Control
 }
 
 function showTab8 () {  // KCX BT Emitter
+    state = 'BT'
     console.log('tab-content8 (Remote Control)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'

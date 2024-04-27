@@ -327,6 +327,8 @@ inline bool startsWith(const char* base, const char* searchString) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline bool endsWith(const char* base, const char* searchString) {
+    if(base == NULL) {log_e("base = NULL"); return false;}                      // guard
+    if(searchString == NULL) {log_e("searchString == NULL"); return false;}     // guard
     int32_t slen = strlen(searchString);
     if(slen == 0) return false;
     const char* p = base + strlen(base);
@@ -756,7 +758,7 @@ public:
         else m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
     }
     void setInactivePicturePath(const char* path){
-        if(m_inactivePicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
         if(path) m_inactivePicturePath = x_ps_strdup(path);
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     }
