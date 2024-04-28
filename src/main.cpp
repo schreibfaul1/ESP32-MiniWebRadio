@@ -1619,7 +1619,8 @@ void processPlaylist(boolean first) {
     idx = indexOf(_PLS_content[_plsCurPos], "\n", 0);
     if(idx > 0) { // has additional infos: duration, title
         f_has_EXTINF = true;
-        int8_t idx1 = indexOf(_PLS_content[_plsCurPos], ",", idx);
+        int16_t idx1 = indexOf(_PLS_content[_plsCurPos], ",", idx);
+        log_e("%s, pos %i, res %s", _PLS_content[_plsCurPos], idx1, _PLS_content[_plsCurPos] + idx1);
         SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _PLS_content[_plsCurPos] + idx1 + 1);
         clearLogo();
         showFileName(_PLS_content[_plsCurPos] + idx1 + 1);
