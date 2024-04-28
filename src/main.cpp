@@ -1620,7 +1620,6 @@ void processPlaylist(boolean first) {
     if(idx > 0) { // has additional infos: duration, title
         f_has_EXTINF = true;
         int16_t idx1 = indexOf(_PLS_content[_plsCurPos], ",", idx);
-        log_e("%s, pos %i, res %s", _PLS_content[_plsCurPos], idx1, _PLS_content[_plsCurPos] + idx1);
         SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _PLS_content[_plsCurPos] + idx1 + 1);
         clearLogo();
         showFileName(_PLS_content[_plsCurPos] + idx1 + 1);
@@ -2523,7 +2522,7 @@ void placingGraphicObjects(){  // and initialize them
 
 // clang-format off
 void changeState(int32_t state){
-    log_i("new state %i, current state %i", state, _state);
+    // log_i("new state %i, current state %i", state, _state);
     switch(_state){
         case RADIO:     btn_R_Mute.disable();    btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
                         btn_R_staList.disable(); btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
