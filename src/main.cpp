@@ -1614,6 +1614,9 @@ void processPlaylist(boolean first) {
 
     if(_plsCurPos == _PLS_content.size()) goto exit;
 
+    _playerSubmenue = 1;
+    if(_state != PLAYER) changeState(PLAYER);
+
     // now read from vector _PLS_content
 
     idx = indexOf(_PLS_content[_plsCurPos], "\n", 0);
@@ -1633,8 +1636,7 @@ void processPlaylist(boolean first) {
         _PLS_content[_plsCurPos][idx] = '\0';
     }
     if(startsWith(_PLS_content[_plsCurPos], "http")) {
-        _playerSubmenue = 1;
-        if(_state != PLAYER) changeState(PLAYER);
+
 
         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _PLS_content[_plsCurPos]);
         showVolumeBar();
@@ -1676,6 +1678,7 @@ exit:
     SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "end of playlist");
     webSrv.send("SD_playFile=", "end of playlist");
     _f_playlistEnabled = false;
+    _playerSubmenue = 0;
     changeState(PLAYER);
     _plsCurPos = 0;
     if(_playlistPath){free(_playlistPath); _playlistPath = NULL;}
