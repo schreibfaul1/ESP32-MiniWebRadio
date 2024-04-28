@@ -1128,17 +1128,22 @@ void showFileLogo(uint8_t state) {
     if(state == RADIO) {
         if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".jpg";
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        drawImage(logo.c_str(), 0, _winName.y + 2);
+        webSrv.send("stationLogo=", logo);
+        goto exit;
     }
-    else if(state == DLNA)     { logo = "/common/DLNA.jpg"; }
-    else if(state == PLAYER)   { logo = "/common/AudioPlayer.jpg";}
-    else if(state == UNDEFINED){ clearLogo(); goto exit;}
-    else { // _state PLAYER
-        logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+    else if(state == DLNA) {
+        logo = "/common/DLNA.jpg";
+        drawImage(logo.c_str(), 0, _winName.y + 2);
+        webSrv.send("stationLogo=", logo);
+        goto exit;
     }
-    if(drawImage(logo.c_str(), 0, _winName.y + 2) == true) { webSrv.send("stationLogo=", logo); }
-    else {
-        (drawImage("/common/unknown.jpg", 0, _winName.y + 2));
-        webSrv.send("stationLogo=");
+    if(state == PLAYER) { // _state PLAYER
+        if(_cur_Codec == 0) logo = "/common/AudioPlayer.jpg";
+        else if(_playerSubmenue == 0) logo = "/common/AudioPlayer.jpg";
+        else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        drawImage(logo.c_str(), 0, _winName.y + 2);
+        goto exit;
     }
 exit:
     xSemaphoreGive(mutex_display);
@@ -1636,8 +1641,6 @@ void processPlaylist(boolean first) {
         _PLS_content[_plsCurPos][idx] = '\0';
     }
     if(startsWith(_PLS_content[_plsCurPos], "http")) {
-
-
         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _PLS_content[_plsCurPos]);
         showVolumeBar();
         if(!f_has_EXTINF) clearLogoAndStationname();
@@ -2525,7 +2528,7 @@ void placingGraphicObjects(){  // and initialize them
 
 // clang-format off
 void changeState(int32_t state){
-    // log_i("new state %i, current state %i", state, _state);
+     log_i("new state %i, current state %i", state, _state);
     switch(_state){
         case RADIO:     btn_R_Mute.disable();    btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
                         btn_R_staList.disable(); btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
@@ -2588,7 +2591,8 @@ void changeState(int32_t state){
             if(_playerSubmenue == 0){
                 showHeadlineItem(PLAYER);
                 SD_listDir(_curAudioFolder.c_str(), true, true);
-                showFileLogo(state);
+                _cur_Codec = 0;
+                showFileLogo(PLAYER);
                 showFileName(_SD_content[_cur_AudioFileNr]);
                 showAudioFileNumber();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
@@ -2929,12 +2933,12 @@ void loop() {
                 }
                 else { connecttohost(_lastconnectedhost.c_str()); }
             }
-            if(_f_eof && _state == PLAYER) {
-                if(!_f_playlistEnabled) {
-                    _f_eof = false;
-                    changeState(PLAYER);
-                }
-            }
+            // if(_f_eof && _state == PLAYER) {
+            //     if(!_f_playlistEnabled) {
+            //         _f_eof = false;
+            //         changeState(PLAYER);
+            //     }
+            // }
 
             if((_f_mute == false) && (!_f_sleeping)) {
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
@@ -3025,7 +3029,7 @@ void loop() {
             if(c != 0 && c != 8 && c < 10) { // unknown or OGG, guard: c {1 ... 7, 9}
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
-                if(_state == PLAYER) showFileLogo(_state);
+                if(_state == PLAYER) showFileLogo(PLAYER);
                 if(_state == RADIO && _f_logoUnknown == true) {
                     _f_logoUnknown = false;
                     showFileLogo(_state);
