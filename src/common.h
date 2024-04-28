@@ -194,7 +194,8 @@ void           showStationName(String sn);
 void           showStationLogo(String ln);
 void           showFileLogo(uint8_t state);
 void           showFileName(const char* fname);
-void           showFileNumber();
+void           showPlsFileNumber();
+void           showAudioFileNumber();
 void           showStationsList(uint16_t staListNr);
 void           display_time(boolean showall = false);
 void           display_alarmDays(uint8_t ad, boolean showall = false);
@@ -221,6 +222,7 @@ void           changeBtn_pressed(uint8_t btnNr);
 void           changeBtn_released(uint8_t btnNr);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
+void           SD_playFile(const char* path, const char* fileName);
 void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool           SD_rename(const char* src, const char* dest);
 bool           SD_newFolder(const char* folderPathName);
@@ -792,7 +794,8 @@ private:
     uint32_t m_bgColor = 0;
     char*    m_offPicturePath = NULL;
     char*    m_onPicturePath = NULL;
-    char*    m_clickedPicturePath = NULL;
+    char*    m_clickedOffPicturePath = NULL;
+    char*    m_clickedOnPicturePath = NULL;
     bool     m_enabled = false;
     bool     m_clicked = false;
     bool     m_state = false;
@@ -806,13 +809,14 @@ public:
         m_clicked = false;
         m_state = false;
         setOffPicturePath(NULL);
-        setClickedPicturePath(NULL);
+        setClickedOffPicturePath(NULL);
+        setClickedOnPicturePath(NULL);
         setOnPicturePath(NULL);
     }
     ~button2state(){
         if(m_offPicturePath) {free(m_offPicturePath);  m_offPicturePath = NULL;}
         if(m_onPicturePath) {free(m_onPicturePath);  m_onPicturePath = NULL;}
-        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        if(m_clickedOffPicturePath){free(m_clickedOffPicturePath); m_clickedOffPicturePath = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -863,10 +867,15 @@ public:
         if(path) m_offPicturePath = x_ps_strdup(path);
         else m_offPicturePath = x_ps_strdup("defaultPicturePath is not set");
     }
-    void setClickedPicturePath(const char* path){
-        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
-        if(path) m_clickedPicturePath = x_ps_strdup(path);
-        else m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
+    void setClickedOffPicturePath(const char* path){
+        if(m_clickedOffPicturePath){free(m_clickedOffPicturePath); m_clickedOffPicturePath = NULL;}
+        if(path) m_clickedOffPicturePath = x_ps_strdup(path);
+        else m_clickedOffPicturePath = x_ps_strdup("clickedOffPicturePath is not set");
+    }
+    void setClickedOnPicturePath(const char* path){
+        if(m_clickedOnPicturePath){free(m_clickedOnPicturePath); m_clickedOnPicturePath = NULL;}
+        if(path) m_clickedOnPicturePath = x_ps_strdup(path);
+        else m_clickedOnPicturePath = x_ps_strdup("clickedOnPicturePath is not set");
     }
     void setOnPicturePath(const char* path){
         if(m_onPicturePath){free(m_onPicturePath); m_onPicturePath = NULL;}
@@ -884,7 +893,8 @@ public:
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+        if(m_state) drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+        else        drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = true;
         m_state = !m_state;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);

@@ -33,13 +33,6 @@ enum status {
     CLOCK = 4,
     BRIGHTNESS = 5,
     ALARM = 6,
-
-
-    RADIOico = 100,
-    RADIOmenue = 200,
-    CLOCKico = 201,
-    PLAYERico = 7,
-
     SLEEP = 9,
 
     STATIONSLIST = 11,
@@ -47,6 +40,7 @@ enum status {
     DLNAITEMSLIST = 13,
     BLUETOOTH = 14,
     EQUALIZER = 15,
+    CLOCKico = 16,
     UNDEFINED = 255
 };
 
@@ -71,6 +65,7 @@ uint8_t             _staListPos = 0;
 uint16_t            _staListNr = 0;
 uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
+uint8_t             _playerSubmenue = 0;
 uint16_t            _fileListNr = 0;
 uint8_t             _itemListPos = 0; // DLNA items
 uint16_t            _dlnaItemNr = 0;
@@ -366,15 +361,20 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 
 // RADIO
 button2state   btn_R_Mute("btn_R_Mute");
-button1state   btn_R_volDown("btn_R_volDown"), btn_R_volUp("btn_R_volUp"),   btn_R_prevSta("btn_R_prevSta"), btn_R_nextSta("btn_R_nextSta");
-button1state   btn_R_staList("btn_R_staList"), btn_R_player("btn_R_player"), btn_R_dlna("btn_R_dlna"),       btn_R_clock("btn_R_clock");
-button1state   btn_R_sleep("btn_R_sleep"),     btn_R_bright("btn_R_bright"), btn_R_equal("btn_R_equal");
+button1state   btn_R_volDown("btn_R_volDown"),   btn_R_volUp("btn_R_volUp"),        btn_R_prevSta("btn_R_prevSta"),     btn_R_nextSta("btn_R_nextSta");
+button1state   btn_R_staList("btn_R_staList"),   btn_R_player("btn_R_player"),      btn_R_dlna("btn_R_dlna"),           btn_R_clock("btn_R_clock");
+button1state   btn_R_sleep("btn_R_sleep"),       btn_R_bright("btn_R_bright"),      btn_R_equal("btn_R_equal");
+// PLAYER
+button2state   btn_P_Mute("btn_P_Mute"),         btn_P_pause("btn_P_pause");
+button1state   btn_P_volDown("btn_P_volDown"),   btn_P_volUp("btn_P_volUp"),        btn_P_ready("btn_P_ready"),         btn_P_shuffle("btn_P_shuffle");
+button1state   btn_P_playAll("btn_P_playAll"),   btn_P_fileList("btn_P_fileList"),  btn_P_radio("btn_P_radio"),         btn_P_cancel("btn_P_cancel");
+button1state   btn_P_prevFile("btn_P_prevFile"), btn_P_nextFile("btn_P_nextFile");
 // EQUALIZER
-slider         sdr_E_lowPass("sdr_E_LP"),      sdr_E_bandPass("sdr_E_BP"),   sdr_E_highPass("sdr_E_HP"),     sdr_E_balance("sdr_E_BAL");
-textbox        txt_E_lowPass("txt_E_LP"),      txt_E_bandPass("txt_E_BP"),   txt_E_highPass("txt_E_HP"),     txt_E_balance("txt_E_BAL");
+slider         sdr_E_lowPass("sdr_E_LP"),        sdr_E_bandPass("sdr_E_BP"),        sdr_E_highPass("sdr_E_HP"),         sdr_E_balance("sdr_E_BAL");
+textbox        txt_E_lowPass("txt_E_LP"),        txt_E_bandPass("txt_E_BP"),        txt_E_highPass("txt_E_HP"),         txt_E_balance("txt_E_BAL");
 button1state   btn_E_lowPass("btn_E_LP");
-button1state   btn_E_bandPass("btn_E_BP"),     btn_E_highPass("btn_E_HP"),   btn_E_balance("btn_E_BAL");
-button1state   btn_E_Radio("btn_E_Radio"),     btn_E_Player("btn_E_Player");
+button1state   btn_E_bandPass("btn_E_BP"),       btn_E_highPass("btn_E_HP"),        btn_E_balance("btn_E_BAL");
+button1state   btn_E_Radio("btn_E_Radio"),       btn_E_Player("btn_E_Player");
 button2state   btn_E_Mute("btn_E_Mute");
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -1132,7 +1132,7 @@ void showFileLogo(uint8_t state) {
     else if(state == DLNA)     { logo = "/common/DLNA.jpg"; }
     else if(state == PLAYER)   { logo = "/common/AudioPlayer.jpg";}
     else if(state == UNDEFINED){ clearLogo(); goto exit;}
-    else { // _state PLAYER or PLAYERico
+    else { // _state PLAYER
         logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
     }
     if(drawImage(logo.c_str(), 0, _winName.y + 2) == true) { webSrv.send("stationLogo=", logo); }
@@ -1157,10 +1157,17 @@ void showFileName(const char* fname) {
     display_info(fname, _winName.x, _winName.y, TFT_CYAN, 0, 0, _winName.w, _winName.h);
 }
 
-void showFileNumber() {
+void showPlsFileNumber() {
     tft.setFont(_fonts[3]);
     char buf[15];
     sprintf(buf, "%03u/%03u", _plsCurPos, _PLS_content.size());
+    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
+}
+
+void showAudioFileNumber() {
+    tft.setFont(_fonts[3]);
+    char buf[15];
+    sprintf(buf, "%03u/%03u", _cur_AudioFileNr, _SD_content.size());
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
@@ -1626,11 +1633,13 @@ void processPlaylist(boolean first) {
         _PLS_content[_plsCurPos][idx] = '\0';
     }
     if(startsWith(_PLS_content[_plsCurPos], "http")) {
+        _playerSubmenue = 1;
+        if(_state != PLAYER) changeState(PLAYER);
+
         SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _PLS_content[_plsCurPos]);
         showVolumeBar();
         if(!f_has_EXTINF) clearLogoAndStationname();
         webSrv.send("SD_playFile=", _PLS_content[_plsCurPos]);
-        changeState(PLAYERico);
         _cur_Codec = 0;
         connecttohost(_PLS_content[_plsCurPos]);
     }
@@ -1660,7 +1669,7 @@ void processPlaylist(boolean first) {
         if(playFile){free(playFile); playFile = NULL;}
     }
     _plsCurPos++;
-    showFileNumber();
+    showPlsFileNumber();
     return;
 
 exit:
@@ -2150,7 +2159,7 @@ void setStation(uint16_t sta) {
     }
     _cur_station = sta;
     StationsItems();
-    if(_state == RADIO || _state == RADIOico) showLogoAndStationName();
+    if(_state == RADIO) showLogoAndStationName();
     showFooterStaNr();
 }
 void nextStation() {
@@ -2183,7 +2192,7 @@ void setStationViaURL(const char* url) {
     _stationURL = x_ps_strdup(url);
     connecttohost(url);
     StationsItems();
-    if(_state == RADIO || _state == RADIOico) {
+    if(_state == RADIO) {
         clearStreamTitle();
         showLogoAndStationName();
     }
@@ -2192,10 +2201,6 @@ void setStationViaURL(const char* url) {
 
 void changeBtn_pressed(uint8_t btnNr) { drawImage(_pressBtn[btnNr], btnNr * _winButton.w, _winButton.y); }
 void changeBtn_released(uint8_t btnNr) {
-    if(_state == RADIOico || _state == PLAYERico) {
-        if(_f_mute) _releaseBtn[0] = "/btn/Button_Mute_Red.jpg";
-        else _releaseBtn[0] = "/btn/Button_Mute_Green.jpg";
-    }
     if(_state == CLOCKico) {
         if(_f_mute) _releaseBtn[2] = "/btn/Button_Mute_Red.jpg";
         else _releaseBtn[2] = "/btn/Button_Mute_Green.jpg";
@@ -2247,6 +2252,14 @@ String setI2STone() {
     return tone;
 }
 
+void SD_playFile(const char* path, const char* fileName){
+                    sprintf(_chbuf, "%s/%s", path , fileName);
+                    int32_t idx = indexOf(_chbuf, "\033[", 1);
+                    if(idx == -1) {;}  // do nothing
+                    else {_chbuf[idx] = '\0';}  // remove color and filesize
+                    SD_playFile(_chbuf, 0, true);
+}
+
 void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     if(!path) return;                            // avoid a possible crash
     if(endsWith(path, "ogg")) resumeFilePos = 0; // resume only mp3, m4a, flac and wav
@@ -2261,10 +2274,11 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
     if(showFN) {clearLogo(); showFileName(path + idx + 1);}
-    changeState(PLAYERico);
+    _playerSubmenue = 1;
+    changeState(PLAYER);
     SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path + idx + 1);
     connecttoFS((const char*)path, resumeFilePos);
-    showFileNumber();
+    showPlsFileNumber();
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
         _lastconnectedfile = x_ps_strdup(path);
@@ -2320,8 +2334,6 @@ void fall_asleep() {
     WiFi.mode(WIFI_OFF);    // Switch WiFi off
     setCpuFrequencyMhz(80); // 10MHz and 40MHz seem to stop TPanel after minute or so.
     if(_state == CLOCKico) _state = CLOCK;
-    if(_state == RADIOico) _state = RADIO;
-    if(_state == PLAYERico) _state = PLAYER;
     SerialPrintfln("falling asleep");
 }
 
@@ -2418,36 +2430,66 @@ boolean copySDtoFFat(const char* path) {
  *****************************************************************************************************************************************************/
 void placingGraphicObjects(){  // and initialize them
 // RADIO
-    btn_R_Mute.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+    btn_R_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                        btn_R_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-                                                                                       btn_R_Mute.setClickedPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_R_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_R_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
                                                                                        btn_R_Mute.setValue(_f_mute);
-    btn_R_volDown.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+    btn_R_volDown.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
                                                                                        btn_R_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_R_volUp.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+    btn_R_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
                                                                                        btn_R_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_R_prevSta.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.jpg");
+    btn_R_prevSta.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.jpg");
                                                                                        btn_R_prevSta.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
-    btn_R_nextSta.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.jpg");
+    btn_R_nextSta.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.jpg");
                                                                                        btn_R_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.jpg");
-    btn_R_staList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_staList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
+    btn_R_staList.begin( 5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_staList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
                                                                                        btn_R_staList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
-    btn_R_player.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_player.setDefaultPicturePath("/btn/Player_Green.jpg");
+    btn_R_player.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_player.setDefaultPicturePath("/btn/Player_Green.jpg");
                                                                                        btn_R_player.setClickedPicturePath("/btn/Player_Yellow.jpg");
-    btn_R_dlna.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.jpg");
+    btn_R_dlna.begin(    1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.jpg");
                                                                                        btn_R_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.jpg");
-    btn_R_clock.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_clock.setDefaultPicturePath("/btn/Clock_Green.jpg");
+    btn_R_clock.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_clock.setDefaultPicturePath("/btn/Clock_Green.jpg");
                                                                                        btn_R_clock.setClickedPicturePath("/btn/Clock_Yellow.jpg");
-    btn_R_sleep.begin(  3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_sleep.setDefaultPicturePath("/btn/Button_Sleep_Green.jpg");
+    btn_R_sleep.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_sleep.setDefaultPicturePath("/btn/Button_Sleep_Green.jpg");
                                                                                        btn_R_sleep.setClickedPicturePath("/btn/Button_Sleep_Yellow.jpg");
-    btn_R_bright.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
+    btn_R_bright.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
                                                                                        btn_R_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
                                                                                        btn_R_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
                                                                                        if(TFT_BL == -1) btn_R_bright.setInactive();
-    btn_R_equal.begin(  5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
+    btn_R_equal.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_R_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
                                                                                        btn_R_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
-
-
+// PLAYER
+    btn_P_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                       btn_P_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                       btn_P_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_P_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_P_Mute.setValue(_f_mute);
+    btn_P_volDown.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                       btn_P_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_P_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                       btn_P_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_P_pause.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
+                                                                                       btn_P_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                       btn_P_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
+                                                                                       btn_P_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
+                                                                                       btn_P_pause.setValue(false);
+    btn_P_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
+                                                                                       btn_P_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
+    btn_P_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
+                                                                                       btn_P_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
+    btn_P_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                       btn_P_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
+    btn_P_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
+                                                                                       btn_P_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    btn_P_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.jpg");
+                                                                                       btn_P_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.jpg");
+    btn_P_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.jpg");
+                                                                                       btn_P_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.jpg");
+    btn_P_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
+                                                                                       btn_P_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
+    btn_P_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_P_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                       btn_P_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
 // EQUALIZER
     sdr_E_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);               sdr_E_lowPass.setValue(_toneLP);
     sdr_E_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);              sdr_E_bandPass.setValue(_toneBP);
@@ -2471,7 +2513,8 @@ void placingGraphicObjects(){  // and initialize them
                                                                                        btn_E_Player.setClickedPicturePath("/btn/Player_Yellow.jpg");
     btn_E_Mute.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);    btn_E_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                        btn_E_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-                                                                                       btn_E_Mute.setClickedPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_E_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                       btn_E_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
                                                                                        btn_E_Mute.setValue(_f_mute);
 }
 
@@ -2484,7 +2527,11 @@ void changeState(int32_t state){
         case RADIO:     btn_R_Mute.disable();    btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
                         btn_R_staList.disable(); btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
                         btn_R_bright.disable();  btn_R_equal.disable();
-                        clearWithOutHeaderFooter(); break;
+                        if(_radioSubmenue == 0) {clearWithOutHeaderFooter();} break;
+        case PLAYER:    btn_P_Mute.disable();    btn_P_volDown.disable();  btn_P_volUp.disable();    btn_P_pause.disable();   btn_P_cancel.disable();
+                        btn_P_prevFile.disable();btn_P_nextFile.disable(); btn_P_ready.disable();    btn_P_playAll.disable(); btn_P_shuffle.disable();
+                        btn_P_fileList.hide();btn_P_radio.hide();
+                        if(_playerSubmenue == 0) {clearWithOutHeaderFooter();} break;
         case EQUALIZER: sdr_E_lowPass.disable(); sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
                         btn_E_lowPass.disable(); btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
                         txt_E_lowPass.disable(); txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable(); btn_E_Player.disable();
@@ -2524,97 +2571,47 @@ void changeState(int32_t state){
             }
             if(_state != RADIO) webSrv.send("changeState=", "RADIO");
             break;
-
-            // if(_state == RADIOico || _state == RADIOmenue){
-            //     _f_newStreamTitle = true;
-            // }
-            // else if(_state == PLAYER  || _state == PLAYERico || _state == DLNA){
-            //     setStation(_cur_station);
-            //     clearTitle();
-            //     showLogoAndStationName();
-            //     _f_newStreamTitle = true;
-            // }
-            // else if(_state == CLOCKico){
-            //     showLogoAndStationName();
-            //     _timeCounter.timer = 0;
-            //     _f_newStreamTitle = true;
-            // }
-            // else if(_state == SLEEP){
-            //     clearLogoAndStationname();
-            //     clearTitle();
-            //     connecttohost(_lastconnectedhost.c_str());
-            //     showLogoAndStationName();
-            //     showFooter();
-            //     showHeadlineVolume();
-            // }
-            // else if(_state == BRIGHTNESS){
-            //     showLogoAndStationName();
-            //     _f_newStreamTitle = true;
-            //     clearTitle();
-            // }
-            // else if(_state == STATIONSLIST){
-            //     clearWithOutHeaderFooter();
-            //     showLogoAndStationName();
-            //     showStreamTitle(_streamTitle);
-            // }
-            // else if(_state == UNDEFINED){
-            //     audioInit();
-            //     audioSetVolume(_cur_volume);
-            //     clearWithOutHeaderFooter();
-            //     connecttohost(_lastconnectedhost.c_str());
-            //     showLogoAndStationName();
-            //     showStreamTitle(_streamTitle);
-            // }
-            // else{
-            //     showLogoAndStationName();
-            //     _f_newStreamTitle = true;
-            // }
-            // showVUmeter();
-            // webSrv.send("changeState=", "RADIO");
-            // break;
         }
-        // case RADIOico:{
-        //     showHeadlineItem(RADIOico);
-        //     _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] =  _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-        //     _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
-        //     _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
-        //     _pressBtn[3] = "/btn/Button_Previous_Yellow.jpg";    _releaseBtn[3] = "/btn/Button_Previous_Green.jpg";
-        //     _pressBtn[4] = "/btn/Button_Next_Yellow.jpg";        _releaseBtn[4] = "/btn/Button_Next_Green.jpg";
-        //     _pressBtn[5] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[5] = "/btn/Button_List_Green.jpg";
-        //     _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-        //     _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-        //     clearTitle();
-        //     showVolumeBar();
-        //     //for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-        //     if(_f_mute) drawImage("/btn/RADIOico2.gif", 0, _winButton.y);
-        //     else        drawImage("/btn/RADIOico1.gif", 0, _winButton.y);
-        //     _timeCounter.timer = 5;
-        //     _timeCounter.factor = 2.0;
-        //     break;
-        // }
-        // case RADIOmenue:{
-        //     showHeadlineItem(RADIOmenue);
-        //     _pressBtn[0] = "/btn/Player_Yellow.jpg";             _releaseBtn[0] = "/btn/Player_Green.jpg";
-        //     _pressBtn[1] = "/btn/Button_DLNA_Yellow.jpg";        _releaseBtn[1] = "/btn/Button_DLNA_Green.jpg";
-        //     _pressBtn[2] = "/btn/Clock_Yellow.jpg";              _releaseBtn[2] = "/btn/Clock_Green.jpg";
-        //     _pressBtn[3] = "/btn/Button_Sleep_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Sleep_Green.jpg";
-        //     _pressBtn[4] = "/btn/Bulb_Yellow.jpg";               _releaseBtn[4]=  "/btn/Bulb_Green.jpg";
-        //     _pressBtn[5] = "/btn/Button_EQ_Yellow.jpg";          _releaseBtn[5] = "/btn/Button_EQ_Green.jpg";
-        //     _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-        //     _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-        //     // for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-        //     drawImage("/btn/RADIOmenue.gif", 0, _winButton.y);
-        //     clearVolBar();
-        //     _timeCounter.timer = 5;
-        //     _timeCounter.factor = 2.0;
-        //     break;
-        // }
+
         case STATIONSLIST:{
             showStationsList(_staListNr);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
         }
+
+
+        case PLAYER: {
+            if(_playerSubmenue == 0){
+                showHeadlineItem(PLAYER);
+                SD_listDir(_curAudioFolder.c_str(), true, true);
+                showFileLogo(state);
+                showFileName(_SD_content[_cur_AudioFileNr]);
+                showAudioFileNumber();
+                if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
+                showAudioFileNumber();
+                btn_P_prevFile.show();
+                btn_P_nextFile.show();
+                btn_P_ready.show();
+                btn_P_playAll.show();
+                btn_P_shuffle.show();
+                btn_P_fileList.show();
+                btn_P_radio.show();
+            }
+            if(_playerSubmenue == 1){
+                btn_P_Mute.show();    btn_P_volDown.show();  btn_P_volUp.show();    btn_P_pause.show();   btn_P_cancel.show();
+            }
+
+            break;
+        }
+
+
+
+
+
+
+
+
         case CLOCK:{
             if(_state == ALARM){
                 updateSettings();
@@ -2680,44 +2677,6 @@ void changeState(int32_t state){
             _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
             drawImage("/common/Brightness.jpg", 0, _winName.y);
             showBrightnessBar();
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-            break;
-        }
-        case PLAYER:{
-            if(_state == RADIO || _state == DLNA || _state == AUDIOFILESLIST){
-                clearWithOutHeaderFooter();
-            }
-            showHeadlineItem(PLAYER);
-            SD_listDir(_curAudioFolder.c_str(), true, true);
-            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
-            _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3] = "/btn/Button_PlayAll_Yellow.jpg";     _releaseBtn[3] = "/btn/Button_PlayAll_Blue.jpg";
-            _pressBtn[4] = "/btn/Button_Shuffle_Yellow.jpg";     _releaseBtn[4] = "/btn/Button_Shuffle_Blue.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
-            _pressBtn[6] = "/btn/Button_List_Yellow.jpg";        _releaseBtn[6] = "/btn/Button_List_Green.jpg";
-            _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-            //drawImage("/btn/PLAYER.gif", 0, _winButton.y);
-            showFileLogo(state);
-            showFileName(_SD_content[_cur_AudioFileNr]);
-            if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
-            showFileNumber();
-            break;
-        }
-        case PLAYERico:{
-            if(_state == RADIO || _state == AUDIOFILESLIST){
-                clearWithOutHeaderFooter();
-            }
-            showHeadlineItem(PLAYERico);
-            _pressBtn[0] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[0] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-            _pressBtn[1] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[1] = "/btn/Button_Volume_Down_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[2] = "/btn/Button_Volume_Up_Blue.jpg";
-            _pressBtn[3] = "/btn/Button_Pause_Yellow.jpg";       _releaseBtn[3] = "/btn/Button_Pause_Blue.jpg";
-            _pressBtn[4] = "/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4] = "/btn/Button_Cancel_Red.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
-            _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-            _pressBtn[7] = "/btn/Radio_Yellow.jpg";              _releaseBtn[7] = "/btn/Radio_Green.jpg";
             for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
@@ -2874,7 +2833,7 @@ void loop() {
             _f_muteDecrement = false;
             _f_mute = true;
             webSrv.send("mute=", "1");
-            if(_state == RADIOico || _state == PLAYERico || _state == DLNA) { drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y); }
+            if(_state == DLNA) { drawImage("/btn/Button_Mute_Red.jpg", 0, _winButton.y); }
             if(_state == CLOCKico) { drawImage("/btn/Button_Mute_Red.jpg", 2 * _winButton.w, _winButton.y); }
         }
     }
@@ -2889,7 +2848,7 @@ void loop() {
             _f_muteIncrement = false;
             _f_mute = false;
             webSrv.send("mute=", "0");
-            if(_state == RADIOico || _state == PLAYERico || _state == DLNA) { drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y); }
+            if(_state == DLNA) { drawImage("/btn/Button_Mute_Green.jpg", 0, _winButton.y); }
             if(_state == CLOCKico) { drawImage("/btn/Button_Mute_Green.jpg", 2 * _winButton.w, _winButton.y); }
         }
     }
@@ -2967,7 +2926,7 @@ void loop() {
                 }
                 else { connecttohost(_lastconnectedhost.c_str()); }
             }
-            if(_f_eof && _state == PLAYERico) {
+            if(_f_eof && _state == PLAYER) {
                 if(!_f_playlistEnabled) {
                     _f_eof = false;
                     changeState(PLAYER);
@@ -3063,7 +3022,7 @@ void loop() {
             if(c != 0 && c != 8 && c < 10) { // unknown or OGG, guard: c {1 ... 7, 9}
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
-                if(_state == PLAYER || _state == PLAYERico) showFileLogo(_state);
+                if(_state == PLAYER) showFileLogo(_state);
                 if(_state == RADIO && _f_logoUnknown == true) {
                     _f_logoUnknown = false;
                     showFileLogo(_state);
@@ -3222,7 +3181,7 @@ void audio_commercial(const char* info) { show_ST_commercial(info); }
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER || _state == PLAYERico) {
+    if(_state == PLAYER) {
         if(!_f_playlistEnabled) {
             _f_clearLogo = true;
             _f_clearStationName = true;
@@ -3236,7 +3195,7 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER || _state == PLAYERico) {
+    if(_state == PLAYER) {
         if(!_f_playlistEnabled) {
             _f_clearLogo = true;
             _f_clearStationName = true;
@@ -3380,7 +3339,7 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    enum : int8_t {none = -1,  RADIO_1, RADIOico_1, RADIOico_2, RADIOmenue_1, PLAYER_1, PLAYERico_1, ALARM_1, BRIGHTNESS_1, CLOCK_1,
+    enum : int8_t {none = -1,  ALARM_1, BRIGHTNESS_1, CLOCK_1,
                                CLOCKico_1, ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1
     };
     int8_t yPos = none;
@@ -3415,35 +3374,24 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
 
 
-
-
-
-
-        // case RADIOico:
-        //     if(y <= _winTitle.y) { yPos = RADIOico_1; }
-        //     if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-        //         yPos = RADIOico_2;
-        //         btnNr = x / _winButton.w;
-        //     }
-        //     break;
-        // case RADIOmenue:
-        //     if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-        //         yPos = RADIOmenue_1;
-        //         btnNr = x / _winButton.w;
-        //     }
-        //     break;
         case PLAYER:
-            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-                yPos = PLAYER_1;
-                btnNr = x / _winButton.w;
-            }
-            break;
-        case PLAYERico:
-            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-                yPos = PLAYERico_1;
-                btnNr = x / _winButton.w;
-            }
-            break;
+                if(_playerSubmenue == 0){
+                    if(btn_P_prevFile.positionXY(x, y)) return;
+                    if(btn_P_nextFile.positionXY(x, y)) return;
+                    if(btn_P_ready.positionXY(x, y)) return;;
+                    if(btn_P_playAll.positionXY(x, y)) return;
+                    if(btn_P_shuffle.positionXY(x, y)) return;
+                    if(btn_P_fileList.positionXY(x, y)) return;
+                    if(btn_P_radio.positionXY(x, y)) return;
+                }
+                if(_playerSubmenue == 1){
+                    if(btn_P_Mute.positionXY(x, y)) return;
+                    if(btn_P_volDown.positionXY(x, y)) return;
+                    if(btn_P_volUp.positionXY(x, y)) return;
+                    if(btn_P_pause.positionXY(x, y)) return;
+                    if(btn_P_cancel.positionXY(x, y)) return;
+                }
+                break;
         case CLOCK:
             if(_winDigits.y <= y && y <= _winDigits.y + _winDigits.h) { yPos = CLOCK_1; }
             break;
@@ -3543,25 +3491,9 @@ void tp_pressed(uint16_t x, uint16_t y) {
     }
 
     switch(yPos){
-        // case RADIO_1:       changeState(RADIOico); break;
-        // case RADIOico_1:    changeState(RADIOmenue); break;
+
         case CLOCK_1:       changeState(CLOCKico);   break;
-        // case RADIOico_2:    if     (btnNr == 0){_releaseNr =  0; _timeCounter.timer = 5; mute();}
-        //                     else if(btnNr == 1){_releaseNr =  1; _timeCounter.timer = 5;} // Vol-
-        //                     else if(btnNr == 2){_releaseNr =  2; _timeCounter.timer = 5;} // Vol+
-        //                     else if(btnNr == 3){_releaseNr =  3; _timeCounter.timer = 5;} // station--
-        //                     else if(btnNr == 4){_releaseNr =  4; _timeCounter.timer = 5;} // station++
-        //                     else if(btnNr == 5){_releaseNr =  5; } // list stations
-        //                     else   {SerialPrintfln(ANSI_ESC_YELLOW "invalid button nr: %i", btnNr); break;}
-        //                     changeBtn_pressed(btnNr);
-        //                     break;
-        // case RADIOmenue_1:  if(btnNr == 0){_releaseNr = 10; audioStopSong();} // AudioPlayer
-        //                     if(btnNr == 1){_releaseNr = 11;} // DLNA
-        //                     if(btnNr == 2){_releaseNr = 12;} // Clock
-        //                     if(btnNr == 3){_releaseNr = 13;} // Sleep
-        //                     if(btnNr == 4){_releaseNr = 14;} // Brightness
-        //                     if(btnNr == 5){_releaseNr = 15;} // Equalizer
-        //                     changeBtn_pressed(btnNr); break;
+
         case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
                             if(btnNr == 1){_releaseNr = 21;} // Radio
                             if(btnNr == 2){_releaseNr = 22; _timeCounter.timer = 5; mute();}
@@ -3573,24 +3505,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 2){_releaseNr = 32;} // up
                             if(btnNr == 3){_releaseNr = 33;} // down
                             if(btnNr == 4){_releaseNr = 34;} // ready (return to CLOCK)
-                            changeBtn_pressed(btnNr); break;
-        case PLAYER_1:      if(btnNr == 0){_releaseNr = 40;} // previous audiofile
-                            if(btnNr == 1){_releaseNr = 41;} // next audiofile
-                            if(btnNr == 2){_releaseNr = 42;} // ready
-                            if(btnNr == 3){_releaseNr = 43;} // play all files
-                            if(btnNr == 4){_releaseNr = 44;} // play all files with shuffle
-                            if(btnNr == 5){_releaseNr = 45;} // unused
-                            if(btnNr == 6){_releaseNr = 46;} // audiofiles list
-                            if(btnNr == 7){_releaseNr = 47;} // RADIO
-                            changeBtn_pressed(btnNr); break;
-        case PLAYERico_1:   if(btnNr == 0){_releaseNr = 50; mute();}
-                            if(btnNr == 1){_releaseNr = 51;} // Vol-
-                            if(btnNr == 2){_releaseNr = 52;} // Vol+
-                            if(btnNr == 3){_releaseNr = 53;} // pause/resume
-                            if(btnNr == 4){_releaseNr = 54;} // cancel
-                            if(btnNr == 5){_releaseNr = 55;} // unused
-                            if(btnNr == 6){_releaseNr = 56;} // unused
-                            if(btnNr == 7){_releaseNr = 57;} // RADIO
                             changeBtn_pressed(btnNr); break;
         case ALARM_1:       if(btnNr == 0){_releaseNr = 60;} // mon
                             if(btnNr == 1){_releaseNr = 61;} // tue
@@ -3667,8 +3581,25 @@ void tp_released(uint16_t x, uint16_t y){
                 btn_R_equal.released();
             }
             break;
+        case PLAYER:
+            if(_playerSubmenue == 0){
+                btn_P_prevFile.released();
+                btn_P_nextFile.released();
+                btn_P_ready.released();
+                btn_P_playAll.released();
+                btn_P_shuffle.released();
+                btn_P_fileList.released();
+                btn_P_radio.released();
+            }
+            if(_playerSubmenue == 1){
+                btn_P_Mute.released();
+                btn_P_volDown.released();
+                btn_P_volUp.released();
+                btn_P_pause.released();
+                btn_P_cancel.released();
+            }
 
-
+            break;
         case EQUALIZER: sdr_E_lowPass.released();
                         sdr_E_bandPass.released();
                         sdr_E_highPass.released();
@@ -3690,21 +3621,6 @@ void tp_released(uint16_t x, uint16_t y){
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
     switch(_releaseNr){
-        /* RADIOico ******************************/
-        // case  0:    /*changeBtn_released(0);*/                               break; // Mute
-        // case  1:    changeBtn_released(1); downvolume(); showVolumeBar();    break;  // Vol-
-        // case  2:    changeBtn_released(2); upvolume();   showVolumeBar();    break;  // Vol+
-        // case  3:    changeBtn_released(3); prevStation(); showFooterStaNr(); break;  // previousstation
-        // case  4:    changeBtn_released(4); nextStation(); showFooterStaNr(); break;  // nextstation
-        // case  5:    changeBtn_released(5); changeState(STATIONSLIST); break;  //  list stations
-
-        // /* RADIOmenue ******************************/
-        // case 10:    changeState(PLAYER); break;
-        // case 11:    changeState(DLNA); break;
-        // case 12:    changeState(CLOCK); break;
-        // case 13:    changeState(SLEEP); break;
-        // case 14:    changeState(BRIGHTNESS); break;
-        // case 15:    changeState(EQUALIZER); break;
 
         /* CLOCKico ******************************/
         case 20:    changeState(ALARM); break;
@@ -3720,62 +3636,7 @@ void tp_released(uint16_t x, uint16_t y){
         case 33:    changeBtn_released(3); display_alarmtime( 0 , -1); break;
         case 34:    changeState(CLOCK); break;
 
-        /* AUDIOPLAYER ******************************/
-        case 40:    changeBtn_released(0); // previous audiofile
-                    if(_cur_AudioFileNr > 0){
-                        _cur_AudioFileNr--;
-                        showFileName(_SD_content[_cur_AudioFileNr]);
-                        showFileNumber();
-                    }
-                    break;
-        case 41:    changeBtn_released(1); // next audiofile
-                    if(_cur_AudioFileNr + 1 < _SD_content.size()){
-                        _cur_AudioFileNr++;
-                        showFileName(_SD_content[_cur_AudioFileNr]);
-                        showFileNumber();
-                    }
-                    break;
-        case 42:    changeState(PLAYERico); showVolumeBar(); // ready
-                    sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content[_cur_AudioFileNr]);
-                    {
-                        int32_t idx = indexOf(_chbuf, "\033[", 1);
-                        if(idx == -1) break;  // is folder
-                        _chbuf[idx] = '\0';  // remove color and filesize
-                    }
-                    changeState(PLAYERico);
-                    SD_playFile(_chbuf, 0, true);
-                    break;
-        case 43:    _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true);  break;  // in alphabetical order
-        case 44:    _f_shuffle = true;  preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true);  break;  // with shuffle
-        case 45:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
-        case 46:    SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST);break;
-        case 47:    changeBtn_released(0); changeState(RADIO); break; // RADIO
-
-        /* AUDIOPLAYERico ******************************/
-        case 50:    changeBtn_released(0); break; // Mute
-        case 51:    changeBtn_released(1); downvolume(); showVolumeBar(); break; // Vol-
-        case 52:    changeBtn_released(2); upvolume();   showVolumeBar(); break; // Vol+
-        case 53:    if(_f_isFSConnected){
-                        if(!_f_pauseResume){_f_pauseResume = true; // toggle pause/resume an set the flag
-                            _pressBtn[3] = "/btn/Button_Right_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Right_Blue.jpg";
-                            SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Audio file is paused");}
-                        else {_f_pauseResume = false;
-                            _pressBtn[3] = "/btn/Button_Pause_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Pause_Blue.jpg";
-                            SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Audio file is resumed");}
-                        drawImage(_releaseBtn[3], 3 * _winButton.w,  _winButton.y);
-                        audioPauseResume();
-                    }
-                    else{
-                        changeBtn_released(3);
-                        SerialPrintfln("Audioplayer: " ANSI_ESC_GREEN "Web files can't be paused");
-                    }
-                    break;
-        case 54:    stopSong(); changeState(PLAYER);  break;
-        case 55:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
-        case 56:    SerialPrintfln(ANSI_ESC_YELLOW "Button number: %d is unsed yet", _releaseNr); break;
-        case 57:    stopSong(); changeState(RADIO); break;
-
-        /* ALARM (weekdays) ******************************/
+            /* ALARM (weekdays) ******************************/
         case 60:    display_alarmDays(0); break;  // sun
         case 61:    display_alarmDays(1); break;  // mon
         case 62:    display_alarmDays(2); break;
@@ -3899,9 +3760,11 @@ void tp_released(uint16_t x, uint16_t y){
                                 }
                                 else {
                                     _chbuf[idx] = '\0';  // remove color and filesize
-                                    changeState(PLAYERico);
+                                    clearStreamTitle();
+                                    changeState(PLAYER);
                                     log_i("fn %s", _chbuf);
                                     SD_playFile(_chbuf, 0, true);
+                                    showAudioFileNumber();
                                 }
                             }
                             _timeCounter.timer = 0;
@@ -4364,21 +4227,34 @@ void graphicObjects_OnChange(const char* name, int32_t arg1){
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnClick(const char* name){
     if(_state == RADIO){
-        if(strcmp(name, "btn_R_Mute")    == 0) { _timeCounter.timer = 5; return;}
-        if(strcmp(name, "btn_R_volDown") == 0) { _timeCounter.timer = 5; return;};
-        if(strcmp(name, "btn_R_volUp")   == 0) { _timeCounter.timer = 5; return;};
-        if(strcmp(name, "btn_R_prevSta") == 0) { return;};
-        if(strcmp(name, "btn_R_nextSta") == 0) { return;};
-        if(strcmp(name, "btn_R_staList") == 0) { return;};
-        if(strcmp(name, "btn_R_player")  == 0) { return;};
-        if(strcmp(name, "btn_R_dlna")    == 0) { return;};
-        if(strcmp(name, "btn_R_clock")   == 0) { return;};
-        if(strcmp(name, "btn_R_sleep")   == 0) { return;};
-        if(strcmp(name, "btn_R_bright")  == 0) { return;};
-        if(strcmp(name, "btn_R_equal")   == 0) { return;};
+        if(strcmp(name, "btn_R_Mute")     == 0) { _timeCounter.timer = 5; return;}
+        if(strcmp(name, "btn_R_volDown")  == 0) { _timeCounter.timer = 5; return;};
+        if(strcmp(name, "btn_R_volUp")    == 0) { _timeCounter.timer = 5; return;};
+        if(strcmp(name, "btn_R_prevSta")  == 0) { return;};
+        if(strcmp(name, "btn_R_nextSta")  == 0) { return;};
+        if(strcmp(name, "btn_R_staList")  == 0) { return;};
+        if(strcmp(name, "btn_R_player")   == 0) { return;};
+        if(strcmp(name, "btn_R_dlna")     == 0) { return;};
+        if(strcmp(name, "btn_R_clock")    == 0) { return;};
+        if(strcmp(name, "btn_R_sleep")    == 0) { return;};
+        if(strcmp(name, "btn_R_bright")   == 0) { return;};
+        if(strcmp(name, "btn_R_equal")    == 0) { return;};
     }
 
-
+    if(_state == PLAYER){
+        if(strcmp(name, "btn_P_Mute")     == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_volDown")  == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_volUp")    == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_pause")    == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_cancel")   == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_prevFile") == 0) { if(_cur_AudioFileNr > 0){_cur_AudioFileNr--; showFileName(_SD_content[_cur_AudioFileNr]); showAudioFileNumber();} return;}
+        if(strcmp(name, "btn_P_nextFile") == 0) { if(_cur_AudioFileNr + 1 < _SD_content.size()){_cur_AudioFileNr++; showFileName(_SD_content[_cur_AudioFileNr]); showAudioFileNumber();} return;}
+        if(strcmp(name, "btn_P_ready")    == 0) {   ; return;}
+        if(strcmp(name, "btn_P_playAll")  == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_shuffle")  == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_fileList") == 0) {                        ; return;}
+        if(strcmp(name, "btn_P_radio")    == 0) {                        ; return;}
+    }
     if(_state == EQUALIZER){
         if(strcmp(name, "btn_E_LP")     == 0){ sdr_E_lowPass.setValue(0); return;}
         if(strcmp(name, "btn_E_BP")     == 0){ sdr_E_bandPass.setValue(0); return;}
@@ -4393,25 +4269,40 @@ void graphicObjects_OnClick(const char* name){
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnRelease(const char* name){
     if(_state == RADIO){
-        if(strcmp(name, "btn_R_Mute")    == 0) { audioMute(btn_R_Mute.getValue()); btn_E_Mute.setValue(btn_R_Mute.getValue()); return;}
-        if(strcmp(name, "btn_R_volDown") == 0) { downvolume(); showVolumeBar(); return;};
-        if(strcmp(name, "btn_R_volUp")   == 0) { upvolume();   showVolumeBar(); return;};
-        if(strcmp(name, "btn_R_prevSta") == 0) { _radioSubmenue = 0; prevStation(); showFooterStaNr(); return;};
-        if(strcmp(name, "btn_R_nextSta") == 0) { _radioSubmenue = 0; nextStation(); showFooterStaNr(); return;};
-        if(strcmp(name, "btn_R_staList") == 0) { _radioSubmenue = 0; changeState(STATIONSLIST); return;};
-        if(strcmp(name, "btn_R_player")  == 0) { _radioSubmenue = 0; changeState(PLAYER); return;};
-        if(strcmp(name, "btn_R_dlna")    == 0) { _radioSubmenue = 0; changeState(DLNA); return;};
-        if(strcmp(name, "btn_R_clock")   == 0) { _radioSubmenue = 0; changeState(CLOCK); return;};
-        if(strcmp(name, "btn_R_sleep")   == 0) { _radioSubmenue = 0; changeState(SLEEP); return;};
-        if(strcmp(name, "btn_R_bright")  == 0) { _radioSubmenue = 0; changeState(BRIGHTNESS); return;};
-        if(strcmp(name, "btn_R_equal")   == 0) { _radioSubmenue = 0; changeState(EQUALIZER); return;};
+        if(strcmp(name, "btn_R_Mute")     == 0) { audioMute(btn_R_Mute.getValue()); btn_E_Mute.setValue(btn_R_Mute.getValue()); btn_P_Mute.setValue(btn_R_Mute.getValue());return;}
+        if(strcmp(name, "btn_R_volDown")  == 0) { downvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_R_volUp")    == 0) { upvolume();   showVolumeBar(); return;}
+        if(strcmp(name, "btn_R_prevSta")  == 0) { _radioSubmenue = 0; prevStation(); showFooterStaNr(); return;}
+        if(strcmp(name, "btn_R_nextSta")  == 0) { _radioSubmenue = 0; nextStation(); showFooterStaNr(); return;}
+        if(strcmp(name, "btn_R_staList")  == 0) { _radioSubmenue = 0; changeState(STATIONSLIST); return;}
+        if(strcmp(name, "btn_R_player")   == 0) { _radioSubmenue = 0; changeState(PLAYER); return;}
+        if(strcmp(name, "btn_R_dlna")     == 0) { _radioSubmenue = 0; changeState(DLNA); return;}
+        if(strcmp(name, "btn_R_clock")    == 0) { _radioSubmenue = 0; changeState(CLOCK); return;}
+        if(strcmp(name, "btn_R_sleep")    == 0) { _radioSubmenue = 0; changeState(SLEEP); return;}
+        if(strcmp(name, "btn_R_bright")   == 0) { _radioSubmenue = 0; changeState(BRIGHTNESS); return;}
+        if(strcmp(name, "btn_R_equal")    == 0) { _radioSubmenue = 0; changeState(EQUALIZER); return;}
     }
-
-
+    if(_state == PLAYER){
+        if(strcmp(name, "btn_P_Mute")     == 0) { bool b = btn_P_Mute.getValue(); audioMute(b); btn_E_Mute.setValue(b); btn_R_Mute.setValue(b); return;}
+        if(strcmp(name, "btn_P_volDown")  == 0) { downvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_P_volUp")    == 0) { upvolume();   showVolumeBar(); return;}
+        if(strcmp(name, "btn_P_pause")    == 0) { if(_f_isFSConnected){audioPauseResume();} return;}
+        if(strcmp(name, "btn_P_cancel")   == 0) { _playerSubmenue = 0; stopSong(); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_P_prevFile") == 0) { return;}
+        if(strcmp(name, "btn_P_nextFile") == 0) { return;}
+        if(strcmp(name, "btn_P_ready")    == 0) { _playerSubmenue = 1; SD_playFile(_curAudioFolder.c_str(), _SD_content[_cur_AudioFileNr]);  changeState(PLAYER); showAudioFileNumber();   return;}
+        if(strcmp(name, "btn_P_playAll")  == 0) { _playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_P_shuffle")  == 0) { _playerSubmenue = 1; _f_shuffle = true;  preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_P_fileList") == 0) { _playerSubmenue = 1; SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST); return;}
+        if(strcmp(name, "btn_P_radio")    == 0) { _playerSubmenue = 0; changeState(RADIO); return;}
+    }
     if(_state == EQUALIZER){
         if(strcmp(name, "btn_E_Radio")  == 0){ changeState(RADIO); return;}
         if(strcmp(name, "btn_E_Player") == 0){ changeState(PLAYER); return;}
-        if(strcmp(name, "btn_E_Mute")   == 0){ audioMute(btn_E_Mute.getValue()); btn_R_Mute.setValue(btn_E_Mute.getValue()); return;}
+        if(strcmp(name, "btn_E_Mute")   == 0){ audioMute(btn_E_Mute.getValue()); btn_R_Mute.setValue(btn_E_Mute.getValue()); btn_P_Mute.setValue(btn_E_Mute.getValue()); return;}
     }
     log_d("unused event: graphicObject %s was released", name);
 }
+
+
+
