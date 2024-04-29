@@ -44,6 +44,25 @@ enum status {
     UNDEFINED = 255
 };
 
+char _hl_item[16][40]{
+    "",                 // none
+    "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
+    "Audio player",     // "** цифрово́й плеер **
+    "DLNA",             // Digital Living Network Alliance
+    "Clock",            // Clock "** часы́ **"  "** ρολόι **"
+    "Brightness",       // Brightness яркость λάμψη
+    "Alarm (hh:mm)",    // Alarm
+    "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+    ""
+    "Stations List",
+    "Audio Files",
+    "DLNA List",
+    "Bluetooth",
+    "Equalizer",
+    ""
+    ""
+};
+
 const uint8_t       _max_volume = 21;
 const uint16_t      _max_stations = 1000;
 int16_t             _releaseNr = -1;
@@ -175,26 +194,6 @@ struct dlnaHistory {
     char* objId = NULL;
     char* name = NULL;
 } _dlnaHistory[10];
-
-char _hl_item[16][40]{
-    "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
-    "Internet Radio",   //
-    "Internet Radio",   //
-    "Clock",            // Clock "** часы́ **"  "** ρολόι **"
-    "Clock",            //
-    "Brightness",       // Brightness яркость λάμψη
-    "Audio player",     // "** цифрово́й плеер **"
-    "Audio player",     //
-    "Alarm (hh:mm)",    // Alarm
-    "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-    "DLNA",             // Digital Living Network Alliance
-    "Stations List",
-    "Audio Files",
-    "DLNA List",
-    "Bluetooth",
-    "Equalizer",
-};
-
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
@@ -2627,8 +2626,8 @@ void changeState(int32_t state){
 
         case PLAYER: {
             if(_state != PLAYER) clearWithOutHeaderFooter();
+            showHeadlineItem(PLAYER);
             if(_playerSubmenue == 0){
-                showHeadlineItem(PLAYER);
                 SD_listDir(_curAudioFolder.c_str(), true, true);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2647,7 +2646,6 @@ void changeState(int32_t state){
             if(_playerSubmenue == 1){
                 btn_P_Mute.show();    btn_P_volDown.show();  btn_P_volUp.show();    btn_P_pause.show();   btn_P_cancel.show();
             }
-
             break;
         }
         case DLNA:{
