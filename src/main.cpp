@@ -2649,14 +2649,12 @@ void changeState(int32_t state){
             break;
         }
         case DLNA:{
-            if(_state != DLNA) clearWithOutHeaderFooter();
+            clearWithOutHeaderFooter();
+            showFileLogo(state);
             showHeadlineItem(DLNA);
+            showVolumeBar();
             btn_D_Mute.show();    btn_D_volDown.show();  btn_D_volUp.show();    btn_D_pause.show();   btn_D_cancel.show();
             btn_D_ready.show();   btn_D_fileList.show(); btn_D_radio.show();
-//            clearLogoAndStationname();
-//            clearTitle();
-//            showFileLogo(state);
-            showVolumeBar();
             break;
         }
         case DLNAITEMSLIST:{
@@ -4336,8 +4334,8 @@ void graphicObjects_OnRelease(const char* name){
         if(strcmp(name, "btn_R_prevSta")  == 0) { _radioSubmenue = 0; prevStation(); showFooterStaNr(); return;}
         if(strcmp(name, "btn_R_nextSta")  == 0) { _radioSubmenue = 0; nextStation(); showFooterStaNr(); return;}
         if(strcmp(name, "btn_R_staList")  == 0) { _radioSubmenue = 0; changeState(STATIONSLIST); return;}
-        if(strcmp(name, "btn_R_player")   == 0) { _radioSubmenue = 0; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_R_dlna")     == 0) { _radioSubmenue = 0; changeState(DLNA); return;}
+        if(strcmp(name, "btn_R_player")   == 0) { _radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_R_dlna")     == 0) { _radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
         if(strcmp(name, "btn_R_clock")    == 0) { _radioSubmenue = 0; changeState(CLOCK); return;}
         if(strcmp(name, "btn_R_sleep")    == 0) { _radioSubmenue = 0; changeState(SLEEP); return;}
         if(strcmp(name, "btn_R_bright")   == 0) { _radioSubmenue = 0; changeState(BRIGHTNESS); return;}
@@ -4355,7 +4353,7 @@ void graphicObjects_OnRelease(const char* name){
         if(strcmp(name, "btn_P_playAll")  == 0) { _playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
         if(strcmp(name, "btn_P_shuffle")  == 0) { _playerSubmenue = 1; _f_shuffle = true;  preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
         if(strcmp(name, "btn_P_fileList") == 0) { _playerSubmenue = 1; SD_listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST); return;}
-        if(strcmp(name, "btn_P_radio")    == 0) { _playerSubmenue = 0; changeState(RADIO); return;}
+        if(strcmp(name, "btn_P_radio")    == 0) { _playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
     }
     if(_state == DLNA){
         if(strcmp(name, "btn_D_Mute")     == 0) { bool b = btn_D_Mute.getValue(); audioMute(b); btn_E_Mute.setValue(b); btn_R_Mute.setValue(b); btn_P_Mute.setValue(b); return;}
@@ -4363,12 +4361,12 @@ void graphicObjects_OnRelease(const char* name){
         if(strcmp(name, "btn_D_volDown")  == 0) { downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_D_volUp")    == 0) { upvolume();   showVolumeBar(); return;}
         if(strcmp(name, "btn_D_ready")    == 0) { ; return;}
-        if(strcmp(name, "btn_D_radio")    == 0) { changeState(RADIO); return;}
+        if(strcmp(name, "btn_D_radio")    == 0) { setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_D_fileList") == 0) { changeState(DLNAITEMSLIST); return;}
         if(strcmp(name, "btn_D_cancel")   == 0) { stopSong(); return;}
     }
     if(_state == EQUALIZER){
-        if(strcmp(name, "btn_E_Radio")  == 0){ changeState(RADIO); return;}
+        if(strcmp(name, "btn_E_Radio")  == 0){ setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_E_Player") == 0){ changeState(PLAYER); return;}
         if(strcmp(name, "btn_E_Mute")   == 0){ audioMute(btn_E_Mute.getValue()); btn_R_Mute.setValue(btn_E_Mute.getValue()); btn_P_Mute.setValue(btn_E_Mute.getValue()); return;}
     }
