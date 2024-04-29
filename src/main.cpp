@@ -371,8 +371,7 @@ button1state   btn_P_prevFile("btn_P_prevFile"), btn_P_nextFile("btn_P_nextFile"
 // DLNA
 button2state   btn_D_Mute("btn_D_Mute"),         btn_D_pause("btn_D_pause");
 button1state   btn_D_volDown("btn_D_volDown"),   btn_D_volUp("btn_D_volUp");
-button1state   btn_D_ready("btn_D_ready"),       btn_D_radio("btn_D_radio"),        btn_D_fileList("btn_D_fileList");
-button1state   btn_D_cancel("btn_D_cancel");
+button1state   btn_D_radio("btn_D_radio"),       btn_D_fileList("btn_D_fileList"), btn_D_cancel("btn_D_cancel");
 // EQUALIZER
 slider         sdr_E_lowPass("sdr_E_LP"),        sdr_E_bandPass("sdr_E_BP"),        sdr_E_highPass("sdr_E_HP"),         sdr_E_balance("sdr_E_BAL");
 textbox        txt_E_lowPass("txt_E_LP"),        txt_E_bandPass("txt_E_BP"),        txt_E_highPass("txt_E_HP"),         txt_E_balance("txt_E_BAL");
@@ -2516,14 +2515,12 @@ void placingGraphicObjects(){  // and initialize them
                                                                                        btn_D_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
     btn_D_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
                                                                                        btn_D_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_D_ready.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
-                                                                                       btn_D_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
-    btn_D_pause.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
+    btn_D_pause.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
                                                                                        btn_D_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
                                                                                        btn_D_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
                                                                                        btn_D_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
                                                                                        btn_D_pause.setValue(false);
-    btn_D_cancel.begin(  5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
+    btn_D_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
                                                                                        btn_D_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
     btn_D_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);  btn_D_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
                                                                                        btn_D_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
@@ -2572,7 +2569,7 @@ void changeState(int32_t state){
                         btn_P_fileList.hide();   btn_P_radio.hide();
                         break;
         case DLNA:      btn_D_Mute.disable();    btn_D_volDown.disable();  btn_D_volUp.disable();    btn_D_pause.disable();   btn_D_cancel.disable();
-                        btn_D_ready.disable();   btn_D_fileList.disable(); btn_D_radio.disable();
+                        btn_D_fileList.disable(); btn_D_radio.disable();
                          break;
         case EQUALIZER: sdr_E_lowPass.disable(); sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
                         btn_E_lowPass.disable(); btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
@@ -2654,7 +2651,7 @@ void changeState(int32_t state){
             showHeadlineItem(DLNA);
             showVolumeBar();
             btn_D_Mute.show();    btn_D_volDown.show();  btn_D_volUp.show();    btn_D_pause.show();   btn_D_cancel.show();
-            btn_D_ready.show();   btn_D_fileList.show(); btn_D_radio.show();
+            btn_D_fileList.show(); btn_D_radio.show();
             break;
         }
         case DLNAITEMSLIST:{
@@ -3237,6 +3234,7 @@ void audio_eof_stream(const char* info) {
         }
     }
     if(_state == DLNA) { showFileName(""); }
+    if(_state == RADIO){clearWithOutHeaderFooter();}
     _f_eof = true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3427,7 +3425,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_D_pause.positionXY(x, y)) return;
                 if(btn_D_volDown.positionXY(x, y)) return;
                 if(btn_D_volUp.positionXY(x, y)) return;
-                if(btn_D_ready.positionXY(x, y)) return;
                 if(btn_D_radio.positionXY(x, y)) return;
                 if(btn_D_fileList.positionXY(x, y)) return;
                 if(btn_D_cancel.positionXY(x, y)) return;
@@ -3640,7 +3637,6 @@ void tp_released(uint16_t x, uint16_t y){
                 btn_D_pause.released();
                 btn_D_volDown.released();
                 btn_D_volUp.released();
-                btn_D_ready.released();
                 btn_D_radio.released();
                 btn_D_fileList.released();
                 btn_D_cancel.released();
@@ -4020,9 +4016,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
 
     if(cmd == "change_state"){      if(_state != CLOCK){
-                                        if     (!strcmp(param.c_str(), "RADIO") && _state != RADIO) {changeState(RADIO);  return;}
-                                        else if(!strcmp(param.c_str(), "PLAYER")&& _state != PLAYER){changeState(PLAYER); return;}
-                                        else if(!strcmp(param.c_str(), "DLNA")  && _state != DLNA)  {changeState(DLNA);   return;}
+                                        if     (!strcmp(param.c_str(), "RADIO") && _state != RADIO) {setStation(_cur_station); changeState(RADIO);  return;}
+                                        else if(!strcmp(param.c_str(), "PLAYER")&& _state != PLAYER){stopSong(); changeState(PLAYER); return;}
+                                        else if(!strcmp(param.c_str(), "DLNA")  && _state != DLNA)  {stopSong(); changeState(DLNA);   return;}
                                         else return;
                                     }}
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=", "audiofile stopped");
@@ -4306,7 +4302,6 @@ void graphicObjects_OnClick(const char* name){
         if(strcmp(name, "btn_D_pause")    == 0) { ; return;}
         if(strcmp(name, "btn_D_volDown")  == 0) { ; return;}
         if(strcmp(name, "btn_D_volUp")    == 0) { ; return;}
-        if(strcmp(name, "btn_D_ready")    == 0) { ; return;}
         if(strcmp(name, "btn_D_radio")    == 0) { ; return;}
         if(strcmp(name, "btn_D_fileList") == 0) { ; return;}
         if(strcmp(name, "btn_D_cancel")   == 0) { ; return;}
@@ -4359,7 +4354,6 @@ void graphicObjects_OnRelease(const char* name){
         if(strcmp(name, "btn_D_pause")    == 0) { audioPauseResume(); return;}
         if(strcmp(name, "btn_D_volDown")  == 0) { downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_D_volUp")    == 0) { upvolume();   showVolumeBar(); return;}
-        if(strcmp(name, "btn_D_ready")    == 0) { ; return;}
         if(strcmp(name, "btn_D_radio")    == 0) { setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_D_fileList") == 0) { changeState(DLNAITEMSLIST); return;}
         if(strcmp(name, "btn_D_cancel")   == 0) { stopSong(); return;}
