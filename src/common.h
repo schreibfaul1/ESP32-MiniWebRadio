@@ -188,6 +188,7 @@ void           showFooter();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
 void           showVUmeter();
+void           hideVUmeter();
 void           updateVUmeter();
 void           showLogoAndStationName();
 void           showStationName(String sn);
