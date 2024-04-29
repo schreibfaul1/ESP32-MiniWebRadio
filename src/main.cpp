@@ -2959,7 +2959,7 @@ void loop() {
                     wake_up();
                     _f_eof_alarm = false;
                 }
-                else { connecttohost(_lastconnectedhost.c_str()); }
+                //else { connecttohost(_lastconnectedhost.c_str()); }
             }
             // if(_f_eof && _state == PLAYER) {
             //     if(!_f_playlistEnabled) {
@@ -3238,7 +3238,6 @@ void audio_eof_stream(const char* info) {
     }
     if(_state == DLNA) { showFileName(""); }
     _f_eof = true;
-    _f_isWebConnected = false;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void audio_lasthost(const char* info) { // really connected URL
