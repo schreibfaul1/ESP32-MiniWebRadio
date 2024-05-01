@@ -240,6 +240,7 @@ void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
 void           placingGraphicObjects();
+void           muteChanged(bool m);
 
 //prototypes (audiotask.cpp)
 void           audioInit();
@@ -265,7 +266,7 @@ uint16_t       audioGetVUlevel();
 uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
-void           audioMute(bool setSilent);
+void           audioMute(uint8_t vol);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -911,3 +912,140 @@ public:
         return true;
     }
 };
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class imgClock{ // draw a clock in 12 or 24h format
+private:
+    int16_t  m_x = 0;
+    int16_t  m_y = 0;
+    int16_t  m_w = 0;
+    int16_t  m_h = 0;
+#if TFT_CONTROLLER < 2
+    uint16_t m_timeXPos7S[5] = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
+    uint16_t m_timeXPosFN[6] = {0, 56, 152, 208, 264, 112}; // folded numbers
+#else
+    uint16_t m_timeXPos7S[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
+    uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
+#endif
+    uint32_t m_bgColor = 0;
+    bool     m_enabled = false;
+    bool     m_clicked = false;
+    bool     m_state = false;
+    uint8_t  m_timeFormat = 24;
+    bool     m_showAll = false;
+    char*    m_name = NULL;
+    char*    m_pathBuff = NULL;
+    uint8_t  m_min = 0, m_hour = 0, m_day = 0;
+public:
+    imgClock(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("imgClock");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+    }
+    ~imgClock(){
+        if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    void show(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+        //    setInactive();
+            return;
+        }
+        m_enabled = true;
+        m_showAll = true;
+        writeTime(m_hour, m_min);
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
+        // minuteOfTheDay counts at 00:00, from 0...23*60+59
+        // weekDay So - 0, Mo - 1 ... Sa - 6
+        m_hour = minuteOfTheDay / 60;
+        m_min  = minuteOfTheDay % 60;
+        m_day  = weekday;
+        if(m_enabled) writeTime(m_hour, m_min);
+    }
+    void writeTime(uint8_t m_hour, uint8_t  m_min){
+        static uint8_t oldTime[4];
+        static bool k = false;
+        uint8_t time[5];
+        time[0] = m_hour / 10; time[1] = m_hour % 10;
+        time[2] = m_min / 10;  time[3] = m_min % 10;
+
+        if(m_timeFormat == 24){
+            for(uint8_t i = 0; i < 4; i++){
+                if((time[i] != oldTime[i]) || m_showAll){
+                    sprintf(m_pathBuff, "/digits/sevenSegment/%igreen.jpg", time[i]);
+                    drawImage(m_pathBuff, m_timeXPos7S[i], m_y);
+                }
+                oldTime[i] = time[i];
+            }
+        }
+        else { // 12h format
+             bool isPM = true;
+             static bool isOldPM = false;
+            for(uint8_t i = 0; i < 4; i++){
+                uint8_t hour = m_hour;
+                if(hour > 0 && hour < 13) isPM = false;
+                else(hour -= 12);
+                time[0] = hour / 10; time[1] = hour % 10;
+                if((time[i] != oldTime[i]) || m_showAll){
+                    sprintf(m_pathBuff, "/digits/foldedNumbers/%iwhite.jpg", time[i]);
+                    drawImage(m_pathBuff, m_timeXPosFN[i], m_y);
+                }
+                oldTime[i] = time[i];
+            }
+            if((isPM != isOldPM) || m_showAll){
+                if(isPM) drawImage("/digits/foldedNumbers/pmwhite.jpg", m_timeXPosFN[4], m_y);
+                else     drawImage("/digits/foldedNumbers/amwhite.jpg", m_timeXPosFN[4], m_y);
+                isOldPM = isPM;
+            }
+        }
+        k = !k;
+        if(m_timeFormat == 24){
+            if(k) drawImage("/digits/sevenSegment/dgreen.jpg", m_timeXPos7S[4], m_y);
+            else  drawImage("/digits/sevenSegment/egreen.jpg", m_timeXPos7S[4], m_y);
+        }
+        else{
+            if(k) drawImage("/digits/foldedNumbers/dwhite.jpg", m_timeXPosFN[5], m_y);
+            else  drawImage("/digits/foldedNumbers/ewhite.jpg", m_timeXPosFN[5], m_y);
+        }
+        m_showAll = false;
+    }
+    void setTimeFormat(uint8_t timeFormat){
+        m_timeFormat = timeFormat;
+        m_showAll = true;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

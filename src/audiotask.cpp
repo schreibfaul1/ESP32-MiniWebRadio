@@ -184,7 +184,7 @@ void audioTask(void *parameter) {
         if(f_muteDecrement){
             if(t_millis + 30 < millis()){
                 uint8_t v = audio.getVolume();
-                if (v > 0) audio.setVolume(v - 1);
+                if (v > t_volume) audio.setVolume(v - 1);
                 else f_muteDecrement = false;
                 t_millis = millis();
             }
@@ -192,8 +192,8 @@ void audioTask(void *parameter) {
         if(f_muteIncrement){
             if(t_millis + 30 < millis()){
                 uint8_t v = audio.getVolume();
-                if(v >= t_volume) f_muteIncrement = false;
-                else audio.setVolume(v + 1);
+                if(v < t_volume) audio.setVolume(v + 1);
+                else f_muteIncrement = false;
                 t_millis = millis();
             }
         }
@@ -233,7 +233,6 @@ audioMessage transmitReceive(audioMessage msg){
 }
 
 void audioSetVolume(uint8_t vol){
-    t_volume = vol;
     audioTxMessage.cmd = SET_VOLUME;
     audioTxMessage.value1 = vol;
     audioMessage RX = transmitReceive(audioTxMessage);
@@ -373,12 +372,15 @@ bool audioSetTimeOffset(int16_t timeOffset){
     return RX.ret;
 }
 
-void audioMute(bool setSilent){
-    if(setSilent){ // mute on
-        if(audioGetVolume() > 0) f_muteDecrement = true;
+void audioMute(uint8_t vol){
+    if(vol > 21) vol = 21;
+    if(vol > audioGetVolume()) {
+        t_volume = vol;
+        f_muteIncrement = true;
     }
-    else{ // mute off
-        if(audioGetVolume() == 0) f_muteIncrement = true;
+    else if(vol < audioGetVolume()){
+        t_volume = vol;
+        f_muteDecrement = true;
     }
     t_millis = millis();
 }
