@@ -1200,47 +1200,6 @@ void showStationsList(uint16_t staListNr) {
     _timeCounter.factor = 1.0;
 }
 
-// void display_time(boolean showall) { // show current time on the TFT Display
-//     static String  t, oldt = "";
-//     static boolean k = false;
-//     uint8_t        i = 0;
-//     if(showall == true) { oldt = "        "; }
-//     if((_state == CLOCK) || (_state == CLOCKico)) {
-//         if(_timeFormat == 12) t = rtc.gettime_xs_12h(); // 01:27 PM
-//         else                  t = rtc.gettime_xs();     // 13:27
-
-//         for(i = 0; i < 5; i++) {
-//             if(t[i] == ':') {
-//                 if(k == false) {
-//                     k = true;
-//                     t[i] = 'd';
-//                 }
-//                 else {
-//                     t[i] = 'e';
-//                     k = false;
-//                 }
-//             }
-//             if(_timeFormat == 12) {
-//                 if(t[i] != oldt[i]) {
-//                     sprintf(_chbuf, "/digits/foldedNumbers/%cwhite.jpg", t[i]);
-//                     drawImage(_chbuf, _alarmtimeXPosFN[i], _winDigits.y);
-//                     if(i == 4) {
-//                         if(t.substring(6, 8) == "PM") { drawImage("/digits/foldedNumbers/pmwhite.jpg", _alarmtimeXPosFN[5], _winDigits.y); }
-//                         else { drawImage("/digits/foldedNumbers/amwhite.jpg", _alarmtimeXPosFN[5], _winDigits.y); }
-//                     }
-//                 }
-//             }
-//             else {
-//                 if(t[i] != oldt[i]) { // 24h representation
-//                     sprintf(_chbuf, "/digits/sevenSegment/%cgreen.jpg", t[i]);
-//                     drawImage(_chbuf, _alarmtimeXPos7S[i], _winDigits.y);
-//                 }
-//             }
-//         }
-//         oldt = t;
-//     }
-// }
-
 void display_alarmDays(uint8_t ad, boolean showall) { // Sun ad=0, Mon ad=1, Tue ad=2 ....
     uint8_t i = 0;
     String  str = "";
@@ -2682,65 +2641,6 @@ void changeState(int32_t state){
             }
             break;
         }
-
-
-
-
-
-
-        // case CLOCK:{
-        //     if(_state == ALARM){
-        //         updateSettings();
-        //         const char day[7][6] = {"Sun, ", "Mon, ", "Tue, ", "Wed, ", "Thu, ", "Fri, ", "Sat, "};
-        //         char wd[40] = "";
-        //         for(uint8_t i = 0; i < 7; i++){
-        //             uint8_t j = 1 << i;
-        //             if(_alarmdays & j) strcat(wd, day[i]);
-        //         }
-        //         uint8_t l = strlen(wd);
-        //         if(l > 1) wd[l - 2] = '\0'; // remove last space and comma
-        //         else strcat(wd, "no day of the week activated");
-
-        //         SerialPrintfln("Alarm set to " ANSI_ESC_CYAN "%02d:%02d" ANSI_ESC_WHITE " on " ANSI_ESC_CYAN
-        //                        "%s -> %s", _alarmtime / 60, _alarmtime % 60, byte_to_binary(_alarmdays), wd);
-        //         _f_semaphore = false;
-        //         _f_alarm = false;
-        //     }
-        //     if(_state == CLOCKico){
-        //         clearButtonBar();
-        //     }
-        //     else{ // != CLOCKico
-        //         clearLogoAndStationname();
-        //         clearTitle();
-        //         showFooter();
-        //         showHeadlineVolume();
-        //         showHeadlineTime();
-        //     }
-        //     _state = CLOCK;
-        //     showHeadlineItem(CLOCK);
-        //     display_time(true);
-        //     break;
-        // }
-        // case CLOCKico:{
-        //     if(_state != CLOCK) clearDigits();
-        //     _state = CLOCKico;
-        //     showHeadlineItem(CLOCKico);
-        //     display_time(true);
-        //     _pressBtn[0] = "/btn/Bell_Yellow.jpg";               _releaseBtn[0] = "/btn/Bell_Green.jpg";
-        //     _pressBtn[1] = "/btn/Radio_Yellow.jpg";              _releaseBtn[1] = "/btn/Radio_Green.jpg";
-        //     _pressBtn[2] = "/btn/Button_Mute_Yellow.jpg";        _releaseBtn[2] = _f_mute? "/btn/Button_Mute_Red.jpg":"/btn/Button_Mute_Green.jpg";
-        //     _pressBtn[3] = "/btn/Button_Volume_Down_Yellow.jpg"; _releaseBtn[3] = "/btn/Button_Volume_Down_Blue.jpg";
-        //     _pressBtn[4] = "/btn/Button_Volume_Up_Yellow.jpg";   _releaseBtn[4] = "/btn/Button_Volume_Up_Blue.jpg";
-        //     _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
-        //     _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-        //     _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-        //     // for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-        //     if(_f_mute) drawImage("/btn/CLOCKico2.gif", 0, _winButton.y);
-        //     else        drawImage("/btn/CLOCKico1.gif", 0, _winButton.y);
-        //     _timeCounter.timer = 5;
-        //     _timeCounter.factor = 2.0;
-        //     break;
-        // }
         case BRIGHTNESS:{
             showHeadlineItem(BRIGHTNESS);
             _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
@@ -2902,7 +2802,6 @@ void loop() {
         if(!_f_sleeping) {
             showHeadlineTime(false);
             showFooterRSSI();
-            //if(_state == CLOCK || _state == CLOCKico) display_time();
             clk_C_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
         }
 
@@ -3434,15 +3333,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                     if(btn_C_volUp.positionXY(x, y)) return;
                 }
             break;
-        // case CLOCK:
-        //     if(_winDigits.y <= y && y <= _winDigits.y + _winDigits.h) { yPos = CLOCK_1; }
-        //     break;
-        // case CLOCKico:
-        //     if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-        //         yPos = CLOCKico_1;
-        //         btnNr = x / _winButton.w;
-        //     }
-        //     break;
         case ALARM:
             if(_winAlarmDays.y <= y && y <= _winAlarmDays.y + _winAlarmDays.h) {
                 yPos = ALARM_1;
@@ -3529,14 +3419,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     switch(yPos){
 
-        // case CLOCK_1:       changeState(CLOCKico);   break;
-
-        // case CLOCKico_1:    if(btnNr == 0){_releaseNr = 20;} // Bell
-        //                     if(btnNr == 1){_releaseNr = 21;} // Radio
-        //                     if(btnNr == 2){_releaseNr = 22; _timeCounter.timer = 5; mute();}
-        //                     if(btnNr == 3){_releaseNr = 23; _timeCounter.timer = 5;} // Vol-
-        //                     if(btnNr == 4){_releaseNr = 24; _timeCounter.timer = 5;} // Vol+
-        //                     changeBtn_pressed(btnNr); break;
         case ALARM_2:       if(btnNr == 0){_releaseNr = 30;} // left
                             if(btnNr == 1){_releaseNr = 31;} // right
                             if(btnNr == 2){_releaseNr = 32;} // up
@@ -3561,12 +3443,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             if(btnNr == 1){_releaseNr = 81;} // brighter
                             if(btnNr == 2){_releaseNr = 82;} // okay
                             changeBtn_pressed(btnNr); break;
-        // case DLNA_1:        if(btnNr == 0){_releaseNr = 90; mute();}
-        //                     if(btnNr == 1){_releaseNr = 91; } // Vol-
-        //                     if(btnNr == 2){_releaseNr = 92; } // Vol+
-        //                     if(btnNr == 3){_releaseNr = 93; } // DLNAITEMSLIST
-        //                     if(btnNr == 7){_releaseNr = 97;}  // RADIO
-        //                     changeBtn_pressed(btnNr); break;
         case STATIONSLIST_1:if(btnNr == none) break;
                             _releaseNr = 100;
                             _staListPos = btnNr;
@@ -3676,13 +3552,6 @@ void tp_released(uint16_t x, uint16_t y){
 
     switch(_releaseNr){
 
-        // /* CLOCKico ******************************/
-        // case 20:    changeState(ALARM); break;
-        // case 21:    changeState(RADIO); break;
-        // case 22:    changeBtn_released(2); break; // Mute
-        // case 23:    changeBtn_released(3); downvolume(); /* showVolumeBar(); */ break;
-        // case 24:    changeBtn_released(4); upvolume();   /* showVolumeBar();*/ break;
-
         /* ALARM ******************************/
         case 30:    changeBtn_released(0); display_alarmtime(-1 ,  0); break;
         case 31:    changeBtn_released(1); display_alarmtime( 1 ,  0); break;
@@ -3714,13 +3583,6 @@ void tp_released(uint16_t x, uint16_t y){
         case 80:    downBrightness(); changeBtn_released(0); break;
         case 81:    upBrightness();   changeBtn_released(1); break;
         case 82:    changeState(RADIO); break;
-
-        /* DLNA ******************************************/
-        // case 90:    changeBtn_released(0); break; // Mute
-        // case 91:    changeBtn_released(1); downvolume(); showVolumeBar();  break;  // Vol-
-        // case 92:    changeBtn_released(2); upvolume();   showVolumeBar();  break;  // Vol+
-        // case 93:    changeState(DLNAITEMSLIST); break;
-        // case 97:    changeState(RADIO); break;
 
         /* STATIONSLIST *********************************/
         case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
