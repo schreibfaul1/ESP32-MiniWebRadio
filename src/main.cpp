@@ -263,10 +263,10 @@ struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h = 
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
 struct w_u  {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
 struct w_a  {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
-struct w_b  {uint16_t x =   0; uint16_t y = 166; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
+struct w_b  {uint16_t x =   0; uint16_t y = 170; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  60; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  40;} const _winAlarmDays;
+struct w_d  {uint16_t x =   0; uint16_t y =  52; uint16_t w = 320; uint16_t h = 120;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h =  32;} const _winAlarmDays;
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;} const _sdrBP;        // slider bandpass in equalizer
