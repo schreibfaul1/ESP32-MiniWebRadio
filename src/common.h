@@ -7,12 +7,12 @@
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
-#define TFT_CONTROLLER      0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER      4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         3                               // 1 or 3 (landscape)
+#define TP_VERSION          4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
 #define AUDIOTASK_CORE      0                               // 0 or 1
@@ -1062,9 +1062,13 @@ private:
     uint16_t m_digitsPos[5]     = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
     uint8_t  m_alarmdaysW = 44;
     uint8_t  m_alarmdaysH = 25;
+    uint8_t  m_fontSize = 16
 #else
-    uint16_t m_alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
-    uint16_t m_digitsPos[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
+    uint16_t m_alarmdaysXPos[7] = {9, 75, 141, 207, 273, 339, 405};
+    uint16_t m_digitsPos[5] = {23, 123, 258, 358, 223}; // seven segment digits "hhmm:""
+    uint8_t  m_alarmdaysW = 65;
+    uint8_t  m_alarmdaysH = 25;
+    uint8_t  m_fontSize = 21;
 
 #endif
     uint32_t    m_bgColor = 0;
@@ -1233,7 +1237,7 @@ public:
             *m_alarmDays ^= mask;    // toggle the bit
             log_w("m_alarmDays %i", *m_alarmDays);
             if(*m_alarmDays & mask){ // is set
-                tft.setFont(16);
+                tft.setFont(m_fontSize);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_RED);
                 tft.setTextColor(TFT_RED);
                 tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos,  m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
@@ -1244,7 +1248,7 @@ public:
                 tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
             }
             else{                    // bit is not set
-                tft.setFont(16);
+                tft.setFont(m_fontSize);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
                 tft.setTextColor(TFT_DARKGREY);
                 tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
@@ -1258,7 +1262,7 @@ public:
             uint8_t mask = 0b00000001;
             mask <<= m_btnAlarmTime;
             if(mask & *m_alarmDays){ // bit is set -> alarm is active for that day
-                tft.setFont(16);
+                tft.setFont(m_fontSize);
             //    tft.fillRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
                 tft.setTextColor(TFT_GREEN);
@@ -1294,7 +1298,7 @@ private:
         }
     }
     void updateAlarmDaysAndTime(){
-        tft.setFont(16);
+        tft.setFont(m_fontSize);
         uint8_t mask = 0b00000001;
         uint16_t color = TFT_BLACK;
         for(int i = 0; i < 7; i++){
@@ -1321,7 +1325,7 @@ private:
         }
     }
     void alarmDaysPressed(uint8_t idx){
-        tft.setFont(16);
+        tft.setFont(m_fontSize);
         tft.drawRect(m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
         tft.setTextColor(TFT_YELLOW);
         tft.writeText(m_WD[idx], m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
@@ -1330,7 +1334,7 @@ private:
         uint8_t mask = 0b00000001;
         mask <<= idx;
         if(mask & *m_alarmDays){ // bit is set -> active
-            tft.setFont(16);
+            tft.setFont(m_fontSize);
             tft.fillRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
             tft.drawRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
             tft.setTextColor(TFT_YELLOW);
