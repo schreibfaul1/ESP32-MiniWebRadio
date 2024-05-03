@@ -1207,23 +1207,23 @@ public:
 
         if(y <= m_alarmtimeYPos){
             m_btnAlarmDay = -1;
-            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmDay = 6; log_i("alarmdays Saturday");}
-            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmDay = 5; log_i("alarmdays Friday");}
-            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmDay = 4; log_i("alarmdays Thursday");}
-            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmDay = 3; log_i("alarmdays Wednesday");}
-            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmDay = 2; log_i("alarmdays Tuesday");}
-            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmDay = 1; log_i("alarmdays Monday");}
-            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmDay = 0; log_i("alarmdays Sunday");}
+            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmDay = 6;}
+            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmDay = 5;}
+            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmDay = 4;}
+            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmDay = 3;}
+            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmDay = 2;}
+            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmDay = 1;}
+            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmDay = 0;}
             if(m_btnAlarmDay >= 0) alarmDaysPressed(m_btnAlarmDay);
         }
         else if(y <= m_digitsYPos){
-            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmTime = 6; log_i("alarmtime Saturday");}
-            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmTime = 5; log_i("alarmtime Friday");}
-            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmTime = 4; log_i("alarmtime Thursday");}
-            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmTime = 3; log_i("alarmtime Wednesday");}
-            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmTime = 2; log_i("alarmtime Tuesday");}
-            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmTime = 1; log_i("alarmtime Monday");}
-            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmTime = 0; log_i("alarmtime Sunday");}
+            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmTime = 6;}
+            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmTime = 5;}
+            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmTime = 4;}
+            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmTime = 3;}
+            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmTime = 2;}
+            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmTime = 1;}
+            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmTime = 0;}
             if(m_btnAlarmTime >= 0) alarmTimePressed(m_btnAlarmTime);
         }
         return true;

@@ -3319,16 +3319,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_A_down.positionXY(x, y)) return;
                 if(btn_A_ready.positionXY(x, y)) return;
             break;
-        // case ALARM:
-        //     if(_winAlarmDays.y <= y && y <= _winAlarmDays.y + _winAlarmDays.h) {
-        //         yPos = ALARM_1;
-        //         btnNr = (x - 2) / _alarmdays_w;
-        //     }  // weekdays
-        //     if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-        //         yPos = ALARM_2;
-        //         btnNr = x / _winButton.w;
-        //     }
-        //     break;
+
         case SLEEP:
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
                 yPos = SLEEP_1;
@@ -3460,107 +3451,46 @@ void tp_long_pressed(uint16_t x, uint16_t y){
         log_i("longPressed X %i, Y %i, btnNr %i", x, y, btnNr);
     }
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
     switch(_state){
         case RADIO:
             if(_radioSubmenue == 1){
-                btn_R_Mute.released();
-                btn_R_volDown.released();
-                btn_R_volUp.released();
-                btn_R_prevSta.released();
-                btn_R_nextSta.released();
-                btn_R_staList.released();
+                btn_R_Mute.released();        btn_R_volDown.released();     btn_R_volUp.released();       btn_R_prevSta.released();     btn_R_nextSta.released();     btn_R_staList.released();
             }
             if(_radioSubmenue == 2){
-                btn_R_player.released();
-                btn_R_dlna.released();
-                btn_R_clock.released();
-                btn_R_sleep.released();
-                btn_R_bright.released();
-                btn_R_equal.released();
+                btn_R_player.released();      btn_R_dlna.released();        btn_R_clock.released();       btn_R_sleep.released();       btn_R_bright.released();      btn_R_equal.released();
             }
             break;
         case PLAYER:
             if(_playerSubmenue == 0){
-                btn_P_prevFile.released();
-                btn_P_nextFile.released();
-                btn_P_ready.released();
-                btn_P_playAll.released();
-                btn_P_shuffle.released();
-                btn_P_fileList.released();
+                btn_P_prevFile.released();    btn_P_nextFile.released();    btn_P_ready.released();       btn_P_playAll.released();     btn_P_shuffle.released();     btn_P_fileList.released();
                 btn_P_radio.released();
             }
             if(_playerSubmenue == 1){
-                btn_P_Mute.released();
-                btn_P_volDown.released();
-                btn_P_volUp.released();
-                btn_P_pause.released();
-                btn_P_cancel.released();
+                btn_P_Mute.released();        btn_P_volDown.released();     btn_P_volUp.released();       btn_P_pause.released();       btn_P_cancel.released();
             }
             break;
         case DLNA:
-                btn_D_Mute.released();
-                btn_D_pause.released();
-                btn_D_volDown.released();
-                btn_D_volUp.released();
-                btn_D_radio.released();
-                btn_D_fileList.released();
+                btn_D_Mute.released();        btn_D_pause.released();       btn_D_volDown.released();     btn_D_volUp.released();       btn_D_radio.released();       btn_D_fileList.released();
                 btn_D_cancel.released();
             break;
         case CLOCK:
-                btn_C_Mute.released();
-                btn_C_alarm.released();
-                btn_C_radio.released();
-                btn_C_volDown.released();
-                btn_C_volUp.released();
-                clk_C_green.released();
+                btn_C_Mute.released();        btn_C_alarm.released();       btn_C_radio.released();       btn_C_volDown.released();     btn_C_volUp.released();       clk_C_green.released();
             break;
         case ALARM:
-                clk_A_red.released();
-                btn_A_left.released();
-                btn_A_right.released();
-                btn_A_up.released();
-                btn_A_down.released();
-                btn_A_ready.released();
+                clk_A_red.released();         btn_A_left.released();        btn_A_right.released();       btn_A_up.released();          btn_A_down.released();        btn_A_ready.released();
             break;
         case EQUALIZER:
-                sdr_E_lowPass.released();
-                sdr_E_bandPass.released();
-                sdr_E_highPass.released();
-                sdr_E_balance.released();
-                btn_E_lowPass.released();
-                btn_E_bandPass.released();
-                btn_E_highPass.released();
-                btn_E_balance.released();
-                txt_E_lowPass.released();
-                txt_E_bandPass.released();
-                txt_E_highPass.released();
-                txt_E_balance.released();
-                btn_E_Radio.released();
-                btn_E_Player.released();
-                btn_E_Mute.released();
+                sdr_E_lowPass.released();     sdr_E_bandPass.released();    sdr_E_highPass.released();    sdr_E_balance.released();     btn_E_lowPass.released();     btn_E_bandPass.released();
+                btn_E_highPass.released();    btn_E_balance.released();     txt_E_lowPass.released();     txt_E_bandPass.released();    txt_E_highPass.released();    txt_E_balance.released();
+                btn_E_Radio.released();       btn_E_Player.released();      btn_E_Mute.released();
             break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
     switch(_releaseNr){
-
-        // /* ALARM ******************************/
-        // case 30:    changeBtn_released(0); display_alarmtime(-1 ,  0); break;
-        // case 31:    changeBtn_released(1); display_alarmtime( 1 ,  0); break;
-        // case 32:    changeBtn_released(2); display_alarmtime( 0 ,  1); break;
-        // case 33:    changeBtn_released(3); display_alarmtime( 0 , -1); break;
-        // case 34:    changeState(CLOCK); break;
-
-            /* ALARM (weekdays) ******************************/
-        // case 60:    display_alarmDays(0); break;  // sun
-        // case 61:    display_alarmDays(1); break;  // mon
-        // case 62:    display_alarmDays(2); break;
-        // case 63:    display_alarmDays(3); break;
-        // case 64:    display_alarmDays(4); break;
-        // case 65:    display_alarmDays(5); break;
-        // case 66:    display_alarmDays(6); break;
 
         /* SLEEP ******************************************/
         case 70:    display_sleeptime(1);  changeBtn_released(0); break;
@@ -3778,7 +3708,7 @@ void tp_long_released(){
     if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) {return;}
     tp_released(0, 0);
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
     if(_state == EQUALIZER){
         if(sdr_E_lowPass.positionXY(x, y)) return;
@@ -3786,7 +3716,6 @@ void tp_positionXY(uint16_t x, uint16_t y){
         if(sdr_E_highPass.positionXY(x, y)) return;
         if(sdr_E_balance.positionXY(x, y)) return;
     }
-
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //Events from websrv
