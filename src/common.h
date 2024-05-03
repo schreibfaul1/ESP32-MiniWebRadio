@@ -3,7 +3,7 @@
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
-
+// clang-format off
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
@@ -159,7 +159,7 @@ extern RTIME rtc;
                             _newLine = true; \
                             xSemaphoreGive(mutex_rtc);}
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
+// clang-format on
 //prototypes (main.cpp)
 boolean        defaultsettings();
 boolean        saveStationsToNVS();
@@ -198,8 +198,6 @@ void           showFileName(const char* fname);
 void           showPlsFileNumber();
 void           showAudioFileNumber();
 void           showStationsList(uint16_t staListNr);
-void           display_alarmDays(uint8_t ad, boolean showall = false);
-void           display_alarmtime(int8_t xy = 0, int8_t ud = 0, boolean showall = false);
 void           display_sleeptime(int8_t ud = 0);
 boolean        drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
 bool           SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs);
@@ -484,12 +482,9 @@ inline void hardcopy(){
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-
-
-
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//                                              G R A P H I C   O B J E C T S
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+    ║                                                     G R A P H I C   O B J E C T S                                                         ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name);
@@ -925,6 +920,7 @@ private:
     uint16_t m_timeXPos7S[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
     uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
 #endif
+    uint16_t m_minuteOfTheDay = 0;
     uint32_t m_bgColor = 0;
     bool     m_enabled = false;
     bool     m_clicked = false;
@@ -933,7 +929,7 @@ private:
     bool     m_showAll = false;
     char*    m_name = NULL;
     char*    m_pathBuff = NULL;
-    uint8_t  m_min = 0, m_hour = 0, m_day = 0;
+    uint8_t  m_min = 0, m_hour = 0, m_weekday = 0;
 public:
     imgClock(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -974,9 +970,10 @@ public:
     void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
         // minuteOfTheDay counts at 00:00, from 0...23*60+59
         // weekDay So - 0, Mo - 1 ... Sa - 6
+        m_minuteOfTheDay = minuteOfTheDay;
         m_hour = minuteOfTheDay / 60;
         m_min  = minuteOfTheDay % 60;
-        m_day  = weekday;
+        m_weekday  = weekday;
         if(m_enabled) writeTime(m_hour, m_min);
     }
     void writeTime(uint8_t m_hour, uint8_t  m_min){
@@ -1030,6 +1027,15 @@ public:
         m_timeFormat = timeFormat;
         m_showAll = true;
     }
+    bool isAlarm(uint8_t alarmdays, int16_t* alarmtime){
+        uint8_t mask = 0b00000001 << m_weekday;
+        if(alarmdays & mask){ // yes, is alarmday
+            if(alarmtime[m_weekday] == m_minuteOfTheDay){ // yes, is alarmtime
+                return true;
+            }
+        }
+        return false;
+    }
     bool positionXY(uint16_t x, uint16_t y){
         if(!m_enabled) return false;
         if(x < m_x) return false;
@@ -1080,7 +1086,7 @@ private:
     char*       m_pathBuff = NULL;
     uint8_t*    m_alarmDays = NULL;
     int16_t*    m_alarmTime = NULL;
-    uint8_t     m_min = 0, m_hour = 0, m_day = 0;
+    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
     int8_t      m_btnAlarmDay = -1;
     int8_t      m_btnAlarmTime = -1;
     int8_t      m_idx = 0;
