@@ -804,7 +804,8 @@ inline uint16_t txtlen(String str) {
 void showHeadlineVolume() {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_DEEPSKYBLUE);
+    if(_f_mute) tft.setTextColor(TFT_RED);
+    else        tft.setTextColor(TFT_DEEPSKYBLUE);
     clearVolume();
     sprintf(_chbuf, "Vol %02d", _cur_volume);
     tft.writeText(_chbuf, _winVolume.x + 6, _winVolume.y, _winVolume.w, _winVolume.h);
@@ -1922,11 +1923,9 @@ void setup() {
     }
 
     tft.fillScreen(TFT_BLACK); // Clear screen
-
     muteChanged(_f_mute);
     showHeadlineVolume();
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
-
     showHeadlineItem(RADIO);
     _state = RADIO;
     setI2STone();
@@ -2009,13 +2008,17 @@ void setVolume(uint8_t vol) {
 uint8_t downvolume() {
     if(_cur_volume == 0) return _cur_volume;
     _cur_volume--;
-    setVolume(_cur_volume);
+//    setVolume(_cur_volume);
+    _f_mute = false;
+    muteChanged(_f_mute); // set mute off
     return _cur_volume;
 }
 uint8_t upvolume() {
     if(_cur_volume == _max_volume) return _cur_volume;
     _cur_volume++;
-    setVolume(_cur_volume);
+//    setVolume(_cur_volume);
+    _f_mute = false;
+    muteChanged(_f_mute); // set mute off
     return _cur_volume;
 }
 
@@ -2321,6 +2324,8 @@ void muteChanged(bool m) {
     else audioMute(_cur_volume);
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
+    showHeadlineVolume();
+    updateSettings();
 };
 
 void logAlarmItems() {
@@ -2553,9 +2558,9 @@ void changeState(int32_t state){
         case ALARM:     clk_A_red.disable();      btn_A_left.disable();     btn_A_right.disable();    btn_A_up.disable();      btn_A_down.disable();
                         btn_A_ready.disable();
                         break;
-        case EQUALIZER: sdr_E_lowPass.disable(); sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
-                        btn_E_lowPass.disable(); btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
-                        txt_E_lowPass.disable(); txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable(); btn_E_Player.disable();
+        case EQUALIZER: sdr_E_lowPass.disable();  sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
+                        btn_E_lowPass.disable();  btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
+                        txt_E_lowPass.disable();  txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable(); btn_E_Player.disable();
                         btn_E_Mute.disable();
                         break;
     }
@@ -2614,13 +2619,7 @@ void changeState(int32_t state){
                 showAudioFileNumber();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 showAudioFileNumber();
-                btn_P_prevFile.show();
-                btn_P_nextFile.show();
-                btn_P_ready.show();
-                btn_P_playAll.show();
-                btn_P_shuffle.show();
-                btn_P_fileList.show();
-                btn_P_radio.show();
+                btn_P_prevFile.show();  btn_P_nextFile.show();  btn_P_ready.show(); btn_P_playAll.show(); btn_P_shuffle.show(); btn_P_fileList.show(); btn_P_radio.show();
             }
             if(_playerSubmenue == 1){
                 btn_P_Mute.show();    btn_P_volDown.show();  btn_P_volUp.show();    btn_P_pause.show();   btn_P_cancel.show();
@@ -2632,8 +2631,7 @@ void changeState(int32_t state){
             showFileLogo(state);
             showHeadlineItem(DLNA);
             showVolumeBar();
-            btn_D_Mute.show();    btn_D_volDown.show();  btn_D_volUp.show();    btn_D_pause.show();   btn_D_cancel.show();
-            btn_D_fileList.show(); btn_D_radio.show();
+            btn_D_Mute.show();    btn_D_volDown.show();  btn_D_volUp.show();    btn_D_pause.show();   btn_D_cancel.show(); btn_D_fileList.show(); btn_D_radio.show();
             break;
         }
         case DLNAITEMSLIST:{
@@ -3858,7 +3856,7 @@ void tp_positionXY(uint16_t x, uint16_t y){
     }
 
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
@@ -4128,7 +4126,7 @@ void WEBSRV_onInfo(const char* info) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info); // infos for debug
     }
 }
-// ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
 void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
@@ -4162,7 +4160,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }
 }
-// ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val) { SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val); }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
@@ -4267,7 +4265,7 @@ void graphicObjects_OnClick(const char* name) {
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
-// ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnRelease(const char* name) {
 
     if(_state == RADIO) {
