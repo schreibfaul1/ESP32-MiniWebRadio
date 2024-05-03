@@ -1048,3 +1048,297 @@ public:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class alarmClock{ // draw a clock in 12 or 24h format
+private:
+    int16_t  m_x = 0;
+    int16_t  m_y = 0;
+    int16_t  m_w = 0;
+    int16_t  m_h = 0;
+    uint16_t m_alarmdaysYPos    = 0;
+    uint16_t m_alarmtimeYPos    = 0;
+    uint16_t m_digitsYPos       = 0;
+#if TFT_CONTROLLER < 2
+    uint16_t m_alarmdaysXPos[7] = {2, 47, 92, 137, 182, 227, 272}; // same as altarmTimeXPos
+    uint16_t m_digitsPos[5]     = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
+    uint8_t  m_alarmdaysW = 44;
+    uint8_t  m_alarmdaysH = 25;
+#else
+    uint16_t m_alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
+    uint16_t m_digitsPos[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
+
+#endif
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    bool        m_showAll = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+    uint8_t*    m_alarmDays = NULL;
+    int16_t*    m_alarmTime = NULL;
+    uint8_t     m_min = 0, m_hour = 0, m_day = 0;
+    int8_t      m_btnAlarmDay = -1;
+    int8_t      m_btnAlarmTime = -1;
+    int8_t      m_idx = 0;
+    uint8_t     m_alarmDigits[4] = {0};
+    const char* m_p1 = "/digits/sevenSegment/"; // path
+    uint8_t     m_p1Len = 21;
+    const char  m_WD[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+
+public:
+    alarmClock(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("alarmClock");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+        strcpy(m_pathBuff, m_p1);
+
+    }
+    ~alarmClock(){
+        if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+        m_alarmdaysYPos    = m_y; // m_y;
+        m_alarmtimeYPos    = m_alarmdaysYPos + 25 + 1;
+        m_digitsYPos       = m_alarmtimeYPos + 25 + 1;
+    }
+    void show(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+        //    setInactive();
+            return;
+        }
+        m_enabled = true;
+        m_showAll = true;
+        updateDigit();
+        updateAlarmDaysAndTime();
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void shiftRight(){
+        m_idx++;
+        if(m_idx == 4) m_idx = 0;
+        m_showAll = true;
+        updateDigit();
+    }
+    void shiftLeft(){
+        m_idx--;
+        if(m_idx == -1) m_idx = 0;
+        m_showAll = true;
+        updateDigit();
+    }
+    void digitUp(){
+        if(m_idx == 0){ // 10h
+            if(m_alarmDigits[0] == 2) return;
+            if(m_alarmDigits[0] == 1 && m_alarmDigits[1] > 3) return;
+            m_alarmDigits[0]++;
+        }
+        if(m_idx == 1){ // 1h
+            if(m_alarmDigits[0] == 2 && m_alarmDigits[1] == 3) return;
+            if(m_alarmDigits[1] == 9) return;
+            m_alarmDigits[1]++;
+        }
+        if(m_idx == 2){ // 10m
+            if(m_alarmDigits[2] == 5) return;
+            m_alarmDigits[2]++;
+        }
+        if(m_idx == 3){ // 1m
+            if(m_alarmDigits[3] == 9) return;
+            m_alarmDigits[3]++;
+        }
+        m_showAll = true;
+        updateDigit();
+    }
+    void digitDown(){
+        if(m_idx == 0){ // 10h
+            if(m_alarmDigits[0] == 0) return;
+            m_alarmDigits[0]--;
+        }
+        if(m_idx == 1){ // 1h
+            if(m_alarmDigits[1] == 0) return;
+            m_alarmDigits[1]--;
+        }
+        if(m_idx == 2){ // 10m
+            if(m_alarmDigits[2] == 0) return;
+            m_alarmDigits[2]--;
+        }
+        if(m_idx == 3){ // 1m
+            if(m_alarmDigits[3] == 0) return;
+            m_alarmDigits[3]--;
+        }
+        m_showAll = true;
+        updateDigit();
+    }
+    void setAlarmTimeAndDays(uint8_t* alarmDays, int16_t alarmTime[7]){
+        m_alarmTime = alarmTime;
+        m_alarmDays = alarmDays;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+
+        if(y <= m_alarmtimeYPos){
+            m_btnAlarmDay = -1;
+            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmDay = 6; log_i("alarmdays Saturday");}
+            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmDay = 5; log_i("alarmdays Friday");}
+            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmDay = 4; log_i("alarmdays Thursday");}
+            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmDay = 3; log_i("alarmdays Wednesday");}
+            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmDay = 2; log_i("alarmdays Tuesday");}
+            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmDay = 1; log_i("alarmdays Monday");}
+            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmDay = 0; log_i("alarmdays Sunday");}
+            if(m_btnAlarmDay >= 0) alarmDaysPressed(m_btnAlarmDay);
+        }
+        else if(y <= m_digitsYPos){
+            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmTime = 6; log_i("alarmtime Saturday");}
+            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmTime = 5; log_i("alarmtime Friday");}
+            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmTime = 4; log_i("alarmtime Thursday");}
+            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmTime = 3; log_i("alarmtime Wednesday");}
+            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmTime = 2; log_i("alarmtime Tuesday");}
+            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmTime = 1; log_i("alarmtime Monday");}
+            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmTime = 0; log_i("alarmtime Sunday");}
+            if(m_btnAlarmTime >= 0) alarmTimePressed(m_btnAlarmTime);
+        }
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        char hhmm[10] = "00:00";
+        if(m_btnAlarmDay >= 0){
+            sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmDay] / 60, m_alarmTime[m_btnAlarmDay] % 60);
+        }
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(m_btnAlarmDay >= 0){
+            uint8_t mask = 0b00000001;
+            mask <<= m_btnAlarmDay;
+            log_w("mask %i, m_alarmDays %i", mask, *m_alarmDays);
+            *m_alarmDays ^= mask;    // toggle the bit
+            log_w("m_alarmDays %i", *m_alarmDays);
+            if(*m_alarmDays & mask){ // is set
+                tft.setFont(16);
+                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_RED);
+                tft.setTextColor(TFT_RED);
+                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos,  m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+
+                tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
+                tft.setTextColor(TFT_GREEN);
+                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            }
+            else{                    // bit is not set
+                tft.setFont(16);
+                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
+                tft.setTextColor(TFT_DARKGREY);
+                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+
+                tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
+            }
+            m_btnAlarmDay = -1;
+        }
+        if(m_btnAlarmTime >= 0){
+            uint8_t mask = 0b00000001;
+            mask <<= m_btnAlarmTime;
+            if(mask & *m_alarmDays){ // bit is set -> alarm is active for that day
+                tft.setFont(16);
+            //    tft.fillRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+                tft.drawRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
+                tft.setTextColor(TFT_GREEN);
+                m_alarmTime[m_btnAlarmTime] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
+                char hhmm[10] = "00:00";
+                sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmTime] / 60, m_alarmTime[m_btnAlarmTime] % 60);
+                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            }
+            m_btnAlarmTime = -1;
+        }
+        return true;
+    }
+private:
+    void updateDigit(){
+        static uint8_t m_oldAlarmDigits[4] = {0};
+        if(m_showAll) drawImage("/digits/sevenSegment/dred.jpg", m_digitsPos[4], m_digitsYPos); // colon
+        for(uint8_t i = 0; i < 4; i++){
+            if(m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll){
+                if(i == m_idx){
+                    m_pathBuff[m_p1Len + 0] = m_alarmDigits[i] + 48;
+                    m_pathBuff[m_p1Len + 1] = '\0';
+                    strcat(m_pathBuff, "orange.jpg");
+                }
+                else{
+                    m_pathBuff[m_p1Len + 0] =  m_alarmDigits[i] + 48;
+                    m_pathBuff[m_p1Len + 1] = '\0';
+                    strcat(m_pathBuff, "red.jpg");
+                }
+                drawImage(m_pathBuff, m_digitsPos[i], m_digitsYPos);
+
+            }
+            m_oldAlarmDigits[i] = m_alarmDigits[i];
+        }
+    }
+    void updateAlarmDaysAndTime(){
+        tft.setFont(16);
+        uint8_t mask = 0b00000001;
+        uint16_t color = TFT_BLACK;
+        for(int i = 0; i < 7; i++){
+            // alarmDays
+            if(*m_alarmDays & mask) color = TFT_RED;
+            else color = TFT_DARKGREY;
+            tft.drawRect(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, color);
+            tft.setTextColor(color);
+            tft.writeText(m_WD[i], m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            // alarmTime
+            if(*m_alarmDays & mask){
+            //    tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+                tft.drawRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
+                tft.setTextColor(TFT_GREEN);
+                char hhmm[10] = "00:00";
+                sprintf(hhmm, "%02d:%02d", m_alarmTime[i] / 60, m_alarmTime[i] % 60);
+                tft.writeText(hhmm, m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            }
+            else{
+                tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+                tft.drawRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
+            }
+            mask <<= 1;
+        }
+    }
+    void alarmDaysPressed(uint8_t idx){
+        tft.setFont(16);
+        tft.drawRect(m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
+        tft.setTextColor(TFT_YELLOW);
+        tft.writeText(m_WD[idx], m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+    }
+    void alarmTimePressed(uint8_t idx){
+        uint8_t mask = 0b00000001;
+        mask <<= idx;
+        if(mask & *m_alarmDays){ // bit is set -> active
+            tft.setFont(16);
+            tft.fillRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
+            tft.drawRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
+            tft.setTextColor(TFT_YELLOW);
+            m_alarmTime[idx] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
+            char hhmm[10] = "00:00";
+            sprintf(hhmm, "%02d:%02d", m_alarmTime[idx] / 60, m_alarmTime[idx] % 60);
+            tft.writeText(hhmm, m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+        }
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
