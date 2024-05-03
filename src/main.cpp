@@ -2338,208 +2338,158 @@ void logAlarmItems() {
     }
 }
 
-/*****************************************************************************************************************************************************
- *                                                            M E N U E / B U T T O N S                                                              *
- *****************************************************************************************************************************************************/
-void placingGraphicObjects() { // and initialize them
-                               // RADIO
-    btn_R_Mute.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
-    btn_R_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-    btn_R_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_R_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_R_Mute.setValue(_f_mute);
-    btn_R_volDown.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-    btn_R_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_R_volUp.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-    btn_R_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_R_prevSta.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.jpg");
-    btn_R_prevSta.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
-    btn_R_nextSta.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.jpg");
-    btn_R_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.jpg");
-    btn_R_staList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_staList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
-    btn_R_staList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
-    btn_R_player.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_player.setDefaultPicturePath("/btn/Player_Green.jpg");
-    btn_R_player.setClickedPicturePath("/btn/Player_Yellow.jpg");
-    btn_R_dlna.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.jpg");
-    btn_R_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.jpg");
-    btn_R_clock.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_clock.setDefaultPicturePath("/btn/Clock_Green.jpg");
-    btn_R_clock.setClickedPicturePath("/btn/Clock_Yellow.jpg");
-    btn_R_sleep.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_sleep.setDefaultPicturePath("/btn/Button_Sleep_Green.jpg");
-    btn_R_sleep.setClickedPicturePath("/btn/Button_Sleep_Yellow.jpg");
-    btn_R_bright.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
-    btn_R_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
-    btn_R_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
-    if(TFT_BL == -1) btn_R_bright.setInactive();
-    btn_R_equal.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_R_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
-    btn_R_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
-    // PLAYER
-    btn_P_Mute.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
-    btn_P_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-    btn_P_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_P_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_P_Mute.setValue(_f_mute);
-    btn_P_volDown.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-    btn_P_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_P_volUp.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-    btn_P_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_P_pause.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
-    btn_P_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
-    btn_P_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
-    btn_P_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_P_pause.setValue(false);
-    btn_P_cancel.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
-    btn_P_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
-    btn_P_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
-    btn_P_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
-    btn_P_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
-    btn_P_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_P_ready.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
-    btn_P_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
-    btn_P_playAll.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.jpg");
-    btn_P_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.jpg");
-    btn_P_shuffle.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.jpg");
-    btn_P_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.jpg");
-    btn_P_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
-    btn_P_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
-    btn_P_radio.begin(7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_P_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
-    btn_P_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
-    // DLNA
-    btn_D_Mute.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
-    btn_D_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-    btn_D_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_D_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_D_Mute.setValue(_f_mute);
-    btn_D_volDown.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-    btn_D_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_D_volUp.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-    btn_D_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_D_pause.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
-    btn_D_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
-    btn_D_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
-    btn_D_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_D_pause.setValue(false);
-    btn_D_cancel.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
-    btn_D_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
-    btn_D_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
-    btn_D_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
-    btn_D_radio.begin(7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_D_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
-    btn_D_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
-    // CLOCK
-    clk_C_green.begin(_winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
-    clk_C_green.setTimeFormat(_timeFormat);
-    btn_C_alarm.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_C_alarm.setDefaultPicturePath("/btn/Bell_Green.jpg");
-    btn_C_alarm.setClickedPicturePath("/btn/Bell_Yellow.jpg");
-    btn_C_radio.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_C_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
-    btn_C_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
-    btn_C_Mute.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_C_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
-    btn_C_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-    btn_C_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_C_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_C_Mute.setValue(_f_mute);
-    btn_C_volDown.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_C_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-    btn_C_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_C_volUp.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_C_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-    btn_C_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    // ALARM
-    clk_A_red.begin(_winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);
-    clk_A_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
-    btn_A_left.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_A_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
-    btn_A_left.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
-    btn_A_right.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_A_right.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
-    btn_A_right.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_A_up.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_A_up.setDefaultPicturePath("/btn/Button_Up_Blue.jpg");
-    btn_A_up.setClickedPicturePath("/btn/Button_Up_Yellow.jpg");
-    btn_A_down.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_A_down.setDefaultPicturePath("/btn/Button_Down_Blue.jpg");
-    btn_A_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
-    btn_A_ready.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_A_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
-    btn_A_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
-    // EQUALIZER
-    sdr_E_lowPass.begin(_sdrLP.x, _sdrLP.y, _sdrLP.w, _sdrLP.h, -40, 6);
-    sdr_E_lowPass.setValue(_toneLP);
-    sdr_E_bandPass.begin(_sdrBP.x, _sdrBP.y, _sdrBP.w, _sdrBP.h, -40, 6);
-    sdr_E_bandPass.setValue(_toneBP);
-    sdr_E_highPass.begin(_sdrHP.x, _sdrHP.y, _sdrHP.w, _sdrHP.h, -40, 6);
-    sdr_E_highPass.setValue(_toneHP);
-    sdr_E_balance.begin(_sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16);
-    sdr_E_balance.setValue(_toneBAL);
-    txt_E_lowPass.begin(_sdrLP.x + _sdrLP.w + 2, _sdrLP.y, 80, _sdrLP.h);
-    txt_E_lowPass.setFont(_fonts[2]);
-    txt_E_bandPass.begin(_sdrBP.x + _sdrBP.w + 2, _sdrBP.y, 80, _sdrBP.h);
-    txt_E_bandPass.setFont(_fonts[2]);
-    txt_E_highPass.begin(_sdrHP.x + _sdrHP.w + 2, _sdrHP.y, 80, _sdrHP.h);
-    txt_E_highPass.setFont(_fonts[2]);
-    txt_E_balance.begin(_sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h);
-    txt_E_balance.setFont(_fonts[2]);
-    btn_E_lowPass.begin(_sdrLP.x - 60, _sdrLP.y + 1, 48, 48);
-    btn_E_lowPass.setDefaultPicturePath("/btn/LP_green.jpg");
-    btn_E_lowPass.setClickedPicturePath("/btn/LP_yellow.jpg");
-    btn_E_bandPass.begin(_sdrBP.x - 60, _sdrBP.y + 1, 48, 48);
-    btn_E_bandPass.setDefaultPicturePath("/btn/BP_green.jpg");
-    btn_E_bandPass.setClickedPicturePath("/btn/BP_yellow.jpg");
-    btn_E_highPass.begin(_sdrHP.x - 60, _sdrHP.y + 1, 48, 48);
-    btn_E_highPass.setDefaultPicturePath("/btn/HP_green.jpg");
-    btn_E_highPass.setClickedPicturePath("/btn/HP_yellow.jpg");
-    btn_E_balance.begin(_sdrBAL.x - 60, _sdrBAL.y + 1, 48, 48);
-    btn_E_balance.setDefaultPicturePath("/btn/BAL_green.jpg");
-    btn_E_balance.setClickedPicturePath("/btn/BAL_yellow.jpg");
-    btn_E_Radio.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_E_Radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
-    btn_E_Radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
-    btn_E_Player.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_E_Player.setDefaultPicturePath("/btn/Player_Green.jpg");
-    btn_E_Player.setClickedPicturePath("/btn/Player_Yellow.jpg");
-    btn_E_Mute.begin(2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);
-    btn_E_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
-    btn_E_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
-    btn_E_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_E_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
-    btn_E_Mute.setValue(_f_mute);
-}
+
+/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+           ║                                                                                  M E N U E / B U T T O N S                                                                  ║
+           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 // clang-format off
+void placingGraphicObjects() { // and initialize them
+    // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    btn_R_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                        btn_R_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                        btn_R_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_R_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_R_Mute.setValue(_f_mute);
+    btn_R_volDown.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                        btn_R_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_R_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                        btn_R_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_R_prevSta.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.jpg");
+                                                                                        btn_R_prevSta.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
+    btn_R_nextSta.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.jpg");
+                                                                                        btn_R_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.jpg");
+    btn_R_staList.begin( 5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_staList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
+                                                                                        btn_R_staList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
+    btn_R_player.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_player.setDefaultPicturePath("/btn/Player_Green.jpg");
+                                                                                        btn_R_player.setClickedPicturePath("/btn/Player_Yellow.jpg");
+    btn_R_dlna.begin(    1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.jpg");
+                                                                                        btn_R_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.jpg");
+    btn_R_clock.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_clock.setDefaultPicturePath("/btn/Clock_Green.jpg");
+                                                                                        btn_R_clock.setClickedPicturePath("/btn/Clock_Yellow.jpg");
+    btn_R_sleep.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_sleep.setDefaultPicturePath("/btn/Button_Sleep_Green.jpg");
+                                                                                        btn_R_sleep.setClickedPicturePath("/btn/Button_Sleep_Yellow.jpg");
+    btn_R_bright.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
+                                                                                        btn_R_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
+                                                                                        btn_R_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
+                                                                                        if(TFT_BL == -1) btn_R_bright.setInactive();
+    btn_R_equal.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);      btn_R_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
+                                                                                        btn_R_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
+    // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    btn_P_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                        btn_P_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                        btn_P_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_P_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_P_Mute.setValue(_f_mute);
+    btn_P_volDown.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                        btn_P_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_P_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                        btn_P_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_P_pause.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
+                                                                                        btn_P_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                        btn_P_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
+                                                                                        btn_P_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
+                                                                                        btn_P_pause.setValue(false);
+    btn_P_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
+                                                                                        btn_P_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
+    btn_P_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
+                                                                                        btn_P_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
+    btn_P_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                        btn_P_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
+    btn_P_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
+                                                                                        btn_P_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    btn_P_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.jpg");
+                                                                                        btn_P_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.jpg");
+    btn_P_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.jpg");
+                                                                                        btn_P_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.jpg");
+    btn_P_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
+                                                                                        btn_P_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
+    btn_P_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_P_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                        btn_P_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    btn_D_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                        btn_D_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                        btn_D_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_D_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_D_Mute.setValue(_f_mute);
+    btn_D_volDown.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                        btn_D_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_D_volUp.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                        btn_D_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_D_pause.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
+                                                                                        btn_D_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                        btn_D_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
+                                                                                        btn_D_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
+                                                                                        btn_D_pause.setValue(false);
+    btn_D_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
+                                                                                        btn_D_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
+    btn_D_fileList.begin(6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_fileList.setDefaultPicturePath("/btn/Button_List_Green.jpg");
+                                                                                        btn_D_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
+    btn_D_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                        btn_D_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    clk_C_green.begin(       _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);   clk_C_green.setTimeFormat(_timeFormat);
+    btn_C_alarm.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_C_alarm.setDefaultPicturePath("/btn/Bell_Green.jpg");
+                                                                                        btn_C_alarm.setClickedPicturePath("/btn/Bell_Yellow.jpg");
+    btn_C_radio.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_C_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                        btn_C_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    btn_C_Mute.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_C_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                        btn_C_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                        btn_C_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_C_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_C_Mute.setValue(_f_mute);
+    btn_C_volDown.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_C_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                        btn_C_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_C_volUp.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_C_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                        btn_C_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    clk_A_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_A_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
+    btn_A_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
+                                                                                        btn_A_left.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
+    btn_A_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_right.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                        btn_A_right.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
+    btn_A_up.begin(      2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_up.setDefaultPicturePath("/btn/Button_Up_Blue.jpg");
+                                                                                        btn_A_up.setClickedPicturePath("/btn/Button_Up_Yellow.jpg");
+    btn_A_down.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_down.setDefaultPicturePath("/btn/Button_Down_Blue.jpg");
+                                                                                        btn_A_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
+    btn_A_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
+                                                                                        btn_A_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    sdr_E_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h, -40,  6);          sdr_E_lowPass.setValue(_toneLP);
+    sdr_E_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h, -40,  6);          sdr_E_bandPass.setValue(_toneBP);
+    sdr_E_highPass.begin( _sdrHP.x,  _sdrHP.y,  _sdrHP.w,  _sdrHP.h, -40,  6);          sdr_E_highPass.setValue(_toneHP);
+    sdr_E_balance.begin( _sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, -16, 16);          sdr_E_balance.setValue(_toneBAL);
+    txt_E_lowPass.begin(  _sdrLP.x +  _sdrLP.w + 2,  _sdrLP.y, 80, _sdrLP.h);           txt_E_lowPass.setFont(_fonts[2]);
+    txt_E_bandPass.begin( _sdrBP.x +  _sdrBP.w + 2,  _sdrBP.y, 80, _sdrBP.h);           txt_E_bandPass.setFont(_fonts[2]);
+    txt_E_highPass.begin( _sdrHP.x +  _sdrHP.w + 2,  _sdrHP.y, 80, _sdrHP.h);           txt_E_highPass.setFont(_fonts[2]);
+    txt_E_balance.begin( _sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h);          txt_E_balance.setFont(_fonts[2]);
+    btn_E_lowPass.begin( _sdrLP.x - 60, _sdrLP.y + 1, 48, 48);                           btn_E_lowPass.setDefaultPicturePath("/btn/LP_green.jpg");
+                                                                                        btn_E_lowPass.setClickedPicturePath("/btn/LP_yellow.jpg");
+    btn_E_bandPass.begin(_sdrBP.x - 60, _sdrBP.y + 1, 48, 48);                          btn_E_bandPass.setDefaultPicturePath("/btn/BP_green.jpg");
+                                                                                        btn_E_bandPass.setClickedPicturePath("/btn/BP_yellow.jpg");
+    btn_E_highPass.begin(_sdrHP.x - 60, _sdrHP.y + 1, 48, 48);                          btn_E_highPass.setDefaultPicturePath("/btn/HP_green.jpg");
+                                                                                        btn_E_highPass.setClickedPicturePath("/btn/HP_yellow.jpg");
+    btn_E_balance.begin(_sdrBAL.x - 60, _sdrBAL.y + 1, 48, 48);                         btn_E_balance.setDefaultPicturePath("/btn/BAL_green.jpg");
+                                                                                        btn_E_balance.setClickedPicturePath("/btn/BAL_yellow.jpg");
+    btn_E_Radio.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_E_Radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                        btn_E_Radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    btn_E_Player.begin(  1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_E_Player.setDefaultPicturePath("/btn/Player_Green.jpg");
+                                                                                        btn_E_Player.setClickedPicturePath("/btn/Player_Yellow.jpg");
+    btn_E_Mute.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_E_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
+                                                                                        btn_E_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
+                                                                                        btn_E_Mute.setClickedOffPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_E_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
+                                                                                        btn_E_Mute.setValue(_f_mute);
+}
+// clang-format off
+
+/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+           ║                                                                              C H A N G E    S T A T E                                                                       ║
+           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
+
+// clang-format on
 void changeState(int32_t state){
-    log_i("new state %i, current state %i radioSubMenue %i", state, _state, _radioSubmenue);
+//    log_i("new state %i, current state %i radioSubMenue %i", state, _state, _radioSubmenue);
     switch(_state){
         case RADIO:     btn_R_Mute.disable();     btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
                         btn_R_staList.disable();  btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
@@ -2850,7 +2800,7 @@ void loop() {
         }
 
         if(_timeCounter.timer) {
-            log_w("timeCounter.timer  %i", _timeCounter.timer);
+        //    log_w("timeCounter.timer  %i", _timeCounter.timer);
             _timeCounter.timer--;
             if(_timeCounter.timer < 10) {
                 sprintf(_chbuf, "/common/tc%02d.bmp", uint8_t(_timeCounter.timer * _timeCounter.factor));
@@ -3049,52 +2999,34 @@ void loop() {
         }
     }
 }
-/*****************************************************************************************************************************************************
- *                                                                    E V E N T S                                                                    *
- *****************************************************************************************************************************************************/
+
+/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+           ║                                                                                  E V E N T S                                                                                ║
+           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
+
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(startsWith(info, "Request")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(startsWith(info, "FLAC")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        return;
-    }
-    if(endsWith(info, "Stream lost")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(startsWith(info, "authent")) {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        return;
-    }
-    if(startsWith(info, "StreamTitle=")) { return; }
-    if(startsWith(info, "HTTP/") && info[9] > '3') {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-        return;
-    }
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) // all other
-    {
-        SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info);
-        // SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);
-        return;
-    }
+    if(startsWith(info, "Request"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
+    if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
+    if(startsWith(info, "StreamTitle="))           {return;}
+    if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;} // all other
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_showstation(const char* info) {
     _stationName_air = info;
     if(strlen(info)) SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     if(!_cur_station) _f_newLogoAndStation = true;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_showstreamtitle(const char* info) {
     strcpy(_streamTitle, info);
     if(!_f_irNumberSeen) _f_newStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void show_ST_commercial(const char* info) {
     _commercial_dur = atoi(info) / 1000; // info is the duration of advertising in ms
     char cdur[10];
@@ -3107,7 +3039,7 @@ void show_ST_commercial(const char* info) {
     SerialPrintfln("StreamTitle: %s", info);
 }
 void audio_commercial(const char* info) { show_ST_commercial(info); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -3121,7 +3053,7 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     _f_eof = true;
     _f_isFSConnected = false;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -3135,14 +3067,14 @@ void audio_eof_stream(const char* info) {
     if(_state == RADIO) { clearWithOutHeaderFooter(); }
     _f_eof = true;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
     webSrv.send("stationURL=", _lastconnectedhost);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
         SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
@@ -3150,35 +3082,35 @@ void audio_icyurl(const char* info) { // if the Radio has a homepage, this event
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icylogo(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, info); }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_oggimage(File& audiofile, std::vector<uint32_t> vec) { // OGG blockpicture
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
     for(int i = 0; i < vec.size(); i += 2) { SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07ld, len %05ld", i / 2, (long unsigned int)vec[i], (long unsigned int)vec[i + 1]); }
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
     if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_bitrate(const char* info) {
     if(!strlen(info)) return; // guard
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
     SerialPrintfln("ftpServer:   %s", info);
