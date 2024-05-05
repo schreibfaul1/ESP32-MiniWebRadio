@@ -1696,7 +1696,6 @@ void connecttohost(const char* host) {
     _avrBitRate = 0;
 
     idx1 = indexOf(host, "|", 0);
-    // log_i("idx1 = %i", idx1);
     if(idx1 == -1) { // no pipe found
         _f_isWebConnected = audioConnecttohost(host);
         _f_isFSConnected = false;
@@ -2838,21 +2837,29 @@ void loop() {
             // }
 
             if((_f_mute == false) && (!_f_sleeping)) {
+                static bool f_resume = false;
                 if(time_s.endsWith("59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
                     String hour = time_s.substring(0, 2);         // extract the hour
                     h = hour.toInt();
                     h++;
                     if(h == 24) h = 0;
                     if(_f_timeAnnouncement) {
+                        f_resume = true;
+                        _f_eof = false;
                         if(_timeFormat == 12)
                             if(h > 12) h -= 12;
                         sprintf(_chbuf, "/voice_time/%d_00.mp3", h);
                         SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
+                        return;
                     }
                     else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", h); }
                 }
+                if(f_resume && _f_eof){
+                    f_resume = false;
+                    _f_eof = false;
+                    connecttohost(_lastconnectedhost.c_str());
+                }
             }
-
 
 
             if(_f_hpChanged) {
