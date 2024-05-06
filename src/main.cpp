@@ -3190,7 +3190,7 @@ void ir_key(uint8_t key) {
             }
             break;
         case 10:
-            //   mute(); break; // MUTE
+            muteChanged(!_f_mute);
             break;
         case 16:
             if(_state == RADIO) {
@@ -3727,7 +3727,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else        webSrv.send("mute=", "0");
                                     return;}
 
-    if(cmd == "setmute"){           _f_mute = !_f_mute; muteChanged(_f_mute); return;}
+    if(cmd == "setmute"){           muteChanged(!_f_mute); return;}
 
     if(cmd == "upvolume"){          webSrv.send("volume=", (String)upvolume());  return;}                                                            // via websocket
 
