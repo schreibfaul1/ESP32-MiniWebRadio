@@ -110,7 +110,7 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     if(path == NULL){ log_e("path is NULL"); return false;}                                                     // guard1
     if(strlen(path) > m_pathLength){ log_e("pathLength > %i", m_pathLength); return false;}                     // guard2
     int i = 0; while(path[i] != 0){ if(path[i] < 32) {log_e("illegal character in path"); return false;}; i++;} // guard3
-    if(!cmdclient.connected()){log_e("cmdclient is not connected"); return false;}                              // guard4
+    if(!cmdclient.connected()){ /* log_e("cmdclient is not connected"); */  return false;}                              // guard4
 
     size_t wIndex = 0, res=0, leftover=0;
     String httpheader="";

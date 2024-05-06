@@ -907,6 +907,125 @@ public:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class pictureBox{
+private:
+    int16_t  m_x = 0;
+    int16_t  m_y = 0;
+    int16_t  m_w = 0;
+    int16_t  m_h = 0;
+    uint32_t m_bgColor = 0;
+    char*    m_PicturePath = NULL;
+    char*    m_altPicturePath = NULL;
+    char*    m_name = NULL;
+    bool     m_enabled = false;
+    bool     m_clicked = false;
+public:
+    pictureBox(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("pictureBox");
+        setPicturePath(NULL);
+        setAlternativPicturePath(NULL);
+    }
+    ~pictureBox(){
+        if(m_PicturePath) {free(m_PicturePath);  m_PicturePath = NULL;}
+        if(m_altPicturePath) {free(m_altPicturePath);  m_altPicturePath = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_enabled = false;
+    }
+    bool show(){
+        if(!GetImageSize(m_PicturePath)){
+            GetImageSize(m_altPicturePath);
+            return drawImage(m_altPicturePath, m_x, m_y);
+        }
+        else{
+            return drawImage(m_PicturePath, m_x, m_y);
+        }
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setPicturePath(const char* path){
+        if(m_PicturePath){free(m_PicturePath); m_PicturePath = NULL;}
+        if(path) m_PicturePath = x_ps_strdup(path);
+        else m_PicturePath = x_ps_strdup("picturePath is not set");
+        if(path){GetImageSize(scaleImage(path));}
+
+    }
+    void setAlternativPicturePath(const char* path){
+        if(m_altPicturePath){free(m_altPicturePath); m_altPicturePath = NULL;}
+        if(path) m_altPicturePath = x_ps_strdup(path);
+        else m_altPicturePath = x_ps_strdup("alternativePicturePath is not set");
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        return true;
+    }
+private:
+    bool GetImageSize(const char* picturePath){
+        if(!SD_MMC.exists(picturePath)) {log_w("file %s not exists", picturePath); return false;}
+        File file = SD_MMC.open(picturePath,"r", false);
+        if(file.size() < 24) {log_w("file %s is too small", picturePath); file.close(); return false;}
+        char buf[8];
+        file.readBytes(buf,3);
+        if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg
+            int16_t c1, c2;
+            while(true){
+                c1 = file.read();
+                if(c1 == -1) {log_w("sof marker in %s not found", picturePath); file.close(); return false;} //end of file reached
+                if(c1 == 0xFF){c2 = file.read(); if(c2 == 0xC0) break;} // 0xFFC0 Marker found
+            }
+            file.readBytes(buf,7);
+            m_h = buf[3] * 256 + buf[4];
+            m_w = buf[5] * 256 + buf[6];
+            log_e("w %i, h %i", m_w, m_h);
+            return true;
+        }
+        if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
+            for(int i= 0; i < 15; i++) file.read(); // read 15 dummys
+            m_w  = file.read(); // pos 18
+            m_w += (file.read() << 8);
+            m_w += (file.read() << 16);
+            m_w += (file.read() << 24);
+            m_h  = file.read(); // pos 22
+            m_h += (file.read() << 8);
+            m_h += (file.read() << 16);
+            m_h += (file.read() << 24);
+            log_e("w %i, h %i", m_w, m_h);
+            return true;
+        }
+        if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
+            for(int i= 0; i < 3; i++) file.read(); // read 3 dummys
+            m_w  = file.read(); // pos 6
+            m_w += (file.read() << 8);
+            m_h  = file.read(); // pos 8
+            m_h += (file.read() << 8);
+            return true;
+        }
+        log_e("unknown picture format");
+        return false;
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock{ // draw a clock in 12 or 24h format
 private:
     int16_t  m_x = 0;
