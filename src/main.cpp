@@ -1602,6 +1602,7 @@ bool connectToWiFi() {
         if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
     }
     WiFi.setHostname("MiniWebRadio");
+    WiFi.setAutoReconnect(true);
     if(psramFound()) WiFi.useStaticBuffers(true);
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC

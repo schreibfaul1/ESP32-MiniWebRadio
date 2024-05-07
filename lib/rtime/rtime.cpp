@@ -258,7 +258,7 @@ boolean RTIME::begin(String TimeZone){
     // -D NTP_Pool_1='"europe.pool.ntp.org"'
     // -D NTP_Pool_2='"pool.ntp.org"'
     // -D NTP_Pool_3='"time-a-g.nist.gov"'
-    esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    esp_sntp_setoperatingmode(esp_sntp_operatingmode_t(SNTP_OPMODE_POLL));
     configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
     return obtain_time();
 }
