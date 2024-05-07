@@ -697,9 +697,13 @@ const char* SD_stringifyDirContent(String path) {
  *                                                    T F T   B R I G H T N E S S                                                                    *
  *****************************************************************************************************************************************************/
 void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
-    if(TFT_BL == -1) return;
+    // if(TFT_BL == -1) return;
+    // uint8_t d = round((double)duty * 2.55); // #186
+    // ledcWrite(TFT_BL, d);
+    ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
+    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     uint8_t d = round((double)duty * 2.55); // #186
-    ledcWrite(TFT_BL, d);
+    ledcWrite(0, d);
 }
 
 inline uint8_t downBrightness() {
@@ -1862,8 +1866,8 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-    defaultsettings();                           // first init
-    if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+    defaultsettings();
+//    if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
@@ -2860,7 +2864,7 @@ void loop() {
             _audioFileDuration = audioGetFileDuration();
             if(_audioFileDuration) {
                 SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
-                               _audioCurrentTime / 60, _audioCurrentTime % 60, _audioFileDuration / 60, _audioFileDuration % 60);
+                               (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
