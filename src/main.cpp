@@ -697,13 +697,16 @@ const char* SD_stringifyDirContent(String path) {
  *                                                    T F T   B R I G H T N E S S                                                                    *
  *****************************************************************************************************************************************************/
 void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
-    // if(TFT_BL == -1) return;
-    // uint8_t d = round((double)duty * 2.55); // #186
-    // ledcWrite(TFT_BL, d);
+#if ESP_IDF_VERSION_MAJOR == 5
+    if(TFT_BL == -1) return;
+    uint8_t d = round((double)duty * 2.55); // #186
+    ledcWrite(TFT_BL, d);
+#else
     ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
     ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
+#endif
 }
 
 inline uint8_t downBrightness() {
@@ -1867,9 +1870,12 @@ void setup() {
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
-//    if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+#if ESP_IDF_VERSION_MAJOR == 5
+    if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+#else
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
+#endif
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
