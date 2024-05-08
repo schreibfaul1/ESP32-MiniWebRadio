@@ -487,7 +487,7 @@ inline void hardcopy(){
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
-extern __attribute__((weak)) void graphicObjects_OnClick(const char* name);
+extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name);
 class slider{
 private:
@@ -537,18 +537,19 @@ public:
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled)  return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
 
-        // (x, y) is in range
-        if(x < m_leftStop) x = m_leftStop;
-        if(x > m_rightStop) x = m_rightStop;
-        if(!m_clicked){ if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);}
-        m_clicked = true;
-        drawNewSpot(x);
+        if(m_enabled){
+            if(x < m_leftStop) x = m_leftStop;// (x, y) is in range
+            if(x > m_rightStop) x = m_rightStop;
+            m_clicked = true;
+            drawNewSpot(x);
+        }
+        if(!m_clicked){ if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);}
+        if(!m_enabled) return false;
         return true;
     }
     void setValue(int16_t val){
@@ -659,13 +660,13 @@ public:
         m_bgColor = color;
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled) return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
         return true;
     }
     bool released(){
@@ -761,14 +762,16 @@ public:
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled) return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        if(m_enabled) {
+            drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+            m_clicked = true;
+        }
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
         return true;
     }
     bool released(){
@@ -884,16 +887,18 @@ public:
     //     else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     // }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled) return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        if(m_state) drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
-        else        drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
-        m_clicked = true;
-        m_state = !m_state;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        if(m_enabled){
+            if(m_state) drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);
+            else        drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);
+            m_clicked = true;
+            m_state = !m_state;
+        }
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
         return true;
     }
     bool released(){
@@ -965,13 +970,13 @@ public:
         else m_altPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled) return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
         return true;
     }
     bool released(){
@@ -1164,8 +1169,9 @@ public:
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
         return true;
     }
     bool released(){
@@ -1319,14 +1325,13 @@ public:
         m_alarmDays = alarmDays;
     }
     bool positionXY(uint16_t x, uint16_t y){
-        if(!m_enabled) return false;
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
-        m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name);
-
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
         if(y <= m_alarmtimeYPos){
             m_btnAlarmDay = -1;
             if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmDay = 6;}
