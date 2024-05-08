@@ -1,4 +1,4 @@
-# ESP32-MiniWebRadio V3
+# ESP32-MiniWebRadio V3.1
 
 ![Display](docs/MiniWebRadio.jpg)
 
@@ -26,7 +26,7 @@ Required HW:
 <ul>
 <li>ESP32 or ESP32-S3 board <b>with PSRAM</b></li>
 <li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
-<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
+<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 </ul>
 Optional HW:
