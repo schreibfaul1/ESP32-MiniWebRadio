@@ -377,6 +377,8 @@ button1state btn_A_ready("btn_A_ready");
 // BRIGHTNESS
 button1state btn_B_left("btn_B_left"), btn_B_right("btn_B_right"), btn_B_ready("btn_B_ready");
 pictureBox   pic_B_logo("pic_B_logo");
+// SLEEP
+button1state btn_S_up("btn_S_up"), btn_S_down("btn_S_down"), btn_S_ready("btn_S_ready"), btn_S_cancel("btn_S_cancel");
 // EQUALIZER
 slider       sdr_E_lowPass("sdr_E_LP"), sdr_E_bandPass("sdr_E_BP"), sdr_E_highPass("sdr_E_HP"), sdr_E_balance("sdr_E_BAL");
 textbox      txt_E_lowPass("txt_E_LP"), txt_E_bandPass("txt_E_BP"), txt_E_highPass("txt_E_HP"), txt_E_balance("txt_E_BAL");
@@ -2453,6 +2455,15 @@ void placingGraphicObjects() { // and initialize them
                                                                                         btn_A_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
     btn_A_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
                                                                                         btn_A_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    // SLEEP -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    btn_S_up.begin(      0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_S_up.setDefaultPicturePath("/btn/Button_Up_Blue.jpg");
+                                                                                        btn_S_up.setClickedPicturePath("/btn/Button_Up_Yellow.jpg");
+    btn_S_down.begin(    1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_S_down.setDefaultPicturePath("/btn/Button_Down_Blue.jpg");
+                                                                                        btn_S_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
+    btn_S_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_S_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
+                                                                                        btn_S_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    btn_S_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_S_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.jpg");
+                                                                                        btn_S_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_B_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_B_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
                                                                                         btn_B_left.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
@@ -2518,6 +2529,8 @@ void changeState(int32_t state){
                          break;
         case ALARM:      clk_A_red.disable();      btn_A_left.disable();     btn_A_right.disable();    btn_A_up.disable();      btn_A_down.disable();
                          btn_A_ready.disable();
+                         break;
+        case SLEEP:      btn_S_up.disable();       btn_S_down.disable();     btn_S_ready.disable();    btn_S_cancel.disable();
                          break;
         case BRIGHTNESS: btn_B_left.disable();     btn_B_right.disable();    btn_B_ready.disable();    pic_B_logo.disable();
                          break;
@@ -2631,6 +2644,15 @@ void changeState(int32_t state){
             btn_A_ready.show();
             break;
         }
+        case SLEEP:{
+            showHeadlineItem(SLEEP);
+            clearWithOutHeaderFooter();
+            display_sleeptime();
+            btn_S_up.show();           btn_S_down.show();       btn_S_ready.show();    btn_S_cancel.show();
+            if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
+            else                   drawImage("/common/Night_Gown.bmp", 280, 45);
+            break;
+        }
         case BRIGHTNESS:{
             showHeadlineItem(BRIGHTNESS);
             clearWithOutHeaderFooter();
@@ -2644,25 +2666,6 @@ void changeState(int32_t state){
             _timeCounter.factor = 1.0;
             break;
         }
-        case SLEEP:{
-            showHeadlineItem(SLEEP);
-            _pressBtn[0] = "/btn/Button_Up_Yellow.jpg";          _releaseBtn[0] = "/btn/Button_Up_Blue.jpg";
-            _pressBtn[1] = "/btn/Button_Down_Yellow.jpg";        _releaseBtn[1] = "/btn/Button_Down_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
-            _pressBtn[4] = "/btn/Button_Cancel_Yellow.jpg";      _releaseBtn[4] = "/btn/Button_Cancel_Blue.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
-            _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-            _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            clearLogoAndStationname();
-            clearTitle();
-            display_sleeptime();
-            if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
-            else                   drawImage("/common/Night_Gown.bmp", 280, 45);
-            for(int32_t i = 0; i < 5 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
-            break;
-        }
-
         case EQUALIZER:{
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
@@ -3308,17 +3311,17 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_A_down.positionXY(x, y)) return;
                 if(btn_A_ready.positionXY(x, y)) return;
             break;
+        case SLEEP:
+                if(btn_S_up.positionXY(x, y)) return;
+                if(btn_S_down.positionXY(x, y)) return;
+                if(btn_S_ready.positionXY(x, y)) return;
+                if(btn_S_cancel.positionXY(x, y)) return;
+            break;
         case BRIGHTNESS:
                 if(btn_B_left.positionXY(x, y)) return;
                 if(btn_B_right.positionXY(x, y)) return;
                 if(btn_B_ready.positionXY(x, y)) return;
                 if(pic_B_logo.positionXY(x, y)) return;
-            break;
-        case SLEEP:
-            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-                yPos = SLEEP_1;
-                btnNr = x / _winButton.w;
-            }
             break;
         case STATIONSLIST:
             if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
@@ -3383,12 +3386,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     switch(yPos){
 
-        case SLEEP_1:       if(btnNr == 0){_releaseNr = 70;} // sleeptime up
-                            if(btnNr == 1){_releaseNr = 71;} // sleeptime down
-                            if(btnNr == 2){_releaseNr = 72;} // display_sleeptime(0, true);} // ready, return to RADIO
-                            if(btnNr == 3){_releaseNr = 73;} // unused
-                            if(btnNr == 4){_releaseNr = 74;} // return to RADIO without saving sleeptime
-                            changeBtn_pressed(btnNr); break;
+        // case SLEEP_1:       if(btnNr == 0){_releaseNr = 70;} // sleeptime up
+        //                     if(btnNr == 1){_releaseNr = 71;} // sleeptime down
+        //                     if(btnNr == 2){_releaseNr = 72;} // display_sleeptime(0, true);} // ready, return to RADIO
+        //                     if(btnNr == 3){_releaseNr = 73;} // unused
+        //                     if(btnNr == 4){_releaseNr = 74;} // return to RADIO without saving sleeptime
+        //                     changeBtn_pressed(btnNr); break;
         case STATIONSLIST_1:if(btnNr == none) break;
                             _releaseNr = 100;
                             _staListPos = btnNr;
@@ -3450,6 +3453,9 @@ void tp_released(uint16_t x, uint16_t y){
         case ALARM:
                 clk_A_red.released();         btn_A_left.released();        btn_A_right.released();       btn_A_up.released();          btn_A_down.released();        btn_A_ready.released();
             break;
+        case SLEEP:
+                btn_S_up.released();          btn_S_down.released();        btn_S_ready.released();       btn_S_cancel.released();
+            break;
         case BRIGHTNESS:
                btn_B_left.released();         btn_B_right.released();       btn_B_ready.released();       pic_B_logo.released();
             break;
@@ -3464,16 +3470,16 @@ void tp_released(uint16_t x, uint16_t y){
 
     switch(_releaseNr){
 
-        /* SLEEP ******************************************/
-        case 70:    display_sleeptime(1);  changeBtn_released(0); break;
-        case 71:    display_sleeptime(-1); changeBtn_released(1); break;
-        case 72:    updateSleepTime(true);
-                    changeBtn_released(2);
-                    changeState(RADIO); break;
-        case 73:    changeBtn_released(3); break; // unused
-        case 74:    _sleeptime = 0;
-                    changeBtn_released(4);
-                    changeState(RADIO); break;
+        // /* SLEEP ******************************************/
+        // case 70:    display_sleeptime(1);  changeBtn_released(0); break;
+        // case 71:    display_sleeptime(-1); changeBtn_released(1); break;
+        // case 72:    updateSleepTime(true);
+        //             changeBtn_released(2);
+        //             changeState(RADIO); break;
+        // case 73:    changeBtn_released(3); break; // unused
+        // case 74:    _sleeptime = 0;
+        //             changeBtn_released(4);
+        //             changeState(RADIO); break;
 
         /* STATIONSLIST *********************************/
         case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
@@ -4082,6 +4088,12 @@ void graphicObjects_OnClick(const char* name) {
         if(strcmp(name, "btn_A_down") == 0)    {return;}
         if(strcmp(name, "btn_A_ready") == 0)   {return;}
     }
+    if(_state == SLEEP) {
+        if(strcmp(name, "btn_S_up") == 0)      {return;}
+        if(strcmp(name, "btn_S_down") == 0)    {return;}
+        if(strcmp(name, "btn_S_ready") == 0)   {return;}
+        if(strcmp(name, "btn_S_cancel") == 0)  {return;}
+    }
     if(_state == BRIGHTNESS){
         if(strcmp(name, "btn_B_left") == 0)    {return;}
         if(strcmp(name, "btn_B_right") == 0)   {return;}
@@ -4154,6 +4166,12 @@ void graphicObjects_OnRelease(const char* name) {
         if(strcmp(name, "btn_A_up") == 0)       {clk_A_red.digitUp(); return;}
         if(strcmp(name, "btn_A_down") == 0)     {clk_A_red.digitDown(); return;}
         if(strcmp(name, "btn_A_ready") == 0)    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
+    }
+    if(_state == SLEEP) {
+        if(strcmp(name, "btn_S_up") == 0)      {display_sleeptime(1); return;}
+        if(strcmp(name, "btn_S_down") == 0)    {display_sleeptime(-1); return;}
+        if(strcmp(name, "btn_S_ready") == 0)   {updateSleepTime(true); changeState(RADIO); return;}
+        if(strcmp(name, "btn_S_cancel") == 0)  {changeState(RADIO); return;}
     }
     if(_state == BRIGHTNESS){
         if(strcmp(name, "btn_B_left") == 0)     {downBrightness(); return;}

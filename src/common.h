@@ -999,7 +999,7 @@ private:
             file.readBytes(buf,7);
             m_h = buf[3] * 256 + buf[4];
             m_w = buf[5] * 256 + buf[6];
-            log_e("w %i, h %i", m_w, m_h);
+        //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
@@ -1012,7 +1012,7 @@ private:
             m_h += (file.read() << 8);
             m_h += (file.read() << 16);
             m_h += (file.read() << 24);
-            log_e("w %i, h %i", m_w, m_h);
+        //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
@@ -1021,6 +1021,7 @@ private:
             m_w += (file.read() << 8);
             m_h  = file.read(); // pos 8
             m_h += (file.read() << 8);
+        //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         log_e("unknown picture format");
