@@ -374,6 +374,9 @@ button1state btn_C_alarm("btn_C_alarm"), btn_C_radio("btn_C_radio"), btn_C_volDo
 alarmClock   clk_A_red("clk_C_green");
 button1state btn_A_left("btn_A_left"), btn_A_right("btn_A_right"), btn_A_up("btn_A_up"), btn_A_down("btn_A_down");
 button1state btn_A_ready("btn_A_ready");
+// BRIGHTNESS
+button1state btn_B_left("btn_B_left"), btn_B_right("btn_B_right"), btn_B_ready("btn_B_ready");
+pictureBox   pic_B_logo("pic_B_logo");
 // EQUALIZER
 slider       sdr_E_lowPass("sdr_E_LP"), sdr_E_bandPass("sdr_E_BP"), sdr_E_highPass("sdr_E_HP"), sdr_E_balance("sdr_E_BAL");
 textbox      txt_E_lowPass("txt_E_LP"), txt_E_bandPass("txt_E_BP"), txt_E_highPass("txt_E_HP"), txt_E_balance("txt_E_BAL");
@@ -2450,6 +2453,14 @@ void placingGraphicObjects() { // and initialize them
                                                                                         btn_A_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
     btn_A_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_A_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
                                                                                         btn_A_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    btn_B_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_B_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
+                                                                                        btn_B_left.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
+    btn_B_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_B_right.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                        btn_B_right.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
+    btn_B_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_B_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
+                                                                                        btn_B_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+    pic_B_logo.begin(    0,  _winName.y) ;                                              pic_B_logo.setPicturePath("/common/Brightness.jpg");
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_E_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h, -40,  6);          sdr_E_lowPass.setValue(_toneLP);
     sdr_E_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h, -40,  6);          sdr_E_bandPass.setValue(_toneBP);
@@ -2491,28 +2502,30 @@ void placingGraphicObjects() { // and initialize them
 void changeState(int32_t state){
 //    log_i("new state %i, current state %i radioSubMenue %i", state, _state, _radioSubmenue);
     switch(_state){
-        case RADIO:     btn_R_Mute.disable();     btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
-                        btn_R_staList.disable();  btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
-                        btn_R_bright.disable();   btn_R_equal.disable();    pic_R_logo.disable();
-                        hideVUmeter(); break;
-        case PLAYER:    btn_P_Mute.disable();     btn_P_volDown.disable();  btn_P_volUp.disable();    btn_P_pause.disable();   btn_P_cancel.disable();
-                        btn_P_prevFile.disable(); btn_P_nextFile.disable(); btn_P_ready.disable();    btn_P_playAll.disable(); btn_P_shuffle.disable();
-                        btn_P_fileList.hide();    btn_P_radio.hide();
-                        break;
-        case DLNA:      btn_D_Mute.disable();     btn_D_volDown.disable();  btn_D_volUp.disable();    btn_D_pause.disable();   btn_D_cancel.disable();
-                        btn_D_fileList.disable(); btn_D_radio.disable();
-                        break;
-        case CLOCK:     btn_C_Mute.disable();     btn_C_alarm.disable();    btn_C_radio.disable();    btn_C_volDown.disable(); btn_C_volUp.disable();
-                        clk_C_green.disable();
-                        break;
-        case ALARM:     clk_A_red.disable();      btn_A_left.disable();     btn_A_right.disable();    btn_A_up.disable();      btn_A_down.disable();
-                        btn_A_ready.disable();
-                        break;
-        case EQUALIZER: sdr_E_lowPass.disable();  sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
-                        btn_E_lowPass.disable();  btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
-                        txt_E_lowPass.disable();  txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable(); btn_E_Player.disable();
-                        btn_E_Mute.disable();
-                        break;
+        case RADIO:      btn_R_Mute.disable();     btn_R_volDown.disable();  btn_R_volUp.disable();    btn_R_prevSta.disable(); btn_R_nextSta.disable();
+                         btn_R_staList.disable();  btn_R_player.disable();   btn_R_dlna.disable();     btn_R_clock.disable();   btn_R_sleep.disable();
+                         btn_R_bright.disable();   btn_R_equal.disable();    pic_R_logo.disable();
+                         hideVUmeter(); break;
+        case PLAYER:     btn_P_Mute.disable();     btn_P_volDown.disable();  btn_P_volUp.disable();    btn_P_pause.disable();   btn_P_cancel.disable();
+                         btn_P_prevFile.disable(); btn_P_nextFile.disable(); btn_P_ready.disable();    btn_P_playAll.disable(); btn_P_shuffle.disable();
+                         btn_P_fileList.hide();    btn_P_radio.hide();
+                         break;
+        case DLNA:       btn_D_Mute.disable();     btn_D_volDown.disable();  btn_D_volUp.disable();    btn_D_pause.disable();   btn_D_cancel.disable();
+                         btn_D_fileList.disable(); btn_D_radio.disable();
+                         break;
+        case CLOCK:      btn_C_Mute.disable();     btn_C_alarm.disable();    btn_C_radio.disable();    btn_C_volDown.disable(); btn_C_volUp.disable();
+                         clk_C_green.disable();
+                         break;
+        case ALARM:      clk_A_red.disable();      btn_A_left.disable();     btn_A_right.disable();    btn_A_up.disable();      btn_A_down.disable();
+                         btn_A_ready.disable();
+                         break;
+        case BRIGHTNESS: btn_B_left.disable();     btn_B_right.disable();    btn_B_ready.disable();    pic_B_logo.disable();
+                         break;
+        case EQUALIZER:  sdr_E_lowPass.disable();  sdr_E_bandPass.disable(); sdr_E_highPass.disable(); sdr_E_balance.disable();
+                         btn_E_lowPass.disable();  btn_E_bandPass.disable(); btn_E_highPass.disable(); btn_E_balance.disable(); btn_E_Radio.disable();
+                         txt_E_lowPass.disable();  txt_E_bandPass.disable(); txt_E_highPass.disable(); txt_E_balance.disable(); btn_E_Player.disable();
+                         btn_E_Mute.disable();
+                         break;
     }
     _f_volBarVisible = false;
     if(_timeCounter.timer){
@@ -2620,17 +2633,9 @@ void changeState(int32_t state){
         }
         case BRIGHTNESS:{
             showHeadlineItem(BRIGHTNESS);
-            _pressBtn[0] = "/btn/Button_Left_Yellow.jpg";        _releaseBtn[0] = "/btn/Button_Left_Blue.jpg";
-            _pressBtn[1] = "/btn/Button_Right_Yellow.jpg";       _releaseBtn[1] = "/btn/Button_Right_Blue.jpg";
-            _pressBtn[2] = "/btn/Button_Ready_Yellow.jpg";       _releaseBtn[2] = "/btn/Button_Ready_Blue.jpg";
-            _pressBtn[3] = "/btn/Black.jpg";                     _releaseBtn[3] = "/btn/Black.jpg";
-            _pressBtn[4] = "/btn/Black.jpg";                     _releaseBtn[4] = "/btn/Black.jpg";
-            _pressBtn[5] = "/btn/Black.jpg";                     _releaseBtn[5] = "/btn/Black.jpg";
-            _pressBtn[6] = "/btn/Black.jpg";                     _releaseBtn[6] = "/btn/Black.jpg";
-            _pressBtn[7] = "/btn/Black.jpg";                     _releaseBtn[7] = "/btn/Black.jpg";
-            drawImage("/common/Brightness.jpg", 0, _winName.y);
+            clearWithOutHeaderFooter();
+            btn_B_left.show(); btn_B_right.show(); btn_B_ready.show(); pic_B_logo.show();
             showBrightnessBar();
-            for(int32_t i = 0; i < 8 ; i++) {drawImage(_releaseBtn[i], i * _winButton.w, _winButton.y);}
             break;
         }
         case AUDIOFILESLIST:{
@@ -3226,8 +3231,7 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    enum : int8_t {none = -1,  ALARM_1, BRIGHTNESS_1, CLOCK_1,
-                               ALARM_2, SLEEP_1, DLNA_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1
+    enum : int8_t {none = -1, SLEEP_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3304,20 +3308,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_A_down.positionXY(x, y)) return;
                 if(btn_A_ready.positionXY(x, y)) return;
             break;
-
+        case BRIGHTNESS:
+                if(btn_B_left.positionXY(x, y)) return;
+                if(btn_B_right.positionXY(x, y)) return;
+                if(btn_B_ready.positionXY(x, y)) return;
+                if(pic_B_logo.positionXY(x, y)) return;
+            break;
         case SLEEP:
             if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
                 yPos = SLEEP_1;
                 btnNr = x / _winButton.w;
             }
             break;
-        case BRIGHTNESS:
-            if((y > _winButton.y) && (y < _winButton.y + _winButton.h)) {
-                yPos = BRIGHTNESS_1;
-                btnNr = x / _winButton.w;
-            }
-            break;
-
         case STATIONSLIST:
             if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
                 btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
@@ -3381,29 +3383,11 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     switch(yPos){
 
-        case ALARM_2:       if(btnNr == 0){_releaseNr = 30;} // left
-                            if(btnNr == 1){_releaseNr = 31;} // right
-                            if(btnNr == 2){_releaseNr = 32;} // up
-                            if(btnNr == 3){_releaseNr = 33;} // down
-                            if(btnNr == 4){_releaseNr = 34;} // ready (return to CLOCK)
-                            changeBtn_pressed(btnNr); break;
-        case ALARM_1:       if(btnNr == 0){_releaseNr = 60;} // mon
-                            if(btnNr == 1){_releaseNr = 61;} // tue
-                            if(btnNr == 2){_releaseNr = 62;} // wed
-                            if(btnNr == 3){_releaseNr = 63;} // thu
-                            if(btnNr == 4){_releaseNr = 64;} // fri
-                            if(btnNr == 5){_releaseNr = 65;} // sat
-                            if(btnNr == 6){_releaseNr = 66;} // sun
-                            break;
         case SLEEP_1:       if(btnNr == 0){_releaseNr = 70;} // sleeptime up
                             if(btnNr == 1){_releaseNr = 71;} // sleeptime down
                             if(btnNr == 2){_releaseNr = 72;} // display_sleeptime(0, true);} // ready, return to RADIO
                             if(btnNr == 3){_releaseNr = 73;} // unused
                             if(btnNr == 4){_releaseNr = 74;} // return to RADIO without saving sleeptime
-                            changeBtn_pressed(btnNr); break;
-        case BRIGHTNESS_1:  if(btnNr == 0){_releaseNr = 80;} // darker
-                            if(btnNr == 1){_releaseNr = 81;} // brighter
-                            if(btnNr == 2){_releaseNr = 82;} // okay
                             changeBtn_pressed(btnNr); break;
         case STATIONSLIST_1:if(btnNr == none) break;
                             _releaseNr = 100;
@@ -3466,6 +3450,9 @@ void tp_released(uint16_t x, uint16_t y){
         case ALARM:
                 clk_A_red.released();         btn_A_left.released();        btn_A_right.released();       btn_A_up.released();          btn_A_down.released();        btn_A_ready.released();
             break;
+        case BRIGHTNESS:
+               btn_B_left.released();         btn_B_right.released();       btn_B_ready.released();       pic_B_logo.released();
+            break;
         case EQUALIZER:
                 sdr_E_lowPass.released();     sdr_E_bandPass.released();    sdr_E_highPass.released();    sdr_E_balance.released();     btn_E_lowPass.released();     btn_E_bandPass.released();
                 btn_E_highPass.released();    btn_E_balance.released();     txt_E_lowPass.released();     txt_E_bandPass.released();    txt_E_highPass.released();    txt_E_balance.released();
@@ -3487,11 +3474,6 @@ void tp_released(uint16_t x, uint16_t y){
         case 74:    _sleeptime = 0;
                     changeBtn_released(4);
                     changeState(RADIO); break;
-
-        /* BRIGHTNESS ************************************/
-        case 80:    downBrightness(); changeBtn_released(0); break;
-        case 81:    upBrightness();   changeBtn_released(1); break;
-        case 82:    changeState(RADIO); break;
 
         /* STATIONSLIST *********************************/
         case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
@@ -4100,6 +4082,12 @@ void graphicObjects_OnClick(const char* name) {
         if(strcmp(name, "btn_A_down") == 0)    {return;}
         if(strcmp(name, "btn_A_ready") == 0)   {return;}
     }
+    if(_state == BRIGHTNESS){
+        if(strcmp(name, "btn_B_left") == 0)    {return;}
+        if(strcmp(name, "btn_B_right") == 0)   {return;}
+        if(strcmp(name, "btn_B_ready") == 0)   {return;}
+        if(strcmp(name, "pic_B_logo") == 0)    {return;}
+    }
     if(_state == EQUALIZER) {
         if(strcmp(name, "btn_E_LP") == 0)      {sdr_E_lowPass.setValue(0);  return;}
         if(strcmp(name, "btn_E_BP") == 0)      {sdr_E_bandPass.setValue(0); return;}
@@ -4166,6 +4154,12 @@ void graphicObjects_OnRelease(const char* name) {
         if(strcmp(name, "btn_A_up") == 0)       {clk_A_red.digitUp(); return;}
         if(strcmp(name, "btn_A_down") == 0)     {clk_A_red.digitDown(); return;}
         if(strcmp(name, "btn_A_ready") == 0)    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
+    }
+    if(_state == BRIGHTNESS){
+        if(strcmp(name, "btn_B_left") == 0)     {downBrightness(); return;}
+        if(strcmp(name, "btn_B_right") == 0)    {upBrightness(); return;}
+        if(strcmp(name, "btn_B_ready") == 0)    {changeState(RADIO); return;}
+        if(strcmp(name, "pic_B_logo") == 0)     {return;}
     }
     if(_state == EQUALIZER) {
         if(strcmp(name, "btn_E_Radio") == 0)    {setStation(_cur_station); changeState(RADIO); return;}

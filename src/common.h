@@ -938,10 +938,12 @@ public:
     bool show(){
         if(!GetImageSize(m_PicturePath)){
             GetImageSize(m_altPicturePath);
-            return drawImage(m_altPicturePath, m_x, m_y);
+            m_enabled = drawImage(m_altPicturePath, m_x, m_y);
+            return m_enabled;
         }
         else{
-            return drawImage(m_PicturePath, m_x, m_y);
+            m_enabled = drawImage(m_PicturePath, m_x, m_y);
+            return m_enabled;
         }
     }
     void hide(){
@@ -955,8 +957,7 @@ public:
         if(m_PicturePath){free(m_PicturePath); m_PicturePath = NULL;}
         if(path) m_PicturePath = x_ps_strdup(path);
         else m_PicturePath = x_ps_strdup("picturePath is not set");
-        if(path){GetImageSize(scaleImage(path));}
-
+        if(path){GetImageSize(path);}
     }
     void setAlternativPicturePath(const char* path){
         if(m_altPicturePath){free(m_altPicturePath); m_altPicturePath = NULL;}
@@ -982,16 +983,17 @@ public:
     }
 private:
     bool GetImageSize(const char* picturePath){
-        if(!SD_MMC.exists(picturePath)) {log_w("file %s not exists", picturePath); return false;}
-        File file = SD_MMC.open(picturePath,"r", false);
-        if(file.size() < 24) {log_w("file %s is too small", picturePath); file.close(); return false;}
+        const char* scaledPicPath = scaleImage(picturePath);
+        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists", scaledPicPath); return false;}
+        File file = SD_MMC.open(scaledPicPath,"r", false);
+        if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
         file.readBytes(buf,3);
         if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg
             int16_t c1, c2;
             while(true){
                 c1 = file.read();
-                if(c1 == -1) {log_w("sof marker in %s not found", picturePath); file.close(); return false;} //end of file reached
+                if(c1 == -1) {log_w("sof marker in %s not found", scaledPicPath); file.close(); return false;} //end of file reached
                 if(c1 == 0xFF){c2 = file.read(); if(c2 == 0xC0) break;} // 0xFFC0 Marker found
             }
             file.readBytes(buf,7);
