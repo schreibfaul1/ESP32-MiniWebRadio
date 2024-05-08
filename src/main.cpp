@@ -166,6 +166,7 @@ bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
 bool                _f_dlnaSeekServer = false;
 bool                _f_BtEmitterFound = false;
+bool                _f_brightnessIsChangeable = false;
 String              _station = "";
 String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
@@ -1876,6 +1877,7 @@ void setup() {
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
+    if(TFT_BL >= 0) _f_brightnessIsChangeable = true;
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
 #else
@@ -2374,7 +2376,6 @@ void placingGraphicObjects() { // and initialize them
     btn_R_bright.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
                                                                                         btn_R_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
                                                                                         btn_R_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
-                                                                                        if(TFT_BL == -1) btn_R_bright.setInactive();
     btn_R_equal.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
                                                                                         btn_R_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
     btn_R_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_R_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
@@ -2425,6 +2426,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                         btn_D_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
                                                                                         btn_D_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
                                                                                         btn_D_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
+                                                                                        btn_D_pause.setInactivePicturePath("/btn/Button_Pause_Grey.jpg");
                                                                                         btn_D_pause.setValue(false);
     btn_D_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_D_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.jpg");
                                                                                         btn_D_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
@@ -2573,7 +2575,7 @@ void changeState(int32_t state){
                 hideVUmeter();
                 clearVolBar();
                 btn_R_player.show();    btn_R_dlna.show();             btn_R_clock.show();
-                btn_R_sleep.show();     btn_R_bright.show();           btn_R_equal.show();
+                btn_R_sleep.show();     btn_R_bright.show(!_f_brightnessIsChangeable); btn_R_equal.show();
                 btn_R_bt.show(!_f_BtEmitterFound);
                 _timeCounter.timer = 5;
                 _timeCounter.factor = 2.0;
@@ -2600,10 +2602,10 @@ void changeState(int32_t state){
                 showAudioFileNumber();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 showAudioFileNumber();
-                btn_P_prevFile.show();  btn_P_nextFile.show();  btn_P_ready.show(); btn_P_playAll.show(); btn_P_shuffle.show(); btn_P_fileList.show(); btn_P_radio.show();
+                btn_P_prevFile.show(); btn_P_nextFile.show(); btn_P_ready.show(); btn_P_playAll.show(); btn_P_shuffle.show(); btn_P_fileList.show(); btn_P_radio.show();
             }
             if(_playerSubmenue == 1){
-                btn_P_Mute.show();    btn_P_volDown.show();  btn_P_volUp.show();    btn_P_pause.show();   btn_P_cancel.show();
+                btn_P_Mute.show(); btn_P_volDown.show(); btn_P_volUp.show(); btn_P_pause.setOff(); btn_P_pause.show(); btn_P_cancel.show();
             }
             break;
         }
@@ -4043,7 +4045,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
     log_d("unused event: graphicObject %s was changed, val %li", name, arg1);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is deaktive
+void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is deactive
     if(_state == RADIO) {
         if( val && strcmp(name, "btn_R_Mute") == 0)    {_timeCounter.timer = 5; {if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_R_volDown") == 0) {_timeCounter.timer = 5; return;}
@@ -4056,8 +4058,9 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_R_clock") == 0)   {return;}
         if( val && strcmp(name, "btn_R_sleep") == 0)   {return;}
         if( val && strcmp(name, "btn_R_bright") == 0)  {return;}
+        if(!val && strcmp(name, "btn_R_bright") == 0)  {_timeCounter.timer = 5; return;}
         if( val && strcmp(name, "btn_R_equal") == 0)   {return;}
-        if( val && strcmp(name, "btn_R_bt") == 0)      {_timeCounter.timer = 5; return;}
+        if( val && strcmp(name, "btn_R_bt") == 0)      {return;}
         if(!val && strcmp(name, "btn_R_bt") == 0)      {_timeCounter.timer = 5; return;}
     }
     if(_state == PLAYER) {
@@ -4081,7 +4084,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_D_volUp") == 0)   {return;}
         if( val && strcmp(name, "btn_D_radio") == 0)   {return;}
         if( val && strcmp(name, "btn_D_fileList") == 0){return;}
-        if( val && strcmp(name, "btn_D_cancel") == 0)  {return;}
+        if( val && strcmp(name, "btn_D_cancel") == 0)  {clearStationName(); btn_D_pause.setInactive(); return;}
     }
     if(_state == CLOCK) {
         if( val && strcmp(name, "btn_C_Mute") == 0)    {_timeCounter.timer = 5; {if(!_f_mute) _f_muteIsPressed = true;} return;}

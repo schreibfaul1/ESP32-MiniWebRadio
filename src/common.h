@@ -795,6 +795,7 @@ private:
     char*    m_onPicturePath = NULL;
     char*    m_clickedOffPicturePath = NULL;
     char*    m_clickedOnPicturePath = NULL;
+    char*    m_inactivePicturePath = NULL;
     bool     m_enabled = false;
     bool     m_clicked = false;
     bool     m_state = false;
@@ -808,14 +809,17 @@ public:
         m_clicked = false;
         m_state = false;
         setOffPicturePath(NULL);
+        setOnPicturePath(NULL);
         setClickedOffPicturePath(NULL);
         setClickedOnPicturePath(NULL);
-        setOnPicturePath(NULL);
+        setInactivePicturePath(NULL);
     }
     ~button2state(){
         if(m_offPicturePath) {free(m_offPicturePath);  m_offPicturePath = NULL;}
         if(m_onPicturePath) {free(m_onPicturePath);  m_onPicturePath = NULL;}
         if(m_clickedOffPicturePath){free(m_clickedOffPicturePath); m_clickedOffPicturePath = NULL;}
+        if(m_clickedOnPicturePath){free(m_clickedOnPicturePath); m_clickedOnPicturePath = NULL;}
+        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -827,7 +831,7 @@ public:
     void show(bool inactive = false){
         m_clicked = false;
         if(inactive){
-        //    setInactive();
+            setInactive();
             return;
         }
         if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
@@ -857,10 +861,10 @@ public:
     void setOff(){
         m_state = false;
     }
-    // void setInactive(){
-    //     drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
-    //     m_enabled = false;
-    // }
+    void setInactive(){
+        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        m_enabled = false;
+    }
     void setOffPicturePath(const char* path){
         if(m_offPicturePath){free(m_offPicturePath); m_offPicturePath = NULL;}
         if(path) m_offPicturePath = x_ps_strdup(path);
@@ -881,11 +885,11 @@ public:
         if(path) m_onPicturePath = x_ps_strdup(path);
         else m_onPicturePath = x_ps_strdup("clickedPicturePath is not set");
     }
-    // void setInactivePicturePath(const char* path){
-    //     if(m_inactivePicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
-    //     if(path) m_inactivePicturePath = x_ps_strdup(path);
-    //     else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
-    // }
+    void setInactivePicturePath(const char* path){
+        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        if(path) m_inactivePicturePath = x_ps_strdup(path);
+        else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
         if(y < m_y) return false;
