@@ -33,12 +33,12 @@ enum status {
     CLOCK = 4,
     BRIGHTNESS = 5,
     ALARM = 6,
-    SLEEP = 9,
-    STATIONSLIST = 11,
-    AUDIOFILESLIST = 12,
-    DLNAITEMSLIST = 13,
-    BLUETOOTH = 14,
-    EQUALIZER = 15,
+    SLEEP = 7,
+    STATIONSLIST = 8,
+    AUDIOFILESLIST = 9,
+    DLNAITEMSLIST = 10,
+    BLUETOOTH = 11,
+    EQUALIZER = 12,
     UNDEFINED = 255
 };
 
@@ -50,12 +50,12 @@ char _hl_item[16][40]{"",                 // none
                       "Brightness",       // Brightness яркость λάμψη
                       "Alarm (hh:mm)",    // Alarm
                       "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-                      ""
                       "Stations List",
                       "Audio Files",
                       "DLNA List",
                       "Bluetooth",
                       "Equalizer",
+                      "",
                       ""
                       ""};
 
@@ -165,6 +165,7 @@ bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
 bool                _f_dlnaSeekServer = false;
 bool                _f_BtEmitterFound = false;
+bool                _f_BTEmitterConnected = false;
 bool                _f_brightnessIsChangeable = false;
 String              _station = "";
 String              _stationName_nvs = "";
@@ -177,6 +178,7 @@ String              _curAudioFolder = "/audiofiles";
 String              _TZName = "Europe/Berlin";
 String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String              _media_downloadIP = "";
+dlnaHistory         _dlnaHistory[10];
 std::vector<String> _names{};
 std::vector<char*>  _SD_content;
 std::vector<char*>  _PLS_content;
@@ -186,12 +188,10 @@ struct timecounter {
     float   factor = 2.0;
 } _timeCounter;
 
-struct dlnaHistory {
-    char* objId = NULL;
-    char* name = NULL;
-} _dlnaHistory[10];
+
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
+
 
 Preferences    pref;
 Preferences    stations;
@@ -367,6 +367,7 @@ button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFil
 button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
 button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+dlnaList     lst_DLNA("lst_DLNA");
 // CLOCK
 imgClock     clk_CL_green("clk_CL_green");
 button2state btn_CL_Mute("btn_CL_Mute");
@@ -2438,6 +2439,8 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
     btn_DL_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_CL_green.begin(       _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);   clk_CL_green.setTimeFormat(_timeFormat);
     btn_CL_alarm.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_alarm.setDefaultPicturePath("/btn/Bell_Green.jpg");
@@ -2519,6 +2522,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BL_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
     btn_BL_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_BL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    pic_BL_mode.begin( _winLogo.x, _winLogo.y);                                          pic_BL_mode.setAlternativPicturePath("/common/BTnc.jpg");
 
     //pic_R_logo.begin(_winLogo.x, _winLogo.y);                                           pic_R_logo.setAlternativPicturePath("/common/unknown.jpg");
     //pic_R_logo.setPicturePath("/common/Brightness.jpg");
@@ -2545,6 +2549,8 @@ void changeState(int32_t state){
                          break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_volDown.disable();  btn_DL_volUp.disable();    btn_DL_pause.disable();   btn_DL_cancel.disable();
                          btn_DL_fileList.disable(); btn_DL_radio.disable();
+                         break;
+        case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
         case CLOCK:      btn_CL_Mute.disable();     btn_CL_alarm.disable();    btn_CL_radio.disable();    btn_CL_volDown.disable(); btn_CL_volUp.disable();
                          clk_CL_green.disable();
@@ -2634,7 +2640,8 @@ void changeState(int32_t state){
             break;
         }
         case DLNAITEMSLIST:{
-            showDlnaItemsList(_currDLNAsrvNr, "");
+            clearWithOutHeaderFooter();
+            lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
@@ -2700,7 +2707,7 @@ void changeState(int32_t state){
         case BLUETOOTH:
             clearWithOutHeaderFooter();
             showHeadlineItem(BLUETOOTH);
-            btn_BL_volUp.show(); btn_BL_volDown.show(); btn_BL_pause.show(); btn_BL_radio.show();
+            btn_BL_volUp.show(); btn_BL_volDown.show(); btn_BL_pause.show(); btn_BL_radio.show(); pic_BL_mode.show();
             break;
     }
     _state = state;
@@ -2710,52 +2717,54 @@ void changeState(int32_t state){
  *                                                                D L N A                                                                            *
  *****************************************************************************************************************************************************/
 
-void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
+// void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
 
-    uint16_t                  itemsSize = 0;
-    DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
-    DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
-    if(_dlnaLevel == 0) {
-        itemsSize = dlnaServer.size;
-        itemListNr = 0;
-    }                                     // DLNA Serverlist
-    else { itemsSize = srvContent.size; } // DLNA Contentlist
+//     uint16_t                  itemsSize = 0;
+//     DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
+//     DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
+//     if(_dlnaLevel == 0) {
+//         itemsSize = dlnaServer.size;
+//         itemListNr = 0;
+//     }                                     // DLNA Serverlist
+//     else { itemsSize = srvContent.size; } // DLNA Contentlist
 
-    auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
-    auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
+//     auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
+//     auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
 
-    clearWithOutHeaderFooter();
-    showHeadlineItem(DLNA);
-    tft.setFont(_fonts[0]);
-    uint8_t lineHight = _winWoHF.h / 10;
-    tft.setTextColor(TFT_ORANGE);
-    tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-    tft.setTextColor(TFT_WHITE);
-    for(uint8_t pos = 1; pos < 10; pos++) {
-        if(pos == 1 && itemListNr > 0) { triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
-        if(pos == 9 && itemListNr + 9 < _dlnaMaxItems) { triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
-        if(pos > 9) break;
-        if(pos > itemsSize) break;
-        if(_dlnaLevel == 0) { tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true); }
-        else {
-            if(startsWith(srvContent.itemURL[pos - 1], "http")) {
-                if(srvContent.isAudio[pos - 1] == true) {
-                    if(srvContent.duration[pos - 1][0] != '?') { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", srvContent.title[pos - 1], srvContent.duration[pos - 1]); }
-                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
-                }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
-            }
-            else {
-                if(srvContent.childCount[pos - 1] == 0) { sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]); }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.childCount[pos - 1]); }
-            }
-            tft.writeText(_chbuf, 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-        }
-    }
+//     clearWithOutHeaderFooter();
+//     showHeadlineItem(DLNA);
+//     tft.setFont(_fonts[0]);
+//     uint8_t lineHight = _winWoHF.h / 10;
+//     tft.setTextColor(TFT_ORANGE);
+//     tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+//     tft.setTextColor(TFT_WHITE);
+//     for(uint8_t pos = 1; pos < 10; pos++) {
+//         if(pos == 1 && itemListNr > 0) { triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
+//         if(pos == 9 && itemListNr + 9 < _dlnaMaxItems) { triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
+//         if(pos > 9) break;
+//         if(pos > itemsSize) break;
+//         if(_dlnaLevel == 0) { tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true); }
+//         else {
+//             if(startsWith(srvContent.itemURL[pos - 1], "http")) {
+//                 if(srvContent.isAudio[pos - 1] == true) {
+//                     if(srvContent.duration[pos - 1][0] != '?') { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", srvContent.title[pos - 1], srvContent.duration[pos - 1]); }
+//                     else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
+//                 }
+//                 else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
+//             }
+//             else {
+//                 if(srvContent.childCount[pos - 1] == 0) { sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]); }
+//                 else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.childCount[pos - 1]); }
+//             }
+//             tft.writeText(_chbuf, 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+//         }
+//     }
 
-    _timeCounter.timer = 10;
-    _timeCounter.factor = 1.0;
-}
+//     _timeCounter.timer = 10;
+//     _timeCounter.factor = 1.0;
+// }
+
+
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                    L O O P                                                                                  ║
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
@@ -4014,8 +4023,17 @@ void kcx_bt_info(const char* info, const char* val) {
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
-    if(status) { webSrv.send("KCX_BT_connected=", "1"); }
-    else { webSrv.send("KCX_BT_connected=", "0"); }
+    if(status) {
+        const char* mode = bt_emitter.getMode();
+        webSrv.send("KCX_BT_connected=", "1");
+        if(strcmp(mode, "TX") == 0) pic_BL_mode.setPicturePath("/common/BTgold.jpg");
+        else                        pic_BL_mode.setPicturePath("/common/BTblue.jpg");
+    }
+    else {
+        webSrv.send("KCX_BT_connected=", "0");
+        pic_BL_mode.setPicturePath("/common/BTnc.jpg");
+    }
+    if(_state == BLUETOOTH) pic_BL_mode.show();
 }
 
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
@@ -4031,11 +4049,11 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 void kcx_bt_modeChanged(const char* m) { // Every time the mode has changed
     if(strcmp("RX", m) == 0) {
         webSrv.send("KCX_BT_MODE=RX");
-        //    if(_f_mute == false) mute();
+        log_w("RX");
     }
     if(strcmp("TX", m) == 0) {
         webSrv.send("KCX_BT_MODE=TX");
-        //   if(_f_mute == true) mute();
+        log_w("TX");
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -4129,10 +4147,10 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_EQ_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
     }
     if(_state == BLUETOOTH) {
-        if( val && strcmp(name, "btn_BL_pause") == 0)   {return;}
+        if( val && strcmp(name, "btn_BL_pause") == 0)   {bt_emitter.pauseResume(); return;}
         if( val && strcmp(name, "btn_BL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_BL_volDown") == 0) {return;}
-        if( val && strcmp(name, "btn_BL_volUp") == 0)   {return;}
+        if( val && strcmp(name, "btn_BL_volDown") == 0) {bt_emitter.downvolume(); return;}
+        if( val && strcmp(name, "btn_BL_volUp") == 0)   {bt_emitter.upvolume(); return;}
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }

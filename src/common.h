@@ -159,6 +159,13 @@ extern RTIME rtc;
                             _newLine = true; \
                             xSemaphoreGive(mutex_rtc);}
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+struct dlnaHistory {
+    char* objId = NULL;
+    char* name = NULL;
+};
+
+
+
 // clang-format on
 //prototypes (main.cpp)
 boolean        defaultsettings();
@@ -1237,10 +1244,11 @@ public:
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
         strcpy(m_pathBuff, m_p1);
-
     }
     ~alarmClock(){
+        if(m_name){free(m_name); m_name = NULL;}
         if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
+
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1480,6 +1488,244 @@ private:
             sprintf(hhmm, "%02d:%02d", m_alarmTime[idx] / 60, m_alarmTime[idx] % 60);
             tft.writeText(hhmm, m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
         }
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class dlnaList{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_dlnaLevel;
+    uint8_t     m_fontSize = 0;
+    int8_t      m_currDLNAsrvNr = -1;
+    uint16_t    m_dlnaMaxItems = 0;
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+    DLNA_Client::dlnaServer_t m_dlnaServer;
+    DLNA_Client::srvContent_t m_srvContent;
+    dlnaHistory m_dlnaHistory[10];
+
+public:
+    dlnaList(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("alarmClock");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+    }
+    ~dlnaList(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_fontSize = fontSize;
+        m_enabled = false;
+    }
+    void show(int8_t currDLNAsrvNr, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t dlnaLevel, dlnaHistory *dh, uint8_t dhSize, uint16_t maxItems){
+        m_currDLNAsrvNr = currDLNAsrvNr;
+        m_dlnaServer = dlnaServer;
+        m_srvContent = srvContent;
+        m_dlnaLevel  = dlnaLevel;
+        m_clicked = false;
+        m_enabled = true;
+        for(uint8_t i = 0; i < dhSize; i++) {m_dlnaHistory[i].name = dh[i].name; m_dlnaHistory[i].objId = dh[i].objId;}
+        m_dlnaMaxItems = maxItems;
+        dlnaItemsList(0);
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        return true;
+    }
+private:
+    void dlnaItemsList(uint16_t itemListNr){
+        char* buff = x_ps_malloc(512);
+        uint16_t itemsSize = 0;
+        if(m_dlnaLevel == 0) {
+            itemsSize = m_dlnaServer.size;
+            itemListNr = 0;
+        }                                     // DLNA Serverlist
+        else { itemsSize = m_srvContent.size; } // DLNA Contentlist
+
+        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
+        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
+
+        //clearWithOutHeaderFooter();
+        //showHeadlineItem(DLNA);
+        tft.setFont(m_fontSize);
+        uint8_t lineHight = m_h / 10;
+        tft.setTextColor(TFT_ORANGE);
+        tft.writeText(m_dlnaHistory[m_dlnaLevel].name, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+        tft.setTextColor(TFT_WHITE);
+        for(uint8_t pos = 1; pos < 10; pos++) {
+            if(pos == 1 && itemListNr > 0) { triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5); }
+            if(pos == 9 && itemListNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5); }
+            if(pos > 9) break;
+            if(pos > itemsSize) break;
+            if(m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos)*lineHight, m_w- 20, lineHight, TFT_ALIGN_LEFT, true, true); }
+            else {
+                if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
+                    if(m_srvContent.isAudio[pos - 1] == true) {
+                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
+                        else { sprintf(buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
+                    }
+                    else { sprintf(buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
+                }
+                else {
+                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
+                    else { sprintf(buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
+                }
+                tft.writeText(buff, 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+            }
+        }
+        if(buff){free(buff); buff = NULL;}
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class fileList{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+public:
+    fileList(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("alarmClock");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+    }
+    ~fileList(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    void show(){
+        m_clicked = false;
+        m_enabled = true;
+        ;
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        return true;
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class stationsList{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+public:
+    stationsList(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("alarmClock");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+    }
+    ~stationsList(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    void show(){
+        m_clicked = false;
+        m_enabled = true;
+        ;
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        return true;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
