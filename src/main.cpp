@@ -2641,7 +2641,6 @@ void changeState(int32_t state){
             break;
         }
         case DLNAITEMSLIST:{
-        //    clearWithOutHeaderFooter();
             lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
@@ -3225,7 +3224,7 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     // SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    enum : int8_t {none = -1, SLEEP_1, DLNAITEMSLIST_1, STATIONSLIST_1, AUDIOFILESLIST_1
+    enum : int8_t {none = -1, SLEEP_1, STATIONSLIST_1, AUDIOFILESLIST_1
     };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
@@ -3380,13 +3379,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             _releaseNr = 110;
                             if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
                             else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
-                            vTaskDelay(100);
-                            break;
-        case DLNAITEMSLIST_1: if(btnNr == none) break;
-                            _releaseNr = 120;
-                            if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
-                            else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
-                            _itemListPos = btnNr;
                             vTaskDelay(100);
                             break;
         default:            break;
