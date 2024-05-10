@@ -367,7 +367,7 @@ button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFil
 button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
 button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
-dlnaList     lst_DLNA("lst_DLNA");
+dlnaList     lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
 imgClock     clk_CL_green("clk_CL_green");
 button2state btn_CL_Mute("btn_CL_Mute");
@@ -2641,7 +2641,7 @@ void changeState(int32_t state){
         }
         case DLNAITEMSLIST:{
         //    clearWithOutHeaderFooter();
-            lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+            lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
@@ -3254,7 +3254,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(_radioSubmenue == 3) _radioSubmenue = 0;
                 changeState(RADIO);
                 return;
-            break;
+                break;
         case PLAYER:
                 if(_playerSubmenue == 0){
                     if(btn_PL_prevFile.positionXY(x, y)) return;
@@ -3281,7 +3281,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_DL_radio.positionXY(x, y)) return;
                 if(btn_DL_fileList.positionXY(x, y)) return;
                 if(btn_DL_cancel.positionXY(x, y)) return;
-            break;
+                break;
+        case DLNAITEMSLIST:
+                if(lst_DLNA.positionXY(x, y)) return;
+                break;
         case CLOCK:
                 if(_clockSubMenue == 0){
                     if(clk_CL_green.positionXY(x, y)) return;
@@ -3293,7 +3296,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                     if(btn_CL_volDown.positionXY(x, y)) return;
                     if(btn_CL_volUp.positionXY(x, y)) return;
                 }
-            break;
+                break;
         case ALARM:
                 if(clk_AL_red.positionXY(x, y)) return;
                 if(btn_AL_left.positionXY(x, y)) return;
@@ -3301,19 +3304,19 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_AL_up.positionXY(x, y)) return;
                 if(btn_AL_down.positionXY(x, y)) return;
                 if(btn_AL_ready.positionXY(x, y)) return;
-            break;
+                break;
         case SLEEP:
                 if(btn_SL_up.positionXY(x, y)) return;
                 if(btn_SL_down.positionXY(x, y)) return;
                 if(btn_SL_ready.positionXY(x, y)) return;
                 if(btn_SL_cancel.positionXY(x, y)) return;
-            break;
+                break;
         case BRIGHTNESS:
                 if(btn_BR_left.positionXY(x, y)) return;
                 if(btn_BR_right.positionXY(x, y)) return;
                 if(btn_BR_ready.positionXY(x, y)) return;
                 if(pic_BR_logo.positionXY(x, y)) return;
-            break;
+                break;
         case STATIONSLIST:
             if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
                 btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
@@ -3334,18 +3337,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
             else if(y > _winFooter.y){
                 if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
                     yPos = AUDIOFILESLIST_1;
-                    btnNr = 100;
-                }
-            }
-            break;
-        case DLNAITEMSLIST:
-            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                yPos = DLNAITEMSLIST_1;
-            }
-            else if(y > _winFooter.y){
-                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
-                    yPos = DLNAITEMSLIST_1;
                     btnNr = 100;
                 }
             }
@@ -3428,6 +3419,9 @@ void tp_released(uint16_t x, uint16_t y){
             break;
         case DLNA:
             btn_DL_Mute.released(); btn_DL_pause.released(); btn_DL_volDown.released(); btn_DL_volUp.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released();
+            break;
+        case DLNAITEMSLIST:
+            lst_DLNA.released(x, y);
             break;
         case CLOCK:
             btn_CL_Mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); btn_CL_volDown.released(); btn_CL_volUp.released(); clk_CL_green.released();
@@ -3559,93 +3553,6 @@ void tp_released(uint16_t x, uint16_t y){
                             showFooterRSSI(true);
                         }
                         else log_i("unknown gesture");
-                    } break;
-        /* DLNAITEMSLIST *********************************/
-        case 120:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                        DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
-                        DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
-                        uint16_t itemSize = 0;
-                        if(_dlnaLevel == 0) itemSize = dlnaServer.size;
-                        else                itemSize = srvContent.size;
-                        uint8_t itemListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                        if(_itemListPos + 2 < itemListPos){               // wipe down
-                            if(_dlnaItemNr == 0) break;
-                            if(_dlnaItemNr >  9) _dlnaItemNr -= 9;
-                            else _dlnaItemNr = 0;
-                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
-                            _f_dlnaWaitForResponse = true;
-                            break;
-                        }
-                        else if(itemListPos + 2 < _itemListPos){          // wipe up
-                            if(_dlnaItemNr + 9 >= _dlnaMaxItems) break;
-                            _dlnaItemNr += 9;
-                            dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
-                            _f_dlnaWaitForResponse = true;
-                            break;
-                        }
-                        else if(itemListPos == _itemListPos){            // no wipe
-                            uint16_t itemNr = _dlnaItemNr + itemListPos;
-                            if(itemNr % 9 > itemSize){
-                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-                                break;
-                            }
-                            uint8_t lineHight = _winWoHF.h / 10;
-                            if(itemListPos == 0) {
-                                if(_dlnaLevel == 0) break;
-                                tft.setFont(_fonts[0]);
-                                tft.setTextColor(TFT_CYAN);
-                                tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winFooter.h, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-                                _dlnaLevel--;
-                                dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
-                                _f_dlnaWaitForResponse = true;
-                                break;
-                            }
-                            else{
-                                if(itemListPos > itemSize) break;
-                                tft.setTextColor(TFT_CYAN);
-                                uint8_t pos = itemListPos;
-                                tft.setFont(_fonts[0]);
-                                if(_dlnaLevel == 0){  // server list
-                                    tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-                                    _currDLNAsrvNr = pos - 1;
-                                    _dlnaLevel++;
-                                    if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
-                                    _dlnaHistory[_dlnaLevel].name = strdup(dlnaServer.friendlyName[pos - 1]);
-                                    dlna.browseServer(_currDLNAsrvNr, "0", 0 , 9);
-                                    _f_dlnaWaitForResponse = true;
-                                }
-                                else {  // content list
-                                    if(startsWith(srvContent.itemURL[pos - 1], "http")){ // is file
-                                        if(srvContent.isAudio[pos - 1]){
-                                            sprintf(_chbuf, "%s",srvContent.title[pos - 1]);
-                                            tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-                                            connecttohost(srvContent.itemURL[pos - 1]);
-                                            changeState(DLNA);
-                                            showFileName(srvContent.title[pos - 1]);
-                                        }
-                                    }
-                                    else{ // is folder
-                                        if(srvContent.childCount[pos - 1] == 0){
-                                            sprintf(_chbuf, "%s",srvContent.title[pos - 1]);
-                                        }
-                                        else{
-                                            sprintf(_chbuf, "%s (%d)",srvContent.title[pos - 1], srvContent.childCount[pos - 1]);
-                                        }
-                                        tft.writeText(_chbuf, 20, _winFooter.h + (pos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-                                        _dlnaLevel++;
-                                        if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;}
-                                        _dlnaHistory[_dlnaLevel].objId = strdup(srvContent.objectId[pos -1]);
-                                        if(_dlnaHistory[_dlnaLevel].name){free(_dlnaHistory[_dlnaLevel].name); _dlnaHistory[_dlnaLevel].name = NULL;}
-                                        _dlnaHistory[_dlnaLevel].name = strdup(srvContent.title[pos - 1]);
-                                        _dlnaItemNr = 0; // new folder? reset dlnaItemNr
-                                        dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
-                                        _f_dlnaWaitForResponse = true;
-                                    }
-                                }
-                            }
-                            _timeCounter.timer = 0;
-                            showFooterRSSI(true);
-                        }
                     } break;
     }
     _releaseNr = -1;
@@ -3941,7 +3848,7 @@ void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
         _f_dlnaBrowseServer = false;
         if(_dlnaLevel > 0) _dlnaLevel--;
-        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         _timeCounter.timer = 10;
         _timeCounter.factor = 1.0;
     }
@@ -3967,7 +3874,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     }
     if(_f_dlnaWaitForResponse) {
         _f_dlnaWaitForResponse = false;
-        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         _timeCounter.timer = 10;
         _timeCounter.factor = 1.0;
     }
@@ -4066,6 +3973,9 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_DL_fileList") == 0){return;}
         if( val && strcmp(name, "btn_DL_cancel") == 0)  {clearStationName(); btn_DL_pause.setInactive(); return;}
     }
+    if(_state == DLNAITEMSLIST) {
+        if( val && strcmp(name, "lst_DLNA") == 0)       {_f_dlnaWaitForResponse = true; return;}
+    }
     if(_state == CLOCK) {
         if( val && strcmp(name, "btn_CL_Mute") == 0)    {_timeCounter.timer = 5; {if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
@@ -4112,7 +4022,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
     log_d("unused event: graphicObject %s was clicked", name);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void graphicObjects_OnRelease(const char* name) {
+void graphicObjects_OnRelease(const char* name, releasedArg ra) {
 
     if(_state == RADIO) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
@@ -4152,6 +4062,9 @@ void graphicObjects_OnRelease(const char* name) {
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); return;}
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); return;}
+    }
+    if(_state == DLNAITEMSLIST) {
+        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1){changeState(DLNA); connecttohost(ra.arg1); showFileName(ra.arg2);} return;}
     }
     if(_state == CLOCK) {
         if(strcmp(name, "btn_CL_Mute") == 0)     {muteChanged(btn_CL_Mute.getValue()); return;}

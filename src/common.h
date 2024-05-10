@@ -160,11 +160,16 @@ extern RTIME rtc;
                             xSemaphoreGive(mutex_rtc);}
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct dlnaHistory {
-    char* objId = NULL;
-    char* name = NULL;
+    char*  objId = NULL;
+    char*   name = NULL;
 };
-
-
+struct releasedArg {
+    char*   arg1 = NULL;
+    char*   arg2 = NULL;
+    int16_t val1 = 0;
+    int16_t val2 = 0;
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // clang-format on
 //prototypes (main.cpp)
@@ -327,6 +332,8 @@ inline void trim(char* s) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline bool startsWith(const char* base, const char* searchString) {
+    if(base == NULL) {log_e("base = NULL"); return false;}                      // guard
+    if(searchString == NULL) {log_e("searchString == NULL"); return false;}     // guard
     char c;
     while((c = *searchString++) != '\0')
         if(c != *base++) return false;
@@ -495,28 +502,29 @@ inline void hardcopy(){
 
 extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8_t val);
-extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name);
+extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, releasedArg ra);
 class slider{
 private:
-    int16_t m_x = 0;
-    int16_t m_y = 0;
-    int16_t m_w = 0;
-    int16_t m_h = 0;
-    int16_t m_val = 0;
-    int16_t m_minVal = 0;
-    int16_t m_maxVal = 0;
-    uint16_t m_leftStop = 0;
-    uint16_t m_rightStop = 0;
-    uint32_t m_bgColor = 0;
-    uint32_t m_railColor = 0;
-    uint32_t m_spotColor = 0;
-    bool     m_enabled = false;
-    bool     m_clicked = false;
-    uint8_t  m_railHigh = 0;
-    uint16_t m_middle_h = 0;
-    uint16_t m_spotPos = 0;
-    uint8_t  m_spotRadius = 0;
-    char*    m_name = NULL;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    int16_t     m_val = 0;
+    int16_t     m_minVal = 0;
+    int16_t     m_maxVal = 0;
+    uint16_t    m_leftStop = 0;
+    uint16_t    m_rightStop = 0;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_railColor = 0;
+    uint32_t    m_spotColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    uint8_t     m_railHigh = 0;
+    uint16_t    m_middle_h = 0;
+    uint16_t    m_spotPos = 0;
+    uint8_t     m_spotRadius = 0;
+    char*       m_name = NULL;
+    releasedArg m_ra;
 public:
     slider(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -584,7 +592,7 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         m_clicked = false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
 private:
@@ -612,17 +620,18 @@ private:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class textbox{
 private:
-    int16_t m_x = 0;
-    int16_t m_y = 0;
-    int16_t m_w = 0;
-    int16_t m_h = 0;
-    uint8_t m_fontSize = 0;
-    uint32_t m_bgColor = 0;
-    uint32_t m_fgColor = 0;
-    char* m_text = NULL;
-    char* m_name = NULL;
-    bool  m_enabled = false;
-    bool  m_clicked = false;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_fontSize = 0;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_fgColor = 0;
+    char*       m_text = NULL;
+    char*       m_name = NULL;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
 public:
     textbox(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -680,7 +689,7 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         m_clicked = false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
     void writeText(const char* txt){
@@ -699,17 +708,18 @@ public:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class button1state{ // click button
 private:
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
-    uint32_t m_bgColor = 0;
-    char*    m_defaultPicturePath = NULL;
-    char*    m_clickedPicturePath = NULL;
-    char*    m_inactivePicturePath = NULL;
-    bool     m_enabled = false;
-    bool     m_clicked = false;
-    char*    m_name = NULL;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    char*       m_defaultPicturePath = NULL;
+    char*       m_clickedPicturePath = NULL;
+    char*       m_inactivePicturePath = NULL;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    char*       m_name = NULL;
+    releasedArg m_ra;
 public:
     button1state(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -786,27 +796,28 @@ public:
         if(!m_clicked) return false;
         drawImage(m_defaultPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class button2state{ // on off switch
 private:
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
-    uint32_t m_bgColor = 0;
-    char*    m_offPicturePath = NULL;
-    char*    m_onPicturePath = NULL;
-    char*    m_clickedOffPicturePath = NULL;
-    char*    m_clickedOnPicturePath = NULL;
-    char*    m_inactivePicturePath = NULL;
-    bool     m_enabled = false;
-    bool     m_clicked = false;
-    bool     m_state = false;
-    char*    m_name = NULL;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    char*       m_offPicturePath = NULL;
+    char*       m_onPicturePath = NULL;
+    char*       m_clickedOffPicturePath = NULL;
+    char*       m_clickedOnPicturePath = NULL;
+    char*       m_inactivePicturePath = NULL;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    char*       m_name = NULL;
+    releasedArg m_ra;
 public:
     button2state(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -918,23 +929,24 @@ public:
         if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
         else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
         m_clicked = false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox{
 private:
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
-    uint32_t m_bgColor = 0;
-    char*    m_PicturePath = NULL;
-    char*    m_altPicturePath = NULL;
-    char*    m_name = NULL;
-    bool     m_enabled = false;
-    bool     m_clicked = false;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    char*       m_PicturePath = NULL;
+    char*       m_altPicturePath = NULL;
+    char*       m_name = NULL;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
 public:
     pictureBox(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -994,7 +1006,7 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         m_clicked = false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
 private:
@@ -1047,27 +1059,28 @@ private:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class imgClock{ // draw a clock in 12 or 24h format
 private:
-    int16_t  m_x = 0;
-    int16_t  m_y = 0;
-    int16_t  m_w = 0;
-    int16_t  m_h = 0;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
 #if TFT_CONTROLLER < 2
-    uint16_t m_timeXPos7S[5] = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
-    uint16_t m_timeXPosFN[6] = {0, 56, 152, 208, 264, 112}; // folded numbers
+    uint16_t    m_timeXPos7S[5] = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
+    uint16_t    m_timeXPosFN[6] = {0, 56, 152, 208, 264, 112}; // folded numbers
 #else
     uint16_t m_timeXPos7S[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
     uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
 #endif
-    uint16_t m_minuteOfTheDay = 0;
-    uint32_t m_bgColor = 0;
-    bool     m_enabled = false;
-    bool     m_clicked = false;
-    bool     m_state = false;
-    uint8_t  m_timeFormat = 24;
-    bool     m_showAll = false;
-    char*    m_name = NULL;
-    char*    m_pathBuff = NULL;
-    uint8_t  m_min = 0, m_hour = 0, m_weekday = 0;
+    uint16_t    m_minuteOfTheDay = 0;
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    uint8_t     m_timeFormat = 24;
+    bool        m_showAll = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg m_ra;
 public:
     imgClock(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -1188,7 +1201,8 @@ public:
     bool released(){
         if(!m_enabled) return false;
         if(!m_clicked) return false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_clicked = false;
         return true;
     }
 };
@@ -1233,6 +1247,7 @@ private:
     const char* m_p1 = "/digits/sevenSegment/"; // path
     uint8_t     m_p1Len = 21;
     const char  m_WD[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+    releasedArg m_ra;
 
 public:
     alarmClock(const char* name){
@@ -1374,7 +1389,7 @@ public:
         if(m_btnAlarmDay >= 0){
             sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmDay] / 60, m_alarmTime[m_btnAlarmDay] % 60);
         }
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         if(m_btnAlarmDay >= 0){
             uint8_t mask = 0b00000001;
             mask <<= m_btnAlarmDay;
@@ -1418,6 +1433,7 @@ public:
             }
             m_btnAlarmTime = -1;
         }
+        m_clicked = false;
         return true;
     }
 private:
@@ -1493,33 +1509,43 @@ private:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class dlnaList{
 private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-    uint8_t     m_dlnaLevel;
-    uint8_t     m_fontSize = 0;
-    int8_t      m_currDLNAsrvNr = -1;
-    uint16_t    m_dlnaMaxItems = 0;
-    uint32_t    m_bgColor = 0;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    bool        m_state = false;
-    char*       m_name = NULL;
-    char*       m_pathBuff = NULL;
+    int16_t                   m_x = 0;
+    int16_t                   m_y = 0;
+    int16_t                   m_w = 0;
+    int16_t                   m_h = 0;
+    uint8_t*                  m_dlnaLevel;
+    uint8_t                   m_fontSize = 0;
+    uint8_t                   m_lineHight = 0;
+    int8_t                    m_currDLNAsrvNr = -1;
+    int8_t                    m_currItemNr = -1;
+    uint16_t                  m_dlnaMaxItems = 0;
+    uint32_t                  m_bgColor = 0;
+    bool                      m_enabled = false;
+    bool                      m_clicked = false;
+    bool                      m_state = false;
+    char*                     m_name = NULL;
+    char*                     m_pathBuff = NULL;
     DLNA_Client::dlnaServer_t m_dlnaServer;
     DLNA_Client::srvContent_t m_srvContent;
-    dlnaHistory m_dlnaHistory[10];
+    DLNA_Client*              m_dlna;
+    dlnaHistory*              m_dlnaHistory = NULL;
+    releasedArg               m_ra;
 
 public:
-    dlnaList(const char* name){
+    dlnaList(const char* name, DLNA_Client *dlna, dlnaHistory* dh, uint8_t dhSize){
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("alarmClock");
+        m_dlna    = dlna;
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
+        m_ra.arg1 = NULL;
+        m_ra.arg2 = NULL;
+        m_ra.val1 = 0;
+        m_ra.val2 = 0;
+        m_dlnaHistory = dh;
     }
     ~dlnaList(){
         if(m_name){free(m_name); m_name = NULL;}
@@ -1531,15 +1557,16 @@ public:
         m_h = h; // high
         m_fontSize = fontSize;
         m_enabled = false;
+        m_lineHight = m_h / 10;
     }
-    void show(int8_t currDLNAsrvNr, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t dlnaLevel, dlnaHistory *dh, uint8_t dhSize, uint16_t maxItems){
-        m_currDLNAsrvNr = currDLNAsrvNr; // currSrvNr in level 0, level > 1 currItemNr
+    void show(int8_t number, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t* dlnaLevel,  uint16_t maxItems){
         m_dlnaServer = dlnaServer;
         m_srvContent = srvContent;
         m_dlnaLevel  = dlnaLevel;
+        if(m_dlnaLevel == 0) m_currDLNAsrvNr = number;
+        else                 m_currItemNr = number;
         m_clicked = false;
         m_enabled = true;
-        for(uint8_t i = 0; i < dhSize; i++) {m_dlnaHistory[i].name = dh[i].name; m_dlnaHistory[i].objId = dh[i].objId;}
         m_dlnaMaxItems = maxItems;
         dlnaItemsList(m_currDLNAsrvNr);
     }
@@ -1556,19 +1583,24 @@ public:
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
+        m_ra.val1 = 0;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
+        hasClicked(x - m_x, y - m_y);
+        return true;
     }
-    bool released(){
+    bool released(uint16_t x, uint16_t y){
         if(!m_enabled) return false;
         if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
 private:
     void dlnaItemsList(uint16_t itemListNr){
         char* buff = x_ps_malloc(512);
         uint16_t itemsSize = 0;
-        if(m_dlnaLevel == 0) {
+        if(*m_dlnaLevel == 0) {
             itemsSize = m_dlnaServer.size;
             itemListNr = 0;
         }
@@ -1579,17 +1611,16 @@ private:
 
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
-        uint8_t lineHight = m_h / 10;
         tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_dlnaHistory[m_dlnaLevel].name, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+log_e("m_dlnaLevel %i", *m_dlnaLevel);
+        tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
-log_i("pos %i. itemListNr %i, m_dlnaLevel %i", pos, itemListNr, m_dlnaLevel);
-            if(pos == 1 && itemListNr > 0) { triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5); }
-            if(pos == 9 && itemListNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5); }
+            if(pos == 1 && itemListNr > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
+            if(pos == 9 && itemListNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
             if(pos > 9) break;
             if(pos > itemsSize) break;
-            if(m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos)*lineHight, m_w- 20, lineHight, TFT_ALIGN_LEFT, true, true); }
+            if(*m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, true, true); }
             else {
                 if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
                     if(m_srvContent.isAudio[pos - 1] == true) {
@@ -1602,10 +1633,89 @@ log_i("pos %i. itemListNr %i, m_dlnaLevel %i", pos, itemListNr, m_dlnaLevel);
                     if(m_srvContent.childCount[pos - 1] == 0) { sprintf(buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
                     else { sprintf(buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
                 }
-                tft.writeText(buff, 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+                tft.writeText(buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
             }
         }
         if(buff){free(buff); buff = NULL;}
+        return;
+    }
+    void hasClicked(uint16_t x, uint16_t y){
+        char* buff = x_ps_malloc(512);
+        uint8_t itemListPos = y / (m_h / 10);
+        uint16_t itemNr = m_dlnaMaxItems + itemListPos;
+log_i("itemListPos  %i, maxItens %i, itemListNr %i", itemListPos, m_dlnaMaxItems, itemNr);
+        //     if(_itemListPos + 2 < itemListPos){               // wipe down
+        //         if(_dlnaItemNr == 0) return;
+        //             if(_dlnaItemNr >  9) _dlnaItemNr -= 9;
+        //             else _dlnaItemNr = 0;
+        //             dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
+        //             _f_dlnaWaitForResponse = true;
+        //             return;
+        //         }
+        //         else if(itemListPos + 2 < _itemListPos){          // wipe up
+        //             if(_dlnaItemNr + 9 >= _dlnaMaxItems) return;
+        //             _dlnaItemNr += 9;
+        //             dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
+        //             _f_dlnaWaitForResponse = true;
+        //             return;
+        //         }
+        //         else if(itemListPos == _itemListPos){            // no wipe
+        //             uint16_t itemNr = _dlnaItemNr + itemListPos;
+        //             if(itemNr % 9 > itemSize){
+        //             SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
+        //             return;
+        //         }
+        
+        //if(itemListPos == 0) {
+        //         if(_dlnaLevel == 0) return;
+        //         tft.setFont(m_fontSize);
+        //         tft.setTextColor(TFT_CYAN);
+        //         tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winFooter.h, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+        //         _dlnaLevel--;
+        //         dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
+        //         _f_dlnaWaitForResponse = true;
+        //         return;
+        //     }
+        //     else{
+        //         if(itemListPos > itemSize) return;
+        tft.setTextColor(TFT_CYAN);
+        tft.setFont(m_fontSize);
+        if(*m_dlnaLevel == 0){  // server list
+            tft.writeText(m_dlnaServer.friendlyName[itemListPos - 1], 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+            m_currDLNAsrvNr = itemListPos - 1;
+            (*m_dlnaLevel) ++;
+            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[itemListPos - 1]);
+            m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);
+        }
+        else {  // content list
+            if(itemListPos == 0){
+                (*m_dlnaLevel) --;
+                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+            }
+            else if(startsWith(m_srvContent.itemURL[itemListPos - 1], "http")){ // is file
+                if(m_srvContent.isAudio[itemListPos - 1]){
+                    sprintf(buff, "%s",m_srvContent.title[itemListPos - 1]);
+                    tft.writeText(buff, 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                    m_ra.arg1 = m_srvContent.itemURL[itemListPos - 1]; // url --> connecttohost()
+                    m_ra.arg2 = m_srvContent.title[itemListPos - 1];   // filename --> showFileName()
+                    if(m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
+                }
+            }
+            else{ // is folder
+                sprintf(buff, "%s (%d)",m_srvContent.title[itemListPos - 1], m_srvContent.childCount[itemListPos - 1]);
+                (*m_dlnaLevel) ++;
+                 tft.writeText(buff, 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
+                m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[itemListPos -1]);
+                if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[itemListPos - 1]);
+                itemNr = 0; // new folder? reset dlnaItemNr
+                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+            }
+        }
+        if(buff){free(buff); buff = NULL;}
+        return;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
