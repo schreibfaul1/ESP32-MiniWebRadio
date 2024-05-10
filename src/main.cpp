@@ -2640,7 +2640,7 @@ void changeState(int32_t state){
             break;
         }
         case DLNAITEMSLIST:{
-            clearWithOutHeaderFooter();
+        //    clearWithOutHeaderFooter();
             lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
@@ -2713,57 +2713,6 @@ void changeState(int32_t state){
     _state = state;
 }
 // clang-format on
-/*****************************************************************************************************************************************************
- *                                                                D L N A                                                                            *
- *****************************************************************************************************************************************************/
-
-void showDlnaItemsList(uint16_t itemListNr, const char* parentName) {
-
-    uint16_t                  itemsSize = 0;
-    DLNA_Client::dlnaServer_t dlnaServer = dlna.getServer();
-    DLNA_Client::srvContent_t srvContent = dlna.getBrowseResult();
-    if(_dlnaLevel == 0) {
-        itemsSize = dlnaServer.size;
-        itemListNr = 0;
-    }                                     // DLNA Serverlist
-    else { itemsSize = srvContent.size; } // DLNA Contentlist
-
-    auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
-    auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
-
-    clearWithOutHeaderFooter();
-    showHeadlineItem(DLNA);
-    tft.setFont(_fonts[0]);
-    uint8_t lineHight = _winWoHF.h / 10;
-    tft.setTextColor(TFT_ORANGE);
-    tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-    tft.setTextColor(TFT_WHITE);
-    for(uint8_t pos = 1; pos < 10; pos++) {
-        if(pos == 1 && itemListNr > 0) { triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
-        if(pos == 9 && itemListNr + 9 < _dlnaMaxItems) { triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5); }
-        if(pos > 9) break;
-        if(pos > itemsSize) break;
-        if(_dlnaLevel == 0) { tft.writeText(dlnaServer.friendlyName[pos - 1], 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true); }
-        else {
-            if(startsWith(srvContent.itemURL[pos - 1], "http")) {
-                if(srvContent.isAudio[pos - 1] == true) {
-                    if(srvContent.duration[pos - 1][0] != '?') { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", srvContent.title[pos - 1], srvContent.duration[pos - 1]); }
-                    else { sprintf(_chbuf, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
-                }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", srvContent.title[pos - 1], (long int)srvContent.itemSize[pos - 1]); }
-            }
-            else {
-                if(srvContent.childCount[pos - 1] == 0) { sprintf(_chbuf, ANSI_ESC_WHITE "%s", srvContent.title[pos - 1]); }
-                else { sprintf(_chbuf, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", srvContent.title[pos - 1], srvContent.childCount[pos - 1]); }
-            }
-            tft.writeText(_chbuf, 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-        }
-    }
-
-    _timeCounter.timer = 10;
-    _timeCounter.factor = 1.0;
-}
-
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                    L O O P                                                                                  ║
@@ -3034,7 +2983,11 @@ void loop() {
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(startsWith(info, "Request"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
+                                                   if(endsWith(info, "failed!")){
+                                                       connecttohost(_lastconnectedhost.c_str());
+                                                       log_e ("try another connection!");
+                                                   }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
@@ -3988,8 +3941,9 @@ void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
         _f_dlnaBrowseServer = false;
         if(_dlnaLevel > 0) _dlnaLevel--;
-        showDlnaItemsList(_dlnaItemNr, _dlnaHistory[_dlnaLevel].name);
-    //    lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+        _timeCounter.timer = 10;
+        _timeCounter.factor = 1.0;
     }
     SerialPrintfln("DLNA_info:    %s", info);
 }
@@ -4013,7 +3967,9 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     }
     if(_f_dlnaWaitForResponse) {
         _f_dlnaWaitForResponse = false;
-        showDlnaItemsList(_dlnaItemNr, _dlnaHistory[_dlnaLevel].name);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), _dlnaLevel, _dlnaHistory, 10, _dlnaMaxItems);
+        _timeCounter.timer = 10;
+        _timeCounter.factor = 1.0;
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }
 }

@@ -10,7 +10,7 @@
 #define TFT_CONTROLLER      0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TFT_FREQUENCY       80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_VERSION          0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
 #define TP_ROTATION         3                               // 1 or 3 (landscape)
 #define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
@@ -1533,7 +1533,7 @@ public:
         m_enabled = false;
     }
     void show(int8_t currDLNAsrvNr, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t dlnaLevel, dlnaHistory *dh, uint8_t dhSize, uint16_t maxItems){
-        m_currDLNAsrvNr = currDLNAsrvNr;
+        m_currDLNAsrvNr = currDLNAsrvNr; // currSrvNr in level 0, level > 1 currItemNr
         m_dlnaServer = dlnaServer;
         m_srvContent = srvContent;
         m_dlnaLevel  = dlnaLevel;
@@ -1541,7 +1541,7 @@ public:
         m_enabled = true;
         for(uint8_t i = 0; i < dhSize; i++) {m_dlnaHistory[i].name = dh[i].name; m_dlnaHistory[i].objId = dh[i].objId;}
         m_dlnaMaxItems = maxItems;
-        dlnaItemsList(0);
+        dlnaItemsList(m_currDLNAsrvNr);
     }
     void hide(){
         m_enabled = false;
@@ -1571,20 +1571,20 @@ private:
         if(m_dlnaLevel == 0) {
             itemsSize = m_dlnaServer.size;
             itemListNr = 0;
-        }                                     // DLNA Serverlist
-        else { itemsSize = m_srvContent.size; } // DLNA Contentlist
+        }
+        else { itemsSize = m_srvContent.size; }
 
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
         auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
 
-        //clearWithOutHeaderFooter();
-        //showHeadlineItem(DLNA);
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
         uint8_t lineHight = m_h / 10;
         tft.setTextColor(TFT_ORANGE);
         tft.writeText(m_dlnaHistory[m_dlnaLevel].name, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
+log_i("pos %i. itemListNr %i, m_dlnaLevel %i", pos, itemListNr, m_dlnaLevel);
             if(pos == 1 && itemListNr > 0) { triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5); }
             if(pos == 9 && itemListNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5); }
             if(pos > 9) break;
