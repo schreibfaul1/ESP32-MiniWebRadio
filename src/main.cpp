@@ -1652,7 +1652,8 @@ bool connectToWiFi() {
         }
         file.close();
     }
-    wifiMulti.run();
+    uint8_t cnt = 0;
+    while(!WiFi.isConnected()) {wifiMulti.run(); cnt++; vTaskDelay(10); if(cnt > 3) break;}
 
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -3282,9 +3283,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_DL_fileList.positionXY(x, y)) return;
                 if(btn_DL_cancel.positionXY(x, y)) return;
                 break;
-        case DLNAITEMSLIST:
-                if(lst_DLNA.positionXY(x, y)) return;
-                break;
         case CLOCK:
                 if(_clockSubMenue == 0){
                     if(clk_CL_green.positionXY(x, y)) return;
@@ -3565,6 +3563,9 @@ void tp_long_released(){
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
+    if(_state == DLNAITEMSLIST){
+        if(lst_DLNA.positionXY(x, y)) return;
+    }
     if(_state == EQUALIZER){
         if(sdr_EQ_lowPass.positionXY(x, y)) return;
         if(sdr_EQ_bandPass.positionXY(x, y)) return;

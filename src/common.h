@@ -247,7 +247,6 @@ void           connecttohost(const char* host);
 void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
-void           showDlnaItemsList(uint16_t itemListNr, const char* parentName);
 void           placingGraphicObjects();
 void           muteChanged(bool m);
 
@@ -1513,9 +1512,13 @@ private:
     int16_t                   m_y = 0;
     int16_t                   m_w = 0;
     int16_t                   m_h = 0;
+    int16_t                   m_oldX = 0;
+    int16_t                   m_oldY = 0;
     uint8_t*                  m_dlnaLevel;
+    uint8_t                   m_oldDlnaLevel = 0;
     uint8_t                   m_fontSize = 0;
     uint8_t                   m_lineHight = 0;
+    uint8_t                   m_browseOnRelease = 0;
     int8_t                    m_currDLNAsrvNr = -1;
     int8_t                    m_currItemNr = -1;
     uint16_t                  m_dlnaMaxItems = 0;
@@ -1560,15 +1563,15 @@ public:
         m_lineHight = m_h / 10;
     }
     void show(int8_t number, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t* dlnaLevel,  uint16_t maxItems){
+        m_browseOnRelease = 0;
         m_dlnaServer = dlnaServer;
         m_srvContent = srvContent;
         m_dlnaLevel  = dlnaLevel;
         if(m_dlnaLevel == 0) m_currDLNAsrvNr = number;
-        else                 m_currItemNr = number;
         m_clicked = false;
         m_enabled = true;
         m_dlnaMaxItems = maxItems;
-        dlnaItemsList(m_currDLNAsrvNr);
+        dlnaItemsList();
     }
     void hide(){
         m_enabled = false;
@@ -1583,7 +1586,6 @@ public:
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
-        m_ra.val1 = 0;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
         hasClicked(x - m_x, y - m_y);
@@ -1593,16 +1595,22 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         m_clicked = false;
+        if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}
+        if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
+        if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
+        if(m_browseOnRelease == 4){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_currItemNr , 9);}
+        m_browseOnRelease = 0;
+        m_oldX = 0; m_oldY = 0;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_ra.val1 = 0;
         return true;
     }
 private:
-    void dlnaItemsList(uint16_t itemListNr){
+    void dlnaItemsList(){
         char* buff = x_ps_malloc(512);
         uint16_t itemsSize = 0;
         if(*m_dlnaLevel == 0) {
             itemsSize = m_dlnaServer.size;
-            itemListNr = 0;
         }
         else { itemsSize = m_srvContent.size; }
 
@@ -1612,12 +1620,11 @@ private:
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(TFT_ORANGE);
-log_e("m_dlnaLevel %i", *m_dlnaLevel);
         tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
-            if(pos == 1 && itemListNr > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
-            if(pos == 9 && itemListNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
+            if(pos == 1 && m_currItemNr > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
+            if(pos == 9 && m_currItemNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
             if(pos > 9) break;
             if(pos > itemsSize) break;
             if(*m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, true, true); }
@@ -1642,42 +1649,26 @@ log_e("m_dlnaLevel %i", *m_dlnaLevel);
     void hasClicked(uint16_t x, uint16_t y){
         char* buff = x_ps_malloc(512);
         uint8_t itemListPos = y / (m_h / 10);
-        uint16_t itemNr = m_dlnaMaxItems + itemListPos;
-log_i("itemListPos  %i, maxItens %i, itemListNr %i", itemListPos, m_dlnaMaxItems, itemNr);
-        //     if(_itemListPos + 2 < itemListPos){               // wipe down
-        //         if(_dlnaItemNr == 0) return;
-        //             if(_dlnaItemNr >  9) _dlnaItemNr -= 9;
-        //             else _dlnaItemNr = 0;
-        //             dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
-        //             _f_dlnaWaitForResponse = true;
-        //             return;
-        //         }
-        //         else if(itemListPos + 2 < _itemListPos){          // wipe up
-        //             if(_dlnaItemNr + 9 >= _dlnaMaxItems) return;
-        //             _dlnaItemNr += 9;
-        //             dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _dlnaItemNr , 9);
-        //             _f_dlnaWaitForResponse = true;
-        //             return;
-        //         }
-        //         else if(itemListPos == _itemListPos){            // no wipe
-        //             uint16_t itemNr = _dlnaItemNr + itemListPos;
-        //             if(itemNr % 9 > itemSize){
-        //             SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-        //             return;
-        //         }
-        
-        //if(itemListPos == 0) {
-        //         if(_dlnaLevel == 0) return;
-        //         tft.setFont(m_fontSize);
-        //         tft.setTextColor(TFT_CYAN);
-        //         tft.writeText(_dlnaHistory[_dlnaLevel].name, 10, _winFooter.h, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-        //         _dlnaLevel--;
-        //         dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, 0 , 9);
-        //         _f_dlnaWaitForResponse = true;
-        //         return;
-        //     }
-        //     else{
-        //         if(itemListPos > itemSize) return;
+
+        if(m_oldY && (m_oldY + 2 *m_lineHight < y)) {
+            m_ra.val1 = 0;
+            m_browseOnRelease = 4;
+            *m_dlnaLevel = m_oldDlnaLevel;
+            if(m_currItemNr == 0) goto exit;
+            if(m_currItemNr >  9) m_currItemNr -= 9;
+            else m_currItemNr = 0;
+        }
+        if(m_oldY && (m_oldY - 2* m_lineHight > y)) {
+            m_ra.val1 = 0;
+            m_browseOnRelease = 4;
+            *m_dlnaLevel = m_oldDlnaLevel;
+            if(m_currItemNr + 9 >= m_dlnaMaxItems) goto exit;
+            m_currItemNr += 9;
+        }
+
+        if(m_oldX || m_oldY) goto exit;
+        m_oldX = x; m_oldY = y;
+        m_oldDlnaLevel = *m_dlnaLevel;
         tft.setTextColor(TFT_CYAN);
         tft.setFont(m_fontSize);
         if(*m_dlnaLevel == 0){  // server list
@@ -1686,12 +1677,12 @@ log_i("itemListPos  %i, maxItens %i, itemListNr %i", itemListPos, m_dlnaMaxItems
             (*m_dlnaLevel) ++;
             if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[itemListPos - 1]);
-            m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);
+            m_browseOnRelease = 1;
         }
         else {  // content list
             if(itemListPos == 0){
                 (*m_dlnaLevel) --;
-                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+                m_browseOnRelease = 2;
             }
             else if(startsWith(m_srvContent.itemURL[itemListPos - 1], "http")){ // is file
                 if(m_srvContent.isAudio[itemListPos - 1]){
@@ -1700,6 +1691,7 @@ log_i("itemListPos  %i, maxItens %i, itemListNr %i", itemListPos, m_dlnaMaxItems
                     m_ra.arg1 = m_srvContent.itemURL[itemListPos - 1]; // url --> connecttohost()
                     m_ra.arg2 = m_srvContent.title[itemListPos - 1];   // filename --> showFileName()
                     if(m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
+                    m_browseOnRelease = 0;
                 }
             }
             else{ // is folder
@@ -1710,10 +1702,10 @@ log_i("itemListPos  %i, maxItens %i, itemListNr %i", itemListPos, m_dlnaMaxItems
                 m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[itemListPos -1]);
                 if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
                 m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[itemListPos - 1]);
-                itemNr = 0; // new folder? reset dlnaItemNr
-                m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+                m_browseOnRelease = 3;
             }
         }
+exit:
         if(buff){free(buff); buff = NULL;}
         return;
     }
