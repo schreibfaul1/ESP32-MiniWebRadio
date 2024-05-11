@@ -53,8 +53,6 @@
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
 
-extern TFT tft;
-
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
         #define TFT_CS           22
@@ -168,6 +166,10 @@ struct releasedArg {
     char*   arg2 = NULL;
     int16_t val1 = 0;
     int16_t val2 = 0;
+};
+struct timecounter {
+    uint8_t timer = 0;
+    float   factor = 2.0;
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -460,6 +462,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+extern TFT tft;
 inline void hardcopy(){
     const uint8_t bmp320x240[70] = {
         0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
@@ -588,6 +591,8 @@ public:
 extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int32_t arg1);
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, releasedArg ra);
+
+extern SD_content _SD_content;
 class slider{
 private:
     int16_t     m_x = 0;
@@ -1605,6 +1610,7 @@ private:
     uint8_t                   m_fontSize = 0;
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_browseOnRelease = 0;
+    uint8_t                   m_itemListPos = 0;
     int8_t                    m_currDLNAsrvNr = -1;
     int16_t                   m_currItemNr = -1;
     uint16_t                  m_dlnaMaxItems = 0;
@@ -1614,6 +1620,8 @@ private:
     bool                      m_state = false;
     char*                     m_name = NULL;
     char*                     m_pathBuff = NULL;
+    char*                     m_chptr = NULL;
+    char*                     m_buff = NULL;
     DLNA_Client::dlnaServer_t m_dlnaServer;
     DLNA_Client::srvContent_t m_srvContent;
     DLNA_Client*              m_dlna;
@@ -1638,6 +1646,7 @@ public:
     }
     ~dlnaList(){
         if(m_name){free(m_name); m_name = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
@@ -1681,6 +1690,16 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         m_clicked = false;
+
+        if(m_chptr) {
+            tft.setTextColor(TFT_CYAN);
+            tft.setFont(m_fontSize);
+            tft.writeText(m_chptr, 20, m_y + (m_itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+            m_chptr = NULL;
+            vTaskDelay(300);
+        }
+        if(m_buff){free(m_buff); m_buff = NULL;}
+
         if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}
         if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
         if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
@@ -1693,7 +1712,7 @@ public:
     }
 private:
     void dlnaItemsList(){
-        char* buff = x_ps_malloc(512);
+        if(!m_buff) m_buff = x_ps_malloc(512);
         uint16_t itemsSize = 0;
         if(*m_dlnaLevel == 0) {
             itemsSize = m_dlnaServer.size;
@@ -1717,24 +1736,24 @@ private:
             else {
                 if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
                     if(m_srvContent.isAudio[pos - 1] == true) {
-                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
-                        else { sprintf(buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
+                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
+                        else { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
                     }
-                    else { sprintf(buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
+                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
                 }
                 else {
-                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
-                    else { sprintf(buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
+                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
+                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
                 }
-                tft.writeText(buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
             }
         }
-        if(buff){free(buff); buff = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
         return;
     }
     void hasClicked(uint16_t x, uint16_t y){
-        char* buff = x_ps_malloc(512);
-        uint8_t itemListPos = y / (m_h / 10);
+        if(!m_buff) m_buff = x_ps_malloc(512);
+        m_itemListPos = y / (m_h / 10);
 
         if(m_oldY && (m_oldY + 2 *m_lineHight < y)) {
             m_ra.val1 = 0;
@@ -1743,6 +1762,7 @@ private:
             if(m_currItemNr >  9) m_currItemNr -= 9;
             else m_currItemNr = 0;
             m_browseOnRelease = 4;
+            m_chptr = NULL;
         }
         if(m_oldY && (m_oldY - 2* m_lineHight > y)) {
             m_ra.val1 = 0;
@@ -1750,49 +1770,47 @@ private:
             if(m_currItemNr + 9 >= m_dlnaMaxItems) goto exit;
             m_currItemNr += 9;
             m_browseOnRelease = 4;
+            m_chptr = NULL;
         }
 
         if(m_oldX || m_oldY) goto exit;
         m_oldX = x; m_oldY = y;
         m_oldDlnaLevel = *m_dlnaLevel;
-        tft.setTextColor(TFT_CYAN);
-        tft.setFont(m_fontSize);
         if(*m_dlnaLevel == 0){  // server list
-            tft.writeText(m_dlnaServer.friendlyName[itemListPos - 1], 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
-            m_currDLNAsrvNr = itemListPos - 1;
+            m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
+            m_currDLNAsrvNr = m_itemListPos - 1;
             (*m_dlnaLevel) ++;
             if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[itemListPos - 1]);
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
             m_browseOnRelease = 1;
         }
         else {  // content list
-            if(itemListPos == 0){
+            if(m_itemListPos == 0){
                 (*m_dlnaLevel) --;
                 m_browseOnRelease = 2;
             }
-            else if(startsWith(m_srvContent.itemURL[itemListPos - 1], "http")){ // is file
-                if(m_srvContent.isAudio[itemListPos - 1]){
-                    sprintf(buff, "%s",m_srvContent.title[itemListPos - 1]);
-                    tft.writeText(buff, 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
-                    m_ra.arg1 = m_srvContent.itemURL[itemListPos - 1]; // url --> connecttohost()
-                    m_ra.arg2 = m_srvContent.title[itemListPos - 1];   // filename --> showFileName()
+            else if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){ // is file
+                if(m_srvContent.isAudio[m_itemListPos - 1]){
+                    sprintf(m_buff, "%s",m_srvContent.title[m_itemListPos - 1]);
+                    m_chptr = m_buff;
+                    m_ra.arg1 = m_srvContent.itemURL[m_itemListPos - 1]; // url --> connecttohost()
+                    m_ra.arg2 = m_srvContent.title[m_itemListPos - 1];   // filename --> showFileName()
                     if(m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
                     m_browseOnRelease = 0;
                 }
             }
             else{ // is folder
-                sprintf(buff, "%s (%d)",m_srvContent.title[itemListPos - 1], m_srvContent.childCount[itemListPos - 1]);
+                sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
                 (*m_dlnaLevel) ++;
-                 tft.writeText(buff, 20, m_y + (itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                m_chptr = m_buff;
                 if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
-                m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[itemListPos -1]);
+                m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
                 if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[itemListPos - 1]);
+                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_itemListPos - 1]);
                 m_browseOnRelease = 3;
             }
         }
 exit:
-        if(buff){free(buff); buff = NULL;}
         return;
     }
 };
@@ -1803,6 +1821,8 @@ private:
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
+    uint16_t    m_fileListNr = 0;
+    uint8_t     m_fontSize = 0;
     uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
@@ -1822,16 +1842,19 @@ public:
     ~fileList(){
         if(m_name){free(m_name); m_name = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_fontSize = fontSize;
         m_enabled = false;
     }
-    void show(){
+    void show(uint16_t fileListNr){
         m_clicked = false;
         m_enabled = true;
+        m_fileListNr = fileListNr;
+        audioFileslist();
         ;
     }
     void hide(){
@@ -1857,31 +1880,31 @@ public:
     }
 private:
     void audioFileslist(){
-        // auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-        // auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
+        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
+        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
 
     //    clearWithOutHeaderFooter();
-    //    if(_SD_content.size() < 10) fileListNr = 0;
+        if(_SD_content.getSize() < 10) m_fileListNr = 0;
         // showHeadlineItem(AUDIOFILESLIST);
-        // tft.setFont(_fonts[0]);
-        // uint8_t lineHight = _winWoHF.h / 10;
-        // tft.setTextColor(TFT_ORANGE);
-        // tft.writeText(_curAudioFolder.c_str(), 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-        // tft.setTextColor(TFT_WHITE);
-        // for(uint8_t pos = 1; pos < 10; pos++) {
-    //        if(pos == 1 && fileListNr > 0) {
-    //            tft.setTextColor(TFT_AQUAMARINE);
-    //            triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
-    //        }
-    //        if(pos == 9 && fileListNr + 9 < _SD_content.size()) {
-            //     tft.setTextColor(TFT_AQUAMARINE);
-            //     triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
-            // }
-            // if(fileListNr + pos > _SD_content.size()) break;
-            // if(indexOf(_SD_content[pos + fileListNr - 1], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
-            // else tft.setTextColor(TFT_WHITE);                                                            // is file
-            // tft.writeText(_SD_content[pos + fileListNr - 1], 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-    //    }
+        tft.setFont(m_fontSize);
+        uint8_t lineHight = m_h / 10;
+        tft.setTextColor(TFT_ORANGE);
+   //     tft.writeText(_curAudioFolder.c_str(), 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+        tft.setTextColor(TFT_WHITE);
+        for(uint8_t pos = 1; pos < 10; pos++) {
+            if(pos == 1 && m_fileListNr > 0) {
+                tft.setTextColor(TFT_AQUAMARINE);
+                triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
+            }
+            if(pos == 9 && m_fileListNr + 9 < _SD_content.getSize()) {
+                tft.setTextColor(TFT_AQUAMARINE);
+                triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
+            }
+            if(m_fileListNr + pos > _SD_content.getSize()) break;
+            if(indexOf(_SD_content.getIndex(pos + m_fileListNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
+            else tft.setTextColor(TFT_WHITE);                                                            // is file
+            tft.writeText(_SD_content.getIndex(pos + m_fileListNr - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+        }
     //    _timeCounter.timer = 10;
     //    _timeCounter.factor = 1.0;
     }

@@ -174,20 +174,14 @@ String              _homepage = "";
 String              _filename = "";
 String              _lastconnectedhost = "";
 String              _scannedNetworks = "";
-String              _curAudioFolder = "/audiofiles";
+char*               _curAudioFolder = NULL;
 String              _TZName = "Europe/Berlin";
 String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String              _media_downloadIP = "";
 dlnaHistory         _dlnaHistory[10];
+timecounter         _timeCounter;
 SD_content          _SD_content;
 std::vector<char*>  _PLS_content;
-
-struct timecounter {
-    uint8_t timer = 0;
-    float   factor = 2.0;
-} _timeCounter;
-
-
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
@@ -1310,7 +1304,7 @@ void showAudioFilesList(uint16_t fileListNr) { // on tft
     tft.setFont(_fonts[0]);
     uint8_t lineHight = _winWoHF.h / 10;
     tft.setTextColor(TFT_ORANGE);
-    tft.writeText(_curAudioFolder.c_str(), 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+    tft.writeText(_curAudioFolder, 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
     tft.setTextColor(TFT_WHITE);
     for(uint8_t pos = 1; pos < 10; pos++) {
         if(pos == 1 && fileListNr > 0) {
@@ -1322,8 +1316,8 @@ void showAudioFilesList(uint16_t fileListNr) { // on tft
             triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
         }
         if(fileListNr + pos > _SD_content.getSize()) break;
-        if(indexOf(_SD_content.getIndex(pos + fileListNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
-        else tft.setTextColor(TFT_WHITE);                                                            // is file
+        if(indexOf(_SD_content.getIndex(pos + fileListNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_CHOCOLATE); // is folder
+        else tft.setTextColor(TFT_WHITE);                                                                          // is file
         tft.writeText(_SD_content.getIndex(pos + fileListNr - 1), 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
     }
     _timeCounter.timer = 10;
@@ -1786,8 +1780,13 @@ void setup() {
     _f_ESPfound = true;
 
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
+
+    _curAudioFolder = x_ps_malloc(1024);
+    strcpy(_curAudioFolder, "/audiofiles");
+
+
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
-    else strcpy(_prefix, "/m");
+    else                   strcpy(_prefix, "/m");
     stations.begin("Stations", false); // instance of preferences for stations (name, url ...)
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
@@ -2551,7 +2550,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             showHeadlineItem(PLAYER);
             if(_playerSubmenue == 0){
-                _SD_content.listDir(_curAudioFolder.c_str(), true, true);
+                _SD_content.listDir(_curAudioFolder, true, true);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
                 showFileName(_SD_content.getIndex(_cur_AudioFileNr));
@@ -3442,11 +3441,11 @@ void tp_released(uint16_t x, uint16_t y){
                             }
                             uint8_t lineHight = _winWoHF.h / 10;
                             if(fileListPos == 0) {
-                                int32_t idx = _curAudioFolder.lastIndexOf("/");
+                                int32_t idx =  lastIndexOf(_curAudioFolder, '/');
                                 if(idx > 1){ // not the first '/'
-                                    _curAudioFolder = _curAudioFolder.substring(0, idx);
+                                    _curAudioFolder[idx] = '\0';
                                     _fileListNr = 0;
-                                    _SD_content.listDir(_curAudioFolder.c_str(), true, false);
+                                    _SD_content.listDir(_curAudioFolder, true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3458,12 +3457,13 @@ void tp_released(uint16_t x, uint16_t y){
                                 tft.setFont(_fonts[0]);
                                 tft.writeText(_SD_content.getIndex(_cur_AudioFileNr), 20, _winFooter.h + (fileListPos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
                                 vTaskDelay(500);
-                                sprintf(_chbuf, "%s/%s", _curAudioFolder.c_str() ,_SD_content.getIndex(_cur_AudioFileNr));
+                                sprintf(_chbuf, "%s/%s", _curAudioFolder,_SD_content.getIndex(_cur_AudioFileNr));
                                 int32_t idx = indexOf(_chbuf, "\033[", 1);
                                 if(idx == -1){ // is folder
-                                    _curAudioFolder += "/" + (String)_SD_content.getIndex(_cur_AudioFileNr);
+                                    strcat(_curAudioFolder, "/");
+                                    strcat(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr));
                                     _fileListNr = 0;
-                                    _SD_content.listDir(_curAudioFolder.c_str(), true, false);
+                                    _SD_content.listDir(_curAudioFolder, true, false);
                                     showAudioFilesList(_fileListNr);
                                     break;
                                 }
@@ -3978,10 +3978,10 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
-        if(strcmp(name, "btn_PL_ready") == 0)    {_playerSubmenue = 1; SD_playFile(_curAudioFolder.c_str(), _SD_content.getIndex(_cur_AudioFileNr)); changeState(PLAYER); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromFolder(_curAudioFolder.c_str()); processPlaylist(true); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder.c_str(), true, false); changeState(AUDIOFILESLIST); return;}
+        if(strcmp(name, "btn_PL_ready") == 0)    {_playerSubmenue = 1; SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); changeState(PLAYER); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
     }
     if(_state == DLNA) {
