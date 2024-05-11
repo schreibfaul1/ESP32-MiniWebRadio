@@ -356,6 +356,7 @@ button2state btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
 button1state btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
 button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
 button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
+fileList     lst_PLAYER("lst_PLAYER");
 // DLNA
 button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
@@ -2350,6 +2351,8 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
     btn_PL_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_PL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_DL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_DL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2480,6 +2483,8 @@ void changeState(int32_t state){
                          btn_PL_prevFile.disable(); btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
                          btn_PL_fileList.hide();    btn_PL_radio.hide();
                          break;
+        case AUDIOFILESLIST: lst_PLAYER.disable();
+                         break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_volDown.disable();  btn_DL_volUp.disable();    btn_DL_pause.disable();   btn_DL_cancel.disable();
                          btn_DL_fileList.disable(); btn_DL_radio.disable();
                          break;
@@ -2564,6 +2569,15 @@ void changeState(int32_t state){
             }
             break;
         }
+        case AUDIOFILESLIST: {
+            clearWithOutHeaderFooter();
+            showHeadlineItem(AUDIOFILESLIST);
+            lst_PLAYER.show(_fileListNr);
+        //    showAudioFilesList(_fileListNr);
+            _timeCounter.timer = 10;
+            _timeCounter.factor = 1.0;
+            break;
+        }
         case DLNA:{
             clearWithOutHeaderFooter();
             showFileLogo(state);
@@ -2622,12 +2636,12 @@ void changeState(int32_t state){
             showBrightnessBar();
             break;
         }
-        case AUDIOFILESLIST:{
-            showAudioFilesList(_fileListNr);
-            _timeCounter.timer = 10;
-            _timeCounter.factor = 1.0;
-            break;
-        }
+        // case AUDIOFILESLIST:{
+        //     showAudioFilesList(_fileListNr);
+        //     _timeCounter.timer = 10;
+        //     _timeCounter.factor = 1.0;
+        //     break;
+        // }
         case EQUALIZER:{
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
@@ -3206,6 +3220,9 @@ void tp_pressed(uint16_t x, uint16_t y) {
                     if(btn_PL_cancel.positionXY(x, y)) return;
                 }
                 break;
+        case AUDIOFILESLIST:
+                if(lst_PLAYER.positionXY(x, y)) return;
+                break;
         case DLNA:
                 if(btn_DL_Mute.positionXY(x, y)) return;
                 if(btn_DL_pause.positionXY(x, y)) return;
@@ -3262,18 +3279,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 }
             }
             break;
-        case AUDIOFILESLIST:
-            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                yPos = AUDIOFILESLIST_1;
-            }
-            else if(y > _winFooter.y){
-                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
-                    yPos = AUDIOFILESLIST_1;
-                    btnNr = 100;
-                }
-            }
-            break;
+        // case AUDIOFILESLIST:
+        //     if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
+        //         btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
+        //         yPos = AUDIOFILESLIST_1;
+        //     }
+        //     else if(y > _winFooter.y){
+        //         if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
+        //             yPos = AUDIOFILESLIST_1;
+        //             btnNr = 100;
+        //         }
+        //     }
+        //     break;
         case EQUALIZER:
             if(sdr_EQ_lowPass.positionXY(x,y)) return;
             if(sdr_EQ_bandPass.positionXY(x,y)) return;
@@ -3311,12 +3328,12 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             _staListPos = btnNr;
 
                             break;
-        case AUDIOFILESLIST_1: if(btnNr == none) break;
-                            _releaseNr = 110;
-                            if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
-                            else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
-                            vTaskDelay(100);
-                            break;
+        // case AUDIOFILESLIST_1: if(btnNr == none) break;
+        //                     _releaseNr = 110;
+        //                     if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
+        //                     else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
+        //                     vTaskDelay(100);
+        //                     break;
         default:            break;
     }
 }
@@ -3342,6 +3359,9 @@ void tp_released(uint16_t x, uint16_t y){
             if(_playerSubmenue == 0){btn_PL_prevFile.released(); btn_PL_nextFile.released(); btn_PL_ready.released(); btn_PL_playAll.released(); btn_PL_shuffle.released(); btn_PL_fileList.released();
                                      btn_PL_radio.released();}
             if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_volDown.released(); btn_PL_volUp.released(); btn_PL_pause.released(); btn_PL_cancel.released();}
+            break;
+        case AUDIOFILESLIST:
+            lst_PLAYER.released();
             break;
         case DLNA:
             btn_DL_Mute.released(); btn_DL_pause.released(); btn_DL_volDown.released(); btn_DL_volUp.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released();
@@ -3492,6 +3512,9 @@ void tp_long_released(){
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
+    if(_state == AUDIOFILESLIST){
+        if(lst_PLAYER.positionXY(x, y)) return;
+    }
     if(_state == DLNAITEMSLIST){
         if(lst_DLNA.positionXY(x, y)) return;
     }
@@ -3894,6 +3917,9 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_PL_fileList") == 0){return;}
         if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
     }
+    if(_state == AUDIOFILESLIST) {
+        if( val && strcmp(name, "lst_PLAYER") == 0)     {return;}
+    }
     if(_state == DLNA) {
         if( val && strcmp(name, "btn_DL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_DL_pause") == 0)   {return;}
@@ -3983,6 +4009,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
+    }
+    if(_state == AUDIOFILESLIST){
+        if(strcmp(name, "lst_PLAYER") == 0)      {return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}

@@ -1828,26 +1828,26 @@ private:
     bool        m_clicked = false;
     bool        m_state = false;
     char*       m_name = NULL;
-    char*       m_pathBuff = NULL;
+    char*       m_curAudioFolder = NULL;
 public:
     fileList(const char* name){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("alarmClock");
+        else     m_name = x_ps_strdup("fileList");
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
-        m_pathBuff = x_ps_malloc(50);
     }
     ~fileList(){
         if(m_name){free(m_name); m_name = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, char* curAudioFolder){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
         m_fontSize = fontSize;
+        m_curAudioFolder = curAudioFolder;
         m_enabled = false;
     }
     void show(uint16_t fileListNr){
@@ -1872,6 +1872,8 @@ public:
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
+        hasClicked(x - m_x, y - m_y);
+        return true;
     }
     bool released(){
         if(!m_enabled) return false;
@@ -1880,16 +1882,15 @@ public:
     }
 private:
     void audioFileslist(){
+        if(!m_curAudioFolder){ log_e("m_curAudioFolder is NULL"); return;}
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
         auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
 
-    //    clearWithOutHeaderFooter();
         if(_SD_content.getSize() < 10) m_fileListNr = 0;
-        // showHeadlineItem(AUDIOFILESLIST);
         tft.setFont(m_fontSize);
         uint8_t lineHight = m_h / 10;
         tft.setTextColor(TFT_ORANGE);
-   //     tft.writeText(_curAudioFolder.c_str(), 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
             if(pos == 1 && m_fileListNr > 0) {
