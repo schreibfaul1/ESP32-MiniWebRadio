@@ -1621,8 +1621,6 @@ bool connectToWiFi() {
         if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
     }
     WiFi.setHostname("MiniWebRadio");
-    WiFi.setAutoReconnect(true);
-    if(psramFound()) WiFi.useStaticBuffers(true);
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
         String str = "";
@@ -1657,7 +1655,6 @@ bool connectToWiFi() {
 
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
-        WiFi.setSleep(false);
         if(!MDNS.begin("MiniWebRadio")) { SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS"); }
         else {
             MDNS.addService("esp32", "tcp", 80);
@@ -2985,8 +2982,10 @@ void loop() {
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
-                                                       connecttohost(_lastconnectedhost.c_str());
-                                                       log_e ("try another connection!");
+                                                        bool ic = WiFi.isConnected();
+                                                        log_e ("try another connection! isConnected %i",ic);
+                                                        if(ic){WiFi.disconnect(); connectToWiFi();}
+                                                        connecttohost(_lastconnectedhost.c_str());
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
@@ -3282,7 +3281,10 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_DL_fileList.positionXY(x, y)) return;
                 if(btn_DL_cancel.positionXY(x, y)) return;
                 break;
-        case CLOCK:
+        case DLNAITEMSLIST:
+                if(lst_DLNA.positionXY(x, y)) return;
+                break;
+            case CLOCK:
                 if(_clockSubMenue == 0){
                     if(clk_CL_green.positionXY(x, y)) return;
                 }
