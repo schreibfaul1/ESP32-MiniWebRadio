@@ -191,7 +191,6 @@ void           showFooterRSSI(boolean show = false);
 void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
-void           vector_clear_and_shrink(vector<char*>& vec);
 boolean        copySDtoFFat(const char* path);
 void           updateSleepTime(boolean noDecrement = false);
 void           showVolumeBar();
@@ -212,7 +211,6 @@ void           showAudioFileNumber();
 void           showStationsList(uint16_t staListNr);
 void           display_sleeptime(int8_t ud = 0);
 boolean        drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth = 0, uint16_t maxHeigth = 0);
-bool           SD_listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs);
 boolean        isAudio(File file);
 boolean        isAudio(const char* path);
 boolean        isPlaylist(File file);
@@ -493,6 +491,94 @@ inline void hardcopy(){
         hc.close();
     }
 }
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline void vector_clear_and_shrink(vector<char*>& vec) {
+    uint size = vec.size();
+    for(int32_t i = 0; i < size; i++) {
+        if(vec[i]) {
+            free(vec[i]);
+            vec[i] = NULL;
+        }
+    }
+    vec.clear();
+    vec.shrink_to_fit();
+}
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class SD_content{
+private:
+    std::vector<char*>  m_SD_content;
+    File m_masterFile;
+    File m_slaveFile;
+    char* m_buff = NULL;
+public:
+    SD_content(){
+        vector_clear_and_shrink(m_SD_content);
+    }
+    ~SD_content(){
+        vector_clear_and_shrink(m_SD_content);
+        if(m_buff){free(m_buff); m_buff = NULL;}
+    }
+    bool listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){
+        m_buff = x_ps_malloc(1024);
+        if(!m_buff) {log_e("oom"); return false;}
+        vector_clear_and_shrink(m_SD_content);
+        if(m_masterFile) m_masterFile.close();
+        if(!SD_MMC.exists(path)) {
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
+            return false;
+        }
+        m_masterFile = SD_MMC.open(path);
+        if(!m_masterFile.isDirectory()) {
+            SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s is not a directory", path);
+            m_masterFile.close();
+            return false;
+        }
+        while(true) { // get content
+            m_slaveFile = m_masterFile.openNextFile();
+            if(!m_slaveFile) break;
+            if(m_slaveFile.isDirectory()) {
+                if(!withoutDirs) {
+                    m_buff[0] = 2; // ASCII: start of text, sort set dirs on first position
+                    sprintf(m_buff + 1, "%s", m_slaveFile.name());
+                    m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                }
+            }
+            else {
+                if(audioFilesOnly) {
+                    if(endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") || endsWith(m_slaveFile.name(), ".flac") ||
+                       endsWith(m_slaveFile.name(), ".m3u") || endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
+                        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %d", m_slaveFile.name(), m_slaveFile.size());
+                        m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                    }
+                }
+                else {
+                    sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %d", m_slaveFile.name(), m_slaveFile.size());
+                    m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                }
+            }
+        }
+        for(int i = 0; i < m_SD_content.size(); i++) { // easy bubble sort
+            for(int j = 1; j < m_SD_content.size(); j++) {
+                if(strcmp(m_SD_content[j - 1], m_SD_content[i]) > 0) { swap(m_SD_content[i], m_SD_content[j - 1]); }
+            }
+        }
+        for(int i = 0; i < m_SD_content.size(); i++) {
+            if(m_SD_content[i][0] == 2) { // remove ASCII 2
+                memcpy(m_SD_content[i], m_SD_content[i] + 1, strlen(m_SD_content[i]));
+            }
+        }
+        m_masterFile.close();
+        if(m_buff){free(m_buff); m_buff = NULL;}
+        return true;
+    }
+    size_t getSize(){
+        return m_SD_content.size();
+    }
+    const char* getIndex(uint16_t idx){
+        return m_SD_content[idx];
+    }
+};
+
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -1768,6 +1854,39 @@ public:
         if(!m_enabled) return false;
         if(!m_clicked) return false;
         return true;
+    }
+private:
+    void audioFileslist(){
+        // auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
+        // auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
+
+    //    clearWithOutHeaderFooter();
+    //    if(_SD_content.size() < 10) fileListNr = 0;
+        // showHeadlineItem(AUDIOFILESLIST);
+        // tft.setFont(_fonts[0]);
+        // uint8_t lineHight = _winWoHF.h / 10;
+        // tft.setTextColor(TFT_ORANGE);
+        // tft.writeText(_curAudioFolder.c_str(), 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+        // tft.setTextColor(TFT_WHITE);
+        // for(uint8_t pos = 1; pos < 10; pos++) {
+    //        if(pos == 1 && fileListNr > 0) {
+    //            tft.setTextColor(TFT_AQUAMARINE);
+    //            triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
+    //        }
+    //        if(pos == 9 && fileListNr + 9 < _SD_content.size()) {
+            //     tft.setTextColor(TFT_AQUAMARINE);
+            //     triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
+            // }
+            // if(fileListNr + pos > _SD_content.size()) break;
+            // if(indexOf(_SD_content[pos + fileListNr - 1], "\033[", 0) == -1) tft.setTextColor(TFT_GRAY); // is folder
+            // else tft.setTextColor(TFT_WHITE);                                                            // is file
+            // tft.writeText(_SD_content[pos + fileListNr - 1], 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+    //    }
+    //    _timeCounter.timer = 10;
+    //    _timeCounter.factor = 1.0;
+    }
+    void hasClicked(uint16_t x, uint16_t y){
+        ;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
