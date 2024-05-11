@@ -1520,7 +1520,7 @@ private:
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_browseOnRelease = 0;
     int8_t                    m_currDLNAsrvNr = -1;
-    int8_t                    m_currItemNr = -1;
+    int16_t                   m_currItemNr = -1;
     uint16_t                  m_dlnaMaxItems = 0;
     uint32_t                  m_bgColor = 0;
     bool                      m_enabled = false;
@@ -1652,18 +1652,18 @@ private:
 
         if(m_oldY && (m_oldY + 2 *m_lineHight < y)) {
             m_ra.val1 = 0;
-            m_browseOnRelease = 4;
             *m_dlnaLevel = m_oldDlnaLevel;
             if(m_currItemNr == 0) goto exit;
             if(m_currItemNr >  9) m_currItemNr -= 9;
             else m_currItemNr = 0;
+            m_browseOnRelease = 4;
         }
         if(m_oldY && (m_oldY - 2* m_lineHight > y)) {
             m_ra.val1 = 0;
-            m_browseOnRelease = 4;
             *m_dlnaLevel = m_oldDlnaLevel;
             if(m_currItemNr + 9 >= m_dlnaMaxItems) goto exit;
             m_currItemNr += 9;
+            m_browseOnRelease = 4;
         }
 
         if(m_oldX || m_oldY) goto exit;
