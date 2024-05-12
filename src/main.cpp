@@ -1294,37 +1294,6 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
  *                                                   H A N D L E  A U D I O F I L E                                                                  *
  *****************************************************************************************************************************************************/
 
-void showAudioFilesList(uint16_t fileListNr) { // on tft
-
-    auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-    auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
-
-    clearWithOutHeaderFooter();
-    if(_SD_content.getSize() < 10) fileListNr = 0;
-    showHeadlineItem(AUDIOFILESLIST);
-    tft.setFont(_fonts[0]);
-    uint8_t lineHight = _winWoHF.h / 10;
-    tft.setTextColor(TFT_ORANGE);
-    tft.writeText(_curAudioFolder, 10, _winHeader.h, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-    tft.setTextColor(TFT_WHITE);
-    for(uint8_t pos = 1; pos < 10; pos++) {
-        if(pos == 1 && fileListNr > 0) {
-            tft.setTextColor(TFT_AQUAMARINE);
-            triangleUp(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
-        }
-        if(pos == 9 && fileListNr + 9 < _SD_content.getSize()) {
-            tft.setTextColor(TFT_AQUAMARINE);
-            triangleDown(0, _winHeader.h + (pos * lineHight), lineHight / 3.5);
-        }
-        if(fileListNr + pos > _SD_content.getSize()) break;
-        if(indexOf(_SD_content.getIndex(pos + fileListNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_CHOCOLATE); // is folder
-        else tft.setTextColor(TFT_WHITE);                                                                          // is file
-        tft.writeText(_SD_content.getIndex(pos + fileListNr - 1), 20, _winFooter.h + (pos)*lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-    }
-    _timeCounter.timer = 10;
-    _timeCounter.factor = 1.0;
-}
-
 boolean isAudio(File file) {
     if(endsWith(file.name(), ".mp3") || endsWith(file.name(), ".aac") || endsWith(file.name(), ".m4a") || endsWith(file.name(), ".wav") || endsWith(file.name(), ".flac") ||
        endsWith(file.name(), ".opus") || endsWith(file.name(), ".ogg")) {
@@ -2575,7 +2544,6 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             showHeadlineItem(AUDIOFILESLIST);
             lst_PLAYER.show();
-        //    showAudioFilesList(_fileListNr);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
@@ -2638,12 +2606,6 @@ void changeState(int32_t state){
             showBrightnessBar();
             break;
         }
-        // case AUDIOFILESLIST:{
-        //     showAudioFilesList(_fileListNr);
-        //     _timeCounter.timer = 10;
-        //     _timeCounter.factor = 1.0;
-        //     break;
-        // }
         case EQUALIZER:{
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
             showHeadlineItem(EQUALIZER);
@@ -3171,10 +3133,9 @@ void ir_long_key(int8_t key) {
 // Event from TouchPad
 // clang-format off
 void tp_pressed(uint16_t x, uint16_t y) {
-    // SerialPrintfln("tp_pressed, state is: %i", _state);
+    //  SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    enum : int8_t {none = -1, SLEEP_1, STATIONSLIST_1, AUDIOFILESLIST_1
-    };
+    enum : int8_t {none = -1, STATIONSLIST_1 };
     int8_t yPos = none;
     int8_t btnNr = none;     // buttonnumber
 
@@ -3281,18 +3242,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 }
             }
             break;
-        // case AUDIOFILESLIST:
-        //     if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-        //         btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
-        //         yPos = AUDIOFILESLIST_1;
-        //     }
-        //     else if(y > _winFooter.y){
-        //         if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
-        //             yPos = AUDIOFILESLIST_1;
-        //             btnNr = 100;
-        //         }
-        //     }
-        //     break;
         case EQUALIZER:
             if(sdr_EQ_lowPass.positionXY(x,y)) return;
             if(sdr_EQ_bandPass.positionXY(x,y)) return;
@@ -3330,12 +3279,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                             _staListPos = btnNr;
 
                             break;
-        // case AUDIOFILESLIST_1: if(btnNr == none) break;
-        //                     _releaseNr = 110;
-        //                     if(btnNr >= 0 && btnNr < 100) _fileListPos = btnNr;
-        //                     else if (btnNr == 100){_timeCounter.timer = 1;} // leave the list faster
-        //                     vTaskDelay(100);
-        //                     break;
         default:            break;
     }
 }
@@ -3438,68 +3381,6 @@ void tp_released(uint16_t x, uint16_t y){
                             showFooterRSSI(true);
                             setStation(staNr);
                             changeState(RADIO);
-                        }
-                        else log_i("unknown gesture");
-                    } break;
-        /* AUDIOFILESLIST *******************************/
-        case 110:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                        uint8_t fileListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                        if(_fileListPos + 2 < fileListPos){               // wipe down
-                            if(_fileListNr == 0) break;
-                            if(_fileListNr >  9) _fileListNr -= 9;
-                            else _fileListNr = 0;
-                            showAudioFilesList(_fileListNr);
-                        }
-                        else if(fileListPos + 2 < _fileListPos){          // wipe up
-                            if(_fileListNr + 9 >= _SD_content.getSize()) break;
-                            _fileListNr += 9;
-                            showAudioFilesList(_fileListNr);
-                        }
-                        else if(fileListPos == _fileListPos){
-                            uint16_t fileNr = _fileListNr + fileListPos;
-                            if(fileNr > _SD_content.getSize()){
-                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-                                break;
-                            }
-                            uint8_t lineHight = _winWoHF.h / 10;
-                            if(fileListPos == 0) {
-                                int32_t idx =  lastIndexOf(_curAudioFolder, '/');
-                                if(idx > 1){ // not the first '/'
-                                    _curAudioFolder[idx] = '\0';
-                                    _fileListNr = 0;
-                                    _SD_content.listDir(_curAudioFolder, true, false);
-                                    showAudioFilesList(_fileListNr);
-                                    break;
-                                }
-                            }
-                            else{
-                                if(fileNr > _SD_content.getSize()) break;
-                                tft.setTextColor(TFT_CYAN);
-                                _cur_AudioFileNr = fileNr - 1;
-                                tft.setFont(_fonts[0]);
-                                tft.writeText(_SD_content.getIndex(_cur_AudioFileNr), 20, _winFooter.h + (fileListPos) * lineHight, _dispWidth - 20, lineHight, TFT_ALIGN_LEFT, true, true);
-                                vTaskDelay(500);
-                                sprintf(_chbuf, "%s/%s", _curAudioFolder,_SD_content.getIndex(_cur_AudioFileNr));
-                                int32_t idx = indexOf(_chbuf, "\033[", 1);
-                                if(idx == -1){ // is folder
-                                    strcat(_curAudioFolder, "/");
-                                    strcat(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr));
-                                    _fileListNr = 0;
-                                    _SD_content.listDir(_curAudioFolder, true, false);
-                                    showAudioFilesList(_fileListNr);
-                                    break;
-                                }
-                                else {
-                                    _chbuf[idx] = '\0';  // remove color and filesize
-                                    clearStreamTitle();
-                                    changeState(PLAYER);
-                                    log_i("fn %s", _chbuf);
-                                    SD_playFile(_chbuf, 0, true);
-                                    showAudioFileNumber();
-                                }
-                            }
-                            _timeCounter.timer = 0;
-                            showFooterRSSI(true);
                         }
                         else log_i("unknown gesture");
                     } break;
@@ -3889,9 +3770,9 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is deactive
     if(_state == RADIO) {
-        if( val && strcmp(name, "btn_RA_Mute") == 0)    {_timeCounter.timer = 5; {if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_RA_volDown") == 0) {_timeCounter.timer = 5; return;}
-        if( val && strcmp(name, "btn_RA_volUp") == 0)   {_timeCounter.timer = 5; return;}
+        if( val && strcmp(name, "btn_RA_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2.0; {if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && strcmp(name, "btn_RA_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if( val && strcmp(name, "btn_RA_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
         if( val && strcmp(name, "btn_RA_prevSta") == 0) {clearVolBar();          return;}
         if( val && strcmp(name, "btn_RA_nextSta") == 0) {clearVolBar();          return;}
         if( val && strcmp(name, "btn_RA_staList") == 0) {return;}
@@ -3900,10 +3781,10 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_clock") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_sleep") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bright") == 0)  {return;}
-        if(!val && strcmp(name, "btn_RA_bright") == 0)  {_timeCounter.timer = 5; return;}
+        if(!val && strcmp(name, "btn_RA_bright") == 0)  {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
         if( val && strcmp(name, "btn_RA_equal") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
-        if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; return;}
+        if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
     }
     if(_state == PLAYER) {
         if( val && strcmp(name, "btn_PL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
@@ -3920,7 +3801,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
     }
     if(_state == AUDIOFILESLIST) {
-        if( val && strcmp(name, "lst_PLAYER") == 0)     {_timeCounter.timer = 5; return;}
+        if( val && strcmp(name, "lst_PLAYER") == 0)     {_timeCounter.timer = 10; _timeCounter.factor = 1.0; return;}
     }
     if(_state == DLNA) {
         if( val && strcmp(name, "btn_DL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
@@ -3935,11 +3816,11 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "lst_DLNA") == 0)       {_f_dlnaWaitForResponse = true; return;}
     }
     if(_state == CLOCK) {
-        if( val && strcmp(name, "btn_CL_Mute") == 0)    {_timeCounter.timer = 5; {if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && strcmp(name, "btn_CL_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2.0; if(!_f_mute){ _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
         if( val && strcmp(name, "btn_CL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_CL_volDown") == 0) {_timeCounter.timer = 5; return;}
-        if( val && strcmp(name, "btn_CL_volUp") == 0)   {_timeCounter.timer = 5; return;}
+        if( val && strcmp(name, "btn_CL_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if( val && strcmp(name, "btn_CL_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
         if( val && strcmp(name, "clk_CL_green") == 0)   {return;}
     }
     if(_state == ALARM) {
