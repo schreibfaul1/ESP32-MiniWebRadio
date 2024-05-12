@@ -10,7 +10,7 @@
 #define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_VERSION          5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
 #define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
