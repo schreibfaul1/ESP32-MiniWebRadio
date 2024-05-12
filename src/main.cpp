@@ -2105,6 +2105,8 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
         }
         return;
     }
+    _playerSubmenue = 1;
+    changeState(PLAYER);
     showVolumeBar();
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
@@ -2112,11 +2114,10 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
         clearLogo();
         showFileName(path + idx + 1);
     }
-    _playerSubmenue = 1;
-    changeState(PLAYER);
+
     SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path + idx + 1);
     connecttoFS((const char*)path, resumeFilePos);
-    showPlsFileNumber();
+    if(_f_playlistEnabled) showPlsFileNumber();
     if(_f_isFSConnected) {
         free(_lastconnectedfile);
         _lastconnectedfile = x_ps_strdup(path);
@@ -3894,7 +3895,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
     }
     if(_state == AUDIOFILESLIST){
-        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){connecttoFS(ra.arg1);_playerSubmenue = 1; changeState(PLAYER); showFileName(ra.arg2);} return;}
+        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){SD_playFile(ra.arg1);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
