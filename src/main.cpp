@@ -119,6 +119,7 @@ char                _prefix[5] = "/s";
 char                _commercial[25];
 char                _icyDescription[512] = {};
 char                _streamTitle[512] = {};
+char*               _curAudioFolder = NULL;
 char*               _lastconnectedfile = NULL;
 char*               _stationURL = NULL;
 char*               _JSONstr = NULL;
@@ -174,7 +175,6 @@ String              _homepage = "";
 String              _filename = "";
 String              _lastconnectedhost = "";
 String              _scannedNetworks = "";
-char*               _curAudioFolder = NULL;
 String              _TZName = "Europe/Berlin";
 String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String              _media_downloadIP = "";
@@ -1594,7 +1594,8 @@ bool connectToWiFi() {
         file.close();
     }
     uint8_t cnt = 0;
-    while(!WiFi.isConnected()) {wifiMulti.run(); cnt++; vTaskDelay(10); if(cnt > 3) break;}
+    while(WiFi.scanComplete() < 1) {WiFi.scanNetworks();}
+    while(!WiFi.isConnected()) {wifiMulti.run(); cnt++; if(WiFi.waitForConnectResult() == WL_CONNECTED) break; if(cnt > 3) break;}
 
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -1609,6 +1610,7 @@ bool connectToWiFi() {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false; // can't connect to any network
     }
+    WiFi.setSleep(true);
 }
 
 void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
@@ -2352,7 +2354,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_PL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder);
+    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder, &_cur_AudioFileNr);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_DL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_DL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2572,7 +2574,7 @@ void changeState(int32_t state){
         case AUDIOFILESLIST: {
             clearWithOutHeaderFooter();
             showHeadlineItem(AUDIOFILESLIST);
-            lst_PLAYER.show(_fileListNr);
+            lst_PLAYER.show();
         //    showAudioFilesList(_fileListNr);
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
@@ -3918,7 +3920,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
     }
     if(_state == AUDIOFILESLIST) {
-        if( val && strcmp(name, "lst_PLAYER") == 0)     {return;}
+        if( val && strcmp(name, "lst_PLAYER") == 0)     {_timeCounter.timer = 5; return;}
     }
     if(_state == DLNA) {
         if( val && strcmp(name, "btn_DL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
@@ -4011,7 +4013,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
     }
     if(_state == AUDIOFILESLIST){
-        if(strcmp(name, "lst_PLAYER") == 0)      {return;}
+        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){connecttoFS(ra.arg1);_playerSubmenue = 1; changeState(PLAYER); showFileName(ra.arg2);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
