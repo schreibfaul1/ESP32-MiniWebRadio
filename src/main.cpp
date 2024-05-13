@@ -77,6 +77,7 @@ uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
+uint8_t             _reconnectCnt = 0;
 uint16_t            _staListNr = 0;
 uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
@@ -136,6 +137,7 @@ bool                _f_sleeping = false;
 bool                _f_isWebConnected = false;
 bool                _f_isFSConnected = false;
 bool                _f_eof = false;
+bool                _f_reconnect = false;
 bool                _f_eof_alarm = false;
 bool                _f_alarm = false;
 bool                _f_irNumberSeen = false;
@@ -351,16 +353,20 @@ button1state btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn
 button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
 pictureBox   pic_R_logo("pic_R_logo");
+// STATIONSLIST
+stationsList lst_RADIO("lst_RADIO");
 // PLAYER
 button2state btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
 button1state btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
 button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
 button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
+// AUDIOFILESLIST
 fileList     lst_PLAYER("lst_PLAYER");
 // DLNA
 button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
 button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+// DLNAITEMSLIST
 dlnaList     lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
 imgClock     clk_CL_green("clk_CL_green");
@@ -1562,10 +1568,14 @@ bool connectToWiFi() {
         }
         file.close();
     }
-    uint8_t cnt = 0;
-    while(WiFi.scanComplete() < 1) {WiFi.scanNetworks();}
-    while(!WiFi.isConnected()) {wifiMulti.run(); cnt++; if(WiFi.waitForConnectResult() == WL_CONNECTED) break; if(cnt > 3) break;}
 
+
+    int16_t n = WiFi.scanNetworks();
+    SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
+    for(int i = 0; i < n; i++){
+        SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+    }
+    wifiMulti.run();
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
         if(!MDNS.begin("MiniWebRadio")) { SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS"); }
@@ -1573,13 +1583,13 @@ bool connectToWiFi() {
             MDNS.addService("esp32", "tcp", 80);
             SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
         }
+        WiFi.setSleep(true);
         return true;
     }
     else {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false; // can't connect to any network
     }
-    WiFi.setSleep(true);
 }
 
 void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
@@ -1631,6 +1641,7 @@ void connecttohost(const char* host) {
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
         _f_isWebConnected = audioConnecttohost(host);
+        if(_f_isWebConnected) _reconnectCnt = 0;
         _f_isFSConnected = false;
         return;
     }
@@ -1639,6 +1650,7 @@ void connecttohost(const char* host) {
         // log_i("idx2 = %i", idx2);
         if(idx2 == -1) { // second pipe not found
             _f_isWebConnected = audioConnecttohost(host);
+            if(_f_isWebConnected) _reconnectCnt = 0;
             _f_isFSConnected = false;
             return;
         }
@@ -2292,6 +2304,8 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
                                                                                          btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
                                                                                          btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
+    // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_PL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_PL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2451,6 +2465,9 @@ void changeState(int32_t state){
                          btn_RA_staList.disable();  btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
                          btn_RA_bright.disable();   btn_RA_equal.disable();    pic_R_logo.disable();     btn_RA_bt.disable();
                          hideVUmeter(); break;
+        case STATIONSLIST:
+                         lst_RADIO.disable();
+                         break;
         case PLAYER:     btn_PL_Mute.disable();     btn_PL_volDown.disable();  btn_PL_volUp.disable();    btn_PL_pause.disable();   btn_PL_cancel.disable();
                          btn_PL_prevFile.disable(); btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
                          btn_PL_fileList.hide();    btn_PL_radio.hide();
@@ -2517,7 +2534,8 @@ void changeState(int32_t state){
         }
 
         case STATIONSLIST:{
-            showStationsList(_staListNr);
+            clearWithOutHeaderFooter();
+            lst_RADIO.show();
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
             break;
@@ -2824,6 +2842,12 @@ void loop() {
                 }
             }
         }
+        //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
+        if(_f_reconnect){
+            _f_reconnect = false;
+            _reconnectCnt ++;
+            if(_reconnectCnt < 3) connecttohost(_lastconnectedhost.c_str());
+        }
         //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
         if(_f_dlnaSeekServer) {
             _f_dlnaSeekServer = false;
@@ -2896,9 +2920,7 @@ void loop() {
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
-                                                        bool ic = WiFi.isConnected();
-                                                        if(!ic){log_i ("WiFi is not connected -> establish the WiFi connection again"); WiFi.disconnect(); connectToWiFi();}
-                                                        connecttohost(_lastconnectedhost.c_str());
+                                                        _f_reconnect = true;
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
@@ -3136,9 +3158,6 @@ void ir_long_key(int8_t key) {
 void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    enum : int8_t {none = -1, STATIONSLIST_1 };
-    int8_t yPos = none;
-    int8_t btnNr = none;     // buttonnumber
 
     if(_f_sleeping) return;  // awake in tp_released()
 
@@ -3231,18 +3250,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_BR_ready.positionXY(x, y)) return;
                 if(pic_BR_logo.positionXY(x, y)) return;
                 break;
-        case STATIONSLIST:
-            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                yPos = STATIONSLIST_1;
-            }
-            else if(y > _winFooter.y){
-                if(x > _winRSSID.x && x < (_winRSSID.x + _winRSSID.w)){
-                    yPos = STATIONSLIST_1;
-                    btnNr = 100;
-                }
-            }
-            break;
         case EQUALIZER:
             if(sdr_EQ_lowPass.positionXY(x,y)) return;
             if(sdr_EQ_bandPass.positionXY(x,y)) return;
@@ -3269,19 +3276,6 @@ void tp_pressed(uint16_t x, uint16_t y) {
         default:
             break;
     }
-    if(yPos == none) {
-        SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-        return;
-    }
-
-    switch(yPos){
-        case STATIONSLIST_1:if(btnNr == none) break;
-                            _releaseNr = 100;
-                            _staListPos = btnNr;
-
-                            break;
-        default:            break;
-    }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
     log_w("long pressed %i  %i", x, y);
@@ -3300,6 +3294,9 @@ void tp_released(uint16_t x, uint16_t y){
             if(_radioSubmenue == 1){ btn_RA_Mute.released(); btn_RA_volDown.released(); btn_RA_volUp.released(); btn_RA_prevSta.released(); btn_RA_nextSta.released(); btn_RA_staList.released();}
             if(_radioSubmenue == 2){ btn_RA_player.released(); btn_RA_dlna.released(); btn_RA_clock.released(); btn_RA_sleep.released(); btn_RA_bright.released(); btn_RA_equal.released();
                                      btn_RA_bt.released();}
+            break;
+        case STATIONSLIST:
+            lst_RADIO.released();
             break;
         case PLAYER:
             if(_playerSubmenue == 0){btn_PL_prevFile.released(); btn_PL_nextFile.released(); btn_PL_ready.released(); btn_PL_playAll.released(); btn_PL_shuffle.released(); btn_PL_fileList.released();
@@ -3338,55 +3335,6 @@ void tp_released(uint16_t x, uint16_t y){
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
-
-    switch(_releaseNr){
-
-
-        /* STATIONSLIST *********************************/
-        case 100:   if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                        uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                        if(_staListPos + 2 < staListPos){               // wipe down
-                            if(_staListNr == 0) break;
-                            if(_staListNr >  9) _staListNr -= 9;
-                            else _staListNr = 0;
-                            showStationsList(_staListNr);
-                        }
-                        else if(staListPos + 2 < _staListPos){          // wipe up
-                            if(_staListNr + 9 >= _sum_stations) break;
-                            _staListNr += 9;
-                            showStationsList(_staListNr);
-                        }
-                        else if(staListPos == _staListPos){
-                            uint16_t staNr = _staListNr + staListPos + 1;
-                            if(staNr > _sum_stations){
-                                SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-                                break;
-                            }
-                            if(y -_winHeader.h >= 0 && y -_winHeader.h <= _winWoHF.h){
-                                tft.setFont(_fonts[0]);
-                                uint8_t staListPos = (y -_winHeader.h)  / (_winWoHF.h / 10);
-                                uint16_t staNr = _staListNr + staListPos + 1;
-                                if(staNr > _sum_stations){
-                                    SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint not valid x=%d, y=%d", x, y);
-                                    break;
-                                }
-                                uint8_t lineHight = _winWoHF.h / 10;
-                                sprintf(_chbuf, "station_%03d", staNr);
-                                String content = stations.getString(_chbuf, " #not_found");
-                                int32_t idx = content.indexOf("#");
-                                sprintf(_chbuf, ANSI_ESC_YELLOW"%03d " ANSI_ESC_CYAN "%s\n",staNr, content.substring(0, idx).c_str());
-                                tft.writeText(_chbuf, 10, _winHeader.h + (staListPos * lineHight), _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-                                vTaskDelay(500);
-                            }
-                            _timeCounter.timer = 0;
-                            showFooterRSSI(true);
-                            setStation(staNr);
-                            changeState(RADIO);
-                        }
-                        else log_i("unknown gesture");
-                    } break;
-    }
-    _releaseNr = -1;
 }
 
 void tp_long_released(){
@@ -3396,6 +3344,9 @@ void tp_long_released(){
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
+    if(_state == STATIONSLIST){
+        if(lst_RADIO.positionXY(x, y)) return;
+    }
     if(_state == AUDIOFILESLIST){
         if(lst_PLAYER.positionXY(x, y)) return;
     }
@@ -3787,6 +3738,9 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
         if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
     }
+    if(_state == STATIONSLIST) {
+        if( val && strcmp(name, "lst_RADIO") == 0)      {_timeCounter.timer = 10; _timeCounter.factor = 1.0; return;}
+    }
     if(_state == PLAYER) {
         if( val && strcmp(name, "btn_PL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_PL_volDown") == 0) {return;}
@@ -3879,6 +3833,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubmenue = 0; changeState(BLUETOOTH); return;}
+    }
+    if(_state == STATIONSLIST) {
+        if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStation(ra.val1); changeState(RADIO);} return;}
     }
     if(_state == PLAYER) {
         if(strcmp(name, "btn_PL_Mute") == 0)     {muteChanged(btn_PL_Mute.getValue()); return;}

@@ -21,8 +21,8 @@
 #define SDMMC_FREQUENCY     80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000 not every SD Card will run at 80MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
-#define CONN_TIMEOUT        500                             // unencrypted connection timeout in ms (http://...)
-#define CONN_TIMEOUT_SSL    2000                            // encrypted connection timeout in ms (https://...)
+#define CONN_TIMEOUT        1000                             // unencrypted connection timeout in ms (http://...)
+#define CONN_TIMEOUT_SSL    2500                            // encrypted connection timeout in ms (https://...)
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -1851,6 +1851,7 @@ public:
     }
     ~fileList(){
         if(m_name){free(m_name); m_name = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, char* curAudioFolder, uint16_t* curAudioFileNr){
         m_x = x; // x pos
@@ -2009,42 +2010,64 @@ exit:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+extern Preferences stations;
 class stationsList{
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
+    int16_t     m_oldX = 0;
+    int16_t     m_oldY = 0;
+    uint8_t     m_lineHight = 0;
+    uint16_t    m_firstStationsLineNr = 0;
+    uint16_t*   m_curSstationNr = NULL;
+    uint16_t    m_maxStations = 0;
+    uint8_t     m_browseOnRelease = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_stationListPos = 0;
     uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_state = false;
     char*       m_name = NULL;
     char*       m_pathBuff = NULL;
+    char*       m_buff = NULL;
+    releasedArg m_ra;
 public:
     stationsList(const char* name){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("alarmClock");
+        else     m_name = x_ps_strdup("stationsList");
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
+        m_ra.arg1 = NULL;
+        m_ra.arg2 = NULL;
+        m_ra.val1 = 0;
+        m_ra.val2 = 0;
     }
     ~stationsList(){
         if(m_name){free(m_name); m_name = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, uint16_t* curStationNr, uint16_t maxStations){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_lineHight = m_h / 10;
+        m_fontSize = fontSize;
+        m_curSstationNr = curStationNr;
+        m_maxStations = maxStations;
         m_enabled = false;
     }
     void show(){
         m_clicked = false;
         m_enabled = true;
-        ;
+        m_browseOnRelease = 0;
+        stationslist(true);
     }
     void hide(){
         m_enabled = false;
@@ -2061,11 +2084,93 @@ public:
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
+        hasClicked(x - m_x, y - m_y);
+        return true;
     }
     bool released(){
         if(!m_enabled) return false;
         if(!m_clicked) return false;
+
+        if(m_browseOnRelease == 1)  {   stationslist(false);                                             // wipe up
+                                    }
+        if(m_browseOnRelease == 2)  {   stationslist(false);                                             // wipe down
+                                    }
+        if(m_browseOnRelease == 3)  {   if(!m_buff) log_e("m_buff is empty");
+                                        tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                                        m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
+                                    }
+        m_browseOnRelease = 0;
+        m_oldX = 0; m_oldY = 0;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        if(m_buff){free(m_buff); m_buff = NULL;}
+        m_ra.val1 = 0;
+        m_ra.arg1 = NULL;
         return true;
+    }
+private:
+    void stationslist(bool first){
+        if(first){
+            if(m_maxStations <= 10) m_firstStationsLineNr = 0;
+            else  if(*m_curSstationNr < 5) m_firstStationsLineNr = 0;
+            else if(*m_curSstationNr +5 <= m_maxStations) m_firstStationsLineNr = *m_curSstationNr - 5;
+            else m_firstStationsLineNr = m_maxStations - 10;
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        char* stationStr = x_ps_malloc(1024);
+        if(!stationStr) {log_e("oom"); return;}
+        tft.setFont(m_fontSize);
+        for(uint8_t pos = 0; pos < 10; pos++) {
+            if(pos + m_firstStationsLineNr + 1 > m_maxStations) break;
+            char staKey[15];
+            sprintf(staKey, "station_%03d", pos + m_firstStationsLineNr + 1);
+            if((pos + m_firstStationsLineNr + 1) == *m_curSstationNr){
+                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, pos + m_firstStationsLineNr + 1); // is currStationNr
+            }
+            else{
+                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, pos + m_firstStationsLineNr + 1);
+            }
+            stations.getString(staKey, stationStr + strlen(stationStr), 950);
+            for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
+            tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
+        }
+    }
+    void hasClicked(uint16_t x, uint16_t y){
+        char staKey[15];
+        m_stationListPos = y / (m_h / 10);
+
+        if(m_oldY && (m_oldY + 2 * m_lineHight < y)) { // wipe up
+            if(m_browseOnRelease != 1){
+                m_browseOnRelease = 1;
+            //    log_w("wipe down");
+                if(m_firstStationsLineNr == 0) {m_browseOnRelease = 0; return;} // nothing to do
+                else if(m_firstStationsLineNr < 10) m_firstStationsLineNr = 0;
+                else m_firstStationsLineNr -= 9;
+            }
+            return;
+        }
+
+        if(m_oldY && (m_oldY - 2 * m_lineHight > y)) { // wipe down
+            if(m_browseOnRelease != 2){
+                m_browseOnRelease = 2;
+            //    log_w("wipe up");
+                if(m_firstStationsLineNr + 10 >= m_maxStations) {m_browseOnRelease = 0; return;} // nothing to do
+                 else m_firstStationsLineNr += 9;
+            }
+            return;
+        }
+        if(m_oldX || m_oldY) return;
+        m_oldX = x; m_oldY = y;
+        if(!m_buff) m_buff = x_ps_malloc(1024);
+
+        tft.setFont(m_fontSize);
+        sprintf(staKey, "station_%03d", m_firstStationsLineNr + m_stationListPos + 1);
+        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, m_firstStationsLineNr + m_stationListPos + 1);
+        stations.getString(staKey, m_buff + strlen(m_buff), 950);
+        for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
+        m_browseOnRelease = 3;
+        return;
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
