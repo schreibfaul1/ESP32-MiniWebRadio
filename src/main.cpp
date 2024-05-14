@@ -1227,25 +1227,6 @@ void showAudioFileNumber() {
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
-void showStationsList(uint16_t staListNr) {
-    clearWithOutHeaderFooter();
-    if(_sum_stations < 11) staListNr = 0;
-    else if(staListNr + 9 > _max_stations) staListNr = _max_stations - 9;
-    showHeadlineItem(STATIONSLIST);
-    tft.setFont(_fonts[0]);
-    uint8_t lineHight = _winWoHF.h / 10;
-    for(uint8_t pos = 0; pos < 10; pos++) {
-        if(pos + staListNr + 1 > _sum_stations) break;
-        sprintf(_chbuf, "station_%03d", pos + staListNr + 1);
-        String content = stations.getString(_chbuf, " #not_found");
-        content.replace('#', '\0');
-        sprintf(_chbuf, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE "%s\n", pos + staListNr + 1, content.c_str());
-        tft.writeText(_chbuf, 10, _winFooter.h + (pos)*lineHight, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-    }
-    _timeCounter.timer = 10;
-    _timeCounter.factor = 1.0;
-}
-
 void display_sleeptime(int8_t ud) { // set sleeptimer
     if(ud == 1) {
         switch(_sleeptime) {
@@ -1531,6 +1512,7 @@ exit:
  *                                         C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                              *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
+    WiFi.setHostname("MiniWebRadio");
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
     if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
@@ -1538,7 +1520,6 @@ bool connectToWiFi() {
         String ap_pw = pref.getString("ap_pw", "");
         if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
     }
-    WiFi.setHostname("MiniWebRadio");
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
         String str = "";
@@ -1583,7 +1564,7 @@ bool connectToWiFi() {
             MDNS.addService("esp32", "tcp", 80);
             SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
         }
-        WiFi.setSleep(true);
+    //    WiFi.setSleep(true);
         return true;
     }
     else {
@@ -3079,73 +3060,28 @@ void ir_key(uint8_t key) {
     } // awake
 
     switch(key) {
-        case 15:
-            if(_state == SLEEP) {
-                updateSleepTime(true);
-                changeState(RADIO);
-                break;
-            } // CLOCK <-> RADIO
-            if(_state == RADIO) {
-                changeState(CLOCK);
-                break;
-            }
-            if(_state == CLOCK) {
-                changeState(RADIO);
-                break;
-            }
-            break;
-        case 11:
-            upvolume(); // VOLUME+
-            break;
-        case 12:
-            downvolume(); // VOLUME-
-            break;
-        case 14:
-            if(_state == RADIO) {
-                nextStation();
-                break;
-            } // NEXT STATION
-            if(_state == CLOCK) {
-                nextStation();
-                changeState(RADIO);
-                _f_switchToClock = true;
-                break;
-            }
-            if(_state == SLEEP) {
-                display_sleeptime(1);
-                break;
-            }
-            break;
-        case 13:
-            if(_state == RADIO) {
-                prevStation();
-                break;
-            } // PREV STATION
-            if(_state == CLOCK) {
-                prevStation();
-                changeState(RADIO);
-                _f_switchToClock = true;
-                break;
-            }
-            if(_state == SLEEP) {
-                display_sleeptime(-1);
-                break;
-            }
-            break;
-        case 10:
-            muteChanged(!_f_mute);
-            break;
-        case 16:
-            if(_state == RADIO) {
-                changeState(SLEEP);
-                break;
-            } // OFF TIMER
-            if(_state == SLEEP) {
-                changeState(RADIO);
-                break;
-            }
-            break;
-        default: break;
+        case 15:    if(_state == SLEEP) {updateSleepTime(true); changeState(RADIO); break;} // CLOCK <-> RADIO
+                    if(_state == RADIO) {changeState(CLOCK); break;}
+                    if(_state == CLOCK) {changeState(RADIO); break;}
+                    break;
+        case 11:    upvolume(); // VOLUME+
+                    break;
+        case 12:    downvolume(); // VOLUME-
+                    break;
+        case 14:    if(_state == RADIO) {nextStation(); break;} // NEXT STATION
+                    if(_state == CLOCK) {nextStation(); changeState(RADIO); _f_switchToClock = true; break;}
+                    if(_state == SLEEP) {display_sleeptime(1); break;}
+                    break;
+        case 13:    if(_state == RADIO) {prevStation(); break;} // PREV STATION
+                    if(_state == CLOCK) {prevStation(); changeState(RADIO); _f_switchToClock = true; break;}
+                    if(_state == SLEEP) {display_sleeptime(-1); break;}
+                    break;
+        case 10:    muteChanged(!_f_mute);
+                    break;
+        case 16:    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
+                    if(_state == SLEEP) {changeState(RADIO); break;}
+                    break;
+        default:    break;
     }
 }
 void ir_long_key(int8_t key) {
@@ -3163,46 +3099,46 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     switch(_state) {
         case RADIO:
-                if(_radioSubmenue == 1){
-                    if(btn_RA_Mute.positionXY(x, y)) return;
-                    if(btn_RA_volDown.positionXY(x, y)) return;
-                    if(btn_RA_volUp.positionXY(x, y)) return;
-                    if(btn_RA_prevSta.positionXY(x, y)) return;
-                    if(btn_RA_nextSta.positionXY(x, y)) return;
-                    if(btn_RA_staList.positionXY(x, y)) return;
-                }
-                if(_radioSubmenue == 2){
-                    if(btn_RA_player.positionXY(x, y)) return;
-                    if(btn_RA_dlna.positionXY(x, y)) return;
-                    if(btn_RA_clock.positionXY(x, y)) return;
-                    if(btn_RA_sleep.positionXY(x, y)) return;
-                    if(btn_RA_bright.positionXY(x, y)) return;
-                    if(btn_RA_equal.positionXY(x, y)) return;
-                    if(btn_RA_bt.positionXY(x, y)) return;
-                }
-                _radioSubmenue++;
-                if(_radioSubmenue == 3) _radioSubmenue = 0;
-                changeState(RADIO);
-                return;
-                break;
+            if(_radioSubmenue == 1){
+                if(btn_RA_Mute.positionXY(x, y)) return;
+                if(btn_RA_volDown.positionXY(x, y)) return;
+                if(btn_RA_volUp.positionXY(x, y)) return;
+                if(btn_RA_prevSta.positionXY(x, y)) return;
+                if(btn_RA_nextSta.positionXY(x, y)) return;
+                if(btn_RA_staList.positionXY(x, y)) return;
+            }
+            if(_radioSubmenue == 2){
+                if(btn_RA_player.positionXY(x, y)) return;
+                if(btn_RA_dlna.positionXY(x, y)) return;
+                if(btn_RA_clock.positionXY(x, y)) return;
+                if(btn_RA_sleep.positionXY(x, y)) return;
+                if(btn_RA_bright.positionXY(x, y)) return;
+                if(btn_RA_equal.positionXY(x, y)) return;
+                if(btn_RA_bt.positionXY(x, y)) return;
+            }
+            _radioSubmenue++;
+            if(_radioSubmenue == 3) _radioSubmenue = 0;
+            changeState(RADIO);
+            return;
+            break;
         case PLAYER:
-                if(_playerSubmenue == 0){
-                    if(btn_PL_prevFile.positionXY(x, y)) return;
-                    if(btn_PL_nextFile.positionXY(x, y)) return;
-                    if(btn_PL_ready.positionXY(x, y)) return;;
-                    if(btn_PL_playAll.positionXY(x, y)) return;
-                    if(btn_PL_shuffle.positionXY(x, y)) return;
-                    if(btn_PL_fileList.positionXY(x, y)) return;
-                    if(btn_PL_radio.positionXY(x, y)) return;
-                }
-                if(_playerSubmenue == 1){
-                    if(btn_PL_Mute.positionXY(x, y)) return;
-                    if(btn_PL_volDown.positionXY(x, y)) return;
-                    if(btn_PL_volUp.positionXY(x, y)) return;
-                    if(btn_PL_pause.positionXY(x, y)) return;
-                    if(btn_PL_cancel.positionXY(x, y)) return;
-                }
-                break;
+            if(_playerSubmenue == 0){
+                if(btn_PL_prevFile.positionXY(x, y)) return;
+                if(btn_PL_nextFile.positionXY(x, y)) return;
+                if(btn_PL_ready.positionXY(x, y)) return;;
+                if(btn_PL_playAll.positionXY(x, y)) return;
+                if(btn_PL_shuffle.positionXY(x, y)) return;
+                if(btn_PL_fileList.positionXY(x, y)) return;
+                if(btn_PL_radio.positionXY(x, y)) return;
+            }
+            if(_playerSubmenue == 1){
+                if(btn_PL_Mute.positionXY(x, y)) return;
+                if(btn_PL_volDown.positionXY(x, y)) return;
+                if(btn_PL_volUp.positionXY(x, y)) return;
+                if(btn_PL_pause.positionXY(x, y)) return;
+                if(btn_PL_cancel.positionXY(x, y)) return;
+            }
+            break;
         case AUDIOFILESLIST:
                 if(lst_PLAYER.positionXY(x, y)) return;
                 break;
@@ -3218,18 +3154,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case DLNAITEMSLIST:
                 if(lst_DLNA.positionXY(x, y)) return;
                 break;
-            case CLOCK:
-                if(_clockSubMenue == 0){
-                    if(clk_CL_green.positionXY(x, y)) return;
-                }
-                if(_clockSubMenue == 1){
-                    if(btn_CL_Mute.positionXY(x, y)) return;
-                    if(btn_CL_alarm.positionXY(x, y)) return;
-                    if(btn_CL_radio.positionXY(x, y)) return;
-                    if(btn_CL_volDown.positionXY(x, y)) return;
-                    if(btn_CL_volUp.positionXY(x, y)) return;
-                }
-                break;
+        case CLOCK:
+            if(_clockSubMenue == 0){
+                if(clk_CL_green.positionXY(x, y)) return;
+            }
+            if(_clockSubMenue == 1){
+                if(btn_CL_Mute.positionXY(x, y)) return;
+                if(btn_CL_alarm.positionXY(x, y)) return;
+                if(btn_CL_radio.positionXY(x, y)) return;
+                if(btn_CL_volDown.positionXY(x, y)) return;
+                if(btn_CL_volUp.positionXY(x, y)) return;
+            }
+            break;
         case ALARM:
                 if(clk_AL_red.positionXY(x, y)) return;
                 if(btn_AL_left.positionXY(x, y)) return;
@@ -3251,30 +3187,30 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(pic_BR_logo.positionXY(x, y)) return;
                 break;
         case EQUALIZER:
-            if(sdr_EQ_lowPass.positionXY(x,y)) return;
-            if(sdr_EQ_bandPass.positionXY(x,y)) return;
-            if(sdr_EQ_highPass.positionXY(x,y)) return;
-            if(sdr_EQ_balance.positionXY(x,y)) return;
-            if(btn_EQ_lowPass.positionXY(x, y)) return;
-            if(btn_EQ_bandPass.positionXY(x, y)) return;
-            if(btn_EQ_highPass.positionXY(x, y)) return;
-            if(btn_EQ_balance.positionXY(x, y)) return;
-            if(txt_EQ_lowPass.positionXY(x, y)) return;
-            if(txt_EQ_bandPass.positionXY(x, y)) return;
-            if(txt_EQ_highPass.positionXY(x, y)) return;
-            if(txt_EQ_balance.positionXY(x, y)) return;
-            if(btn_EQ_Radio.positionXY(x, y)) return;
-            if(btn_EQ_Player.positionXY(x,y)) return;
-            if(btn_EQ_Mute.positionXY(x, y)) return;
-            break;
+                if(sdr_EQ_lowPass.positionXY(x,y)) return;
+                if(sdr_EQ_bandPass.positionXY(x,y)) return;
+                if(sdr_EQ_highPass.positionXY(x,y)) return;
+                if(sdr_EQ_balance.positionXY(x,y)) return;
+                if(btn_EQ_lowPass.positionXY(x, y)) return;
+                if(btn_EQ_bandPass.positionXY(x, y)) return;
+                if(btn_EQ_highPass.positionXY(x, y)) return;
+                if(btn_EQ_balance.positionXY(x, y)) return;
+                if(txt_EQ_lowPass.positionXY(x, y)) return;
+                if(txt_EQ_bandPass.positionXY(x, y)) return;
+                if(txt_EQ_highPass.positionXY(x, y)) return;
+                if(txt_EQ_balance.positionXY(x, y)) return;
+                if(btn_EQ_Radio.positionXY(x, y)) return;
+                if(btn_EQ_Player.positionXY(x,y)) return;
+                if(btn_EQ_Mute.positionXY(x, y)) return;
+                break;
         case BLUETOOTH:
-            if(btn_BL_volUp.positionXY(x, y)) return;
-            if(btn_BL_volDown.positionXY(x, y)) return;
-            if(btn_BL_pause.positionXY(x, y)) return;
-            if(btn_BL_radio.positionXY(x, y)) return;
-            break;
+                if(btn_BL_volUp.positionXY(x, y)) return;
+                if(btn_BL_volDown.positionXY(x, y)) return;
+                if(btn_BL_pause.positionXY(x, y)) return;
+                if(btn_BL_radio.positionXY(x, y)) return;
+                break;
         default:
-            break;
+                break;
     }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
