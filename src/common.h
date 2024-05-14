@@ -200,9 +200,6 @@ void           showBrightnessBar();
 void           showFooter();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
-void           showVUmeter();
-void           hideVUmeter();
-void           updateVUmeter();
 void           showLogoAndStationName();
 void           showStationName(String sn);
 void           showStationLogo(String ln);
@@ -2171,5 +2168,133 @@ private:
         m_browseOnRelease = 3;
         return;
     }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class vuMeter{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = TFT_BLACK;
+    uint32_t    m_frameColor = TFT_DARKGREY;
+    char*       m_name = NULL;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    uint8_t     m_VUleftCh = 0;   // VU meter left channel
+    uint8_t     m_VUrightCh = 0;  // VU meter right channel
+    releasedArg m_ra;
+    uint8_t     m_segm_w = 0;
+    uint8_t     m_segm_h = 0;
+    uint8_t     m_frameSize = 1;
+public:
+    vuMeter(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+    }
+    ~vuMeter(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t dummy_w, uint16_t dummy_h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+#if TFT_CONTROLLER < 2 // 320 x 240px
+        m_segm_w = 9;
+        m_segm_h = 7;
+        m_xOffs = 11;
+        m_yOffs = 8;
+        m_xStart = 2;
+        m_yStart = 90;
+#else // 480 x 320px
+        m_segm_w = 12;
+        m_segm_h = 8;
+#endif
+        m_w = 2 *  m_segm_w  +  3 * m_frameSize;
+        m_h = 12 * m_segm_h + 13 * m_frameSize;
+    }
+    void show(){
+        m_enabled = true;
+        m_clicked = false;
+        log_i("m_x %i, m_y %i, m_w %i, m_h %i", m_x, m_y, m_w, m_h);
+        tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
+        for(uint8_t i = 0; i < 12; i++){
+            drawRect(i, 0, 0);
+            drawRect(i, 1, 0);
+        }
+        m_VUleftCh = 0;
+        m_VUrightCh = 0;
+
+
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void update(uint16_t vum){
+        if(!m_enabled) return;
+        uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
+        uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
+
+        if(left > m_VUleftCh) {
+            for(int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
+        }
+        if(left < m_VUleftCh) {
+            for(int32_t i = left; i < m_VUleftCh; i++) { drawRect(i, 1, 0); }
+        }
+        m_VUleftCh = left;
+
+        if(right > m_VUrightCh) {
+            for(int32_t i = m_VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
+        }
+        if(right < m_VUrightCh) {
+            for(int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
+        }
+        m_VUrightCh = right;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+private:
+    void drawRect(uint8_t pos, uint8_t ch, bool br) {
+        uint16_t color = 0;
+        uint16_t y_end = m_y + m_h -m_frameSize - m_segm_h;
+        uint16_t xPos = m_x + m_frameSize + ch * (m_segm_w + m_frameSize);
+        uint16_t yPos = y_end - pos * (m_frameSize + m_segm_h);
+        if(pos > 11) return;
+        switch(pos) {
+            case 0 ... 6: // green
+                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
+                break;
+            case 7 ... 9: // yellow
+                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
+                break;
+            case 10 ... 11: // red
+                br ? color = TFT_RED : color = TFT_DARKRED;
+                break;
+        }
+        tft.fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
+    };
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -70,8 +70,6 @@ uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
 uint8_t             _cur_Codec = 0;
-uint8_t             _VUleftCh = 0;   // VU meter left channel
-uint8_t             _VUrightCh = 0;  // VU meter right channel
 uint8_t             _numServers = 0; //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
@@ -155,7 +153,6 @@ bool                _f_playlistNextFile = false;
 bool                _f_logoUnknown = false;
 bool                _f_pauseResume = false;
 bool                _f_accessPoint = false;
-bool                _f_VUmeterIsVisible = false;
 bool                _f_SD_Upload = false;
 bool                _f_PSRAMfound = false;
 bool                _f_FFatFound = false;
@@ -353,6 +350,7 @@ button1state btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn
 button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
 pictureBox   pic_R_logo("pic_R_logo");
+vuMeter      VUmeter_RA("VUmeter_RA");
 // STATIONSLIST
 stationsList lst_RADIO("lst_RADIO");
 // PLAYER
@@ -1008,71 +1006,6 @@ void showVolumeBar() {
     _f_volBarVisible = true;
 }
 
-void updateVUmeter() {
-    if(_state != RADIO) return;
-    if(_radioSubmenue > 0) return;
-    if(!_f_VUmeterIsVisible) return;
-    if(_f_sleeping) return;
-    if(_f_irNumberSeen) return;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    uint8_t width = 0, height = 0, xOffs = 0, yOffs = 0, xStart = 0, yStart = 0;
-#if TFT_CONTROLLER < 2 // 320 x 240px
-    width = 9;
-    height = 7;
-    xOffs = 11;
-    yOffs = 8;
-    xStart = 2;
-    yStart = 90;
-#else // 480 x 320px
-    width = 12;
-    height = 8;
-    xOffs = 16;
-    yOffs = 10;
-    xStart = 2;
-    yStart = 115;
-#endif
-
-    // c99 has no inner functions, lambdas are only allowed from c11, please don't use ancient compiler
-    auto drawRect = [&](uint8_t pos, uint8_t ch, bool br) { // lambda, inner function
-        uint16_t color = 0, xPos = _winVUmeter.x + xStart + ch * xOffs, yPos = _winVUmeter.y + yStart - pos * yOffs;
-        if(pos > 11) return;
-        switch(pos) {
-            case 0 ... 6: // green
-                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
-                break;
-            case 7 ... 9: // yellow
-                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
-                break;
-            case 10 ... 11: // red
-                br ? color = TFT_RED : color = TFT_DARKRED;
-                break;
-        }
-        tft.fillRect(xPos, yPos, width, height, color);
-    };
-
-    uint16_t vum = audioGetVUlevel();
-
-    uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
-    uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
-
-    if(left > _VUleftCh) {
-        for(int32_t i = _VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
-    }
-    if(left < _VUleftCh) {
-        for(int32_t i = left; i < _VUleftCh; i++) { drawRect(i, 1, 0); }
-    }
-    _VUleftCh = left;
-
-    if(right > _VUrightCh) {
-        for(int32_t i = _VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
-    }
-    if(right < _VUrightCh) {
-        for(int32_t i = right; i < _VUrightCh; i++) { drawRect(i, 0, 0); }
-    }
-    _VUrightCh = right;
-    xSemaphoreGive(mutex_display);
-}
-
 void showBrightnessBar() {
     uint16_t val = tft.width() * getBrightness() / 100;
     clearVolBar();
@@ -1118,19 +1051,6 @@ void showStreamTitle(const char* streamtitle) {
     }
     display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 2, 10, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
-}
-void showVUmeter() {
-    if(_f_sleeping) return;
-    _f_VUmeterIsVisible = true;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    drawImage("/common/level_bar.jpg", _winVUmeter.x, _winVUmeter.y);
-    _VUrightCh = 0;
-    _VUleftCh = 0;
-    xSemaphoreGive(mutex_display);
-}
-void hideVUmeter() {
-    _f_VUmeterIsVisible = false;
-    tft.drawRect(_winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h, TFT_BLACK);
 }
 
 void showLogoAndStationName() {
@@ -1549,8 +1469,6 @@ bool connectToWiFi() {
         }
         file.close();
     }
-
-
     int16_t n = WiFi.scanNetworks();
     SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
     for(int i = 0; i < n; i++){
@@ -1564,7 +1482,7 @@ bool connectToWiFi() {
             MDNS.addService("esp32", "tcp", 80);
             SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
         }
-    //    WiFi.setSleep(true);
+        WiFi.setAutoReconnect(true);
         return true;
     }
     else {
@@ -1841,8 +1759,6 @@ void setup() {
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
 
-    _state = RADIO;
-
     ir.begin(); // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
@@ -1856,16 +1772,6 @@ void setup() {
         digitalWrite(AMP_ENABLED, HIGH);
     }
 
-    tft.fillScreen(TFT_BLACK); // Clear screen
-    muteChanged(_f_mute);
-    showHeadlineVolume();
-    if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
-    showHeadlineItem(RADIO);
-    _state = RADIO;
-    setI2STone();
-    showFooter();
-
-    showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?");     // get version
@@ -1889,7 +1795,16 @@ void setup() {
         else { setStationViaURL(_lastconnectedhost.c_str()); }
     }
     else { SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr); }
+
     placingGraphicObjects();
+    tft.fillScreen(TFT_BLACK); // Clear screen
+    muteChanged(_f_mute);
+    _radioSubmenue = 0;
+    changeState(RADIO);
+    if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
+    setI2STone();
+    showFooter();
+
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2181,7 +2096,6 @@ void wake_up() {
         }
         else {
             changeState(RADIO);
-            showVUmeter();
             showLogoAndStationName();
             showHeadlineItem(RADIO);
         }
@@ -2285,6 +2199,7 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
                                                                                          btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
                                                                                          btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
+    VUmeter_RA.begin(     _winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2445,7 +2360,7 @@ void changeState(int32_t state){
         case RADIO:      btn_RA_Mute.disable();     btn_RA_volDown.disable();  btn_RA_volUp.disable();    btn_RA_prevSta.disable(); btn_RA_nextSta.disable();
                          btn_RA_staList.disable();  btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
                          btn_RA_bright.disable();   btn_RA_equal.disable();    pic_R_logo.disable();     btn_RA_bt.disable();
-                         hideVUmeter(); break;
+                         VUmeter_RA.disable(); break;
         case STATIONSLIST:
                          lst_RADIO.disable();
                          break;
@@ -2487,14 +2402,13 @@ void changeState(int32_t state){
             if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
                 showHeadlineItem(RADIO);
+                VUmeter_RA.show();
                 if(_state != RADIO) showLogoAndStationName();
-                showVUmeter();
                 _f_newStreamTitle = true;
                 _timeCounter.timer = 0;
             }
             if(_radioSubmenue == 1){
                 clearTitle();
-                hideVUmeter();
                 showVolumeBar();
                 btn_RA_Mute.show();      btn_RA_volDown.show();          btn_RA_volUp.show();
                 btn_RA_prevSta.show();   btn_RA_nextSta.show();          btn_RA_staList.show();
@@ -2502,7 +2416,6 @@ void changeState(int32_t state){
                 _timeCounter.factor = 2.0;
             }
             if(_radioSubmenue == 2){
-                hideVUmeter();
                 clearVolBar();
                 btn_RA_player.show();    btn_RA_dlna.show();             btn_RA_clock.show();
                 btn_RA_sleep.show();     btn_RA_bright.show(!_f_brightnessIsChangeable); btn_RA_equal.show();
@@ -2659,7 +2572,7 @@ void loop() {
 
     if(_f_100ms) { // calls every 0.1 second
         _f_100ms = false;
-        if(_state != ALARM) updateVUmeter();
+        if(_state == RADIO && _radioSubmenue == 0) VUmeter_RA.update(audioGetVUlevel());
     }
 
     if(_f_1sec) { // calls every second
@@ -2675,7 +2588,6 @@ void loop() {
             if(_semaphore >= 65) { _semaphore = 0;}
             if(_f_alarm) {
                 _f_alarm = false;
-                void hideVUmeter();
                 clearAll();
                 showHeadlineItem(ALARM);
                 showHeadlineTime();
@@ -2690,7 +2602,6 @@ void loop() {
             }
             if(_f_eof_alarm) { // AFTER RINGING
                 _f_eof_alarm = false;
-                showVUmeter();
                 audioSetVolume(_cur_volume);
                 showHeadlineVolume();
                 wake_up();
@@ -3038,7 +2949,6 @@ void ir_res(uint32_t res) {
     SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu", (long unsigned)res);
     if(res != 0) { setStation(res); } // valid between 1 ... 999
     else { setStation(_cur_station); }
-    showVUmeter();
     return;
 }
 void ir_number(uint16_t num) {
@@ -3106,6 +3016,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_RA_prevSta.positionXY(x, y)) return;
                 if(btn_RA_nextSta.positionXY(x, y)) return;
                 if(btn_RA_staList.positionXY(x, y)) return;
+                if(VUmeter_RA.positionXY(x, y)) return;
             }
             if(_radioSubmenue == 2){
                 if(btn_RA_player.positionXY(x, y)) return;
@@ -3227,6 +3138,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 void tp_released(uint16_t x, uint16_t y){
     switch(_state){
         case RADIO:
+            if(_radioSubmenue == 0){ VUmeter_RA.released();}
             if(_radioSubmenue == 1){ btn_RA_Mute.released(); btn_RA_volDown.released(); btn_RA_volUp.released(); btn_RA_prevSta.released(); btn_RA_nextSta.released(); btn_RA_staList.released();}
             if(_radioSubmenue == 2){ btn_RA_player.released(); btn_RA_dlna.released(); btn_RA_clock.released(); btn_RA_sleep.released(); btn_RA_bright.released(); btn_RA_equal.released();
                                      btn_RA_bt.released();}
@@ -3673,6 +3585,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_equal") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
         if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if( val && strcmp(name, "VUmeter_RA") == 0)     {return;}
     }
     if(_state == STATIONSLIST) {
         if( val && strcmp(name, "lst_RADIO") == 0)      {_timeCounter.timer = 10; _timeCounter.factor = 1.0; return;}
@@ -3769,6 +3682,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubmenue = 0; changeState(BLUETOOTH); return;}
+        if(strcmp(name, "VUmeter_RA") == 0)      {return;}
     }
     if(_state == STATIONSLIST) {
         if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStation(ra.val1); changeState(RADIO);} return;}
