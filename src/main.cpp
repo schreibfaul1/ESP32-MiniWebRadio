@@ -244,9 +244,6 @@ struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 
 struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
 struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
-struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 180; uint16_t h =  20;} const _winItem;
-struct w_v  {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  20;} const _winVolume;
-struct w_m  {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
@@ -309,9 +306,6 @@ struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 
 struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
-struct w_m  {uint16_t x = 380; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winTime;
-struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
-struct w_v  {uint16_t x = 280; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winVolume;
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
@@ -344,53 +338,55 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
+// ALL STATE
+displayHeader dispHeader("dispHeader");
 // RADIO
-button2state btn_RA_Mute("btn_RA_Mute");
-button1state btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
-button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
-button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
-pictureBox   pic_R_logo("pic_R_logo");
-vuMeter      VUmeter_RA("VUmeter_RA");
+button2state  btn_RA_Mute("btn_RA_Mute");
+button1state  btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
+button1state  btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
+button1state  btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
+pictureBox    pic_R_logo("pic_R_logo");
+vuMeter       VUmeter_RA("VUmeter_RA");
 // STATIONSLIST
-stationsList lst_RADIO("lst_RADIO");
+stationsList  lst_RADIO("lst_RADIO");
 // PLAYER
-button2state btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
-button1state btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
-button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
-button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
+button2state  btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
+button1state  btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
+button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
+button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
 // AUDIOFILESLIST
-fileList     lst_PLAYER("lst_PLAYER");
+fileList      lst_PLAYER("lst_PLAYER");
 // DLNA
-button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
-button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
-button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+button2state  btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
+button1state  btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
+button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
 // DLNAITEMSLIST
-dlnaList     lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
+dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
-imgClock     clk_CL_green("clk_CL_green");
-button2state btn_CL_Mute("btn_CL_Mute");
-button1state btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_volDown("btn_CL_volDown"), btn_CL_volUp("btn_CL_volUp");
+imgClock      clk_CL_green("clk_CL_green");
+button2state  btn_CL_Mute("btn_CL_Mute");
+button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_volDown("btn_CL_volDown"), btn_CL_volUp("btn_CL_volUp");
 // ALARM
-alarmClock   clk_AL_red("clk_CL_green");
-button1state btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
-button1state btn_AL_ready("btn_AL_ready");
+alarmClock    clk_AL_red("clk_CL_green");
+button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
+button1state  btn_AL_ready("btn_AL_ready");
 // BRIGHTNESS
-button1state btn_BR_left("btn_BR_left"), btn_BR_right("btn_BR_right"), btn_BR_ready("btn_BR_ready");
-pictureBox   pic_BR_logo("pic_BR_logo");
+button1state  btn_BR_left("btn_BR_left"), btn_BR_right("btn_BR_right"), btn_BR_ready("btn_BR_ready");
+pictureBox    pic_BR_logo("pic_BR_logo");
 // SLEEP
-button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
+button1state  btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
-slider       sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
-textbox      txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
-button1state btn_EQ_lowPass("btn_E_LP");
-button1state btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
-button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
-button2state btn_EQ_Mute("btn_EQ_Mute");
+slider        sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
+textbox       txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
+button1state  btn_EQ_lowPass("btn_E_LP");
+button1state  btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
+button1state  btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
+button2state  btn_EQ_Mute("btn_EQ_Mute");
 // BLUETOOTH
-button2state btn_BL_pause("btn_BL_pause");
-button1state btn_BL_volDown("btn_BL_volDown"), btn_BL_volUp("btn_BL_volUp"), btn_BL_radio("btn_BL_radio");
-pictureBox   pic_BL_mode("pic_BL_mode");
-textbox      txt_BL_mode("txt_BL_mode");
+button2state  btn_BL_pause("btn_BL_pause");
+button1state  btn_BL_volDown("btn_BL_volDown"), btn_BL_volUp("btn_BL_volUp"), btn_BL_radio("btn_BL_radio");
+pictureBox    pic_BL_mode("pic_BL_mode");
+textbox       txt_BL_mode("txt_BL_mode");
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -799,9 +795,6 @@ inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y
 inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
 inline void clearWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
-inline void clearTime()               {tft.fillRect(_winTime.x,      _winTime.y,      _winTime.w,      _winTime.h,     TFT_BLACK);}
-inline void clearItem()               {tft.fillRect(_winItem.x,      _winItem.y,      _winItem.w,      _winTime.h,     TFT_BLACK);}
-inline void clearVolume()             {tft.fillRect(_winVolume.x,    _winVolume.y,    _winVolume.w,    _winVolume.h,   TFT_BLACK);}
 inline void clearIPaddr()             {tft.fillRect(_winIPaddr.x,    _winIPaddr.y,    _winIPaddr.w,    _winIPaddr.h,   TFT_BLACK);}
 inline void clearBitRate()            {tft.fillRect(_winBitRate.x,   _winBitRate.y,   _winBitRate.w,   _winBitRate.h,  TFT_BLACK);}
 inline void clearStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
@@ -819,65 +812,6 @@ inline uint16_t txtlen(String str) {
     return len;
 }
 
-void showHeadlineVolume() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    if(_f_mute) tft.setTextColor(TFT_RED);
-    else        tft.setTextColor(TFT_DEEPSKYBLUE);
-    clearVolume();
-    sprintf(_chbuf, "Vol %02d", _cur_volume);
-    tft.writeText(_chbuf, _winVolume.x + 6, _winVolume.y, _winVolume.w, _winVolume.h);
-    xSemaphoreGive(mutex_display);
-}
-void showHeadlineTime(bool complete) {
-    static char oldtime[8]; // hhmmss
-    char        newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
-    uint8_t     pos_s[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     pos_m[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
-    uint8_t*    pos = NULL;
-    uint8_t     w = 0;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    if(!_f_rtc) {
-        xSemaphoreGive(mutex_display);
-        clearTime();
-        return;
-    } // has rtc the correct time? no -> return
-    memcpy(newtime, rtc.gettime_s(), 8);
-    if(complete == true) {
-        clearTime();
-        for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-    }
-    for(uint8_t i = 0; i < 8; i++) {
-        if(oldtime[i] != newtime[i]) {
-            char ch[2] = {0, 0};
-            ch[0] = newtime[i];
-            if(TFT_CONTROLLER < 2) { // 320x240
-                pos = pos_s;
-                w = 9;
-            }
-            else { // 480x320
-                pos = pos_m;
-                w = 13;
-            }
-            tft.fillRect(_winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_BLACK);
-            tft.writeText(ch, _winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_ALIGN_LEFT, true);
-            oldtime[i] = newtime[i];
-        }
-    }
-
-    xSemaphoreGive(mutex_display);
-}
-void showHeadlineItem(uint8_t idx) { // radio, clock, audioplayer...
-    if(_f_sleeping) return;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    clearItem();
-    tft.writeText(_hl_item[idx], _winItem.x + 6, _winItem.y, _winItem.w, _winItem.h);
-    xSemaphoreGive(mutex_display);
-}
 void showFooterIPaddr() {
     xSemaphoreTake(mutex_display, portMAX_DELAY);
     char myIP[30] = "IP:";
@@ -1799,6 +1733,7 @@ void setup() {
     placingGraphicObjects();
     tft.fillScreen(TFT_BLACK); // Clear screen
     muteChanged(_f_mute);
+    dispHeader.show();
     _radioSubmenue = 0;
     changeState(RADIO);
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
@@ -1830,8 +1765,8 @@ const char* scaleImage(const char* path) {
 
 void setVolume(uint8_t vol) {
     audioSetVolume(vol);
-    showHeadlineVolume();
     _cur_volume = vol;
+    dispHeader.updateVolume(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
 
 #if DECODER > 1 // ES8388, AC101 ...
@@ -2088,16 +2023,14 @@ void wake_up() {
         setTFTbrightness(_brightness);
         connecttohost(_lastconnectedhost.c_str());
         showFooter();
-        showHeadlineTime();
-        showHeadlineVolume();
+        dispHeader.updateTime(rtc.gettime_s());
+        dispHeader.updateVolume(_cur_volume);
         if(_state == CLOCK) {
-            showHeadlineItem(CLOCK);
             clk_CL_green.show();
         }
         else {
             changeState(RADIO);
             showLogoAndStationName();
-            showHeadlineItem(RADIO);
         }
     }
 }
@@ -2146,7 +2079,9 @@ void muteChanged(bool m) {
     else {audioMute(_cur_volume); _f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
-    showHeadlineVolume();
+    if(_f_mute) dispHeader.setVolumeColor(TFT_RED);
+    else        dispHeader.setVolumeColor(TFT_DEEPSKYBLUE);
+    dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
 
@@ -2167,6 +2102,8 @@ void logAlarmItems() {
 
 // clang-format off
 void placingGraphicObjects() { // and initialize them
+    // ALL STATE
+    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, _fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_RA_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_RA_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2397,11 +2334,11 @@ void changeState(int32_t state){
         showFooterRSSI(true);
     }
 
+    dispHeader.updateItem(_hl_item[state]);
     switch(state) {
         case RADIO:{
             if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
-                showHeadlineItem(RADIO);
                 VUmeter_RA.show();
                 if(_state != RADIO) showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -2437,7 +2374,6 @@ void changeState(int32_t state){
 
         case PLAYER: {
             if(_state != PLAYER) clearWithOutHeaderFooter();
-            showHeadlineItem(PLAYER);
             if(_playerSubmenue == 0){
                 _SD_content.listDir(_curAudioFolder, true, true);
                 _cur_Codec = 0;
@@ -2455,7 +2391,6 @@ void changeState(int32_t state){
         }
         case AUDIOFILESLIST: {
             clearWithOutHeaderFooter();
-            showHeadlineItem(AUDIOFILESLIST);
             lst_PLAYER.show();
             _timeCounter.timer = 10;
             _timeCounter.factor = 1.0;
@@ -2464,7 +2399,6 @@ void changeState(int32_t state){
         case DLNA:{
             clearWithOutHeaderFooter();
             showFileLogo(state);
-            showHeadlineItem(DLNA);
             showVolumeBar();
             btn_DL_Mute.show();    btn_DL_volDown.show();  btn_DL_volUp.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             break;
@@ -2476,7 +2410,6 @@ void changeState(int32_t state){
             break;
         }
         case CLOCK:{
-            showHeadlineItem(CLOCK);
             if(_clockSubMenue == 0){
                 _timeCounter.timer = 0;
                 if(_state != CLOCK){
@@ -2497,14 +2430,12 @@ void changeState(int32_t state){
             break;
         }
         case ALARM:{
-            showHeadlineItem(ALARM);
             clearWithOutHeaderFooter();
             clk_AL_red.show();          btn_AL_left.show();     btn_AL_right.show();    btn_AL_up.show();      btn_AL_down.show();
             btn_AL_ready.show();
             break;
         }
         case SLEEP:{
-            showHeadlineItem(SLEEP);
             clearWithOutHeaderFooter();
             display_sleeptime();
             btn_SL_up.show();           btn_SL_down.show();       btn_SL_ready.show();    btn_SL_cancel.show();
@@ -2513,7 +2444,6 @@ void changeState(int32_t state){
             break;
         }
         case BRIGHTNESS:{
-            showHeadlineItem(BRIGHTNESS);
             clearWithOutHeaderFooter();
             btn_BR_left.show(); btn_BR_right.show(); btn_BR_ready.show(); pic_BR_logo.show();
             showBrightnessBar();
@@ -2521,7 +2451,6 @@ void changeState(int32_t state){
         }
         case EQUALIZER:{
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
-            showHeadlineItem(EQUALIZER);
             sdr_EQ_lowPass.show(); sdr_EQ_bandPass.show(); sdr_EQ_highPass.show(); sdr_EQ_balance.show();
             btn_EQ_lowPass.show(); btn_EQ_bandPass.show(); btn_EQ_highPass.show(); btn_EQ_balance.show(); btn_EQ_Radio.show(); btn_EQ_Player.show(); btn_EQ_Mute.show();
             txt_EQ_lowPass.show(); txt_EQ_bandPass.show(); txt_EQ_highPass.show(); txt_EQ_balance.show();
@@ -2529,7 +2458,6 @@ void changeState(int32_t state){
         }
         case BLUETOOTH:
             clearWithOutHeaderFooter();
-            showHeadlineItem(BLUETOOTH);
             btn_BL_volUp.show(); btn_BL_volDown.show(); btn_BL_pause.show(); btn_BL_radio.show(); pic_BL_mode.show();
             break;
     }
@@ -2589,8 +2517,8 @@ void loop() {
             if(_f_alarm) {
                 _f_alarm = false;
                 clearAll();
-                showHeadlineItem(ALARM);
-                showHeadlineTime();
+                dispHeader.updateItem("ALARM");
+                dispHeader.updateTime(rtc.gettime_s());
                 showFooter();
                 showFileName("ALARM");
                 drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
@@ -2603,7 +2531,7 @@ void loop() {
             if(_f_eof_alarm) { // AFTER RINGING
                 _f_eof_alarm = false;
                 audioSetVolume(_cur_volume);
-                showHeadlineVolume();
+                dispHeader.updateVolume(_cur_volume);
                 wake_up();
                 _radioSubmenue = 0;
                 changeState(RADIO);
@@ -2613,7 +2541,7 @@ void loop() {
         }
         //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
         if(!_f_sleeping) {
-            showHeadlineTime(false);
+            dispHeader.updateTime(rtc.gettime_s(), false);
             showFooterRSSI(true);
             if(_f_newBitRate) {
                _f_newBitRate = false; }

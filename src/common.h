@@ -184,9 +184,6 @@ void           updateSettings();
 void           urldecode(char* str);
 const char*    SD_stringifyDirContent(String path);
 void           setTFTbrightness(uint8_t duty);
-void           showHeadlineVolume();
-void           showHeadlineTime(bool complete = true);
-void           showHeadlineItem(uint8_t idx);
 void           showFooterIPaddr();
 void           showFooterStaNr();
 void           showFooterRSSI(boolean show = false);
@@ -588,6 +585,7 @@ extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int3
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, releasedArg ra);
 
+extern SemaphoreHandle_t mutex_display;
 extern SD_content _SD_content;
 class slider{
 private:
@@ -2202,10 +2200,6 @@ public:
 #if TFT_CONTROLLER < 2 // 320 x 240px
         m_segm_w = 9;
         m_segm_h = 7;
-        m_xOffs = 11;
-        m_yOffs = 8;
-        m_xStart = 2;
-        m_yStart = 90;
 #else // 480 x 320px
         m_segm_w = 12;
         m_segm_h = 8;
@@ -2216,7 +2210,6 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
-        log_i("m_x %i, m_y %i, m_w %i, m_h %i", m_x, m_y, m_w, m_h);
         tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
         for(uint8_t i = 0; i < 12; i++){
             drawRect(i, 0, 0);
@@ -2224,8 +2217,6 @@ public:
         }
         m_VUleftCh = 0;
         m_VUrightCh = 0;
-
-
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -2242,6 +2233,7 @@ public:
         uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
         uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
 
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(left > m_VUleftCh) {
             for(int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
         }
@@ -2257,6 +2249,7 @@ public:
             for(int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
         }
         m_VUrightCh = right;
+        xSemaphoreGive(mutex_display);
     }
 
     bool positionXY(uint16_t x, uint16_t y){
@@ -2296,5 +2289,144 @@ private:
         }
         tft.fillRect(xPos, yPos, m_segm_w, m_segm_h, color);
     };
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class displayHeader{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_volume = 0;
+    uint32_t    m_bgColor = TFT_BLACK;
+    char*       m_name = NULL;
+    char        m_time[10] = {0};
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
+    uint16_t    m_itemColor = TFT_GREENYELLOW;
+    uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
+    uint16_t    m_timeColor = TFT_GREENYELLOW;
+#if TFT_CONTROLLER < 2 // 320 x 240px
+    uint16_t    m_item_x = 6;
+    uint16_t    m_item_w = 174;
+    uint16_t    m_volume_x = 180;
+    uint16_t    m_volume_w = 50;
+    uint16_t    m_time_x = 260;
+    uint16_t    m_time_w = 60;
+    uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
+    uint8_t     m_time_ch_w = 9;
+#else // 480 x 320px
+    uint16_t    m_item_x = 6;
+    uint16_t    m_item_w = 274;
+    uint16_t    m_volume_x = 280;
+    uint16_t    m_volume_w = 100;
+    uint16_t    m_time_x = 380;
+    uint16_t    m_time_w = 100;
+    uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
+    uint8_t     m_time_ch_w = 13;
+#endif
+public:
+    displayHeader(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+    }
+    ~displayHeader(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_fontSize = fontSize;
+    }
+    void show(){
+        m_enabled = true;
+        m_clicked = false;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void updateItem(const char* hl_item){// radio, clock, audioplayer...
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.setFont(m_fontSize);
+        tft.setTextColor(m_itemColor);
+        tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
+        tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
+        xSemaphoreGive(mutex_display);
+    }
+    void setItemColor(uint16_t itemColor){
+        m_itemColor = itemColor;
+    }
+    void updateVolume(uint8_t vol){
+        m_volume = vol;
+        char buff[10];
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.setFont(m_fontSize);
+        tft.setTextColor(m_volumeColor);
+        tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
+        sprintf(buff, "Vol %02d", m_volume);
+        tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
+        xSemaphoreGive(mutex_display);
+    }
+    void setVolumeColor(uint16_t volColor){
+        m_volumeColor = volColor;
+        updateVolume(m_volume);
+    }
+    void updateTime(const char* hl_time, bool complete = true){
+        memcpy(m_time, hl_time, 8); // hhmmss
+        static char oldtime[8] = {255}; // hhmmss
+        uint8_t*    pos = NULL;
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.setFont(m_fontSize);
+        tft.setTextColor(m_timeColor);
+        if(complete == true) {
+            tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
+            for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        }
+        for(uint8_t i = 0; i < 8; i++) {
+            if(oldtime[i] != m_time[i]) {
+                char ch[2] = {0, 0};
+                ch[0] = m_time[i];
+                pos = m_time_pos;
+                tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_BLACK);
+                tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, true);
+                oldtime[i] = m_time[i];
+            }
+        }
+        xSemaphoreGive(mutex_display);
+    }
+    void setTimeColor(uint16_t timeColor){
+        m_timeColor = timeColor;
+        updateTime(m_time, true);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+private:
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
