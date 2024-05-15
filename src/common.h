@@ -169,7 +169,7 @@ struct releasedArg {
 };
 struct timecounter {
     uint8_t timer = 0;
-    float   factor = 2.0;
+    uint8_t factor = 2;
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -2444,6 +2444,7 @@ private:
     int8_t      m_rssi = 0;
     int8_t      m_old_rssi = -1;
     uint8_t     m_fontSize = 0;
+    int8_t      m_timeCounter = 0;
     uint8_t     m_volume = 0;
     uint16_t    m_staNr = 0;
     uint16_t    m_offTime = 0;
@@ -2457,7 +2458,6 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     releasedArg m_ra;
-
     const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.bmp", "/common/RSSI1.bmp", "/common/RSSI2.bmp", "/common/RSSI3.bmp", "/common/RSSI4.bmp"};
     const char  m_stationSymbol[16]     = "/common/STA.bmp";
     const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.bmp", "/common/Hourglass_red.bmp"};
@@ -2466,7 +2466,8 @@ private:
     uint16_t    m_staNr_x = 25, m_staNr_w = 35;
     uint16_t    m_offTimerSymbol_x = 60;
     uint16_t    m_offTimerNr_x = 88, m_offTimerNr_w = 37;
-    uint16_t    m_rssiSymbol_x = 125; // w = 24
+    uint16_t    m_rssiSymbol_x = 125;
+    uint16_t    m_rssiSymbol_w = 24;
     uint16_t    m_bitRate_x = 150, m_bitRate_w = 40;
     uint16_t    m_ipAddr_x = 190, m_ipAddr_w = 130;
 #else // 480 x 320px
@@ -2474,7 +2475,8 @@ private:
     uint16_t    m_staNr_x = 33, m_staNr_w = 52;
     uint16_t    m_offTimerSymbol_x = 85;
     uint16_t    m_offTimerNr_x = 118, m_offTimerNr_w = 54;
-    uint16_t    m_rssiSymbol_x = 172; // w = 32px
+    uint16_t    m_rssiSymbol_x = 172;
+    uint16_t    m_rssiSymbol_w = 32;
     uint16_t    m_bitRate_x = 204, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 270, m_ipAddr_w = 210;
 #endif
@@ -2549,10 +2551,9 @@ public:
         tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
         xSemaphoreGive(mutex_display);
     }
-    void updateRSSI(int8_t rssi){
+    void updateRSSI(int8_t rssi, bool show = false){
         static int32_t old_rssi = -1;
         int8_t new_rssi = -1;
-        bool show = false;
         m_rssi = rssi;
         if(m_rssi < -1)  new_rssi = 4;
         if(m_rssi < -50) new_rssi = 3;
@@ -2575,6 +2576,19 @@ public:
             xSemaphoreGive(mutex_display);
         }
     }
+    void updateTC(uint8_t timeCounter){
+        m_timeCounter = timeCounter;
+        if(!m_timeCounter) updateRSSI(m_rssi, true);
+        else{
+            uint16_t x0   = m_rssiSymbol_x;
+            uint16_t x1x2 = round(m_rssiSymbol_x + ((float)((m_rssiSymbol_w) / 10) * timeCounter));
+            uint16_t y0y1 = m_y + m_h - 5;
+            uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
+            tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
+            tft.fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
+        }
+    }
+
     void updateBitRate(uint32_t bitRate){
         m_bitRate = bitRate;
         char sbr[10];
