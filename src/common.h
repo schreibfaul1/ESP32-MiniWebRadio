@@ -2430,3 +2430,148 @@ public:
 private:
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class displayFooter{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_volume = 0;
+    uint32_t    m_bgColor = TFT_BLACK;
+    char*       m_name = NULL;
+    char        m_time[10] = {0};
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
+    uint16_t    m_itemColor = TFT_GREENYELLOW;
+    uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
+    uint16_t    m_timeColor = TFT_GREENYELLOW;
+#if TFT_CONTROLLER < 2 // 320 x 240px
+    uint16_t    m_item_x = 6;
+    uint16_t    m_item_w = 174;
+    uint16_t    m_volume_x = 180;
+    uint16_t    m_volume_w = 50;
+    uint16_t    m_time_x = 260;
+    uint16_t    m_time_w = 60;
+    uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
+    uint8_t     m_time_ch_w = 9;
+#else // 480 x 320px
+    uint16_t    m_item_x = 6;
+    uint16_t    m_item_w = 274;
+    uint16_t    m_volume_x = 280;
+    uint16_t    m_volume_w = 100;
+    uint16_t    m_time_x = 380;
+    uint16_t    m_time_w = 100;
+    uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
+    uint8_t     m_time_ch_w = 13;
+#endif
+public:
+    displayFooter(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+    }
+    ~displayFooter(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w;
+        m_h = h;
+        m_fontSize = fontSize;
+    }
+    void show(){
+        m_enabled = true;
+        m_clicked = false;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void updateStation(uint16_t staNr){// radio, clock, audioplayer...
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        // tft.setFont(m_fontSize);
+        // tft.setTextColor(m_itemColor);
+        // tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
+        // tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
+        xSemaphoreGive(mutex_display);
+    }
+    void setStationNrColor(uint16_t itemColor){
+        m_itemColor = itemColor;
+    }
+    void updateOffTime(uint8_t offTime){
+//        m_volume = vol;
+        char buff[10];
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        // tft.setFont(m_fontSize);
+        // tft.setTextColor(m_volumeColor);
+        // tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
+        // sprintf(buff, "Vol %02d", m_volume);
+        // tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
+        xSemaphoreGive(mutex_display);
+    }
+    void setOffTimeColor(uint16_t OffTimeColor){
+        //m_volumeColor = volColor;
+        //updateVolume(m_volume);
+    }
+    void updateRSSI(int8_t rssi){
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        // tft.setFont(m_fontSize);
+        // tft.setTextColor(m_timeColor);
+        // if(complete == true) {
+        //     tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
+        //     for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        // }
+        // for(uint8_t i = 0; i < 8; i++) {
+        //     if(oldtime[i] != m_time[i]) {
+        //         char ch[2] = {0, 0};
+        //         ch[0] = m_time[i];
+        //         pos = m_time_pos;
+        //         tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_BLACK);
+        //         tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, true);
+        //         oldtime[i] = m_time[i];
+        //     }
+        // }
+        xSemaphoreGive(mutex_display);
+    }
+    void setRSSIColor(uint16_t rssiColor){
+        // m_timeColor = timeColor;
+        // updateTime(m_time, true);
+    }
+    void updateBitRate(uint16_t bitRate){
+
+    }
+    void setBitRateColor(uint16_t bitRateColor){
+
+    }
+    void updateIpAddr(const char* ipAddr){
+
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+private:
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

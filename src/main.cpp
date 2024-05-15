@@ -1366,7 +1366,6 @@ exit:
  *                                         C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                              *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
-    WiFi.setHostname("MiniWebRadio");
     String s_ssid = "", s_password = "", s_info = "";
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
     if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
@@ -1718,9 +1717,6 @@ void setup() {
     _dlnaHistory[1].objId = strdup("0");
     _f_dlnaSeekServer = true;
 
-    ArduinoOTA.setHostname("MiniWebRadio");
-    ArduinoOTA.begin();
-
     if(_resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage
        _resetResaon == ESP_RST_SW ||        // ESP.restart()
        _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
@@ -1739,6 +1735,8 @@ void setup() {
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
     setI2STone();
     showFooter();
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.begin();
 
 }
 /*****************************************************************************************************************************************************
