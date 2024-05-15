@@ -70,8 +70,6 @@ uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
 uint8_t             _cur_Codec = 0;
-uint8_t             _VUleftCh = 0;   // VU meter left channel
-uint8_t             _VUrightCh = 0;  // VU meter right channel
 uint8_t             _numServers = 0; //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
@@ -155,7 +153,6 @@ bool                _f_playlistNextFile = false;
 bool                _f_logoUnknown = false;
 bool                _f_pauseResume = false;
 bool                _f_accessPoint = false;
-bool                _f_VUmeterIsVisible = false;
 bool                _f_SD_Upload = false;
 bool                _f_PSRAMfound = false;
 bool                _f_FFatFound = false;
@@ -247,14 +244,9 @@ struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 
 struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
 struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
-struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 180; uint16_t h =  20;} const _winItem;
-struct w_v  {uint16_t x = 180; uint16_t y =   0; uint16_t w =  50; uint16_t h =  20;} const _winVolume;
-struct w_m  {uint16_t x = 260; uint16_t y =   0; uint16_t w =  60; uint16_t h =  20;} const _winTime;
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
-struct w_u  {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
-struct w_a  {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
 struct w_b  {uint16_t x =   0; uint16_t y = 170; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
@@ -312,14 +304,9 @@ struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 
 struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
-struct w_m  {uint16_t x = 380; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winTime;
-struct w_i  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 280; uint16_t h =  30;} const _winItem;
-struct w_v  {uint16_t x = 280; uint16_t y =   0; uint16_t w = 100; uint16_t h =  30;} const _winVolume;
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
-struct w_u  {uint16_t x = 204; uint16_t y = 290; uint16_t w =  64; uint16_t h =  30;} const _winBitRate;
-struct w_a  {uint16_t x = 268; uint16_t y = 290; uint16_t w = 212; uint16_t h =  30;} const _winIPaddr;
 struct w_b  {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -347,52 +334,56 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
+// ALL STATE
+displayHeader dispHeader("dispHeader", _fonts[1]);
+displayFooter dispFooter("dispFooter", _fonts[1]);
 // RADIO
-button2state btn_RA_Mute("btn_RA_Mute");
-button1state btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
-button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
-button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
-pictureBox   pic_R_logo("pic_R_logo");
+button2state  btn_RA_Mute("btn_RA_Mute");
+button1state  btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
+button1state  btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
+button1state  btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
+pictureBox    pic_R_logo("pic_R_logo");
+vuMeter       VUmeter_RA("VUmeter_RA");
 // STATIONSLIST
-stationsList lst_RADIO("lst_RADIO");
+stationsList  lst_RADIO("lst_RADIO");
 // PLAYER
-button2state btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
-button1state btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
-button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
-button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
+button2state  btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
+button1state  btn_PL_volDown("btn_PL_volDown"), btn_PL_volUp("btn_PL_volUp"), btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
+button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
+button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile");
 // AUDIOFILESLIST
-fileList     lst_PLAYER("lst_PLAYER");
+fileList      lst_PLAYER("lst_PLAYER");
 // DLNA
-button2state btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
-button1state btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
-button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+button2state  btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
+button1state  btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
+button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
 // DLNAITEMSLIST
-dlnaList     lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
+dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
-imgClock     clk_CL_green("clk_CL_green");
-button2state btn_CL_Mute("btn_CL_Mute");
-button1state btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_volDown("btn_CL_volDown"), btn_CL_volUp("btn_CL_volUp");
+imgClock      clk_CL_green("clk_CL_green");
+button2state  btn_CL_Mute("btn_CL_Mute");
+button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_volDown("btn_CL_volDown"), btn_CL_volUp("btn_CL_volUp");
 // ALARM
-alarmClock   clk_AL_red("clk_CL_green");
-button1state btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
-button1state btn_AL_ready("btn_AL_ready");
+alarmClock    clk_AL_red("clk_CL_green");
+button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
+button1state  btn_AL_ready("btn_AL_ready");
 // BRIGHTNESS
-button1state btn_BR_left("btn_BR_left"), btn_BR_right("btn_BR_right"), btn_BR_ready("btn_BR_ready");
-pictureBox   pic_BR_logo("pic_BR_logo");
+button1state  btn_BR_left("btn_BR_left"), btn_BR_right("btn_BR_right"), btn_BR_ready("btn_BR_ready");
+pictureBox    pic_BR_logo("pic_BR_logo");
 // SLEEP
-button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
+button1state  btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
-slider       sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
-textbox      txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
-button1state btn_EQ_lowPass("btn_E_LP");
-button1state btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
-button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
-button2state btn_EQ_Mute("btn_EQ_Mute");
+slider        sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
+textbox       txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
+button1state  btn_EQ_lowPass("btn_E_LP");
+button1state  btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
+button1state  btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
+button2state  btn_EQ_Mute("btn_EQ_Mute");
 // BLUETOOTH
-button2state btn_BL_pause("btn_BL_pause");
-button1state btn_BL_volDown("btn_BL_volDown"), btn_BL_volUp("btn_BL_volUp"), btn_BL_radio("btn_BL_radio");
-pictureBox   pic_BL_mode("pic_BL_mode");
-textbox      txt_BL_mode("txt_BL_mode");
+button2state  btn_BL_pause("btn_BL_pause");
+button1state  btn_BL_volDown("btn_BL_volDown"), btn_BL_volUp("btn_BL_volUp"), btn_BL_radio("btn_BL_radio");
+pictureBox    pic_BL_mode("pic_BL_mode");
+textbox       txt_BL_mode("txt_BL_mode");
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -801,11 +792,6 @@ inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y
 inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
 inline void clearWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
-inline void clearTime()               {tft.fillRect(_winTime.x,      _winTime.y,      _winTime.w,      _winTime.h,     TFT_BLACK);}
-inline void clearItem()               {tft.fillRect(_winItem.x,      _winItem.y,      _winItem.w,      _winTime.h,     TFT_BLACK);}
-inline void clearVolume()             {tft.fillRect(_winVolume.x,    _winVolume.y,    _winVolume.w,    _winVolume.h,   TFT_BLACK);}
-inline void clearIPaddr()             {tft.fillRect(_winIPaddr.x,    _winIPaddr.y,    _winIPaddr.w,    _winIPaddr.h,   TFT_BLACK);}
-inline void clearBitRate()            {tft.fillRect(_winBitRate.x,   _winBitRate.y,   _winBitRate.w,   _winBitRate.h,  TFT_BLACK);}
 inline void clearStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
 inline void clearSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h,    TFT_BLACK);}
 inline void clearVolBar()             {tft.fillRect(_winVolBar.x,    _winVolBar.y,    _winVolBar.w,    _winVolBar.h,   TFT_BLACK);}
@@ -821,256 +807,12 @@ inline uint16_t txtlen(String str) {
     return len;
 }
 
-void showHeadlineVolume() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    if(_f_mute) tft.setTextColor(TFT_RED);
-    else        tft.setTextColor(TFT_DEEPSKYBLUE);
-    clearVolume();
-    sprintf(_chbuf, "Vol %02d", _cur_volume);
-    tft.writeText(_chbuf, _winVolume.x + 6, _winVolume.y, _winVolume.w, _winVolume.h);
-    xSemaphoreGive(mutex_display);
-}
-void showHeadlineTime(bool complete) {
-    static char oldtime[8]; // hhmmss
-    char        newtime[8] = {255, 255, 255, 255, 255, 255, 255, 255};
-    uint8_t     pos_s[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     pos_m[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
-    uint8_t*    pos = NULL;
-    uint8_t     w = 0;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    if(!_f_rtc) {
-        xSemaphoreGive(mutex_display);
-        clearTime();
-        return;
-    } // has rtc the correct time? no -> return
-    memcpy(newtime, rtc.gettime_s(), 8);
-    if(complete == true) {
-        clearTime();
-        for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-    }
-    for(uint8_t i = 0; i < 8; i++) {
-        if(oldtime[i] != newtime[i]) {
-            char ch[2] = {0, 0};
-            ch[0] = newtime[i];
-            if(TFT_CONTROLLER < 2) { // 320x240
-                pos = pos_s;
-                w = 9;
-            }
-            else { // 480x320
-                pos = pos_m;
-                w = 13;
-            }
-            tft.fillRect(_winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_BLACK);
-            tft.writeText(ch, _winTime.x + pos[i], _winTime.y, w, _winTime.h, TFT_ALIGN_LEFT, true);
-            oldtime[i] = newtime[i];
-        }
-    }
-
-    xSemaphoreGive(mutex_display);
-}
-void showHeadlineItem(uint8_t idx) { // radio, clock, audioplayer...
-    if(_f_sleeping) return;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    clearItem();
-    tft.writeText(_hl_item[idx], _winItem.x + 6, _winItem.y, _winItem.w, _winItem.h);
-    xSemaphoreGive(mutex_display);
-}
-void showFooterIPaddr() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    char myIP[30] = "IP:";
-    strcpy(myIP + 3, _myIP);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    clearIPaddr();
-    tft.writeText(myIP, _winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_ALIGN_RIGHT, true);
-    xSemaphoreGive(mutex_display);
-}
-void showFooterStaNr() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2) offset = 25;
-    else offset = 33;
-    clearStaNr();
-    drawImage("/common/STA.bmp", _winStaNr.x, _winStaNr.y);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_LAVENDER);
-    char buf[10];
-    sprintf(buf, "%03d", _cur_station);
-    tft.writeText(buf, _winStaNr.x + offset, _winStaNr.y, _winStaNr.w, _winStaNr.h);
-    xSemaphoreGive(mutex_display);
-}
-void showFooterRSSI(boolean show) {
-    static int32_t old_rssi = -1;
-    int32_t        new_rssi = -1;
-    int8_t         rssi = WiFi.RSSI(); // Received Signal Strength Indicator
-    if(rssi < -1) new_rssi = 4;
-    if(rssi < -50) new_rssi = 3;
-    if(rssi < -65) new_rssi = 2;
-    if(rssi < -75) new_rssi = 1;
-    if(rssi < -85) new_rssi = 0;
-
-    if(new_rssi != old_rssi) {
-        old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
-        if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
-            static int32_t tmp_rssi = 0;
-            if((abs(rssi - tmp_rssi) > 3)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
-            tmp_rssi = rssi;
-        }
-        show = true;
-    }
-    if(show && !_timeCounter.timer) {
-        switch(new_rssi) {
-            case 4: {
-                drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 3: {
-                drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 2: {
-                drawImage("/common/RSSI2.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 1: {
-                drawImage("/common/RSSI1.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 0: {
-                drawImage("/common/RSSI0.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-        }
-    }
-}
-
-void showFooterBitRate(uint16_t br) {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearBitRate();
-    char sbr[10];
-    itoa(br, sbr, 10);
-    if(br < 1000) { strcat(sbr, "K"); }
-    else {
-        sbr[2] = sbr[1];
-        sbr[1] = '.';
-        sbr[3] = 'M';
-        sbr[4] = '\0';
-    }
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_LAVENDER);
-    uint8_t space = 2;
-    if(strlen(sbr) < 4) space += 5;
-    tft.writeText(sbr, _winBitRate.x + space, _winBitRate.y, _winBitRate.w, _winBitRate.h);
-    xSemaphoreGive(mutex_display);
-}
-
-void updateSleepTime(boolean noDecrement) { // decrement and show new value in footer
-    if(_f_sleeping) return;
-    boolean sleep = false;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearSleep();
-    drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
-    uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2) offset = 28;
-    else offset = 33;
-    if(_sleeptime == 1) sleep = true;
-    if(_sleeptime > 0 && !noDecrement) _sleeptime--;
-
-    char Slt[15];
-    sprintf(Slt, "%d:%02d", _sleeptime / 60, _sleeptime % 60);
-    tft.setFont(_fonts[1]);
-    if(!_sleeptime) {
-        drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
-        tft.setTextColor(TFT_DEEPSKYBLUE);
-    }
-    else {
-        drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
-        tft.setTextColor(TFT_RED);
-    }
-    tft.writeText(Slt, _winSleep.x + offset, _winSleep.y, _winSleep.w, _winSleep.h);
-
-    xSemaphoreGive(mutex_display);
-    if(sleep) { // fall asleep
-        fall_asleep();
-        _sleeptime = 0;
-    }
-}
 void showVolumeBar() {
     uint16_t val = tft.width() * _cur_volume / 21;
     clearVolBar();
     tft.fillRect(_winVolBar.x, _winVolBar.y + 1, val, _winVolBar.h - 2, TFT_RED);
     tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
-}
-
-void updateVUmeter() {
-    if(_state != RADIO) return;
-    if(_radioSubmenue > 0) return;
-    if(!_f_VUmeterIsVisible) return;
-    if(_f_sleeping) return;
-    if(_f_irNumberSeen) return;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    uint8_t width = 0, height = 0, xOffs = 0, yOffs = 0, xStart = 0, yStart = 0;
-#if TFT_CONTROLLER < 2 // 320 x 240px
-    width = 9;
-    height = 7;
-    xOffs = 11;
-    yOffs = 8;
-    xStart = 2;
-    yStart = 90;
-#else // 480 x 320px
-    width = 12;
-    height = 8;
-    xOffs = 16;
-    yOffs = 10;
-    xStart = 2;
-    yStart = 115;
-#endif
-
-    // c99 has no inner functions, lambdas are only allowed from c11, please don't use ancient compiler
-    auto drawRect = [&](uint8_t pos, uint8_t ch, bool br) { // lambda, inner function
-        uint16_t color = 0, xPos = _winVUmeter.x + xStart + ch * xOffs, yPos = _winVUmeter.y + yStart - pos * yOffs;
-        if(pos > 11) return;
-        switch(pos) {
-            case 0 ... 6: // green
-                br ? color = TFT_GREEN : color = TFT_DARKGREEN;
-                break;
-            case 7 ... 9: // yellow
-                br ? color = TFT_YELLOW : color = TFT_DARKYELLOW;
-                break;
-            case 10 ... 11: // red
-                br ? color = TFT_RED : color = TFT_DARKRED;
-                break;
-        }
-        tft.fillRect(xPos, yPos, width, height, color);
-    };
-
-    uint16_t vum = audioGetVUlevel();
-
-    uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
-    uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
-
-    if(left > _VUleftCh) {
-        for(int32_t i = _VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
-    }
-    if(left < _VUleftCh) {
-        for(int32_t i = left; i < _VUleftCh; i++) { drawRect(i, 1, 0); }
-    }
-    _VUleftCh = left;
-
-    if(right > _VUrightCh) {
-        for(int32_t i = _VUrightCh; i < right; i++) { drawRect(i, 0, 1); }
-    }
-    if(right < _VUrightCh) {
-        for(int32_t i = right; i < _VUrightCh; i++) { drawRect(i, 0, 0); }
-    }
-    _VUrightCh = right;
-    xSemaphoreGive(mutex_display);
 }
 
 void showBrightnessBar() {
@@ -1080,13 +822,7 @@ void showBrightnessBar() {
     tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
 }
-void showFooter() { // stationnumber, sleeptime, IPaddress
-    showFooterStaNr();
-    updateSleepTime(true);
-    showFooterIPaddr();
-    showFooterRSSI(true);
-    showFooterBitRate(_icyBitRate);
-}
+
 void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
@@ -1118,19 +854,6 @@ void showStreamTitle(const char* streamtitle) {
     }
     display_info(ST.c_str(), _winSTitle.x, _winSTitle.y, TFT_CORNSILK, 2, 10, _winSTitle.w, _winSTitle.h);
     xSemaphoreGive(mutex_display);
-}
-void showVUmeter() {
-    if(_f_sleeping) return;
-    _f_VUmeterIsVisible = true;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    drawImage("/common/level_bar.jpg", _winVUmeter.x, _winVUmeter.y);
-    _VUrightCh = 0;
-    _VUleftCh = 0;
-    xSemaphoreGive(mutex_display);
-}
-void hideVUmeter() {
-    _f_VUmeterIsVisible = false;
-    tft.drawRect(_winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h, TFT_BLACK);
 }
 
 void showLogoAndStationName() {
@@ -1225,25 +948,6 @@ void showAudioFileNumber() {
     char buf[15];
     sprintf(buf, "%03u/%03u", _cur_AudioFileNr, _SD_content.getSize());
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
-}
-
-void showStationsList(uint16_t staListNr) {
-    clearWithOutHeaderFooter();
-    if(_sum_stations < 11) staListNr = 0;
-    else if(staListNr + 9 > _max_stations) staListNr = _max_stations - 9;
-    showHeadlineItem(STATIONSLIST);
-    tft.setFont(_fonts[0]);
-    uint8_t lineHight = _winWoHF.h / 10;
-    for(uint8_t pos = 0; pos < 10; pos++) {
-        if(pos + staListNr + 1 > _sum_stations) break;
-        sprintf(_chbuf, "station_%03d", pos + staListNr + 1);
-        String content = stations.getString(_chbuf, " #not_found");
-        content.replace('#', '\0');
-        sprintf(_chbuf, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE "%s\n", pos + staListNr + 1, content.c_str());
-        tft.writeText(_chbuf, 10, _winFooter.h + (pos)*lineHight, _dispWidth - 10, lineHight, TFT_ALIGN_LEFT, true, true);
-    }
-    _timeCounter.timer = 10;
-    _timeCounter.factor = 1.0;
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
@@ -1538,7 +1242,6 @@ bool connectToWiFi() {
         String ap_pw = pref.getString("ap_pw", "");
         if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
     }
-    WiFi.setHostname("MiniWebRadio");
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
         String str = "";
@@ -1568,8 +1271,6 @@ bool connectToWiFi() {
         }
         file.close();
     }
-
-
     int16_t n = WiFi.scanNetworks();
     SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
     for(int i = 0; i < n; i++){
@@ -1583,7 +1284,7 @@ bool connectToWiFi() {
             MDNS.addService("esp32", "tcp", 80);
             SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
         }
-        WiFi.setSleep(true);
+        WiFi.setAutoReconnect(true);
         return true;
     }
     else {
@@ -1632,7 +1333,7 @@ void connecttohost(const char* host) {
     char*   user = nullptr;
     char*   pwd = nullptr;
 
-    clearBitRate();
+    dispFooter.updateBitRate(0);
     _cur_Codec = 0;
     //    if(_state == RADIO) clearStreamTitle();
     _icyBitRate = 0;
@@ -1667,7 +1368,7 @@ void connecttohost(const char* host) {
     }
 }
 void connecttoFS(const char* filename, uint32_t resumeFilePos) {
-    clearBitRate();
+    dispFooter.updateBitRate(0);
     _icyBitRate = 0;
     _avrBitRate = 0;
     _cur_Codec = 0;
@@ -1860,8 +1561,6 @@ void setup() {
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
 
-    _state = RADIO;
-
     ir.begin(); // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
@@ -1875,16 +1574,6 @@ void setup() {
         digitalWrite(AMP_ENABLED, HIGH);
     }
 
-    tft.fillScreen(TFT_BLACK); // Clear screen
-    muteChanged(_f_mute);
-    showHeadlineVolume();
-    if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
-    showHeadlineItem(RADIO);
-    _state = RADIO;
-    setI2STone();
-    showFooter();
-
-    showVUmeter();
     ticker100ms.attach(0.1, timer100ms);
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?");     // get version
@@ -1897,18 +1586,37 @@ void setup() {
     _dlnaHistory[1].objId = strdup("0");
     _f_dlnaSeekServer = true;
 
-    ArduinoOTA.setHostname("MiniWebRadio");
-    ArduinoOTA.begin();
+    placingGraphicObjects();
+    tft.fillScreen(TFT_BLACK); // Clear screen
+    muteChanged(_f_mute);
 
-    if(_resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage
-       _resetResaon == ESP_RST_SW ||        // ESP.restart()
-       _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
-       _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
+    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.updateStation(_cur_station);
+    dispFooter.updateOffTime(_sleeptime);
+    dispFooter.show();
+
+    dispHeader.updateItem(_hl_item[RADIO]);
+    dispHeader.updateVolume(_cur_volume);
+    dispHeader.show();
+
+    _radioSubmenue = 0;
+    _state = RADIO;
+    VUmeter_RA.show();
+
+    if( _resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage
+        _resetResaon == ESP_RST_SW ||        // ESP.restart()
+        _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
+        _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
         if(_cur_station > 0) setStation(_cur_station);
         else { setStationViaURL(_lastconnectedhost.c_str()); }
     }
     else { SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr); }
-    placingGraphicObjects();
+
+    if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
+    setI2STone();
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.begin();
+
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -1934,8 +1642,8 @@ const char* scaleImage(const char* path) {
 
 void setVolume(uint8_t vol) {
     audioSetVolume(vol);
-    showHeadlineVolume();
     _cur_volume = vol;
+    dispHeader.updateVolume(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
 
 #if DECODER > 1 // ES8388, AC101 ...
@@ -2005,7 +1713,7 @@ void setStation(uint16_t sta) {
     _cur_station = sta;
     StationsItems();
     if(_state == RADIO) showLogoAndStationName();
-    showFooterStaNr();
+    dispFooter.updateStation(_cur_station);
 }
 void nextStation() {
     if(_cur_station >= _sum_stations) setStation(1);
@@ -2049,7 +1757,7 @@ void setStationViaURL(const char* url) {
         clearStreamTitle();
         showLogoAndStationName();
     }
-    showFooterStaNr(); // set to '000'
+    dispFooter.updateStation(0); // set 000
 }
 
 void changeBtn_pressed(uint8_t btnNr) { drawImage(_pressBtn[btnNr], btnNr * _winButton.w, _winButton.y); }
@@ -2191,18 +1899,15 @@ void wake_up() {
         clearAll();
         setTFTbrightness(_brightness);
         connecttohost(_lastconnectedhost.c_str());
-        showFooter();
-        showHeadlineTime();
-        showHeadlineVolume();
+        dispFooter.show();
+    //    dispHeader.updateTime(rtc.gettime_s());
+    //    dispHeader.updateVolume(_cur_volume);
         if(_state == CLOCK) {
-            showHeadlineItem(CLOCK);
             clk_CL_green.show();
         }
         else {
             changeState(RADIO);
-            showVUmeter();
             showLogoAndStationName();
-            showHeadlineItem(RADIO);
         }
     }
 }
@@ -2251,7 +1956,9 @@ void muteChanged(bool m) {
     else {audioMute(_cur_volume); _f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
-    showHeadlineVolume();
+    if(_f_mute) dispHeader.setVolumeColor(TFT_RED);
+    else        dispHeader.setVolumeColor(TFT_DEEPSKYBLUE);
+    dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
 
@@ -2272,6 +1979,9 @@ void logAlarmItems() {
 
 // clang-format off
 void placingGraphicObjects() { // and initialize them
+    // ALL STATE
+    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
+    dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_RA_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_RA_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2304,6 +2014,7 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
                                                                                          btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
                                                                                          btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
+    VUmeter_RA.begin(     _winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2464,7 +2175,7 @@ void changeState(int32_t state){
         case RADIO:      btn_RA_Mute.disable();     btn_RA_volDown.disable();  btn_RA_volUp.disable();    btn_RA_prevSta.disable(); btn_RA_nextSta.disable();
                          btn_RA_staList.disable();  btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
                          btn_RA_bright.disable();   btn_RA_equal.disable();    pic_R_logo.disable();     btn_RA_bt.disable();
-                         hideVUmeter(); break;
+                         VUmeter_RA.disable(); break;
         case STATIONSLIST:
                          lst_RADIO.disable();
                          break;
@@ -2498,36 +2209,36 @@ void changeState(int32_t state){
     _f_volBarVisible = false;
     if(_timeCounter.timer){
         _timeCounter.timer = 0;
-        showFooterRSSI(true);
+        dispFooter.updateTC(0);
     }
 
+    dispHeader.updateItem(_hl_item[state]);
     switch(state) {
         case RADIO:{
             if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
-                showHeadlineItem(RADIO);
+                clearVolBar();
+                VUmeter_RA.show();
                 if(_state != RADIO) showLogoAndStationName();
-                showVUmeter();
                 _f_newStreamTitle = true;
                 _timeCounter.timer = 0;
+                dispFooter.updateTC(0);
             }
             if(_radioSubmenue == 1){
                 clearTitle();
-                hideVUmeter();
                 showVolumeBar();
                 btn_RA_Mute.show();      btn_RA_volDown.show();          btn_RA_volUp.show();
                 btn_RA_prevSta.show();   btn_RA_nextSta.show();          btn_RA_staList.show();
                 _timeCounter.timer = 5;
-                _timeCounter.factor = 2.0;
+                _timeCounter.factor = 2;
             }
             if(_radioSubmenue == 2){
-                hideVUmeter();
                 clearVolBar();
                 btn_RA_player.show();    btn_RA_dlna.show();             btn_RA_clock.show();
                 btn_RA_sleep.show();     btn_RA_bright.show(!_f_brightnessIsChangeable); btn_RA_equal.show();
                 btn_RA_bt.show(!_f_BtEmitterFound);
                 _timeCounter.timer = 5;
-                _timeCounter.factor = 2.0;
+                _timeCounter.factor = 2;
             }
             if(_state != RADIO) webSrv.send("changeState=", "RADIO");
             break;
@@ -2537,13 +2248,12 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             lst_RADIO.show();
             _timeCounter.timer = 10;
-            _timeCounter.factor = 1.0;
+            _timeCounter.factor = 1;
             break;
         }
 
         case PLAYER: {
             if(_state != PLAYER) clearWithOutHeaderFooter();
-            showHeadlineItem(PLAYER);
             if(_playerSubmenue == 0){
                 _SD_content.listDir(_curAudioFolder, true, true);
                 _cur_Codec = 0;
@@ -2561,16 +2271,14 @@ void changeState(int32_t state){
         }
         case AUDIOFILESLIST: {
             clearWithOutHeaderFooter();
-            showHeadlineItem(AUDIOFILESLIST);
             lst_PLAYER.show();
             _timeCounter.timer = 10;
-            _timeCounter.factor = 1.0;
+            _timeCounter.factor = 1;
             break;
         }
         case DLNA:{
             clearWithOutHeaderFooter();
             showFileLogo(state);
-            showHeadlineItem(DLNA);
             showVolumeBar();
             btn_DL_Mute.show();    btn_DL_volDown.show();  btn_DL_volUp.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             break;
@@ -2578,13 +2286,13 @@ void changeState(int32_t state){
         case DLNAITEMSLIST:{
             lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
             _timeCounter.timer = 10;
-            _timeCounter.factor = 1.0;
+            _timeCounter.factor = 1;
             break;
         }
         case CLOCK:{
-            showHeadlineItem(CLOCK);
             if(_clockSubMenue == 0){
                 _timeCounter.timer = 0;
+                dispFooter.updateTC(0);
                 if(_state != CLOCK){
                     clearWithOutHeaderFooter();
                     clk_CL_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
@@ -2598,19 +2306,17 @@ void changeState(int32_t state){
             if(_clockSubMenue == 1){
                 btn_CL_Mute.show();     btn_CL_alarm.show();    btn_CL_radio.show();    btn_CL_volDown.show(); btn_CL_volUp.show();
                 _timeCounter.timer = 5;
-                _timeCounter.factor = 2.0;
+                _timeCounter.factor = 2;
             }
             break;
         }
         case ALARM:{
-            showHeadlineItem(ALARM);
             clearWithOutHeaderFooter();
             clk_AL_red.show();          btn_AL_left.show();     btn_AL_right.show();    btn_AL_up.show();      btn_AL_down.show();
             btn_AL_ready.show();
             break;
         }
         case SLEEP:{
-            showHeadlineItem(SLEEP);
             clearWithOutHeaderFooter();
             display_sleeptime();
             btn_SL_up.show();           btn_SL_down.show();       btn_SL_ready.show();    btn_SL_cancel.show();
@@ -2619,7 +2325,6 @@ void changeState(int32_t state){
             break;
         }
         case BRIGHTNESS:{
-            showHeadlineItem(BRIGHTNESS);
             clearWithOutHeaderFooter();
             btn_BR_left.show(); btn_BR_right.show(); btn_BR_ready.show(); pic_BR_logo.show();
             showBrightnessBar();
@@ -2627,7 +2332,6 @@ void changeState(int32_t state){
         }
         case EQUALIZER:{
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
-            showHeadlineItem(EQUALIZER);
             sdr_EQ_lowPass.show(); sdr_EQ_bandPass.show(); sdr_EQ_highPass.show(); sdr_EQ_balance.show();
             btn_EQ_lowPass.show(); btn_EQ_bandPass.show(); btn_EQ_highPass.show(); btn_EQ_balance.show(); btn_EQ_Radio.show(); btn_EQ_Player.show(); btn_EQ_Mute.show();
             txt_EQ_lowPass.show(); txt_EQ_bandPass.show(); txt_EQ_highPass.show(); txt_EQ_balance.show();
@@ -2635,7 +2339,6 @@ void changeState(int32_t state){
         }
         case BLUETOOTH:
             clearWithOutHeaderFooter();
-            showHeadlineItem(BLUETOOTH);
             btn_BL_volUp.show(); btn_BL_volDown.show(); btn_BL_pause.show(); btn_BL_radio.show(); pic_BL_mode.show();
             break;
     }
@@ -2678,7 +2381,7 @@ void loop() {
 
     if(_f_100ms) { // calls every 0.1 second
         _f_100ms = false;
-        if(_state != ALARM) updateVUmeter();
+        if(_state == RADIO && _radioSubmenue == 0) VUmeter_RA.update(audioGetVUlevel());
     }
 
     if(_f_1sec) { // calls every second
@@ -2694,11 +2397,10 @@ void loop() {
             if(_semaphore >= 65) { _semaphore = 0;}
             if(_f_alarm) {
                 _f_alarm = false;
-                void hideVUmeter();
                 clearAll();
-                showHeadlineItem(ALARM);
-                showHeadlineTime();
-                showFooter();
+                dispHeader.updateItem("ALARM");
+                dispHeader.updateTime(rtc.gettime_s());
+                dispFooter.show();
                 showFileName("ALARM");
                 drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
                 setTFTbrightness(_brightness);
@@ -2709,9 +2411,8 @@ void loop() {
             }
             if(_f_eof_alarm) { // AFTER RINGING
                 _f_eof_alarm = false;
-                showVUmeter();
                 audioSetVolume(_cur_volume);
-                showHeadlineVolume();
+                dispHeader.updateVolume(_cur_volume);
                 wake_up();
                 _radioSubmenue = 0;
                 changeState(RADIO);
@@ -2721,26 +2422,26 @@ void loop() {
         }
         //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
         if(!_f_sleeping) {
-            showHeadlineTime(false);
-            showFooterRSSI(true);
+            dispHeader.updateTime(rtc.gettime_s(), false);
+            dispFooter.updateRSSI(WiFi.RSSI());
             if(_f_newBitRate) {
                _f_newBitRate = false; }
-               showFooterBitRate(_icyBitRate);
+               dispFooter.updateBitRate(_icyBitRate);
             if(_f_newLogoAndStation) {
                 _f_newLogoAndStation = false;
                 showLogoAndStationName();
             }
         }
         //------------------------------------------STATE TIMEOUT-------------------------------------------------------------------------------------
-        if(_timeCounter.timer) {
-        //    log_w("timeCounter.timer  %i", _timeCounter.timer);
-            _timeCounter.timer--;
-            if(_timeCounter.timer < 10) {
-                sprintf(_chbuf, "/common/tc%02d.bmp", uint8_t(_timeCounter.timer * _timeCounter.factor));
-                drawImage(_chbuf, _winRSSID.x, _winRSSID.y + 2);
+        static bool f_tc = false;
+        if(_timeCounter.timer || f_tc) {
+            f_tc = false;
+            dispFooter.updateTC(_timeCounter.timer * _timeCounter.factor);
+            if(_timeCounter.timer) {
+                _timeCounter.timer--;
+                f_tc = true;
             }
-            if(!_timeCounter.timer) {
-                showFooterRSSI(true);
+            else{
                 if(_state == RADIO) {
                     _radioSubmenue = 0;
                     changeState(RADIO);
@@ -2871,7 +2572,7 @@ void loop() {
             if(ibr > 0) {
                 if(ibr != _avrBitRate) {
                     _avrBitRate = ibr;
-                    showFooterBitRate(_avrBitRate);
+                //    showFooterBitRate(_avrBitRate);
                 }
             }
         }
@@ -2880,7 +2581,11 @@ void loop() {
 
     if(_f_1min == true) {  // calls every minute
         _f_1min = false;
-        updateSleepTime();
+        if(_sleeptime){
+            _sleeptime--;
+            if(!_sleeptime) fall_asleep();
+            dispFooter.updateOffTime(_sleeptime);
+        }
     }
 
     //-------------------------------------------------DEBUG / TEST ----------------------------------------------------------------------------------
@@ -3057,7 +2762,6 @@ void ir_res(uint32_t res) {
     SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu", (long unsigned)res);
     if(res != 0) { setStation(res); } // valid between 1 ... 999
     else { setStation(_cur_station); }
-    showVUmeter();
     return;
 }
 void ir_number(uint16_t num) {
@@ -3079,73 +2783,28 @@ void ir_key(uint8_t key) {
     } // awake
 
     switch(key) {
-        case 15:
-            if(_state == SLEEP) {
-                updateSleepTime(true);
-                changeState(RADIO);
-                break;
-            } // CLOCK <-> RADIO
-            if(_state == RADIO) {
-                changeState(CLOCK);
-                break;
-            }
-            if(_state == CLOCK) {
-                changeState(RADIO);
-                break;
-            }
-            break;
-        case 11:
-            upvolume(); // VOLUME+
-            break;
-        case 12:
-            downvolume(); // VOLUME-
-            break;
-        case 14:
-            if(_state == RADIO) {
-                nextStation();
-                break;
-            } // NEXT STATION
-            if(_state == CLOCK) {
-                nextStation();
-                changeState(RADIO);
-                _f_switchToClock = true;
-                break;
-            }
-            if(_state == SLEEP) {
-                display_sleeptime(1);
-                break;
-            }
-            break;
-        case 13:
-            if(_state == RADIO) {
-                prevStation();
-                break;
-            } // PREV STATION
-            if(_state == CLOCK) {
-                prevStation();
-                changeState(RADIO);
-                _f_switchToClock = true;
-                break;
-            }
-            if(_state == SLEEP) {
-                display_sleeptime(-1);
-                break;
-            }
-            break;
-        case 10:
-            muteChanged(!_f_mute);
-            break;
-        case 16:
-            if(_state == RADIO) {
-                changeState(SLEEP);
-                break;
-            } // OFF TIMER
-            if(_state == SLEEP) {
-                changeState(RADIO);
-                break;
-            }
-            break;
-        default: break;
+        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // CLOCK <-> RADIO
+                    if(_state == RADIO) {changeState(CLOCK); break;}
+                    if(_state == CLOCK) {changeState(RADIO); break;}
+                    break;
+        case 11:    upvolume(); // VOLUME+
+                    break;
+        case 12:    downvolume(); // VOLUME-
+                    break;
+        case 14:    if(_state == RADIO) {nextStation(); break;} // NEXT STATION
+                    if(_state == CLOCK) {nextStation(); changeState(RADIO); _f_switchToClock = true; break;}
+                    if(_state == SLEEP) {display_sleeptime(1); break;}
+                    break;
+        case 13:    if(_state == RADIO) {prevStation(); break;} // PREV STATION
+                    if(_state == CLOCK) {prevStation(); changeState(RADIO); _f_switchToClock = true; break;}
+                    if(_state == SLEEP) {display_sleeptime(-1); break;}
+                    break;
+        case 10:    muteChanged(!_f_mute);
+                    break;
+        case 16:    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
+                    if(_state == SLEEP) {changeState(RADIO); break;}
+                    break;
+        default:    break;
     }
 }
 void ir_long_key(int8_t key) {
@@ -3163,46 +2822,47 @@ void tp_pressed(uint16_t x, uint16_t y) {
 
     switch(_state) {
         case RADIO:
-                if(_radioSubmenue == 1){
-                    if(btn_RA_Mute.positionXY(x, y)) return;
-                    if(btn_RA_volDown.positionXY(x, y)) return;
-                    if(btn_RA_volUp.positionXY(x, y)) return;
-                    if(btn_RA_prevSta.positionXY(x, y)) return;
-                    if(btn_RA_nextSta.positionXY(x, y)) return;
-                    if(btn_RA_staList.positionXY(x, y)) return;
-                }
-                if(_radioSubmenue == 2){
-                    if(btn_RA_player.positionXY(x, y)) return;
-                    if(btn_RA_dlna.positionXY(x, y)) return;
-                    if(btn_RA_clock.positionXY(x, y)) return;
-                    if(btn_RA_sleep.positionXY(x, y)) return;
-                    if(btn_RA_bright.positionXY(x, y)) return;
-                    if(btn_RA_equal.positionXY(x, y)) return;
-                    if(btn_RA_bt.positionXY(x, y)) return;
-                }
-                _radioSubmenue++;
-                if(_radioSubmenue == 3) _radioSubmenue = 0;
-                changeState(RADIO);
-                return;
-                break;
+            if(_radioSubmenue == 1){
+                if(btn_RA_Mute.positionXY(x, y)) return;
+                if(btn_RA_volDown.positionXY(x, y)) return;
+                if(btn_RA_volUp.positionXY(x, y)) return;
+                if(btn_RA_prevSta.positionXY(x, y)) return;
+                if(btn_RA_nextSta.positionXY(x, y)) return;
+                if(btn_RA_staList.positionXY(x, y)) return;
+                if(VUmeter_RA.positionXY(x, y)) return;
+            }
+            if(_radioSubmenue == 2){
+                if(btn_RA_player.positionXY(x, y)) return;
+                if(btn_RA_dlna.positionXY(x, y)) return;
+                if(btn_RA_clock.positionXY(x, y)) return;
+                if(btn_RA_sleep.positionXY(x, y)) return;
+                if(btn_RA_bright.positionXY(x, y)) return;
+                if(btn_RA_equal.positionXY(x, y)) return;
+                if(btn_RA_bt.positionXY(x, y)) return;
+            }
+            _radioSubmenue++;
+            if(_radioSubmenue == 3) _radioSubmenue = 0;
+            changeState(RADIO);
+            return;
+            break;
         case PLAYER:
-                if(_playerSubmenue == 0){
-                    if(btn_PL_prevFile.positionXY(x, y)) return;
-                    if(btn_PL_nextFile.positionXY(x, y)) return;
-                    if(btn_PL_ready.positionXY(x, y)) return;;
-                    if(btn_PL_playAll.positionXY(x, y)) return;
-                    if(btn_PL_shuffle.positionXY(x, y)) return;
-                    if(btn_PL_fileList.positionXY(x, y)) return;
-                    if(btn_PL_radio.positionXY(x, y)) return;
-                }
-                if(_playerSubmenue == 1){
-                    if(btn_PL_Mute.positionXY(x, y)) return;
-                    if(btn_PL_volDown.positionXY(x, y)) return;
-                    if(btn_PL_volUp.positionXY(x, y)) return;
-                    if(btn_PL_pause.positionXY(x, y)) return;
-                    if(btn_PL_cancel.positionXY(x, y)) return;
-                }
-                break;
+            if(_playerSubmenue == 0){
+                if(btn_PL_prevFile.positionXY(x, y)) return;
+                if(btn_PL_nextFile.positionXY(x, y)) return;
+                if(btn_PL_ready.positionXY(x, y)) return;;
+                if(btn_PL_playAll.positionXY(x, y)) return;
+                if(btn_PL_shuffle.positionXY(x, y)) return;
+                if(btn_PL_fileList.positionXY(x, y)) return;
+                if(btn_PL_radio.positionXY(x, y)) return;
+            }
+            if(_playerSubmenue == 1){
+                if(btn_PL_Mute.positionXY(x, y)) return;
+                if(btn_PL_volDown.positionXY(x, y)) return;
+                if(btn_PL_volUp.positionXY(x, y)) return;
+                if(btn_PL_pause.positionXY(x, y)) return;
+                if(btn_PL_cancel.positionXY(x, y)) return;
+            }
+            break;
         case AUDIOFILESLIST:
                 if(lst_PLAYER.positionXY(x, y)) return;
                 break;
@@ -3218,18 +2878,18 @@ void tp_pressed(uint16_t x, uint16_t y) {
         case DLNAITEMSLIST:
                 if(lst_DLNA.positionXY(x, y)) return;
                 break;
-            case CLOCK:
-                if(_clockSubMenue == 0){
-                    if(clk_CL_green.positionXY(x, y)) return;
-                }
-                if(_clockSubMenue == 1){
-                    if(btn_CL_Mute.positionXY(x, y)) return;
-                    if(btn_CL_alarm.positionXY(x, y)) return;
-                    if(btn_CL_radio.positionXY(x, y)) return;
-                    if(btn_CL_volDown.positionXY(x, y)) return;
-                    if(btn_CL_volUp.positionXY(x, y)) return;
-                }
-                break;
+        case CLOCK:
+            if(_clockSubMenue == 0){
+                if(clk_CL_green.positionXY(x, y)) return;
+            }
+            if(_clockSubMenue == 1){
+                if(btn_CL_Mute.positionXY(x, y)) return;
+                if(btn_CL_alarm.positionXY(x, y)) return;
+                if(btn_CL_radio.positionXY(x, y)) return;
+                if(btn_CL_volDown.positionXY(x, y)) return;
+                if(btn_CL_volUp.positionXY(x, y)) return;
+            }
+            break;
         case ALARM:
                 if(clk_AL_red.positionXY(x, y)) return;
                 if(btn_AL_left.positionXY(x, y)) return;
@@ -3251,30 +2911,30 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(pic_BR_logo.positionXY(x, y)) return;
                 break;
         case EQUALIZER:
-            if(sdr_EQ_lowPass.positionXY(x,y)) return;
-            if(sdr_EQ_bandPass.positionXY(x,y)) return;
-            if(sdr_EQ_highPass.positionXY(x,y)) return;
-            if(sdr_EQ_balance.positionXY(x,y)) return;
-            if(btn_EQ_lowPass.positionXY(x, y)) return;
-            if(btn_EQ_bandPass.positionXY(x, y)) return;
-            if(btn_EQ_highPass.positionXY(x, y)) return;
-            if(btn_EQ_balance.positionXY(x, y)) return;
-            if(txt_EQ_lowPass.positionXY(x, y)) return;
-            if(txt_EQ_bandPass.positionXY(x, y)) return;
-            if(txt_EQ_highPass.positionXY(x, y)) return;
-            if(txt_EQ_balance.positionXY(x, y)) return;
-            if(btn_EQ_Radio.positionXY(x, y)) return;
-            if(btn_EQ_Player.positionXY(x,y)) return;
-            if(btn_EQ_Mute.positionXY(x, y)) return;
-            break;
+                if(sdr_EQ_lowPass.positionXY(x,y)) return;
+                if(sdr_EQ_bandPass.positionXY(x,y)) return;
+                if(sdr_EQ_highPass.positionXY(x,y)) return;
+                if(sdr_EQ_balance.positionXY(x,y)) return;
+                if(btn_EQ_lowPass.positionXY(x, y)) return;
+                if(btn_EQ_bandPass.positionXY(x, y)) return;
+                if(btn_EQ_highPass.positionXY(x, y)) return;
+                if(btn_EQ_balance.positionXY(x, y)) return;
+                if(txt_EQ_lowPass.positionXY(x, y)) return;
+                if(txt_EQ_bandPass.positionXY(x, y)) return;
+                if(txt_EQ_highPass.positionXY(x, y)) return;
+                if(txt_EQ_balance.positionXY(x, y)) return;
+                if(btn_EQ_Radio.positionXY(x, y)) return;
+                if(btn_EQ_Player.positionXY(x,y)) return;
+                if(btn_EQ_Mute.positionXY(x, y)) return;
+                break;
         case BLUETOOTH:
-            if(btn_BL_volUp.positionXY(x, y)) return;
-            if(btn_BL_volDown.positionXY(x, y)) return;
-            if(btn_BL_pause.positionXY(x, y)) return;
-            if(btn_BL_radio.positionXY(x, y)) return;
-            break;
+                if(btn_BL_volUp.positionXY(x, y)) return;
+                if(btn_BL_volDown.positionXY(x, y)) return;
+                if(btn_BL_pause.positionXY(x, y)) return;
+                if(btn_BL_radio.positionXY(x, y)) return;
+                break;
         default:
-            break;
+                break;
     }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
@@ -3291,6 +2951,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 void tp_released(uint16_t x, uint16_t y){
     switch(_state){
         case RADIO:
+            if(_radioSubmenue == 0){ VUmeter_RA.released();}
             if(_radioSubmenue == 1){ btn_RA_Mute.released(); btn_RA_volDown.released(); btn_RA_volUp.released(); btn_RA_prevSta.released(); btn_RA_nextSta.released(); btn_RA_staList.released();}
             if(_radioSubmenue == 2){ btn_RA_player.released(); btn_RA_dlna.released(); btn_RA_clock.released(); btn_RA_sleep.released(); btn_RA_bright.released(); btn_RA_equal.released();
                                      btn_RA_bt.released();}
@@ -3638,7 +3299,7 @@ void dlna_info(const char* info) {
         if(_dlnaLevel > 0) _dlnaLevel--;
         lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         _timeCounter.timer = 10;
-        _timeCounter.factor = 1.0;
+        _timeCounter.factor = 1;
     }
     SerialPrintfln("DLNA_info:    %s", info);
 }
@@ -3664,7 +3325,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
         _f_dlnaWaitForResponse = false;
         lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         _timeCounter.timer = 10;
-        _timeCounter.factor = 1.0;
+        _timeCounter.factor = 1;
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }
 }
@@ -3722,9 +3383,9 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is deactive
     if(_state == RADIO) {
-        if( val && strcmp(name, "btn_RA_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2.0; {if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_RA_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
-        if( val && strcmp(name, "btn_RA_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if( val && strcmp(name, "btn_RA_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2; {if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && strcmp(name, "btn_RA_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
+        if( val && strcmp(name, "btn_RA_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
         if( val && strcmp(name, "btn_RA_prevSta") == 0) {clearVolBar();          return;}
         if( val && strcmp(name, "btn_RA_nextSta") == 0) {clearVolBar();          return;}
         if( val && strcmp(name, "btn_RA_staList") == 0) {return;}
@@ -3733,13 +3394,14 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_clock") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_sleep") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bright") == 0)  {return;}
-        if(!val && strcmp(name, "btn_RA_bright") == 0)  {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if(!val && strcmp(name, "btn_RA_bright") == 0)  {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
         if( val && strcmp(name, "btn_RA_equal") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
-        if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
+        if( val && strcmp(name, "VUmeter_RA") == 0)     {return;}
     }
     if(_state == STATIONSLIST) {
-        if( val && strcmp(name, "lst_RADIO") == 0)      {_timeCounter.timer = 10; _timeCounter.factor = 1.0; return;}
+        if( val && strcmp(name, "lst_RADIO") == 0)      {_timeCounter.timer = 10; _timeCounter.factor = 1; return;}
     }
     if(_state == PLAYER) {
         if( val && strcmp(name, "btn_PL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
@@ -3756,7 +3418,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
     }
     if(_state == AUDIOFILESLIST) {
-        if( val && strcmp(name, "lst_PLAYER") == 0)     {_timeCounter.timer = 10; _timeCounter.factor = 1.0; return;}
+        if( val && strcmp(name, "lst_PLAYER") == 0)     {_timeCounter.timer = 10; _timeCounter.factor = 1; return;}
     }
     if(_state == DLNA) {
         if( val && strcmp(name, "btn_DL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
@@ -3771,11 +3433,11 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "lst_DLNA") == 0)       {_f_dlnaWaitForResponse = true; return;}
     }
     if(_state == CLOCK) {
-        if( val && strcmp(name, "btn_CL_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2.0; if(!_f_mute){ _f_muteIsPressed = true;} return;}
+        if( val && strcmp(name, "btn_CL_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2; if(!_f_mute){ _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
         if( val && strcmp(name, "btn_CL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_CL_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
-        if( val && strcmp(name, "btn_CL_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2.0; return;}
+        if( val && strcmp(name, "btn_CL_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
+        if( val && strcmp(name, "btn_CL_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
         if( val && strcmp(name, "clk_CL_green") == 0)   {return;}
     }
     if(_state == ALARM) {
@@ -3822,8 +3484,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
         if(strcmp(name, "btn_RA_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_RA_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {_radioSubmenue = 0; prevStation(); showFooterStaNr(); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {_radioSubmenue = 0; nextStation(); showFooterStaNr(); return;}
+        if(strcmp(name, "btn_RA_prevSta") == 0)  {_radioSubmenue = 0; prevStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_nextSta") == 0)  {_radioSubmenue = 0; nextStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
@@ -3833,6 +3495,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubmenue = 0; changeState(BLUETOOTH); return;}
+        if(strcmp(name, "VUmeter_RA") == 0)      {return;}
     }
     if(_state == STATIONSLIST) {
         if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStation(ra.val1); changeState(RADIO);} return;}
@@ -3885,7 +3548,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if(_state == SLEEP) {
         if(strcmp(name, "btn_SL_up") == 0)       {display_sleeptime(1); return;}
         if(strcmp(name, "btn_SL_down") == 0)     {display_sleeptime(-1); return;}
-        if(strcmp(name, "btn_SL_ready") == 0)    {updateSleepTime(true); changeState(RADIO); return;}
+        if(strcmp(name, "btn_SL_ready") == 0)    {dispFooter.updateOffTime(_sleeptime);  changeState(RADIO); return;}
         if(strcmp(name, "btn_SL_cancel") == 0)   {changeState(RADIO); return;}
     }
     if(_state == BRIGHTNESS){
