@@ -247,8 +247,6 @@ struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h = 
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
-struct w_u  {uint16_t x = 150; uint16_t y = 220; uint16_t w =  40; uint16_t h =  20;} const _winBitRate;
-struct w_a  {uint16_t x = 190; uint16_t y = 220; uint16_t w = 130; uint16_t h =  20;} const _winIPaddr;
 struct w_b  {uint16_t x =   0; uint16_t y = 170; uint16_t w = 320; uint16_t h =   6;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
@@ -309,8 +307,6 @@ struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h = 
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
-struct w_u  {uint16_t x = 204; uint16_t y = 290; uint16_t w =  64; uint16_t h =  30;} const _winBitRate;
-struct w_a  {uint16_t x = 268; uint16_t y = 290; uint16_t w = 212; uint16_t h =  30;} const _winIPaddr;
 struct w_b  {uint16_t x =   0; uint16_t y = 222; uint16_t w = 480; uint16_t h =   8;} const _winVolBar;
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -339,7 +335,8 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader");
+displayHeader dispHeader("dispHeader", _fonts[1]);
+displayFooter dispFooter("dispFooter", _fonts[1]);
 // RADIO
 button2state  btn_RA_Mute("btn_RA_Mute");
 button1state  btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
@@ -795,8 +792,6 @@ inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y
 inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
 inline void clearWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
 inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
-inline void clearIPaddr()             {tft.fillRect(_winIPaddr.x,    _winIPaddr.y,    _winIPaddr.w,    _winIPaddr.h,   TFT_BLACK);}
-inline void clearBitRate()            {tft.fillRect(_winBitRate.x,   _winBitRate.y,   _winBitRate.w,   _winBitRate.h,  TFT_BLACK);}
 inline void clearStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
 inline void clearSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h,    TFT_BLACK);}
 inline void clearVolBar()             {tft.fillRect(_winVolBar.x,    _winVolBar.y,    _winVolBar.w,    _winVolBar.h,   TFT_BLACK);}
@@ -812,126 +807,6 @@ inline uint16_t txtlen(String str) {
     return len;
 }
 
-void showFooterIPaddr() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    char myIP[30] = "IP:";
-    strcpy(myIP + 3, _myIP);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_GREENYELLOW);
-    clearIPaddr();
-    tft.writeText(myIP, _winIPaddr.x, _winIPaddr.y, _winIPaddr.w, _winIPaddr.h, TFT_ALIGN_RIGHT, true);
-    xSemaphoreGive(mutex_display);
-}
-void showFooterStaNr() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2) offset = 25;
-    else offset = 33;
-    clearStaNr();
-    drawImage("/common/STA.bmp", _winStaNr.x, _winStaNr.y);
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_LAVENDER);
-    char buf[10];
-    sprintf(buf, "%03d", _cur_station);
-    tft.writeText(buf, _winStaNr.x + offset, _winStaNr.y, _winStaNr.w, _winStaNr.h);
-    xSemaphoreGive(mutex_display);
-}
-void showFooterRSSI(boolean show) {
-    static int32_t old_rssi = -1;
-    int32_t        new_rssi = -1;
-    int8_t         rssi = WiFi.RSSI(); // Received Signal Strength Indicator
-    if(rssi < -1) new_rssi = 4;
-    if(rssi < -50) new_rssi = 3;
-    if(rssi < -65) new_rssi = 2;
-    if(rssi < -75) new_rssi = 1;
-    if(rssi < -85) new_rssi = 0;
-
-    if(new_rssi != old_rssi) {
-        old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
-        if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
-            static int32_t tmp_rssi = 0;
-            if((abs(rssi - tmp_rssi) > 3)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
-            tmp_rssi = rssi;
-        }
-        show = true;
-    }
-    if(show && !_timeCounter.timer) {
-        switch(new_rssi) {
-            case 4: {
-                drawImage("/common/RSSI4.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 3: {
-                drawImage("/common/RSSI3.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 2: {
-                drawImage("/common/RSSI2.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 1: {
-                drawImage("/common/RSSI1.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-            case 0: {
-                drawImage("/common/RSSI0.bmp", _winRSSID.x, _winRSSID.y + 2);
-                break;
-            }
-        }
-    }
-}
-
-void showFooterBitRate(uint16_t br) {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearBitRate();
-    char sbr[10];
-    itoa(br, sbr, 10);
-    if(br < 1000) { strcat(sbr, "K"); }
-    else {
-        sbr[2] = sbr[1];
-        sbr[1] = '.';
-        sbr[3] = 'M';
-        sbr[4] = '\0';
-    }
-    tft.setFont(_fonts[1]);
-    tft.setTextColor(TFT_LAVENDER);
-    uint8_t space = 2;
-    if(strlen(sbr) < 4) space += 5;
-    tft.writeText(sbr, _winBitRate.x + space, _winBitRate.y, _winBitRate.w, _winBitRate.h);
-    xSemaphoreGive(mutex_display);
-}
-
-void updateSleepTime(boolean noDecrement) { // decrement and show new value in footer
-    if(_f_sleeping) return;
-    boolean sleep = false;
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
-    clearSleep();
-    drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
-    uint8_t offset = 0;
-    if(TFT_CONTROLLER < 2) offset = 28;
-    else offset = 33;
-    if(_sleeptime == 1) sleep = true;
-    if(_sleeptime > 0 && !noDecrement) _sleeptime--;
-
-    char Slt[15];
-    sprintf(Slt, "%d:%02d", _sleeptime / 60, _sleeptime % 60);
-    tft.setFont(_fonts[1]);
-    if(!_sleeptime) {
-        drawImage("/common/Hourglass_blue.bmp", _winSleep.x, _winSleep.y);
-        tft.setTextColor(TFT_DEEPSKYBLUE);
-    }
-    else {
-        drawImage("/common/Hourglass_red.bmp", _winSleep.x, _winSleep.y);
-        tft.setTextColor(TFT_RED);
-    }
-    tft.writeText(Slt, _winSleep.x + offset, _winSleep.y, _winSleep.w, _winSleep.h);
-
-    xSemaphoreGive(mutex_display);
-    if(sleep) { // fall asleep
-        fall_asleep();
-        _sleeptime = 0;
-    }
-}
 void showVolumeBar() {
     uint16_t val = tft.width() * _cur_volume / 21;
     clearVolBar();
@@ -947,13 +822,7 @@ void showBrightnessBar() {
     tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
     _f_volBarVisible = true;
 }
-void showFooter() { // stationnumber, sleeptime, IPaddress
-    showFooterStaNr();
-    updateSleepTime(true);
-    showFooterIPaddr();
-    showFooterRSSI(true);
-    showFooterBitRate(_icyBitRate);
-}
+
 void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
     tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
@@ -1729,12 +1598,20 @@ void setup() {
     placingGraphicObjects();
     tft.fillScreen(TFT_BLACK); // Clear screen
     muteChanged(_f_mute);
+
+    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.updateStation(_cur_station);
+    dispFooter.updateOffTime(_sleeptime);
+    dispFooter.show();
+
+    dispHeader.updateItem(_hl_item[RADIO]);
+    dispHeader.updateVolume(_cur_volume);
     dispHeader.show();
+
     _radioSubmenue = 0;
     changeState(RADIO);
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
     setI2STone();
-    showFooter();
     ArduinoOTA.setHostname("MiniWebRadio");
     ArduinoOTA.begin();
 
@@ -1834,7 +1711,7 @@ void setStation(uint16_t sta) {
     _cur_station = sta;
     StationsItems();
     if(_state == RADIO) showLogoAndStationName();
-    showFooterStaNr();
+    dispFooter.updateStation(_cur_station);
 }
 void nextStation() {
     if(_cur_station >= _sum_stations) setStation(1);
@@ -1878,7 +1755,7 @@ void setStationViaURL(const char* url) {
         clearStreamTitle();
         showLogoAndStationName();
     }
-    showFooterStaNr(); // set to '000'
+    dispFooter.updateStation(0); // set 000
 }
 
 void changeBtn_pressed(uint8_t btnNr) { drawImage(_pressBtn[btnNr], btnNr * _winButton.w, _winButton.y); }
@@ -2020,9 +1897,9 @@ void wake_up() {
         clearAll();
         setTFTbrightness(_brightness);
         connecttohost(_lastconnectedhost.c_str());
-        showFooter();
-        dispHeader.updateTime(rtc.gettime_s());
-        dispHeader.updateVolume(_cur_volume);
+        dispFooter.show();
+    //    dispHeader.updateTime(rtc.gettime_s());
+    //    dispHeader.updateVolume(_cur_volume);
         if(_state == CLOCK) {
             clk_CL_green.show();
         }
@@ -2101,7 +1978,8 @@ void logAlarmItems() {
 // clang-format off
 void placingGraphicObjects() { // and initialize them
     // ALL STATE
-    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h, _fonts[0]);
+    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
+    dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_RA_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_RA_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2329,7 +2207,6 @@ void changeState(int32_t state){
     _f_volBarVisible = false;
     if(_timeCounter.timer){
         _timeCounter.timer = 0;
-        showFooterRSSI(true);
     }
 
     dispHeader.updateItem(_hl_item[state]);
@@ -2337,6 +2214,7 @@ void changeState(int32_t state){
         case RADIO:{
             if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
+                clearVolBar();
                 VUmeter_RA.show();
                 if(_state != RADIO) showLogoAndStationName();
                 _f_newStreamTitle = true;
@@ -2517,7 +2395,7 @@ void loop() {
                 clearAll();
                 dispHeader.updateItem("ALARM");
                 dispHeader.updateTime(rtc.gettime_s());
-                showFooter();
+                dispFooter.show();
                 showFileName("ALARM");
                 drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
                 setTFTbrightness(_brightness);
@@ -2540,10 +2418,10 @@ void loop() {
         //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
         if(!_f_sleeping) {
             dispHeader.updateTime(rtc.gettime_s(), false);
-            showFooterRSSI(true);
+            dispFooter.updateRSSI(WiFi.RSSI());
             if(_f_newBitRate) {
                _f_newBitRate = false; }
-               showFooterBitRate(_icyBitRate);
+               dispFooter.updateBitRate(_icyBitRate);
             if(_f_newLogoAndStation) {
                 _f_newLogoAndStation = false;
                 showLogoAndStationName();
@@ -2558,7 +2436,7 @@ void loop() {
                 drawImage(_chbuf, _winRSSID.x, _winRSSID.y + 2);
             }
             if(!_timeCounter.timer) {
-                showFooterRSSI(true);
+                // showFooterRSSI(true);
                 if(_state == RADIO) {
                     _radioSubmenue = 0;
                     changeState(RADIO);
@@ -2689,7 +2567,7 @@ void loop() {
             if(ibr > 0) {
                 if(ibr != _avrBitRate) {
                     _avrBitRate = ibr;
-                    showFooterBitRate(_avrBitRate);
+                //    showFooterBitRate(_avrBitRate);
                 }
             }
         }
@@ -2698,7 +2576,11 @@ void loop() {
 
     if(_f_1min == true) {  // calls every minute
         _f_1min = false;
-        updateSleepTime();
+        if(_sleeptime){
+            _sleeptime--;
+            if(!_sleeptime) fall_asleep();
+            dispFooter.updateOffTime(_sleeptime);
+        }
     }
 
     //-------------------------------------------------DEBUG / TEST ----------------------------------------------------------------------------------
@@ -2896,7 +2778,7 @@ void ir_key(uint8_t key) {
     } // awake
 
     switch(key) {
-        case 15:    if(_state == SLEEP) {updateSleepTime(true); changeState(RADIO); break;} // CLOCK <-> RADIO
+        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // CLOCK <-> RADIO
                     if(_state == RADIO) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(RADIO); break;}
                     break;
@@ -3597,8 +3479,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
         if(strcmp(name, "btn_RA_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_RA_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {_radioSubmenue = 0; prevStation(); showFooterStaNr(); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {_radioSubmenue = 0; nextStation(); showFooterStaNr(); return;}
+        if(strcmp(name, "btn_RA_prevSta") == 0)  {_radioSubmenue = 0; prevStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_nextSta") == 0)  {_radioSubmenue = 0; nextStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
@@ -3661,7 +3543,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if(_state == SLEEP) {
         if(strcmp(name, "btn_SL_up") == 0)       {display_sleeptime(1); return;}
         if(strcmp(name, "btn_SL_down") == 0)     {display_sleeptime(-1); return;}
-        if(strcmp(name, "btn_SL_ready") == 0)    {updateSleepTime(true); changeState(RADIO); return;}
+        if(strcmp(name, "btn_SL_ready") == 0)    {dispFooter.updateOffTime(_sleeptime);  changeState(RADIO); return;}
         if(strcmp(name, "btn_SL_cancel") == 0)   {changeState(RADIO); return;}
     }
     if(_state == BRIGHTNESS){
