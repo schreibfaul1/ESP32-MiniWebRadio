@@ -1536,12 +1536,27 @@ void setup() {
     SerialPrintfln("setup: ....  stations.csv found");
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
-    if(!connectToWiFi()) {
-        openAccessPoint();
-        return;
+
+    while(true){
+        if(!connectToWiFi()){
+            _reconnectCnt++;
+            SerialPrintfln("RECONNECTION " ANSI_ESC_RED "try %i", _reconnectCnt);
+            if(_reconnectCnt == 3){
+                openAccessPoint();
+                return;
+            }
+        }
+        else{
+            break;
+        }
     }
+    _reconnectCnt = 0;
+
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.begin();
+
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
 
     setRTC(_TZString.c_str());
@@ -1614,9 +1629,6 @@ void setup() {
 
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
     setI2STone();
-    ArduinoOTA.setHostname("MiniWebRadio");
-    ArduinoOTA.begin();
-
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2547,7 +2559,12 @@ void loop() {
         if(_f_reconnect){
             _f_reconnect = false;
             _reconnectCnt ++;
-            if(_reconnectCnt < 3) connecttohost(_lastconnectedhost.c_str());
+            if(_reconnectCnt < 3){
+                SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _lastconnectedhost.c_str(), _reconnectCnt);
+                connectToWiFi();
+                connecttohost(_lastconnectedhost.c_str());
+                if(audioIsRunning()) _reconnectCnt = 0;
+            }
         }
         //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
         if(_f_dlnaSeekServer) {
@@ -2625,6 +2642,8 @@ void loop() {
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
+                                                        WiFi.disconnect();
+                                                        log_w("disconnected");
                                                         _f_reconnect = true;
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
