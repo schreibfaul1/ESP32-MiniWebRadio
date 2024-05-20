@@ -92,7 +92,7 @@ int16_t             _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t            _icyBitRate = 0;      // from http response header via event
-uint16_t            _avrBitRate = 0;      // from decoder via getBitRate(true)
+uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t            _cur_station = 0;     // current station(nr), will be set later
 uint16_t            _cur_AudioFileNr = 0; // position inside _SD_content
 uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
@@ -1337,7 +1337,7 @@ void connecttohost(const char* host) {
     _cur_Codec = 0;
     //    if(_state == RADIO) clearStreamTitle();
     _icyBitRate = 0;
-    _avrBitRate = 0;
+    _decoderBitRate = 0;
 
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
@@ -1370,7 +1370,7 @@ void connecttohost(const char* host) {
 void connecttoFS(const char* filename, uint32_t resumeFilePos) {
     dispFooter.updateBitRate(0);
     _icyBitRate = 0;
-    _avrBitRate = 0;
+    _decoderBitRate = 0;
     _cur_Codec = 0;
     _f_isFSConnected = audioConnecttoFS(filename, resumeFilePos);
     _f_isWebConnected = false;
@@ -2437,8 +2437,9 @@ void loop() {
             dispHeader.updateTime(rtc.gettime_s(), false);
             dispFooter.updateRSSI(WiFi.RSSI());
             if(_f_newBitRate) {
-               _f_newBitRate = false; }
+               _f_newBitRate = false;
                dispFooter.updateBitRate(_icyBitRate);
+            }
             if(_f_newLogoAndStation) {
                 _f_newLogoAndStation = false;
                 showLogoAndStationName();
@@ -2585,12 +2586,11 @@ void loop() {
     if(_f_10sec == true) { // calls every 10 seconds
         _f_10sec = false;
         if(_state == RADIO && !_icyBitRate && !_f_sleeping) {
-            uint32_t ibr = audioGetBitRate() / 1000;
-            if(ibr > 0) {
-                if(ibr != _avrBitRate) {
-                    _avrBitRate = ibr;
-                //    showFooterBitRate(_avrBitRate);
-                }
+            _decoderBitRate = audioGetBitRate();
+            static uint32_t oldBr = 0;
+            if(_decoderBitRate != oldBr){
+                oldBr = _decoderBitRate;
+                dispFooter.updateBitRate(_decoderBitRate / 1000);
             }
         }
         updateSettings();

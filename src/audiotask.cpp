@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 08.04.2024
+// updated: 20.05.2024
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -81,7 +81,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == GET_BITRATE){
                 audioTxTaskMessage.cmd = GET_BITRATE;
-                audioTxTaskMessage.ret = audio.getBitRate(true);
+                audioTxTaskMessage.ret = audio.getBitRate(false);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_CODEC){
