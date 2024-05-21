@@ -40,7 +40,7 @@ Control is via the display touchscreen or a web page in a browser, no additional
 Schematic<br>
 ![Schematic with external DAC](docs/MiniWebRadioV3_schematic.jpg)<br>
 <br>
-[Display Layout](docs/MiniWebRadio%20V3%20Layout.pdf)
+[Display Layout](docs/MiniWebRadio%20V3.1%20Layout.pdf)
 
 [How to install](docs/How%20to%20install.pdf) : PlatformIO is definitely recommended as the IDE.
 
