@@ -1708,8 +1708,6 @@ void setStation(uint16_t sta) {
     free(_stationURL);
     _stationURL = x_ps_strdup(content.c_str());
     _homepage = "";
-    if(_state == RADIO) clearStreamTitle();
-
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
     if(_f_isWebConnected && sta == _cur_station && _state == RADIO) { // Station is already selected
@@ -3405,8 +3403,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_Mute") == 0)    {_timeCounter.timer = 5; _timeCounter.factor = 2; {if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_RA_volDown") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
         if( val && strcmp(name, "btn_RA_volUp") == 0)   {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
-        if( val && strcmp(name, "btn_RA_prevSta") == 0) {clearVolBar();          return;}
-        if( val && strcmp(name, "btn_RA_nextSta") == 0) {clearVolBar();          return;}
+        if( val && strcmp(name, "btn_RA_prevSta") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2; clearVolBar(); return;}
+        if( val && strcmp(name, "btn_RA_nextSta") == 0) {_timeCounter.timer = 5; _timeCounter.factor = 2; clearVolBar(); return;}
         if( val && strcmp(name, "btn_RA_staList") == 0) {return;}
         if( val && strcmp(name, "btn_RA_player") == 0)  {return;}
         if( val && strcmp(name, "btn_RA_dlna") == 0)    {return;}
@@ -3503,8 +3501,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
         if(strcmp(name, "btn_RA_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_RA_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {_radioSubmenue = 0; prevStation(); dispFooter.updateStation(_cur_station); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {_radioSubmenue = 0; nextStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
