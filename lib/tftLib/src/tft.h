@@ -143,8 +143,10 @@ class TFT{
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
 
-        inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor; fillScreen(BGcolor);}
+        inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor;}
+        inline uint16_t getBackGroundColor(){return _backGroundColor;}
         inline void setTextColor(uint16_t FGcolor){_textColor = FGcolor;}
+        inline uint16_t getTextColor(){return _textColor;}
         void setFont(uint16_t font);
         inline void setTextOrientation(uint16_t orientation=0){_textorientation=orientation;} //0 h other v
         int16_t height(void) const;

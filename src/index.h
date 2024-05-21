@@ -537,8 +537,9 @@ function connect() {
                                         else{console.log("wrong timeFormat ", val); break;}
                                         radiobtn.checked = true;
                                         break;
-            case "changeState":         if      (val == 'RADIO' && state != 'RADIO') showTab1();
-                                        else if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
+            case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
+                                        if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
+                                        if (val == 'BLUETOOTH'&& state != 'BT') showTab8();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
                                         if(val == '0') showLogo1('label-bt-logo', '/png/BT.png')
@@ -760,6 +761,7 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send("change_state=" + "BLUETOOTH")
     socket.send('KCX_BT_connected')  // is connected?
     socket.send('KCX_BT_scanned')    // get scanned items
     socket.send('KCX_BT_mem')        // get saved items

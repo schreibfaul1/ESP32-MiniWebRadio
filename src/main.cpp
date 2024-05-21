@@ -380,10 +380,11 @@ button1state  btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_b
 button1state  btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
 button2state  btn_EQ_Mute("btn_EQ_Mute");
 // BLUETOOTH
-button2state  btn_BL_pause("btn_BL_pause");
-button1state  btn_BL_volDown("btn_BL_volDown"), btn_BL_volUp("btn_BL_volUp"), btn_BL_radio("btn_BL_radio");
-pictureBox    pic_BL_mode("pic_BL_mode");
-textbox       txt_BL_mode("txt_BL_mode");
+button2state  btn_BT_pause("btn_BT_pause");
+button1state  btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
+pictureBox    pic_BT_mode("pic_BT_mode");
+textbox       txt_BT_mode("txt_BT_mode");
+textbox       txt_BT_volume("txt_BT_volume");
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -1591,9 +1592,6 @@ void setup() {
 
     ticker100ms.attach(0.1, timer100ms);
     bt_emitter.begin();
-    bt_emitter.userCommand("AT+GMR?");     // get version
-    bt_emitter.userCommand("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
-    bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
 
     _dlnaLevel = 0;
     _dlnaHistory[0].name = strdup("Media Server");
@@ -2155,17 +2153,22 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_EQ_Mute.setClickedOnPicturePath("/btn/Button_Mute_Yellow.jpg");
                                                                                          btn_EQ_Mute.setValue(_f_mute);
     // BLUETOOTH ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_BL_volDown.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BL_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-                                                                                         btn_BL_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_BL_volUp.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BL_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-                                                                                         btn_BL_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
-    btn_BL_pause.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BL_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
-                                                                                         btn_BL_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
-                                                                                         btn_BL_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
-                                                                                         btn_BL_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_BL_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
-                                                                                         btn_BL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
-    pic_BL_mode.begin( _winLogo.x, _winLogo.y);                                          pic_BL_mode.setAlternativPicturePath("/common/BTnc.jpg");
+    btn_BT_volDown.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
+                                                                                         btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
+    btn_BT_volUp.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
+                                                                                         btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_BT_pause.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_pause.setOffPicturePath("/btn/Button_Pause_Blue.jpg");
+                                                                                         btn_BT_pause.setOnPicturePath("/btn/Button_Right_Blue.jpg");
+                                                                                         btn_BT_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.jpg");
+                                                                                         btn_BT_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
+    btn_BT_mode.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.jpg");
+                                                                                         btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.jpg");
+    btn_BT_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+                                                                                         btn_BT_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.jpg");
+    txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h);   txt_BT_volume.setFont(_fonts[2]);
+    txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
+
 
     //pic_R_logo.begin(_winLogo.x, _winLogo.y);                                           pic_R_logo.setAlternativPicturePath("/common/unknown.jpg");
     //pic_R_logo.setPicturePath("/common/Brightness.jpg");
@@ -2215,6 +2218,8 @@ void changeState(int32_t state){
                          txt_EQ_lowPass.disable();  txt_EQ_bandPass.disable(); txt_EQ_highPass.disable(); txt_EQ_balance.disable(); btn_EQ_Player.disable();
                          btn_EQ_Mute.disable();
                          break;
+        case BLUETOOTH:  btn_BT_volDown.disable();  btn_BT_volUp.disable();    btn_BT_pause.disable();    btn_BT_radio.disable();   btn_BT_mode.disable();
+                         pic_BT_mode.disable();     txt_BT_volume.disable();   txt_BT_mode.disable();
     }
     _f_volBarVisible = false;
     if(_timeCounter.timer){
@@ -2340,16 +2345,28 @@ void changeState(int32_t state){
             showBrightnessBar();
             break;
         }
-        case EQUALIZER:{
+        case EQUALIZER:
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
             sdr_EQ_lowPass.show(); sdr_EQ_bandPass.show(); sdr_EQ_highPass.show(); sdr_EQ_balance.show();
             btn_EQ_lowPass.show(); btn_EQ_bandPass.show(); btn_EQ_highPass.show(); btn_EQ_balance.show(); btn_EQ_Radio.show(); btn_EQ_Player.show(); btn_EQ_Mute.show();
             txt_EQ_lowPass.show(); txt_EQ_bandPass.show(); txt_EQ_highPass.show(); txt_EQ_balance.show();
             break;
-        }
+
         case BLUETOOTH:
             clearWithOutHeaderFooter();
-            btn_BL_volUp.show(); btn_BL_volDown.show(); btn_BL_pause.show(); btn_BL_radio.show(); pic_BL_mode.show();
+            btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show(); btn_BT_radio.show(); pic_BT_mode.show();
+            char* mode = strdup(bt_emitter.getMode());
+            if(strcmp(mode, "RX") == 0){
+                txt_BT_mode.writeText("RECEIVER", TFT_ALIGN_CENTER);
+                if(bt_emitter.isConnected()) muteChanged(true);
+            }
+            else {
+                txt_BT_mode.writeText("EMITTER", TFT_ALIGN_CENTER);
+            }
+            txt_BT_mode.setBGcolor(TFT_BROWN); txt_BT_mode.show();
+            char c[10]; sprintf(c, "Vol: %02i", bt_emitter.getVolume()); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER); txt_BT_volume.show();
+            if(_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
+            if(mode){ free(mode); mode = NULL;}
             break;
     }
     _state = state;
@@ -2945,10 +2962,11 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_EQ_Mute.positionXY(x, y)) return;
                 break;
         case BLUETOOTH:
-                if(btn_BL_volUp.positionXY(x, y)) return;
-                if(btn_BL_volDown.positionXY(x, y)) return;
-                if(btn_BL_pause.positionXY(x, y)) return;
-                if(btn_BL_radio.positionXY(x, y)) return;
+                if(btn_BT_volUp.positionXY(x, y)) return;
+                if(btn_BT_volDown.positionXY(x, y)) return;
+                if(btn_BT_pause.positionXY(x, y)) return;
+                if(btn_BT_mode.positionXY(x, y)) return;
+                if(btn_BT_radio.positionXY(x, y)) return;
                 break;
         default:
                 break;
@@ -3008,7 +3026,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_EQ_Radio.released(); btn_EQ_Player.released(); btn_EQ_Mute.released();
             break;
         case BLUETOOTH:
-            btn_BL_pause.released(); btn_BL_radio.released(); btn_BL_volDown.released(); btn_BL_volUp.released();
+            btn_BT_pause.released(); btn_BT_radio.released(); btn_BT_volDown.released(); btn_BT_volUp.released(); btn_BT_mode.released();
             break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
@@ -3133,9 +3151,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
 
     if(cmd == "change_state"){      if(_state != CLOCK){
-                                        if     (!strcmp(param.c_str(), "RADIO") && _state != RADIO) {setStation(_cur_station); changeState(RADIO);  return;}
-                                        else if(!strcmp(param.c_str(), "PLAYER")&& _state != PLAYER){stopSong(); changeState(PLAYER); return;}
-                                        else if(!strcmp(param.c_str(), "DLNA")  && _state != DLNA)  {stopSong(); changeState(DLNA);   return;}
+                                        if     (!strcmp(param.c_str(), "RADIO")      && _state != RADIO)     {setStation(_cur_station); changeState(RADIO); return;}
+                                        else if(!strcmp(param.c_str(), "PLAYER")     && _state != PLAYER)    {stopSong(); changeState(PLAYER); return;}
+                                        else if(!strcmp(param.c_str(), "DLNA")       && _state != DLNA)      {stopSong(); changeState(DLNA);   return;}
+                                        else if(!strcmp(param.c_str(), "BLUETOOTH")  && _state != BLUETOOTH) {changeState(BLUETOOTH); return;}
                                         else return;
                                     }}
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=", "audiofile stopped");
@@ -3348,22 +3367,35 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val) {
-    if(endsWith(info, "Emitter found")) _f_BtEmitterFound = true;
+    if(endsWith(info, "Emitter found")){
+        _f_BtEmitterFound = true;
+        bt_emitter.userCommand("AT+GMR?");     // get version
+        bt_emitter.userCommand("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
+        bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
+    }
     SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
+    if(_state == BLUETOOTH){
+        if(startsWith(info, "Volume")){
+            char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER);
+        }
+        if(startsWith(info, "Mode")){
+            txt_BT_mode.writeText(val, TFT_ALIGN_CENTER);
+        }
+    }
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
     if(status) {
         const char* mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
-        if(strcmp(mode, "TX") == 0) pic_BL_mode.setPicturePath("/common/BTgold.jpg");
-        else                        pic_BL_mode.setPicturePath("/common/BTblue.jpg");
+        if(strcmp(mode, "TX") == 0) pic_BT_mode.setPicturePath("/common/BTgold.jpg");
+        else                      { pic_BT_mode.setPicturePath("/common/BTblue.jpg"); muteChanged(true);}
     }
     else {
         webSrv.send("KCX_BT_connected=", "0");
-        pic_BL_mode.setPicturePath("/common/BTnc.jpg");
+        pic_BT_mode.setPicturePath("/common/BTnc.jpg"); // not connected
     }
-    if(_state == BLUETOOTH) pic_BL_mode.show();
+    if(_state == BLUETOOTH) pic_BT_mode.show();
 }
 
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
@@ -3379,11 +3411,9 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 void kcx_bt_modeChanged(const char* m) { // Every time the mode has changed
     if(strcmp("RX", m) == 0) {
         webSrv.send("KCX_BT_MODE=RX");
-        log_w("RX");
     }
     if(strcmp("TX", m) == 0) {
         webSrv.send("KCX_BT_MODE=TX");
-        log_w("TX");
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3487,10 +3517,11 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_EQ_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
     }
     if(_state == BLUETOOTH) {
-        if( val && strcmp(name, "btn_BL_pause") == 0)   {bt_emitter.pauseResume(); return;}
-        if( val && strcmp(name, "btn_BL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_BL_volDown") == 0) {bt_emitter.downvolume(); return;}
-        if( val && strcmp(name, "btn_BL_volUp") == 0)   {bt_emitter.upvolume(); return;}
+        if( val && strcmp(name, "btn_BT_pause") == 0)   {bt_emitter.pauseResume(); return;}
+        if( val && strcmp(name, "btn_BT_radio") == 0)   {return;}
+        if( val && strcmp(name, "btn_BT_volDown") == 0) {bt_emitter.downvolume(); return;}
+        if( val && strcmp(name, "btn_BT_volUp") == 0)   {bt_emitter.upvolume(); return;}
+        if( val && strcmp(name, "btn_BT_mode") == 0)    {bt_emitter.changeMode(); return;}
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
@@ -3580,10 +3611,11 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_EQ_Mute") == 0)     {muteChanged(btn_EQ_Mute.getValue()); return;}
     }
     if(_state == BLUETOOTH) {
-        if(strcmp(name, "btn_BL_pause") == 0)    {return;}
-        if(strcmp(name, "btn_BL_radio") == 0)    {changeState(RADIO); return;}
-        if(strcmp(name, "btn_BL_volDown") == 0)  {return;}
-        if(strcmp(name, "btn_BL_volUp") == 0)    {return;}
+        if(strcmp(name, "btn_BT_pause") == 0)    {return;}
+        if(strcmp(name, "btn_BT_radio") == 0)    {changeState(RADIO); return;}
+        if(strcmp(name, "btn_BT_volDown") == 0)  {return;}
+        if(strcmp(name, "btn_BT_volUp") == 0)    {return;}
+        if(strcmp(name, "btn_BT_mode") == 0)     {return;}
     }
     log_d("unused event: graphicObject %s was released", name);
 }

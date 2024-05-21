@@ -704,6 +704,7 @@ private:
     int16_t     m_w = 0;
     int16_t     m_h = 0;
     uint8_t     m_fontSize = 0;
+    uint8_t     m_align = TFT_ALIGN_RIGHT;
     uint32_t    m_bgColor = 0;
     uint32_t    m_fgColor = 0;
     char*       m_text = NULL;
@@ -733,12 +734,7 @@ public:
         m_enabled = true;
         m_clicked = false;
         if(!m_text){char c[] = " "; m_text = c;}
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.setTextColor(m_fgColor);
-        tft.setFont(m_fontSize);
-        uint8_t offset_v = 0;
-        if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
-        tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, TFT_ALIGN_RIGHT);
+        writeText(m_text, m_align);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -771,16 +767,22 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void writeText(const char* txt){
+    void writeText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){
         if(m_text){free(m_text); m_text = NULL;}
         m_text = x_ps_strdup(txt);
+        m_align = align;
         if(m_enabled){
-            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            uint16_t txtColor_tmp = tft.getTextColor();
+            uint16_t bgColor_tmp = tft.getBackGroundColor();
             tft.setTextColor(m_fgColor);
+            tft.setBackGoundColor(m_bgColor);
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             tft.setFont(m_fontSize);
             uint8_t offset_v = 0;
             if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
-            tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, TFT_ALIGN_RIGHT);
+            tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
         }
     }
 };
