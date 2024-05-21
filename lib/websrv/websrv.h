@@ -42,10 +42,15 @@ private:
     String          contenttype;
     char            buff[256];
     char*           msgBuff = NULL;
+    char*           m_transBuf = NULL;
+    char*           m_path = NULL;
+    uint8_t         m_pathLength;
     uint8_t         method;
     String          WS_sec_Key;
     String          WS_resp_Key;
     String          WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    uint16_t        m_bytesPerTransaction;
+
 
 protected:
     String  calculateWebSocketResponseKey(String sec_WS_key);
@@ -58,12 +63,12 @@ protected:
     String  UTF8toASCII(String str);
     String  responseCodeToString(int32_t code);
 
-
 public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
     enum { Continuation_Frame = 0x00, Text_Frame = 0x01, Binary_Frame = 0x02, Connection_Close_Frame = 0x08,
            Ping_Frame = 0x09, Pong_Frame = 0x0A };
     WebSrv(String Name="WebSrv library", String Version="1.0");
+    ~WebSrv();
     void begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
     void stop();
     void loop();

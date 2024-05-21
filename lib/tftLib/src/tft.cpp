@@ -24,6 +24,7 @@ SPIClass*   SPItransfer;
 #define ILI9341_CASET       0x2A // Column Address Set
 #define ILI9341_RASET       0x2B // Row Address Set
 #define ILI9341_RAMWR       0x2C // Memory Write
+#define ILI9341_RAMRD       0x2E // Memory Read
 #define ILI9341_MADCTL      0x36 // Memory Data Access Control
 #define ILI9341_VSCRSADD    0x37 // Vertical Scrolling Start Address
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -32,6 +33,7 @@ SPIClass*   SPItransfer;
 #define ILI9486_CASET       0x2A // Display On
 #define ILI9486_PASET       0x2B // Page Address Set
 #define ILI9486_RAMWR       0x2C // Memory Write
+#define ILI9486_RAMRD       0x2E // Memory Read
 #define ILI9486_MADCTL      0x36 // Memory Data Access Control
 #define ILI9486_MADCTL_MY   0x80 // Bit 7 Parameter MADCTL
 #define ILI9486_MADCTL_MX   0x40 // Bit 5 Parameter MADCTL
@@ -768,6 +770,18 @@ int16_t TFT::height(void) const {
 uint8_t TFT::getRotation(void) const{
     return _rotation;
 }
+
+uint16_t TFT::readCommand(){
+    uint16_t ret = 0;
+    TFT_DC_LOW();
+    if(_TFTcontroller == ILI9341  || _TFTcontroller == HX8347D ||
+       _TFTcontroller == ILI9488  || _TFTcontroller == ST7796) ret = spi_TFT->transfer(0);
+
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b || _TFTcontroller == ST7796RPI)  ret = spi_TFT->transfer16(0);
+    TFT_DC_HIGH();
+    return ret;
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) {
@@ -1047,6 +1061,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         h=y+h-1;
         spi_TFT->write16(h >> 8);
         spi_TFT->write16(h & 0xFF);         // YEND
+        writeCommand(ILI9486_RAMWR);
     }
     if(_TFTcontroller == ILI9488){
         writeCommand(ILI9488_CASET);        // Column addr set
@@ -1061,6 +1076,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         h=y+h-1;
         spi_TFT->write(h >> 8);
         spi_TFT->write(h & 0xFF);           // YEND
+        writeCommand(ILI9488_RAMWR);
     }
     if(_TFTcontroller == ST7796){
         writeCommand(ST7796_CASET);         // Column addr set
@@ -1075,6 +1091,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         h=y+h-1;
         spi_TFT->write(h >> 8);
         spi_TFT->write(h & 0xFF);           // YEND
+        writeCommand(ST7796_RAMWR);
     }
     if(_TFTcontroller == ST7796RPI){
         writeCommand(ST7796_CASET);         // Column addr set
@@ -1089,6 +1106,91 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         h=y+h-1;
         spi_TFT->write16(h >> 8);
         spi_TFT->write16(h & 0xFF);         // YEND
+        writeCommand(ST7796_RAMWR);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+void TFT::readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    if(_TFTcontroller == ILI9341){  //ILI9341
+        uint32_t xa = ((uint32_t)x << 16) | (x+w-1);
+        uint32_t ya = ((uint32_t)y << 16) | (y+h-1);
+        writeCommand(ILI9341_CASET);
+        spi_TFT->write32(xa);
+        writeCommand(ILI9341_RASET);
+        spi_TFT->write32(ya);
+        writeCommand(ILI9341_RAMRD);
+    }
+    if(_TFTcontroller == HX8347D){  // HX8347D
+        writeCommand(0x02); spi_TFT->write(x >> 8);
+        writeCommand(0x03); spi_TFT->write(x & 0xFF);        //Column Start
+        writeCommand(0x04); spi_TFT->write((x+w-1) >> 8);
+        writeCommand(0x05); spi_TFT->write((x+w-1) & 0xFF);  //Column End
+        writeCommand(0x06); spi_TFT->write(y >> 8);
+        writeCommand(0x07); spi_TFT->write(y & 0xFF);        //Row Start
+        writeCommand(0x08); spi_TFT->write((y+h-1) >> 8);
+        writeCommand(0x09); spi_TFT->write((y+h-1) & 0xFF);  //Row End
+    }
+    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b){
+        writeCommand(ILI9486_CASET);        // Column addr set
+        spi_TFT->write16(x >> 8);
+        spi_TFT->write16(x & 0xFF);         // XSTART
+        w=x+w-1;
+        spi_TFT->write16(w >> 8);
+        spi_TFT->write16(w & 0xFF);         // XEND
+        writeCommand(ILI9486_PASET);        // Row addr set
+        spi_TFT->write16(y >> 8);
+        spi_TFT->write16(y & 0xFF);         // YSTART
+        h=y+h-1;
+        spi_TFT->write16(h >> 8);
+        spi_TFT->write16(h & 0xFF);         // YEND
+        writeCommand(ILI9486_RAMRD);
+    }
+    if(_TFTcontroller == ILI9488){
+        writeCommand(ILI9488_CASET);        // Column addr set
+        spi_TFT->write(x >> 8);
+        spi_TFT->write(x & 0xFF);           // XSTART
+        w=x+w-1;
+        spi_TFT->write(w >> 8);
+        spi_TFT->write(w & 0xFF);           // XEND
+        writeCommand(ILI9488_PASET);        // Row addr set
+        spi_TFT->write(y >> 8);
+        spi_TFT->write(y & 0xFF);           // YSTART
+        h=y+h-1;
+        spi_TFT->write(h >> 8);
+        spi_TFT->write(h & 0xFF);           // YEND
+        writeCommand(ILI9488_RAMRD);
+    }
+    if(_TFTcontroller == ST7796){
+        writeCommand(ST7796_CASET);         // Column addr set
+        spi_TFT->write(x >> 8);
+        spi_TFT->write(x & 0xFF);           // XSTART
+        w=x+w-1;
+        spi_TFT->write(w >> 8);
+        spi_TFT->write(w & 0xFF);           // XEND
+        writeCommand(ST7796_RASET);         // Row addr set
+        spi_TFT->write(y >> 8);
+        spi_TFT->write(y & 0xFF);           // YSTART
+        h=y+h-1;
+        spi_TFT->write(h >> 8);
+        spi_TFT->write(h & 0xFF);           // YEND
+        writeCommand(ST7796_RAMRD);
+    }
+    if(_TFTcontroller == ST7796RPI){
+        writeCommand(ST7796_CASET);         // Column addr set
+        spi_TFT->write16(x >> 8);
+        spi_TFT->write16(x & 0xFF);         // XSTART
+        w=x+w-1;
+        spi_TFT->write16(w >> 8);
+        spi_TFT->write16(w & 0xFF);         // XEND
+        writeCommand(ST7796_RASET);         // Row addr set
+        spi_TFT->write16(y >> 8);
+        spi_TFT->write16(y & 0xFF);         // YSTART
+        h=y+h-1;
+        spi_TFT->write16(h >> 8);
+        spi_TFT->write16(h & 0xFF);         // YEND
+        writeCommand(ST7796_RAMRD);
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1327,6 +1429,10 @@ void TFT::drawPixel(int16_t x, int16_t y, uint16_t color){
     startWrite();
     writePixel(x, y, color);
     endWrite();
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t TFT::color565(uint8_t r, uint8_t g, uint8_t b){
+    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1708,6 +1814,43 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+void TFT::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data){
+
+    uint16_t color = 0;
+
+    uint32_t dataSize = w * h;
+    uint32_t counter = 0;
+    startWrite();
+    readAddrWindow(x, y, w, h);
+    readCommand(); // Dummy read to throw away don't care value
+
+    // Read window pixel 24-bit RGB values
+    uint8_t r, g, b;
+
+    while (dataSize--) {
+        if(_TFTcontroller == ILI9488){
+            // The 6 colour bits are in MS 6 bits of each byte but we do not include the extra clock pulse so we use a trick
+            // and mask the middle 6 bits of the byte, then only shift 1 place left
+            r = (readCommand() & 0x7E) << 1;
+            g = (readCommand() & 0x7E) << 1;
+            b = (readCommand() & 0x7E) << 1;
+            color = color565(r, g, b);
+        }
+        else{
+            // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte as the TFT stores colours as 18 bits
+            r = readCommand();
+            g = readCommand();
+            b = readCommand();
+            color = color565(r, g, b);
+        }
+        data[counter] = color;
+        counter++;
+    }
+    endWrite();
+}
+
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
 void TFT::setFont(uint16_t font){
@@ -2565,7 +2708,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     if((win_X + win_W)  > width()) {win_W  = width()  - win_X;} // Limit, right edge of the display
     if((win_Y + win_H) > height()){win_H = height() - win_Y;} // Limit, bottom of the display
 
-     idx = 0;
+    idx = 0;
     uint16_t pX = win_X;
     uint16_t pY = win_Y;
     int16_t  pH = win_H;
@@ -2579,7 +2722,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         if(noWrap && idx) goto exit;
         if(pH < _current_font.line_height){goto exit;}
         charsToDraw = fitInLine(idx, pW, &usedPxLength);
-        if(align == TFT_ALIGN_RIGHT){  pX += win_W - usedPxLength;}
+        if(align == TFT_ALIGN_RIGHT){  pX += win_W - (usedPxLength + 1);}
         if(align == TFT_ALIGN_CENTER){ pX += (win_W - usedPxLength) /2;}
         uint16_t cnt = 0;
         while(true){ // inner while
@@ -2768,6 +2911,21 @@ bool TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
 bool TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
     // debug=true;
     int32_t iterations = repeat;
+
+    gif_next.clear();              gif_next.shrink_to_fit();
+    gif_vals.clear();              gif_vals.shrink_to_fit();
+    gif_stack.clear();             gif_stack.shrink_to_fit();
+    gif_GlobalColorTable.clear();  gif_GlobalColorTable.shrink_to_fit();
+    gif_LocalColorTable.clear();   gif_LocalColorTable.shrink_to_fit();
+
+    gif_decodeSdFile_firstread = false;
+    gif_GlobalColorTableFlag = false;
+    gif_LocalColorTableFlag = false;
+    gif_SortFlag = false;
+    gif_TransparentColorFlag = false;
+    gif_UserInputFlag = false;
+    gif_ZeroDataBlock = 0;
+    gif_InterlaceFlag = false;
 
     do { // repeat this gif
         gif_file = fs.open(path);
@@ -5286,7 +5444,13 @@ void TP::loop() {
     static uint16_t x2 = 0, y2 = 0;
     if (!digitalRead(_TP_IRQ)) {
         if(!read_TP(x, y)){return;}
+
+        if(x !=x1 && y != y1){
+            if(tp_positionXY) tp_positionXY(x, y);
+        }
+
         { x1 = x; y1 = y;}
+
         if (f_loop) {
             f_loop = false;
             // log_i("tp_pressed x=%d, y=%d", x, y);

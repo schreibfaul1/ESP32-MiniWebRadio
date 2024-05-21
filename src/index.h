@@ -155,24 +155,12 @@ const char index_html[] PROGMEM = R"=====(
         .buttonred {
             background-color : red;
         }
-        #label-logo-s {
-            margin-left : 20px;
-            border-color: black;
-            border-style: solid;
-            border-width: 2px;
-            display : inline-block;
-            background-image : url(SD/common/unknown.jpg);
-            width : 96px;
-            height : 96px;
-            margin-top: 5px;
-        }
-        #label-logo-m {
+        #label-logo {
             margin-left : 40px;
             border-color: black;
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/common//unknown.jpg);
             width : 128px;
             height : 128px;
             margin-top: 5px;
@@ -201,11 +189,16 @@ const char index_html[] PROGMEM = R"=====(
             font-weight: bold;
             text-align: center;
         }
-        #div-logo-s{
-          display: none;
-        }
-        #div-logo-m{
-          display: none;
+        #label-infopic {
+            margin-left : 4px;
+            border-color: #99ccff;
+            border-style: solid;
+            border-width: 2px;
+            display : inline-block;
+            background-image : url(SD/png/MiniWebRadioV3.png);
+            width : 480px;
+            height : 320px;
+            margin-top: 5px;
         }
         canvas {
             left : 0;
@@ -395,6 +388,7 @@ var host = location.hostname
 var tm
 var IR_addr = ""
 var bt_RxTx = 'TX'
+var state = 'RADIO'
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -417,7 +411,7 @@ function connect() {
         socket.send("get_timeAnnouncement")
         socket.send("gettone=")   // Now load the tones (tab Radio)
         socket.send("getnetworks=")
-        socket.send("change_state=" + "0")
+        socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
 
         setInterval(ping, 20000)
@@ -475,9 +469,9 @@ function connect() {
                                         break
             case "stationURL":          station.value = val
                                         break
-            case "stationLogo":         if(tft_size == 0) showLogo('label-logo-s', val)
-                                        if(tft_size == 1) showLogo('label-logo-m', val)
+            case "stationLogo":         showLogo1('label-logo', val)
                                         break
+            case "hardcopy":            showLogo1('label-infopic', val)
             case "streamtitle":         cmd.value = val
                                         break
             case "homepage":            window.open(val, '_blank') // show the station homepage
@@ -487,15 +481,11 @@ function connect() {
             case "AudioFileList":       getAudioFileList(val)
                                         break
             case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
-                                                            document.getElementById('div-logo-m').style.display = 'none';
-                                                            document.getElementById('div-logo-s').style.display = 'block';
                                                             document.getElementById('canvas').width  = 96;
                                                             document.getElementById('canvas').height = 96;
                                                             console.log("tftSize is s");
                                         }
                                         if(val == 'm')  { tft_size = 1;
-                                                            document.getElementById('div-logo-s').style.display = 'none';
-                                                            document.getElementById('div-logo-m').style.display = 'block';
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
                                                             console.log("tftSize is m");
@@ -547,13 +537,14 @@ function connect() {
                                         else{console.log("wrong timeFormat ", val); break;}
                                         radiobtn.checked = true;
                                         break;
-            case "changeState":         if      (val == 'RADIO') showTab1();
-                                        else if (val == 'PLAYER') showTab3();
+            case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
+                                        if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
+                                        if (val == 'BLUETOOTH'&& state != 'BT') showTab8();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
-                                        if(val == '0') showLogo('label-bt-logo', '/png/BT.png')
-                                        if(val == '1' && bt_RxTx == 'TX') showLogo('label-bt-logo', '/png/BT_TX.png')
-                                        if(val == '1' && bt_RxTx == 'RX') showLogo('label-bt-logo', '/png/BT_RX.png')
+                                        if(val == '0') showLogo1('label-bt-logo', '/png/BT.png')
+                                        if(val == '1' && bt_RxTx == 'TX') showLogo1('label-bt-logo', '/png/BT_TX.png')
+                                        if(val == '1' && bt_RxTx == 'RX') showLogo1('label-bt-logo', '/png/BT_RX.png')
                                         break
             case "KCX_BT_MEM":          show_BT_memItems(val)
                                         break;
@@ -612,6 +603,7 @@ toastr.options = {
 }
 
 function showTab1 () {
+    state = 'RADIO'
     console.log('tab-content1 (Radio)')
     document.getElementById('tab-content1').style.display = 'block'
     document.getElementById('tab-content2').style.display = 'none'
@@ -627,11 +619,12 @@ function showTab1 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send("change_state=" + "0")
+    socket.send("change_state=" + "RADIO")
     socket.send("getmute")
 }
 
 function showTab2 () {
+    state = 'STATIONS'
     console.log('tab-content2 (Stations)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'block'
@@ -651,6 +644,7 @@ function showTab2 () {
 }
 
 function showTab3 () {
+    state = 'PLAYER'
     console.log('tab-content3 (Audio Player)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -666,10 +660,11 @@ function showTab3 () {
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
-    socket.send("change_state=6")
+    socket.send("change_state=" + "PLAYER")
 }
 
 function showTab4 () {
+    state = 'DLNA'
     console.log('tab-content4 (DLNA)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -687,10 +682,11 @@ function showTab4 () {
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
     clearDLNAServerList(0)
     socket.send('DLNA_getServer')
-    socket.send("change_state=" + "10")
+    socket.send("change_state=" + "DLNA")
 }
 
 function showTab5 () {
+    state = 'SEARCH'
     console.log('tab-content5 (Search Stations)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -709,6 +705,7 @@ function showTab5 () {
 }
 
 function showTab6 () {
+    state = 'ABOUT'
     console.log('tab-content6 (About)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -729,6 +726,7 @@ function showTab6 () {
 }
 
 function showTab7 () {  // Remote Control
+    state = 'IR'
     console.log('tab-content7 (Remote Control)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -747,6 +745,7 @@ function showTab7 () {  // Remote Control
 }
 
 function showTab8 () {  // KCX BT Emitter
+    state = 'BT'
     console.log('tab-content8 (Remote Control)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
@@ -762,6 +761,7 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    socket.send("change_state=" + "BLUETOOTH")
     socket.send('KCX_BT_connected')  // is connected?
     socket.send('KCX_BT_scanned')    // get scanned items
     socket.send('KCX_BT_mem')        // get saved items
@@ -967,19 +967,13 @@ function select_l8 (presctrl) { // preset, select level 7
  }
 // ----------------------------------- TAB RADIO ------------------------------------
 
-function showLogo(id, src) { // get the bitmap from SD, convert to URL first
-    src = src.replace(/%/g, '%25') // % must be the first
-    src = src.replace(/\s/g, '%20') // URLs never can have blanks
-    src = src.replace(/'/g, '%27') // must be replace
-    src = src.replace(/\(/g, '%28') // must be replace
-    src = src.replace(/\)/g, '%29') // must be replace
-    src = src.replace(/\+/g, '%2B') // is necessary to replace, + is the same as space
-    var timestamp = new Date().getTime()
-    var file
-    if(src == '') file = 'url(SD/unknown.jpg)'
-    else file = 'url(SD' + src + ')'
-    console.log("showLogo id=", id, "file=", file)
-    document.getElementById(id).style.backgroundImage = file
+function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
+    const myImg = document.getElementById(id);
+    if(src == '') src = '/unknown.jpg'
+    src = "/SD" + src
+    src += "?" + new Date().getTime()
+    console.log("showLogo1 id=", id, "src=", src)
+    myImg.src = src;
 }
 
 function test(){
@@ -1890,11 +1884,8 @@ function clear_BT_memItems(){
             </div>
         </div>
         <div style="display: flex;">
-            <div id="div-logo-s" style="flex: 0 0 210px;">
-                <label for="label-logo" id="label-logo-s" onclick="socket.send('homepage')"> </label>
-            </div>
-            <div id="div-logo-m" style="flex: 0 0 210px;">
-                <label for="label-logo" id="label-logo-m" onclick="socket.send('homepage')"> </label>
+            <div id="div-logo" style="flex: 0 0 210px;">
+                <img id="label-logo" src="SD/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -2261,7 +2252,9 @@ function clear_BT_memItems(){
         <table>
             <tr>
                 <td style="vertical-align: top;">
-                    <img src="SD/png/MiniWebRadioV3.png" alt="MiniWebRadioV3" border="3">
+                    <label for="label-infopic" onclick="socket.send('hardcopy')">
+                        <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
+                    </label>
                 </td>
                 <td>
                     <div style="display: flex;">
@@ -2442,7 +2435,7 @@ function clear_BT_memItems(){
     <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
         <div style="display:flex">
             <div id="div-BT-logo" style="flex: 0 0 150px;">
-                <label for="label-logo" id="label-bt-logo" onclick="socket.send('KCX_BT_connected')"> </label>
+                <img id="label-bt-logo" onclick="socket.send('KCX_BT_connected')">
                 <label for="label-logo" id="label-bt-mode"> unknown </label>
             </div>
             <div style="flex: 1 0; position: relative;  padding-top: 20px;">

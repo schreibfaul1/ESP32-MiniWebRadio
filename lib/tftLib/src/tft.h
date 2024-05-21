@@ -22,6 +22,7 @@ using namespace std;
 
 
 extern __attribute__((weak)) void tft_info(const char*);
+extern __attribute__((weak)) void tp_positionXY(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_released(uint16_t x, uint16_t y);
@@ -127,6 +128,7 @@ class TFT{
         void      drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
         void      drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
         void      drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
+        void      readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t *data);
         void      fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
         void      drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
         void      fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
@@ -141,8 +143,10 @@ class TFT{
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
 
-        inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor; fillScreen(BGcolor);}
+        inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor;}
+        inline uint16_t getBackGroundColor(){return _backGroundColor;}
         inline void setTextColor(uint16_t FGcolor){_textColor = FGcolor;}
+        inline uint16_t getTextColor(){return _textColor;}
         void setFont(uint16_t font);
         inline void setTextOrientation(uint16_t orientation=0){_textorientation=orientation;} //0 h other v
         int16_t height(void) const;
@@ -199,56 +203,56 @@ class TFT{
 
         const uint8_t gif_MaxLzwBits = 12;
 
-        bool gif_decodeSdFile_firstread=false;
-        bool gif_GlobalColorTableFlag=false;
-        bool gif_LocalColorTableFlag=false;
-        bool gif_SortFlag=false;
-        bool gif_TransparentColorFlag=false;
-        bool gif_UserInputFlag=false;
-        bool gif_ZeroDataBlock=0;
-        bool gif_InterlaceFlag=false;
+        bool gif_decodeSdFile_firstread = false;
+        bool gif_GlobalColorTableFlag = false;
+        bool gif_LocalColorTableFlag = false;
+        bool gif_SortFlag = false;
+        bool gif_TransparentColorFlag = false;
+        bool gif_UserInputFlag = false;
+        bool gif_ZeroDataBlock = 0;
+        bool gif_InterlaceFlag = false;
 
         char gif_buffer[15];
         char gif_DSBbuffer[256]; // DataSubBlock
 
-        String gif_GifHeader="";
+        String gif_GifHeader = "";
 
-        uint8_t gif_BackgroundColorIndex=0;
-        uint8_t gif_BlockTerninator=0;
-        uint8_t gif_CharacterCellWidth=0;
-        uint8_t gif_CharacterCellHeight=0;
-        uint8_t gif_CodeSize=0;
-        uint8_t gif_ColorResulution=0;
-        uint8_t gif_DisposalMethod=0;
-        uint8_t gif_ImageSeparator=0;
-        uint8_t gif_lenDatablock=0;
-        uint8_t gif_LZWMinimumCodeSize=0;
-        uint8_t gif_PackedFields=0;
-        uint8_t gif_PixelAspectRatio=0;
-        uint8_t gif_TextBackgroundColorIndex=0;
-        uint8_t gif_TextForegroundColorIndex=0;
-        uint8_t gif_TransparentColorIndex=0;
+        uint8_t gif_BackgroundColorIndex = 0;
+        uint8_t gif_BlockTerninator = 0;
+        uint8_t gif_CharacterCellWidth = 0;
+        uint8_t gif_CharacterCellHeight = 0;
+        uint8_t gif_CodeSize = 0;
+        uint8_t gif_ColorResulution = 0;
+        uint8_t gif_DisposalMethod = 0;
+        uint8_t gif_ImageSeparator = 0;
+        uint8_t gif_lenDatablock = 0;
+        uint8_t gif_LZWMinimumCodeSize = 0;
+        uint8_t gif_PackedFields = 0;
+        uint8_t gif_PixelAspectRatio = 0;
+        uint8_t gif_TextBackgroundColorIndex = 0;
+        uint8_t gif_TextForegroundColorIndex = 0;
+        uint8_t gif_TransparentColorIndex = 0;
 
-        uint16_t gif_ClearCode=0;
-        uint16_t gif_DelayTime=0;
-        uint16_t gif_EOIcode=0; // End Of Information
+        uint16_t gif_ClearCode = 0;
+        uint16_t gif_DelayTime = 0;
+        uint16_t gif_EOIcode = 0; // End Of Information
 
-        uint16_t gif_ImageHeight=0;
-        uint16_t gif_ImageWidth=0;
-        uint16_t gif_ImageLeftPosition=0;
-        uint16_t gif_ImageTopPosition=0;
-        uint16_t gif_LogicalScreenWidth=0;
-        uint16_t gif_LogicalScreenHeight=0;
-        uint16_t gif_MaxCode=0;
-        uint16_t gif_MaxCodeSize=0;
-        uint16_t gif_SizeOfGlobalColorTable=0;
-        uint16_t gif_SizeOfLocalColorTable=0;
-        uint16_t gif_TextGridLeftPosition=0;
-        uint16_t gif_TextGridTopPosition=0;
-        uint16_t gif_TextGridWidth=0;
-        uint16_t gif_TextGridHeight=0;
+        uint16_t gif_ImageHeight = 0;
+        uint16_t gif_ImageWidth = 0;
+        uint16_t gif_ImageLeftPosition = 0;
+        uint16_t gif_ImageTopPosition = 0;
+        uint16_t gif_LogicalScreenWidth = 0;
+        uint16_t gif_LogicalScreenHeight = 0;
+        uint16_t gif_MaxCode = 0;
+        uint16_t gif_MaxCodeSize = 0;
+        uint16_t gif_SizeOfGlobalColorTable = 0;
+        uint16_t gif_SizeOfLocalColorTable = 0;
+        uint16_t gif_TextGridLeftPosition = 0;
+        uint16_t gif_TextGridTopPosition = 0;
+        uint16_t gif_TextGridWidth = 0;
+        uint16_t gif_TextGridHeight = 0;
 
-        int32_t     GIF_readGifItems();
+        int32_t GIF_readGifItems();
         bool    GIF_decodeGif(uint16_t x, uint16_t y);
         void    GIF_freeMemory();
         void    GIF_readHeader();
@@ -278,13 +282,15 @@ class TFT{
         inline void _swap_int16_t(int16_t &a, int16_t &b) { int16_t t = a; a = b; b = t; }
         void        init();
         void        writeCommand(uint16_t cmd);
+        uint16_t    readCommand();
 
         // Transaction API not used by GFX
         void      setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+        void      readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
         void      write24BitColor(uint16_t color);
         void      writePixels(uint16_t * colors, uint32_t len);
         void      writeColor(uint16_t color, uint32_t len);
-
+        uint16_t  color565(uint8_t r, uint8_t g, uint8_t b);
 
         // Required Non-Transaction
         void      drawPixel(int16_t x, int16_t y, uint16_t color);

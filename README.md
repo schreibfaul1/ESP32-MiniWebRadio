@@ -1,4 +1,4 @@
-# ESP32-MiniWebRadio V3
+# ESP32-MiniWebRadio V3.1
 
 ![Display](docs/MiniWebRadio.jpg)
 
@@ -26,7 +26,7 @@ Required HW:
 <ul>
 <li>ESP32 or ESP32-S3 board <b>with PSRAM</b></li>
 <li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
-<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), HX8347D (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
+<li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 </ul>
 Optional HW:
@@ -40,7 +40,7 @@ Control is via the display touchscreen or a web page in a browser, no additional
 Schematic<br>
 ![Schematic with external DAC](docs/MiniWebRadioV3_schematic.jpg)<br>
 <br>
-[Display Layout](docs/MiniWebRadio%20V3%20Layout.pdf)
+[Display Layout](docs/MiniWebRadio%20V3.1%20Layout.pdf)
 
 [How to install](docs/How%20to%20install.pdf) : PlatformIO is definitely recommended as the IDE.
 
