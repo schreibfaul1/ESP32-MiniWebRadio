@@ -2348,6 +2348,7 @@ public:
         if(m_item) updateItem(m_item);
         else       updateItem("");
         updateVolume(m_volume);
+        updateTime("        ", true);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
