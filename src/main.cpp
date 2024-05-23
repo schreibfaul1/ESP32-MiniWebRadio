@@ -342,7 +342,8 @@ button2state  btn_RA_Mute("btn_RA_Mute");
 button1state  btn_RA_volDown("btn_RA_volDown"), btn_RA_volUp("btn_RA_volUp"), btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
 button1state  btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
 button1state  btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
-pictureBox    pic_R_logo("pic_R_logo");
+button1state  btn_RA_off("btn_RA_off");
+pictureBox    pic_RA_logo("pic_RA_logo");
 vuMeter       VUmeter_RA("VUmeter_RA");
 // STATIONSLIST
 stationsList  lst_RADIO("lst_RADIO");
@@ -1907,6 +1908,7 @@ void wake_up() {
         clearAll();
         setTFTbrightness(_brightness);
         connecttohost(_lastconnectedhost.c_str());
+        dispHeader.show();
         dispFooter.show();
     //    dispHeader.updateTime(rtc.gettime_s());
     //    dispHeader.updateVolume(_cur_volume);
@@ -2022,6 +2024,8 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
                                                                                          btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
                                                                                          btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
+    btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
+                                                                                         btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
     VUmeter_RA.begin(     _winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
@@ -2170,10 +2174,10 @@ void placingGraphicObjects() { // and initialize them
     txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
 
 
-    //pic_R_logo.begin(_winLogo.x, _winLogo.y);                                           pic_R_logo.setAlternativPicturePath("/common/unknown.jpg");
-    //pic_R_logo.setPicturePath("/common/Brightness.jpg");
-    //pic_R_logo.setPicturePath("/common/Night_Gown.bmp");
-    //pic_R_logo.setPicturePath("/btn/PLAYER.gif");
+    //pic_RA_logo.begin(_winLogo.x, _winLogo.y);                                           pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+    //pic_RA_logo.setPicturePath("/common/Brightness.jpg");
+    //pic_RA_logo.setPicturePath("/common/Night_Gown.bmp");
+    //pic_RA_logo.setPicturePath("/btn/PLAYER.gif");
 }
 // clang-format off
 
@@ -2187,7 +2191,7 @@ void changeState(int32_t state){
     switch(_state){
         case RADIO:      btn_RA_Mute.disable();     btn_RA_volDown.disable();  btn_RA_volUp.disable();    btn_RA_prevSta.disable(); btn_RA_nextSta.disable();
                          btn_RA_staList.disable();  btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
-                         btn_RA_bright.disable();   btn_RA_equal.disable();    pic_R_logo.disable();     btn_RA_bt.disable();
+                         btn_RA_bright.disable();   btn_RA_equal.disable();    pic_RA_logo.disable();     btn_RA_bt.disable();      btn_RA_off.disable();
                          VUmeter_RA.disable(); break;
         case STATIONSLIST:
                          lst_RADIO.disable();
@@ -2251,7 +2255,7 @@ void changeState(int32_t state){
                 clearVolBar();
                 btn_RA_player.show();    btn_RA_dlna.show();             btn_RA_clock.show();
                 btn_RA_sleep.show();     btn_RA_bright.show(!_f_brightnessIsChangeable); btn_RA_equal.show();
-                btn_RA_bt.show(!_f_BtEmitterFound);
+                btn_RA_bt.show(!_f_BtEmitterFound); btn_RA_off.show();
                 _timeCounter.timer = 5;
                 _timeCounter.factor = 2;
             }
@@ -2873,6 +2877,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_RA_bright.positionXY(x, y)) return;
                 if(btn_RA_equal.positionXY(x, y)) return;
                 if(btn_RA_bt.positionXY(x, y)) return;
+                if(btn_RA_off.positionXY(x, y)) return;
             }
             _radioSubmenue++;
             if(_radioSubmenue == 3) _radioSubmenue = 0;
@@ -2984,12 +2989,15 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
+
+    if(_f_sleeping){ wake_up(); return;}   // if sleeping
+
     switch(_state){
         case RADIO:
             if(_radioSubmenue == 0){ VUmeter_RA.released();}
             if(_radioSubmenue == 1){ btn_RA_Mute.released(); btn_RA_volDown.released(); btn_RA_volUp.released(); btn_RA_prevSta.released(); btn_RA_nextSta.released(); btn_RA_staList.released();}
             if(_radioSubmenue == 2){ btn_RA_player.released(); btn_RA_dlna.released(); btn_RA_clock.released(); btn_RA_sleep.released(); btn_RA_bright.released(); btn_RA_equal.released();
-                                     btn_RA_bt.released();}
+                                     btn_RA_bt.released(); btn_RA_off.released();}
             break;
         case STATIONSLIST:
             lst_RADIO.released();
@@ -3030,7 +3038,6 @@ void tp_released(uint16_t x, uint16_t y){
             break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
-    if(_f_sleeping){ wake_up(); return;}   // if sleeping
 }
 
 void tp_long_released(){
@@ -3445,6 +3452,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_RA_equal") == 0)   {return;}
         if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
         if(!val && strcmp(name, "btn_RA_bt") == 0)      {_timeCounter.timer = 5; _timeCounter.factor = 2; return;}
+        if( val && strcmp(name, "btn_RA_off") == 0)     {return;}
         if( val && strcmp(name, "VUmeter_RA") == 0)     {return;}
     }
     if(_state == STATIONSLIST) {
@@ -3543,6 +3551,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubmenue = 0; changeState(BLUETOOTH); return;}
+        if(strcmp(name, "btn_RA_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "VUmeter_RA") == 0)      {return;}
     }
     if(_state == STATIONSLIST) {
