@@ -156,7 +156,7 @@ void TFT::init() {
         writeCommand(0xC7); // VCM control2
         spi_TFT->write(0x86);
 
-        writeCommand(0x36); // Memory Access Control
+        writeCommand(0x36);   // Memory Access Control
         spi_TFT->write(0x48); // 88
 
         writeCommand(0x3A); // PIXEL_FORMAT
@@ -267,8 +267,9 @@ void TFT::init() {
         if(_displayInversion == 0){
             writeCommand(0x01); spi_TFT->write(0x00); // DP_STB='0', out deep sleep
         }
-        else{
-            writeCommand(0x01); spi_TFT->write(0x02); // DP_STB='0', out deep sleep, invon = 1
+        else {
+            writeCommand(0x01);
+            spi_TFT->write(0x02); // DP_STB='0', out deep sleep, invon = 1
         }
 
         writeCommand(0x1F); spi_TFT->write(0x88);// GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
@@ -277,7 +278,8 @@ void TFT::init() {
         delay(5);
         writeCommand(0x1F); spi_TFT->write(0x90);// GAS=1, VOMG=00, PON=1, DK=0, XDK=0, DVDH_TRI=0, STB=0
         delay(5);
-        writeCommand(0x1F); spi_TFT->write(0xD0);// GAS=1, VOMG=10, PON=1, DK=0, XDK=0, DDVDH_TRI=0, STB=0
+        writeCommand(0x1F);
+        spi_TFT->write(0xD0); // GAS=1, VOMG=10, PON=1, DK=0, XDK=0, DDVDH_TRI=0, STB=0
         delay(5);
         //262k/65k color selection
         writeCommand(0x17); spi_TFT->write(0x05); //default 0x06 262k color // 0x05 65k color
