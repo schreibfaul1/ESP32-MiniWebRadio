@@ -344,6 +344,7 @@ button1state  btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), 
 button1state  btn_RA_sleep("btn_RA_sleep"), btn_RA_bright("btn_RA_bright"), btn_RA_equal("btn_RA_equal"), btn_RA_bt("btn_RA_bt");
 button1state  btn_RA_off("btn_RA_off");
 pictureBox    pic_RA_logo("pic_RA_logo");
+textbox       txt_RA_sTitle("txt_RA_sTitle", _fonts);
 vuMeter       VUmeter_RA("VUmeter_RA");
 // STATIONSLIST
 stationsList  lst_RADIO("lst_RADIO");
@@ -2024,6 +2025,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
     btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
                                                                                          btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
+    txt_RA_sTitle.begin(      _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h);   txt_RA_sTitle.setFont(255); // 255 -> auto
     VUmeter_RA.begin(     _winVUmeter.x, _winVUmeter.y, _winVUmeter.w, _winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
@@ -2190,7 +2192,7 @@ void changeState(int32_t state){
         case RADIO:      btn_RA_Mute.disable();     btn_RA_volDown.disable();  btn_RA_volUp.disable();    btn_RA_prevSta.disable(); btn_RA_nextSta.disable();
                          btn_RA_staList.disable();  btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
                          btn_RA_bright.disable();   btn_RA_equal.disable();    pic_RA_logo.disable();     btn_RA_bt.disable();      btn_RA_off.disable();
-                         VUmeter_RA.disable(); break;
+                         txt_RA_sTitle.disable();   VUmeter_RA.disable(); break;
         case STATIONSLIST:
                          lst_RADIO.disable();
                          break;
@@ -2236,6 +2238,7 @@ void changeState(int32_t state){
             if(_radioSubmenue == 0){
                 clearVolBar();
                 VUmeter_RA.show();
+                txt_RA_sTitle.show();
                 if(_state != RADIO) showLogoAndStationName();
                 _f_newStreamTitle = true;
                 _timeCounter.timer = 0;

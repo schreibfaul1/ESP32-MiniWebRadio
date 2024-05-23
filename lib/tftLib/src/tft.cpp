@@ -2605,6 +2605,66 @@ void TFT::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, ui
         }
     endWrite();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+int16_t TFT::validCharsInString(const char* strPtr, uint8_t* sequenceLength) { // returns the codepoint of a printable character, the AnsiColor and the sequenceLength
+    uint16_t codePoint = 0;
+    switch((uint8_t)strPtr[0]) {
+        case '\033': // ANSI sequence
+                        if(strcmp(strPtr, "\033[30m") == 0) {*sequenceLength = 5;            return TFT_BLACK;  } // ANSI_ESC_BLACK
+                        if(strcmp(strPtr, "\033[31m") == 0) {*sequenceLength = 5;            return TFT_RED;    } // ANSI_ESC_RED
+                        if(strcmp(strPtr, "\033[32m") == 0) {*sequenceLength = 5;            return TFT_GREEN;  } // ANSI_ESC_GREEN
+                        if(strcmp(strPtr, "\033[33m") == 0) {*sequenceLength = 5;            return TFT_YELLOW; } // ANSI_ESC_YELLOW
+                        if(strcmp(strPtr, "\033[34m") == 0) {*sequenceLength = 5;            return TFT_BLUE;   } // ANSI_ESC_BLUE
+                        if(strcmp(strPtr, "\033[35m") == 0) {*sequenceLength = 5;            return TFT_MAGENTA;} // ANSI_ESC_MAGENTA
+                        if(strcmp(strPtr, "\033[36m") == 0) {*sequenceLength = 5;            return TFT_CYAN;   } // ANSI_ESC_CYAN
+                        if(strcmp(strPtr, "\033[37m") == 0) {*sequenceLength = 5;            return TFT_WHITE;  } // ANSI_ESC_WHITE
+                        if(strcmp(strPtr, "\033[38;5;130m") == 0) {*sequenceLength = 11;     return TFT_BROWN;  } // ANSI_ESC_BROWN
+                        if(strcmp(strPtr, "\033[38;5;214m") == 0) {*sequenceLength = 11;     return TFT_ORANGE; } // ANSI_ESC_ORANGE
+                        if(strcmp(strPtr, "\033[0m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_RESET       unused
+                        if(strcmp(strPtr, "\033[1m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_BOLD        unused
+                        if(strcmp(strPtr, "\033[2m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_FAINT       unused
+                        if(strcmp(strPtr, "\033[3m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_ITALIC      unused
+                        if(strcmp(strPtr, "\033[4m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_UNDERLINE   unused
+                        log_w("unknown ANSI ESC SEQUENCE");
+                        *sequenceLength = 4;
+                        return -1;
+                        break;
+        case 0x20 ... 0x7F: // is ASCII
+                        *sequenceLength = 1;
+                        codePoint = (uint8_t)strPtr[0];
+                        break;
+        case 0xC2 ... 0xD1:
+                        codePoint = (uint8_t)strPtr[0] * 0x40 + (uint8_t)strPtr[1];
+                        if(_current_font.lookup_table[codePoint] != 0) {
+                            *sequenceLength = 2; // is valid UTF8 char
+                        }
+                        else {
+                            *sequenceLength = 2;
+                            log_w("character %c is not in table", strPtr);
+                        }
+                        break;
+        case 0xD2 ... 0xDF:
+                       *sequenceLength = 2; log_w("character %c is not in table", strPtr);
+                       break;
+        case 0xE0:
+                       if((uint8_t)strPtr[1] == 0x80 && (uint8_t)strPtr[2] == 0x99) { codePoint = 0xA4; } // special sign 0xe28099 (general punctuation)
+                       else log_w("character %c is not in table", strPtr);
+                       *sequenceLength = 3;
+                       break;
+        case 0xE1 ... 0xEF:
+                        *sequenceLength = 3;
+                        break;
+        case 0xF0 ... 0xFF:
+                        *sequenceLength = 4;
+                        break;
+        default:
+                        log_w("char is not printable"); // > 0xE0
+                        *sequenceLength = 1;
+    }
+return codePoint;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align, bool narrow, bool noWrap){

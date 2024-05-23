@@ -18,7 +18,7 @@
 #define AUDIOTASK_CORE      0                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
-#define SDMMC_FREQUENCY     80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000 not every SD Card will run at 80MHz
+#define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
 #define CONN_TIMEOUT        1000                             // unencrypted connection timeout in ms (http://...)
@@ -699,26 +699,29 @@ private:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class textbox{
 private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-    uint8_t     m_fontSize = 0;
-    uint8_t     m_align = TFT_ALIGN_RIGHT;
-    uint32_t    m_bgColor = 0;
-    uint32_t    m_fgColor = 0;
-    char*       m_text = NULL;
-    char*       m_name = NULL;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    releasedArg m_ra;
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    uint8_t         m_fontSize = 0;
+    const uint8_t*  m_fonts = NULL;
+    uint8_t         m_align = TFT_ALIGN_RIGHT;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    releasedArg     m_ra;
 public:
-    textbox(const char* name){
+    textbox(const char* name, const uint8_t* fonts = NULL){
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = 1;
+        m_fonts = fonts;
+        if(fonts)  for(int i = 0; i< 8; i++){log_i("%i, %i", i, fonts[i]);}
     }
     ~textbox(){
         if(m_text){free(m_text); m_text = NULL;}
@@ -733,7 +736,7 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
-        if(!m_text){char c[] = " "; m_text = c;}
+        if(!m_text){m_text = strdup("");}
         writeText(m_text, m_align);
     }
     void hide(){
@@ -777,12 +780,19 @@ public:
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            tft.setFont(m_fontSize);
-            uint8_t offset_v = 0;
-            if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
-            tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
-            tft.setTextColor(txtColor_tmp);
-            tft.setBackGoundColor(bgColor_tmp);
+            if(m_fontSize != 0){ // fontSize given
+                tft.setFont(m_fontSize);
+                uint8_t offset_v = 0;
+                if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
+                tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
+                tft.setTextColor(txtColor_tmp);
+                tft.setBackGoundColor(bgColor_tmp);
+            }
+            else if(m_fonts != NULL){ // fontsArray given
+                for(int i = 8; i > 0; i--){
+
+                }
+            }
         }
     }
 };
