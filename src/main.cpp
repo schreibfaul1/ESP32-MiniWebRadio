@@ -1899,7 +1899,6 @@ void fall_asleep() {
 }
 
 void wake_up() {
-    log_i("wake_up");
     if(_f_sleeping == true || _f_eof_alarm) { // awake
         _f_sleeping = false;
         SerialPrintfln("awake");
@@ -1910,14 +1909,13 @@ void wake_up() {
         connecttohost(_lastconnectedhost.c_str());
         dispHeader.show();
         dispFooter.show();
-    //    dispHeader.updateTime(rtc.gettime_s());
-    //    dispHeader.updateVolume(_cur_volume);
         if(_state == CLOCK) {
             clk_CL_green.show();
         }
         else {
+            _radioSubmenue = 0;
+            _f_newLogoAndStation = true;
             changeState(RADIO);
-            showLogoAndStationName();
         }
     }
 }
