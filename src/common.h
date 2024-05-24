@@ -2203,6 +2203,8 @@ private:
     uint8_t     m_segm_w = 0;
     uint8_t     m_segm_h = 0;
     uint8_t     m_frameSize = 1;
+    uint16_t    m_real_w = 0;
+    uint16_t    m_real_h = 0;
 public:
     vuMeter(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -2212,9 +2214,11 @@ public:
     ~vuMeter(){
         if(m_name){free(m_name); m_name = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t dummy_w, uint16_t dummy_h){
+    void begin(uint16_t x, uint16_t y, uint16_t real_w, uint16_t real_h){
         m_x = x; // x pos
         m_y = y; // y pos
+        m_real_w = real_w;
+        m_real_h = real_h;
 #if TFT_CONTROLLER < 2 // 320 x 240px
         m_segm_w = 9;
         m_segm_h = 7;
@@ -2228,6 +2232,7 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
+        tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
         tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
         for(uint8_t i = 0; i < 12; i++){
             drawRect(i, 0, 0);
