@@ -18,7 +18,7 @@
 #define AUDIOTASK_CORE      0                               // 0 or 1
 #define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
-#define SDMMC_FREQUENCY     80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000 not every SD Card will run at 80MHz
+#define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
 #define CONN_TIMEOUT        1000                             // unencrypted connection timeout in ms (http://...)
@@ -237,6 +237,7 @@ void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
 void           muteChanged(bool m);
+void           setTimeCounter(uint8_t sec);
 
 //prototypes (audiotask.cpp)
 void           audioInit();
@@ -699,26 +700,29 @@ private:
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class textbox{
 private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
-    uint8_t     m_fontSize = 0;
-    uint8_t     m_align = TFT_ALIGN_RIGHT;
-    uint32_t    m_bgColor = 0;
-    uint32_t    m_fgColor = 0;
-    char*       m_text = NULL;
-    char*       m_name = NULL;
-    bool        m_enabled = false;
-    bool        m_clicked = false;
-    releasedArg m_ra;
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    uint8_t         m_fontSize = 0;
+    const uint8_t*  m_fonts = NULL;
+    uint8_t         m_align = TFT_ALIGN_RIGHT;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    releasedArg     m_ra;
 public:
-    textbox(const char* name){
+    textbox(const char* name, const uint8_t* fonts = NULL){
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = 1;
+        m_fonts = fonts;
+        if(fonts)  for(int i = 0; i< 8; i++){log_i("%i, %i", i, fonts[i]);}
     }
     ~textbox(){
         if(m_text){free(m_text); m_text = NULL;}
@@ -733,7 +737,7 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
-        if(!m_text){char c[] = " "; m_text = c;}
+        if(!m_text){m_text = strdup("");}
         writeText(m_text, m_align);
     }
     void hide(){
@@ -746,6 +750,9 @@ public:
     void setFont(uint8_t size){
         m_fontSize = size;
         tft.setFont(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
     }
     void setBGcolor(uint32_t color){
         m_bgColor = color;
@@ -767,7 +774,14 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
+    void setText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        if(m_text){free(m_text); m_text = NULL;}
+        m_text = x_ps_strdup(txt);
+        m_align = align;
+    }
     void writeText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){
+        if(!txt){txt = strdup("");}
         if(m_text){free(m_text); m_text = NULL;}
         m_text = x_ps_strdup(txt);
         m_align = align;
@@ -777,12 +791,19 @@ public:
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            tft.setFont(m_fontSize);
-            uint8_t offset_v = 0;
-            if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
-            tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
-            tft.setTextColor(txtColor_tmp);
-            tft.setBackGoundColor(bgColor_tmp);
+            if(m_fontSize != 0){ // fontSize given
+                tft.setFont(m_fontSize);
+                uint8_t offset_v = 0;
+                if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
+                tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
+                tft.setTextColor(txtColor_tmp);
+                tft.setBackGoundColor(bgColor_tmp);
+            }
+            else if(m_fonts != NULL){ // fontsArray given
+                for(int i = 8; i > 0; i--){
+
+                }
+            }
         }
     }
 };
@@ -2182,6 +2203,8 @@ private:
     uint8_t     m_segm_w = 0;
     uint8_t     m_segm_h = 0;
     uint8_t     m_frameSize = 1;
+    uint16_t    m_real_w = 0;
+    uint16_t    m_real_h = 0;
 public:
     vuMeter(const char* name){
         if(name) m_name = x_ps_strdup(name);
@@ -2191,9 +2214,11 @@ public:
     ~vuMeter(){
         if(m_name){free(m_name); m_name = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t dummy_w, uint16_t dummy_h){
+    void begin(uint16_t x, uint16_t y, uint16_t real_w, uint16_t real_h){
         m_x = x; // x pos
         m_y = y; // y pos
+        m_real_w = real_w;
+        m_real_h = real_h;
 #if TFT_CONTROLLER < 2 // 320 x 240px
         m_segm_w = 9;
         m_segm_h = 7;
@@ -2207,6 +2232,7 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
+        tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
         tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
         for(uint8_t i = 0; i < 12; i++){
             drawRect(i, 0, 0);
@@ -2581,7 +2607,10 @@ public:
     }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
-        if(!m_timeCounter) updateRSSI(m_rssi, true);
+        if(!m_timeCounter) {
+            tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
+            updateRSSI(m_rssi, true);
+        }
         else{
             uint16_t x0   = m_rssiSymbol_x;
             uint16_t x1x2 = round(m_rssiSymbol_x + ((float)((m_rssiSymbol_w) / 10) * timeCounter));
@@ -2636,7 +2665,9 @@ public:
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        uint8_t pos = 0;
+        if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, pos);
         if(!m_enabled) return false;
         return true;
     }
