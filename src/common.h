@@ -237,6 +237,7 @@ void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
 void           muteChanged(bool m);
+void           setTimeCounter(uint8_t sec);
 
 //prototypes (audiotask.cpp)
 void           audioInit();
@@ -750,6 +751,9 @@ public:
         m_fontSize = size;
         tft.setFont(m_fontSize);
     }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+    }
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
@@ -770,7 +774,14 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
+    void setText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        if(m_text){free(m_text); m_text = NULL;}
+        m_text = x_ps_strdup(txt);
+        m_align = align;
+    }
     void writeText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){
+        if(!txt){txt = strdup("");}
         if(m_text){free(m_text); m_text = NULL;}
         m_text = x_ps_strdup(txt);
         m_align = align;
@@ -2591,7 +2602,10 @@ public:
     }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
-        if(!m_timeCounter) updateRSSI(m_rssi, true);
+        if(!m_timeCounter) {
+            tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
+            updateRSSI(m_rssi, true);
+        }
         else{
             uint16_t x0   = m_rssiSymbol_x;
             uint16_t x1x2 = round(m_rssiSymbol_x + ((float)((m_rssiSymbol_w) / 10) * timeCounter));
@@ -2646,7 +2660,9 @@ public:
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
-        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        uint8_t pos = 0;
+        if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, pos);
         if(!m_enabled) return false;
         return true;
     }

@@ -2607,62 +2607,70 @@ void TFT::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, ui
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-int16_t TFT::validCharsInString(const char* strPtr, uint8_t* sequenceLength) { // returns the codepoint of a printable character, the AnsiColor and the sequenceLength
-    uint16_t codePoint = 0;
-    switch((uint8_t)strPtr[0]) {
-        case '\033': // ANSI sequence
-                        if(strcmp(strPtr, "\033[30m") == 0) {*sequenceLength = 5;            return TFT_BLACK;  } // ANSI_ESC_BLACK
-                        if(strcmp(strPtr, "\033[31m") == 0) {*sequenceLength = 5;            return TFT_RED;    } // ANSI_ESC_RED
-                        if(strcmp(strPtr, "\033[32m") == 0) {*sequenceLength = 5;            return TFT_GREEN;  } // ANSI_ESC_GREEN
-                        if(strcmp(strPtr, "\033[33m") == 0) {*sequenceLength = 5;            return TFT_YELLOW; } // ANSI_ESC_YELLOW
-                        if(strcmp(strPtr, "\033[34m") == 0) {*sequenceLength = 5;            return TFT_BLUE;   } // ANSI_ESC_BLUE
-                        if(strcmp(strPtr, "\033[35m") == 0) {*sequenceLength = 5;            return TFT_MAGENTA;} // ANSI_ESC_MAGENTA
-                        if(strcmp(strPtr, "\033[36m") == 0) {*sequenceLength = 5;            return TFT_CYAN;   } // ANSI_ESC_CYAN
-                        if(strcmp(strPtr, "\033[37m") == 0) {*sequenceLength = 5;            return TFT_WHITE;  } // ANSI_ESC_WHITE
-                        if(strcmp(strPtr, "\033[38;5;130m") == 0) {*sequenceLength = 11;     return TFT_BROWN;  } // ANSI_ESC_BROWN
-                        if(strcmp(strPtr, "\033[38;5;214m") == 0) {*sequenceLength = 11;     return TFT_ORANGE; } // ANSI_ESC_ORANGE
-                        if(strcmp(strPtr, "\033[0m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_RESET       unused
-                        if(strcmp(strPtr, "\033[1m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_BOLD        unused
-                        if(strcmp(strPtr, "\033[2m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_FAINT       unused
-                        if(strcmp(strPtr, "\033[3m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_ITALIC      unused
-                        if(strcmp(strPtr, "\033[4m") == 0) {*sequenceLength = 4;             return -1;         } // ANSI_ESC_UNDERLINE   unused
-                        log_w("unknown ANSI ESC SEQUENCE");
-                        *sequenceLength = 4;
-                        return -1;
-                        break;
-        case 0x20 ... 0x7F: // is ASCII
-                        *sequenceLength = 1;
-                        codePoint = (uint8_t)strPtr[0];
-                        break;
-        case 0xC2 ... 0xD1:
-                        codePoint = (uint8_t)strPtr[0] * 0x40 + (uint8_t)strPtr[1];
-                        if(_current_font.lookup_table[codePoint] != 0) {
-                            *sequenceLength = 2; // is valid UTF8 char
-                        }
-                        else {
-                            *sequenceLength = 2;
-                            log_w("character %c is not in table", strPtr);
-                        }
-                        break;
-        case 0xD2 ... 0xDF:
-                       *sequenceLength = 2; log_w("character %c is not in table", strPtr);
-                       break;
-        case 0xE0:
-                       if((uint8_t)strPtr[1] == 0x80 && (uint8_t)strPtr[2] == 0x99) { codePoint = 0xA4; } // special sign 0xe28099 (general punctuation)
-                       else log_w("character %c is not in table", strPtr);
-                       *sequenceLength = 3;
-                       break;
-        case 0xE1 ... 0xEF:
-                        *sequenceLength = 3;
-                        break;
-        case 0xF0 ... 0xFF:
-                        *sequenceLength = 4;
-                        break;
-        default:
-                        log_w("char is not printable"); // > 0xE0
-                        *sequenceLength = 1;
+// The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
+// For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
+// If an ANSI sequence is found, the color found is written into ansiArr at the position of the current character. The return value is the number of printable character.
+uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr) {
+    int16_t codePoint = -1;
+    uint16_t idx = 0;
+    uint16_t chLen = 0;
+    while((uint8_t)str[idx] != 0){
+        switch((uint8_t)str[idx]) {
+            case '\033': // ANSI sequence
+                            if(strncmp(str + idx, "\033[30m", 5) == 0) {idx += 5;            ansiArr[chLen] =  1; break;}  // ANSI_ESC_BLACK
+                            if(strncmp(str + idx, "\033[31m", 5) == 0) {idx += 5;            ansiArr[chLen] =  2; break;}  // ANSI_ESC_RED
+                            if(strncmp(str + idx, "\033[32m", 5) == 0) {idx += 5;            ansiArr[chLen] =  3; break;}  // ANSI_ESC_GREEN
+                            if(strncmp(str + idx, "\033[33m", 5) == 0) {idx += 5;            ansiArr[chLen] =  4; break;}  // ANSI_ESC_YELLOW
+                            if(strncmp(str + idx, "\033[34m", 5) == 0) {idx += 5;            ansiArr[chLen] =  5; break;}  // ANSI_ESC_BLUE
+                            if(strncmp(str + idx, "\033[35m", 5) == 0) {idx += 5;            ansiArr[chLen] =  6; break;}  // ANSI_ESC_MAGENTA
+                            if(strncmp(str + idx, "\033[36m", 5) == 0) {idx += 5;            ansiArr[chLen] =  7; break;}  // ANSI_ESC_CYAN
+                            if(strncmp(str + idx, "\033[37m", 5) == 0) {idx += 5;            ansiArr[chLen] =  8; break;}  // ANSI_ESC_WHITE
+                            if(strncmp(str + idx, "\033[38;5;130m", 11) == 0) {idx += 11;    ansiArr[chLen] =  9; break;}  // ANSI_ESC_BROWN
+                            if(strncmp(str + idx, "\033[38;5;214m", 11) == 0) {idx += 11;    ansiArr[chLen] = 10; break;}  // ANSI_ESC_ORANGE
+                            if(strncmp(str + idx, "\033[0m", 4) == 0) {idx += 4;             ansiArr[chLen] = -1; break;}  // ANSI_ESC_RESET       unused
+                            if(strncmp(str + idx, "\033[1m", 4) == 0) {idx += 4;             ansiArr[chLen] = -1; break;}  // ANSI_ESC_BOLD        unused
+                            if(strncmp(str + idx, "\033[2m", 4) == 0) {idx += 4;             ansiArr[chLen] = -1; break;}  // ANSI_ESC_FAINT       unused
+                            if(strncmp(str + idx, "\033[3m", 4) == 0) {idx += 4;             ansiArr[chLen] = -1; break;}  // ANSI_ESC_ITALIC      unused
+                            if(strncmp(str + idx, "\033[4m", 4) == 0) {idx += 4;             ansiArr[chLen] = -1; break;}  // ANSI_ESC_UNDERLINE   unused
+                            log_w("unknown ANSI ESC SEQUENCE");       {idx += 4;             ansiArr[chLen] = -1; break;}  // unknown
+                            break;
+            case 0x20 ... 0x7F: // is ASCII
+                            chArr[chLen] = (uint8_t)str[idx]; // codepoint
+                            idx   += 1;
+                            chLen += 1;
+                            break;
+            case 0xC2 ... 0xD1:
+                            codePoint = ((uint8_t)str[idx] - 0xC2)  * 0x40 + (uint8_t)str[idx + 1]; // codepoint
+                            if(_current_font.lookup_table[codePoint] != 0) {  // is invalid UTF8 char
+                                chArr[chLen] = codePoint;
+                                chLen += 1;
+                            }
+                            else{
+                                log_w("character 0x%02X%02X is not in table", str[idx], str[idx + 1]);
+                            }
+                            idx += 2;
+                            break;
+            case 0xD2 ... 0xDF:
+                           log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
+                           idx += 2;
+                           break;
+            case 0xE0:
+                           if((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99) { codePoint = 0xA4;  chLen += 1;} // special sign 0xe28099 (general punctuation)
+                           else log_w("character %02X%02X  is not in table", str[idx], str[idx + 1]);
+                           idx += 3;
+                           break;
+            case 0xE1 ... 0xEF:
+                            idx += 3;
+                            break;
+            case 0xF0 ... 0xFF:
+                            idx += 4;
+                            break;
+            default:
+                            log_w("char is not printable 0x%02X", (uint8_t)str[idx]);
+                            idx += 1;
+        }
     }
-return codePoint;
+    return chLen;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2670,17 +2678,9 @@ return codePoint;
 size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align, bool narrow, bool noWrap){
 
     uint16_t idx = 0;
-    uint16_t utfPosArr[512] = {0};
+    uint16_t utfPosArr[strlen(str) + 1] = {0};
+    int8_t   ansiArr[strlen(str) + 1] = {0};
     uint16_t strChLength = 0; // nr. of chars
-    uint16_t ANSIcolor = 0;
-    uint16_t ANSIcolor1 = 0;
-    uint16_t ANSIcolor2 = 0;
-    uint16_t ANSIcolor3 = 0;
-    uint16_t ANSIcolor4 = 0;
-    int16_t  ANSIcolorPos1 = -1;
-    int16_t  ANSIcolorPos2 = -1;
-    int16_t  ANSIcolorPos3 = -1;
-    int16_t  ANSIcolorPos4 = -1;
 
 //-------------------------------------------------------------------------------------------------------------------
     auto fitInLine = [&](uint16_t begin, uint16_t maxPxLength, uint16_t* usedPxLength) {  // lambda
@@ -2723,48 +2723,8 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         return adv_w;
     };
 //-------------------------------------------------------------------------------------------------------------------
-    while(str[idx] != 0){
-        if((uint8_t)str[idx] == '\033'){ // ANSI sequence
-            if((uint8_t)str[idx + 1] == '[' && (uint8_t)str[idx + 2] == '3' && (uint8_t)str[idx + 4] == 'm'){
-                switch (str[idx + 3]) {
-                    case '0':   ANSIcolor = TFT_BLACK;         break; // ANSI_ESC_BLACK
-                    case '1':   ANSIcolor = TFT_RED;           break; // ANSI_ESC_RED
-                    case '2':   ANSIcolor = TFT_GREEN;         break; // ANSI_ESC_GREEN
-                    case '3':   ANSIcolor = TFT_YELLOW;        break; // ANSI_ESC_YELLOW
-                    case '4':   ANSIcolor = TFT_BLUE;          break; // ANSI_ESC_BLUE
-                    case '5':   ANSIcolor = TFT_MAGENTA;       break; // ANSI_ESC_MAGENTA
-                    case '6':   ANSIcolor = TFT_CYAN;          break; // ANSI_ESC_CYAN
-                    case '7':   ANSIcolor = TFT_WHITE;         break; // ANSI_ESC_WHITE
-                    default: log_w("unknown ANSI ESCAPE COLOR SEQUENCE "); break;
-                }
-                if(ANSIcolorPos1 == -1){ANSIcolorPos1 = strChLength; ANSIcolor1 = ANSIcolor; idx += 5; continue;}
-                if(ANSIcolorPos2 == -1){ANSIcolorPos2 = strChLength; ANSIcolor2 = ANSIcolor; idx += 5; continue;}
-                if(ANSIcolorPos3 == -1){ANSIcolorPos3 = strChLength; ANSIcolor3 = ANSIcolor; idx += 5; continue;}
-                if(ANSIcolorPos4 == -1){ANSIcolorPos4 = strChLength; ANSIcolor4 = ANSIcolor; idx += 5; continue;}
-            }
-        }
-        uint16_t codePoint = 0;
-        if((uint8_t)str[idx] >= 0xE0){
-            if((uint8_t)str[idx + 1] == 0x80 && (uint8_t)str[idx + 2] == 0x99){
-                idx += 3; codePoint = 0x27;   // special sign 0xe28099 (general punctuation)
-            }
-            else{log_w("char can't displayed 0x%x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1], (uint8_t)str[idx + 2]); idx += 3; codePoint = 0xA4;}
-        }
-        else if((uint8_t)str[idx] == 0xD1 && (uint8_t)str[idx + 1] > 0x9D) {log_w("char can't displayed 0x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1]); idx += 2; codePoint = 0xA4;}
-        else if((uint8_t)str[idx] >  0xD1){log_w("char can't displayed 0x%x%x", (uint8_t)str[idx], (uint8_t)str[idx + 1]); idx += 2; codePoint = 0xA4;}
-        else if((uint8_t)str[idx] >= 0xC2){ //next char is UTF-8
-            codePoint =((uint8_t)str[idx + 1] + ((uint8_t)str[idx]-0xC2) * 64);
-            if(codePoint > _current_font.range_length) {log_w("char can't displayed 0x%x%x (not in charset)", (uint8_t)str[idx], (uint8_t)str[idx + 1]); codePoint = 0xA4;}
-            idx += 2;
-        }
-        else{
-            codePoint = (uint8_t)str[idx];
-            if(codePoint > _current_font.range_length) {log_w("char can't displayed 0x%x (not in charset)", (uint8_t)str[idx]); codePoint = 0xA4;}
-            idx++;
-        }
-        utfPosArr[strChLength] = codePoint;
-        strChLength++;
-    }
+
+    strChLength = validCharsInString(str, utfPosArr, ansiArr);
     if(!strChLength) return 0;
     //----------------------------------------------------------------------
     if((win_X + win_W)  > width()) {win_W  = width()  - win_X;} // Limit, right edge of the display
@@ -2779,7 +2739,6 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     uint16_t charsToDraw = 0;
     uint16_t usedPxLength = 0;
     uint16_t charsDrawn = 0;
-
     while(true){ // outer while
         if(noWrap && idx) goto exit;
         if(pH < _current_font.line_height){goto exit;}
@@ -2788,11 +2747,19 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         if(align == TFT_ALIGN_CENTER){ pX += (win_W - usedPxLength) /2;}
         uint16_t cnt = 0;
         while(true){ // inner while
-            if(idx == ANSIcolorPos1) {setTextColor(ANSIcolor1); charsDrawn += 4;}
-            if(idx == ANSIcolorPos2) {setTextColor(ANSIcolor2); charsDrawn += 4;}
-            if(idx == ANSIcolorPos3) {setTextColor(ANSIcolor3); charsDrawn += 4;}
-            if(idx == ANSIcolorPos4) {setTextColor(ANSIcolor4); charsDrawn += 4;}
-            if(cnt == 0 && utfPosArr[idx] == 0x20) {idx++; charsDrawn++; continue;}
+            if(ansiArr[idx] != 0){ //
+                if(ansiArr[idx] ==  1) setTextColor(TFT_BLACK);
+                if(ansiArr[idx] ==  2) setTextColor(TFT_RED);
+                if(ansiArr[idx] ==  3) setTextColor(TFT_GREEN);
+                if(ansiArr[idx] ==  4) setTextColor(TFT_YELLOW);
+                if(ansiArr[idx] ==  5) setTextColor(TFT_BLUE);
+                if(ansiArr[idx] ==  6) setTextColor(TFT_MAGENTA);
+                if(ansiArr[idx] ==  7) setTextColor(TFT_CYAN);
+                if(ansiArr[idx] ==  8) setTextColor(TFT_WHITE);
+                if(ansiArr[idx] ==  9) setTextColor(TFT_BROWN);
+                if(ansiArr[idx] == 10) setTextColor(TFT_ORANGE);
+            }
+            if(cnt == 0 && utfPosArr[idx] == 0x20) {idx++; charsDrawn++; continue;} // skip leading spaces
             uint16_t res = drawChar(idx, pX, pY);
             pX += res;
             pW -= res;

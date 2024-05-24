@@ -141,7 +141,7 @@ class TFT{
         bool      drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
         bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
-        int16_t   validCharsInString(const char* strPtr, uint8_t* sequenceLength);
+        uint16_t  validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
         size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
 
         inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor;}
