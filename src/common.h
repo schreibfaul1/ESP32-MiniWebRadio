@@ -55,66 +55,68 @@
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
-        #define TFT_CS           22
-        #define TFT_DC           21
-        #define TFT_BL           32  // at -1 the brightness menu is not displayed
-        #define TP_IRQ           39  // VN
-        #define TP_CS             5
-        #define SD_MMC_D0         2  // cannot be changed
-        #define SD_MMC_CLK       14  // cannot be changed
-        #define SD_MMC_CMD       15  // cannot be changed
-        #define IR_PIN           35  // IR Receiver (if available)
-        #define TFT_MOSI         23  // TFT and TP (VSPI)
-        #define TFT_MISO         19  // TFT and TP (VSPI)
-        #define TFT_SCK          18  // TFT and TP (VSPI)
+        #define TFT_CS             22
+        #define TFT_DC             21
+        #define TFT_BL             32  // at -1 the brightness menu is not displayed
+        #define TP_IRQ             39  // VN
+        #define TP_CS               5
+        #define SD_MMC_D0           2  // cannot be changed
+        #define SD_MMC_CLK         14  // cannot be changed
+        #define SD_MMC_CMD         15  // cannot be changed
+        #define IR_PIN             35  // IR Receiver (if available)
+        #define TFT_MOSI           23  // TFT and TP (VSPI)
+        #define TFT_MISO           19  // TFT and TP (VSPI)
+        #define TFT_SCK            18  // TFT and TP (VSPI)
 
-        #define I2S_DOUT         25
-        #define I2S_BCLK         27
-        #define I2S_LRC          26
-        #define I2S_MCLK          0  // mostly not used
+        #define I2S_DOUT           25
+        #define I2S_BCLK           27
+        #define I2S_LRC            26
+        #define I2S_MCLK            0  // mostly not used
 
-        #define I2C_DATA         -1  // some DACs are controlled via I2C
-        #define I2C_CLK          -1
-        #define SD_DETECT        -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT        -1
-        #define AMP_ENABLED      -1
+        #define I2C_DATA           -1  // some DACs are controlled via I2C
+        #define I2C_CLK            -1
+        #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
+        #define HP_DETECT          -1
+        #define AMP_ENABLED        -1
 
-        #define BT_EMITTER_RX    33  // TX pin - KCX Bluetooth Transmitter (-1 if not available)
-        #define BT_EMITTER_TX    36  // RX pin - KCX Bluetooth Transmitter (-1 if not available)
-        #define BT_EMITTER_LINK  34  // high if connected                  (-1 if not available)
-        #define BT_EMITTER_MODE  13  // high transmit - low receive        (-1 if not available)
+        #define BT_EMITTER_RX      33  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      36  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_LINK    34  // high if connected                     (-1 if not available)
+        #define BT_EMITTER_MODE    13  // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT -1
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     // Digital I/O used
-        #define TFT_CS            8
-        #define TFT_DC           12
-        #define TFT_BL           10 // at -1 the brightness menu is not displayed
-        #define TP_IRQ           39
-        #define TP_CS            15
-        #define SD_MMC_D0        11
-        #define SD_MMC_CLK       13
-        #define SD_MMC_CMD       14
-        #define IR_PIN            4  // IR Receiver (if available)
-        #define TFT_MOSI         18  // TFT and TP (FSPI)
-        #define TFT_MISO          2  // TFT and TP (FSPI)
-        #define TFT_SCK          17  // TFT and TP (FSPI)
+        #define TFT_CS              8
+        #define TFT_DC             12
+        #define TFT_BL             10 // at -1 the brightness menu is not displayed
+        #define TP_IRQ             39
+        #define TP_CS              15
+        #define SD_MMC_D0          11
+        #define SD_MMC_CLK         13
+        #define SD_MMC_CMD         14
+        #define IR_PIN              4  // IR Receiver (if available)
+        #define TFT_MOSI           18  // TFT and TP (FSPI)
+        #define TFT_MISO            2  // TFT and TP (FSPI)
+        #define TFT_SCK            17  // TFT and TP (FSPI)
 
-        #define I2S_DOUT          9
-        #define I2S_BCLK          3
-        #define I2S_LRC           1
-        #define I2S_MCLK          0
+        #define I2S_DOUT            9
+        #define I2S_BCLK            3
+        #define I2S_LRC             1
+        #define I2S_MCLK            0
 
-        #define I2C_DATA         -1  // some DACs are controlled via I2C
-        #define I2C_CLK          -1
-        #define SD_DETECT        -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT        -1
-        #define AMP_ENABLED      -1
+        #define I2C_DATA           -1  // some DACs are controlled via I2C
+        #define I2C_CLK            -1
+        #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
+        #define HP_DETECT          -1
+        #define AMP_ENABLED        -1
 
-        #define BT_EMITTER_RX    45  // TX pin - KCX Bluetooth Transmitter (-1 if not available)
-        #define BT_EMITTER_TX    38  // RX pin - KCX Bluetooth Transmitter (-1 if not available)
-        #define BT_EMITTER_LINK  19  // high if connected                  (-1 if not available)
-        #define BT_EMITTER_MODE  20  // high transmit - low receive        (-1 if not available)
+        #define BT_EMITTER_RX      45  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      38  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_LINK    19  // high if connected                     (-1 if not available)
+        #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
 #endif
 

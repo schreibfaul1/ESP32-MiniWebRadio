@@ -1595,6 +1595,7 @@ void setup() {
     }
 
     ticker100ms.attach(0.1, timer100ms);
+    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
     bt_emitter.begin();
 
     _dlnaLevel = 0;
@@ -1898,6 +1899,7 @@ void fall_asleep() {
     clearAll();
     setTFTbrightness(0);
     xSemaphoreGive(mutex_display);
+    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, HIGH); bt_emitter.cmd_PowerOff();}
     SerialPrintfln("falling asleep");
 }
 
@@ -1920,6 +1922,7 @@ void wake_up() {
             _f_newLogoAndStation = true;
             changeState(RADIO);
         }
+        if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
     }
 }
 
