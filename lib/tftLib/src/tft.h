@@ -142,6 +142,8 @@ class TFT{
         bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         uint16_t  validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
+        uint16_t  fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
+        uint8_t   fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H);
         size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
 
         inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor;}
@@ -160,6 +162,8 @@ class TFT{
         uint8_t _TFTcontroller = ILI9341;
         SPISettings     TFT_SPI;                     // SPI settings for this slave
         SPIClass*       spi_TFT = NULL;             // use in class TP
+
+        uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
 
         typedef struct{
         	const uint8_t* glyph_bitmap;
