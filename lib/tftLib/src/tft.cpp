@@ -2911,7 +2911,7 @@ uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, 
 
         currentFontSize--;
     }
-    log_i("nrOfFonts %i, currentFontSize %i", nrOfFonts, currentFontSize);
+//    log_i("nrOfFonts %i, currentFontSize %i", nrOfFonts, currentFontSize);
     return 0;
 }
 
@@ -2923,7 +2923,6 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     int8_t   ansiArr[strlen(str) + 1] = {0};
     uint16_t strChLength = 0; // nr. of chars
 
-   
     //-------------------------------------------------------------------------------------------------------------------
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
         uint16_t glyphPos = _current_font.lookup_table[utfPosArr[idx]];
@@ -2963,20 +2962,20 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         //charsToDraw = fitInLine(idx, pW, &usedPxLength);
         charsToDraw = fitInLine(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
-        if(align == TFT_ALIGN_RIGHT) { pX += win_W - (usedPxLength + 1); }
+        if(align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength + 1); }
         if(align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
         while(true) {               // inner while
             if(ansiArr[idx] != 0) { //
-                if(ansiArr[idx] == 1) setTextColor(TFT_BLACK);
-                if(ansiArr[idx] == 2) setTextColor(TFT_RED);
-                if(ansiArr[idx] == 3) setTextColor(TFT_GREEN);
-                if(ansiArr[idx] == 4) setTextColor(TFT_YELLOW);
-                if(ansiArr[idx] == 5) setTextColor(TFT_BLUE);
-                if(ansiArr[idx] == 6) setTextColor(TFT_MAGENTA);
-                if(ansiArr[idx] == 7) setTextColor(TFT_CYAN);
-                if(ansiArr[idx] == 8) setTextColor(TFT_WHITE);
-                if(ansiArr[idx] == 9) setTextColor(TFT_BROWN);
+                if(ansiArr[idx] ==  1) setTextColor(TFT_BLACK);
+                if(ansiArr[idx] ==  2) setTextColor(TFT_RED);
+                if(ansiArr[idx] ==  3) setTextColor(TFT_GREEN);
+                if(ansiArr[idx] ==  4) setTextColor(TFT_YELLOW);
+                if(ansiArr[idx] ==  5) setTextColor(TFT_BLUE);
+                if(ansiArr[idx] ==  6) setTextColor(TFT_MAGENTA);
+                if(ansiArr[idx] ==  7) setTextColor(TFT_CYAN);
+                if(ansiArr[idx] ==  8) setTextColor(TFT_WHITE);
+                if(ansiArr[idx] ==  9) setTextColor(TFT_BROWN);
                 if(ansiArr[idx] == 10) setTextColor(TFT_ORANGE);
             }
             if(cnt == 0 && utfPosArr[idx] == 0x20) {
