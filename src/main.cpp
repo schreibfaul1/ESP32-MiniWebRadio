@@ -1517,13 +1517,13 @@ void setup() {
     _f_SD_MMCfound = true;
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
-    if(TFT_BL >= 0) _f_brightnessIsChangeable = true;
+    if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
-#else
+#endif
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
-#endif
+
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
@@ -1595,7 +1595,9 @@ void setup() {
     }
 
     ticker100ms.attach(0.1, timer100ms);
-    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
+    if(BT_EMITTER_CONNECT != -1){
+        pinMode(BT_EMITTER_CONNECT, OUTPUT);
+        digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
     bt_emitter.begin();
 
     _dlnaLevel = 0;
