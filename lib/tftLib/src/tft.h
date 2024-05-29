@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 08 2024
+// updated on May 29 2024
 
 
 #pragma once
@@ -108,7 +108,8 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_ALIGN_RIGHT          (1)
 #define TFT_ALIGN_LEFT           (2)
 #define TFT_ALIGN_CENTER         (3)
-
+#define TFT_ALIGN_TOP            (4)
+#define TFT_ALIGN_DOWN           (5)
 
 class TFT{
     protected:
@@ -143,8 +144,8 @@ class TFT{
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         uint16_t  validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
         uint16_t  fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
-        uint8_t   fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H);
-        size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align = TFT_ALIGN_LEFT, bool narrow = false, bool noWrap = false);
+        uint8_t   fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
+        size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
 
         inline void setBackGoundColor(uint16_t BGcolor){_backGroundColor = BGcolor;}
         inline uint16_t getBackGroundColor(){return _backGroundColor;}

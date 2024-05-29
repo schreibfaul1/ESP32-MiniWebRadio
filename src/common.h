@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 21.May 2024
+// updated: 29.May 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -194,8 +194,7 @@ void           showVolumeBar();
 void           showBrightnessBar();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
-void           showLogoAndStationName();
-void           showStationName(String sn);
+void           showLogoAndStationName(bool force);
 void           showStationLogo(String ln);
 void           showFileLogo(uint8_t state);
 void           showFileName(const char* fname);
@@ -218,8 +217,6 @@ void           nextStation();
 void           prevStation();
 void           StationsItems();
 void           setStationViaURL(const char* url);
-void           changeBtn_pressed(uint8_t btnNr);
-void           changeBtn_released(uint8_t btnNr);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
 void           SD_playFile(const char* path, const char* fileName);
@@ -392,6 +389,42 @@ inline boolean strCompare(const char* str1, char* str2) { // returns true if str
     }
     return f;
 }
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
+    int   count;
+    char* sp; // start of pattern
+    // printf("replacestr(%s, %s, %s)\n", line, search, replace);
+    if((sp = strstr(line, search)) == NULL) { return (0); }
+    count = 1;
+    int sLen = strlen(search);
+    int rLen = strlen(replace);
+    if(sLen > rLen) {
+        // move from right to left
+        char* src = sp + sLen;
+        char* dst = sp + rLen;
+        while((*dst = *src) != '\0') {
+            dst++;
+            src++;
+        }
+    }
+    else if(sLen < rLen) {
+        // move from left to right
+        int   tLen = strlen(sp) - sLen;
+        char* stop = sp + rLen;
+        char* src = sp + sLen + tLen;
+        char* dst = sp + rLen + tLen;
+        while(dst >= stop) {
+            *dst = *src;
+            dst--;
+            src--;
+        }
+    }
+    memcpy(sp, replace, rLen);
+    count += replacestr(sp + rLen, search, replace);
+    return (count);
+}
+
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline char* x_ps_malloc(uint16_t len) {
@@ -707,24 +740,23 @@ private:
     int16_t         m_w = 0;
     int16_t         m_h = 0;
     uint8_t         m_fontSize = 0;
-    const uint8_t*  m_fonts = NULL;
-    uint8_t         m_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_v_align = TFT_ALIGN_TOP;
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
     char*           m_text = NULL;
     char*           m_name = NULL;
     bool            m_enabled = false;
     bool            m_clicked = false;
+    bool            m_autoSize = false;
     releasedArg     m_ra;
 public:
-    textbox(const char* name, const uint8_t* fonts = NULL){
+    textbox(const char* name){
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_fontSize = 1;
-        m_fonts = fonts;
-        if(fonts)  for(int i = 0; i< 8; i++){log_i("%i, %i", i, fonts[i]);}
     }
     ~textbox(){
         if(m_text){free(m_text); m_text = NULL;}
@@ -740,7 +772,7 @@ public:
         m_enabled = true;
         m_clicked = false;
         if(!m_text){m_text = strdup("");}
-        writeText(m_text, m_align);
+        writeText(m_text);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -749,9 +781,12 @@ public:
     void disable(){
         m_enabled = false;
     }
-    void setFont(uint8_t size){
-        m_fontSize = size;
-        tft.setFont(m_fontSize);
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
     }
     void setTextColor(uint32_t color){
         m_fgColor = color;
@@ -776,36 +811,31 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){ // prepare a text, wait of show() to write it
+    void setText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT,  uint8_t v_align = TFT_ALIGN_TOP){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
         if(m_text){free(m_text); m_text = NULL;}
         m_text = x_ps_strdup(txt);
-        m_align = align;
+        m_h_align = h_align;
+        m_v_align = v_align;
     }
-    void writeText(const char* txt, uint8_t align = TFT_ALIGN_RIGHT){
+    void writeText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT, uint8_t v_align = TFT_ALIGN_TOP){
         if(!txt){txt = strdup("");}
-        if(m_text){free(m_text); m_text = NULL;}
-        m_text = x_ps_strdup(txt);
-        m_align = align;
+        if(txt != m_text){ // no self copy
+            if(m_text){free(m_text); m_text = NULL;}
+            m_text = x_ps_strdup(txt);
+        }
+        m_h_align = h_align;
+        m_v_align = v_align;
         if(m_enabled){
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            if(m_fontSize != 0){ // fontSize given
-                tft.setFont(m_fontSize);
-                uint8_t offset_v = 0;
-                if(m_fontSize < m_h) offset_v = (m_h - m_fontSize) / 2;
-                tft.writeText(m_text, m_x, m_y + offset_v, m_w, m_h, m_align);
-                tft.setTextColor(txtColor_tmp);
-                tft.setBackGoundColor(bgColor_tmp);
-            }
-            else if(m_fonts != NULL){ // fontsArray given
-                for(int i = 8; i > 0; i--){
-
-                }
-            }
+            if(m_fontSize != 0){ tft.setFont(m_fontSize);}
+            tft.writeText(m_text, m_x, m_y, m_w, m_h, m_h_align, m_v_align, false, false, m_autoSize);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
         }
     }
 };
@@ -1070,7 +1100,7 @@ public:
     bool show(){
         if(!GetImageSize(m_PicturePath)){
             GetImageSize(m_altPicturePath);
-            m_enabled = drawImage(m_altPicturePath, m_x, m_y);
+             m_enabled = drawImage(m_altPicturePath, m_x, m_y);
             return m_enabled;
         }
         else{
@@ -1084,6 +1114,9 @@ public:
     }
     void disable(){
         m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
     }
     void setPicturePath(const char* path){
         if(m_PicturePath){free(m_PicturePath); m_PicturePath = NULL;}
@@ -2123,6 +2156,7 @@ public:
     }
 private:
     void stationslist(bool first){
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(first){
             if(m_maxStations <= 10) m_firstStationsLineNr = 0;
             else  if(*m_curSstationNr < 5) m_firstStationsLineNr = 0;
@@ -2133,7 +2167,6 @@ private:
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         }
         char* stationStr = x_ps_malloc(1024);
-        if(!stationStr) {log_e("oom"); return;}
         tft.setFont(m_fontSize);
         for(uint8_t pos = 0; pos < 10; pos++) {
             if(pos + m_firstStationsLineNr + 1 > m_maxStations) break;
@@ -2149,6 +2182,7 @@ private:
             for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
             tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
         }
+        xSemaphoreGive(mutex_display);
     }
     void hasClicked(uint16_t x, uint16_t y){
         char staKey[15];
@@ -2585,6 +2619,7 @@ public:
     void updateRSSI(int8_t rssi, bool show = false){
         static int32_t old_rssi = -1;
         int8_t new_rssi = -1;
+        if(rssi >= 0) return;
         m_rssi = rssi;
         if(m_rssi < -1)  new_rssi = 4;
         if(m_rssi < -50) new_rssi = 3;
