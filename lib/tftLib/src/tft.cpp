@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 08 2024
+// updated on May 29 2024
 
 #include "tft.h"
 #include "Arduino.h"
@@ -2876,7 +2876,7 @@ uint16_t TFT::fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int1
     uint16_t glyphPos = 0;
     while(cpArr[idx] != 0) {
         *usedPxLength = pxLength;
-        if(cpArr[idx] == 0x20) {
+        if(cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
             lastSpacePos = drawableChars;
             lastUsedPxLength = pxLength;
         }
@@ -2898,30 +2898,53 @@ uint16_t TFT::fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int1
     return drawableChars;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H){
+uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap){
     // First, the largest character set is used to check whether a given string str fits into a window of size win_W - winH.
     // If this is not the case, the next smaller character set is selected and checked again.
-    // The largest possible character set (in px) is returned; if nothing fits, the smallest character set is returned. Then parts of the string will not be able to be written.
-    // cpArr contains the codepoints of the str, chLength determines th Length of cpArr
+    // The largest possible character set (in px) is used; if nothing fits, the smallest character set is used. Then parts of the string will not be able to be written.
+    // cpArr contains the codepoints of the str, chLength determines th Length of cpArr, returns the number of lines used
     uint8_t nrOfFonts = sizeof(fontSizes);
-    uint8_t currentFontSize = fontSizes[nrOfFonts - 1];
-    while(currentFontSize){
-
-
-
-        currentFontSize--;
+    uint8_t currentFontSize = 0;
+    uint16_t usedPxLength = 0;
+    uint16_t drawableCharsTotal = 0;
+    uint16_t drawableCharsInLine = 0;
+    uint16_t startPos = 0;
+    uint8_t  nrOfLines = 0;
+    while(true){
+        currentFontSize = fontSizes[nrOfFonts - 1];
+        if(currentFontSize == 0) break;
+        setFont(currentFontSize);
+        drawableCharsTotal = 0;
+        startPos = 0;
+        nrOfLines = 1;
+        int16_t win_H_remain = win_H;
+        while(true){
+            if(win_H_remain < _current_font.line_height) {break;}
+            drawableCharsInLine = fitInLine(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
+            win_H_remain -= _current_font.line_height;
+        //    log_i("drawableCharsInLine  %i,chLength  %i, currentFontSize %i", drawableCharsInLine, chLength, currentFontSize);
+            drawableCharsTotal += drawableCharsInLine;
+            startPos += drawableCharsInLine;
+            if(drawableCharsInLine == 0) break;
+            if(drawableCharsTotal == chLength) goto exit;
+            nrOfLines++;
+        }
+        if(drawableCharsTotal == chLength) goto exit;
+        if(nrOfFonts == 0) break;
+        nrOfFonts--;
     }
-//    log_i("nrOfFonts %i, currentFontSize %i", nrOfFonts, currentFontSize);
-    return 0;
+exit:
+//  log_w("nrOfLines  %i", nrOfLines);
+    return nrOfLines;
 }
-
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t align, bool narrow, bool noWrap) {
-
+size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
+    // autoSize choose the biggest possible font
     uint16_t idx = 0;
     uint16_t utfPosArr[strlen(str) + 1] = {0};
     int8_t   ansiArr[strlen(str) + 1] = {0};
     uint16_t strChLength = 0; // nr. of chars
+    uint8_t  nrOfLines = 1;
 
     //-------------------------------------------------------------------------------------------------------------------
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
@@ -2941,7 +2964,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     //-------------------------------------------------------------------------------------------------------------------
 
     strChLength = validCharsInString(str, utfPosArr, ansiArr); // fill utfPosArr,
-    fitInAddrWindow(utfPosArr, strChLength, win_W, win_H);
+    if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
     //----------------------------------------------------------------------
     if((win_X + win_W) > width()) { win_W = width() - win_X; }   // Limit, right edge of the display
@@ -2953,6 +2976,18 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     int16_t  pH = win_H;
     int16_t  pW = win_W;
 
+    if(v_align == TFT_ALIGN_TOP){
+        ; // nothing to do, is default
+    }
+    if(v_align == TFT_ALIGN_CENTER){
+        int offset = (win_H - (nrOfLines * _current_font.line_height)) / 2;
+        pY = pY + offset;
+    }
+    if(v_align == TFT_ALIGN_DOWN){
+        int offset = (win_H - (nrOfLines * _current_font.line_height));
+        pY = pY + offset;
+    }
+
     uint16_t charsToDraw = 0;
     uint16_t usedPxLength = 0;
     uint16_t charsDrawn = 0;
@@ -2962,8 +2997,8 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
         //charsToDraw = fitInLine(idx, pW, &usedPxLength);
         charsToDraw = fitInLine(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
-        if(align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength + 1); }
-        if(align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
+        if(h_align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength + 1); }
+        if(h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
         while(true) {               // inner while
             if(ansiArr[idx] != 0) { //
