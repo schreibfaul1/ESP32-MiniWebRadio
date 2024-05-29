@@ -2552,7 +2552,7 @@ void loop() {
                     _f_newIcyDescription = false;
                     webSrv.send("icy_description=", _icyDescription);
                 }
-                else txt_RA_sTitle.hide();
+                else txt_RA_sTitle.writeText("");
             }
             webSrv.send("streamtitle=", _streamTitle);
         }
