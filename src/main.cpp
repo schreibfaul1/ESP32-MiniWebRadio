@@ -1888,6 +1888,8 @@ void fall_asleep() {
     }
     if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, HIGH); bt_emitter.cmd_PowerOff();}
     SerialPrintfln("falling asleep");
+    dispHeader.hide();
+    dispFooter.hide();
 }
 
 void wake_up() {
@@ -2433,6 +2435,7 @@ void loop() {
                 if(f_tc){
                     f_tc = false;
                     dispFooter.updateTC(0);
+                    if(_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
                     if(_state == RADIO) {
                         _radioSubmenue = 0;
                         changeState(RADIO);
@@ -2486,11 +2489,10 @@ void loop() {
             }
         }
         //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
-        if(!_f_sleeping || _state == CLOCK) {
+        if(!_f_sleeping) {
             dispHeader.updateTime(rtc.gettime_s(), false);
             dispFooter.updateRSSI(WiFi.RSSI());
-        }
-        if(!_f_sleeping) {
+
             if(_f_newBitRate) {
                _f_newBitRate = false;
                dispFooter.updateBitRate(_icyBitRate);
@@ -3000,6 +3002,7 @@ void tp_released(uint16_t x, uint16_t y){
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
     // all state
+    dispHeader.released();
     dispFooter.released();
 
     switch(_state){
