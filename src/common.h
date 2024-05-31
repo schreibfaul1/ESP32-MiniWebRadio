@@ -2423,6 +2423,7 @@ public:
         m_bgColor = color;
     }
     void updateItem(const char* hl_item){// radio, clock, audioplayer...
+        if(!m_enabled) return;
         if(!hl_item) log_e("hl_item is NULL");
         char* tmp = strdup(hl_item);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
@@ -2440,6 +2441,7 @@ public:
     }
     void updateVolume(uint8_t vol){
         m_volume = vol;
+        if(!m_enabled) return;
         char buff[10];
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
@@ -2454,6 +2456,7 @@ public:
         updateVolume(m_volume);
     }
     void updateTime(const char* hl_time, bool complete = true){
+        if(!m_enabled) return;
         memcpy(m_time, hl_time, 8); // hhmmss
         static char oldtime[8] = {255}; // hhmmss
         uint8_t*    pos = NULL;
@@ -2586,6 +2589,7 @@ public:
     }
     void updateStation(uint16_t staNr){// radio, clock, audioplayer...
         m_staNr = staNr;
+        if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
@@ -2600,6 +2604,7 @@ public:
     }
     void updateOffTime(uint16_t offTime){
         m_offTime = offTime;
+        if(!m_enabled) return;
         char buff[15];
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
         tft.setFont(m_fontSize);
@@ -2634,7 +2639,7 @@ public:
                 if((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
                 tmp_rssi = rssi;
             }
-            show = true;
+            if(m_enabled) show = true;
         }
         if(show) {
             xSemaphoreTake(mutex_display, portMAX_DELAY);
@@ -2644,6 +2649,7 @@ public:
     }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
+        if(!m_enabled) return;
         if(!m_timeCounter) {
             tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
             updateRSSI(m_rssi, true);
@@ -2660,6 +2666,7 @@ public:
 
     void updateBitRate(uint32_t bitRate){
         m_bitRate = bitRate;
+        if(!m_enabled) return;
         char sbr[10];
         itoa(bitRate, sbr, 10);
         if(m_bitRate < 1000) { strcat(sbr, "K"); }
