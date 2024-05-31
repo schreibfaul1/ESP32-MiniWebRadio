@@ -73,6 +73,7 @@ uint8_t             _cur_Codec = 0;
 uint8_t             _numServers = 0; //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
+uint8_t             _sleepMode = 0;   // 0 display off, 1 show the clock
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
@@ -422,7 +423,8 @@ boolean defaultsettings(){
         strcat(jO, "\"toneBP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
-        strcat(jO, "\"timeFormat\":");        strcat(jO, "24}");
+        strcat(jO, "\"timeFormat\":");        strcat(jO, "24,");
+        strcat(jO, "\"sleepMode\":");         strcat(jO, "0}"); // 0 display off, 1 clock
         file.print(jO);
         if(jO){free(jO); jO = NULL;}
     }
@@ -477,6 +479,7 @@ boolean defaultsettings(){
     _TZName              =         parseJson("\"Timezone_Name\":");
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
+    _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
 
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
@@ -631,7 +634,8 @@ void updateSettings(){
     sprintf(tmp, ",\"toneBP\":%i", _toneBP);                                                strcat(jO, tmp);
     sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                                strcat(jO, tmp);
     sprintf(tmp, ",\"balance\":%i", _toneBAL);                                              strcat(jO, tmp);
-    sprintf(tmp, ",\"timeFormat\":%i}", _timeFormat);                                       strcat(jO, tmp);
+    sprintf(tmp, ",\"timeFormat\":%i", _timeFormat);                                        strcat(jO, tmp);
+    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                         strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -863,17 +867,17 @@ void showLogoAndStationName(bool force) {
         if(old_SN_utf8){free(old_SN_utf8); old_SN_utf8 = strdup("");}
     }
 
-
     if(_cur_station) {
         SN_utf8 = x_ps_calloc(_stationName_nvs.length() + 12, 1);
         memcpy(SN_utf8, _stationName_nvs.c_str(), _stationName_nvs.length() + 1);
     }
     else {
-        SN_utf8 = x_ps_calloc(strlen(_stationName_air) + 1, 1);
+        if(!_stationName_air) _stationName_air = strdup("");
+        SN_utf8 = x_ps_calloc(strlen(_stationName_air) + 12, 1);
         memcpy(SN_utf8, _stationName_air,  strlen(_stationName_air) + 1);
     }
     trim(SN_utf8);
-    if(strcmp(old_SN_utf8, SN_utf8) == 0) {return;}
+    if(strcmp(old_SN_utf8, SN_utf8) == 0) {goto exit;}
     if(old_SN_utf8){free(old_SN_utf8); old_SN_utf8 = NULL;}
     old_SN_utf8 = x_ps_strdup(SN_utf8);
     txt_RA_staName.setTextColor(TFT_CYAN);
@@ -885,7 +889,7 @@ void showLogoAndStationName(bool force) {
     pic_RA_logo.setPicturePath(SN_utf8);
     pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
     pic_RA_logo.show();
-
+exit:
     if(SN_utf8){free(SN_utf8); SN_utf8 = NULL;}
 }
 
@@ -1870,40 +1874,36 @@ void headphoneDetect() { // called via interrupt
 }
 
 void fall_asleep() {
-    xSemaphoreTake(mutex_display, portMAX_DELAY);
     _f_sleeping = true;
     _f_playlistEnabled = false;
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     audioStopSong();
-    clearAll();
-    setTFTbrightness(0);
-    xSemaphoreGive(mutex_display);
+    if(_sleepMode == 0){
+        clearAll();
+        setTFTbrightness(0);
+    }
+    else{
+        changeState(CLOCK);
+    }
     if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, HIGH); bt_emitter.cmd_PowerOff();}
     SerialPrintfln("falling asleep");
 }
 
 void wake_up() {
-    if(_f_sleeping == true || _f_eof_alarm) { // awake
-        _f_sleeping = false;
-        SerialPrintfln("awake");
-        _f_mute = true;
-        muteChanged(false);
-        clearAll();
-        setTFTbrightness(_brightness);
-        connecttohost(_lastconnectedhost.c_str());
-        dispHeader.show();
-        dispFooter.show();
-        if(_state == CLOCK) {
-            clk_CL_green.show();
-        }
-        else {
-            _radioSubmenue = 0;
-            _f_newStationName = true;
-            changeState(RADIO);
-        }
-        if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
-    }
+    _f_sleeping = false;
+    SerialPrintfln("awake");
+    _f_mute = true;
+    muteChanged(false);
+    clearAll();
+    setTFTbrightness(_brightness);
+    connecttohost(_lastconnectedhost.c_str());
+    _radioSubmenue = 0;
+    changeState(RADIO);
+    showLogoAndStationName(true);
+    dispHeader.show();
+    dispFooter.show();
+    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
 }
 
 void setRTC(const char* TZString) {
@@ -2260,7 +2260,7 @@ void changeState(int32_t state){
             if(_radioSubmenue == 3){ // show Numbers from IR
                 char buf[10];
                 itoa(_irNumber, buf, 10);
-                txt_RA_irNum.setText(buf, TFT_ALIGN_CENTER);
+                txt_RA_irNum.setText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
                 txt_RA_irNum.show();
                 setTimeCounter(1);
             }
@@ -2483,16 +2483,14 @@ void loop() {
                 audioSetVolume(_cur_volume);
                 dispHeader.updateVolume(_cur_volume);
                 wake_up();
-                _radioSubmenue = 0;
-                changeState(RADIO);
-                connecttohost(_lastconnectedhost.c_str());
-                showLogoAndStationName(true);
             }
         }
         //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
-        if(!_f_sleeping) {
+        if(!_f_sleeping || _state == CLOCK) {
             dispHeader.updateTime(rtc.gettime_s(), false);
             dispFooter.updateRSSI(WiFi.RSSI());
+        }
+        if(!_f_sleeping) {
             if(_f_newBitRate) {
                _f_newBitRate = false;
                dispFooter.updateBitRate(_icyBitRate);
@@ -2852,7 +2850,7 @@ void ir_key(uint8_t key) {
     }
 }
 void ir_long_key(int8_t key) {
-    log_i("long pressed key nr: %i", key);
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
     if(key == 10) fall_asleep(); // long mute
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3198,8 +3196,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     if(  !_f_timeAnnouncement) webSrv.send("timeAnnouncement=", "0");
                                     return;}
 
-    if(cmd == "set_timeAnnouncement"){ if(param == "true" ) _f_timeAnnouncement = true;
-                                    if(   param == "false") _f_timeAnnouncement = false;
+    if(cmd == "set_timeAnnouncement"){ if(param == "true" ) {_f_timeAnnouncement = true;}
+                                    if(   param == "false") {_f_timeAnnouncement = false;}
+                                    SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "%s", (_f_timeAnnouncement == 1) ? "on" : "off");
                                     return;}
 
     if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); _currDLNAsrvNr = -1; return;}
@@ -3292,6 +3291,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         clearWithOutHeaderFooter();
                                    }
                                    SerialPrintfln("TimeFormat:  " ANSI_ESC_YELLOW "new time format: " ANSI_ESC_BLUE "%sh", param.c_str());
+                                   return;}
+
+    if(cmd == "getSleepMode"){     webSrv.send("sleepMode=", String(_sleepMode, 10));
+                                   return;}
+
+    if(cmd == "setSleepMode"){     _sleepMode = param.toInt();
+                                   if(_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");
+                                   if(_sleepMode == 1) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Show the time");
                                    return;}
 
     if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp

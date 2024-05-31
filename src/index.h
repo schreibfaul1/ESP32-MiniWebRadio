@@ -413,6 +413,7 @@ function connect() {
         socket.send("getnetworks=")
         socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
+        socket.send("getSleepMode")
 
         setInterval(ping, 20000)
     };
@@ -535,6 +536,10 @@ function connect() {
                                         if     (val == '12') radiobtn = document.getElementById("h12")
                                         else if(val == '24') radiobtn = document.getElementById("h24")
                                         else{console.log("wrong timeFormat ", val); break;}
+                                        radiobtn.checked = true;
+                                        break;
+            case "sleepMode":           if  (val == "0") radiobtn = document.getElementById("sleepMode0")
+                                        else if(val == '1') radiobtn = document.getElementById("sleepMode1")
                                         radiobtn.checked = true;
                                         break;
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
@@ -2284,6 +2289,18 @@ function clear_BT_memItems(){
                         <div>
                             <input type="radio" id="h24" name="timeFormat" value="24h" checked onclick="socket.send('setTimeFormat=24');">
                             <label for="h24">24h</label>
+                        </div>
+                    </fieldset>
+                    <br>
+                    <fieldset>
+                        <legend> sleep mode </legend>
+                        <div>
+                            <input type="radio" id="sleepMode0" name="sleepMode" value="display off" onclick="socket.send('setSleepMode=0');">
+                            <label for="sleepMode0">display off</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="sleepMode1" name="sleepMode" value="show the time" checked onclick="socket.send('setSleepMode=1');">
+                            <label for="sleepMode1">show the time</label>
                         </div>
                     </fieldset>
                 </td>

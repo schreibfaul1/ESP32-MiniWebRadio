@@ -772,7 +772,7 @@ public:
         m_enabled = true;
         m_clicked = false;
         if(!m_text){m_text = strdup("");}
-        writeText(m_text);
+        writeText(m_text, m_h_align, m_v_align);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
