@@ -52,6 +52,8 @@
 #include "WM8978.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
+#include <freertos/task.h>
+
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -2725,3 +2727,62 @@ public:
 private:
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline void GetRunTimeStats( char *pcWriteBuffer ){
+    TaskStatus_t *pxTaskStatusArray;
+    volatile UBaseType_t uxArraySize, x;
+    uint32_t ulTotalRunTime, ulStatsAsPercentage;
+    char leftSpace[] = "             ";
+
+    // Make sure the write buffer does not contain a string.
+    *pcWriteBuffer = 0x00;
+
+    // Take a snapshot of the number of tasks in case it changes while this function is executing.
+    uxArraySize = uxTaskGetNumberOfTasks();
+
+    // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
+    pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+
+    if( pxTaskStatusArray != NULL ) {
+     // Generate raw status information about each task.
+        uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime );
+
+        // For percentage calculations.
+        ulTotalRunTime /= 100UL;
+
+        char* tmpBuff = (char*) malloc(100);
+        strcpy(pcWriteBuffer, leftSpace);
+        strcat(pcWriteBuffer, ANSI_ESC_YELLOW "TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
+        strcat(pcWriteBuffer, leftSpace);
+        strcat(pcWriteBuffer,                 "--------------------+----------------+-----------------+------+-------|\n");
+
+        // Avoid divide by zero errors.
+        if(ulTotalRunTime > 0){
+            // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
+            for( x = 0; x < uxArraySize; x++ ) {
+                // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
+                // ulTotalRunTimeDiv100 has already been divided by 100.
+                ulStatsAsPercentage = pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
+                memset(tmpBuff, 0x20, 100);
+                memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
+                tmpBuff[20] = '|';
+                uint8_t core = (pxTaskStatusArray[x].xCoreID);
+                uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
+                if(ulStatsAsPercentage){
+                    sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4d  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
+                }
+                else{
+                    sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4d  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, core, prio);
+                }
+                uint8_t i = 23; while(tmpBuff[i] == '0') {tmpBuff[i] = ' '; i++;}
+                if(tmpBuff[45] == '0') tmpBuff[45] = ' ';
+                strcat(pcWriteBuffer, leftSpace);
+                strcat(pcWriteBuffer, tmpBuff);
+                strcat(pcWriteBuffer, "\n");
+            }
+            free(tmpBuff);
+        }
+        // The array is no longer needed, free the memory it consumes.
+        vPortFree( pxTaskStatusArray );
+    }
+}

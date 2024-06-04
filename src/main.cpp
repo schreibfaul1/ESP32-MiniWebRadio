@@ -2659,6 +2659,11 @@ void loop() {
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "mute increment"); }
             audioMute(false);
         }
+        if(r.startsWith("s")) {
+            char timeStatsBuffer[1024 * 2];
+            GetRunTimeStats(timeStatsBuffer);
+            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
+        }
         if(r.toInt() != 0) { // is integer?
             if(audioSetTimeOffset(r.toInt())) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt()); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible"); }
