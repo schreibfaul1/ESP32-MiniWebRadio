@@ -1814,9 +1814,9 @@ private:
 
     void hasReleased(uint16_t x, uint16_t y){
 
-        bool guard1 = m_dlnaServer.friendlyName.size() > m_itemListPos - 1;
-        bool guard2 = m_srvContent.itemURL.size() >  m_itemListPos - 1;
-        bool guard3 = m_srvContent.title.size() > m_itemListPos - 1;
+        bool guard1 = false; if(m_dlnaServer.friendlyName.size() > (m_itemListPos -1)) guard1 = true;
+        bool guard2 = false; if(m_srvContent.itemURL.size() >  (m_itemListPos - 1)) guard2 = true;
+        bool guard3 = false; if(m_srvContent.title.size() > (m_itemListPos - 1)) guard3 = true;
 
         if(!m_buff) m_buff = x_ps_malloc(512);
         m_itemListPos = y / (m_h / 10);
@@ -1861,22 +1861,27 @@ private:
             goto exit;
         }
 
-        if(*m_dlnaLevel == 0){  // server list
-            if(guard1 == false) goto exit;
-            m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
-            m_currDLNAsrvNr = m_itemListPos - 1;
-            (*m_dlnaLevel) ++;
-            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
-            m_browseOnRelease = 1;
+        if(m_itemListPos == 0){ // content list
+            m_currItemNr = -1;
+            (*m_dlnaLevel) --;
+            m_browseOnRelease = 2;
+            goto exit;
         }
-        else {  // content list
-            if(m_itemListPos == 0){
-                m_currItemNr = -1;
-                (*m_dlnaLevel) --;
-                m_browseOnRelease = 2;
+
+        if(guard1){
+            if(*m_dlnaLevel == 0){  // server list
+                m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
+                m_currDLNAsrvNr = m_itemListPos - 1;
+                (*m_dlnaLevel) ++;
+                if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
+                m_browseOnRelease = 1;
+                goto exit;
             }
-            else if(guard2 && startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){ // is file
+        }
+
+        if(guard2){
+            if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){ // is file
                 if(m_srvContent.isAudio[m_itemListPos - 1]){
                     sprintf(m_buff, "%s",m_srvContent.title[m_itemListPos - 1]);
                     m_chptr = m_buff;
@@ -1884,21 +1889,24 @@ private:
                     m_ra.arg2 = m_srvContent.title[m_itemListPos - 1];   // filename --> showFileName()
                     if(m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
                     m_browseOnRelease = 0;
+                    goto exit;
                 }
             }
-            else{ // is folder
-                if(guard3 == false) goto exit;
-                m_currItemNr = -1;
-                sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
-                (*m_dlnaLevel) ++;
-                m_chptr = m_buff;
-                if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
-                m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
-                if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_itemListPos - 1]);
-                m_browseOnRelease = 3;
-            }
         }
+
+        if(guard3){  // is folder
+            m_currItemNr = -1;
+            sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
+            (*m_dlnaLevel) ++;
+            m_chptr = m_buff;
+            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
+            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_itemListPos - 1]);
+            m_browseOnRelease = 3;
+            goto exit;
+        }
+        // log_i("at this position is nothing to do");
 exit:
         return;
     }
