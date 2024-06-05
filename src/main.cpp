@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1   May 29/2024                                                                                                                       ";
+    Version 3.1a Jun 05/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -169,6 +169,7 @@ bool                _f_dlnaSeekServer = false;
 bool                _f_BtEmitterFound = false;
 bool                _f_BTEmitterConnected = false;
 bool                _f_brightnessIsChangeable = false;
+bool                _f_connectToLasthost = false;
 String              _station = "";
 String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
@@ -362,6 +363,7 @@ fileList      lst_PLAYER("lst_PLAYER");
 button2state  btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state  btn_DL_volDown("btn_DL_volDown"), btn_DL_volUp("btn_DL_volUp");
 button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+textbox       txt_DL_fName("txt_DL_fName");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
@@ -2087,6 +2089,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.jpg");
     btn_DL_radio.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    txt_DL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2201,7 +2204,7 @@ void changeState(int32_t state){
         case AUDIOFILESLIST: lst_PLAYER.disable();
                          break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_volDown.disable();  btn_DL_volUp.disable();    btn_DL_pause.disable();   btn_DL_cancel.disable();
-                         btn_DL_fileList.disable(); btn_DL_radio.disable();
+                         btn_DL_fileList.disable(); btn_DL_radio.disable();    txt_DL_fName.disable();
                          break;
         case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
@@ -2307,6 +2310,7 @@ void changeState(int32_t state){
             showFileLogo(state);
             showVolumeBar();
             btn_DL_Mute.show();    btn_DL_volDown.show();  btn_DL_volUp.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
+            txt_DL_fName.show();
             break;
         }
         case DLNAITEMSLIST:{
@@ -2588,6 +2592,11 @@ void loop() {
                 }
             }
         }
+        //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
+        if(_f_connectToLasthost){
+            _f_connectToLasthost = false;
+            connecttohost(_lastconnectedhost.c_str());
+        }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
         if(_f_reconnect){
             _f_reconnect = false;
@@ -2664,6 +2673,10 @@ void loop() {
             GetRunTimeStats(timeStatsBuffer);
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
         }
+        if(r.startsWith("a")) {
+            audioConnecttospeech("Hallo, wie geht es dir?", "de");
+        }
+
         if(r.toInt() != 0) { // is integer?
             if(audioSetTimeOffset(r.toInt())) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt()); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible"); }
@@ -2787,6 +2800,10 @@ void audio_bitrate(const char* info) {
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void audio_eof_speech(const char*) {
+    _f_connectToLasthost = true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
@@ -3610,12 +3627,12 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_DL_pause") == 0)    {audioPauseResume(); return;}
         if(strcmp(name, "btn_DL_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
         if(strcmp(name, "btn_DL_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); changeState(RADIO); return;}
-        if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); return;}
-        if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); return;}
+        if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); changeState(RADIO); return;}
+        if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
+        if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1){changeState(DLNA); connecttohost(ra.arg1); showFileName(ra.arg2);} return;}
+        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); changeState(DLNA); connecttohost(ra.arg1);} return;}
     }
     if(_state == CLOCK) {
         if(strcmp(name, "btn_CL_Mute") == 0)     {muteChanged(btn_CL_Mute.getValue()); return;}

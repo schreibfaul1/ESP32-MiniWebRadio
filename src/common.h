@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 29.May 2024
+// updated: 05.Jun 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -248,6 +248,7 @@ uint8_t        audioGetVolume();
 uint32_t       audioGetBitRate();
 boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
 boolean        audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
+boolean        audioConnecttospeech(const char* text, const char* lang);
 uint32_t       audioStopSong();
 void           audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
 uint32_t       audioInbuffFilled();
@@ -323,6 +324,7 @@ inline void trim(char* s) {
 inline bool startsWith(const char* base, const char* searchString) {
     if(base == NULL) {log_e("base = NULL"); return false;}                      // guard
     if(searchString == NULL) {log_e("searchString == NULL"); return false;}     // guard
+    if(strlen(searchString) > strlen(base)) return false;
     char c;
     while((c = *searchString++) != '\0')
         if(c != *base++) return false;
@@ -1641,7 +1643,7 @@ private:
             m_alarmTime[idx] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
             char hhmm[10] = "00:00";
             sprintf(hhmm, "%02d:%02d", m_alarmTime[idx] / 60, m_alarmTime[idx] % 60);
-            tft.writeText(hhmm, m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            tft.writeText(hhmm, m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
         }
     }
 };
@@ -1655,7 +1657,6 @@ private:
     int16_t                   m_oldX = 0;
     int16_t                   m_oldY = 0;
     uint8_t*                  m_dlnaLevel;
-    uint8_t                   m_oldDlnaLevel = 0;
     uint8_t                   m_fontSize = 0;
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_browseOnRelease = 0;
@@ -1671,6 +1672,7 @@ private:
     char*                     m_pathBuff = NULL;
     char*                     m_chptr = NULL;
     char*                     m_buff = NULL;
+    char*                     m_dlnaItemsPos = NULL;
     DLNA_Client::dlnaServer_t m_dlnaServer;
     DLNA_Client::srvContent_t m_srvContent;
     DLNA_Client*              m_dlna;
@@ -1687,6 +1689,7 @@ public:
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
+        m_dlnaItemsPos = x_ps_malloc(30);
         m_ra.arg1 = NULL;
         m_ra.arg2 = NULL;
         m_ra.val1 = 0;
@@ -1724,35 +1727,38 @@ public:
     void disable(){
         m_enabled = false;
     }
-    bool positionXY(uint16_t x, uint16_t y){
+    bool positionXY(uint16_t x, uint16_t y){ // called every tine if x or y has changed
         if(x < m_x) return false;
         if(y < m_y) return false;
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
+        if(m_clicked == false){m_oldX = x; m_oldY = y;}
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
-        hasClicked(x - m_x, y - m_y);
         return true;
     }
     bool released(uint16_t x, uint16_t y){
         if(!m_enabled) return false;
         if(!m_clicked) return false;
+
+        hasReleased(x - m_x, y - m_y);
         m_clicked = false;
 
         if(m_chptr) {
             tft.setTextColor(TFT_CYAN);
             tft.setFont(m_fontSize);
-            tft.writeText(m_chptr, 20, m_y + (m_itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+            tft.writeText(m_chptr, 20, m_y + (m_itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
             m_chptr = NULL;
             vTaskDelay(300);
         }
         if(m_buff){free(m_buff); m_buff = NULL;}
 
-        if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}
-        if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
-        if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}
-        if(m_browseOnRelease == 4){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_currItemNr , 9);}
+        if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
+        if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // content list
+        if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder
+        if(m_browseOnRelease == 4){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_currItemNr + 1 , 9);} // scroll up / down
+
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
@@ -1763,6 +1769,7 @@ private:
     void dlnaItemsList(){
         if(!m_buff) m_buff = x_ps_malloc(512);
         uint16_t itemsSize = 0;
+        uint8_t pos = 0;
         if(*m_dlnaLevel == 0) {
             itemsSize = m_dlnaServer.size;
         }
@@ -1774,14 +1781,14 @@ private:
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
+        tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         tft.setTextColor(TFT_WHITE);
-        for(uint8_t pos = 1; pos < 10; pos++) {
+        for(pos = 1; pos < 10; pos++) {
             if(pos == 1 && m_currItemNr > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
-            if(pos == 9 && m_currItemNr + 9 < m_dlnaMaxItems) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
+            if(pos == 9 && m_currItemNr + 9 < m_dlnaMaxItems - 1) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
             if(pos > 9) break;
             if(pos > itemsSize) break;
-            if(*m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, true, true); }
+            if(*m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true); }
             else {
                 if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
                     if(m_srvContent.isAudio[pos - 1] == true) {
@@ -1794,38 +1801,68 @@ private:
                     if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
                     else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
                 }
-                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
             }
         }
+        sprintf(m_dlnaItemsPos, "%i-%i/%i", m_currItemNr + 2, m_currItemNr + pos , m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        tft.setTextColor(TFT_ORANGE);
+        tft.writeText(m_dlnaItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+
         if(m_buff){free(m_buff); m_buff = NULL;}
         return;
     }
-    void hasClicked(uint16_t x, uint16_t y){
+
+    void hasReleased(uint16_t x, uint16_t y){
+
+        bool guard1 = m_dlnaServer.friendlyName.size() > m_itemListPos - 1;
+        bool guard2 = m_srvContent.itemURL.size() >  m_itemListPos - 1;
+        bool guard3 = m_srvContent.title.size() > m_itemListPos - 1;
+
         if(!m_buff) m_buff = x_ps_malloc(512);
         m_itemListPos = y / (m_h / 10);
 
-        if(m_oldY && (m_oldY + 2 *m_lineHight < y)) {
+        if(m_oldY && (m_oldY + 6 * m_lineHight < y)) {
             m_ra.val1 = 0;
-            *m_dlnaLevel = m_oldDlnaLevel;
-            if(m_currItemNr == 0) goto exit;
-            if(m_currItemNr >  9) m_currItemNr -= 9;
-            else m_currItemNr = 0;
+            if(m_currItemNr == -1) goto exit;
+            if     (m_currItemNr > 36) m_currItemNr -= 36; // fast wipe down
+            else    m_currItemNr = -1;
             m_browseOnRelease = 4;
             m_chptr = NULL;
+            goto exit;
         }
-        if(m_oldY && (m_oldY - 2* m_lineHight > y)) {
+
+        if(m_oldY && (m_oldY + 2 * m_lineHight < y)) {     // normal wipe down
             m_ra.val1 = 0;
-            *m_dlnaLevel = m_oldDlnaLevel;
-            if(m_currItemNr + 9 >= m_dlnaMaxItems) goto exit;
+            if(m_currItemNr == -1) goto exit;
+            if(m_currItemNr >  9) m_currItemNr -= 9;
+            else m_currItemNr = -1;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
+
+        if(m_oldY && (m_oldY - 6 * m_lineHight > y)) {     // fast wipe up
+            m_ra.val1 = 0;
+            if(m_currItemNr + 9 >= m_dlnaMaxItems - 1) goto exit;
+            int16_t diff = (m_dlnaMaxItems - 1) - (m_currItemNr + 9);
+            if(diff >= 36) m_currItemNr += 36;
+            else m_currItemNr += diff;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
+
+        if(m_oldY && (m_oldY - 2 * m_lineHight > y)) {      // normal wipe up
+            m_ra.val1 = 0;
+            if(m_currItemNr + 9 >= m_dlnaMaxItems - 1) goto exit;
             m_currItemNr += 9;
             m_browseOnRelease = 4;
             m_chptr = NULL;
+            goto exit;
         }
 
-        if(m_oldX || m_oldY) goto exit;
-        m_oldX = x; m_oldY = y;
-        m_oldDlnaLevel = *m_dlnaLevel;
         if(*m_dlnaLevel == 0){  // server list
+            if(guard1 == false) goto exit;
             m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
             m_currDLNAsrvNr = m_itemListPos - 1;
             (*m_dlnaLevel) ++;
@@ -1835,10 +1872,11 @@ private:
         }
         else {  // content list
             if(m_itemListPos == 0){
+                m_currItemNr = -1;
                 (*m_dlnaLevel) --;
                 m_browseOnRelease = 2;
             }
-            else if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){ // is file
+            else if(guard2 && startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){ // is file
                 if(m_srvContent.isAudio[m_itemListPos - 1]){
                     sprintf(m_buff, "%s",m_srvContent.title[m_itemListPos - 1]);
                     m_chptr = m_buff;
@@ -1849,6 +1887,8 @@ private:
                 }
             }
             else{ // is folder
+                if(guard3 == false) goto exit;
+                m_currItemNr = -1;
                 sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
                 (*m_dlnaLevel) ++;
                 m_chptr = m_buff;
@@ -1959,7 +1999,7 @@ public:
         if(m_browseOnRelease == 4)  {   *m_curAudioFileNr += m_fileListPos;                                     // next folder
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
-                                        tft.writeText(_SD_content.getIndex(*m_curAudioFileNr -1), 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                                        tft.writeText(_SD_content.getIndex(*m_curAudioFileNr -1), 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
                                         sprintf(m_buff, "%s",_SD_content.getIndex(*m_curAudioFileNr -1));
                                         strcat(m_curAudioFolder, "/");
                                         strcat(m_curAudioFolder, _SD_content.getIndex(*m_curAudioFileNr - 1));
@@ -1970,7 +2010,7 @@ public:
         if(m_browseOnRelease == 5)  {   *m_curAudioFileNr += m_fileListPos;                                     // play file
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
-                                        tft.writeText(m_buff, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                                        tft.writeText(m_buff, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
                                         fileName = x_ps_strdup(m_buff);
                                         strcpy(m_buff, m_curAudioFolder);
                                         strcat(m_buff, "/");
@@ -2000,7 +2040,7 @@ private:
         tft.setFont(m_fontSize);
         uint8_t lineHight = m_h / 10;
         tft.setTextColor(TFT_MAGENTA);
-        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, true, true);
+        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
             if(pos == 1 && *m_curAudioFileNr > 0) {
@@ -2014,7 +2054,7 @@ private:
             if(*m_curAudioFileNr + pos > _SD_content.getSize()) break;
             if(indexOf(_SD_content.getIndex(pos + *m_curAudioFileNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_ORANGE); // is folder
             else tft.setTextColor(TFT_WHITE);                                                                       // is file
-            tft.writeText(_SD_content.getIndex(pos + *m_curAudioFileNr - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, true, true);
+            tft.writeText(_SD_content.getIndex(pos + *m_curAudioFileNr - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
     }
     void hasClicked(uint16_t x, uint16_t y){
@@ -2145,7 +2185,7 @@ public:
         if(m_browseOnRelease == 2)  {   stationslist(false);                                             // wipe down
                                     }
         if(m_browseOnRelease == 3)  {   if(!m_buff) log_e("m_buff is empty");
-                                        tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
+                                        tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
                                         m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
                                     }
         m_browseOnRelease = 0;
@@ -2182,7 +2222,7 @@ private:
             }
             stations.getString(staKey, stationStr + strlen(stationStr), 950);
             for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
-            tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, true, true);
+            tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
         xSemaphoreGive(mutex_display);
     }
@@ -2475,7 +2515,7 @@ public:
                 ch[0] = m_time[i];
                 pos = m_time_pos;
                 tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_BLACK);
-                tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, true);
+                tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
                 oldtime[i] = m_time[i];
             }
         }
@@ -2684,7 +2724,7 @@ public:
         tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
         uint8_t space = 2;
         if(strlen(sbr) < 4) space += 5;
-        tft.writeText(sbr, m_bitRate_x + space, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER);
+        tft.writeText(sbr, m_bitRate_x + space, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         xSemaphoreGive(mutex_display);
     }
     void setBitRateColor(uint16_t bitRateColor){
@@ -2699,7 +2739,7 @@ public:
         tft.setTextColor(m_ipAddrColor);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
-        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, true);
+        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true);
         xSemaphoreGive(mutex_display);
     }
     void setIpAddrColor(uint16_t ipAddrColor){

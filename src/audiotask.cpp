@@ -12,7 +12,7 @@ Audio audio;
 extern RTIME rtc;
 extern SemaphoreHandle_t  mutex_rtc;
 
-enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, STOPSONG, SETTONE, INBUFF_FILLED,
+enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
                  GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET};
 
@@ -72,6 +72,11 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
                 audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == CONNECTTOSPEECH){
+                audioTxTaskMessage.cmd = CONNECTTOSPEECH;
+                audioTxTaskMessage.ret = audio.connecttospeech(audioRxTaskMessage.txt1, audioRxTaskMessage.txt2);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
@@ -270,6 +275,14 @@ boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt1 = filename;
     audioTxMessage.value1 = resumeFilePos;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+boolean audioConnecttospeech(const char* text, const char* lang){
+    audioTxMessage.cmd = CONNECTTOSPEECH;
+    audioTxMessage.txt1 = text;
+    audioTxMessage.txt2 = lang;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
