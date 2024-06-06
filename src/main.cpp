@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1a Jun 05/2024                                                                                                                       ";
+    Version 3.1b Jun 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -2450,7 +2450,7 @@ void loop() {
                     }
                     //    else if(_state == RADIO && _f_switchToClock) { changeState(CLOCK); _f_switchToClock = false; }
                     else if(_state == STATIONSLIST) { changeState(RADIO); }
-                    else if(_state == AUDIOFILESLIST) { changeState(PLAYER); }
+                    else if(_state == AUDIOFILESLIST) { _playerSubmenue = 0; changeState(PLAYER); }
                     else if(_state == DLNAITEMSLIST) { changeState(DLNA); }
                     else { ; } // all other, do nothing
                 }
@@ -3043,7 +3043,7 @@ void tp_released(uint16_t x, uint16_t y){
             if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_volDown.released(); btn_PL_volUp.released(); btn_PL_pause.released(); btn_PL_cancel.released();}
             break;
         case AUDIOFILESLIST:
-            lst_PLAYER.released();
+            lst_PLAYER.released(x, y);
             break;
         case DLNA:
             btn_DL_Mute.released(); btn_DL_pause.released(); btn_DL_volDown.released(); btn_DL_volUp.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released();
