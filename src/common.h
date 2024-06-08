@@ -647,7 +647,7 @@ private:
 public:
     slider(const char* name){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("textbox");
+        else     m_name = x_ps_strdup("slider");
         m_railHigh = 6;
         m_spotRadius = 12;
         m_bgColor = TFT_BLACK;
@@ -1682,7 +1682,7 @@ private:
 public:
     dlnaList(const char* name, DLNA_Client *dlna, dlnaHistory* dh, uint8_t dhSize){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("alarmClock");
+        else     m_name = x_ps_strdup("dlnaList");
         m_dlna    = dlna;
         m_bgColor = TFT_BLACK;
         m_enabled = false;
@@ -2303,7 +2303,7 @@ private:
 public:
     vuMeter(const char* name){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("textbox");
+        else     m_name = x_ps_strdup("vuMeter");
         m_bgColor = TFT_BLACK;
     }
     ~vuMeter(){
@@ -2449,7 +2449,7 @@ private:
 public:
     displayHeader(const char* name, uint8_t fontSize){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("textbox");
+        else     m_name = x_ps_strdup("displayHeader");
         m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
     }
@@ -2610,7 +2610,7 @@ private:
 public:
     displayFooter(const char* name, uint8_t fontSize){
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("textbox");
+        else     m_name = x_ps_strdup("displayFooter");
         m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
     }
