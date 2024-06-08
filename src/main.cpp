@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1b Jun 06/2024                                                                                                                       ";
+    Version 3.1c Jun 08/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -1227,7 +1227,9 @@ exit:
  *                                         C O N N E C T   TO   W I F I     /     A C C E S S P O I N T                                              *
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
-    String s_ssid = "", s_password = "", s_info = "";
+
+    char* line = x_ps_malloc(512);
+    uint16_t idx = 0;
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
     if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
         String ap_ssid = pref.getString("ap_ssid", ""); // credentials from accesspoint
@@ -1236,32 +1238,39 @@ bool connectToWiFi() {
     }
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
-        String str = "";
         while(file.available()) {
-            str = file.readStringUntil('\n');   // read the line
-            if(str[0] == '*') continue;         // ignore this, goto next line
-            if(str[0] == '\n') continue;        // empty line
-            if(str[0] == ' ') continue;         // space as first char
-            if(str.indexOf('\t') < 0) continue; // no tab
-            str += "\t";
-            uint p = 0, q = 0;
-            s_ssid = "", s_password = "", s_info = "";
-            for(int32_t i = 0; i < str.length(); i++) {
-                if(str[i] == '\t') {
-                    if(p == 0) s_ssid = str.substring(q, i);
-                    if(p == 1) s_password = str.substring(q, i);
-                    if(p == 2) s_info = str.substring(q, i);
+            char emptyStr[1] = "";
+            char* s_ssid = emptyStr;
+            char* s_password = emptyStr;
+            char* s_info = emptyStr;
+            idx = file.readBytesUntil('\n', line, 512);     // read the line
+            if(idx == 0) break;
+            line[idx] = '\0';                               // terminate the line
+            if(line[0] == '*') continue;                    // ignore this, goto next line
+            if(line[0] == '\n') continue;                   // empty line
+            if(line[0] == ' ') continue;                    // space as first char
+
+            uint8_t p = 0;
+            uint16_t slen = strlen(line);
+            for(int16_t i = 0; i < slen; i++) {
+                if(line[i] == '\n') {                       // make LF ineffective
+                    line[i] = '\0';
+                    continue;
+                }
+                if(i == 0) s_ssid = line;                   // string at pos 0 is ssid
+                if(line[i] == '\t') {
+                    line[i] = '\0';
+                    if(p == 0) {s_password = line + i + 1;} // string after first tab is passwort (if available)
+                    if(p == 1) {    s_info = line + i + 1;} // string after second tab is info (if available)
                     p++;
-                    i++;
-                    q = i;
                 }
             }
-            // log_i("s_ssid=%s  s_password=%s  s_info=%s", s_ssid.c_str(), s_password.c_str(), s_info.c_str());
-            if(s_ssid == "") continue;
-            if(s_password == "") continue;
-            wifiMulti.addAP(s_ssid.c_str(), s_password.c_str());
+        //    log_i("%s, %s, %s",  s_ssid, s_password, s_info);
+            wifiMulti.addAP(s_ssid, s_password);
+            (void) s_info; // unused
         }
         file.close();
+        if(line){free(line); line = NULL;}
     }
     int16_t n = WiFi.scanNetworks();
     SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);

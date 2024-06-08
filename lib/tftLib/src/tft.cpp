@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 29 2024
+// updated on Jun 08 2024
 
 #include "tft.h"
 #include "Arduino.h"
@@ -892,9 +892,6 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
     digitalWrite(_TFT_DC, LOW);
     pinMode(_TFT_CS, OUTPUT);
     digitalWrite(_TFT_CS, HIGH);
-
-    // log_i("DC=%d, CS=%d, MISO=%d, MOSI=%d, SCK=%d", TFT_DC, TFT_CS, TFT_MISO, TFT_MOSI, TFT_SCK);
-    spi_TFT->begin(_TFT_SCK, _TFT_MISO, _TFT_MOSI, -1);
 
     init(); //
 }

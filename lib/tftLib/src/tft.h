@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on May 29 2024
+// updated on Jun 08 2024
 
 
 #pragma once
@@ -191,9 +191,6 @@ class TFT{
         uint8_t   _textorientation=0;
         uint8_t   _TFT_DC  = 21;    /* Data or Command */
         uint8_t   _TFT_CS  = 22;    /* SPI Chip select */
-        uint8_t   _TFT_SCK = 18;
-        uint8_t   _TFT_MISO= 19;
-        uint8_t   _TFT_MOSI= 23;
         uint8_t  buf[1024];
         char     chbuf[256];
 
