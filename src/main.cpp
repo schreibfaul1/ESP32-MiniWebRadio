@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1c Jun 08/2024                                                                                                                       ";
+    Version 3.1d Jun 10/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -61,7 +61,6 @@ char _hl_item[16][40]{"",                 // none
 
 const uint8_t       _max_volume = 21;
 const uint16_t      _max_stations = 1000;
-int16_t             _releaseNr = -1;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
 uint8_t             _cur_volume = 0;           // will be set from stored preferences
@@ -2702,7 +2701,9 @@ void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
                                                         WiFi.disconnect();
-                                                        log_w("disconnected");
+                                                        log_w("disconnected, wait 35s");
+                                                        vTaskDelay(35000 / portTICK_PERIOD_MS);
+                                                        log_w("try reconnection");
                                                         _f_reconnect = true;
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
@@ -3018,14 +3019,13 @@ void tp_pressed(uint16_t x, uint16_t y) {
     }
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
-    log_w("long pressed %i  %i", x, y);
 
     if(_f_muteIsPressed) {fall_asleep(); return;}
 
-    if(_releaseNr == 110){
-        uint8_t btnNr = (y -_winHeader.h)  / (_winWoHF.h / 10);
-        log_i("longPressed X %i, Y %i, btnNr %i", x, y, btnNr);
+    if(_state == DLNAITEMSLIST){
+        lst_DLNA.longPressed(x, y);
     }
+
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
@@ -3086,8 +3086,6 @@ void tp_released(uint16_t x, uint16_t y){
 
 void tp_long_released(){
     // log_w("long released)");
-    //if(_releaseNr == 0 || _releaseNr == 22 || _releaseNr == 50) {return;}
-    // tp_released(0, 0);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
@@ -3539,7 +3537,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_DL_cancel") == 0)  {clearStationName(); btn_DL_pause.setInactive(); return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if( val && strcmp(name, "lst_DLNA") == 0)       {_f_dlnaWaitForResponse = true; return;}
+        if( val && strcmp(name, "lst_DLNA") == 0)       {setTimeCounter(6); _f_dlnaWaitForResponse = true; return;}
     }
     if(_state == CLOCK) {
         if( val && strcmp(name, "btn_CL_Mute") == 0)    {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}

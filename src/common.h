@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 06.Jun 2024
+// updated: 10.Jun 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -1765,6 +1765,46 @@ public:
         m_ra.val1 = 0;
         return true;
     }
+
+    void longPressed(uint16_t x, uint16_t y){ // is unused
+        bool maybe_a_server = false;
+        bool maybe_a_file = false;
+        bool maybe_a_folder = false;
+        m_clicked = false; // ignore tp released event, wait of next clicked
+        m_itemListPos = (y / (m_h / 10));
+        if(m_itemListPos < 2 || m_itemListPos > 11) goto exit; // oor, is header, footer or return item
+        m_itemListPos -= 2;
+
+        if(*m_dlnaLevel == 0){
+            if( m_dlnaServer.friendlyName.size() > m_itemListPos) maybe_a_server = true;
+        }
+        else{
+            if(m_srvContent.itemURL.size() > m_itemListPos) maybe_a_file   = true;
+            if(m_srvContent.title.size()   > m_itemListPos) maybe_a_folder = true;
+        }
+
+        if(maybe_a_server){
+            log_i("long pressed at server %s", m_dlnaServer.friendlyName[m_itemListPos]);
+            goto exit;
+        }
+
+        if(maybe_a_file){
+            if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){
+                log_i("long pressed at file %s", m_srvContent.itemURL[m_itemListPos]);
+                goto exit;
+            }
+        }
+
+        if(maybe_a_folder){
+            log_i("long pressed at folder x %s",m_srvContent.title[m_itemListPos]);
+            goto exit;
+        }
+
+        log_i("something went wrong or out of range");
+    exit:
+        return;
+    }
+
 private:
     void dlnaItemsList(){
         if(!m_buff) m_buff = x_ps_malloc(512);
@@ -2801,7 +2841,7 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
     pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
 
     if( pxTaskStatusArray != NULL ) {
-     // Generate raw status information about each task.
+    // Generate raw status information about each task.
         uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime );
 
         // For percentage calculations.
