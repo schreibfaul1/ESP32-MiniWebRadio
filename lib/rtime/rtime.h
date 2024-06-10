@@ -44,7 +44,7 @@ private:
 	String w_day_l[7]={"Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"};
 	String w_day_s[7]={"So","Mo","Di","Mi","Do","Fr","Sa"};
 	String month_l[12]={"Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"};
-	String month_s[12]={"Jan","Feb","März","Apr","Mai","Jun","Jul","Sep","Okt","Nov","Dez"};
+	String month_s[12]={"Jan","Feb","März","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"};
 };
 
 #endif /* RTIME_H_ */
