@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 10.Jun 2024
+// updated: 11.Jun 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -21,13 +21,13 @@
 #define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
 #define FTP_PASSWORD        "esp32"
-#define CONN_TIMEOUT        1000                             // unencrypted connection timeout in ms (http://...)
+#define CONN_TIMEOUT        1000                            // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL    2500                            // encrypted connection timeout in ms (https://...)
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 #include <Arduino.h>
-#include <ArduinoOTA.h>
+// #include <ArduinoOTA.h>
 #include <Preferences.h>
 #include <Ticker.h>
 #include <SPI.h>
@@ -1772,7 +1772,10 @@ public:
         bool maybe_a_folder = false;
         m_clicked = false; // ignore tp released event, wait of next clicked
         m_itemListPos = (y / (m_h / 10));
-        if(m_itemListPos < 2 || m_itemListPos > 11) goto exit; // oor, is header, footer or return item
+        if(m_itemListPos == 0) goto exit; // is header
+        if(m_itemListPos == 1) {log_i("long pressed at return item %s", m_dlnaHistory[*m_dlnaLevel].name); goto exit;}
+        if(m_itemListPos >= 11) goto exit; // is footer
+
         m_itemListPos -= 2;
 
         if(*m_dlnaLevel == 0){
@@ -1789,7 +1792,7 @@ public:
         }
 
         if(maybe_a_file){
-            if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){
+            if(startsWith(m_srvContent.itemURL[m_itemListPos], "http")){
                 log_i("long pressed at file %s", m_srvContent.itemURL[m_itemListPos]);
                 goto exit;
             }

@@ -1554,8 +1554,8 @@ void setup() {
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
-    ArduinoOTA.setHostname("MiniWebRadio");
-    ArduinoOTA.begin();
+    // ArduinoOTA.setHostname("MiniWebRadio");
+    // ArduinoOTA.begin();
 
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
 
@@ -2404,7 +2404,7 @@ void loop() {
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
-    ArduinoOTA.handle();
+//    ArduinoOTA.handle();
     dlna.loop();
     bt_emitter.loop();
 
@@ -2704,6 +2704,7 @@ void audio_info(const char* info) {
                                                         log_w("disconnected, wait 35s");
                                                         vTaskDelay(35000 / portTICK_PERIOD_MS);
                                                         log_w("try reconnection");
+                                                        _reconnectCnt = 0;
                                                         _f_reconnect = true;
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
