@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1d Jun 10/2024                                                                                                                       ";
+    Version 3.1e Jun 11/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -165,6 +165,8 @@ bool                _f_shuffle = false;
 bool                _f_dlnaBrowseServer = false;
 bool                _f_dlnaWaitForResponse = false;
 bool                _f_dlnaSeekServer = false;
+bool                _f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
+bool                _f_dlna_browseReady = false;
 bool                _f_BtEmitterFound = false;
 bool                _f_BTEmitterConnected = false;
 bool                _f_brightnessIsChangeable = false;
@@ -1113,6 +1115,29 @@ bool preparePlaylistFromFolder(const char* path) { // all files whithin a folder
     if(_f_shuffle) sortPlayListRandom();
     else sortPlayListAlphabetical();
 
+    return true;
+}
+//____________________________________________________________________________________________________________________________________________________
+bool preparePlaylistFromDLNAFolder(){
+    vector_clear_and_shrink(_PLS_content); // clear _PLS_content first
+    DLNA_Client::srvContent_t foldercontent = dlna.getBrowseResult();
+    for ( int i=0; i<foldercontent.size; i++) {
+        // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
+        if(!foldercontent.isAudio[i]) continue;
+        uint16_t len = strlen((const char*)foldercontent.itemURL[i]) + strlen((const char*)foldercontent.title[i]) + strlen((const char*)foldercontent.duration[i]) + 3;
+        // log_i("malloc with size %d %d %d %d",len, strlen((const char*)foldercontent.itemURL[i]), strlen((const char*)foldercontent.title[i]), strlen((const char*)foldercontent.duration[i]));
+        char* itstr = x_ps_malloc( len );
+        strcpy( itstr, (const char*)foldercontent.itemURL[i]);
+        strcat( itstr, "\n");
+        strcat( itstr, (const char*)foldercontent.duration[i]);
+        strcat( itstr, ",");
+        strcat( itstr, (const char*)foldercontent.title[i]);
+        log_i("pushing to playlist : %s",itstr);
+        _PLS_content.push_back(itstr);
+        //_PLS_content.push_back(x_ps_strdup((const char*)foldercontent.itemURL[i]));
+    }
+    if(!_PLS_content.size()) return false;
+    log_i("pls length %i", _PLS_content.size());
     return true;
 }
 //____________________________________________________________________________________________________________________________________________________
@@ -2621,6 +2646,16 @@ void loop() {
             _f_dlnaSeekServer = false;
             dlna.seekServer();
         }
+        //------------------------------------------CREATE DLNA PLAYLIST------------------------------------------------------------------------------
+        if(_f_dlnaMakePlaylistOTF && _f_dlna_browseReady){
+            _f_dlnaMakePlaylistOTF = false;
+            _f_dlna_browseReady = false;
+            if(preparePlaylistFromDLNAFolder()) processPlaylist(true);
+        }
+        //------------------------------------------DLNA ITEMS RECEIVED-------------------------------------------------------------------------------
+        if(_f_dlna_browseReady){ // unused
+            _f_dlna_browseReady = false;
+        }
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if(_f_isFSConnected) {
             //    uint32_t t = 0;
@@ -2704,7 +2739,6 @@ void audio_info(const char* info) {
                                                         log_w("disconnected, wait 35s");
                                                         vTaskDelay(35000 / portTICK_PERIOD_MS);
                                                         log_w("try reconnection");
-                                                        _reconnectCnt = 0;
                                                         _f_reconnect = true;
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
@@ -3087,6 +3121,7 @@ void tp_released(uint16_t x, uint16_t y){
 
 void tp_long_released(){
     // log_w("long released)");
+    if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
@@ -3411,8 +3446,8 @@ void dlna_browseResult(const char* objectId, const char* parentId, uint16_t chil
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     SerialPrintfln("DLNA_server: returned %i from %i", numberReturned + _totalNumberReturned, totalMatches);
     _dlnaMaxItems = totalMatches;
-    if(numberReturned == 50) { // next round
-        _totalNumberReturned += numberReturned;
+    _totalNumberReturned += numberReturned;
+    if(numberReturned == 50 && !_f_dlnaMakePlaylistOTF) { // next round
         if(_totalNumberReturned < totalMatches && _totalNumberReturned < 500) { _f_dlnaBrowseServer = true; }
     }
     if(_f_dlnaWaitForResponse) {
@@ -3421,6 +3456,10 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
         setTimeCounter(4);
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }
+    if(_totalNumberReturned == totalMatches || _totalNumberReturned == 500 || _f_dlnaMakePlaylistOTF){
+        _totalNumberReturned = 0;
+        _f_dlna_browseReady = true; // last item received
+    }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val) {
@@ -3538,7 +3577,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is d
         if( val && strcmp(name, "btn_DL_cancel") == 0)  {clearStationName(); btn_DL_pause.setInactive(); return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if( val && strcmp(name, "lst_DLNA") == 0)       {setTimeCounter(6); _f_dlnaWaitForResponse = true; return;}
+        if( val && strcmp(name, "lst_DLNA") == 0)       {setTimeCounter(15); _f_dlnaWaitForResponse = true; return;}
     }
     if(_state == CLOCK) {
         if( val && strcmp(name, "btn_CL_Mute") == 0)    {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}
@@ -3640,7 +3679,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); changeState(DLNA); connecttohost(ra.arg1);} return;}
+        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); changeState(DLNA); connecttohost(ra.arg1);} // play a file
+                                                  if(ra.val1 == 2){dlna.browseServer(ra.val2, ra.arg1, 0, 50); _f_dlnaMakePlaylistOTF = true; } // browse dlna object, waiting for content and create a playlist
+                                                  return;}
     }
     if(_state == CLOCK) {
         if(strcmp(name, "btn_CL_Mute") == 0)     {muteChanged(btn_CL_Mute.getValue()); return;}

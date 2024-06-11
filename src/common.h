@@ -211,7 +211,6 @@ bool           connectToWiFi();
 void           openAccessPoint();
 const char*    scaleImage(const char* path);
 void           setVolume(uint8_t vol);
-inline uint8_t getvolume();
 uint8_t        downvolume();
 uint8_t        upvolume();
 void           setStation(uint16_t sta);
@@ -226,6 +225,7 @@ void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool sh
 bool           SD_rename(const char* src, const char* dest);
 bool           SD_newFolder(const char* folderPathName);
 bool           SD_delete(const char* itemPath);
+bool           preparePlaylistFromDLNAFolder();
 bool           preparePlaylistFromFile(const char* path);
 bool           preparePlaylistFromFolder(const char* path);
 void           sortPlayListAlphabetical();
@@ -1766,15 +1766,15 @@ public:
         return true;
     }
 
-    void longPressed(uint16_t x, uint16_t y){ // is unused
+    void longPressed(uint16_t x, uint16_t y){
         bool maybe_a_server = false;
         bool maybe_a_file = false;
         bool maybe_a_folder = false;
-        m_clicked = false; // ignore tp released event, wait of next clicked
+        m_clicked = false;                    // ignore tp released event, wait of next clicked
         m_itemListPos = (y / (m_h / 10));
-        if(m_itemListPos == 0) goto exit; // is header
-        if(m_itemListPos == 1) {log_i("long pressed at return item %s", m_dlnaHistory[*m_dlnaLevel].name); goto exit;}
-        if(m_itemListPos >= 11) goto exit; // is footer
+        if(m_itemListPos == 0) goto exit;    // is header
+        if(m_itemListPos == 1) { /* log_i("long pressed at return item %s", m_dlnaHistory[*m_dlnaLevel].name); */ goto exit;}
+        if(m_itemListPos >= 11) goto exit;   // is footer
 
         m_itemListPos -= 2;
 
@@ -1787,25 +1787,38 @@ public:
         }
 
         if(maybe_a_server){
-            log_i("long pressed at server %s", m_dlnaServer.friendlyName[m_itemListPos]);
-            goto exit;
+            /* log_i("long pressed at server %s", m_dlnaServer.friendlyName[m_itemListPos]); */ goto exit;
         }
 
         if(maybe_a_file){
             if(startsWith(m_srvContent.itemURL[m_itemListPos], "http")){
-                log_i("long pressed at file %s", m_srvContent.itemURL[m_itemListPos]);
-                goto exit;
+                /* log_i("long pressed at file %s", m_srvContent.itemURL[m_itemListPos]); */ goto exit;
             }
         }
 
         if(maybe_a_folder){
-            log_i("long pressed at folder x %s",m_srvContent.title[m_itemListPos]);
+            // log_i("long pressed at folder x %s",m_srvContent.title[m_itemListPos]);
+            tft.setTextColor(TFT_MAGENTA);
+            tft.setFont(m_fontSize);
+            tft.writeText(m_srvContent.title[m_itemListPos], 20, m_y + (m_itemListPos + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+
+            m_ra.arg1 = m_srvContent.objectId[m_itemListPos];
+            m_ra.val2 = m_currDLNAsrvNr;
+            m_ra.val1 = 2;
             goto exit;
         }
 
         log_i("something went wrong or out of range");
     exit:
         return;
+    }
+
+    void longReleased(){
+        if(!m_enabled) return;
+        if(!m_clicked) return;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_ra.val1 = 0;
+        m_clicked = false;
     }
 
 private:
