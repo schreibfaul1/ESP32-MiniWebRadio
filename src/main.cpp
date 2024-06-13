@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.1e Jun 11/2024                                                                                                                       ";
+    Version 3.2 Jun 13/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
@@ -72,7 +72,8 @@ uint8_t             _cur_Codec = 0;
 uint8_t             _numServers = 0; //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24; // 24 or 12
-uint8_t             _sleepMode = 0;   // 0 display off, 1 show the clock
+uint8_t             _sleepMode = 0;   // 0 display off,     1 show the clock
+uint8_t             _alarmMode = 1;   // 0 with radio only, 1 with bell and radio
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
@@ -427,7 +428,8 @@ boolean defaultsettings(){
         strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
         strcat(jO, "\"timeFormat\":");        strcat(jO, "24,");
-        strcat(jO, "\"sleepMode\":");         strcat(jO, "0}"); // 0 display off, 1 clock
+        strcat(jO, "\"sleepMode\":");         strcat(jO, "0,"); // 0 display off, 1 clock
+        strcat(jO, "\"alarmMode\":");         strcat(jO, "1}"); // 0 with radio only, 1 with bell and radio
         file.print(jO);
         if(jO){free(jO); jO = NULL;}
     }
@@ -483,6 +485,7 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
+    _alarmMode           = atoi(   parseJson("\"alarmMode\":"));
 
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
@@ -638,7 +641,8 @@ void updateSettings(){
     sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                                strcat(jO, tmp);
     sprintf(tmp, ",\"balance\":%i", _toneBAL);                                              strcat(jO, tmp);
     sprintf(tmp, ",\"timeFormat\":%i", _timeFormat);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                         strcat(jO, tmp);
+    sprintf(tmp, ",\"sleepMode\":%i", _sleepMode);                                          strcat(jO, tmp);
+    sprintf(tmp, ",\"alarmMode\":%i}", _alarmMode);                                         strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -1021,7 +1025,7 @@ boolean isPlaylist(File file) {
  *                                                                     P L A Y L I S T                                                               *
  *****************************************************************************************************************************************************/
 
-bool preparePlaylistFromFile(const char* path) {
+bool preparePlaylistFromFile(const char* path) {  // *.m3u
     File playlistFile = SD_MMC.open(path);
     if(!playlistFile) {
         log_e("playlistfile path not found");
@@ -1084,7 +1088,7 @@ bool preparePlaylistFromFile(const char* path) {
 }
 //____________________________________________________________________________________________________________________________________________________
 
-bool preparePlaylistFromFolder(const char* path) { // all files whithin a folder
+bool preparePlaylistFromSDFolder(const char* path) { // all files whithin a SD folder
     if(!SD_MMC.exists(path)) {
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
         return false;
@@ -2510,13 +2514,19 @@ void loop() {
                 dispHeader.updateItem("ALARM");
                 dispHeader.updateTime(rtc.gettime_s());
                 dispFooter.show();
-                showFileName("ALARM");
-                drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
-                setTFTbrightness(_brightness);
-                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                audioSetVolume(21);
-                muteChanged(false);
-                connecttoFS("/ring/alarm_clock.mp3");
+                if(_alarmMode == 1){ // alarm with bell
+                    showFileName("ALARM");
+                    drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
+                    setTFTbrightness(_brightness);
+                    SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
+                    audioSetVolume(21);
+                    muteChanged(false);
+                    connecttoFS("/ring/alarm_clock.mp3");
+                }
+                else{ // alarm without bell
+                    _f_eof_alarm = true;
+                    return;
+                }
             }
             if(_f_eof_alarm) { // AFTER RINGING
                 _f_eof_alarm = false;
@@ -3315,7 +3325,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "SD_playAllFiles"){   webSrv.send("SD_playFolder=", "" + param);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
-                                    preparePlaylistFromFolder(param.c_str());
+                                    preparePlaylistFromSDFolder(param.c_str());
                                     processPlaylist(true);
                                     return;}
 
@@ -3367,6 +3377,14 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setSleepMode"){     _sleepMode = param.toInt();
                                    if(_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");
                                    if(_sleepMode == 1) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Show the time");
+                                   return;}
+
+    if(cmd == "getAlarmMode"){     webSrv.send("alarmMode=", String(_alarmMode, 10));
+                                   return;}
+
+    if(cmd == "setAlarmMode"){     _alarmMode = param.toInt();
+                                   if(_alarmMode == 0) SerialPrintfln("AlarmMode:   " ANSI_ESC_YELLOW "with radio only");
+                                   if(_alarmMode == 1) SerialPrintfln("AlarmMode:   " ANSI_ESC_YELLOW "with bell and radio");
                                    return;}
 
     if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
@@ -3661,8 +3679,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
         if(strcmp(name, "btn_PL_ready") == 0)    {_playerSubmenue = 1; SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); changeState(PLAYER); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromSDFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromSDFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
     }

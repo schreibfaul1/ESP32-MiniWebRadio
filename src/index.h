@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 06.04.2024
+ *  Updated on: 13.06.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -414,6 +414,7 @@ function connect() {
         socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
         socket.send("getSleepMode")
+        socket.send("getAlarmMode") // with bell and radio or with radio only
 
         setInterval(ping, 20000)
     };
@@ -540,6 +541,10 @@ function connect() {
                                         break;
             case "sleepMode":           if  (val == "0") radiobtn = document.getElementById("sleepMode0")
                                         else if(val == '1') radiobtn = document.getElementById("sleepMode1")
+                                        radiobtn.checked = true;
+                                        break;
+            case "alarmMode":           if  (val == '0') radiobtn = document.getElementById("alarmMode0")
+                                        else if(val == '1') radiobtn = document.getElementById("alarmMode1")
                                         radiobtn.checked = true;
                                         break;
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
@@ -2260,6 +2265,24 @@ function clear_BT_memItems(){
                     <label for="label-infopic" onclick="socket.send('hardcopy')">
                         <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
                     </label>
+
+                    <h3>
+                        Connected WiFi network
+                        <select class="boxstyle" id="ssid" ></select>
+                    </h3>
+
+                    <h3>
+                        Timezone
+                        <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
+                    </h3>
+
+                    <h3>
+                        Time announcement on the hour
+                        <input  type="checkbox" id="chk_timeSpeech"
+                                onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+                    </h3>
+
+
                 </td>
                 <td>
                     <div style="display: flex;">
@@ -2303,25 +2326,23 @@ function clear_BT_memItems(){
                             <label for="sleepMode1">show the time</label>
                         </div>
                     </fieldset>
+                    <br>
+                    <fieldset>
+                        <legend> alarm clock </legend>
+                        <div>
+                            <input type="radio" id="alarmMode0" name="alarmMode" value="only with radio" onclick="socket.send('setAlarmMode=0');">
+                            <label for="alarmMode0">with radio only</label>
+                        </div>
+                        <div>
+                            <input type="radio" id="alarmMode1" name="alarmMode" value="with bell and radio" checked onclick="socket.send('setAlarmMode=1');">
+                            <label for="alarmMode1">with bell and radio</label>
+                        </div>
+                    </fieldset>
                 </td>
             </tr>
         </table>
 
-        <h3>
-            Connected WiFi network
-            <select class="boxstyle" id="ssid" ></select>
-        </h3>
 
-        <h3>
-            Timezone
-            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
-        </h3>
-
-        <h3>
-            Time announcement on the hour
-            <input  type="checkbox" id="chk_timeSpeech"
-                    onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-        </h3>
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content7"> <!-- IR Settings -->
