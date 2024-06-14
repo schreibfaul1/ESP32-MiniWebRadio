@@ -31,7 +31,7 @@
 	AC101 ac;
 	ac.begin(sda, scl);
 
-	//two I2C busses:
+	//two I2C buses:
 	TwoWire i2cBusOne = TwoWire(0);
 	TwoWire i2cBusTwo = TwoWire(1);
     AC101 ac(&i2cBusOne);
