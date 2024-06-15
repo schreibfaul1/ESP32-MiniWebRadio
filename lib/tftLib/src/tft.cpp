@@ -1623,7 +1623,7 @@ void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colo
     //  endWrite();
 
     // Bresenham's algorithm - thx wikipedia - speed enhanced by Bodmer to use
-    // an eficient FastH/V Line draw routine for line segments of 2 pixels or more
+    // an efficient FastH/V Line draw routine for line segments of 2 pixels or more
     int16_t t;
     bool    steep = abs(y1 - y0) > abs(x1 - x0);
     if(steep) {
@@ -4047,7 +4047,7 @@ bool TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
 }
 
 void TFT::renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight) {
-    // retrieve infomration about the image
+    // retrieve information about the image
     uint16_t* pImg;
     uint16_t  mcu_w = JpegDec.MCUWidth;
     uint16_t  mcu_h = JpegDec.MCUHeight;

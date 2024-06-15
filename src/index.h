@@ -1744,7 +1744,7 @@ function addScannedName(i){
     if(i == 2) scannedName = document.getElementsByName('bt_scan_name')[i].value;
     console.log("scannedName", scannedName)
     if(scannedName === ""){
-        alert("choosen BT name is empty")
+        alert("chosen BT name is empty")
         return
     }
     for (var a = 0; a < 10; a++) {
@@ -1763,7 +1763,7 @@ function addScannedAddr(i){
     if(i == 2) scannedAddr = document.getElementsByName('bt_scan_addr')[i].value;
     console.log("scannedAddr", scannedAddr)
     if(scannedAddr === ""){
-        alert("choosen MAC address is empty")
+        alert("chosen MAC address is empty")
         return
     }
     for (var a = 0; a < 10; a++) {
@@ -1971,7 +1971,7 @@ function clear_BT_memItems(){
         <div style="height: 66px; display: flex;">
             <div style="flex:1;">
                 <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="station"
-                    placeholder=" Enter a streamURL here.... , for authentification streamURL|username|password">
+                    placeholder=" Enter a streamURL here.... , for authentication streamURL|username|password">
             </div>
             <div style="flex: 0 0 66px;">
                 <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"

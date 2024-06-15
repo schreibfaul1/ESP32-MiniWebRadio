@@ -7,7 +7,7 @@
     Version 3.2 Jun 13/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
-    3.5" color display (480x320px) wiht controller ILI9486 or ILI9488 (SPI)
+    3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
 
 
     SD_MMC is mandatory
@@ -1088,7 +1088,7 @@ bool preparePlaylistFromFile(const char* path) {  // *.m3u
 }
 //____________________________________________________________________________________________________________________________________________________
 
-bool preparePlaylistFromSDFolder(const char* path) { // all files whithin a SD folder
+bool preparePlaylistFromSDFolder(const char* path) { // all files within a SD folder
     if(!SD_MMC.exists(path)) {
         SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
         return false;
@@ -3498,7 +3498,7 @@ void kcx_bt_info(const char* info, const char* val) {
     }
 }
 
-void kcx_bt_status(bool status) { // is always called when the status changes fron disconnected to connected and vice versa
+void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
     if(status) {
         const char* mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
@@ -3542,7 +3542,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
     log_d("unused event: graphicObject %s was changed, val %li", name, arg1);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is deactive
+void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is inactive
     // all state
     if(val == 3 && strcmp(name, "dispFooter") == 0)     {setTimeCounter(0); return;} // pos 3 is RSSI or TC
 

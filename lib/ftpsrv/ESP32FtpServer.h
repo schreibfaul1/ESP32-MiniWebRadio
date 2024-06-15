@@ -46,7 +46,7 @@
 
 #define FTP_SERVER_VERSION "FTP-2020-12-12"
 
-#define FTP_CTRL_PORT    21             // Command port on wich server is listening
+#define FTP_CTRL_PORT    21             // Command port on which server is listening
 #define FTP_DATA_PORT_PASV 50009        // Data port in passive mode
 
 #define FTP_TIME_OUT     5              // Disconnect client after 5 minutes of inactivity
@@ -105,7 +105,7 @@ private:
     boolean  rnfrCmd = false;               // previous command was RNFR
     char     *parameters = NULL;            // point to begin of parameters sent by client
     uint16_t iCL = 0;                       // pointer to cmdLine next incoming char
-    int8_t   cmdStatus = 0;                 // status of ftp command connexion
+    int8_t   cmdStatus = 0;                 // status of ftp command connection
     int8_t   transferStatus = 0;            // status of ftp data transfer
     uint32_t millisTimeOut = 0;             // disconnect after 5 min of inactivity
     uint32_t millisDelay = 0;

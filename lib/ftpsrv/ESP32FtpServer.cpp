@@ -197,7 +197,7 @@ boolean FtpServer::userIdentity() {
             client.println("200 OK, UTF8 ON");
         }
         else{
-            client.println("504 Unknow OPTS");
+            client.println("504 Unknown OPTS");
         }
     }
 
@@ -281,7 +281,7 @@ boolean FtpServer::processCommand() {
 
     else if(!strcmp(command, "MODE")) {   //  MODE - Transfer Mode
         if(!strcmp(parameters, "S"))  client.println("200 S Ok");
-        else                          client.println("504 Only S(tream) is suported");
+        else                          client.println("504 Only S(tream) is supported");
     }
 
     else if(!strcmp(command, "PASV")) {  //  PASV - Passive Connection management
@@ -321,12 +321,12 @@ boolean FtpServer::processCommand() {
     }
     else if(!strcmp(command, "STRU")) {  //  STRU - File Structure
         if(!strcmp(parameters, "F")) client.println("200 F Ok");
-        else                         client.println("504 Only F(ile) is suported");
+        else                         client.println("504 Only F(ile) is supported");
     }
     else if(!strcmp(command, "TYPE")) {  //  TYPE - Data Type
-        if(!strcmp(parameters, "A"))       client.println("200 TYPE is now ASII");
+        if(!strcmp(parameters, "A"))       client.println("200 TYPE is now ASCII");
         else if(!strcmp(parameters, "I"))  client.println("200 TYPE is now 8-bit binary");
-        else                               client.println("504 Unknow TYPE");
+        else                               client.println("504 Unknown TYPE");
     }
 
     //        FTP SERVICE COMMANDS
@@ -601,7 +601,7 @@ boolean FtpServer::processCommand() {
     //   EXTENSIONS COMMANDS (RFC 3659)
 
     else if(!strcmp(command, "FEAT")) {  //  FEAT - New Features
-        client.println("211-Extensions suported:");
+        client.println("211-Extensions supported:");
         client.println(" MLSD");
         client.println(" UTF8");
         client.println("211 End.");
@@ -626,7 +626,7 @@ boolean FtpServer::processCommand() {
         }
     }
     else if(!strcmp(command, "SITE")) {  //  SITE - System command
-        client.println("500 Unknow SITE command " + String(parameters));
+        client.println("500 Unknown SITE command " + String(parameters));
     }
     else if(!strcmp(command, "OPTS")){
         if(strcmp(parameters, "UTF8 ON") == 0){
@@ -637,7 +637,7 @@ boolean FtpServer::processCommand() {
         }
     }
     else   //  Unrecognized commands ...
-        client.println("500 Unknow command");
+        client.println("500 Unknown command");
 
     return true;
 }

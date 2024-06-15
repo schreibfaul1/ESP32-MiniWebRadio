@@ -102,7 +102,7 @@ extern __attribute__((weak)) void tp_long_released();
 #elif TFT_FONT == 4
 #define TFT_Z300
 #else
-#define TFT_GARAMOND // if nothing is choosen
+#define TFT_GARAMOND // if nothing is chosen
 #endif
 
 #define TFT_ALIGN_RIGHT          (1)

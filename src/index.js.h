@@ -65,7 +65,7 @@ var lastNode
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 function deleteChildren(nodeId) {
-    $('#audioFileTree').jstree('open_node', nodeId); // need to open node for accruate selection
+    $('#audioFileTree').jstree('open_node', nodeId); // need to open node for accurate selection
     var ref = $('#audioFileTree').jstree(true);
     var children = $("#audioFileTree").jstree("get_children_dom",nodeId);
     for(var i=0;i<children.length;i++) {

@@ -185,7 +185,7 @@ boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sen
     size_t msgLen = strlen(msg);
 
     if(msgLen > UINT16_MAX) {
-        log_e("send: message too long, greather than 64kB");
+        log_e("send: message too long, greater than 64kB");
         return false;
     }
 
@@ -493,7 +493,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
 
             if(currentLine.startsWith("------")) {
                 count++; // WebKitFormBoundary header
-                contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer ist 2 chars longer
+                contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
             }
             if(currentLine.length() == 1 && count == 1){
                 contentLength -= 7; // "\r\n\r\n..."
@@ -510,7 +510,7 @@ boolean WebSrv::handleWS() {                  // Websocketserver, receive messag
     String currentLine = "";                // Build up to complete line
 
     if (!webSocketClient.connected()){
-        log_e("webSocketClient schould be connected but is not!");
+        log_e("webSocketClient should be connected but is not!");
         hasclient_WS = false;
         return false;
     }
