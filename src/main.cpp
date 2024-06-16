@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2 Jun 13/2024                                                                                                                       ";
+    Version 3.2a Jun 16/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1293,6 +1293,7 @@ bool connectToWiFi() {
                     p++;
                 }
             }
+            if(strlen(s_ssid) == 0) continue;               // ssid is empty
         //    log_i("%s, %s, %s",  s_ssid, s_password, s_info);
             wifiMulti.addAP(s_ssid, s_password);
             (void) s_info; // unused
