@@ -208,10 +208,10 @@ TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encod
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 
 #if DECODER == 2 // ac101
-AC101 dac(i2cBusTwo);
+AC101 dac(&i2cBusTwo);
 #endif
 #if DECODER == 3 // es8388
-ES8388 dac(i2cBusTwo);
+ES8388 dac(&i2cBusTwo);
 #endif
 
 SemaphoreHandle_t mutex_rtc;
