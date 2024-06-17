@@ -6,7 +6,7 @@
 // clang-format off
 #define _SSID               "mySSID"                        // Your WiFi credentials here
 #define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
-#define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388, (4)WM8978
+#define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
 #define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION   0                               // (0) off (1) on
 #define TFT_ROTATION        1                               // 1 or 3 (landscape)
@@ -49,7 +49,6 @@
 #include "ESP32FtpServer.h"
 #include "AC101.h"
 #include "ES8388.h"
-#include "WM8978.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
 #include <freertos/task.h>

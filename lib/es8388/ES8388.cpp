@@ -1,30 +1,28 @@
-#include <Arduino.h>
 #include "ES8388.h"
-#include <Wire.h>
 
 #define ES8388_ADDR 0x10
 
 /* ES8388 register */
-#define ES8388_CONTROL1 0x00
-#define ES8388_CONTROL2 0x01
-#define ES8388_CHIPPOWER 0x02
-#define ES8388_ADCPOWER 0x03
-#define ES8388_DACPOWER 0x04
-#define ES8388_CHIPLOPOW1 0x05
-#define ES8388_CHIPLOPOW2 0x06
+#define ES8388_CONTROL1    0x00
+#define ES8388_CONTROL2    0x01
+#define ES8388_CHIPPOWER   0x02
+#define ES8388_ADCPOWER    0x03
+#define ES8388_DACPOWER    0x04
+#define ES8388_CHIPLOPOW1  0x05
+#define ES8388_CHIPLOPOW2  0x06
 #define ES8388_ANAVOLMANAG 0x07
-#define ES8388_MASTERMODE 0x08
+#define ES8388_MASTERMODE  0x08
 
 /* ADC */
-#define ES8388_ADCCONTROL1 0x09
-#define ES8388_ADCCONTROL2 0x0a
-#define ES8388_ADCCONTROL3 0x0b
-#define ES8388_ADCCONTROL4 0x0c
-#define ES8388_ADCCONTROL5 0x0d
-#define ES8388_ADCCONTROL6 0x0e
-#define ES8388_ADCCONTROL7 0x0f
-#define ES8388_ADCCONTROL8 0x10
-#define ES8388_ADCCONTROL9 0x11
+#define ES8388_ADCCONTROL1  0x09
+#define ES8388_ADCCONTROL2  0x0a
+#define ES8388_ADCCONTROL3  0x0b
+#define ES8388_ADCCONTROL4  0x0c
+#define ES8388_ADCCONTROL5  0x0d
+#define ES8388_ADCCONTROL6  0x0e
+#define ES8388_ADCCONTROL7  0x0f
+#define ES8388_ADCCONTROL8  0x10
+#define ES8388_ADCCONTROL9  0x11
 #define ES8388_ADCCONTROL10 0x12
 #define ES8388_ADCCONTROL11 0x13
 #define ES8388_ADCCONTROL12 0x14
@@ -32,15 +30,15 @@
 #define ES8388_ADCCONTROL14 0x16
 
 /* DAC */
-#define ES8388_DACCONTROL1 0x17
-#define ES8388_DACCONTROL2 0x18
-#define ES8388_DACCONTROL3 0x19
-#define ES8388_DACCONTROL4 0x1a
-#define ES8388_DACCONTROL5 0x1b
-#define ES8388_DACCONTROL6 0x1c
-#define ES8388_DACCONTROL7 0x1d
-#define ES8388_DACCONTROL8 0x1e
-#define ES8388_DACCONTROL9 0x1f
+#define ES8388_DACCONTROL1  0x17
+#define ES8388_DACCONTROL2  0x18
+#define ES8388_DACCONTROL3  0x19
+#define ES8388_DACCONTROL4  0x1a
+#define ES8388_DACCONTROL5  0x1b
+#define ES8388_DACCONTROL6  0x1c
+#define ES8388_DACCONTROL7  0x1d
+#define ES8388_DACCONTROL8  0x1e
+#define ES8388_DACCONTROL9  0x1f
 #define ES8388_DACCONTROL10 0x20
 #define ES8388_DACCONTROL11 0x21
 #define ES8388_DACCONTROL12 0x22
@@ -63,36 +61,35 @@
 #define ES8388_DACCONTROL29 0x33
 #define ES8388_DACCONTROL30 0x34
 
-bool ES8388::write_reg(uint8_t slave_add, uint8_t reg_add, uint8_t data)
-{
-    Wire.beginTransmission(slave_add);
-    Wire.write(reg_add);
-    Wire.write(data);
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ES8388::ES8388( TwoWire *TwoWireInstance ){
+    _TwoWireInstance = TwoWireInstance;
+}
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool ES8388::write_reg(uint8_t slave_add, uint8_t reg_add, uint8_t data) {
+    _TwoWireInstance->beginTransmission(slave_add);
+    _TwoWireInstance->write(reg_add);
+    _TwoWireInstance->write(data);
     return Wire.endTransmission() == 0;
 }
-
-bool ES8388::read_reg(uint8_t slave_add, uint8_t reg_add, uint8_t &data)
-{
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool ES8388::read_reg(uint8_t slave_add, uint8_t reg_add, uint8_t& data) {
     bool retval = false;
-    Wire.beginTransmission(slave_add);
-    Wire.write(reg_add);
-    Wire.endTransmission(false);
-    Wire.requestFrom((uint16_t)slave_add, (uint8_t)1, true);
-    if (Wire.available() >= 1)
-    {
-        data = Wire.read();
+    _TwoWireInstance->beginTransmission(slave_add);
+    _TwoWireInstance->write(reg_add);
+    _TwoWireInstance->endTransmission(false);
+    _TwoWireInstance->requestFrom((uint16_t)slave_add, (uint8_t)1, true);
+    if(_TwoWireInstance->available() >= 1) {
+        data = _TwoWireInstance->read();
         retval = true;
     }
     return retval;
 }
-
-bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency)
-{
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency) {
     bool res = identify(sda, scl, frequency);
 
-    if (res == true)
-    {
-
+    if(res == true) {
         /* mute DAC during setup, power up all systems, slave mode */
         res &= write_reg(ES8388_ADDR, ES8388_DACCONTROL3, 0x04);
         res &= write_reg(ES8388_ADDR, ES8388_CONTROL2, 0x50);
@@ -146,90 +143,82 @@ bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency)
         res &= write_reg(ES8388_ADDR, ES8388_DACPOWER, 0x3c);
         res &= write_reg(ES8388_ADDR, ES8388_DACCONTROL3, 0x00);
         res &= write_reg(ES8388_ADDR, ES8388_ADCPOWER, 0x00);
-
     }
     return res;
 }
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /**
- * @brief (un)mute one of the two outputs or main dac output of the ES8388 by switching of the output register bits. Does not really mute the selected output, causes an attenuation. 
+ * @brief (un)mute one of the two outputs or main dac output of the ES8388 by switching of the output register bits. Does not really mute the
+ * selected output, causes an attenuation.
  * hence should be used in conjunction with appropriate volume setting. Main dac output mute does mute both outputs
- * 
+ *
  * @param out
  * @param muted
  */
-void ES8388::mute(const ES8388_OUT out, const bool muted)
-{
+void ES8388::mute(const ES8388_OUT out, const bool muted) {
     uint8_t reg_addr;
     uint8_t mask_mute;
     uint8_t mask_val;
 
-    switch (out)
-    {
-    case ES_OUT1:
-        reg_addr = ES8388_DACPOWER;
-        mask_mute = (3 << 4);
-        mask_val = muted ? 0 : mask_mute;
-        break;
-    case ES_OUT2:
-        reg_addr = ES8388_DACPOWER;
-        mask_mute = (3 << 2);
-        mask_val = muted ? 0 : mask_mute;
-        break;
-    case ES_MAIN:
-    default:
-        reg_addr = ES8388_DACCONTROL3;
-        mask_mute = 1 << 2;
-        mask_val = muted ? mask_mute : 0;
-        break;
+    switch(out) {
+        case ES_OUT1:
+            reg_addr = ES8388_DACPOWER;
+            mask_mute = (3 << 4);
+            mask_val = muted ? 0 : mask_mute;
+            break;
+        case ES_OUT2:
+            reg_addr = ES8388_DACPOWER;
+            mask_mute = (3 << 2);
+            mask_val = muted ? 0 : mask_mute;
+            break;
+        case ES_MAIN:
+        default:
+            reg_addr = ES8388_DACCONTROL3;
+            mask_mute = 1 << 2;
+            mask_val = muted ? mask_mute : 0;
+            break;
     }
 
     uint8_t reg;
-    if (read_reg(ES8388_ADDR, reg_addr, reg))
-    {
+    if(read_reg(ES8388_ADDR, reg_addr, reg)) {
         reg = (reg & ~mask_mute) | (mask_val & mask_mute);
         write_reg(ES8388_ADDR, reg_addr, reg);
     }
 }
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /**
- * @brief Set volume gain for the main dac, or for one of the two output channels. Final gain = main gain + out channel gain 
- * 
+ * @brief Set volume gain for the main dac, or for one of the two output channels. Final gain = main gain + out channel gain
+ *
  * @param out which gain setting to control
  * @param vol 0-100 (100 is max)
  */
-void ES8388::volume(const ES8388_OUT out, const uint8_t vol)
-{
+void ES8388::volume(const ES8388_OUT out, const uint8_t vol) {
     const uint32_t max_vol = 100; // max input volume value
 
     const int32_t max_vol_val = out == ES8388_OUT::ES_MAIN ? 96 : 0x21; // max register value for ES8388 out volume
 
     uint8_t lreg = 0, rreg = 0;
 
-    switch (out)
-    {
-    case ES_MAIN:
-        lreg = ES8388_DACCONTROL4;
-        rreg = ES8388_DACCONTROL5;
-        break;
-    case ES_OUT1:
-        lreg = ES8388_DACCONTROL24;
-        rreg = ES8388_DACCONTROL25;
-        break;
-    case ES_OUT2:
-        lreg = ES8388_DACCONTROL26;
-        rreg = ES8388_DACCONTROL27;
-        break;
+    switch(out) {
+        case ES_MAIN:
+            lreg = ES8388_DACCONTROL4;
+            rreg = ES8388_DACCONTROL5;
+            break;
+        case ES_OUT1:
+            lreg = ES8388_DACCONTROL24;
+            rreg = ES8388_DACCONTROL25;
+            break;
+        case ES_OUT2:
+            lreg = ES8388_DACCONTROL26;
+            rreg = ES8388_DACCONTROL27;
+            break;
     }
 
     uint8_t vol_val = vol > max_vol ? max_vol_val : (max_vol_val * vol) / max_vol;
 
     // main dac volume control is reverse scale (lowest value is loudest)
     // hence we reverse the calculated value
-    if (out == ES_MAIN)
-    {
-        vol_val = max_vol_val - vol_val;
-    }
+    if(out == ES_MAIN) { vol_val = max_vol_val - vol_val; }
 
     write_reg(ES8388_ADDR, lreg, vol_val);
     write_reg(ES8388_ADDR, rreg, vol_val);
@@ -241,25 +230,23 @@ void ES8388::SetVolumeSpeaker(uint8_t vol) {
     volume(ES_MAIN, 100);
 }
 
-void ES8388::SetVolumeHeadphone(uint8_t vol){
+void ES8388::SetVolumeHeadphone(uint8_t vol) {
     vol = vol * 1.6;
     volume(ES_OUT2, vol);
-    volume(ES_MAIN, 100);    
+    volume(ES_MAIN, 100);
 }
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /**
- * @brief Test if device with I2C address for ES8388 is connected to the I2C bus 
- * 
+ * @brief Test if device with I2C address for ES8388 is connected to the I2C bus
+ *
  * @param sda which pin to use for I2C SDA
  * @param scl which pin to use for I2C SCL
  * @param frequency which frequency to use as I2C bus frequency
  * @return true device was found
  * @return false device was not found
  */
-bool ES8388::identify(int32_t sda, int32_t scl, uint32_t frequency)
-{
-    Wire.begin(sda, scl, frequency);
-    Wire.beginTransmission(ES8388_ADDR);
-    return Wire.endTransmission() == 0;
+bool ES8388::identify(int32_t sda, int32_t scl, uint32_t frequency) {
+    _TwoWireInstance->begin(sda, scl, frequency);
+    _TwoWireInstance->beginTransmission(ES8388_ADDR);
+    return _TwoWireInstance->endTransmission() == 0;
 }
-

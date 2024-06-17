@@ -155,7 +155,7 @@ public:
 
 	// Dumpt the current register configuration to serial.
 	void DumpRegisters();
-	
+
 protected:
 	bool WriteReg(uint8_t reg, uint16_t val);
 	uint16_t ReadReg(uint8_t reg);

@@ -211,9 +211,6 @@ AC101 dac;
 #if DECODER == 3 // es8388
 ES8388 dac;
 #endif
-#if DECODER == 4 // wm8978
-WM8978 dac;
-#endif
 
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;

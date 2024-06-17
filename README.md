@@ -25,7 +25,7 @@ MiniWebRadio Features:
 Required HW:
 <ul>
 <li>ESP32 or ESP32-S3 board <b>with PSRAM</b></li>
-<li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388, WM8978 ...)</li>
+<li>External DAC (e.g. PCM5102a, CS4344, PT8211, AC101, ES8388)</li>
 <li>TFT Display with Touchpad (SPI), Display controller can be ILI9341 (320x240px), ILI9486 (480x320px), ILI9488 (480x320px) or ST7796 (480x320px)</li>
 <li>SD Card (FAT32) + SD adapter (can use SD slot on back of TFT display if available)</li>
 </ul>
@@ -53,7 +53,8 @@ Schematic<br>
 
 - The audioprocess works in its own task and is decoupled. If a VS1053 is used, it must have its own SPI bus (VS1053 uses HSPI - TFT uses VSPI). This prevents dropouts when drawing on the display or when the website is loading.
 - The SD card is wired as SD_MMC to improve stability and increase speed. This means that the GPIOs cannot be chosen freely. The [SD card adapter](docs/SD_Card_Adapter_for_SD_MMC_.jpg) must not have any resistors in series. For best display update speed, use 40MHz frequency for SD card if possible (SDMMC_FREQUENCY 40000000 in common.h).
-- Audio can be decoded using software and a DAC instead of VS1053 decoder board. Possible formats are mp3, aac, mp4 and flac (flac requires PSRAM). DAC (e.g. UDA13348, MAX98357A, PCM5102A) is connected via I2S. AC101, ES8388 and WM8978 (TTGO audioT board) audio decoder boards are also supported
+- Audio can be decoded using software. Possible formats are mp3, aac, mp4, opus, vorbis and flac.
+- External DACs (e.g. UDA13348, MAX98357A, PCM5102A) are connected via I2S, ES8388 and AC101 also require an I2C connection
 - 480x320px display supported. The ILI9486 (SPI display from the Raspberry PI) is also supported
 - The SD card files can be accessed via FTP. See settings for [Filezilla](docs/Filezilla.pdf). The username and password are 'esp32' (this can be changed in 'common.h')
 - Access Point SSID/password can be set using mobile phone browser - no need to modify source code or networks.csv file on SD card
