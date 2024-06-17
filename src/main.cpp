@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2b Jun 17/2024                                                                                                                       ";
+    Version 3.2c Jun 17/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1689,19 +1689,31 @@ void setVolume(uint8_t vol) {
 
 #if DECODER > 1 // ES8388, AC101 ...
     if(HP_DETECT == -1) {
-        dac.SetVolumeSpeaker(_cur_volume * 3);
-        dac.SetVolumeHeadphone(_cur_volume * 3);
-    }
-    else {
-        if(digitalRead(HP_DETECT) == HIGH) {
-            // SerialPrintfln("HP_Detect = High, volume %i", vol);
-            dac.SetVolumeSpeaker(_cur_volume * 3);
+        if(_f_mute){
+            dac.SetVolumeSpeaker(0);
             dac.SetVolumeHeadphone(0);
         }
-        else {
-            // SerialPrintfln("HP_Detect = Low, volume %i", vol);
-            dac.SetVolumeSpeaker(1);
+        else{
+            dac.SetVolumeSpeaker(_cur_volume * 3);
             dac.SetVolumeHeadphone(_cur_volume * 3);
+        }
+    }
+    else {
+        if(_f_mute){
+            dac.SetVolumeSpeaker(0);
+            dac.SetVolumeHeadphone(0);
+        }
+        else{
+            if(digitalRead(HP_DETECT) == HIGH) {
+                // SerialPrintfln("HP_Detect = High, volume %i", vol);
+                dac.SetVolumeSpeaker(_cur_volume * 3);
+                dac.SetVolumeHeadphone(0);
+            }
+            else {
+                // SerialPrintfln("HP_Detect = Low, volume %i", vol);
+                dac.SetVolumeSpeaker(1);
+                dac.SetVolumeHeadphone(_cur_volume * 3);
+            }
         }
     }
 #endif
