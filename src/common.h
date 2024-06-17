@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 13.Jun 2024
+// updated: 17.Jun 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -74,8 +74,8 @@
         #define I2S_LRC            26
         #define I2S_MCLK            0  // mostly not used
 
-        #define I2C_DATA           -1  // some DACs are controlled via I2C
-        #define I2C_CLK            -1
+        #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
+        #define I2C_DAC_SCL        -1
         #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
         #define HP_DETECT          -1
         #define AMP_ENABLED        -1
@@ -107,8 +107,8 @@
         #define I2S_LRC             1
         #define I2S_MCLK            0
 
-        #define I2C_DATA           -1  // some DACs are controlled via I2C
-        #define I2C_CLK            -1
+        #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
+        #define I2C_DAC_SCL        -1
         #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
         #define HP_DETECT          -1
         #define AMP_ENABLED        -1
@@ -119,6 +119,8 @@
         #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
+        #define I2C_SDA            -1  // I2C, dala line for additional HW
+        #define I2C_SDA            -1  // I2C, clock line for additional HW
 #endif
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2a Jun 16/2024                                                                                                                       ";
+    Version 3.2b Jun 17/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -204,12 +204,14 @@ WiFiClient     client;
 WiFiUDP        udp;
 DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
+TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 
 #if DECODER == 2 // ac101
-AC101 dac;
+AC101 dac(i2cBusTwo);
 #endif
 #if DECODER == 3 // es8388
-ES8388 dac;
+ES8388 dac(i2cBusTwo);
 #endif
 
 SemaphoreHandle_t mutex_rtc;
@@ -1589,7 +1591,7 @@ void setup() {
     setRTC(_TZString.c_str());
 
 #if DECODER > 1 // DAC controlled by I2C
-    if(!dac.begin(I2C_DATA, I2C_CLK, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
+    if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
 #endif
 
     audioInit();
