@@ -51,6 +51,7 @@
 #include "ES8388.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
+#include <BH1750.h>
 #include <freertos/task.h>
 
 
@@ -119,8 +120,8 @@
         #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
-        #define I2C_SDA            -1  // I2C, dala line for additional HW
-        #define I2C_SDA            -1  // I2C, clock line for additional HW
+        #define I2C_SDA            41  // I2C, dala line for additional HW
+        #define I2C_SCL            42  // I2C, clock line for additional HW
 #endif
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

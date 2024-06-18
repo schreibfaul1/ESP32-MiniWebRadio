@@ -82,6 +82,7 @@ uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
 uint8_t             _playerSubmenue = 0;
 uint8_t             _clockSubMenue = 0;
+uint8_t             _ambientValue = 0;
 uint16_t            _fileListNr = 0;
 uint16_t            _irNumber = 0;
 uint8_t             _itemListPos = 0; // DLNA items
@@ -102,6 +103,7 @@ uint16_t            _sum_stations = 0;
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
 uint16_t            _dlnaMaxItems = 0;
+uint16_t            _bh1750Value = 0;
 uint32_t            _resumeFilePos = 0; //
 uint32_t            _playlistTime = 0;  // playlist start time millis() for timeout
 uint32_t            _settingsHash = 0;
@@ -160,6 +162,7 @@ bool                _f_PSRAMfound = false;
 bool                _f_FFatFound = false;
 bool                _f_SD_MMCfound = false;
 bool                _f_ESPfound = false;
+bool                _f_BH1750_found = false;
 bool                _f_clearLogo = false;
 bool                _f_clearStationName = false;
 bool                _f_shuffle = false;
@@ -206,6 +209,9 @@ DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+hp_BH1750      BH1750(&i2cBusOne);       //  create the sensor
+byte mtreg = BH1750_QUALITY_HIGH;
+
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -732,7 +738,7 @@ inline uint8_t downBrightness() {
         _brightness -= 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
-        log_i("br %i", _brightness);
+    //    log_i("br %i", _brightness);
     }
     return _brightness;
 }
@@ -742,7 +748,7 @@ inline uint8_t upBrightness() {
         _brightness += 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
-        log_i("br %i", _brightness);
+    //    log_i("br %i", _brightness);
     }
     return _brightness;
 }
@@ -1658,6 +1664,12 @@ void setup() {
 
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
     setI2STone();
+    _f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND , I2C_SDA, I2C_SCL);// init the sensor with address pin connetcted to ground
+    if (_f_BH1750_found) {                                                  // result (bool) wil be be "false" if no sensor found
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found");
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    }
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2658,6 +2670,7 @@ void loop() {
             _reconnectCnt ++;
             if(_reconnectCnt < 3){
                 SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _lastconnectedhost.c_str(), _reconnectCnt);
+                stopSong();
                 connectToWiFi();
                 connecttohost(_lastconnectedhost.c_str());
                 if(audioIsRunning()) _reconnectCnt = 0;
@@ -2685,6 +2698,16 @@ void loop() {
             //    uint32_t br = audioGetBitRate();
             //    if(br) t = (fs * 8)/ br;
             //    log_w("Br %d, Dur %ds", br, t);
+        }
+        //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
+        if(_f_BH1750_found){
+            _bh1750Value = BH1750.getBrightness();
+            uint16_t ambVal = uint16_t(_bh1750Value * (float)_brightness / 100);
+            if(ambVal >100) ambVal = 100;
+            log_i("ambient light: %i", ambVal);
+            setTFTbrightness(ambVal);
+_ambientValue = 0;
+            BH1750.start();
         }
     } //  END _f_1sec
 
