@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2c Jun 17/2024                                                                                                                       ";
+    Version 3.2d Jun 20/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -82,7 +82,7 @@ uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
 uint8_t             _playerSubmenue = 0;
 uint8_t             _clockSubMenue = 0;
-uint8_t             _ambientValue = 0;
+uint8_t             _ambientValue = 50;
 uint16_t            _fileListNr = 0;
 uint16_t            _irNumber = 0;
 uint8_t             _itemListPos = 0; // DLNA items
@@ -103,7 +103,7 @@ uint16_t            _sum_stations = 0;
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
 uint16_t            _dlnaMaxItems = 0;
-uint16_t            _bh1750Value = 0;
+uint16_t            _bh1750Value = 50;
 uint32_t            _resumeFilePos = 0; //
 uint32_t            _playlistTime = 0;  // playlist start time millis() for timeout
 uint32_t            _settingsHash = 0;
@@ -2482,6 +2482,12 @@ void loop() {
     if(_f_100ms) { // calls every 0.1 second
         _f_100ms = false;
 
+        if(_f_BH1750_found){
+            if(_bh1750Value < _ambientValue) {_ambientValue--; setTFTbrightness(_ambientValue); }
+            if(_bh1750Value > _ambientValue) {_ambientValue++; setTFTbrightness(_ambientValue); }
+        }
+
+
         if(_state == RADIO && _radioSubmenue == 0) VUmeter_RA.update(audioGetVUlevel());
 
         static uint8_t factor = 0;
@@ -2701,16 +2707,15 @@ void loop() {
         }
         //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
         if(_f_BH1750_found){
-            _bh1750Value = BH1750.getBrightness();
-            uint16_t ambVal = uint16_t(_bh1750Value * (float)_brightness / 100);
-            if(ambVal >100) ambVal = 100;
-            log_i("ambient light: %i", ambVal);
-            setTFTbrightness(ambVal);
-_ambientValue = 0;
+            uint16_t ambVal = BH1750.getBrightness();
+            if(ambVal > 1500) ambVal = 1500;
+            _bh1750Value = map_l(ambVal, 0, 1500, 2, 100);
+            if(ambVal <  _brightness) ambVal = _brightness;
+        //    log_i("_bh1750Value %i, ambVal %i", _bh1750Value, ambVal);
             BH1750.start();
+        //    log_i("\n %i",audioGetBitRate(true));
         }
     } //  END _f_1sec
-
 
     if(_f_10sec == true) { // calls every 10 seconds
         _f_10sec = false;

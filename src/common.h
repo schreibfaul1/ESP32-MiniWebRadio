@@ -247,7 +247,7 @@ void           audioInit();
 void           audioTaskDelete();
 void           audioSetVolume(uint8_t vol);
 uint8_t        audioGetVolume();
-uint32_t       audioGetBitRate();
+uint32_t       audioGetBitRate(bool avg = false);
 boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
 boolean        audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
 boolean        audioConnecttospeech(const char* text, const char* lang);

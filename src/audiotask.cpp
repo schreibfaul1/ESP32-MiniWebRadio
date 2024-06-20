@@ -86,7 +86,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == GET_BITRATE){
                 audioTxTaskMessage.cmd = GET_BITRATE;
-                audioTxTaskMessage.ret = audio.getBitRate(false);
+                audioTxTaskMessage.ret = audio.getBitRate((bool)audioRxTaskMessage.value1);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == GET_CODEC){
@@ -250,8 +250,9 @@ uint8_t audioGetVolume(){
     return RX.ret;
 }
 
-uint32_t audioGetBitRate(){
+uint32_t audioGetBitRate(bool avg){
     audioTxMessage.cmd = GET_BITRATE;
+    audioTxMessage.value1 = avg;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }
