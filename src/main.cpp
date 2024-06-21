@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2c Jun 17/2024                                                                                                                       ";
+    Version 3.2e Jun 21/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -732,7 +732,7 @@ inline uint8_t downBrightness() {
         _brightness -= 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
-        log_i("br %i", _brightness);
+    //    log_i("br %i", _brightness);
     }
     return _brightness;
 }
@@ -742,7 +742,7 @@ inline uint8_t upBrightness() {
         _brightness += 5;
         setTFTbrightness(_brightness);
         showBrightnessBar();
-        log_i("br %i", _brightness);
+    //    log_i("br %i", _brightness);
     }
     return _brightness;
 }
@@ -1930,6 +1930,7 @@ void fall_asleep() {
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     audioStopSong();
+    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, LOW);}
     if(_sleepMode == 0){
         clearAll();
         setTFTbrightness(0);
@@ -1950,6 +1951,7 @@ void wake_up() {
     muteChanged(false);
     clearAll();
     setTFTbrightness(_brightness);
+    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
     connecttohost(_lastconnectedhost.c_str());
     _radioSubmenue = 0;
     changeState(RADIO);
