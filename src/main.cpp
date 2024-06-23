@@ -2533,6 +2533,7 @@ void loop() {
                     drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
                     setTFTbrightness(_brightness);
                     SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
+                    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                     audioSetVolume(21);
                     muteChanged(false);
                     connecttoFS("/ring/alarm_clock.mp3");
