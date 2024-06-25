@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2e Jun 21/2024                                                                                                                       ";
+    Version 3.2f Jun 22/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -63,17 +63,18 @@ const uint8_t       _max_volume = 21;
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
-uint8_t             _cur_volume = 0;           // will be set from stored preferences
+uint8_t             _cur_volume = 0;     // will be set from stored preferences
+uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringvolume = _max_volume; //
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
 uint8_t             _cur_Codec = 0;
-uint8_t             _numServers = 0; //
+uint8_t             _numServers = 0;     //
 uint8_t             _level = 0;
-uint8_t             _timeFormat = 24; // 24 or 12
-uint8_t             _sleepMode = 0;   // 0 display off,     1 show the clock
-uint8_t             _alarmMode = 1;   // 0 with radio only, 1 with bell and radio
+uint8_t             _timeFormat = 24;    // 24 or 12
+uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
+uint8_t             _alarmMode = 1;      // 0 with radio only, 1 with bell and radio
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
@@ -405,6 +406,7 @@ boolean defaultsettings(){
         char*  jO = x_ps_malloc(1024); // JSON Object
         strcpy(jO, "{");
         strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...21
+        strcat(jO, "\"BTvolume\":");          strcat(jO, "16,"); // 0...31
         strcat(jO, "\"ringvolume\":");        strcat(jO, "21,");
         strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
@@ -460,6 +462,7 @@ boolean defaultsettings(){
     };
 
     _cur_volume          = atoi(   parseJson("\"volume\":"));
+    _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
     _ringvolume          = atoi(   parseJson("\"ringvolume\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -617,6 +620,7 @@ void updateSettings(){
     char tmp[40 + _lastconnectedhost.length()];
     strcpy(jO, "{");
     sprintf(tmp,  "\"volume\":%i", _cur_volume);                                            strcat(jO, tmp);
+    sprintf(tmp,  "\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
     sprintf(tmp, ",\"ringvolume\":%i", _ringvolume);                                        strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
@@ -3422,8 +3426,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "KCX_BT_getMode"){   webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
     if(cmd == "KCX_BT_changeMode"){bt_emitter.changeMode(); return;}
     if(cmd == "KCX_BT_pause"){     bt_emitter.pauseResume(); return;}
-    if(cmd == "KCX_BT_downvolume"){bt_emitter.downvolume(); return;}
-    if(cmd == "KCX_BT_upvolume"){  bt_emitter.upvolume(); return;}
+    if(cmd == "KCX_BT_downvolume"){if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
+    if(cmd == "KCX_BT_upvolume")  {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}   return;}
 
     if(cmd == "hardcopy") {SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); hardcopy(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
@@ -3503,13 +3507,13 @@ void kcx_bt_info(const char* info, const char* val) {
         bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
     }
     SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
-    if(_state == BLUETOOTH){
-        if(startsWith(info, "Volume")){
-            char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        }
-        if(startsWith(info, "Mode")){
-            txt_BT_mode.writeText(val, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        }
+
+    if(startsWith(info, "Volume")){
+        char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        if(_BTvolume != atoi(val)) bt_emitter.setVolume(_BTvolume);
+    }
+    if(startsWith(info, "Mode")){
+        txt_BT_mode.writeText(val, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     }
 }
 
@@ -3652,8 +3656,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(_state == BLUETOOTH) {
         if( val && strcmp(name, "btn_BT_pause") == 0)   {bt_emitter.pauseResume(); return;}
         if( val && strcmp(name, "btn_BT_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_BT_volDown") == 0) {bt_emitter.downvolume(); return;}
-        if( val && strcmp(name, "btn_BT_volUp") == 0)   {bt_emitter.upvolume(); return;}
+        if( val && strcmp(name, "btn_BT_volDown") == 0) {if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
+        if( val && strcmp(name, "btn_BT_volUp") == 0)   {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}  return;}
         if( val && strcmp(name, "btn_BT_mode") == 0)    {bt_emitter.changeMode(); return;}
     }
     log_d("unused event: graphicObject %s was clicked", name);
