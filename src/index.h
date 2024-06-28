@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 13.06.2024
+ *  Updated on: 28.06.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -441,7 +441,7 @@ function connect() {
         if (n >= 0) {
             var msg  = socketMsg.substring(0, n)
             var val  = socketMsg.substring(n + 1)
-        //    console.log("para ",msg, " val ",val)
+            console.log("para ",msg, " val ",val)
         }
         else {
             msg = socketMsg
@@ -552,10 +552,16 @@ function connect() {
                                         if (val == 'BLUETOOTH'&& state != 'BT') showTab8();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
-                                        if(val == '0') showLogo1('label-bt-logo', '/png/BT.png')
-                                        if(val == '1' && bt_RxTx == 'TX') showLogo1('label-bt-logo', '/png/BT_TX.png')
-                                        if(val == '1' && bt_RxTx == 'RX') showLogo1('label-bt-logo', '/png/BT_RX.png')
-                                        break
+                                        if(val == '-1') {showLogo1('label-bt-logo', '/png/BT_off.png');}
+                                        if(val == '0')  {showLogo1('label-bt-logo', '/png/BT.png');}
+                                        if(val == '1' && bt_RxTx == 'TX') {showLogo1('label-bt-logo', '/png/BT_TX.png');}
+                                        if(val == '1' && bt_RxTx == 'RX') {showLogo1('label-bt-logo', '/png/BT_RX.png');}
+                                        break;
+            case "KCX_BT_power":        if(val == '1'){ document.getElementById('BT_Power').src = 'SD/png/BT_Blue.png'
+                                                        console.log("BT Power on")}
+                                        if(val == '0'){ document.getElementById('BT_Power').src = 'SD/png/BT_Red.png'
+                                                        console.log("BT Power off")}
+                                        break;
             case "KCX_BT_MEM":          show_BT_memItems(val)
                                         break;
             case "KCX_BT_SCANNED":      show_BT_scannedItems(val)
@@ -776,6 +782,7 @@ function showTab8 () {  // KCX BT Emitter
     socket.send('KCX_BT_scanned')    // get scanned items
     socket.send('KCX_BT_mem')        // get saved items
     socket.send('KCX_BT_getMode')    // get mode (TX or RX)
+    socket.send('KCX_BT_getPower')   // get power state
 }
 
 
@@ -2677,6 +2684,11 @@ function clear_BT_memItems(){
                     onmouseup="this.src='SD/png/Button_Pause_Blue.png'"
                     ontouchend="this.src='SD/png/Button_Pause_Blue.png'"
                     onclick="socket.send('KCX_BT_pause')">
+                <img id="BT_Power" src="SD/png/BT_Blue.png" alt="BT_Pause"
+                    onmousedown="this.src='SD/png/BT_Yellow.png'"
+                    ontouchstart="this.src='SD/png/BT_Yellow.png'"
+                    onclick="socket.send('KCX_BT_power')"
+                    title="switch Bluetooth on/off">
             </div>
         </div>
     </div>

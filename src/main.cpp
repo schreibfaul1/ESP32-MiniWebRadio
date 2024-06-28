@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2f Jun 22/2024                                                                                                                       ";
+    Version 3.2h Jun 28/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -173,6 +173,8 @@ bool                _f_BtEmitterFound = false;
 bool                _f_BTEmitterConnected = false;
 bool                _f_brightnessIsChangeable = false;
 bool                _f_connectToLasthost = false;
+bool                _f_BTpower = false;
+bool                _f_BTcurPowerState = false;
 String              _station = "";
 String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
@@ -389,7 +391,7 @@ button1state  btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_b
 button1state  btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
 button2state  btn_EQ_Mute("btn_EQ_Mute");
 // BLUETOOTH
-button2state  btn_BT_pause("btn_BT_pause");
+button2state  btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
 button1state  btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
 pictureBox    pic_BT_mode("pic_BT_mode");
 textbox       txt_BT_mode("txt_BT_mode");
@@ -407,6 +409,7 @@ boolean defaultsettings(){
         strcpy(jO, "{");
         strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...21
         strcat(jO, "\"BTvolume\":");          strcat(jO, "16,"); // 0...31
+        strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
         strcat(jO, "\"ringvolume\":");        strcat(jO, "21,");
         strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
@@ -463,6 +466,7 @@ boolean defaultsettings(){
 
     _cur_volume          = atoi(   parseJson("\"volume\":"));
     _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
+    _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
     _ringvolume          = atoi(   parseJson("\"ringvolume\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -618,9 +622,10 @@ void updateSettings(){
     if(!_lastconnectedhost)_lastconnectedhost = "";
     char*  jO = x_ps_malloc(1024 + _lastconnectedhost.length()); // JSON Object
     char tmp[40 + _lastconnectedhost.length()];
-    strcpy(jO, "{");
-    sprintf(tmp,  "\"volume\":%i", _cur_volume);                                            strcat(jO, tmp);
-    sprintf(tmp,  "\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
+    strcpy(jO,   "{");
+    sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
+    sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
+    strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
     sprintf(tmp, ",\"ringvolume\":%i", _ringvolume);                                        strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
@@ -1625,7 +1630,9 @@ void setup() {
     ticker100ms.attach(0.1, timer100ms);
     if(BT_EMITTER_CONNECT != -1){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
-        digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
+        digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
+        _f_BTcurPowerState = true;
+    }
     bt_emitter.begin();
 
     _dlnaLevel = 0;
@@ -1942,7 +1949,7 @@ void fall_asleep() {
     else{
         changeState(CLOCK);
     }
-    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, HIGH); bt_emitter.cmd_PowerOff();}
+    if(_f_BTpower) BTpowerChanged(false);
     SerialPrintfln("falling asleep");
     dispHeader.hide();
     dispFooter.hide();
@@ -1962,7 +1969,7 @@ void wake_up() {
     showLogoAndStationName(true);
     dispHeader.show();
     dispFooter.show();
-    if(BT_EMITTER_CONNECT != -1){digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH);} // POWER_ON
+    if(_f_BTpower) BTpowerChanged(true);
 }
 
 void setRTC(const char* TZString) {
@@ -2014,6 +2021,21 @@ void muteChanged(bool m) {
     dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
+
+void BTpowerChanged(int8_t newState){
+    if(BT_EMITTER_CONNECT == -1) return;    // guard
+    if(_f_BtEmitterFound == false) return;  // guard
+
+    if(newState){                           // POWER_ON
+        digitalWrite(BT_EMITTER_CONNECT, LOW);
+        vTaskDelay(100);
+        digitalWrite(BT_EMITTER_CONNECT, HIGH);
+    }
+    else{
+        bt_emitter.cmd_PowerOff();          // POWER OFF
+    }
+    return;
+}
 
 void logAlarmItems() {
     const char wd[7][11] = {"Sunday:   ", "Monday:   ", "Tuesday:  ", "Wednesday:", "Thursday: ", "Friday:   ", "Saturday: "};
@@ -2230,10 +2252,15 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.jpg");
     btn_BT_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_BT_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
+    btn_BT_power.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_power.setOffPicturePath("/btn/BT_Red.jpg");
+                                                                                         btn_BT_power.setOnPicturePath("/btn/BT_Blue.jpg");
+                                                                                         btn_BT_power.setClickedOffPicturePath("/btn/BT_Yellow.jpg");
+                                                                                         btn_BT_power.setClickedOnPicturePath("/btn/BT_Yellow.jpg");
+                                                                                         btn_BT_power.setValue(_f_BTpower);
+                                                                                         pic_BT_mode.setPicturePath("/common/BTnc.jpg");
     pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.jpg");
     txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h);   txt_BT_volume.setFont(_fonts[2]);
     txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
-
 }
 // clang-format off
 
@@ -2279,7 +2306,7 @@ void changeState(int32_t state){
                          btn_EQ_Mute.disable();
                          break;
         case BLUETOOTH:  btn_BT_volDown.disable();  btn_BT_volUp.disable();    btn_BT_pause.disable();    btn_BT_radio.disable();   btn_BT_mode.disable();
-                         pic_BT_mode.disable();     txt_BT_volume.disable();   txt_BT_mode.disable();
+                         btn_BT_power.disable(); pic_BT_mode.disable();     txt_BT_volume.disable();   txt_BT_mode.disable();
     }
     _f_volBarVisible = false;
     if(_timeCounter.timer){
@@ -2421,7 +2448,7 @@ void changeState(int32_t state){
 
         case BLUETOOTH:
             clearWithOutHeaderFooter();
-            btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show(); btn_BT_radio.show(); pic_BT_mode.show();
+            btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show(); btn_BT_radio.show(); btn_BT_power.show(); pic_BT_mode.show();
             char* mode = strdup(bt_emitter.getMode());
             if(strcmp(mode, "RX") == 0){
                 txt_BT_mode.writeText("RECEIVER", TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
@@ -3077,6 +3104,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_BT_pause.positionXY(x, y)) return;
                 if(btn_BT_mode.positionXY(x, y)) return;
                 if(btn_BT_radio.positionXY(x, y)) return;
+                if(btn_BT_power.positionXY(x, y)) return;
                 break;
         default:
                 break;
@@ -3142,7 +3170,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_EQ_Radio.released(); btn_EQ_Player.released(); btn_EQ_Mute.released();
             break;
         case BLUETOOTH:
-            btn_BT_pause.released(); btn_BT_radio.released(); btn_BT_volDown.released(); btn_BT_volUp.released(); btn_BT_mode.released();
+            btn_BT_pause.released(); btn_BT_radio.released(); btn_BT_volDown.released(); btn_BT_volUp.released(); btn_BT_mode.released(); btn_BT_power.released();
             break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
@@ -3417,7 +3445,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    webSrv.reply(buf, webSrv.TEXT); return;}
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
-    if(cmd == "KCX_BT_connected"){ if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=", "1"); else webSrv.send("KCX_BT_connected=", "0"); return;}
+    if(cmd == "KCX_BT_connected") {if     (!_f_BTpower)              webSrv.send("KCX_BT_connected=", "-1");
+                                   else if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=",  "1");
+                                   else                              webSrv.send("KCX_BT_connected=",  "0");
+                                   return;}
     if(cmd == "KCX_BT_clearItems"){bt_emitter.deleteVMlinks(); return;}
     if(cmd == "KCX_BT_addName"){   bt_emitter.addLinkName(param.c_str()); return;}
     if(cmd == "KCX_BT_addAddr"){   bt_emitter.addLinkAddr(param.c_str()); return;}
@@ -3428,6 +3459,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "KCX_BT_pause"){     bt_emitter.pauseResume(); return;}
     if(cmd == "KCX_BT_downvolume"){if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
     if(cmd == "KCX_BT_upvolume")  {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}   return;}
+    if(cmd == "KCX_BT_getPower")  {if(_f_BTpower) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
+    if(cmd == "KCX_BT_power")     {_f_BTpower = !_f_BTcurPowerState; BTpowerChanged(!_f_BTcurPowerState); return;}
 
     if(cmd == "hardcopy") {SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); hardcopy(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
@@ -3502,11 +3535,11 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
 void kcx_bt_info(const char* info, const char* val) {
     if(endsWith(info, "Emitter found")){
         _f_BtEmitterFound = true;
-        bt_emitter.userCommand("AT+GMR?");     // get version
-        bt_emitter.userCommand("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
-        bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
+        bt_emitter.userCommand("AT+GMR?");                      // get version
+        bt_emitter.userCommand("AT+VOL?");                      // get volume (in receiver mode 0 ... 31)
+        bt_emitter.userCommand("AT+BT_MODE?");                  // transmitter or receiver
+        if(!_f_BTpower) bt_emitter.userCommand("AT+POWER_OFF"); // forced by user
     }
-    SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
 
     if(startsWith(info, "Volume")){
         char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
@@ -3515,9 +3548,33 @@ void kcx_bt_info(const char* info, const char* val) {
     if(startsWith(info, "Mode")){
         txt_BT_mode.writeText(val, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
     }
+    if(startsWith(info, "POWER OFF")){
+        _f_BTcurPowerState = false;
+        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
+        webSrv.send("KCX_BT_power=", "0");
+        if(_state == BLUETOOTH) {
+            btn_BT_power.setValue(false);
+            pic_BT_mode.setPicturePath("/common/BToff.jpg");
+            pic_BT_mode.show();
+        }
+        webSrv.send("KCX_BT_connected=", "-1");
+    }
+    if(startsWith(info, "POWER ON")) {
+        _f_BTcurPowerState = true;
+        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
+        webSrv.send("KCX_BT_power=", "1");
+        if(_state == BLUETOOTH) {
+            btn_BT_power.setValue(true);
+            pic_BT_mode.setPicturePath("/common/BTnc.jpg");
+            pic_BT_mode.show();
+        }
+        return;
+    }
+    if(_f_BTcurPowerState) SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
+
     if(status) {
         const char* mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
@@ -3659,6 +3716,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_BT_volDown") == 0) {if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
         if( val && strcmp(name, "btn_BT_volUp") == 0)   {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}  return;}
         if( val && strcmp(name, "btn_BT_mode") == 0)    {bt_emitter.changeMode(); return;}
+        if( val && strcmp(name, "btn_BT_power") == 0)    {return;}
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
@@ -3759,6 +3817,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_BT_volDown") == 0)  {return;}
         if(strcmp(name, "btn_BT_volUp") == 0)    {return;}
         if(strcmp(name, "btn_BT_mode") == 0)     {return;}
+        if(strcmp(name, "btn_BT_power") == 0)    {_f_BTpower = !_f_BTcurPowerState; BTpowerChanged(!_f_BTcurPowerState); return;}
     }
     log_d("unused event: graphicObject %s was released", name);
 }

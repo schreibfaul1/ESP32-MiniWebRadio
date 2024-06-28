@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 17.Jun 2024
+// updated: 28.Jun 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -198,7 +198,6 @@ void           showBrightnessBar();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
 void           showLogoAndStationName(bool force);
-void           showStationLogo(String ln);
 void           showFileLogo(uint8_t state);
 void           showFileName(const char* fname);
 void           showPlsFileNumber();
@@ -239,6 +238,7 @@ void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
 void           muteChanged(bool m);
+void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void           setTimeCounter(uint8_t sec);
 
 //prototypes (audiotask.cpp)
@@ -1154,7 +1154,7 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists", scaledPicPath); return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
         if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
