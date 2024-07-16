@@ -58,7 +58,7 @@
     // Digital I/O used
         #define TFT_CS             22
         #define TFT_DC             21
-        #define TFT_BL             32  // at -1 the brightness menu is not displayed
+        #define TFT_BL             12  // at -1 the brightness menu is not displayed
         #define TP_IRQ             39  // VN
         #define TP_CS               5
         #define SD_MMC_D0           2  // cannot be changed
@@ -84,7 +84,7 @@
         #define BT_EMITTER_TX      36  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_LINK    34  // high if connected                     (-1 if not available)
         #define BT_EMITTER_MODE    13  // high transmit - low receive           (-1 if not available)
-        #define BT_EMITTER_CONNECT -1
+        #define BT_EMITTER_CONNECT 32  // -1 if not used
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3

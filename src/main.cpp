@@ -1343,7 +1343,7 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     IPAddress myIP = WiFi.softAPIP();
     String    AccesspointIP = myIP.toString();
     char      buf[100];
-    sprintf(buf, "WiFi credentials are not correct\nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
+    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
     tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
     SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
     int16_t n = WiFi.scanNetworks();
@@ -2791,6 +2791,7 @@ void loop() {
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
+                                                        audioStopSong();
                                                         WiFi.disconnect();
                                                         log_w("disconnected, wait 35s");
                                                         vTaskDelay(35000 / portTICK_PERIOD_MS);
@@ -3576,6 +3577,7 @@ void kcx_bt_info(const char* info, const char* val) {
 void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
 
     if(status) {
+        if(!_f_BTcurPowerState) return;
         const char* mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
         if(strcmp(mode, "TX") == 0) pic_BT_mode.setPicturePath("/common/BTgold.jpg");
