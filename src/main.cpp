@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2i Jul 25/2024                                                                                                                       ";
+    Version 3.2j Jul 26/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1593,8 +1593,8 @@ void setup() {
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
-    // ArduinoOTA.setHostname("MiniWebRadio");
-    // ArduinoOTA.begin();
+    ArduinoOTA.setHostname("MiniWebRadio");
+    ArduinoOTA.begin();
 
     ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
 
@@ -2479,7 +2479,7 @@ void loop() {
     ir.loop();
     tp.loop();
     ftpSrv.handleFTP();
-//    ArduinoOTA.handle();
+    ArduinoOTA.handle();
     dlna.loop();
     bt_emitter.loop();
 
