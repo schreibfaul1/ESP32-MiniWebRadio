@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2h Jun 28/2024                                                                                                                       ";
+    Version 3.2i Jul 25/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -78,6 +78,7 @@ uint8_t             _alarmMode = 1;      // 0 with radio only, 1 with bell and r
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
+uint8_t             _WiFi_disconnectCnt = 0;
 uint16_t            _staListNr = 0;
 uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
@@ -2712,6 +2713,22 @@ void loop() {
         if(_f_dlna_browseReady){ // unused
             _f_dlna_browseReady = false;
         }
+        //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
+        if((WiFi.status() != WL_CONNECTED)) {
+            _WiFi_disconnectCnt ++;
+            if(_WiFi_disconnectCnt == 15){
+                _WiFi_disconnectCnt = 1;
+                SerialPrintfln("WiFi         :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+                WiFi.disconnect();
+                WiFi.reconnect();
+            }
+        }
+        else{
+            if(_WiFi_disconnectCnt){
+                _WiFi_disconnectCnt = 0;
+                if(_state == RADIO) audioConnecttohost(_lastconnectedhost.c_str());
+            }
+        }
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if(_f_isFSConnected) {
             //    uint32_t t = 0;
@@ -2791,12 +2808,19 @@ void loop() {
 void audio_info(const char* info) {
     if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
                                                    if(endsWith(info, "failed!")){
-                                                        audioStopSong();
-                                                        WiFi.disconnect();
-                                                        log_w("disconnected, wait 35s");
-                                                        vTaskDelay(35000 / portTICK_PERIOD_MS);
-                                                        log_w("try reconnection");
-                                                        _f_reconnect = true;
+                                                        if(WiFi.status() != WL_CONNECTED){
+                                                            SerialPrintfln("WiFi         :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+                                                            _WiFi_disconnectCnt = 1;
+                                                            WiFi.disconnect();
+                                                            WiFi.reconnect();
+                                                        }
+                                                        else{
+                                                            WiFi.disconnect();
+                                                            log_w("disconnected, wait 35s");
+                                                            vTaskDelay(35000 / portTICK_PERIOD_MS);
+                                                            log_w("try reconnection");
+                                                            _f_reconnect = true;
+                                                        }
                                                    }return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
