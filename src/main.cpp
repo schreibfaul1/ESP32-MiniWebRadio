@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.2j Jul 26/2024                                                                                                                       ";
+    Version 3.2k Jul 27/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1803,7 +1803,7 @@ void StationsItems() {
     else{
         webSrv.send("stationLogo=", "/logo/" + _stationName_nvs + ".jpg");
         webSrv.send("stationNr=", cur_station);
-        if(_stationURL) webSrv.send("stationNr=", String(_stationURL));
+        if(_stationURL) webSrv.send("stationURL=", String(_stationURL));
     }
     if(stationLogo_air){free(stationLogo_air); stationLogo_air = NULL;}
 }
