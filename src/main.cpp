@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3a Jul 27/2024                                                                                                                       ";
+    Version 3.3b Jul 27/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2812,6 +2812,7 @@ void audio_info(const char* info) {
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(startsWith(info, "StreamTitle="))           {return;}
     if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(startsWith(info, "connect to"))             {IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {{SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);} return;} // all other
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
