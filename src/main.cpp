@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3 Jul 27/2024                                                                                                                       ";
+    Version 3.3a Jul 27/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2806,22 +2806,7 @@ void loop() {
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(startsWith(info, "Request")) {              SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info);
-                                                   if(endsWith(info, "failed!")){
-                                                        if(WiFi.status() != WL_CONNECTED){
-                                                            SerialPrintfln("WiFi         :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-                                                            _WiFi_disconnectCnt = 1;
-                                                            WiFi.disconnect();
-                                                            WiFi.reconnect();
-                                                        }
-                                                        else{
-                                                            WiFi.disconnect();
-                                                            log_w("disconnected, wait 35s");
-                                                            vTaskDelay(35000 / portTICK_PERIOD_MS);
-                                                            log_w("try reconnection");
-                                                            _f_reconnect = true;
-                                                        }
-                                                   }return;}
+    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); WiFi.disconnect();  WiFi.begin();}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
