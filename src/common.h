@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 25.Jul 2024
+// updated: 28.Jul 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -747,6 +747,11 @@ private:
     uint8_t         m_fontSize = 0;
     uint8_t         m_h_align = TFT_ALIGN_RIGHT;
     uint8_t         m_v_align = TFT_ALIGN_TOP;
+    uint8_t         m_l_margin = 0; // left margin
+    uint8_t         m_r_margin = 0; // right margin
+    uint8_t         m_t_margin = 0; // top margin
+    uint8_t         m_b_margin = 0; // bottom margin
+    uint8_t         m_d_margin = 0;
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
     char*           m_text = NULL;
@@ -772,6 +777,10 @@ public:
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_l_margin = 0;
+        m_r_margin = w / 100;
+        m_t_margin = 0;
+        m_b_margin = h / 50;
     }
     void show(){
         m_enabled = true;
@@ -838,7 +847,7 @@ public:
             tft.setBackGoundColor(m_bgColor);
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
-            tft.writeText(m_text, m_x, m_y, m_w, m_h, m_h_align, m_v_align, false, false, m_autoSize);
+            tft.writeText(m_text, m_x + m_l_margin, m_y + m_t_margin, m_w - m_r_margin, m_h - m_d_margin, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
