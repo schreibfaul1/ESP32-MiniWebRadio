@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 28.Jul 2024
+// updated: 29.Jul 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -245,6 +245,7 @@ void           setTimeCounter(uint8_t sec);
 void           audioInit();
 void           audioTaskDelete();
 void           audioSetVolume(uint8_t vol);
+void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
 uint32_t       audioGetBitRate();
 boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");

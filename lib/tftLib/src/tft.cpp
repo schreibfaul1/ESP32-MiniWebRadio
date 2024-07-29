@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Jun 08 2024
+// updated on Jul 29 2024
 
 #include "tft.h"
 #include "Arduino.h"
@@ -5879,7 +5879,7 @@ void TP::loop() {
         }
         else {
             if(m_f_isPressing) {
-                if(m_pressingTime + 2500 < millis()) {
+                if(m_pressingTime + 2000 < millis()) {
                     m_f_isPressing = false;
                     if(tp_long_pressed) tp_long_pressed(x2, y2);
                     m_f_longPressed = true;
@@ -5892,6 +5892,7 @@ void TP::loop() {
             // log_i("tp_released");
             if(m_f_longPressed) {
                 m_f_longPressed = false;
+                if(tp_released) tp_released(x1, y1);
                 if(tp_long_released) tp_long_released();
             }
             else {

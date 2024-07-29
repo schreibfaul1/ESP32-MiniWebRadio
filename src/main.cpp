@@ -66,6 +66,7 @@ uint8_t             _alarmdays = 0;
 uint8_t             _cur_volume = 0;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringvolume = _max_volume; //
+uint8_t             _volumeSteps = 0;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
@@ -135,6 +136,10 @@ bool                _f_10sec = false;
 bool                _f_1min = false;
 bool                _f_mute = false;
 bool                _f_muteIsPressed = false;
+bool                _f_volumeDownIsPressed = false;
+bool                _f_volumeUpIsPressed = false;
+bool                _f_volumeDownIsLongPressed = false;
+bool                _f_volumeUpIsLongPressed = false;
 bool                _f_sleeping = false;
 bool                _f_isWebConnected = false;
 bool                _f_isFSConnected = false;
@@ -412,6 +417,7 @@ boolean defaultsettings(){
         strcat(jO, "\"BTvolume\":");          strcat(jO, "16,"); // 0...31
         strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
         strcat(jO, "\"ringvolume\":");        strcat(jO, "21,");
+        strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,");
         strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_tue\":");     strcat(jO, "00:00,");
@@ -469,6 +475,7 @@ boolean defaultsettings(){
     _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
     _ringvolume          = atoi(   parseJson("\"ringvolume\":"));
+    _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     _alarmtime[2]        = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -628,6 +635,7 @@ void updateSettings(){
     sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
     strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
     sprintf(tmp, ",\"ringvolume\":%i", _ringvolume);                                        strcat(jO, tmp);
+    sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_tue\":%02d:%02d", _alarmtime[2] / 60, _alarmtime[2] % 60);   strcat(jO, tmp);
@@ -2538,8 +2546,9 @@ void loop() {
                     else { ; } // all other, do nothing
                 }
             }
-
         }
+        if(_f_volumeUpIsLongPressed)   {setTimeCounter(2); upvolume();   if(_state == RADIO) showVolumeBar();log_i("volumeUpIsLongPressed");}
+        if(_f_volumeDownIsLongPressed) {setTimeCounter(2); downvolume(); if(_state == RADIO) showVolumeBar();log_i("volumeDownIsLongPressed");}
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -3145,7 +3154,8 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     if(_state == DLNAITEMSLIST){
         lst_DLNA.longPressed(x, y);
     }
-
+    if(_f_volumeUpIsPressed)   _f_volumeUpIsLongPressed = true;
+    if(_f_volumeDownIsPressed) _f_volumeDownIsLongPressed = true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
@@ -3205,8 +3215,10 @@ void tp_released(uint16_t x, uint16_t y){
 }
 
 void tp_long_released(){
-    // log_w("long released)");
+    log_w("long released)");
     if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
+    _f_volumeUpIsLongPressed = false;
+    _f_volumeDownIsLongPressed = false;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
@@ -3653,8 +3665,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
 
     if(_state == RADIO) {
         if( val && strcmp(name, "btn_RA_Mute") == 0)    {setTimeCounter(2); {if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_RA_volDown") == 0) {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_RA_volUp") == 0)   {setTimeCounter(2); return;}
+        if( val && strcmp(name, "btn_RA_volDown") == 0) {setTimeCounter(2); _f_volumeDownIsPressed = true; return;}
+        if( val && strcmp(name, "btn_RA_volUp") == 0)   {setTimeCounter(2); _f_volumeUpIsPressed = true; return;}
         if( val && strcmp(name, "btn_RA_prevSta") == 0) {setTimeCounter(2); clearVolBar(); return;}
         if( val && strcmp(name, "btn_RA_nextSta") == 0) {setTimeCounter(2); clearVolBar(); return;}
         if( val && strcmp(name, "btn_RA_staList") == 0) {return;}
@@ -3675,8 +3687,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     }
     if(_state == PLAYER) {
         if( val && strcmp(name, "btn_PL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_PL_volDown") == 0) {return;}
-        if( val && strcmp(name, "btn_PL_volUp") == 0)   {return;}
+        if( val && strcmp(name, "btn_PL_volDown") == 0) {_f_volumeUpIsPressed = true; return;}
+        if( val && strcmp(name, "btn_PL_volUp") == 0)   {_f_volumeUpIsPressed = true; return;}
         if( val && strcmp(name, "btn_PL_pause") == 0)   {return;}
         if( val && strcmp(name, "btn_PL_cancel") == 0)  {return;}
         if( val && strcmp(name, "btn_PL_prevFile") == 0){if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
@@ -3693,8 +3705,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(_state == DLNA) {
         if( val && strcmp(name, "btn_DL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_DL_pause") == 0)   {return;}
-        if( val && strcmp(name, "btn_DL_volDown") == 0) {return;}
-        if( val && strcmp(name, "btn_DL_volUp") == 0)   {return;}
+        if( val && strcmp(name, "btn_DL_volDown") == 0) {_f_volumeDownIsPressed = true; return;}
+        if( val && strcmp(name, "btn_DL_volUp") == 0)   {_f_volumeUpIsPressed = true; return;}
         if( val && strcmp(name, "btn_DL_radio") == 0)   {return;}
         if( val && strcmp(name, "btn_DL_fileList") == 0){return;}
         if( val && strcmp(name, "btn_DL_cancel") == 0)  {clearStationName(); btn_DL_pause.setInactive(); return;}
@@ -3706,8 +3718,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_CL_Mute") == 0)    {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
         if( val && strcmp(name, "btn_CL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_CL_volDown") == 0) {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_CL_volUp") == 0)   {setTimeCounter(2); return;}
+        if( val && strcmp(name, "btn_CL_volDown") == 0) {setTimeCounter(2); _f_volumeDownIsPressed = true; return;}
+        if( val && strcmp(name, "btn_CL_volUp") == 0)   {setTimeCounter(2); _f_volumeUpIsPressed = true; return;}
         if( val && strcmp(name, "clk_CL_green") == 0)   {return;}
     }
     if(_state == ALARM) {
@@ -3757,8 +3769,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
 
     if(_state == RADIO) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
-        if(strcmp(name, "btn_RA_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_RA_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_RA_volDown") == 0)  {downvolume(); showVolumeBar(); _f_volumeDownIsPressed = false; return;}
+        if(strcmp(name, "btn_RA_volUp") == 0)    {upvolume(); showVolumeBar(); _f_volumeUpIsPressed = false; return;}
         if(strcmp(name, "btn_RA_prevSta") == 0)  {prevStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_nextSta") == 0)  {nextStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
@@ -3778,8 +3790,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == PLAYER) {
         if(strcmp(name, "btn_PL_Mute") == 0)     {muteChanged(btn_PL_Mute.getValue()); return;}
-        if(strcmp(name, "btn_PL_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_PL_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_PL_volDown") == 0)  {downvolume(); showVolumeBar(); _f_volumeDownIsPressed = false; return;}
+        if(strcmp(name, "btn_PL_volUp") == 0)    {upvolume(); showVolumeBar(); _f_volumeUpIsPressed = false; return;}
         if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {audioPauseResume();} return;}
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
@@ -3796,8 +3808,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
         if(strcmp(name, "btn_DL_pause") == 0)    {audioPauseResume(); return;}
-        if(strcmp(name, "btn_DL_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_DL_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_DL_volDown") == 0)  {downvolume(); showVolumeBar(); _f_volumeDownIsPressed = false; return;}
+        if(strcmp(name, "btn_DL_volUp") == 0)    {upvolume(); showVolumeBar(); _f_volumeUpIsPressed = false; return;}
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); return;}
@@ -3811,8 +3823,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_CL_Mute") == 0)     {muteChanged(btn_CL_Mute.getValue()); return;}
         if(strcmp(name, "btn_CL_alarm") == 0)    {changeState(ALARM); return;}
         if(strcmp(name, "btn_CL_radio") == 0)    {_clockSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_CL_volDown") == 0)  {downvolume(); showVolumeBar(); return;}
-        if(strcmp(name, "btn_CL_volUp") == 0)    {upvolume(); showVolumeBar(); return;}
+        if(strcmp(name, "btn_CL_volDown") == 0)  {downvolume(); showVolumeBar(); _f_volumeDownIsPressed = false; return;}
+        if(strcmp(name, "btn_CL_volUp") == 0)    {upvolume(); showVolumeBar(); _f_volumeUpIsPressed = false; return;}
         if(strcmp(name, "clk_CL_green") == 0)    {_clockSubMenue = 1; changeState(CLOCK); return;}
     }
     if(_state == ALARM) {

@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 20.05.2024
+// updated: 29.07.2024
 
 #include "common.h"
 #include "SPIFFS.h"
@@ -14,7 +14,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
-                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET};
+                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -180,8 +180,14 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = audio.setTimeOffset(timeOffset);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == SET_VOLUME_STEPS){
+                audioTxTaskMessage.cmd = SET_VOLUME_STEPS;
+                audio.setVolumeSteps(audioRxTaskMessage.value1);
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else{
-                SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage");
+                SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage %i", audioRxTaskMessage.cmd);
             }
         }
         audio.loop();
@@ -383,6 +389,13 @@ bool audioSetTimeOffset(int16_t timeOffset){
     audioTxMessage.value1 = timeOffset;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
+}
+
+void audioSetVolumeSteps(uint8_t steps){
+    audioTxMessage.cmd = SET_VOLUME_STEPS;
+    audioTxMessage.value1 = steps;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
 }
 
 void audioMute(uint8_t vol){
