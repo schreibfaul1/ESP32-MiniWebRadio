@@ -1613,7 +1613,7 @@ void setup() {
 #endif
 
     audioInit();
-
+    audioSetCoreID(1);
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
 
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
@@ -2021,8 +2021,8 @@ void muteChanged(bool m) {
     btn_EQ_Mute.setValue(m);
     btn_PL_Mute.setValue(m);
     btn_RA_Mute.setValue(m);
-    if(m) {audioMute(0); _f_mute = true;}
-    else {audioMute(_cur_volume); _f_mute = false;}
+    if(m) {audioSetVolume(0); _f_mute = true;}
+    else {audioSetVolume(_cur_volume); _f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
     if(_f_mute) dispHeader.setVolumeColor(TFT_RED);
@@ -2483,6 +2483,7 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound) return;    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
+    vTaskDelay(7); // feed the watchdog
     webSrv.loop();
     ir.loop();
     tp.loop();
@@ -2784,14 +2785,6 @@ void loop() {
         if(r.startsWith("h")) { // A hardcopy of the display is created and written to the SD card
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
             hardcopy();
-        }
-        if(r.startsWith("m-")) {
-            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "mute decrement"); }
-            audioMute(true);
-        }
-        if(r.startsWith("m+")) {
-            { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "mute increment"); }
-            audioMute(false);
         }
         if(r.startsWith("rts")) {
             char timeStatsBuffer[1024 * 2];

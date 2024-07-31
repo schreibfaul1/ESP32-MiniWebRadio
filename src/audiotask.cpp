@@ -14,7 +14,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
-                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS};
+                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS, SET_COREID};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -28,8 +28,6 @@ struct audioMessage{
 
 uint8_t  t_volume = 0;
 uint32_t t_millis = 0;
-bool     f_muteIncrement = false;
-bool     f_muteDecrement = false;
 
 QueueHandle_t audioSetQueue = NULL;
 QueueHandle_t audioGetQueue = NULL;
@@ -57,7 +55,7 @@ void audioTask(void *parameter) {
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
             if(audioRxTaskMessage.cmd == SET_VOLUME){
                 audioTxTaskMessage.cmd = SET_VOLUME;
-                audio.setVolume(audioRxTaskMessage.value1);
+                t_volume = audioRxTaskMessage.value1;
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -186,28 +184,25 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == SET_COREID){
+                audioTxTaskMessage.cmd = SET_COREID;
+                audio.setAudioTaskCore(audioRxTaskMessage.value1);
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else{
                 SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage %i", audioRxTaskMessage.cmd);
             }
         }
         audio.loop();
 
-        if(f_muteDecrement){
-            if(t_millis + 30 < millis()){
-                uint8_t v = audio.getVolume();
-                if (v > t_volume) audio.setVolume(v - 1);
-                else f_muteDecrement = false;
-                t_millis = millis();
-            }
+        if(t_millis + 30 < millis()){
+            t_millis = millis();
+            uint8_t v = audio.getVolume();
+            if (v > t_volume) audio.setVolume(v - 1);
+            if (v < t_volume) audio.setVolume(v + 1);
         }
-        if(f_muteIncrement){
-            if(t_millis + 30 < millis()){
-                uint8_t v = audio.getVolume();
-                if(v < t_volume) audio.setVolume(v + 1);
-                else f_muteIncrement = false;
-                t_millis = millis();
-            }
-        }
+        vTaskDelay(7);
     }
 }
 
@@ -391,22 +386,10 @@ bool audioSetTimeOffset(int16_t timeOffset){
     return RX.ret;
 }
 
-void audioSetVolumeSteps(uint8_t steps){
-    audioTxMessage.cmd = SET_VOLUME_STEPS;
-    audioTxMessage.value1 = steps;
+void audioSetCoreID(uint8_t coreId){
+    audioTxMessage.cmd = SET_COREID;
+    audioTxMessage.value1 = coreId;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
 
-void audioMute(uint8_t vol){
-    if(vol > 21) vol = 21;
-    if(vol > audioGetVolume()) {
-        t_volume = vol;
-        f_muteIncrement = true;
-    }
-    else if(vol < audioGetVolume()){
-        t_volume = vol;
-        f_muteDecrement = true;
-    }
-    t_millis = millis();
-}

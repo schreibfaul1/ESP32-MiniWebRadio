@@ -15,8 +15,8 @@
 #define TP_ROTATION         1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
-#define AUDIOTASK_CORE      0                               // 0 or 1
-#define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
+#define AUDIOTASK_CORE      1                               // 0 or 1
+#define AUDIOTASK_PRIO      4                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
 #define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
@@ -267,7 +267,7 @@ uint16_t       audioGetVUlevel();
 uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
-void           audioMute(uint8_t vol);
+void           audioSetCoreID(uint8_t coreId);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
