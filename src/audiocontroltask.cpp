@@ -210,21 +210,21 @@ TaskHandle_t Task1;
 
 void audioInit() {
     xTaskCreatePinnedToCore(
-        audioTask,              /* Function to implement the task */
-        "audioplay",            /* Name of the task */
-        7500,                   /* Stack size in words */
-        NULL,                   /* Task input parameter */
-        AUDIOTASK_PRIO,         /* Priority of the task */
-        &Task1,                 /* Task handle. */
-        AUDIOTASK_CORE          /* Core where the task should run */
+        audioTask,                  /* Function to implement the task */
+        "audioplay",                /* Name of the task */
+        7500,                       /* Stack size in words */
+        NULL,                       /* Task input parameter */
+        AUDIOCONTROLTASK_PRIO,      /* Priority of the task */
+        &Task1,                     /* Task handle. */
+        AUDIOCONTROLTASK_CORE       /* Core where the task should run */
     );
     if(CORE_DEBUG_LEVEL >= 2){
-        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);}
-        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOTASK_PRIO);}
+        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_CORE);}
+        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_PRIO);}
     }
 }
 
-void audioTaskDelete(){
+void audioControlTaskDelete(){
     vTaskDelete(Task1);
 }
 

@@ -4,25 +4,25 @@
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 // clang-format off
-#define _SSID               "mySSID"                        // Your WiFi credentials here
-#define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
-#define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
-#define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_ROTATION        1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
-#define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
-#define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
-#define AUDIOTASK_CORE      1                               // 0 or 1
-#define AUDIOTASK_PRIO      4                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
-#define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
-#define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
-#define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
-#define FTP_PASSWORD        "esp32"
-#define CONN_TIMEOUT        2500                            // unencrypted connection timeout in ms (http://...)
-#define CONN_TIMEOUT_SSL    3500                            // encrypted connection timeout in ms (https://...)
+#define _SSID                   "mySSID"                        // Your WiFi credentials here
+#define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
+#define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define DISPLAY_INVERSION       0                               // (0) off (1) on
+#define TFT_ROTATION            1                               // 1 or 3 (landscape)
+#define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION             1                               // 1 or 3 (landscape)
+#define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
+#define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
+#define AUDIOCONTROLTASK_CORE   1                               // 0 or 1
+#define AUDIOCONTROLTASK_PRIO   2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
+#define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
+#define SDMMC_FREQUENCY         80000000                        // 80000000 or 40000000 MHz
+#define FTP_USERNAME            "esp32"                         // user and pw in FTP Client
+#define FTP_PASSWORD            "esp32"
+#define CONN_TIMEOUT            2500                            // unencrypted connection timeout in ms (http://...)
+#define CONN_TIMEOUT_SSL        3500                            // encrypted connection timeout in ms (https://...)
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -243,7 +243,7 @@ void           setTimeCounter(uint8_t sec);
 
 //prototypes (audiotask.cpp)
 void           audioInit();
-void           audioTaskDelete();
+void           audioControlTaskDelete();
 void           audioSetVolume(uint8_t vol);
 void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
@@ -304,6 +304,14 @@ inline int32_t str2int(const char* str) {
         return stoi(str);
     }
     return 0;
+}
+
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline char* int2str(int val) {
+    static char ret[8];
+    itoa(val, ret, 10);
+    return ret;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

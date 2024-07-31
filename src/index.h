@@ -116,6 +116,10 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
+        #tab-content9 {
+            display : none;
+            margin : 20px;
+        }
         .button_80x30 {
             width : 120px;
             height : 30px;
@@ -495,6 +499,9 @@ function connect() {
                                         break
             case  "volume":             resultstr1.value = "Volume is now " + val;
                                         break
+            case  "ringVolume":         console.log("ringvolume: ", val);
+                                        showRingvolume(val)
+                                        break
             case  "SD_playFile":        resultstr3.value = "Audiofile is " + val;
                                         break
             case  "SD_playFolder":      resultstr3.value = "play all: " + val;
@@ -549,7 +556,7 @@ function connect() {
                                         break;
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
                                         if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
-                                        if (val == 'BLUETOOTH'&& state != 'BT') showTab8();
+                                        if (val == 'BLUETOOTH'&& state != 'BT') showTab9();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
                                         if(val == '-1') {showLogo1('label-bt-logo', '/png/BT_off.png');}
@@ -629,12 +636,14 @@ function showTab1 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     socket.send("change_state=" + "RADIO")
     socket.send("getmute")
 }
@@ -650,12 +659,14 @@ function showTab2 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Yellow.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     $('#jsGrid').jsGrid('refresh')
 }
 
@@ -670,12 +681,14 @@ function showTab3 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     socket.send("change_state=" + "PLAYER")
 }
 
@@ -690,12 +703,14 @@ function showTab4 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Yellow.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     clearDLNAServerList(0)
     socket.send('DLNA_getServer')
     socket.send("change_state=" + "DLNA")
@@ -712,17 +727,19 @@ function showTab5 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
 }
 
 function showTab6 () {
-    state = 'ABOUT'
-    console.log('tab-content6 (About)')
+    state = 'SETTINGS'
+    console.log('tab-content5 (Search Stations)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
     document.getElementById('tab-content3').style.display = 'none'
@@ -731,19 +748,22 @@ function showTab6 () {
     document.getElementById('tab-content6').style.display = 'block'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Yellow.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Yellow.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     // getTimeZoneName()
     loadTimeZones()
+    loadRingVolume()
 }
 
-function showTab7 () {  // Remote Control
-    state = 'IR'
-    console.log('tab-content7 (Remote Control)')
+function showTab7 () {
+    state = 'ABOUT'
+    console.log('tab-content6 (About)')
     document.getElementById('tab-content1').style.display = 'none'
     document.getElementById('tab-content2').style.display = 'none'
     document.getElementById('tab-content3').style.display = 'none'
@@ -752,15 +772,38 @@ function showTab7 () {  // Remote Control
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'block'
     document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Yellow.png'
 }
 
-function showTab8 () {  // KCX BT Emitter
+function showTab8 () {  // Remote Control
+    state = 'IR'
+    console.log('tab-content7 (Remote Control)')
+    document.getElementById('tab-content1').style.display = 'none'
+    document.getElementById('tab-content2').style.display = 'none'
+    document.getElementById('tab-content3').style.display = 'none'
+    document.getElementById('tab-content4').style.display = 'none'
+    document.getElementById('tab-content5').style.display = 'none'
+    document.getElementById('tab-content6').style.display = 'none'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'block'
+    document.getElementById('tab-content9').style.display = 'none'
+    document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
+    document.getElementById('btn2').src = 'SD/png/Station_Green.png'
+    document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
+    document.getElementById('btn5').src = 'SD/png/Search_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
+}
+
+function showTab9 () {  // KCX BT Emitter
     state = 'BT'
     console.log('tab-content8 (Remote Control)')
     document.getElementById('tab-content1').style.display = 'none'
@@ -770,13 +813,15 @@ function showTab8 () {  // KCX BT Emitter
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
-    document.getElementById('tab-content8').style.display = 'block'
+    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'block'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
-    document.getElementById('btn6').src = 'SD/png/About_Green.png'
+    document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
+    document.getElementById('btn7').src = 'SD/png/About_Green.png'
     socket.send("change_state=" + "BLUETOOTH")
     socket.send('KCX_BT_connected')  // is connected?
     socket.send('KCX_BT_scanned')    // get scanned items
@@ -1599,6 +1644,9 @@ function downloadCanvasImage () {
         lnk.fireEvent('onclick')
     }
 }
+// ------------------------------------- TAB Settings-------------------------------------
+
+
 // -------------------------------------- TAB Info ---------------------------------------
 
 function getTimeZoneName() { //
@@ -1662,6 +1710,47 @@ function loadTimeZones() { // load from SD
     }
     tzFile.send()
 }  // END loadTimeZones
+
+function loadRingVolume(){
+    const selectElement = document.getElementById('selRingVolume');
+
+    for (let i = 0; i <= 255; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i === 200) {
+            option.selected = true; // Setzt den Standardwert
+        }
+        selectElement.appendChild(option);
+    }
+
+    socket.send('getRingVolume')
+}
+function showRingvolume(val){
+    const selectedValueElement = document.getElementById('selectedValue');
+    selectedValueElement.textContent = val;
+}
+
+function loadVolumeSteps(){
+    const selectElement = document.getElementById('selVolumeSteps');
+
+    for (let i = 21; i <= 255; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i === 21) {
+            option.selected = true; // Setzt den Standardwert
+        }
+        selectElement.appendChild(option);
+    }
+
+    socket.send('getRingVolume')
+}
+function showVolumeSteps(val){
+    const selectedValueElement = document.getElementById('selectedValue1');
+    selectedValueElement.textContent = val;
+}
+
 // -------------------------------------- TAB Remote Control---------------------------------------
 function loadIRbuttons(){
   var theUrl = 'loadIRbuttons?' + "" + '&version=' + Math.random()
@@ -1863,16 +1952,17 @@ function clear_BT_memItems(){
     <!-- ~~~~~~~~~~~~~~~~~~~~ hidden div end ~~~~~~~~~~~~~~~~~~~~~~-->
 
 <!--===============================================================================================================================================-->
-    <div style="height: 66px; display: flex;">
-        <div style="flex: 0 0 445px;">
+    <div style="height: 66px; display: flex; padding-right: 0;">
+        <div style="flex: 0 0 480px;">
             <img id="btn1" src="SD/png/Radio_Yellow.png" alt="radio" onclick="showTab1()">
             <img id="btn2" src="SD/png/Station_Green.png" alt="station" onclick="showTab2()">
             <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()">
             <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()">
             <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()">
-            <img id="btn6" src="SD/png/About_Green.png" alt="radio" onclick="showTab6()">
+            <img id="btn6" src="SD/png/Settings_Green.png" alt="radio" onclick="showTab6()">
+            <img id="btn7" src="SD/png/About_Green.png" alt="radio" onclick="showTab7()">
         </div>
-        <div style="font-size: 50px; text-align: center; flex: 1;">
+        <div style="font-size: 50px; text-align: center; flex: 1; padding-left: 0;">
             MiniWebRadio
         </div>
     </div>
@@ -2258,20 +2348,28 @@ function clear_BT_memItems(){
         </div>
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content6">
-        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and  external DAC.
-         This project is documented on
-            <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
-            Author: Wolle (schreibfaul1)
-        </p>
-
-
-        <table>
+    <div id="tab-content6">   <!-- Settings -->
+        <table style="border-collapse: collapse; width: 100%;">
             <tr>
-                <td style="vertical-align: top;">
-                    <label for="label-infopic" onclick="socket.send('hardcopy')">
-                        <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
-                    </label>
+                <td style="padding: 10px; vertical-align: top; border-right: 3px double #4CAF50; box-shadow: 2px 0 5px -2px #888; width: 370px;">
+
+                    <div style="display: flex;">
+                        <div style="width=64px; height=64px;">
+                            <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings" onmousedown="this.src='SD/png/Remote_Control_Yellow.png'" ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'" onmouseup="this.src='SD/png/Remote_Control_Blue.png'" ontouchend="this.src='SD/png/Remote_Control_Blue.png'" onclick="showTab8()">
+                        </div>
+                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
+                            <p> IR Settings </p>
+                        </div>
+                    </div>
+                    <br>
+                    <div style="display: flex;">
+                        <div style="width=64px; height=64px;">
+                            <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab9()">
+                        </div>
+                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
+                            <p> KCX_BT_Emitter Settings </p>
+                        </div>
+                    </div>
 
                     <h3>
                         Connected WiFi network
@@ -2291,24 +2389,8 @@ function clear_BT_memItems(){
 
 
                 </td>
-                <td>
-                    <div style="display: flex;">
-                        <div style="width=64px; height=64px;">
-                            <img src="SD/png/Remote_Control_Blue.png" alt="IR Settings" title="Remote Control Settings" onmousedown="this.src='SD/png/Remote_Control_Yellow.png'" ontouchstart="this.src='SD/png/Remote_Control_Yellow.png'" onmouseup="this.src='SD/png/Remote_Control_Blue.png'" ontouchend="this.src='SD/png/Remote_Control_Blue.png'" onclick="showTab7()">
-                        </div>
-                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
-                            <p> IR Settings </p>
-                        </div>
-                    </div>
-                    <br>
-                    <div style="display: flex;">
-                        <div style="width=64px; height=64px;">
-                            <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab8()">
-                        </div>
-                        <div style="font-size: 1.17em; font-weight: bold; padding-left: 10px;">
-                            <p> KCX_BT_Emitter Settings </p>
-                        </div>
-                    </div>
+                <td style="padding: 30px;">
+
                     <br>
                     <fieldset>
                         <legend> 12-hour and 24-hour time format </legend>
@@ -2344,15 +2426,48 @@ function clear_BT_memItems(){
                             <input type="radio" id="alarmMode1" name="alarmMode" value="with bell and radio" checked onclick="socket.send('setAlarmMode=1');">
                             <label for="alarmMode1">with bell and radio</label>
                         </div>
+
+                    </fieldset>
+                    <br>
+                    <fieldset>
+                        <legend> alarm </legend>
+                        <div>
+                            <select id="selRingVolume" onchange="socket.send('setRingVolume=' + this.value);"></select>
+                            <label for="selRingVolume">predefined: </label>
+                            <span class="selected-value" id="selectedValue"></span>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend> volume steps </legend>
+                        <div>
+                            <select id="selVolumeSteps" onchange="socket.send('setVolumeSteps=' + this.value);"></select>
+                            <label for="selVolumeSteps">predefined: </label>
+                            <span class="selected-value1" id="selectedValue1"></span>
+                        </div>
                     </fieldset>
                 </td>
             </tr>
         </table>
-
-
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content7"> <!-- IR Settings -->
+    <div id="tab-content7">  <!-- Info / About -->
+        <p> MiniWebRadio -- Webradio receiver for ESP32, 2.8" or 3.5" color display and  external DAC.
+         This project is documented on
+            <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
+            Author: Wolle (schreibfaul1)
+        </p>
+
+
+        <table>
+            <tr>
+                <label for="label-infopic" onclick="socket.send('hardcopy')">
+                    <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
+                </label>
+            </tr>
+        </table>
+    </div>
+<!--===============================================================================================================================================-->
+    <div id="tab-content8"> <!-- IR Settings -->
 
        <table>
             <tr>
@@ -2477,7 +2592,7 @@ function clear_BT_memItems(){
            Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content8"> <!-- KCX BT Emitter Settings -->
+    <div id="tab-content9"> <!-- KCX BT Emitter Settings -->
         <div style="display:flex">
             <div id="div-BT-logo" style="flex: 0 0 150px;">
                 <img id="label-bt-logo" onclick="socket.send('KCX_BT_connected')">

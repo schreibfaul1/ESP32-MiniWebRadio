@@ -65,7 +65,8 @@ int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
 uint8_t             _cur_volume = 0;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
-uint8_t             _ringvolume = _max_volume; //
+//uint8_t             _ringvolume = _max_volume; //
+uint8_t             _ringVolume = 21;
 uint8_t             _volumeSteps = 0;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
@@ -474,7 +475,7 @@ boolean defaultsettings(){
     _cur_volume          = atoi(   parseJson("\"volume\":"));
     _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    _ringvolume          = atoi(   parseJson("\"ringvolume\":"));
+    _ringVolume          = atoi(   parseJson("\"ringvolume\":"));
     _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -634,7 +635,7 @@ void updateSettings(){
     sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
     sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
     strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    sprintf(tmp, ",\"ringvolume\":%i", _ringvolume);                                        strcat(jO, tmp);
+    sprintf(tmp, ",\"ringvolume\":%i", _ringVolume);                                        strcat(jO, tmp);
     sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
@@ -1613,7 +1614,7 @@ void setup() {
 #endif
 
     audioInit();
-    audioSetCoreID(1);
+    audioSetCoreID(0);
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
 
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
@@ -3269,9 +3270,17 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "setmute"){           muteChanged(!_f_mute); return;}
 
-    if(cmd == "upvolume"){          webSrv.send("volume=", (String)upvolume());  return;}                                                            // via websocket
+    if(cmd == "upvolume"){          webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
 
-    if(cmd == "downvolume"){        webSrv.send("volume=", (String)downvolume()); return;}                                                           // via websocket
+    if(cmd == "downvolume"){        webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
+
+    if(cmd == "setVolumeSteps"){    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); return;}
+
+    if(cmd == "getVolumeSteps"){    webSrv.send("volumeSteps=", int2str(_volumeSteps)); return;}
+
+    if(cmd == "setRingVolume"){     _ringVolume = param.toInt();  webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
+
+    if(cmd == "getRingVolume"){     webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
 
     if(cmd == "homepage"){          webSrv.send("homepage=", _homepage);
                                     return;}
