@@ -2443,12 +2443,18 @@ function clear_BT_memItems(){
                         <legend> alarm </legend>
                         <div>
                             <div style="margin-bottom: 10px;">
-                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('setRingVolume=' + this.value);"></select>
+                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('setRingVolume=' + this.value);"
+                                    title="This is the volume at which the ringtone sounds in the event of an alarm. A value of 0 skips the ringtone
+                                    sequence and immediately turns on the radio.">
+                                </select>
                                 <label for="selRingVolume">Ring Volume: </label>
-                                <span class="txtRingVolume" id="txtRingVolume"></span>
+                                <span class="txtRingVolume" id="txtRingVolume">
+                                </span>
                             </div>
                             <div>
-                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('setVolAfterAlarm=' + this.value);"></select>
+                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('setVolAfterAlarm=' + this.value);"
+                                    title="This is the volume at which the radio plays. This volume is maintained as long as it is not manually changed.">
+                                </select>
                                 <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
                                 <span class="txtVolumeAfterAlarm" id="txtVolumeAfterAlarm"></span>
                             </div>
@@ -2457,7 +2463,10 @@ function clear_BT_memItems(){
                     <fieldset>
                         <legend> volume steps </legend>
                         <div>
-                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('setVolumeSteps=' + this.value);"></select>
+                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('setVolumeSteps=' + this.value);"
+                                title= "Specifies the number of volume levels to choose from. 21 is the lowest value.
+                                A change adjusts all other volume values to the new default.">
+                            </select>
                             <label for="selVolumeSteps">Current Volume Steps: </label>
                             <span class="txtVolumeSteps" id="txtVolumeSteps"></span>
                         </div>

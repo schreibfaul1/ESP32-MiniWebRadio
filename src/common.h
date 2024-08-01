@@ -15,7 +15,7 @@
 #define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
-#define AUDIOCONTROLTASK_CORE   1                               // 0 or 1
+#define AUDIOCONTROLTASK_CORE   0                               // 0 or 1
 #define AUDIOCONTROLTASK_PRIO   2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY         80000000                        // 80000000 or 40000000 MHz

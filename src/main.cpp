@@ -139,6 +139,7 @@ bool                _f_volumeDownIsPressed = false;
 bool                _f_volumeUpIsPressed = false;
 bool                _f_volumeDownIsLongPressed = false;
 bool                _f_volumeUpIsLongPressed = false;
+bool                _f_muteIsLongPressed = false;
 bool                _f_sleeping = false;
 bool                _f_isWebConnected = false;
 bool                _f_isFSConnected = false;
@@ -1610,6 +1611,7 @@ void setup() {
     audioInit();
     audioSetCoreID(0);
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
+    audioSetVolumeSteps(_volumeSteps);
 
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
@@ -1736,7 +1738,14 @@ void setVolume(uint8_t vol) {
 
 uint8_t downvolume() {
     if(_cur_volume == 0) return _cur_volume;
-    _cur_volume--;
+    if(_f_volumeDownIsLongPressed){
+        uint8_t steps = _volumeSteps / 20;
+        if(_cur_volume >= steps) _cur_volume -= steps;
+        else(_cur_volume = 0);
+    }
+    else{
+        _cur_volume--;
+    }
 //    setVolume(_cur_volume);
     _f_mute = false;
     muteChanged(_f_mute); // set mute off
@@ -1744,7 +1753,14 @@ uint8_t downvolume() {
 }
 uint8_t upvolume() {
     if(_cur_volume == _volumeSteps) return _cur_volume;
-    _cur_volume++;
+    if(_f_volumeUpIsLongPressed){
+        uint8_t steps = _volumeSteps / 20;
+        if(_cur_volume <= _volumeSteps - steps) _cur_volume += steps;
+        else(_cur_volume = _volumeSteps);
+    }
+    else{
+        _cur_volume++;
+    }
 //    setVolume(_cur_volume);
     _f_mute = false;
     muteChanged(_f_mute); // set mute off
@@ -3137,7 +3153,16 @@ void tp_pressed(uint16_t x, uint16_t y) {
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
 
-    if(_f_muteIsPressed) {fall_asleep(); return;}
+    if(_f_muteIsPressed) {
+        if(!_f_mute){
+            fall_asleep();
+            _f_muteIsLongPressed = true;
+        }
+        else{
+            muteChanged(false);
+        }
+        return;
+    }
 
     if(_state == DLNAITEMSLIST){
         lst_DLNA.longPressed(x, y);
@@ -3148,7 +3173,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
 
-    if(_f_sleeping){ wake_up(); return;}   // if sleeping
+    if(_f_sleeping && !_f_muteIsLongPressed){ wake_up(); return;}   // if sleeping
 
     // all state
     dispHeader.released();
@@ -3207,6 +3232,7 @@ void tp_long_released(){
     if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
     _f_volumeUpIsLongPressed = false;
     _f_volumeDownIsLongPressed = false;
+    _f_muteIsLongPressed = false;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
@@ -3268,10 +3294,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "downvolume"){        webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
 
     if(cmd == "getVolumeSteps"){    webSrv.send("volumeSteps=", int2str(_volumeSteps)); return;}
-    if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt());
+    if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt()); setVolume(_cur_volume);
                                     _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
-                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param);
+                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audioSetVolumeSteps(_volumeSteps);
                                     return;}
 
     if(cmd == "getRingVolume"){     webSrv.send("ringVolume=", int2str(_ringVolume)); return;}

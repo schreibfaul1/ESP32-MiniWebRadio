@@ -59,6 +59,12 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == SET_VOLUME_STEPS){
+                audioTxTaskMessage.cmd = SET_VOLUME_STEPS;
+                audio.setVolumeSteps(audioRxTaskMessage.value1);
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else if(audioRxTaskMessage.cmd == CONNECTTOHOST){
                 audioTxTaskMessage.cmd = CONNECTTOHOST;
                 const char* host = audioRxTaskMessage.txt1;
@@ -241,6 +247,13 @@ audioMessage transmitReceive(audioMessage msg){
 void audioSetVolume(uint8_t vol){
     audioTxMessage.cmd = SET_VOLUME;
     audioTxMessage.value1 = vol;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
+}
+
+void audioSetVolumeSteps(uint8_t steps){
+    audioTxMessage.cmd = SET_VOLUME_STEPS;
+    audioTxMessage.value1 = steps;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
