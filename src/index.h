@@ -393,6 +393,7 @@ var tm
 var IR_addr = ""
 var bt_RxTx = 'TX'
 var state = 'RADIO'
+var cur_volumeSteps = 21
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -497,10 +498,16 @@ function connect() {
                                         break
             case  "volume":             resultstr1.value = "Volume is now " + val;
                                         break
+            case  "volumeSteps":        console.log("volumeSteps: ", val);
+                                        showVolumeSteps(val)
+                                        cur_volumeSteps = val
+                                        loadRingVolume()
+                                        loadVolumeAfterAlarm()
+                                        break
             case  "ringVolume":         console.log("ringvolume: ", val);
                                         showRingvolume(val)
                                         break
-            case  "volumeAfterAlarm":   console.log("volumeAfterAlarm: ", val);
+            case  "volAfterAlarm":      console.log("volumeAfterAlarm: ", val);
                                         showVolumeAfterAlarm(val)
                                         break
             case  "SD_playFile":        resultstr3.value = "Audiofile is " + val;
@@ -756,6 +763,10 @@ function showTab6 () {
     // getTimeZoneName()
     loadTimeZones()
     loadRingVolume()
+    loadVolumeAfterAlarm()
+    loadVolumeSteps()
+    socket.send('getRingVolume')
+    socket.send('getVolAfterAlarm')
 }
 
 function showTab7 () {
@@ -1709,32 +1720,40 @@ function loadTimeZones() { // load from SD
 }  // END loadTimeZones
 
 function loadRingVolume(){
-    const selectElement = document.getElementById('selRingVolume');
+    const selectRingVolume = document.getElementById('selRingVolume');
 
-    for (let i = 0; i <= 255; i++) {
+    selectRingVolume.options.length = 0;
+    for (let i = 0; i <= cur_volumeSteps; i++) {
         const option = document.createElement('option');
         option.value = i;
         option.textContent = i;
-        if (i === 200) {
+        if (i === 0) {
             option.selected = true; // Setzt den Standardwert
         }
-        selectElement.appendChild(option);
+        selectRingVolume.appendChild(option);
     }
+}
 
-    socket.send('getRingVolume')
-}
-function showRingvolume(val){
-    const selectedValueElement = document.getElementById('txtRingVolume');
-    selectedValueElement.textContent = val;
-}
-function showVolumeAfterAlarm(val){ // _curVolume after alarm
-    const selectedValueElement = document.getElementById('txtVolumeAfterAlarm');
-    selectedValueElement.textContent = val;
+function loadVolumeAfterAlarm(){
+    const selectVolumeAfterAlarm = document.getElementById('selVolumeAfterAlarm');
+
+    selectVolumeAfterAlarm.options.length = 0;
+    for (let i = 0; i <= cur_volumeSteps; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        if (i === 0) {
+            option.selected = true; // Setzt den Standardwert
+        }
+        selectVolumeAfterAlarm.appendChild(option);
+    }
 }
 
 function loadVolumeSteps(){
-    const selectElement = document.getElementById('selVolumeSteps');
+    socket.send('getVolumeSteps')
+    const selectVolumeSteps = document.getElementById('selVolumeSteps');
 
+    selectVolumeSteps.options.length = 0;
     for (let i = 21; i <= 255; i++) {
         const option = document.createElement('option');
         option.value = i;
@@ -1742,13 +1761,22 @@ function loadVolumeSteps(){
         if (i === 21) {
             option.selected = true; // Setzt den Standardwert
         }
-        selectElement.appendChild(option);
+        selectVolumeSteps.appendChild(option);
     }
-
-    socket.send('getRingVolume')
 }
+
+function showRingvolume(val){
+    const selectedValueElement = document.getElementById('txtRingVolume');
+    selectedValueElement.textContent = val;
+}
+
+function showVolumeAfterAlarm(val){ // _curVolume after alarm
+    const selectedValueElement = document.getElementById('txtVolumeAfterAlarm');
+    selectedValueElement.textContent = val;
+}
+
 function showVolumeSteps(val){
-    const selectedValueElement = document.getElementById('selectedValue1');
+    const selectedValueElement = document.getElementById('txtVolumeSteps');
     selectedValueElement.textContent = val;
 }
 
@@ -2350,9 +2378,9 @@ function clear_BT_memItems(){
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content6">   <!-- Settings -->
-        <table style="border-collapse: collapse; width: 100%;">
+        <table style="width: 100%;">
             <tr>
-                <td style="padding: 10px; vertical-align: top; border-right: 3px double #4CAF50; box-shadow: 2px 0 5px -2px #888; width: 370px;">
+                <td style="padding: 10px; margin-right: 0px; vertical-align: top; border-right: 3px double #999999; min-width: 365px;">
 
                     <div style="display: flex;">
                         <div style="width=64px; height=64px;">
@@ -2363,7 +2391,7 @@ function clear_BT_memItems(){
                         </div>
                     </div>
                     <br>
-                    <div style="display: flex;">
+                    <div style="display: flex; margin-bottom: 10px; border-bottom: 3px double #999999;">
                         <div style="width=64px; height=64px;">
                             <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab9()">
                         </div>
@@ -2371,27 +2399,21 @@ function clear_BT_memItems(){
                             <p> KCX_BT_Emitter Settings </p>
                         </div>
                     </div>
-
-                    <h3>
-                        Connected WiFi network
-                        <select class="boxstyle" id="ssid" ></select>
-                    </h3>
-
-                    <h3>
-                        Timezone
-                        <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
-                    </h3>
-
-                    <h3>
-                        Time announcement on the hour
-                        <input  type="checkbox" id="chk_timeSpeech"
-                                onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-                    </h3>
-
-
+                    <div style="margin-top: 0px;  border-bottom: 3px double #999999;">
+                        <h3>
+                            Timezone
+                            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
+                        </h3>
+                    </div>
+                    <div>
+                        <h3>
+                            Time announcement on the hour
+                            <input  type="checkbox" id="chk_timeSpeech"
+                                    onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
+                        </h3>
+                    </div>
                 </td>
-                <td style="padding: 30px;">
-
+                <td style="padding: 10px; min-width: 350px; margin-left: 0px;">
                     <br>
                     <fieldset>
                         <legend> 12-hour and 24-hour time format </legend>
@@ -2418,32 +2440,25 @@ function clear_BT_memItems(){
                     </fieldset>
                     <br>
                     <fieldset>
-                        <legend> alarm clock </legend>
-                        <div>
-
-                        </div>
-                        <div>
-
-                        </div>
-
-                    </fieldset>
-                    <br>
-                    <fieldset>
                         <legend> alarm </legend>
                         <div>
-                            <select id="selRingVolume" onchange="socket.send('setRingVolume=' + this.value);"></select>
-                            <label for="selRingVolume">Ring Volume: </label>
-                            <span class="txtRingVolume" id="txtRingVolume"></span>
-                            <select id="selVolumeAfterAlarm" onchange="socket.send('setVolumeAfterAlarm=' + this.value);"></select>
-                            <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
-                            <span class="txtVolumeAfterAlarm" id="txtVolumeAfterAlarm"></span>
+                            <div style="margin-bottom: 10px;">
+                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('setRingVolume=' + this.value);"></select>
+                                <label for="selRingVolume">Ring Volume: </label>
+                                <span class="txtRingVolume" id="txtRingVolume"></span>
+                            </div>
+                            <div>
+                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('setVolAfterAlarm=' + this.value);"></select>
+                                <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
+                                <span class="txtVolumeAfterAlarm" id="txtVolumeAfterAlarm"></span>
+                            </div>
                         </div>
                     </fieldset>
                     <fieldset>
                         <legend> volume steps </legend>
                         <div>
-                            <select id="selVolumeSteps" onchange="socket.send('setVolumeSteps=' + this.value);"></select>
-                            <label for="selVolumeSteps">predefined: </label>
+                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('setVolumeSteps=' + this.value);"></select>
+                            <label for="selVolumeSteps">Current Volume Steps: </label>
                             <span class="txtVolumeSteps" id="txtVolumeSteps"></span>
                         </div>
                     </fieldset>

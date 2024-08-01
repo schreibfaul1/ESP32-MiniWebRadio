@@ -59,13 +59,13 @@ char _hl_item[16][40]{"",                 // none
                       ""
                       ""};
 
-const uint8_t       _max_volume = 21;
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
 uint8_t             _cur_volume = 0;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
+uint8_t             _volumeAfterAlarm = 12;
 uint8_t             _volumeSteps = 0;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
@@ -837,7 +837,7 @@ inline uint16_t txtlen(String str) {
 }
 
 void showVolumeBar() {
-    uint16_t val = tft.width() * _cur_volume / 21;
+    uint16_t val = tft.width() * _cur_volume / _volumeSteps;
     clearVolBar();
     tft.fillRect(_winVolBar.x, _winVolBar.y + 1, val, _winVolBar.h - 2, TFT_RED);
     tft.fillRect(val + 1, _winVolBar.y + 1, tft.width() - val + 1, _winVolBar.h - 2, TFT_GREEN);
@@ -1741,7 +1741,7 @@ uint8_t downvolume() {
     return _cur_volume;
 }
 uint8_t upvolume() {
-    if(_cur_volume == _max_volume) return _cur_volume;
+    if(_cur_volume == _volumeSteps) return _cur_volume;
     _cur_volume++;
 //    setVolume(_cur_volume);
     _f_mute = false;
@@ -3263,16 +3263,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setmute"){           muteChanged(!_f_mute); return;}
 
     if(cmd == "upvolume"){          webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
-
     if(cmd == "downvolume"){        webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
 
-    if(cmd == "setVolumeSteps"){    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); return;}
-
     if(cmd == "getVolumeSteps"){    webSrv.send("volumeSteps=", int2str(_volumeSteps)); return;}
-
-    if(cmd == "setRingVolume"){     _ringVolume = param.toInt();  webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
+    if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt());
+                                    _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
+                                    _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
+                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param);
+                                    return;}
 
     if(cmd == "getRingVolume"){     webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
+    if(cmd == "setRingVolume"){     _ringVolume = param.toInt(); webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
+
+    if(cmd == "getVolAfterAlarm"){  webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
+    if(cmd == "setVolAfterAlarm"){  _volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
 
     if(cmd == "homepage"){          webSrv.send("homepage=", _homepage);
                                     return;}
