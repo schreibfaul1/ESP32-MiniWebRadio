@@ -487,7 +487,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
     }
     const int32_t rise = out_max - out_min;
     const int32_t delta = x - in_min;
-    return (delta * rise) / run + out_min;
+    return round((delta * rise) / run + out_min);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

@@ -412,11 +412,11 @@ boolean defaultsettings(){
         File file = SD_MMC.open("/settings.json","w", true);
         char*  jO = x_ps_malloc(1024); // JSON Object
         strcpy(jO, "{");
-        strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...21
-        strcat(jO, "\"BTvolume\":");          strcat(jO, "16,"); // 0...31
+        strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...volumeSteps
+        strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,"); // 21...255
+        strcat(jO, "\"ringVolume\":");        strcat(jO, "21,"); // 0...volumeSteps
+        strcat(jO, "\"volumeAfterAlarm\":");  strcat(jO, "16,"); // 0...volumeSteps
         strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
-        strcat(jO, "\"ringVolume\":");        strcat(jO, "21,");
-        strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,");
         strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_tue\":");     strcat(jO, "00:00,");
@@ -470,10 +470,11 @@ boolean defaultsettings(){
     };
 
     _cur_volume          = atoi(   parseJson("\"volume\":"));
+    _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
+    _ringVolume          = atoi(   parseJson("\"ringVolume\":"));
+    _volumeAfterAlarm    = atoi(   parseJson("\"volumeAfterAlarm\":"));
     _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    _ringVolume          = atoi(   parseJson("\"ringVolume1\":"));
-    _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     _alarmtime[2]        = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -629,10 +630,11 @@ void updateSettings(){
     char tmp[40 + _lastconnectedhost.length()];
     strcpy(jO,   "{");
     sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
+    sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
+    sprintf(tmp, ",\"ringVolume\":%i", _ringVolume);                                        strcat(jO, tmp);
+    sprintf(tmp, ",\"volumeAfterAlarm\":%i", _volumeAfterAlarm);                            strcat(jO, tmp);
     sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
     strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    sprintf(tmp, ",\"ringVolume\":%i", _ringVolume);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_tue\":%02d:%02d", _alarmtime[2] / 60, _alarmtime[2] % 60);   strcat(jO, tmp);

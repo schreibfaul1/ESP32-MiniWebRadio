@@ -529,14 +529,14 @@ function connect() {
                                         show_DLNA_Content(val)
                                         break
             case "networks":            var networks = val.split('\n')
-                                        select = document.getElementById('ssid')
-                                        for (i = 0; i < (networks.length); i++) {
-                                            opt = document.createElement('OPTION')
-                                            opt.value = i
-                                            console.log(networks[i])
-                                            opt.text = networks[i]
-                                            select.add(opt)
-                                        }
+                                        console.log(networks[i])
+                                        // select = document.getElementById('ssid')
+                                        // for (i = 0; i < (networks.length); i++) {
+                                        //     opt = document.createElement('OPTION')
+                                        //     opt.value = i
+                                        //     opt.text = networks[i]
+                                        //     select.add(opt)
+                                        // }
                                         break
             case "test":                resultstr1.value = val
                                         break
