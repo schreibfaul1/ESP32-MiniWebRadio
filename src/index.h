@@ -418,8 +418,6 @@ function connect() {
         socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
         socket.send("getSleepMode")
-        socket.send("getAlarmMode") // with bell and radio or with radio only
-
         setInterval(ping, 20000)
     };
 
@@ -502,6 +500,9 @@ function connect() {
             case  "ringVolume":         console.log("ringvolume: ", val);
                                         showRingvolume(val)
                                         break
+            case  "volumeAfterAlarm":   console.log("volumeAfterAlarm: ", val);
+                                        showVolumeAfterAlarm(val)
+                                        break
             case  "SD_playFile":        resultstr3.value = "Audiofile is " + val;
                                         break
             case  "SD_playFolder":      resultstr3.value = "play all: " + val;
@@ -548,10 +549,6 @@ function connect() {
                                         break;
             case "sleepMode":           if  (val == "0") radiobtn = document.getElementById("sleepMode0")
                                         else if(val == '1') radiobtn = document.getElementById("sleepMode1")
-                                        radiobtn.checked = true;
-                                        break;
-            case "alarmMode":           if  (val == '0') radiobtn = document.getElementById("alarmMode0")
-                                        else if(val == '1') radiobtn = document.getElementById("alarmMode1")
                                         radiobtn.checked = true;
                                         break;
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
@@ -1727,7 +1724,11 @@ function loadRingVolume(){
     socket.send('getRingVolume')
 }
 function showRingvolume(val){
-    const selectedValueElement = document.getElementById('selectedValue');
+    const selectedValueElement = document.getElementById('txtRingVolume');
+    selectedValueElement.textContent = val;
+}
+function showVolumeAfterAlarm(val){ // _curVolume after alarm
+    const selectedValueElement = document.getElementById('txtVolumeAfterAlarm');
     selectedValueElement.textContent = val;
 }
 
@@ -2419,12 +2420,10 @@ function clear_BT_memItems(){
                     <fieldset>
                         <legend> alarm clock </legend>
                         <div>
-                            <input type="radio" id="alarmMode0" name="alarmMode" value="only with radio" onclick="socket.send('setAlarmMode=0');">
-                            <label for="alarmMode0">with radio only</label>
+
                         </div>
                         <div>
-                            <input type="radio" id="alarmMode1" name="alarmMode" value="with bell and radio" checked onclick="socket.send('setAlarmMode=1');">
-                            <label for="alarmMode1">with bell and radio</label>
+
                         </div>
 
                     </fieldset>
@@ -2433,8 +2432,11 @@ function clear_BT_memItems(){
                         <legend> alarm </legend>
                         <div>
                             <select id="selRingVolume" onchange="socket.send('setRingVolume=' + this.value);"></select>
-                            <label for="selRingVolume">predefined: </label>
-                            <span class="selected-value" id="selectedValue"></span>
+                            <label for="selRingVolume">Ring Volume: </label>
+                            <span class="txtRingVolume" id="txtRingVolume"></span>
+                            <select id="selVolumeAfterAlarm" onchange="socket.send('setVolumeAfterAlarm=' + this.value);"></select>
+                            <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
+                            <span class="txtVolumeAfterAlarm" id="txtVolumeAfterAlarm"></span>
                         </div>
                     </fieldset>
                     <fieldset>
@@ -2442,7 +2444,7 @@ function clear_BT_memItems(){
                         <div>
                             <select id="selVolumeSteps" onchange="socket.send('setVolumeSteps=' + this.value);"></select>
                             <label for="selVolumeSteps">predefined: </label>
-                            <span class="selected-value1" id="selectedValue1"></span>
+                            <span class="txtVolumeSteps" id="txtVolumeSteps"></span>
                         </div>
                     </fieldset>
                 </td>

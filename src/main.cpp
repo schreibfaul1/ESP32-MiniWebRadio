@@ -65,7 +65,6 @@ int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
 uint8_t             _cur_volume = 0;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
-//uint8_t             _ringvolume = _max_volume; //
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeSteps = 0;
 uint8_t             _brightness = 0;
@@ -76,7 +75,6 @@ uint8_t             _numServers = 0;     //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24;    // 24 or 12
 uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
-uint8_t             _alarmMode = 1;      // 0 with radio only, 1 with bell and radio
 uint8_t             _staListPos = 0;
 uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
@@ -417,7 +415,7 @@ boolean defaultsettings(){
         strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...21
         strcat(jO, "\"BTvolume\":");          strcat(jO, "16,"); // 0...31
         strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
-        strcat(jO, "\"ringvolume\":");        strcat(jO, "21,");
+        strcat(jO, "\"ringVolume\":");        strcat(jO, "21,");
         strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,");
         strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
         strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
@@ -440,8 +438,7 @@ boolean defaultsettings(){
         strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
         strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
         strcat(jO, "\"timeFormat\":");        strcat(jO, "24,");
-        strcat(jO, "\"sleepMode\":");         strcat(jO, "0,"); // 0 display off, 1 clock
-        strcat(jO, "\"alarmMode\":");         strcat(jO, "1}"); // 0 with radio only, 1 with bell and radio
+        strcat(jO, "\"sleepMode\":");         strcat(jO, "0}"); // 0 display off, 1 clock
         file.print(jO);
         if(jO){free(jO); jO = NULL;}
     }
@@ -455,10 +452,10 @@ boolean defaultsettings(){
     auto parseJson = [&](const char* s) { // lambda, inner function
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
         pos1 = indexOf(jO, s, 0);
+        if(pos1 < 0) {log_e("index %s not found", s); return "0";}
         pos2 = indexOf(jO, ":", pos1) + 1;
         pos3 = indexOf(jO, ",\"", pos2);
         if(pos3 < 0) pos3 = indexOf(jO, "}", pos2);
-        if(pos1 < 0) {log_e("index %s not found", s); return "";}
         if(jO[pos2] == '\"'){pos2++; pos3--;}  // remove \" embraced strings
         strncpy(tmp, jO + pos2, pos3 - pos2);
         tmp[pos3 - pos2] = '\0';
@@ -475,7 +472,7 @@ boolean defaultsettings(){
     _cur_volume          = atoi(   parseJson("\"volume\":"));
     _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    _ringVolume          = atoi(   parseJson("\"ringvolume\":"));
+    _ringVolume          = atoi(   parseJson("\"ringVolume1\":"));
     _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
     _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -500,7 +497,6 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
-    _alarmMode           = atoi(   parseJson("\"alarmMode\":"));
 
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
@@ -635,7 +631,7 @@ void updateSettings(){
     sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
     sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
     strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    sprintf(tmp, ",\"ringvolume\":%i", _ringVolume);                                        strcat(jO, tmp);
+    sprintf(tmp, ",\"ringVolume\":%i", _ringVolume);                                        strcat(jO, tmp);
     sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
@@ -659,8 +655,7 @@ void updateSettings(){
     sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                                strcat(jO, tmp);
     sprintf(tmp, ",\"balance\":%i", _toneBAL);                                              strcat(jO, tmp);
     sprintf(tmp, ",\"timeFormat\":%i", _timeFormat);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"sleepMode\":%i", _sleepMode);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmMode\":%i}", _alarmMode);                                         strcat(jO, tmp);
+    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                          strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -1511,12 +1506,10 @@ void setup() {
     }
     if(startsWith(chipModel, "ESP32-S3")) { ; } // ESP32-S3  ...  okay
     _f_ESPfound = true;
-
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
 
     _curAudioFolder = x_ps_malloc(1024);
     strcpy(_curAudioFolder, "/audiofiles");
-
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
@@ -1544,6 +1537,7 @@ void setup() {
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
 #endif
+
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
@@ -1566,7 +1560,6 @@ void setup() {
 #endif
     if(getBrightness() >= 5) setTFTbrightness(getBrightness());
     else setTFTbrightness(5);
-
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
@@ -1584,7 +1577,6 @@ void setup() {
     SerialPrintfln("setup: ....  stations.csv found");
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
-
     while(true){
         if(!connectToWiFi()){
             _reconnectCnt++;
@@ -2571,7 +2563,7 @@ void loop() {
                 dispHeader.updateItem("ALARM");
                 dispHeader.updateTime(rtc.gettime_s());
                 dispFooter.show();
-                if(_alarmMode == 1){ // alarm with bell
+                if(_ringVolume > 0){ // alarm with bell
                     showFileName("ALARM");
                     drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
                     setTFTbrightness(_brightness);
@@ -3466,14 +3458,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setSleepMode"){     _sleepMode = param.toInt();
                                    if(_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");
                                    if(_sleepMode == 1) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Show the time");
-                                   return;}
-
-    if(cmd == "getAlarmMode"){     webSrv.send("alarmMode=", String(_alarmMode, 10));
-                                   return;}
-
-    if(cmd == "setAlarmMode"){     _alarmMode = param.toInt();
-                                   if(_alarmMode == 0) SerialPrintfln("AlarmMode:   " ANSI_ESC_YELLOW "with radio only");
-                                   if(_alarmMode == 1) SerialPrintfln("AlarmMode:   " ANSI_ESC_YELLOW "with bell and radio");
                                    return;}
 
     if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
