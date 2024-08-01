@@ -27,6 +27,7 @@ struct audioMessage{
 } audioTxMessage, audioRxMessage;
 
 uint8_t  t_volume = 0;
+uint8_t  t_volSteps = 1;
 uint32_t t_millis = 0;
 
 QueueHandle_t audioSetQueue = NULL;
@@ -62,6 +63,7 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == SET_VOLUME_STEPS){
                 audioTxTaskMessage.cmd = SET_VOLUME_STEPS;
                 audio.setVolumeSteps(audioRxTaskMessage.value1);
+                t_volSteps = audioRxTaskMessage.value1 / 20;
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -205,8 +207,14 @@ void audioTask(void *parameter) {
         if(t_millis + 30 < millis()){
             t_millis = millis();
             uint8_t v = audio.getVolume();
-            if (v > t_volume) audio.setVolume(v - 1);
-            if (v < t_volume) audio.setVolume(v + 1);
+            if (v > t_volume){
+                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0);   else  audio.setVolume(v- t_volSteps);}
+                else audio.setVolume(t_volume);
+            }
+            if (v < t_volume){
+                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255); else audio.setVolume(v + t_volSteps);}
+                else audio.setVolume(t_volume);
+            }
         }
         vTaskDelay(7);
     }

@@ -1699,7 +1699,7 @@ const char* scaleImage(const char* path) {
 }
 
 void setVolume(uint8_t vol) {
-    audioSetVolume(vol);
+    if(!_f_mute) audioSetVolume(vol);
     _cur_volume = vol;
     dispHeader.updateVolume(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
