@@ -2391,7 +2391,7 @@ function clear_BT_memItems(){
                         </div>
                     </div>
                     <br>
-                    <div style="display: flex; margin-bottom: 10px; border-bottom: 3px double #999999;">
+                    <div style="display: flex; padding-bottom: 20px; border-bottom: 3px double #999999;">
                         <div style="width=64px; height=64px;">
                             <img src="SD/png/Button_BT_Blue.png" alt="KCX_BT Settings" title="KCX_BT_Emitter Settings" onmousedown="this.src='SD/png/Button_BT_Yellow.png'" ontouchstart="this.src='SD/png/Button_BT_Yellow.png'" onmouseup="this.src='SD/png/Button_BT_Blue.png'" ontouchend="this.src='SD/png/Button_BT_Blue.png'" onclick="showTab9()">
                         </div>
