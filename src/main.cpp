@@ -3342,7 +3342,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
 
-    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); return;}                                                                         // via websocket
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
     if(cmd == "getnetworks"){       webSrv.send("networks=", WiFi.SSID()); return;}                                                  // via websocket
 
