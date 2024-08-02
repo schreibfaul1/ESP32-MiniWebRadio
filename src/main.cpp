@@ -1689,6 +1689,9 @@ const char* scaleImage(const char* path) {
 }
 
 void setVolume(uint8_t vol) {
+    static int16_t oldVolume = -1;
+    if(vol == oldVolume) return;
+    oldVolume = vol;
     if(!_f_mute) audioSetVolume(vol);
     _cur_volume = vol;
     dispHeader.updateVolume(_cur_volume);
@@ -1729,7 +1732,10 @@ void setVolume(uint8_t vol) {
 uint8_t downvolume() {
     if(_cur_volume == 0) return _cur_volume;
     _cur_volume--;
-//    setVolume(_cur_volume);
+    sdr_CL_volume.setValue(_cur_volume);
+    sdr_DL_volume.setValue(_cur_volume);
+    sdr_PL_volume.setValue(_cur_volume);
+    sdr_RA_volume.setValue(_cur_volume);
     _f_mute = false;
     muteChanged(_f_mute); // set mute off
     return _cur_volume;
@@ -1737,7 +1743,10 @@ uint8_t downvolume() {
 uint8_t upvolume() {
     if(_cur_volume == _volumeSteps) return _cur_volume;
     _cur_volume++;
-//    setVolume(_cur_volume);
+    sdr_CL_volume.setValue(_cur_volume);
+    sdr_DL_volume.setValue(_cur_volume);
+    sdr_PL_volume.setValue(_cur_volume);
+    sdr_RA_volume.setValue(_cur_volume);
     _f_mute = false;
     muteChanged(_f_mute); // set mute off
     return _cur_volume;
@@ -3265,6 +3274,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
                                     _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audioSetVolumeSteps(_volumeSteps);
+                                    sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
+                                    sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
+                                    sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_PL_volume.setValue(_cur_volume);
+                                    sdr_RA_volume.setNewMinMaxVal(0, _volumeSteps); sdr_RA_volume.setValue(_cur_volume);
                                     return;}
 
     if(cmd == "getRingVolume"){     webSrv.send("ringVolume=", int2str(_ringVolume)); return;}

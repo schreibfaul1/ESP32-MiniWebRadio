@@ -708,6 +708,10 @@ public:
     int16_t getValue(){
         return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
     }
+    void setNewMinMaxVal(int16_t minVal, int16_t maxVal){
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+    }
     void show(){
         m_enabled = true;
         tft.fillRoundRect(m_x, m_middle_h - (m_railHigh / 2), m_w, m_railHigh, 2, m_railColor);
