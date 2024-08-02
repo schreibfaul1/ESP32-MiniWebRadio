@@ -51,6 +51,7 @@
 #include "ES8388.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
+#include "BH1750.h"
 #include <freertos/task.h>
 
 
@@ -85,6 +86,9 @@
         #define BT_EMITTER_LINK    34  // high if connected                     (-1 if not available)
         #define BT_EMITTER_MODE    13  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 32  // -1 if not used
+
+        #define I2C_SDA            -1  // I2C, dala line for additional HW
+        #define I2C_SCL            -1  // I2C, clock line for additional HW
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -119,8 +123,8 @@
         #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
-        #define I2C_SDA            -1  // I2C, dala line for additional HW
-        #define I2C_SDA            -1  // I2C, clock line for additional HW
+        #define I2C_SDA            41  // I2C, dala line for additional HW
+        #define I2C_SCL            42  // I2C, clock line for additional HW
 #endif
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -193,7 +197,6 @@ void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
 boolean        copySDtoFFat(const char* path);
-void           showVolumeBar();
 void           showBrightnessBar();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
