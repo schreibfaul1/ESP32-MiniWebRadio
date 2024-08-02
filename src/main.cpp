@@ -318,7 +318,7 @@ struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h = 
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
 struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
-struct w_b  {uint16_t x =   0; uint16_t y = 184; uint16_t w = 480; uint16_t h =  50;} const _sdrOvBtns;   // slider over buttons, max width
+struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;} const _sdrOvBtns;   // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
 struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;} const _winAlarm;
@@ -386,8 +386,10 @@ alarmClock    clk_AL_red("clk_CL_green");
 button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
 button1state  btn_AL_ready("btn_AL_ready");
 // BRIGHTNESS
-button1state  btn_BR_left("btn_BR_left"), btn_BR_right("btn_BR_right"), btn_BR_ready("btn_BR_ready");
+button1state  btn_BR_ready("btn_BR_ready");
 pictureBox    pic_BR_logo("pic_BR_logo");
+slider        sdr_BR_value("sdr_BR_value");
+textbox       txt_BR_value("txt_BR_value");
 // SLEEP
 button1state  btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
@@ -743,27 +745,10 @@ void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(0, d);
 #endif
+    _brightness = duty;
+    txt_BR_value.writeText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
 }
 
-inline uint8_t downBrightness() {
-    if(_brightness > 5) {
-        _brightness -= 5;
-        setTFTbrightness(_brightness);
-        showBrightnessBar();
-    //    log_i("br %i", _brightness);
-    }
-    return _brightness;
-}
-
-inline uint8_t upBrightness() {
-    if(_brightness < 100) {
-        _brightness += 5;
-        setTFTbrightness(_brightness);
-        showBrightnessBar();
-    //    log_i("br %i", _brightness);
-    }
-    return _brightness;
-}
 inline uint8_t getBrightness() { return _brightness; }
 
 /*****************************************************************************************************************************************************
@@ -837,13 +822,6 @@ inline uint16_t txtlen(String str) {
     for(int32_t i = 0; i < str.length(); i++)
         if(str[i] <= 0xC2) len++;
     return len;
-}
-
-void showBrightnessBar() {
-    uint16_t val = tft.width() * getBrightness() / 100;
-    tft.fillRect(_sdrOvBtns.x, _sdrOvBtns.y + 1, val, _sdrOvBtns.h - 2, TFT_RED);
-    tft.fillRect(val + 1, _sdrOvBtns.y + 1, tft.width() - val + 1, _sdrOvBtns.h - 2, TFT_GREEN);
-    _f_volBarVisible = true;
 }
 
 void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
@@ -2198,13 +2176,11 @@ void placingGraphicObjects() { // and initialize them
     btn_SL_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.jpg");
                                                                                          btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_BR_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
-                                                                                         btn_BR_left.setClickedPicturePath("/btn/Button_Left_Yellow.jpg");
-    btn_BR_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_right.setDefaultPicturePath("/btn/Button_Right_Blue.jpg");
-                                                                                         btn_BR_right.setClickedPicturePath("/btn/Button_Right_Yellow.jpg");
+    sdr_BR_value.begin(      _sdrOvBtns.x,  _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, 5, 100); sdr_BR_value.setValue(_brightness);
     btn_BR_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
     pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.jpg");
+    txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h, -40,  6);          sdr_EQ_lowPass.setValue(_toneLP);
     sdr_EQ_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h, -40,  6);          sdr_EQ_bandPass.setValue(_toneBP);
@@ -2293,7 +2269,7 @@ void changeState(int32_t state){
                          break;
         case SLEEP:      btn_SL_up.disable();       btn_SL_down.disable();     btn_SL_ready.disable();    btn_SL_cancel.disable();
                          break;
-        case BRIGHTNESS: btn_BR_left.disable();     btn_BR_right.disable();    btn_BR_ready.disable();    pic_BR_logo.disable();
+        case BRIGHTNESS: sdr_BR_value.disable();    btn_BR_ready.disable();    pic_BR_logo.disable();     txt_BR_value.disable();
                          break;
         case EQUALIZER:  sdr_EQ_lowPass.disable();  sdr_EQ_bandPass.disable(); sdr_EQ_highPass.disable(); sdr_EQ_balance.disable();
                          btn_EQ_lowPass.disable();  btn_EQ_bandPass.disable(); btn_EQ_highPass.disable(); btn_EQ_balance.disable(); btn_EQ_Radio.disable();
@@ -2429,8 +2405,10 @@ void changeState(int32_t state){
         }
         case BRIGHTNESS:{
             clearWithOutHeaderFooter();
-            btn_BR_left.show(); btn_BR_right.show(); btn_BR_ready.show(); pic_BR_logo.show();
-            showBrightnessBar();
+            btn_BR_ready.show(); pic_BR_logo.show();
+            sdr_BR_value.show();
+            txt_BR_value.setText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_BR_value.show();
             break;
         }
         case EQUALIZER:
@@ -3085,8 +3063,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_SL_cancel.positionXY(x, y)) return;
                 break;
         case BRIGHTNESS:
-                if(btn_BR_left.positionXY(x, y)) return;
-                if(btn_BR_right.positionXY(x, y)) return;
+                if(sdr_BR_value.positionXY(x,y)) return;
                 if(btn_BR_ready.positionXY(x, y)) return;
                 if(pic_BR_logo.positionXY(x, y)) return;
                 break;
@@ -3179,7 +3156,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
             break;
         case BRIGHTNESS:
-            btn_BR_left.released(); btn_BR_right.released(); btn_BR_ready.released(); pic_BR_logo.released();
+            sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
             break;
         case EQUALIZER:
             sdr_EQ_lowPass.released(); sdr_EQ_bandPass.released(); sdr_EQ_highPass.released(); sdr_EQ_balance.released(); btn_EQ_lowPass.released(); btn_EQ_bandPass.released();
@@ -3220,6 +3197,9 @@ void tp_positionXY(uint16_t x, uint16_t y){
     }
     if(_state == DLNAITEMSLIST){
         if(lst_DLNA.positionXY(x, y)) return;
+    }
+    if(_state == BRIGHTNESS){
+        if(sdr_BR_value.positionXY(x, y)) return;
     }
     if(_state == EQUALIZER){
         if(sdr_EQ_lowPass.positionXY(x, y)) return;
@@ -3653,6 +3633,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
     if(strcmp(name, "sdr_PL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
     if(strcmp(name, "sdr_DL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
     if(strcmp(name, "sdr_CL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
+    if(strcmp(name, "sdr_BR_value") == 0)  {setTFTbrightness(arg1);}
     if(strcmp(name, "sdr_E_LP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_BP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_HP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
@@ -3731,8 +3712,6 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_SL_cancel") == 0)  {return;}
     }
     if(_state == BRIGHTNESS){
-        if( val && strcmp(name, "btn_BR_left") == 0)    {return;}
-        if( val && strcmp(name, "btn_BR_right") == 0)   {return;}
         if( val && strcmp(name, "btn_BR_ready") == 0)   {return;}
         if( val && strcmp(name, "pic_BR_logo") == 0)    {return;}
     }
@@ -3828,8 +3807,6 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_SL_cancel") == 0)   {changeState(RADIO); return;}
     }
     if(_state == BRIGHTNESS){
-        if(strcmp(name, "btn_BR_left") == 0)     {downBrightness(); return;}
-        if(strcmp(name, "btn_BR_right") == 0)    {upBrightness(); return;}
         if(strcmp(name, "btn_BR_ready") == 0)    {changeState(RADIO); return;}
         if(strcmp(name, "pic_BR_logo") == 0)     {return;}
     }
