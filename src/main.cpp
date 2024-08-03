@@ -137,7 +137,6 @@ bool                _f_mute = false;
 bool                _f_muteIsPressed = false;
 bool                _f_volumeDownIsPressed = false;
 bool                _f_volumeUpIsPressed = false;
-bool                _f_muteIsLongPressed = false;
 bool                _f_sleeping = false;
 bool                _f_isWebConnected = false;
 bool                _f_isFSConnected = false;
@@ -258,7 +257,7 @@ struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h = 
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
-struct w_b  {uint16_t x =   0; uint16_t y = 170; uint16_t w = 320; uint16_t h =   6;} const _sdrOvBtns;
+struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;} const _sdrOvBtns;
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
 struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;} const _winAlarm;
@@ -3105,16 +3104,15 @@ void tp_pressed(uint16_t x, uint16_t y) {
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
 
-    if(_f_muteIsPressed) {
-        if(!_f_mute){
-            fall_asleep();
-            _f_muteIsLongPressed = true;
-        }
-        else{
-            muteChanged(false);
-        }
-        return;
-    }
+    // if(_f_muteIsPressed) {
+    //     if(!_f_mute){
+    //         fall_asleep();
+    //     }
+    //     else{
+    //         muteChanged(false);
+    //     }
+    //     return;
+    // }
 
     if(_state == DLNAITEMSLIST){
         lst_DLNA.longPressed(x, y);
@@ -3123,7 +3121,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
 
-    if(_f_sleeping && !_f_muteIsLongPressed){ wake_up(); return;}   // if sleeping
+    if(_f_sleeping){ wake_up(); return;}   // if sleeping
 
     // all state
     dispHeader.released();
@@ -3180,7 +3178,6 @@ void tp_released(uint16_t x, uint16_t y){
 void tp_long_released(){
 //    log_w("long released)");
     if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
-    _f_muteIsLongPressed = false;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
