@@ -2351,7 +2351,7 @@ void changeState(int32_t state){
             }
             if(_playerSubmenue == 1){
                 sdr_PL_volume.show();
-                txt_PL_fName.setText("");
+            //    txt_PL_fName.setText("");
                 btn_PL_Mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); txt_PL_fName.show();
             }
             break;
