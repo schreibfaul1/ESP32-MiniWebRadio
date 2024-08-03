@@ -84,6 +84,7 @@ uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
 uint8_t             _playerSubmenue = 0;
 uint8_t             _clockSubMenue = 0;
+uint8_t             _ambientValue = 50;
 uint16_t            _fileListNr = 0;
 uint16_t            _irNumber = 0;
 uint8_t             _itemListPos = 0; // DLNA items
@@ -104,6 +105,7 @@ uint16_t            _sum_stations = 0;
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
 uint16_t            _dlnaMaxItems = 0;
+uint16_t            _bh1750Value = 50;
 uint32_t            _resumeFilePos = 0; //
 uint32_t            _playlistTime = 0;  // playlist start time millis() for timeout
 uint32_t            _settingsHash = 0;
@@ -164,6 +166,7 @@ bool                _f_PSRAMfound = false;
 bool                _f_FFatFound = false;
 bool                _f_SD_MMCfound = false;
 bool                _f_ESPfound = false;
+bool                _f_BH1750_found = false;
 bool                _f_clearLogo = false;
 bool                _f_clearStationName = false;
 bool                _f_shuffle = false;
@@ -212,6 +215,7 @@ DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -734,21 +738,15 @@ const char* SD_stringifyDirContent(String path) {
  *                                                    T F T   B R I G H T N E S S                                                                    *
  *****************************************************************************************************************************************************/
 void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
-#if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL == -1) return;
     uint8_t d = round((double)duty * 2.55); // #186
     ledcWrite(TFT_BL, d);
-#else
-    ledcSetup(0, 1200, 8);                  // 1200 Hz PWM and 8 bit resolution
-    ledcAttachPin(TFT_BL, 0);               // Configure variable led, TFT_BL pin to channel 1
-    uint8_t d = round((double)duty * 2.55); // #186
-    ledcWrite(0, d);
-#endif
-
-    txt_BR_value.writeText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
 }
-inline void setBrightness(uint8_t duty) { _brightness =  duty; setTFTbrightness(duty);}
-inline uint8_t getBrightness() { return _brightness; }
+
+int16_t getTFTbrightness() { // duty 0...100 (min...max)
+    if(TFT_BL == -1) return -1;
+    return ledcRead(TFT_BL);
+}
 
 /*****************************************************************************************************************************************************
  *                                                      U R L d e c o d e                                                                            *
@@ -1528,7 +1526,7 @@ void setup() {
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
 #endif
-    if(getBrightness() >= 5) setTFTbrightness(getBrightness());
+    if(_brightness < 5) _brightness = 5;
     else setTFTbrightness(5);
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
@@ -1642,6 +1640,15 @@ void setup() {
 
     if(_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", _cur_volume); }
     setI2STone();
+
+    if(I2C_SCL != -1){
+        _f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND , I2C_SDA, I2C_SCL);// init the sensor with address pin connetcted to ground
+    }
+    if (_f_BH1750_found) {                                                  // result (bool) wil be be "false" if no sensor found
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found");
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    }
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2557,7 +2564,7 @@ void loop() {
                 wake_up();
             }
         }
-        //------------------------------------------1SEC ROUTINE--------------------------------------------------------------------------------------
+        //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping) {
             dispHeader.updateTime(rtc.gettime_s(), false);
             dispFooter.updateRSSI(WiFi.RSSI());
@@ -2711,6 +2718,19 @@ void loop() {
             //    uint32_t br = audioGetBitRate();
             //    if(br) t = (fs * 8)/ br;
             //    log_w("Br %d, Dur %ds", br, t);
+        }
+        //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
+        if(_f_BH1750_found){
+            uint16_t ambVal = BH1750.getBrightness();
+            if(ambVal > 1500) ambVal = 1500;
+            _bh1750Value = map_l(ambVal, 0, 1500, 5, 100);
+
+            BH1750.start();
+        //    log_i("_bh1750Value %i, _brightness %i", _bh1750Value, _brightness);
+            if(!_f_sleeping){
+                if(_bh1750Value >= _brightness) setTFTbrightness(_bh1750Value);
+                else setTFTbrightness(_brightness);
+            }
         }
     } //  END _f_1sec
 
@@ -3633,11 +3653,11 @@ void kcx_bt_modeChanged(const char* m) { // Every time the mode has changed
 // clang-format off
 void graphicObjects_OnChange(const char* name, int32_t arg1) {
     char c[10];
-    if(strcmp(name, "sdr_RA_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
-    if(strcmp(name, "sdr_PL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
-    if(strcmp(name, "sdr_DL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
-    if(strcmp(name, "sdr_CL_volume") == 0) {setTimeCounter(2); setVolume(arg1);}
-    if(strcmp(name, "sdr_BR_value") == 0)  {setBrightness(arg1);}
+    if(strcmp(name, "sdr_RA_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
+    if(strcmp(name, "sdr_PL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
+    if(strcmp(name, "sdr_DL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
+    if(strcmp(name, "sdr_CL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
+    if(strcmp(name, "sdr_BR_value") == 0)  {_brightness = arg1; setTFTbrightness(arg1); txt_BR_value.writeText(int2str(arg1), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); return;}
     if(strcmp(name, "sdr_E_LP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_BP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_HP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
