@@ -15,8 +15,6 @@
 #define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
-#define AUDIOCONTROLTASK_CORE   0                               // 0 or 1
-#define AUDIOCONTROLTASK_PRIO   2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY         80000000                        // 80000000 or 40000000 MHz
 #define FTP_USERNAME            "esp32"                         // user and pw in FTP Client
@@ -41,6 +39,7 @@
 #include <vector>
 #include "index.h"
 #include "index.js.h"
+#include "Audio.h"
 #include "accesspoint.h"
 #include "websrv.h"
 #include "rtime.h"
@@ -243,34 +242,6 @@ void           muteChanged(bool m);
 void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void           setTimeCounter(uint8_t sec);
 
-//prototypes (audiotask.cpp)
-void           audioInit();
-void           audioControlTaskDelete();
-void           audioSetVolume(uint8_t vol);
-void           audioSetVolumeSteps(uint8_t steps);
-uint8_t        audioGetVolume();
-uint32_t       audioGetBitRate();
-boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
-boolean        audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
-boolean        audioConnecttospeech(const char* text, const char* lang);
-uint32_t       audioStopSong();
-void           audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
-uint32_t       audioInbuffFilled();
-uint32_t       audioInbuffFree();
-uint32_t       audioInbuffSize();
-boolean        audioIsRunning();
-uint32_t       audioGetStackHighWatermark();
-uint32_t       audioGetCodec();
-boolean        audioPauseResume();
-void           audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
-uint32_t       audioGetFileSize();
-uint32_t       audioGetFilePosition();
-uint16_t       audioGetVUlevel();
-uint32_t       audioGetFileDuration();
-uint32_t       audioGetCurrentTime();
-bool           audioSetTimeOffset(int16_t timeOffset);
-void           audioSetCoreID(uint8_t coreId);
-
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline const char* byte_to_binary(int8_t x) { // e.g. alarmdays
@@ -310,8 +281,8 @@ inline int32_t str2int(const char* str) {
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline char* int2str(int val) {
-    static char ret[8];
+inline char* int2str(int32_t val) {
+    static char ret[12];
     itoa(val, ret, 10);
     return ret;
 }
@@ -632,7 +603,6 @@ extern __attribute__((weak)) void graphicObjects_OnChange(const char* name, int3
 extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, releasedArg ra);
 
-extern SemaphoreHandle_t mutex_display;
 extern SD_content _SD_content;
 class slider{
 private:
@@ -2296,7 +2266,6 @@ public:
     }
 private:
     void stationslist(bool first){
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(first){
             if(m_maxStations <= 10) m_firstStationsLineNr = 0;
             else  if(*m_curSstationNr < 5) m_firstStationsLineNr = 0;
@@ -2322,7 +2291,6 @@ private:
             for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
             tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
-        xSemaphoreGive(mutex_display);
     }
     void hasClicked(uint16_t x, uint16_t y){
         char staKey[15];
@@ -2432,7 +2400,6 @@ public:
         uint8_t left = map_l(vum >> 8, 0, 127, 0, 11);
         uint8_t right = map_l(vum & 0x00FF, 0, 127, 0, 11);
 
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(left > m_VUleftCh) {
             for(int32_t i = m_VUleftCh; i < left; i++) { drawRect(i, 1, 1); }
         }
@@ -2448,7 +2415,6 @@ public:
             for(int32_t i = right; i < m_VUrightCh; i++) { drawRect(i, 0, 0); }
         }
         m_VUrightCh = right;
-        xSemaphoreGive(mutex_display);
     }
 
     bool positionXY(uint16_t x, uint16_t y){
@@ -2566,7 +2532,6 @@ public:
         if(!m_enabled) return;
         if(!hl_item) log_e("hl_item is NULL");
         char* tmp = strdup(hl_item);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_itemColor);
         tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
@@ -2574,7 +2539,6 @@ public:
         if(m_item){free(m_item); m_item = NULL;}
         m_item = strdup(tmp);
         if(tmp){free(tmp); tmp = NULL;}
-        xSemaphoreGive(mutex_display);
     }
     void setItemColor(uint16_t itemColor){
         m_itemColor = itemColor;
@@ -2583,13 +2547,11 @@ public:
         m_volume = vol;
         if(!m_enabled) return;
         char buff[10];
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
         tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
         sprintf(buff, "Vol %02d", m_volume);
         tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
-        xSemaphoreGive(mutex_display);
     }
     void setVolumeColor(uint16_t volColor){
         m_volumeColor = volColor;
@@ -2600,7 +2562,6 @@ public:
         memcpy(m_time, hl_time, 8); // hhmmss
         static char oldtime[8] = {255}; // hhmmss
         uint8_t*    pos = NULL;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_timeColor);
         if(complete == true) {
@@ -2617,7 +2578,6 @@ public:
                 oldtime[i] = m_time[i];
             }
         }
-        xSemaphoreGive(mutex_display);
     }
     void setTimeColor(uint16_t timeColor){
         m_timeColor = timeColor;
@@ -2730,14 +2690,12 @@ public:
     void updateStation(uint16_t staNr){// radio, clock, audioplayer...
         m_staNr = staNr;
         if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_stationColor);
         char buff[10];
         sprintf(buff, "%03d", staNr);
         tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h);
-        xSemaphoreGive(mutex_display);
     }
     void setStationNrColor(uint16_t stationColor){
         m_stationColor = stationColor;
@@ -2748,7 +2706,6 @@ public:
         char buff[15];
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
         tft.setFont(m_fontSize);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_offTime){
             tft.setTextColor(TFT_RED);
             drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y);
@@ -2759,7 +2716,6 @@ public:
         }
         tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
         tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
-        xSemaphoreGive(mutex_display);
     }
     void updateRSSI(int8_t rssi, bool show = false){
         static int32_t old_rssi = -1;
@@ -2782,9 +2738,7 @@ public:
             if(m_enabled) show = true;
         }
         if(show) {
-            xSemaphoreTake(mutex_display, portMAX_DELAY);
             drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y + 2);
-            xSemaphoreGive(mutex_display);
         }
     }
     void updateTC(uint8_t timeCounter){
@@ -2816,14 +2770,12 @@ public:
             sbr[3] = 'M';
             sbr[4] = '\0';
         }
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_bitRateColor);
         tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
         uint8_t space = 2;
         if(strlen(sbr) < 4) space += 5;
         tft.writeText(sbr, m_bitRate_x + space, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        xSemaphoreGive(mutex_display);
     }
     void setBitRateColor(uint16_t bitRateColor){
         m_bitRateColor = bitRateColor;
@@ -2835,10 +2787,8 @@ public:
         strcpy(myIP + 3, ipAddr);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_ipAddrColor);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
         tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true);
-        xSemaphoreGive(mutex_display);
     }
     void setIpAddrColor(uint16_t ipAddrColor){
         m_ipAddrColor = ipAddrColor;
