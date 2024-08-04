@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4 Aug 03/2024                                                                                                                       ";
+    Version 3.3e Aug 03/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -68,7 +68,7 @@ uint8_t             _cur_volume = 0;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeAfterAlarm = 12;
-uint8_t             _volumeSteps = 0;
+uint8_t             _volumeSteps = 21;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
@@ -1581,14 +1581,16 @@ void setup() {
     if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
 #endif
 
+    placingGraphicObjects();
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    audio.setVolumeSteps(_volumeSteps);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+    audio.setVolumeSteps(_volumeSteps);
 
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
+    SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
     SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
@@ -1620,7 +1622,7 @@ void setup() {
     _dlnaHistory[1].objId = strdup("0");
     _f_dlnaSeekServer = true;
 
-    placingGraphicObjects();
+
     tft.fillScreen(TFT_BLACK); // Clear screen
     muteChanged(_f_mute);
 
@@ -1681,10 +1683,11 @@ const char* scaleImage(const char* path) {
 }
 
 void setVolume(uint8_t vol) {
-    static int16_t oldVolume = -1;
-    if(vol == oldVolume) return;
-    oldVolume = vol;
+    static int16_t oldVol = -1;
+    log_i("vol %i", vol);
+    if(vol == oldVol) return;
     _cur_volume = vol;
+    oldVol = _cur_volume;
     dispHeader.updateVolume(_cur_volume);
     sdr_CL_volume.setValue(_cur_volume);
     sdr_DL_volume.setValue(_cur_volume);
@@ -2176,7 +2179,6 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
                                                                                          btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
-
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.jpg");
@@ -2607,31 +2609,28 @@ void loop() {
             }
         }
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
-        if(_f_timeSpeech){
+        static bool f_resume = false;
+        if(_f_timeSpeech){ // speech the time 7 sec before a new hour is arrived
             _f_timeSpeech =  false;
-            if((_f_mute == false) && (!_f_sleeping)) {
-                static bool f_resume = false;
-                if(_state == RADIO) { // speech the time 7 sec before a new hour is arrived
-                    int hour = atoi(_time_s);                       //  extract the hour
-                    hour++;
-                    if(hour == 24) hour = 0;
-                    if(_f_timeAnnouncement) {
-                        f_resume = true;
-                        _f_eof = false;
-                        if(_timeFormat == 12)
-                            if(hour > 12) hour -= 12;
-                        sprintf(_chbuf, "/voice_time/%d_00.mp3", hour);
-                        SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
-                        return;
-                    }
-                    else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour); }
-                }
-                if(f_resume && _f_eof){
-                    f_resume = false;
-                    _f_eof = false;
-                    connecttohost(_lastconnectedhost.c_str());
-                }
+            int hour = atoi(_time_s); hour++; if(hour == 24) hour = 0; //  extract the hour
+            if(_f_mute) return;
+            if(_f_sleeping) return;
+            if(_state != RADIO) return;
+            if(_f_timeAnnouncement) {
+                f_resume = true;
+                _f_eof = false;
+                if(_timeFormat == 12) {if(hour > 12) hour -= 12;}
+                sprintf(_chbuf, "/voice_time/%d_00.mp3", hour);
+                SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
+                return;
             }
+            else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour); }
+        }
+        if(f_resume && _f_eof){
+            f_resume = false;
+            _f_eof = false;
+            connecttohost(_lastconnectedhost.c_str());
+            return;
         }
         //------------------------------------------HEADPHONE / LOUDSPEAKER --------------------------------------------------------------------------
         if(_f_hpChanged) {
@@ -2829,7 +2828,7 @@ void loop() {
             if(r[2] == '7') strcpy(_streamTitle, "A B C D E F G H I K L J M j O P Q R S T U V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
             if(r[2] == '8') strcpy(_streamTitle, "A B C D E F G H I K L J M p O P Q R S T U V W A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
             if(r[2] == '9') strcpy(_streamTitle, "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
-            log_i("st: %s", _streamTitle);
+            log_w("st: %s", _streamTitle);
             _f_newStreamTitle = true;
         }
     }
@@ -3308,7 +3307,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt());
                                     _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
-                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps); setVolume(_cur_volume);
+                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps);
+                                    // log_w("_volumeSteps  %i", _volumeSteps);
+                                    setVolume(_cur_volume);
                                     sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
                                     sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
                                     sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_PL_volume.setValue(_cur_volume);
@@ -3321,7 +3322,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "%d", _ringVolume); return;}
 
     if(cmd == "getVolAfterAlarm"){  webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
-    if(cmd == "setVolAfterAlarm"){  _volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
+    if(cmd == "setVolAfterAlarm"){  _volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
+                                    SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", _ringVolume); return;}
 
     if(cmd == "homepage"){          webSrv.send("homepage=", _homepage);
                                     return;}

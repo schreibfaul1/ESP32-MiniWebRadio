@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 29.Jul 2024
+// updated: 04.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -455,7 +455,7 @@ inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, a
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     const int32_t run = in_max - in_min;
     if(run == 0) {
-        log_e("map(): Invalid input range, min == max");
+        log_e("map(): Invalid input range, %i == %i (min == max)", in_min, in_max);
         return -1; // AVR returns -1, SAM returns 0
     }
     const int32_t rise = out_max - out_min;
@@ -620,6 +620,7 @@ private:
     uint32_t    m_spotColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_objectInit = false;
     uint8_t     m_railHigh = 0;
     uint16_t    m_middle_h = 0;
     uint16_t    m_spotPos = 0;
@@ -637,7 +638,7 @@ public:
         m_spotColor = TFT_RED;
     }
     ~slider(){
-        ;
+        m_objectInit = false;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
         m_x = x; // x pos
@@ -651,6 +652,7 @@ public:
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
+        m_objectInit = true;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -669,6 +671,7 @@ public:
         return true;
     }
     void setValue(int16_t val){
+        if(!m_objectInit) return;
         if(val < m_minVal) val = m_minVal;
         if(val > m_maxVal) val = m_maxVal;
         m_val = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
@@ -704,7 +707,7 @@ private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if(run == 0) {
-            log_e("map(): Invalid input range, min == max");
+            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -1148,9 +1151,9 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {log_i("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
-        if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
+        if(file.size() < 24) {log_i("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
         file.readBytes(buf,3);
         if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg

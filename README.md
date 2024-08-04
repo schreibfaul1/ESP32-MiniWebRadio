@@ -33,6 +33,7 @@ Optional HW:
 <ul>
 <li>IR receiver + IR remote controller according to the NFC protocol</li>
 <li>KCX_BT_EMITTER V1.7, for connecting external Bluetooth devices in the sending or receiving direction, a connection with voice assistants such as ALEXA is possible</li>
+<li>BH1750 light sensor: The BH1750 has a wide range of values, which is still sufficiently sensitive at average room brightness. On the display, you can set the desired brightness when the sensor is darkened. Then the display is dimmed to this value 'at night'.</li>
 </ul><br>
 
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
@@ -70,16 +71,16 @@ Schematic<br>
 
 <br>
 
-|Codec|                          |
-|-----|--------------------------|
-| mp3 | y |
-| aac | y |
-| aacp (HLS) | mono |
-| wav | y |
-| flac | blocksize max 8192 bytes |
-| vorbis | y (<=196Kbit/s)  |
-| m4a | y |
-| opus |  y (celt)  |
+|Codec       |ESP32          |ESP32-S3       |                         |
+|------------|---------------|---------------|-------------------------|
+| mp3        | y             | y             |                         |
+| aac        | y             | y             |                         |
+| aacp       | y (mono)      | y (+SBR, +PS) |                         |
+| wav        | y             | y             |                         |
+| flac       | y             | y             |blocksize max 8192 bytes |
+| vorbis     | y <=196Kbit/s | y <=256Kbit/s |                         |
+| m4a        | y             | y             |                         |
+| opus       | y             | y             |celt only                |
 
 ***
 <br>

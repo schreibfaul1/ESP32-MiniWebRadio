@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 28.06.2024
+ *  Updated on: 04.08.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
