@@ -2781,14 +2781,19 @@ public:
         m_bitRateColor = bitRateColor;
     }
     void setIpAddr(const char* ipAddr){
+        if(m_ipAddr){free(m_ipAddr); m_ipAddr = NULL;}
+
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wuse-after-free"
         m_ipAddr = strdup(ipAddr);
         char myIP[30] = "IP:";
         strcpy(myIP + 3, ipAddr);
+        #pragma GCC diagnostic pop
+
         tft.setFont(m_fontSize);
         tft.setTextColor(m_ipAddrColor);
         tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
         tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true);
-        if(m_ipAddr){free(m_ipAddr); m_ipAddr = NULL;}
     }
     void setIpAddrColor(uint16_t ipAddrColor){
         m_ipAddrColor = ipAddrColor;

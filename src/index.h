@@ -1768,16 +1768,22 @@ function loadVolumeSteps(){
 function showRingvolume(val){
     const selectedValueElement = document.getElementById('txtRingVolume');
     selectedValueElement.textContent = val;
+    const selectRingVolume = document.getElementById('selRingVolume');
+    selectRingVolume.selectedIndex = val;
 }
 
 function showVolumeAfterAlarm(val){ // _curVolume after alarm
     const selectedValueElement = document.getElementById('txtVolumeAfterAlarm');
     selectedValueElement.textContent = val;
+    const selectVolumeAfterAlarm = document.getElementById('selVolumeAfterAlarm');
+    selectVolumeAfterAlarm.selectedIndex = val;
 }
 
 function showVolumeSteps(val){
     const selectedValueElement = document.getElementById('txtVolumeSteps');
     selectedValueElement.textContent = val;
+    const selectVolumeSteps = document.getElementById('selVolumeSteps');
+    selectVolumeSteps.selectedIndex = val- 21;
 }
 
 // -------------------------------------- TAB Remote Control---------------------------------------

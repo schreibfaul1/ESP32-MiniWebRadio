@@ -78,7 +78,6 @@ uint8_t             _level = 0;
 uint8_t             _timeFormat = 24;    // 24 or 12
 uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
 uint8_t             _staListPos = 0;
-uint8_t             _semaphore = 0;
 uint8_t             _reconnectCnt = 0;
 uint8_t             _WiFi_disconnectCnt = 0;
 uint16_t            _staListNr = 0;
@@ -118,6 +117,7 @@ uint32_t            _audioFileDuration = 0;
 uint8_t             _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*         _pressBtn[8];
 const char*         _releaseBtn[8];
+const char*         _time_s = "";
 char                _chbuf[512];
 char                _fName[256];
 char                _myIP[25] = {0};
@@ -183,6 +183,7 @@ bool                _f_brightnessIsChangeable = false;
 bool                _f_connectToLasthost = false;
 bool                _f_BTpower = false;
 bool                _f_BTcurPowerState = false;
+bool                _f_timeSpeech = false;
 String              _station = "";
 String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
@@ -787,9 +788,18 @@ void urldecode(char* str) {
 // clang-format off
 void timer100ms(){
     static uint16_t ms100 = 0;
+    static uint8_t semaphore = 0;
     _f_100ms = true;
     ms100 ++;
-    if(!(ms100 % 10))   _f_1sec  = true;
+    if(!(ms100 % 10))   {
+        _f_1sec  = true;
+        _time_s = rtc.gettime_s();
+        if(endsWith(_time_s, "59:53"))  _f_timeSpeech = true;
+        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime); }
+        if(_f_alarm)        {semaphore++;}
+        if(semaphore)       {semaphore++;}
+        if(semaphore >= 65) {semaphore = 0;}
+    }
     if(!(ms100 % 100))  _f_10sec = true;
     if(!(ms100 % 600)) {_f_1min  = true; ms100 = 0;}
 
@@ -1571,7 +1581,7 @@ void setup() {
     if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
 #endif
 
-    audio.setAudioTaskCore(0);
+    audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(_volumeSteps);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
@@ -2527,46 +2537,40 @@ void loop() {
 
     if(_f_1sec) { // calls every second
         _f_1sec = false;
-        const char* time_s = rtc.gettime_s();
         clk_CL_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
 
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
-        {
-            if(!_semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime); }
-            if(_f_alarm)         {_semaphore++;}
-            if(_semaphore)       {_semaphore++;}
-            if(_semaphore >= 65) { _semaphore = 0;}
-            if(_f_alarm) {
-                _f_alarm = false;
-                clearAll();
-                dispHeader.updateItem("ALARM");
-                dispHeader.updateTime(rtc.gettime_s());
-                dispFooter.show();
-                if(_ringVolume > 0){ // alarm with bell
-                    showFileName("ALARM");
-                    drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
-                    setTFTbrightness(_brightness);
-                    SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
-                    audio.setVolume(21);
-                    muteChanged(false);
-                    connecttoFS("/ring/alarm_clock.mp3");
-                }
-                else{ // alarm without bell
-                    _f_eof_alarm = true;
-                    return;
-                }
+        if(_f_alarm) {
+            _f_alarm = false;
+            clearAll();
+            dispHeader.updateItem("ALARM");
+            dispHeader.updateTime(_time_s);
+            dispFooter.show();
+            if(_ringVolume > 0){ // alarm with bell
+                showFileName("ALARM");
+                drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
+                setTFTbrightness(_brightness);
+                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
+                if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
+                audio.setVolume(_ringVolume);
+                muteChanged(false);
+                connecttoFS("/ring/alarm_clock.mp3");
             }
-            if(_f_eof_alarm) { // AFTER RINGING
-                _f_eof_alarm = false;
-                audio.setVolume(_cur_volume);
-                dispHeader.updateVolume(_cur_volume);
-                wake_up();
+            else{ // alarm without bell
+                _f_eof_alarm = true;
+                return;
             }
+        }
+        if(_f_eof_alarm) { // AFTER RINGING
+            _f_eof_alarm = false;
+            _cur_volume = _volumeAfterAlarm;
+            audio.setVolume(_cur_volume);
+            dispHeader.updateVolume(_cur_volume);
+            wake_up();
         }
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping) {
-            dispHeader.updateTime(rtc.gettime_s(), false);
+            dispHeader.updateTime(_time_s, false);
             dispFooter.updateRSSI(WiFi.RSSI());
 
             if(_f_newBitRate) {
@@ -2579,27 +2583,30 @@ void loop() {
             }
         }
         //---------------------------------------------TIME SPEECH -----------------------------------------------------------------------------------
-        if((_f_mute == false) && (!_f_sleeping)) {
-            static bool f_resume = false;
-            if(endsWith(time_s, "59:53") && _state == RADIO) { // speech the time 7 sec before a new hour is arrived
-                int hour = atoi(time_s);                       //  extract the hour
-                hour++;
-                if(hour == 24) hour = 0;
-                if(_f_timeAnnouncement) {
-                    f_resume = true;
-                    _f_eof = false;
-                    if(_timeFormat == 12)
-                        if(hour > 12) hour -= 12;
-                    sprintf(_chbuf, "/voice_time/%d_00.mp3", hour);
-                    SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
-                    return;
+        if(_f_timeSpeech){
+            _f_timeSpeech =  false;
+            if((_f_mute == false) && (!_f_sleeping)) {
+                static bool f_resume = false;
+                if(_state == RADIO) { // speech the time 7 sec before a new hour is arrived
+                    int hour = atoi(_time_s);                       //  extract the hour
+                    hour++;
+                    if(hour == 24) hour = 0;
+                    if(_f_timeAnnouncement) {
+                        f_resume = true;
+                        _f_eof = false;
+                        if(_timeFormat == 12)
+                            if(hour > 12) hour -= 12;
+                        sprintf(_chbuf, "/voice_time/%d_00.mp3", hour);
+                        SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS(_chbuf);
+                        return;
+                    }
+                    else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour); }
                 }
-                else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour); }
-            }
-            if(f_resume && _f_eof){
-                f_resume = false;
-                _f_eof = false;
-                connecttohost(_lastconnectedhost.c_str());
+                if(f_resume && _f_eof){
+                    f_resume = false;
+                    _f_eof = false;
+                    connecttohost(_lastconnectedhost.c_str());
+                }
             }
         }
         //------------------------------------------HEADPHONE / LOUDSPEAKER --------------------------------------------------------------------------
@@ -3274,18 +3281,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "downvolume"){        webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
 
     if(cmd == "getVolumeSteps"){    webSrv.send("volumeSteps=", int2str(_volumeSteps)); return;}
-    if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt()); setVolume(_cur_volume);
+    if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt());
                                     _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
-                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps);
+                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps); setVolume(_cur_volume);
                                     sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
                                     sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
                                     sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_PL_volume.setValue(_cur_volume);
                                     sdr_RA_volume.setNewMinMaxVal(0, _volumeSteps); sdr_RA_volume.setValue(_cur_volume);
+                                    SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
                                     return;}
 
     if(cmd == "getRingVolume"){     webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
-    if(cmd == "setRingVolume"){     _ringVolume = param.toInt(); webSrv.send("ringVolume=", int2str(_ringVolume)); return;}
+    if(cmd == "setRingVolume"){     _ringVolume = param.toInt(); webSrv.send("ringVolume=", int2str(_ringVolume));
+                                    SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "%d", _ringVolume); return;}
 
     if(cmd == "getVolAfterAlarm"){  webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
     if(cmd == "setVolAfterAlarm"){  _volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
