@@ -1684,9 +1684,12 @@ void setVolume(uint8_t vol) {
     static int16_t oldVolume = -1;
     if(vol == oldVolume) return;
     oldVolume = vol;
-    if(!_f_mute) audio.setVolume(vol);
     _cur_volume = vol;
     dispHeader.updateVolume(_cur_volume);
+    sdr_CL_volume.setValue(_cur_volume);
+    sdr_DL_volume.setValue(_cur_volume);
+    sdr_PL_volume.setValue(_cur_volume);
+    sdr_RA_volume.setValue(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
 
 #if DECODER > 1 // ES8388, AC101 ...
@@ -2009,8 +2012,8 @@ void muteChanged(bool m) {
     btn_EQ_Mute.setValue(m);
     btn_PL_Mute.setValue(m);
     btn_RA_Mute.setValue(m);
-    if(m) {audio.setVolume(0); _f_mute = true;}
-    else {audio.setVolume(_cur_volume); _f_mute = false;}
+    if(m) {_f_mute = true;}
+    else  {_f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
     if(_f_mute) dispHeader.setVolumeColor(TFT_RED);
@@ -2532,6 +2535,25 @@ void loop() {
                 }
             }
         }
+
+        uint8_t vol = audio.getVolume();
+        uint8_t steps = _volumeSteps / 20;
+        if(_f_mute){
+            if(vol){
+                if(vol >= steps)  vol -= steps;
+                else vol--;
+                audio.setVolume(vol);
+            }
+        }
+        else{
+            if(vol != _cur_volume){
+                if      (vol > _cur_volume + steps) vol -= steps;
+                else if (vol > _cur_volume) vol --;
+                else if (vol < _cur_volume - steps) vol += steps;
+                else if (vol < _cur_volume) vol ++;
+                audio.setVolume(vol);
+            }
+        }
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -2552,6 +2574,7 @@ void loop() {
                 setTFTbrightness(_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
+                setVolume(_ringVolume);
                 audio.setVolume(_ringVolume);
                 muteChanged(false);
                 connecttoFS("/ring/alarm_clock.mp3");
@@ -2564,6 +2587,7 @@ void loop() {
         if(_f_eof_alarm) { // AFTER RINGING
             _f_eof_alarm = false;
             _cur_volume = _volumeAfterAlarm;
+            setVolume(_cur_volume);
             audio.setVolume(_cur_volume);
             dispHeader.updateVolume(_cur_volume);
             wake_up();
