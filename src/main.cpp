@@ -1744,7 +1744,7 @@ uint8_t downvolume() {
 uint8_t upvolume() {
     uint8_t steps = _volumeSteps / 20;
     if(_cur_volume == _volumeSteps) return _cur_volume;
-    else if (_volumeSteps > _cur_volume - steps) _cur_volume += steps;
+    else if (_volumeSteps > _cur_volume + steps) _cur_volume += steps;
     else  _cur_volume ++;
     sdr_CL_volume.setValue(_cur_volume);
     sdr_DL_volume.setValue(_cur_volume);
