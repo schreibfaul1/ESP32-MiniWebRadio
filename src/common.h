@@ -675,7 +675,7 @@ public:
         if(val < m_minVal) val = m_minVal;
         if(val > m_maxVal) val = m_maxVal;
         m_val = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        drawNewSpot(m_val);
+        if(m_enabled) drawNewSpot(m_val);
     }
     int16_t getValue(){
         return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
@@ -2549,11 +2549,11 @@ public:
     void updateVolume(uint8_t vol){
         m_volume = vol;
         if(!m_enabled) return;
-        char buff[10];
+        char buff[15];
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
         tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
-        sprintf(buff, "Vol %02d", m_volume);
+        sprintf(buff, "Vol %d", m_volume);
         tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
     }
     void setVolumeColor(uint16_t volColor){

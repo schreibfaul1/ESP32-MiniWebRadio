@@ -1684,10 +1684,10 @@ const char* scaleImage(const char* path) {
 
 void setVolume(uint8_t vol) {
     static int16_t oldVol = -1;
-    log_i("vol %i", vol);
+    log_i("vol %i   oldVol %i", vol, oldVol);
     if(vol == oldVol) return;
     _cur_volume = vol;
-    oldVol = _cur_volume;
+    oldVol = vol;
     dispHeader.updateVolume(_cur_volume);
     sdr_CL_volume.setValue(_cur_volume);
     sdr_DL_volume.setValue(_cur_volume);
@@ -1728,8 +1728,10 @@ void setVolume(uint8_t vol) {
 }
 
 uint8_t downvolume() {
+    uint8_t steps = _volumeSteps / 20;
     if(_cur_volume == 0) return _cur_volume;
-    _cur_volume--;
+    else if (steps < _cur_volume) _cur_volume -= steps;
+    else _cur_volume --;
     sdr_CL_volume.setValue(_cur_volume);
     sdr_DL_volume.setValue(_cur_volume);
     sdr_PL_volume.setValue(_cur_volume);
@@ -1738,9 +1740,12 @@ uint8_t downvolume() {
     muteChanged(_f_mute); // set mute off
     return _cur_volume;
 }
+
 uint8_t upvolume() {
+    uint8_t steps = _volumeSteps / 20;
     if(_cur_volume == _volumeSteps) return _cur_volume;
-    _cur_volume++;
+    else if (_volumeSteps > _cur_volume - steps) _cur_volume += steps;
+    else  _cur_volume ++;
     sdr_CL_volume.setValue(_cur_volume);
     sdr_DL_volume.setValue(_cur_volume);
     sdr_PL_volume.setValue(_cur_volume);
@@ -3309,11 +3314,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
                                     _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps);
                                     // log_w("_volumeSteps  %i", _volumeSteps);
+                                    sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps);
+                                    sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps);
+                                    sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps);
+                                    sdr_RA_volume.setNewMinMaxVal(0, _volumeSteps);
                                     setVolume(_cur_volume);
-                                    sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
-                                    sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
-                                    sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps); sdr_PL_volume.setValue(_cur_volume);
-                                    sdr_RA_volume.setNewMinMaxVal(0, _volumeSteps); sdr_RA_volume.setValue(_cur_volume);
                                     SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
                                     return;}
 
@@ -3323,7 +3328,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "getVolAfterAlarm"){  webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm)); return;}
     if(cmd == "setVolAfterAlarm"){  _volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
-                                    SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", _ringVolume); return;}
+                                    SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", _volumeAfterAlarm); return;}
 
     if(cmd == "homepage"){          webSrv.send("homepage=", _homepage);
                                     return;}
