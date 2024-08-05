@@ -380,6 +380,7 @@ button2state  btn_DL_Mute("btn_DL_Mute"), btn_DL_pause("btn_DL_pause");
 button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
 textbox       txt_DL_fName("txt_DL_fName");
 slider        sdr_DL_volume("sdr_DL_volume");
+pictureBox    pic_DL_logo("pic_DL_logo");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
@@ -899,13 +900,17 @@ void showFileLogo(uint8_t state) {
     if(state == RADIO) {
         if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".jpg";
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
-        drawImage(logo.c_str(), 0, _winName.y + 2);
+        pic_RA_logo.setPicturePath(logo.c_str());
+        pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_RA_logo.show();
         webSrv.send("stationLogo=", logo);
         return;
     }
     else if(state == DLNA) {
         logo = "/common/DLNA.jpg";
-        drawImage(logo.c_str(), 0, _winName.y + 2);
+        pic_DL_logo.setPicturePath(logo.c_str());
+        pic_DL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_DL_logo.show();
         webSrv.send("stationLogo=", logo);
         return;
     }
@@ -2177,6 +2182,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
     sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
     txt_DL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
+    pic_DL_logo.begin(          _winLogo.x,   _winLogo.y);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2296,7 +2302,7 @@ void changeState(int32_t state){
                          break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_pause.disable();   btn_DL_cancel.disable();
                          btn_DL_fileList.disable(); btn_DL_radio.disable();    txt_DL_fName.disable();
-                         sdr_DL_volume.hide();
+                         sdr_DL_volume.hide();      pic_DL_logo.disable();
                          break;
         case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
@@ -2400,7 +2406,8 @@ void changeState(int32_t state){
         }
         case DLNA:{
             clearWithOutHeaderFooter();
-            showFileLogo(state);
+            pic_DL_logo.enable();
+            showFileLogo(DLNA);
             btn_DL_Mute.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             txt_DL_fName.show();
             sdr_DL_volume.show();
@@ -2552,24 +2559,26 @@ void loop() {
             }
         }
 
-        uint8_t vol = audioGetVolume();
-        uint8_t steps = _volumeSteps / 20;
-        if(_f_mute){
-            if(vol){
-                if(vol >= steps)  vol -= steps;
-                else vol--;
-                audioSetVolume(vol);
-            }
-        }
-        else{
-            if(vol != _cur_volume){
-                if      (vol > _cur_volume + steps) vol -= steps;
-                else if (vol > _cur_volume) vol --;
-                else if (vol < _cur_volume - steps) vol += steps;
-                else if (vol < _cur_volume) vol ++;
-                audioSetVolume(vol);
-            }
-        }
+        // uint8_t vol = audioGetVolume();
+        // uint8_t steps = _volumeSteps / 20;
+        // if(_f_mute){
+        //     if(vol){
+        //         if(vol >= steps)  vol -= steps;
+        //         else vol--;
+        //         audioSetVolume(vol);
+        //     }
+        // }
+        // else{
+        //     if(vol != _cur_volume){
+        //         if      (vol > _cur_volume + steps) vol -= steps;
+        //         else if (vol > _cur_volume) vol --;
+        //         else if (vol < _cur_volume - steps) vol += steps;
+        //         else if (vol < _cur_volume) vol ++;
+        //         audioSetVolume(vol);
+        //     }
+        // }
+        if(audioGetVolume() && _f_mute) audioSetVolume(0);
+        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume);
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -2765,16 +2774,17 @@ void loop() {
         }
         //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
         if(_f_BH1750_found){
-            uint16_t ambVal = BH1750.getBrightness();
+            int32_t ambVal = BH1750.getBrightness();
+            if(ambVal <= 0) goto endbrightness;
             if(ambVal > 1500) ambVal = 1500;
             _bh1750Value = map_l(ambVal, 0, 1500, 5, 100);
-
-            BH1750.start();
         //    log_i("_bh1750Value %i, _brightness %i", _bh1750Value, _brightness);
             if(!_f_sleeping){
                 if(_bh1750Value >= _brightness) setTFTbrightness(_bh1750Value);
                 else setTFTbrightness(_brightness);
             }
+endbrightness:
+            BH1750.start();
         }
     } //  END _f_1sec
 

@@ -1961,6 +1961,11 @@ private:
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 (*m_dlnaLevel) ++;
                 if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                if(m_dlnaServer.friendlyName[m_itemListPos - 1] == NULL){
+                    log_e("invalid pointer in dlna history");
+                    m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                    goto exit;
+                }
                 m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
                 m_browseOnRelease = 1;
                 goto exit;
