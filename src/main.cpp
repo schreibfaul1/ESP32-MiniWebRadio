@@ -372,6 +372,7 @@ button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList
 button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
 textbox       txt_PL_fName("txt_PL_fName");
 slider        sdr_PL_volume("sdr_PL_volume");
+pictureBox    pic_PL_logo("pic_PL_logo");
 // AUDIOFILESLIST
 fileList      lst_PLAYER("lst_PLAYER");
 // DLNA
@@ -912,7 +913,9 @@ void showFileLogo(uint8_t state) {
         if(_cur_Codec == 0) logo = "/common/AudioPlayer.jpg";
         else if(_playerSubmenue == 0) logo = "/common/AudioPlayer.jpg";
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
-        drawImage(logo.c_str(), 0, _winName.y + 2);
+        pic_PL_logo.setPicturePath(logo.c_str());
+        pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_PL_logo.show();
         return;
     }
 }
@@ -2151,6 +2154,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
                                                                                          btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
+    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder, &_cur_AudioFileNr);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2286,7 +2290,7 @@ void changeState(int32_t state){
         case PLAYER:     btn_PL_Mute.disable();     btn_PL_pause.disable();   btn_PL_cancel.disable();    btn_PL_off.disable();
                          btn_PL_prevFile.disable(); btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
                          btn_PL_fileList.hide();    btn_PL_radio.hide();       txt_PL_fName.disable();
-                         sdr_PL_volume.hide();
+                         sdr_PL_volume.hide();      pic_PL_logo.disable();
                          break;
         case AUDIOFILESLIST: lst_PLAYER.disable();
                          break;
@@ -2369,6 +2373,7 @@ void changeState(int32_t state){
 
         case PLAYER: {
             if(_state != PLAYER) clearWithOutHeaderFooter();
+            pic_PL_logo.enable();
             if(_playerSubmenue == 0){
                 _SD_content.listDir(_curAudioFolder, true, true);
                 _cur_Codec = 0;
@@ -3825,6 +3830,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubmenue = 0; changeState(BLUETOOTH); return;}
         if(strcmp(name, "btn_RA_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "VUmeter_RA") == 0)      {return;}
+        if(strcmp(name, "sdr_RA_volume") == 0)   {return;}
     }
     if(_state == STATIONSLIST) {
         if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStation(ra.val1); changeState(RADIO);} return;}
@@ -3841,6 +3847,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
+        if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){SD_playFile(ra.arg1);} return;}
@@ -3851,6 +3858,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); return;}
+        if(strcmp(name, "sdr_DL_volume") == 0)   {return;}
     }
     if(_state == DLNAITEMSLIST) {
         if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); changeState(DLNA); connecttohost(ra.arg1);} // play a file
@@ -3863,6 +3871,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_CL_radio") == 0)    {_clockSubMenue = 0; changeState(RADIO); return;}
         if(strcmp(name, "clk_CL_green") == 0)    {_clockSubMenue = 1; changeState(CLOCK); return;}
         if(strcmp(name, "btn_CL_off") == 0)      {fall_asleep(); return;}
+        if(strcmp(name, "sdr_CL_volume") == 0)   {return;}
     }
     if(_state == ALARM) {
         if(strcmp(name, "clk_AL_red") == 0)      {return;}

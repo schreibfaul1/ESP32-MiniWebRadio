@@ -704,11 +704,13 @@ public:
         if(!m_objectInit) return;
         if(val < m_minVal) val = m_minVal;
         if(val > m_maxVal) val = m_maxVal;
-        m_val = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        if(m_enabled) drawNewSpot(m_val);
+        m_val = val;
+        if(m_clicked) return;
+        m_spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if(m_enabled) drawNewSpot(m_spotPos);
     }
     int16_t getValue(){
-        return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        return m_val;
     }
     void setNewMinMaxVal(int16_t minVal, int16_t maxVal){
         m_minVal = minVal;
@@ -752,6 +754,7 @@ private:
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        m_ra.val1 = val;
         if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, val);
     }
 };
