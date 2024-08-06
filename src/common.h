@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 04.Aug 2024
+// updated: 06.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -756,6 +756,123 @@ private:
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
         m_ra.val1 = val;
         if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, val);
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class progressbar{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    int16_t     m_val = 0;
+    int16_t     m_minVal = 0;
+    int16_t     m_maxVal = 0;
+    int16_t     m_oldPos = 0;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_frameColor = 0;
+    uint32_t    m_railColorLeft = 0;
+    uint32_t    m_railColorRight = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_objectInit = false;
+    uint8_t     m_railHigh = 0;
+    char*       m_name = NULL;
+    releasedArg m_ra;
+public:
+    progressbar(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("progressbar");
+        m_railHigh = 6;
+        m_bgColor = TFT_BLACK;
+        m_frameColor = TFT_WHITE;
+        m_railColorLeft = TFT_RED;
+        m_railColorRight = TFT_GREEN;
+    }
+    ~progressbar(){
+        m_objectInit = false;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+        m_enabled = false;
+        m_objectInit = true;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    void setValue(int16_t val){
+        if(!m_objectInit) return;
+        if(val < m_minVal) val = m_minVal;
+        if(val > m_maxVal) val = m_maxVal;
+        m_val = val;
+        if(m_clicked) return;
+        if(m_enabled) drawChanges();
+    }
+    int16_t getValue(){
+        return m_val;
+    }
+    void setNewMinMaxVal(int16_t minVal, int16_t maxVal){
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+    }
+    void show(){
+        tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
+        drawNewValue();
+        m_enabled = true;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+private:
+    int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+        const int32_t run = in_max - in_min;
+        if(run == 0) {
+            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
+            return -1;
+        }
+        const int32_t rise = out_max - out_min;
+        const int32_t delta = x - in_min;
+        return round((float)(delta * rise) / run + out_min);
+    }
+    void drawNewValue(){
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
+        tft.fillRect(m_x + 1, m_y + 1,  pos, m_h - 2, m_railColorLeft);
+        tft.fillRect(pos, m_y + 1,  m_w  -  pos - 1, m_h - 2, m_railColorRight);
+        m_oldPos = pos;
+        if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
+    }
+    void drawChanges(){
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
+        if(pos > m_oldPos){
+            tft.fillRect(m_oldPos, m_y + 1, pos, m_h - 2, m_railColorLeft);
+        }
+        if(pos < m_oldPos){
+            tft.fillRect(pos, m_y + 1,  m_oldPos - pos, m_h - 2, m_railColorRight);
+        }
+        if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

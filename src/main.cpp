@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3e Aug 03/2024                                                                                                                       ";
+    Version 3.3e Aug 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -256,6 +256,7 @@ struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 
 struct w_n  {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
 struct w_e  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
 struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  46;} const _winFileNr;
+struct w_a  {uint16_t x =   0; uint16_t y = 168; uint16_t w = 320; uint16_t h =   7;} const _winProgbar;
 struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
 struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
@@ -315,7 +316,8 @@ struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h = 
 struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
 struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;} const _winName;
 struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 130; uint16_t h =  60;} const _winFileNr;
+struct w_j  {uint16_t x =   0; uint16_t y = 168; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;
+struct w_a  {uint16_t x =   0; uint16_t y = 219; uint16_t w = 480; uint16_t h =   9;} const _winProgbar;
 struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
@@ -373,6 +375,7 @@ button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFi
 textbox       txt_PL_fName("txt_PL_fName");
 slider        sdr_PL_volume("sdr_PL_volume");
 pictureBox    pic_PL_logo("pic_PL_logo");
+progressbar   pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
 fileList      lst_PLAYER("lst_PLAYER");
 // DLNA
@@ -2160,6 +2163,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
     pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
+    pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder, &_cur_AudioFileNr);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2295,7 +2299,7 @@ void changeState(int32_t state){
                          break;
         case PLAYER:     btn_PL_Mute.disable();     btn_PL_pause.disable();   btn_PL_cancel.disable();    btn_PL_off.disable();
                          btn_PL_prevFile.disable(); btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
-                         btn_PL_fileList.hide();    btn_PL_radio.hide();       txt_PL_fName.disable();
+                         btn_PL_fileList.hide();    btn_PL_radio.hide();       txt_PL_fName.disable();    pgb_PL_progress.disable();
                          sdr_PL_volume.hide();      pic_PL_logo.disable();
                          break;
         case AUDIOFILESLIST: lst_PLAYER.disable();
@@ -2385,13 +2389,15 @@ void changeState(int32_t state){
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
                 showFileName(_SD_content.getIndex(_cur_AudioFileNr));
-           //     showAudioFileNumber();
+                pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 showAudioFileNumber();
                 txt_PL_fName.show();
                 btn_PL_prevFile.show(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
             if(_playerSubmenue == 1){
+                pgb_PL_progress.setValue(0);
+                pgb_PL_progress.show();
                 sdr_PL_volume.show();
             //    txt_PL_fName.setText("");
                 btn_PL_Mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); txt_PL_fName.show();
@@ -2666,6 +2672,7 @@ void loop() {
         if(audioIsRunning() && _f_isFSConnected) {
             _audioCurrentTime = audioGetCurrentTime();
             _audioFileDuration = audioGetFileDuration();
+            if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
             if(_audioFileDuration) {
                 SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
                                (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
