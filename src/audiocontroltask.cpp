@@ -1,11 +1,9 @@
 // created: 10.02.2022
 // updated: 29.07.2024
 
-#include "common.h"
-#include "SPIFFS.h"
-#include "FFat.h"
-#include "WiFiClientSecure.h"
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
+#include "common.h"
+
 
 Audio audio;
 
@@ -14,7 +12,7 @@ extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
-                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS};
+                 GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS, SET_COREID};
 
 struct audioMessage{
     uint8_t     cmd;
@@ -27,9 +25,8 @@ struct audioMessage{
 } audioTxMessage, audioRxMessage;
 
 uint8_t  t_volume = 0;
+uint8_t  t_volSteps = 1;
 uint32_t t_millis = 0;
-bool     f_muteIncrement = false;
-bool     f_muteDecrement = false;
 
 QueueHandle_t audioSetQueue = NULL;
 QueueHandle_t audioGetQueue = NULL;
@@ -57,7 +54,14 @@ void audioTask(void *parameter) {
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
             if(audioRxTaskMessage.cmd == SET_VOLUME){
                 audioTxTaskMessage.cmd = SET_VOLUME;
-                audio.setVolume(audioRxTaskMessage.value1);
+                t_volume = audioRxTaskMessage.value1;
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == SET_VOLUME_STEPS){
+                audioTxTaskMessage.cmd = SET_VOLUME_STEPS;
+                audio.setVolumeSteps(audioRxTaskMessage.value1);
+                t_volSteps = audioRxTaskMessage.value1 / 20;
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -186,28 +190,31 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == SET_COREID){
+                audioTxTaskMessage.cmd = SET_COREID;
+                audio.setAudioTaskCore(audioRxTaskMessage.value1);
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else{
                 SerialPrintfln(ANSI_ESC_RED "Error: unknown audioTaskMessage %i", audioRxTaskMessage.cmd);
             }
         }
         audio.loop();
 
-        if(f_muteDecrement){
-            if(t_millis + 30 < millis()){
-                uint8_t v = audio.getVolume();
-                if (v > t_volume) audio.setVolume(v - 1);
-                else f_muteDecrement = false;
-                t_millis = millis();
+        if(t_millis + 30 < millis()){
+            t_millis = millis();
+            uint8_t v = audio.getVolume();
+            if (v > t_volume){
+                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0);   else  audio.setVolume(v- t_volSteps);}
+                else audio.setVolume(t_volume);
+            }
+            if (v < t_volume){
+                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255); else audio.setVolume(v + t_volSteps);}
+                else audio.setVolume(t_volume);
             }
         }
-        if(f_muteIncrement){
-            if(t_millis + 30 < millis()){
-                uint8_t v = audio.getVolume();
-                if(v < t_volume) audio.setVolume(v + 1);
-                else f_muteIncrement = false;
-                t_millis = millis();
-            }
-        }
+        vTaskDelay(7);
     }
 }
 
@@ -215,21 +222,21 @@ TaskHandle_t Task1;
 
 void audioInit() {
     xTaskCreatePinnedToCore(
-        audioTask,              /* Function to implement the task */
-        "audioplay",            /* Name of the task */
-        7500,                   /* Stack size in words */
-        NULL,                   /* Task input parameter */
-        AUDIOTASK_PRIO,         /* Priority of the task */
-        &Task1,                 /* Task handle. */
-        AUDIOTASK_CORE          /* Core where the task should run */
+        audioTask,                  /* Function to implement the task */
+        "audioplay",                /* Name of the task */
+        7500,                       /* Stack size in words */
+        NULL,                       /* Task input parameter */
+        AUDIOCONTROLTASK_PRIO,      /* Priority of the task */
+        &Task1,                     /* Task handle. */
+        AUDIOCONTROLTASK_CORE       /* Core where the task should run */
     );
     if(CORE_DEBUG_LEVEL >= 2){
-        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOTASK_CORE);}
-        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOTASK_PRIO);}
+        {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_CORE);}
+        {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_PRIO);}
     }
 }
 
-void audioTaskDelete(){
+void audioControlTaskDelete(){
     vTaskDelete(Task1);
 }
 
@@ -246,6 +253,13 @@ audioMessage transmitReceive(audioMessage msg){
 void audioSetVolume(uint8_t vol){
     audioTxMessage.cmd = SET_VOLUME;
     audioTxMessage.value1 = vol;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
+}
+
+void audioSetVolumeSteps(uint8_t steps){
+    audioTxMessage.cmd = SET_VOLUME_STEPS;
+    audioTxMessage.value1 = steps;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -391,22 +405,10 @@ bool audioSetTimeOffset(int16_t timeOffset){
     return RX.ret;
 }
 
-void audioSetVolumeSteps(uint8_t steps){
-    audioTxMessage.cmd = SET_VOLUME_STEPS;
-    audioTxMessage.value1 = steps;
+void audioSetCoreID(uint8_t coreId){
+    audioTxMessage.cmd = SET_COREID;
+    audioTxMessage.value1 = coreId;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
 
-void audioMute(uint8_t vol){
-    if(vol > 21) vol = 21;
-    if(vol > audioGetVolume()) {
-        t_volume = vol;
-        f_muteIncrement = true;
-    }
-    else if(vol < audioGetVolume()){
-        t_volume = vol;
-        f_muteDecrement = true;
-    }
-    t_millis = millis();
-}

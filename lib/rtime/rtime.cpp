@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 03.04.2024
+ *  Updated on: 04.08.2024
  *
  */
 
@@ -272,6 +272,7 @@ boolean RTIME::obtain_time(){
     int32_t retry = 0;
     const int32_t retry_count = 10;
     while(timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count) {
+        IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);
         sprintf(sbuf, "Waiting for system time to be set... (%ld/%ld)", (long int)retry, (long int)retry_count);
         if (RTIME_info) RTIME_info(sbuf);
         vTaskDelay(uint16_t(2000 / portTICK_PERIOD_MS));

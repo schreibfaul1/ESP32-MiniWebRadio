@@ -1,28 +1,26 @@
 // created: 10.Feb.2022
-// updated: 29.Jul 2024
+// updated: 06.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 // clang-format off
-#define _SSID               "mySSID"                        // Your WiFi credentials here
-#define _PW                 "myWiFiPassword"                // Or in textfile on SD-card
-#define DECODER             1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER      5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
-#define DISPLAY_INVERSION   0                               // (0) off (1) on
-#define TFT_ROTATION        1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY       40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION          5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
-#define TP_ROTATION         1                               // 1 or 3 (landscape)
-#define TP_H_MIRROR         0                               // (0) default, (1) mirror up <-> down
-#define TP_V_MIRROR         0                               // (0) default, (1) mittor left <-> right
-#define AUDIOTASK_CORE      0                               // 0 or 1
-#define AUDIOTASK_PRIO      2                               // 0 ... 24  Priority of the Task (0...configMAX_PRIORITIES -1)
-#define I2S_COMM_FMT        0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
-#define SDMMC_FREQUENCY     80000000                        // 80000000 or 40000000 MHz
-#define FTP_USERNAME        "esp32"                         // user and pw in FTP Client
-#define FTP_PASSWORD        "esp32"
-#define CONN_TIMEOUT        2500                            // unencrypted connection timeout in ms (http://...)
-#define CONN_TIMEOUT_SSL    3500                            // encrypted connection timeout in ms (https://...)
+#define _SSID                   "mySSID"                        // Your WiFi credentials here
+#define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
+#define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define DISPLAY_INVERSION       0                               // (0) off (1) on
+#define TFT_ROTATION            1                               // 1 or 3 (landscape)
+#define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_ROTATION             1                               // 1 or 3 (landscape)
+#define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
+#define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
+#define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
+#define SDMMC_FREQUENCY         80000000                        // 80000000 or 40000000 MHz
+#define FTP_USERNAME            "esp32"                         // user and pw in FTP Client
+#define FTP_PASSWORD            "esp32"
+#define CONN_TIMEOUT            2500                            // unencrypted connection timeout in ms (http://...)
+#define CONN_TIMEOUT_SSL        3500                            // encrypted connection timeout in ms (https://...)
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -37,6 +35,7 @@
 #include <Wire.h>
 #include <ESPmDNS.h>
 #include <WiFiClient.h>
+#include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <vector>
 #include "index.h"
@@ -46,13 +45,14 @@
 #include "rtime.h"
 #include "IR.h"
 #include "tft.h"
+#include "SPIFFS.h"
 #include "ESP32FtpServer.h"
 #include "AC101.h"
 #include "ES8388.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
+#include "BH1750.h"
 #include <freertos/task.h>
-
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -85,6 +85,9 @@
         #define BT_EMITTER_LINK    34  // high if connected                     (-1 if not available)
         #define BT_EMITTER_MODE    13  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 32  // -1 if not used
+
+        #define I2C_SDA            -1  // I2C, dala line for additional HW
+        #define I2C_SCL            -1  // I2C, clock line for additional HW
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -119,8 +122,8 @@
         #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
-        #define I2C_SDA            -1  // I2C, dala line for additional HW
-        #define I2C_SDA            -1  // I2C, clock line for additional HW
+        #define I2C_SDA            41  // I2C, dala line for additional HW
+        #define I2C_SCL            42  // I2C, clock line for additional HW
 #endif
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -193,8 +196,6 @@ void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
 boolean        copySDtoFFat(const char* path);
-void           showVolumeBar();
-void           showBrightnessBar();
 void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
 void           showLogoAndStationName(bool force);
@@ -241,9 +242,10 @@ void           muteChanged(bool m);
 void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void           setTimeCounter(uint8_t sec);
 
+
 //prototypes (audiotask.cpp)
 void           audioInit();
-void           audioTaskDelete();
+void           audioControlTaskDelete();
 void           audioSetVolume(uint8_t vol);
 void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
@@ -267,7 +269,7 @@ uint16_t       audioGetVUlevel();
 uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
-void           audioMute(uint8_t vol);
+void           audioSetCoreID(uint8_t coreId);
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -304,6 +306,14 @@ inline int32_t str2int(const char* str) {
         return stoi(str);
     }
     return 0;
+}
+
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline char* int2str(int32_t val) {
+    static char ret[12];
+    itoa(val, ret, 10);
+    return ret;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -474,12 +484,12 @@ inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, a
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     const int32_t run = in_max - in_min;
     if(run == 0) {
-        log_e("map(): Invalid input range, min == max");
+        log_e("map(): Invalid input range, %i == %i (min == max)", in_min, in_max);
         return -1; // AVR returns -1, SAM returns 0
     }
     const int32_t rise = out_max - out_min;
     const int32_t delta = x - in_min;
-    return (delta * rise) / run + out_min;
+    return round((delta * rise) / run + out_min);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -640,6 +650,7 @@ private:
     uint32_t    m_spotColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_objectInit = false;
     uint8_t     m_railHigh = 0;
     uint16_t    m_middle_h = 0;
     uint16_t    m_spotPos = 0;
@@ -657,7 +668,7 @@ public:
         m_spotColor = TFT_RED;
     }
     ~slider(){
-        ;
+        m_objectInit = false;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
         m_x = x; // x pos
@@ -671,6 +682,7 @@ public:
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
+        m_objectInit = true;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -689,13 +701,20 @@ public:
         return true;
     }
     void setValue(int16_t val){
+        if(!m_objectInit) return;
         if(val < m_minVal) val = m_minVal;
         if(val > m_maxVal) val = m_maxVal;
-        m_val = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        drawNewSpot(m_val);
+        m_val = val;
+        if(m_clicked) return;
+        m_spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if(m_enabled) drawNewSpot(m_spotPos);
     }
     int16_t getValue(){
-        return map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        return m_val;
+    }
+    void setNewMinMaxVal(int16_t minVal, int16_t maxVal){
+        m_minVal = minVal;
+        m_maxVal = maxVal;
     }
     void show(){
         m_enabled = true;
@@ -720,7 +739,7 @@ private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if(run == 0) {
-            log_e("map(): Invalid input range, min == max");
+            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -735,7 +754,125 @@ private:
         }
         m_spotPos = xPos;
         int32_t val = map_l(m_spotPos, m_leftStop, m_rightStop, m_minVal, m_maxVal); // xPos -> val
+        m_ra.val1 = val;
         if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, val);
+    }
+};
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class progressbar{
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    int16_t     m_val = 0;
+    int16_t     m_minVal = 0;
+    int16_t     m_maxVal = 0;
+    int16_t     m_oldPos = 0;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_frameColor = 0;
+    uint32_t    m_railColorLeft = 0;
+    uint32_t    m_railColorRight = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_objectInit = false;
+    uint8_t     m_railHigh = 0;
+    char*       m_name = NULL;
+    releasedArg m_ra;
+public:
+    progressbar(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("progressbar");
+        m_railHigh = 6;
+        m_bgColor = TFT_BLACK;
+        m_frameColor = TFT_WHITE;
+        m_railColorLeft = TFT_RED;
+        m_railColorRight = TFT_GREEN;
+    }
+    ~progressbar(){
+        m_objectInit = false;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+        m_enabled = false;
+        m_objectInit = true;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    void setValue(int16_t val){
+        if(!m_objectInit) return;
+        if(val < m_minVal) val = m_minVal;
+        if(val > m_maxVal) val = m_maxVal;
+        m_val = val;
+        if(m_clicked) return;
+        if(m_enabled) drawChanges();
+    }
+    int16_t getValue(){
+        return m_val;
+    }
+    void setNewMinMaxVal(int16_t minVal, int16_t maxVal){
+        m_minVal = minVal;
+        m_maxVal = maxVal;
+    }
+    void show(){
+        tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
+        drawNewValue();
+        m_enabled = true;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+private:
+    int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
+        const int32_t run = in_max - in_min;
+        if(run == 0) {
+            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
+            return -1;
+        }
+        const int32_t rise = out_max - out_min;
+        const int32_t delta = x - in_min;
+        return round((float)(delta * rise) / run + out_min);
+    }
+    void drawNewValue(){
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
+        tft.fillRect(m_x + 1, m_y + 1,  pos, m_h - 2, m_railColorLeft);
+        tft.fillRect(pos, m_y + 1,  m_w  -  pos - 1, m_h - 2, m_railColorRight);
+        m_oldPos = pos;
+        if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
+    }
+    void drawChanges(){
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
+        if(pos > m_oldPos){
+            tft.fillRect(m_oldPos, m_y + 1, pos, m_h - 2, m_railColorLeft);
+        }
+        if(pos < m_oldPos){
+            tft.fillRect(pos, m_y + 1,  m_oldPos - pos, m_h - 2, m_railColorRight);
+        }
+        if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1164,9 +1301,9 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {log_i("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
-        if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
+        if(file.size() < 24) {log_i("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
         file.readBytes(buf,3);
         if ((buf[0] == 0xFF) && (buf[1] == 0xD8) && (buf[2] == 0xFF)) { // format jpeg
@@ -1941,6 +2078,11 @@ private:
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 (*m_dlnaLevel) ++;
                 if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                if(m_dlnaServer.friendlyName[m_itemListPos - 1] == NULL){
+                    log_e("invalid pointer in dlna history");
+                    m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                    goto exit;
+                }
                 m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
                 m_browseOnRelease = 1;
                 goto exit;
@@ -2568,12 +2710,12 @@ public:
     void updateVolume(uint8_t vol){
         m_volume = vol;
         if(!m_enabled) return;
-        char buff[10];
+        char buff[15];
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
         tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
-        sprintf(buff, "Vol %02d", m_volume);
+        sprintf(buff, "Vol %d", m_volume);
         tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
         xSemaphoreGive(mutex_display);
     }
@@ -2816,9 +2958,14 @@ public:
     }
     void setIpAddr(const char* ipAddr){
         if(m_ipAddr){free(m_ipAddr); m_ipAddr = NULL;}
+
+        #pragma GCC diagnostic push
+        #pragma GCC diagnostic ignored "-Wuse-after-free"
         m_ipAddr = strdup(ipAddr);
         char myIP[30] = "IP:";
         strcpy(myIP + 3, ipAddr);
+        #pragma GCC diagnostic pop
+
         tft.setFont(m_fontSize);
         tft.setTextColor(m_ipAddrColor);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
