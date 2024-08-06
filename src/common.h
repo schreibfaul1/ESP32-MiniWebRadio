@@ -151,14 +151,14 @@ extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
  /* line feed */            if(_newLine){_newLine = false; Serial.println("");} \
-                            Serial.printf("%s ", rtc.gettime_s()); \
+                            rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
                             Serial.printf(__VA_ARGS__); \
                             Serial.printf("\033[0m"); \
                             Serial.println(""); \
                             xSemaphoreGive(mutex_rtc);}
 
 #define SerialPrintfcr(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
- /* carriage return */      Serial.printf("%s ", rtc.gettime_s()); \
+ /* carriage return */      rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
                             Serial.printf(__VA_ARGS__); \
                             Serial.printf("\033[0m"); \
                             Serial.print("  \r"); \

@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 04.08.2024
+ *  Updated on: 06.08.2024
  *
  */
 
@@ -260,7 +260,7 @@ boolean RTIME::begin(String TimeZone){
     // -D NTP_Pool_3='"time-a-g.nist.gov"'
     esp_sntp_setoperatingmode(esp_sntp_operatingmode_t(SNTP_OPMODE_POLL));
     configTzTime(RTIME_TZ.c_str(), NTP_Pool_1, NTP_Pool_2, NTP_Pool_3);
-    return obtain_time();
+    return true; // obtain_time();
 }
 
 void RTIME::stop(){
@@ -286,6 +286,10 @@ boolean RTIME::obtain_time(){
     //log_i( "The current date/time in Berlin is: %s", strftime_buf);
     if(retry < retry_count) return true;
     else return false;
+}
+
+bool RTIME::hasValidTime(){
+    return (timeinfo.tm_year < (2016 - 1900))? false: true;
 }
 
 const char* RTIME::gettime(){

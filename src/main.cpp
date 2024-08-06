@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3e Aug 06/2024                                                                                                                       ";
+    Version 3.3f Aug 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1301,11 +1301,11 @@ bool connectToWiFi() {
         file.close();
         if(line){free(line); line = NULL;}
     }
-    int16_t n = WiFi.scanNetworks();
+    /* int16_t n = WiFi.scanNetworks();
     SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
     for(int i = 0; i < n; i++){
         SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-    }
+    } */
     wifiMulti.run();
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -1580,7 +1580,9 @@ void setup() {
     _reconnectCnt = 0;
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
-    SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s", WiFi.SSID().c_str(), _myIP);
+    SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
+                                                                   ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
+                                                                   ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI());
     ArduinoOTA.setHostname("MiniWebRadio");
     ArduinoOTA.begin();
 

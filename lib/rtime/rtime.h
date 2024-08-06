@@ -2,7 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
- *  Updated on: 25.02.2024
+ *  Updated on: 06.08.2024
  *      Author: Wolle
  */
 
@@ -25,6 +25,7 @@ public:
 	RTIME();
 	~RTIME();
 	boolean begin(String TimeZone="CET-1CEST,M3.5.0,M10.5.0/3");
+	bool hasValidTime();
 	void stop();
 	const char* gettime();
 	const char* gettime_l();
