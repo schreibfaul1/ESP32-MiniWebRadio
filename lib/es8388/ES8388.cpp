@@ -181,7 +181,7 @@ void ES8388::mute(const ES8388_OUT out, const bool muted) {
             break;
     }
 
-    uint8_t reg;
+    uint8_t reg = 0;
     if(read_reg(ES8388_ADDR, reg_addr, reg)) {
         reg = (reg & ~mask_mute) | (mask_val & mask_mute);
         write_reg(ES8388_ADDR, reg_addr, reg);
