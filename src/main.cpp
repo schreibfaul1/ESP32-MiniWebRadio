@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3g Aug 06/2024                                                                                                                       ";
+    Version 3.3h Aug 07/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1578,6 +1578,7 @@ void setup() {
     _reconnectCnt = 0;
 
     if(_brightness < 5) _brightness = 5;
+    if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
@@ -1596,16 +1597,11 @@ void setup() {
 #endif
 
     placingGraphicObjects();
-    // audio.setAudioTaskCore(AUDIOTASK_CORE);
-    // audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    // audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
-    // audio.setVolumeSteps(_volumeSteps);
 
     audioInit();
-    audioSetCoreID(0);
+    audioSetCoreID(AUDIOTASK_CORE);
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audioSetVolumeSteps(_volumeSteps);
-
 
     SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
