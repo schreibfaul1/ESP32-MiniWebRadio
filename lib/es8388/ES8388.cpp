@@ -70,20 +70,22 @@ bool ES8388::write_reg(uint8_t slave_add, uint8_t reg_add, uint8_t data) {
     _TwoWireInstance->beginTransmission(slave_add);
     _TwoWireInstance->write(reg_add);
     _TwoWireInstance->write(data);
-    return Wire.endTransmission() == 0;
+    return 0 == _TwoWireInstance->endTransmission(true); // Based on AC101::write_reg
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ES8388::read_reg(uint8_t slave_add, uint8_t reg_add, uint8_t& data) {
-    bool retval = false;
+    // Based on AC101::ReadReg
     _TwoWireInstance->beginTransmission(slave_add);
-    _TwoWireInstance->write(reg_add);
-    _TwoWireInstance->endTransmission(false);
-    _TwoWireInstance->requestFrom((uint16_t)slave_add, (uint8_t)1, true);
-    if(_TwoWireInstance->available() >= 1) {
-        data = _TwoWireInstance->read();
-        retval = true;
-    }
-    return retval;
+	_TwoWireInstance->write(reg_add);
+	_TwoWireInstance->endTransmission(false);
+
+	uint16_t val = 0u;
+	if (2 == _TwoWireInstance->requestFrom(uint16_t(slave_add), uint8_t(2)))
+	{
+		val = uint16_t(_TwoWireInstance->read() << 8) + uint16_t(_TwoWireInstance->read());
+	}
+	_TwoWireInstance->endTransmission(true);
+	return val;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool ES8388::begin(int32_t sda, int32_t scl, uint32_t frequency) {
