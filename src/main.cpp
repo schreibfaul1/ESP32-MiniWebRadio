@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3f Aug 06/2024                                                                                                                       ";
+    Version 3.3g Aug 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1509,6 +1509,7 @@ void setup() {
     tft.begin(TFT_CS, TFT_DC, FSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32S3
 #endif
 
+    setTFTbrightness(100);
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tft.setBackGoundColor(TFT_BLACK);
@@ -1531,7 +1532,6 @@ void setup() {
         tft.setFont(_fonts[6]);
         tft.setTextColor(TFT_YELLOW);
         tft.writeText("SD Card Mount Failed", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        setTFTbrightness(80);
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         return;
     }
@@ -1545,8 +1545,7 @@ void setup() {
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
 #endif
-    if(_brightness < 5) _brightness = 5;
-    setTFTbrightness(80);
+
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     SerialPrintfln("setup: ....  seek for stations.csv");
@@ -1556,7 +1555,6 @@ void setup() {
         tft.setFont(_fonts[6]);
         tft.setTextColor(TFT_YELLOW);
         tft.writeText("stations.csv not found", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        setTFTbrightness(80);
         SerialPrintfln(ANSI_ESC_RED "stations.csv not found");
         while(1) {}; // endless loop, MiniWebRadio does not work without stations.csv
     }
@@ -1578,6 +1576,9 @@ void setup() {
         }
     }
     _reconnectCnt = 0;
+
+    if(_brightness < 5) _brightness = 5;
+    setTFTbrightness(_brightness);
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
