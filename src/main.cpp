@@ -1716,14 +1716,15 @@ void setVolume(uint8_t vol) {
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
 
 #if DECODER > 1 // ES8388, AC101 ...
+    uint8_t v = map_l(_cur_volume, 0, _volumeSteps, 0, 63);
     if(HP_DETECT == -1) {
         if(_f_mute){
             dac.SetVolumeSpeaker(0);
             dac.SetVolumeHeadphone(0);
         }
         else{
-            dac.SetVolumeSpeaker(_cur_volume * 3);
-            dac.SetVolumeHeadphone(_cur_volume * 3);
+            dac.SetVolumeSpeaker(v);
+            dac.SetVolumeHeadphone(v);
         }
     }
     else {
@@ -1734,13 +1735,13 @@ void setVolume(uint8_t vol) {
         else{
             if(digitalRead(HP_DETECT) == HIGH) {
                 // SerialPrintfln("HP_Detect = High, volume %i", vol);
-                dac.SetVolumeSpeaker(_cur_volume * 3);
+                dac.SetVolumeSpeaker(v);
                 dac.SetVolumeHeadphone(0);
             }
             else {
                 // SerialPrintfln("HP_Detect = Low, volume %i", vol);
-                dac.SetVolumeSpeaker(1);
-                dac.SetVolumeHeadphone(_cur_volume * 3);
+                dac.SetVolumeSpeaker(0);
+                dac.SetVolumeHeadphone(v);
             }
         }
     }
