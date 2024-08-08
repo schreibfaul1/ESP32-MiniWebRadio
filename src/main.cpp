@@ -855,9 +855,9 @@ void showStreamTitle(const char* streamtitle) {
 
     char* st = x_ps_strdup(streamtitle);
     trim(st);
-    replacestr(st, " | ", "\n"); // some stations use pipe as \n or
-    replacestr(st, "| ", "\n");
-    replacestr(st, "|", "\n");
+    // replacestr(st, " | ", "\n"); // some stations use pipe as \n or
+    // replacestr(st, "| ", "\n");
+    // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
     txt_RA_sTitle.writeText(st, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
@@ -2499,7 +2499,7 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound) return;    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
-    vTaskDelay(3); // feed the watchdog
+    vTaskDelay(1); // feed the watchdog
     webSrv.loop();
     ir.loop();
     tp.loop();
