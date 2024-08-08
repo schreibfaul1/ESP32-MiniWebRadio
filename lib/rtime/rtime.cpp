@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 06.08.2024
+ *  Updated on: 08.08.2024
  *
  */
 
@@ -251,6 +251,7 @@ RTIME::~RTIME(){
 	esp_sntp_stop();
 }
 boolean RTIME::begin(String TimeZone){
+    stop(); // if sntp is already running after restart: assert failed: sntp_setoperatingmode
     if(TimeZone.length() == 0) TimeZone = "CET-1CEST,M3.5.0,M10.5.0/3"; // default
     RTIME_TZ=TimeZone;
     if (RTIME_info) RTIME_info("Initializing SNTP");
