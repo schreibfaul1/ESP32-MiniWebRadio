@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Jul 29 2024
+// updated on Aug 08 2024
 
 #include "tft.h"
 #include "Arduino.h"
@@ -2854,6 +2854,7 @@ uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiA
                 break;
             case 0xE1 ... 0xEF: idx += 3; break;
             case 0xF0 ... 0xFF: idx += 4; break;
+            case 0x0A: idx+=1; break; // is '/n'
             default: log_w("char is not printable 0x%02X", (uint8_t)str[idx]); idx += 1;
         }
     }
