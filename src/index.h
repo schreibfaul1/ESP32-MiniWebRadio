@@ -2849,4 +2849,109 @@ function clear_BT_memItems(){
 </html>
 
 )=====";
+
+
+const char stations_html[] PROGMEM = R"=====(
+
+<!DOCTYPE html><html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MiniWebRadio List Of Stations</title>
+    <style>
+        .table-container {
+            width: 100%;
+            max-width: 95vw;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid black;
+            white-space: nowrap;
+        }
+        /* every second line is grey */
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Station List</h1>
+    <div class="table-container">
+        <table id="myTable">
+            <thead>
+                <tr>
+                    <th>Hide</th>
+                    <th>Country</th>
+                    <th>Station Name</th>
+                    <th>Stream URL</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        const tableData = [
+            ["","D","0N 70s","http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+            ["","D","0N 80s","http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+            ["","D","0N 90s","http://0n-90s.radionetz.de:8000/0n-90s.mp3"],
+            ["","D","0N Charts","http://0n-charts.radionetz.de:8000/0n-charts.mp3"],
+            ["","D","0N Dance","http://0n-dance.radionetz.de:8000/0n-dance.mp3"],
+            ["","D","0N Disco","http://0n-disco.radionetz.de:8000/0n-disco.mp3"],
+            ["","D","1000 Oldies","http://c3.auracast.net:8010/stream"],
+            ["*","D","Eurodance","http://www.laut.fm/eurodance"],
+            ["","D","extra-radio 88.0","https://www.extra-radio.de/stream/listen.m3u"],
+            ["","D","Hitradio SKW","http://server4.streamserver24.com:2199/tunein/hitradio.asx"],
+            ["","D","MacSlon's Irish Pub Radio","macslons-irish-pub-radio.stream.laut.fm/macslons-irish-pub-radio"],
+            ["","GR","Άνοιξη 100.7","http://solid1.streamupsolutions.com:55023/stream"],
+            ["","RU","НАШЕ Радио","http://nashe1.hostingradio.ru/nashe-128.mp3"],
+            ["","RU","Радио Русские Песни","http://listen.rusongs.ru/ru-mp3-128"],
+            ["","BG","Свежа България","http://31.13.223.148:8000/fresh.mp3"],
+            ["","CH","SWISS POP","https://stream.srg-ssr.ch/rsp/aacp_48.asx"],
+            ["","BG","BGRADIO","http://play.global.audio/bgradio_low.ogg"],
+            ["","D","knixx.fm","http://s1.knixx.fm:5347/dein_webradio_vbr.opus"],
+            ["","D","- 0 N - Christmas on Radio","https://0n-christmas.radionetz.de/0n-christmas.aac"],
+            ["","UK","BBC 6music","http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=96000.norewind.m3u8"],
+            ["","D","- 0 N - Movies on Radio","https://0n-movies.radionetz.de/0n-movies.mp3"],
+            ["","D","- 0 N - Top 40 on Radio","	https://0n-top40.radionetz.de/0n-top40.mp3"],
+            ["","D","ROCKANTENNE Alternative (mp3)","https://stream.rockantenne.de/alternative/stream/mp3"],
+            ["","P","Gra Wrocław","http://rmfstream2.interia.pl:8000/radio_gra_wroc"],
+            ["","RU","Classic EuroDisco Радио","https://live.radiospinner.com/clsscrdsc-96"],
+            ["","D","Hit Radio FFH - Soundtrack (AAC+)","http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u"]
+        ];
+
+        // Funktion zum Laden der Daten aus dem Array in die Tabelle
+        function loadTableData() {
+            const table = document.getElementById('myTable').querySelector('tbody');
+            table.innerHTML = ''; // Tabelle leeren
+
+            tableData.forEach((rowData, index) => {
+                const row = table.insertRow();
+
+                rowData.forEach(cellData => {
+                    const cell = row.insertCell();
+                    cell.textContent = cellData;
+                });
+
+                // Hintergrundfarbe für jede zweite Zeile
+                if (index % 2 === 1) {
+                    row.style.backgroundColor = '#f2f2f2';
+                }
+            });
+        }
+        loadTableData();
+    </script>
+</body>
+</html>
+
+)=====";
+
 #endif /* INDEX_H_ */

@@ -622,6 +622,110 @@ public:
     }
 };
 
+class stationManagement{
+private:
+    std::vector<char*>  m_stations;
+    File m_stationsFile;
+    char* m_buff = NULL;
+    const char m_path[16] = "/stations.html";
+
+public:
+    stationManagement(){
+        vector_clear_and_shrink(m_stations);
+    }
+    ~stationManagement(){
+        vector_clear_and_shrink(m_stations);
+    }
+    void clearStationsList(){
+        vector_clear_and_shrink(m_stations);
+    }
+    void addStation(){
+
+    }
+    uint16_t getNrOfStations(){
+        return m_stations.size();
+    }
+    const char* getStationVector(uint16_t staNr){
+        if(staNr >= m_stations.size()) return "station number too high";
+        return m_stations[staNr];
+    }
+    const char* getStationName(uint16_t staNr){
+        // find bounds first
+        return m_stations[staNr];
+    }
+    const char* getStationUrl(uint16_t staNr){
+        // find bounds first
+        return m_stations[staNr];
+    }
+    const char* getStatonCountry(uint16_t staNr){
+        // find bounds first
+        return m_stations[staNr];
+    }
+    bool isHide(uint16_t staNr){
+        return false;
+    }
+    bool overwriteStationsHTML(){
+        m_stationsFile = SD_MMC.open(m_path, "w", false);
+    //    m_stationsFile.write((uint8_t*)stations_html, sizeof(stations_html));
+        m_stationsFile.close();
+        return true;
+    }
+    bool putStationsInRAM(){ // read file, put entries in vector
+        if(!SD_MMC.exists(m_path)){
+            log_e("file %s not found", m_path);
+            return false;
+        }
+        m_stationsFile = SD_MMC.open("/stations.html");
+        m_buff = (char*)x_ps_malloc(2048);
+        int pos = m_stationsFile.readBytesUntil('[', (uint8_t*)m_buff, 2048);
+        log_w("pos %i", pos);
+        m_stationsFile.readBytes(m_buff, 2);
+        int b1, e1, b2, e2, b3, e3, b4, e4;
+        while(true){
+            int len = m_stationsFile.readBytesUntil('\n', (uint8_t*)m_buff, 2048);
+            m_buff[len] = '\0';
+            log_w("%i,  %s", len, m_buff);
+            if(len < 12) break;
+            b1 = indexOf(m_buff, "[\"",  0) + 2; e1 = indexOf(m_buff, "\",", b1);
+            b2 = indexOf(m_buff, ",\"", b1) + 2; e2 = indexOf(m_buff, "\",", b2);
+            b3 = indexOf(m_buff, ",\"", b2) + 2; e3 = indexOf(m_buff, "\",", b3);
+            b4 = indexOf(m_buff, ",\"", b3) + 2; e4 = indexOf(m_buff, "\"]", b4);
+            m_buff[e1] = '\0'; m_buff[e2] = '\0'; m_buff[e3] = '\0'; m_buff[e4] = '\0';
+            log_e("H: %s, Cy %s, Sn %s, URL %s", m_buff + b1, m_buff + b2, m_buff + b3 , m_buff + b4);
+ 
+        }
+        m_stationsFile.close();
+
+
+
+
+        // m_buff = x_ps_malloc(1024);
+        // if(!m_buff) {log_e("oom"); return false;}
+        // if(m_stationsFile) m_stationsFile.close();
+        // if(!SD_MMC.exists(path)) {
+        //     SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
+        //     return false;
+        // }
+        // m_masterFile = SD_MMC.open(path);
+        // if(!m_masterFile.isDirectory()) {
+        //     SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s is not a directory", path);
+        //     m_masterFile.close();
+        //     return false;
+        // }
+        // while(true) { // get content
+        //     m_slaveFile = m_masterFile.openNextFile();
+        //     if(!m_slaveFile) break;
+        //     if(m_slaveFile.isDirectory()) {
+        //     }
+        // }
+        ;
+        return true;
+    }
+};
+
+
+
+
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗

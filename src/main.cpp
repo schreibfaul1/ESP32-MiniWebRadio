@@ -219,6 +219,7 @@ KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMIT
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
+stationManagement staMgnt;
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -457,11 +458,18 @@ boolean defaultsettings(){
         if(jO){free(jO); jO = NULL;}
     }
 
-    File file = SD_MMC.open("/settings.json","r", false);
+    if(!SD_MMC.exists("/stations.html")){
+        File file1 = SD_MMC.open("/stations.html","w", true);
+        file1.write((uint8_t*)stations_html, sizeof(stations_html));
+        file1.close();
+    }
+
+    File file2 = SD_MMC.open("/settings.json","r", false);
     char*  jO = x_ps_calloc(1024, 1);
     char* tmp = x_ps_malloc(512);
-    file.readBytes(jO, 1024);
+    file2.readBytes(jO, 1024);
     _settingsHash = simpleHash(jO);
+    file2.close();
 
     auto parseJson = [&](const char* s) { // lambda, inner function
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
@@ -512,6 +520,9 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
+
+
+    staMgnt.putStationsInRAM();
 
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
