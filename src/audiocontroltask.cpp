@@ -202,16 +202,17 @@ void audioTask(void *parameter) {
         }
         audio.loop();
 
+        uint8_t curve = 1;
         if(t_millis + 30 < millis()){
             t_millis = millis();
             uint8_t v = audio.getVolume();
             if (v > t_volume){
-                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0);   else  audio.setVolume(v- t_volSteps);}
-                else audio.setVolume(t_volume);
+                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0, curve);   else  audio.setVolume(v- t_volSteps, curve);}
+                else audio.setVolume(t_volume, curve);
             }
             if (v < t_volume){
-                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255); else audio.setVolume(v + t_volSteps);}
-                else audio.setVolume(t_volume);
+                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255, curve); else audio.setVolume(v + t_volSteps, curve);}
+                else audio.setVolume(t_volume, curve);
             }
         }
         vTaskDelay(7);

@@ -621,110 +621,189 @@ public:
         return m_SD_content[idx];
     }
 };
-
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class stationManagement{
 private:
     std::vector<char*>  m_stations;
     File m_stationsFile;
     char* m_buff = NULL;
+    size_t m_buffSize = 2048;
+    bool m_hide = false;
+    char* m_staName = NULL;
+    char* m_staCy = NULL;
+    char* m_staURL = NULL;
     const char m_path[16] = "/stations.html";
+    const char m_td[21] = "const tableData = [\n";
+    const char m_dummy[33] = "[\"\",\" \",\"dummy\",\"dummy\"]";
+    uint16_t m_dataBegin = 0;
+    uint16_t m_dataEnd = 0;
 
 public:
+    struct stationItems{
+        bool hide;
+        const char* staCY;
+        const char* staName;
+        const char* staURL;
+    } staItems;
     stationManagement(){
         vector_clear_and_shrink(m_stations);
+        m_buff = (char*)x_ps_malloc(m_buffSize);
+        m_dataBegin = indexOf(stations_html, "<script>", 0) + 9;
+        m_dataEnd = indexOf(stations_html, "</script>", m_dataBegin);
     }
     ~stationManagement(){
         vector_clear_and_shrink(m_stations);
+        if(m_buff){free(m_buff); m_buff = NULL;}
+        if(m_staName){free(m_buff); m_buff = NULL;}
+        if(m_staCy){free(m_staCy); m_staCy = NULL;}
+        if(m_staURL){free(m_buff); m_staURL = NULL;}
     }
     void clearStationsList(){
         vector_clear_and_shrink(m_stations);
     }
-    void addStation(){
+//----------------------------------------------------------------------------------------------------------
+    void insertStation(stationItems items, uint16_t pos){
+        if(pos == 0){log_e("pos 0 is reserved");  return;} // guard, 0 is'nt a valid station number
+        if(pos > m_stations.size()) {log_e("pos %i is too high", pos); return;} // guard, is too high
 
+        packStations(items); // packed str is located in m_buff
+        m_stations.insert(m_stations.begin() + pos, strdup(m_buff));
+
+        createNewStationsFile();
+        // m_stationsFile = SD_MMC.open("/stations.html","w", true);
+        // m_stationsFile.write((uint8_t*)stations_html, m_dataBegin);
+        // m_stationsFile.write((uint8_t*)m_td, strlen(m_td));
+
+        // for(int i = 1; i < m_stations.size(); i++){
+        //     m_stationsFile.printf("%s\n", m_stations[i]);
+        // }
+        // m_stationsFile.write((uint8_t*)"];\n", 3);
+        // m_stationsFile.printf("%s\n", stations_html + m_dataEnd);
+
+        // m_stationsFile.close();
     }
+//----------------------------------------------------------------------------------------------------------
+    void eraseStation(uint16_t pos){
+        if(pos == 0){log_e("pos 0 is reserved");  return;} // guard, 0 is'nt a valid station number
+        if(pos > m_stations.size()) {log_e("pos %i is too high", pos); return;} // guard, is too high
+        if(m_stations[pos]){free(m_stations[pos]), m_stations[pos] = NULL;}
+        m_stations.erase(m_stations.begin() + pos);
+
+        createNewStationsFile();
+        // m_stationsFile = SD_MMC.open("/stations.html","w", true);
+        // m_stationsFile.write((uint8_t*)stations_html, m_dataBegin);
+        // m_stationsFile.write((uint8_t*)m_td, strlen(m_td));
+
+        // for(int i = 1; i < m_stations.size(); i++){
+        //     m_stationsFile.printf("%s\n", m_stations[i]);
+        // }
+        // m_stationsFile.write((uint8_t*)"];\n", 3);
+        // m_stationsFile.printf("%s\n", stations_html + m_dataEnd);
+
+        // m_stationsFile.close();
+    }
+//----------------------------------------------------------------------------------------------------------
     uint16_t getNrOfStations(){
-        return m_stations.size();
+        return m_stations.size() - 1; // 0 is dummy
     }
+private:
     const char* getStationVector(uint16_t staNr){
         if(staNr >= m_stations.size()) return "station number too high";
         return m_stations[staNr];
     }
+public:
+    stationItems getStationItems(uint16_t staNr){
+        if(staNr == 0) {log_e("station number 0 can*t be used, is reserved"); return staItems;}
+        if(staNr > m_stations.size()){log_e("given station number is too high"); return staItems;}
+        unpackStation(staNr - 1);
+        staItems.hide = m_hide;
+        staItems.staCY = m_staCy;
+        staItems.staName = m_staName;
+        staItems.staURL = m_staURL;
+        return staItems;
+    }
+
     const char* getStationName(uint16_t staNr){
-        // find bounds first
-        return m_stations[staNr];
+        unpackStation(staNr);
+        return m_staName;
     }
     const char* getStationUrl(uint16_t staNr){
-        // find bounds first
-        return m_stations[staNr];
+        unpackStation(staNr);
+        return m_staURL;
     }
     const char* getStatonCountry(uint16_t staNr){
-        // find bounds first
-        return m_stations[staNr];
+        unpackStation(staNr);
+        return m_staCy;
     }
     bool isHide(uint16_t staNr){
-        return false;
+        unpackStation(staNr);
+        return m_hide;
     }
-    bool overwriteStationsHTML(){
-        m_stationsFile = SD_MMC.open(m_path, "w", false);
-    //    m_stationsFile.write((uint8_t*)stations_html, sizeof(stations_html));
-        m_stationsFile.close();
-        return true;
-    }
-    bool putStationsInRAM(){ // read file, put entries in vector
+    bool putAllStationsIntoRAM(){ // read file, put entries in vector
         if(!SD_MMC.exists(m_path)){
             log_e("file %s not found", m_path);
             return false;
         }
         m_stationsFile = SD_MMC.open("/stations.html");
-        m_buff = (char*)x_ps_malloc(2048);
-        int pos = m_stationsFile.readBytesUntil('[', (uint8_t*)m_buff, 2048);
-        log_w("pos %i", pos);
-        m_stationsFile.readBytes(m_buff, 2);
-        int b1, e1, b2, e2, b3, e3, b4, e4;
+        m_stationsFile.readBytes(m_buff, m_dataBegin);
+        m_stationsFile.readBytesUntil('\n', m_buff, m_buffSize);
+        m_stations.push_back(strdup(m_dummy));
         while(true){
-            int len = m_stationsFile.readBytesUntil('\n', (uint8_t*)m_buff, 2048);
+            int len = m_stationsFile.readBytesUntil('\n', (uint8_t*)m_buff, m_buffSize);
             m_buff[len] = '\0';
-            log_w("%i,  %s", len, m_buff);
-            if(len < 12) break;
-            b1 = indexOf(m_buff, "[\"",  0) + 2; e1 = indexOf(m_buff, "\",", b1);
-            b2 = indexOf(m_buff, ",\"", b1) + 2; e2 = indexOf(m_buff, "\",", b2);
-            b3 = indexOf(m_buff, ",\"", b2) + 2; e3 = indexOf(m_buff, "\",", b3);
-            b4 = indexOf(m_buff, ",\"", b3) + 2; e4 = indexOf(m_buff, "\"]", b4);
-            m_buff[e1] = '\0'; m_buff[e2] = '\0'; m_buff[e3] = '\0'; m_buff[e4] = '\0';
-            log_e("H: %s, Cy %s, Sn %s, URL %s", m_buff + b1, m_buff + b2, m_buff + b3 , m_buff + b4);
- 
+            if(len < 5) break;
+            m_stations.push_back(strdup(m_buff));
         }
         m_stationsFile.close();
 
-
-
-
-        // m_buff = x_ps_malloc(1024);
-        // if(!m_buff) {log_e("oom"); return false;}
-        // if(m_stationsFile) m_stationsFile.close();
-        // if(!SD_MMC.exists(path)) {
-        //     SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
-        //     return false;
-        // }
-        // m_masterFile = SD_MMC.open(path);
-        // if(!m_masterFile.isDirectory()) {
-        //     SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s is not a directory", path);
-        //     m_masterFile.close();
-        //     return false;
-        // }
-        // while(true) { // get content
-        //     m_slaveFile = m_masterFile.openNextFile();
-        //     if(!m_slaveFile) break;
-        //     if(m_slaveFile.isDirectory()) {
-        //     }
-        // }
-        ;
+//      for(int i = 1; i < m_stations.size(); i++){
+//          log_e("%s", m_stations[i]);
+//      }
         return true;
     }
+private:
+    void unpackStation(uint16_t staNr){
+        int b1, e1, b2, e2, b3, e3, b4, e4;
+        if(!m_stations.size()) {log_e("no stations found!"); return;}
+        strcpy(m_buff, m_stations[staNr]);
+        b1 = indexOf(m_buff, "[\"",  0) + 2; e1 = indexOf(m_buff, "\",", b1);
+        b2 = indexOf(m_buff, ",\"", b1) + 2; e2 = indexOf(m_buff, "\",", b2);
+        b3 = indexOf(m_buff, ",\"", b2) + 2; e3 = indexOf(m_buff, "\",", b3);
+        b4 = indexOf(m_buff, ",\"", b3) + 2; e4 = indexOf(m_buff, "\"]", b4);
+        m_buff[e1] = '\0'; m_buff[e2] = '\0'; m_buff[e3] = '\0'; m_buff[e4] = '\0';
+    //    log_w("H: %s, Cy %s, Sn %s, URL %s", m_buff + b1, m_buff + b2, m_buff + b3 , m_buff + b4);
+        if(!strlen(m_buff + b1)) m_hide = false; else m_hide = true;
+        if(m_staCy){free(m_staCy); m_staCy = NULL;} m_staCy = strdup(m_buff + b2);
+        if(m_staName){free(m_buff); m_buff = NULL;} m_staName = strdup(m_buff + 32);
+        if(m_staURL){free(m_buff); m_staURL = NULL;} m_staURL = strdup(m_buff + b4);
+    }
+    void packStations(stationItems items){
+        memset(m_buff, 0, m_buffSize);
+        strcat(m_buff, "[\"");
+        if(items.hide) strcat(m_buff, "*");
+        strcat(m_buff, "\",\"");
+        strcat(m_buff, items.staCY);
+        strcat(m_buff, "\",\"");
+        strcat(m_buff, items.staName);
+        strcat(m_buff, "\",\"");
+        strcat(m_buff, items.staURL);
+        strcat(m_buff, "\"],");
+    }
+    void createNewStationsFile(){ // create or overwrite stations.html
+        m_stationsFile = SD_MMC.open("/stations.html","w", true);
+        m_stationsFile.write((uint8_t*)stations_html, m_dataBegin);
+        m_stationsFile.write((uint8_t*)m_td, strlen(m_td));
+
+        for(int i = 1; i < m_stations.size(); i++){
+            m_stationsFile.printf("%s\n", m_stations[i]);
+        }
+        m_stationsFile.write((uint8_t*)"];\n", 3);
+        m_stationsFile.printf("%s\n", stations_html + m_dataEnd);
+
+        m_stationsFile.close();
+    }
+
 };
-
-
-
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

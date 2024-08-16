@@ -423,7 +423,7 @@ textbox       txt_BT_volume("txt_BT_volume");
 
 // clang-format off
 boolean defaultsettings(){
-    if(!SD_MMC.exists("/settings.json")){
+    if(!SD_MMC.exists("/settings.json")){  // if not found create one
         File file = SD_MMC.open("/settings.json","w", true);
         char*  jO = x_ps_malloc(1024); // JSON Object
         strcpy(jO, "{");
@@ -458,7 +458,7 @@ boolean defaultsettings(){
         if(jO){free(jO); jO = NULL;}
     }
 
-    if(!SD_MMC.exists("/stations.html")){
+    if(!SD_MMC.exists("/stations.html")){  // if not found create one
         File file1 = SD_MMC.open("/stations.html","w", true);
         file1.write((uint8_t*)stations_html, sizeof(stations_html));
         file1.close();
@@ -520,9 +520,6 @@ boolean defaultsettings(){
     _TZString            =         parseJson("\"Timezone_String\":");
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
-
-
-    staMgnt.putStationsInRAM();
 
 
     if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
