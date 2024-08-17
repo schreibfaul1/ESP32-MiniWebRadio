@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 06.Aug 2024
+// updated: 17.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -246,7 +246,7 @@ void           setTimeCounter(uint8_t sec);
 //prototypes (audiotask.cpp)
 void           audioInit();
 void           audioControlTaskDelete();
-void           audioSetVolume(uint8_t vol);
+void           audioSetVolume(uint8_t vol, uint8_t curve);
 void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
 uint32_t       audioGetBitRate();

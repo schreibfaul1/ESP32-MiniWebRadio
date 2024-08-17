@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3i Aug 17/2024                                                                                                                       ";
+    Version 3.3j Aug 17/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -69,6 +69,7 @@ uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeAfterAlarm = 12;
 uint8_t             _volumeSteps = 21;
+uint8_t             _volumeCurve = 1;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
@@ -2570,8 +2571,8 @@ void loop() {
         //         audioSetVolume(vol);
         //     }
         // }
-        if(audioGetVolume() && _f_mute) audioSetVolume(0);
-        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume);
+        if(audioGetVolume() && _f_mute) audioSetVolume(0, _volumeCurve);
+        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume, _volumeCurve);
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -2593,7 +2594,7 @@ void loop() {
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                 setVolume(_ringVolume);
-                audioSetVolume(_ringVolume);
+                audioSetVolume(_ringVolume, _volumeCurve);
                 muteChanged(false);
                 connecttoFS("/ring/alarm_clock.mp3");
             }
@@ -2606,7 +2607,7 @@ void loop() {
             _f_eof_alarm = false;
             _cur_volume = _volumeAfterAlarm;
             setVolume(_cur_volume);
-            audioSetVolume(_cur_volume);
+            audioSetVolume(_cur_volume, _volumeCurve);
             dispHeader.updateVolume(_cur_volume);
             wake_up();
         }
