@@ -1521,11 +1521,17 @@ function gotItems (data) { // fill select countries
     stations.options.length = 1
     // sort data
     const options = Array.from(select.options);
-    options.sort((a, b) => a.text.localeCompare(b.text));
-    select.options.length = 0; // clear select
-    options.forEach(option => select.appendChild(option));
-    select.selectedIndex = 0; // set default
 
+    const uniqueOptions = options.filter((option, index, self) => {
+        return self.findIndex(o => o.text === option.text) === index;
+    });
+
+    uniqueOptions.sort((a, b) => a.text.localeCompare(b.text));
+    select.options.length = 0; // clear select
+    uniqueOptions.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
+    const selectElement = document.getElementById("stations");
+    selectElement.options.length = 0;
 }
 
 function gotStations (data) { // fill select stations
@@ -1542,6 +1548,11 @@ function gotStations (data) { // fill select stations
     // sort data
     const options = Array.from(select.options);
     options.sort((a, b) => a.text.localeCompare(b.text));
+    options.forEach(option => {
+        if (option.text.length > 70) {
+            option.text = option.text.substring(0, 67) + '...'; // max length
+        }
+    });
     select.options.length = 0; // clear select
     options.forEach(option => select.appendChild(option));
     select.selectedIndex = 0; // set default
