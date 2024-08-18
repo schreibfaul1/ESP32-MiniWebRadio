@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 04.08.2024
+ *  Updated on: 18.08.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1459,6 +1459,12 @@ function updateStationlist () { // select in tab Radio
 var countryallstations
 var category
 
+function open_RB_page() {
+  var res = document.getElementById("RB_search").value;
+  var url = "https://www.radio-browser.info/search?page=1&order=clickcount&reverse=true&hidebroken=true&name=" + res;
+  window.open(url, "_blank");
+}
+
 function addStationsToGrid () {
     showDetailsDialog('Add', {})
     $('#txtStreamURL').val($('#streamurl').val())
@@ -1512,6 +1518,19 @@ function gotItems (data) { // fill select countries
     console.log(data.uuid)
     var stations = document.getElementById('stations') // set stations to default
     stations.options.length = 1
+    // sort data
+    const options = Array.from(select.options);
+
+    const uniqueOptions = options.filter((option, index, self) => {
+        return self.findIndex(o => o.text === option.text) === index;
+    });
+
+    uniqueOptions.sort((a, b) => a.text.localeCompare(b.text));
+    select.options.length = 0; // clear select
+    uniqueOptions.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
+    const selectElement = document.getElementById("stations");
+    selectElement.options.length = 0;
 }
 
 function gotStations (data) { // fill select stations
@@ -1525,6 +1544,17 @@ function gotStations (data) { // fill select stations
         select.add(opt)
     }
     countryallstations = data
+    // sort data
+    const options = Array.from(select.options);
+    options.sort((a, b) => a.text.localeCompare(b.text));
+    options.forEach(option => {
+        if (option.text.length > 70) {
+            option.text = option.text.substring(0, 67) + '...'; // max length
+        }
+    });
+    select.options.length = 0; // clear select
+    options.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
 }
 
 function selectstation () { // select a station
@@ -2032,14 +2062,14 @@ function clear_BT_memItems(){
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
 
-                    <label class="sdr_lbl_left">Low:</label>
+                    <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="LowPass"
-                        onmouseup="slider_LP_mouseUp()"
-                        ontouchend="slider_LP_mouseUp()"
-                        oninput="slider_LP_change()">
+                        <input type="range" min="0" max="15" value="13" id="HighPass"
+                        onmouseup="slider_HP_mouseUp()"
+                        ontouchend="slider_HP_mouseUp()"
+                        oninput="slider_HP_change()">
                     </div>
-                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
                     <label class="sdr_lbl_left">Band:</label>
@@ -2052,14 +2082,14 @@ function clear_BT_memItems(){
                     <label id="label_BP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
-                    <label class="sdr_lbl_left">High:</label>
+                    <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="HighPass"
-                        onmouseup="slider_HP_mouseUp()"
-                        ontouchend="slider_HP_mouseUp()"
-                        oninput="slider_HP_change()">
+                        <input type="range" min="0" max="15" value="13" id="LowPass"
+                        onmouseup="slider_LP_mouseUp()"
+                        ontouchend="slider_LP_mouseUp()"
+                        oninput="slider_LP_change()">
                     </div>
-                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
                     <label class="sdr_lbl_left">Balance:</label>
@@ -2281,11 +2311,14 @@ function clear_BT_memItems(){
 
 <!--===============================================================================================================================================-->
     <div id="tab-content5">
-        <div style="height: 30px;">
-            This service is provided by
-            <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
+        <div style="display: inline-block; width: 400px;">
+          This service is provided by
+          <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
         </div>
-        <div style="display: flex;">
+        <div style="display: inline-block; padding-right: 0px; width: calc(100% - 480px);">
+          <input class="boxstyle" style="width: 100%;" type="text" id="RB_search" placeholder="search..." onkeypress="if(event.key === 'Enter') open_RB_page()">
+        </div>
+        <div style="display: flex; margin-top: 5px;">
             <div style="flex: 0 0 calc(100% - 66px);">
                 <select class="boxstyle" style="width: 100%;" onchange="selectcategory(this)" id="category">
                     <option value="-1">Select a category</option>

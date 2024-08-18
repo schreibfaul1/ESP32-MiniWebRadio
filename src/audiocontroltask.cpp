@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 29.07.2024
+// updated: 17.08.2024
 
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
 #include "common.h"
@@ -26,6 +26,7 @@ struct audioMessage{
 
 uint8_t  t_volume = 0;
 uint8_t  t_volSteps = 1;
+uint8_t  t_volCurve = 1; // 0 = quadratic, 1 = log
 uint32_t t_millis = 0;
 
 QueueHandle_t audioSetQueue = NULL;
@@ -48,13 +49,14 @@ void audioTask(void *parameter) {
 
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
-    audio.setVolume(5); // 0...21
+    audio.setVolume(5, t_volCurve); // 0...volumeSteps
 
     while(true){
         if(xQueueReceive(audioSetQueue, &audioRxTaskMessage, 1) == pdPASS) {
             if(audioRxTaskMessage.cmd == SET_VOLUME){
                 audioTxTaskMessage.cmd = SET_VOLUME;
                 t_volume = audioRxTaskMessage.value1;
+                t_volCurve= audioRxTaskMessage.value2;
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -202,17 +204,16 @@ void audioTask(void *parameter) {
         }
         audio.loop();
 
-        uint8_t curve = 1;
         if(t_millis + 30 < millis()){
             t_millis = millis();
             uint8_t v = audio.getVolume();
             if (v > t_volume){
-                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0, curve);   else  audio.setVolume(v- t_volSteps, curve);}
-                else audio.setVolume(t_volume, curve);
+                if(v >= t_volume + t_volSteps) {if(v - t_volSteps <   0) audio.setVolume(0, t_volCurve);   else  audio.setVolume(v- t_volSteps, t_volCurve);}
+                else audio.setVolume(t_volume, t_volCurve);
             }
             if (v < t_volume){
-                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255, curve); else audio.setVolume(v + t_volSteps, curve);}
-                else audio.setVolume(t_volume, curve);
+                if(t_volume + t_volSteps >= v) {if(v + t_volSteps > 255) audio.setVolume(255, t_volCurve); else audio.setVolume(v + t_volSteps, t_volCurve);}
+                else audio.setVolume(t_volume, t_volCurve);
             }
         }
         vTaskDelay(7);
@@ -251,9 +252,10 @@ audioMessage transmitReceive(audioMessage msg){
     return audioRxMessage;
 }
 
-void audioSetVolume(uint8_t vol){
+void audioSetVolume(uint8_t vol, uint8_t curve){
     audioTxMessage.cmd = SET_VOLUME;
     audioTxMessage.value1 = vol;
+    audioTxMessage.value2 = curve;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
@@ -412,4 +414,3 @@ void audioSetCoreID(uint8_t coreId){
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
-

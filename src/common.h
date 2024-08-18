@@ -246,7 +246,7 @@ void           setTimeCounter(uint8_t sec);
 //prototypes (audiotask.cpp)
 void           audioInit();
 void           audioControlTaskDelete();
-void           audioSetVolume(uint8_t vol);
+void           audioSetVolume(uint8_t vol, uint8_t curve);
 void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
 uint32_t       audioGetBitRate();
@@ -889,8 +889,8 @@ public:
         if(val > m_maxVal) val = m_maxVal;
         m_val = val;
         if(m_clicked) return;
-        m_spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        if(m_enabled) drawNewSpot(m_spotPos);
+        uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if(m_enabled) drawNewSpot(spotPos);
     }
     int16_t getValue(){
         return m_val;

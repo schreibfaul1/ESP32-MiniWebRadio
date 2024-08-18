@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3h Aug 07/2024                                                                                                                       ";
+    Version 3.3k Aug 18/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -69,6 +69,7 @@ uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeAfterAlarm = 12;
 uint8_t             _volumeSteps = 21;
+uint8_t             _volumeCurve = 1;
 uint8_t             _brightness = 0;
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
@@ -78,8 +79,8 @@ uint8_t             _level = 0;
 uint8_t             _timeFormat = 24;    // 24 or 12
 uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
 uint8_t             _staListPos = 0;
-uint8_t             _reconnectCnt = 0;
 uint8_t             _WiFi_disconnectCnt = 0;
+uint8_t             _reconnectCnt = 0;
 uint16_t            _staListNr = 0;
 uint8_t             _fileListPos = 0;
 uint8_t             _radioSubmenue = 0;
@@ -270,9 +271,9 @@ struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h = 
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
 struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;} const _winAlarm;
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;} const _sdrHP;        // slider highpass in equalizer
+struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
@@ -331,9 +332,9 @@ struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h = 
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
 struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;} const _winAlarm;
 struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
@@ -1342,9 +1343,9 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     WiFi.softAP("MiniWebRadio");
     IPAddress myIP = WiFi.softAPIP();
     String    AccesspointIP = myIP.toString();
-    char      buf[100];
-    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
-    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
+//    char      buf[100];
+//    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
+//    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
     SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
     int16_t n = WiFi.scanNetworks();
     if(n == 0) {
@@ -1380,7 +1381,6 @@ void connecttohost(const char* host) {
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
         _f_isWebConnected = audioConnecttohost(host);
-        if(_f_isWebConnected) _reconnectCnt = 0;
         _f_isFSConnected = false;
         return;
     }
@@ -1389,7 +1389,6 @@ void connecttohost(const char* host) {
         // log_i("idx2 = %i", idx2);
         if(idx2 == -1) { // second pipe not found
             _f_isWebConnected = audioConnecttohost(host);
-            if(_f_isWebConnected) _reconnectCnt = 0;
             _f_isFSConnected = false;
             return;
         }
@@ -1570,20 +1569,9 @@ void setup() {
     SerialPrintfln("setup: ....  stations.csv found");
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
-    while(true){
-        if(!connectToWiFi()){
-            _reconnectCnt++;
-            SerialPrintfln("RECONNECTION " ANSI_ESC_RED "try %i", _reconnectCnt);
-            if(_reconnectCnt == 3){
-                openAccessPoint();
-                return;
-            }
-        }
-        else{
-            break;
-        }
+    if(!connectToWiFi()){
+        openAccessPoint();
     }
-    _reconnectCnt = 0;
 
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
@@ -2591,8 +2579,8 @@ void loop() {
         //         audioSetVolume(vol);
         //     }
         // }
-        if(audioGetVolume() && _f_mute) audioSetVolume(0);
-        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume);
+        if(audioGetVolume() && _f_mute) audioSetVolume(0, _volumeCurve);
+        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume, _volumeCurve);
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -2614,7 +2602,7 @@ void loop() {
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                 setVolume(_ringVolume);
-                audioSetVolume(_ringVolume);
+                audioSetVolume(_ringVolume, _volumeCurve);
                 muteChanged(false);
                 connecttoFS("/ring/alarm_clock.mp3");
             }
@@ -2627,7 +2615,7 @@ void loop() {
             _f_eof_alarm = false;
             _cur_volume = _volumeAfterAlarm;
             setVolume(_cur_volume);
-            audioSetVolume(_cur_volume);
+            audioSetVolume(_cur_volume, _volumeCurve);
             dispHeader.updateVolume(_cur_volume);
             wake_up();
         }
