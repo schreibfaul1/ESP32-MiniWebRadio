@@ -2052,14 +2052,14 @@ function clear_BT_memItems(){
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
 
-                    <label class="sdr_lbl_left">Low:</label>
+                    <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="LowPass"
-                        onmouseup="slider_LP_mouseUp()"
-                        ontouchend="slider_LP_mouseUp()"
-                        oninput="slider_LP_change()">
+                        <input type="range" min="0" max="15" value="13" id="HighPass"
+                        onmouseup="slider_HP_mouseUp()"
+                        ontouchend="slider_HP_mouseUp()"
+                        oninput="slider_HP_change()">
                     </div>
-                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
+                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
                     <label class="sdr_lbl_left">Band:</label>
@@ -2072,14 +2072,14 @@ function clear_BT_memItems(){
                     <label id="label_BP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
-                    <label class="sdr_lbl_left">High:</label>
+                    <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="HighPass"
-                        onmouseup="slider_HP_mouseUp()"
-                        ontouchend="slider_HP_mouseUp()"
-                        oninput="slider_HP_change()">
+                        <input type="range" min="0" max="15" value="13" id="LowPass"
+                        onmouseup="slider_LP_mouseUp()"
+                        ontouchend="slider_LP_mouseUp()"
+                        oninput="slider_LP_change()">
                     </div>
-                    <label id="label_HP_value" class="sdr_lbl_right">0</label>
+                    <label id="label_LP_value" class="sdr_lbl_right">0</label>
                     <label class="sdr_lbl_measure">dB</label>
 
                     <label class="sdr_lbl_left">Balance:</label>

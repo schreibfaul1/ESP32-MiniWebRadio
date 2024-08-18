@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3j Aug 17/2024                                                                                                                       ";
+    Version 3.3k Aug 18/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -270,9 +270,9 @@ struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h = 
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
 struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;} const _winAlarm;
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;} const _sdrHP;        // slider highpass in equalizer
+struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
@@ -331,9 +331,9 @@ struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h = 
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
 struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;} const _winAlarm;
 struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};

@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 17.Aug 2024
+// updated: 18.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -706,8 +706,8 @@ public:
         if(val > m_maxVal) val = m_maxVal;
         m_val = val;
         if(m_clicked) return;
-        m_spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
-        if(m_enabled) drawNewSpot(m_spotPos);
+        uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
+        if(m_enabled) drawNewSpot(spotPos);
     }
     int16_t getValue(){
         return m_val;
