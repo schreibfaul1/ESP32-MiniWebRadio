@@ -1519,6 +1519,13 @@ function gotItems (data) { // fill select countries
     console.log(data.uuid)
     var stations = document.getElementById('stations') // set stations to default
     stations.options.length = 1
+    // sort data
+    const options = Array.from(select.options);
+    options.sort((a, b) => a.text.localeCompare(b.text));
+    select.options.length = 0; // clear select
+    options.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
+
 }
 
 function gotStations (data) { // fill select stations
@@ -1532,6 +1539,12 @@ function gotStations (data) { // fill select stations
         select.add(opt)
     }
     countryallstations = data
+    // sort data
+    const options = Array.from(select.options);
+    options.sort((a, b) => a.text.localeCompare(b.text));
+    select.options.length = 0; // clear select
+    options.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
 }
 
 function selectstation () { // select a station
