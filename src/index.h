@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 04.08.2024
+ *  Updated on: 18.08.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -739,6 +739,7 @@ function showTab5 () {
     document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
+    document.getElementById("RB_search").value = "";
 }
 
 function showTab6 () {
@@ -1458,6 +1459,12 @@ function updateStationlist () { // select in tab Radio
 // global var
 var countryallstations
 var category
+
+function open_RB_page() {
+  var res = document.getElementById("RB_search").value;
+  var url = "https://www.radio-browser.info/search?page=1&order=clickcount&reverse=true&hidebroken=true&name=" + res;
+  window.open(url, "_blank");
+}
 
 function addStationsToGrid () {
     showDetailsDialog('Add', {})
@@ -2281,11 +2288,14 @@ function clear_BT_memItems(){
 
 <!--===============================================================================================================================================-->
     <div id="tab-content5">
-        <div style="height: 30px;">
-            This service is provided by
-            <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
+        <div style="display: inline-block; width: 400px;">
+          This service is provided by
+          <a target="_blank" href="http://www.radio-browser.info/">Community Radio Browser</a>
         </div>
-        <div style="display: flex;">
+        <div style="display: inline-block; padding-right: 0px; width: calc(100% - 480px);">
+          <input class="boxstyle" style="width: 100%;" type="text" id="RB_search" placeholder="search..." onkeypress="if(event.key === 'Enter') open_RB_page()">
+        </div>
+        <div style="display: flex; margin-top: 5px;">
             <div style="flex: 0 0 calc(100% - 66px);">
                 <select class="boxstyle" style="width: 100%;" onchange="selectcategory(this)" id="category">
                     <option value="-1">Select a category</option>
