@@ -422,13 +422,14 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                     http_param = "";
                     http_arg =   "";
                 }
-                wswitch=false; // use second while
+
                 if (http_cmd.length()) {
                     if(xFilename.length()) http_param = xFilename;
                     if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd).c_str());
                     if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
                 }
                 else if(http_rqfile.length()){
+                    http_cmd = http_rqfile;
                     if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_rqfile).c_str());
                     if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_rqfile), URLdecode(http_arg));
                 }
@@ -436,7 +437,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                     if(WEBSRV_onInfo) WEBSRV_onInfo("Filename is: index.html");
                     if(WEBSRV_onCommand) WEBSRV_onCommand("index.html", URLdecode(http_param), URLdecode(http_arg));
                 }
-
+                wswitch=false; // use second while
                 break;
             } else {
                 // Newline seen

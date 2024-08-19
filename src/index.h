@@ -1089,7 +1089,7 @@ function select_l8 (presctrl) { // preset, select level 7
 
 function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
     const myImg = document.getElementById(id);
-    if(src == '') src = '/unknown.jpg'
+    if(src == '') src = '/common/unknown.jpg'
     src = "/SD" + src
     src += "?" + new Date().getTime()
     console.log("showLogo1 id=", id, "src=", src)
@@ -1410,7 +1410,7 @@ async function saveStationsToSD(filename, content) {
 
 
 // Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
-    function addRowListeners() {
+function addRowListeners() {
     const rows = document.getElementsByClassName('table-row');
     const info = document.getElementById('stationInfo');
     for (let i = 0; i < rows.length; i++) {
@@ -2095,7 +2095,7 @@ function clear_BT_memItems(){
         </div>
         <div style="display: flex;">
             <div id="div-logo" style="flex: 0 0 210px;">
-                <img id="label-logo" src="SD/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
+                <img id="label-logo" src="SD/common/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -2228,35 +2228,6 @@ function clear_BT_memItems(){
                 <div class="context-menu-item" onclick="insertRow()">Zeile einfügen</div>
                 <div class="context-menu-item" onclick="deleteRow()">Zeile löschen</div>
             </div>
-        <center>
-            <br>
-            <button class="button_80x30 buttongreen"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    title="Save to SD">Save
-            </button>
-            &nbsp;
-            <button class="button_80x30 buttongreen"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    id="loadSD" title="Load from SD">Load
-            </button>
-            &nbsp;
-            <button class="button_80x30 buttonblue" title="Download to PC">save xlsx</button>
-            &nbsp;
-            <button class="button_80x30 buttonblue"
-                    onclick="javascript:document.getElementById('file').click();"
-                    title="Load from PC">load xlsx
-            </button>
-
-            <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
-                             width: 0px;" name="img"; ">
-            <br>
-        </center>
         <p id="stationInfo"></p>
     </div>
 <!--===============================================================================================================================================-->
