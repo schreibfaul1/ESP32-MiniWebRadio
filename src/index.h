@@ -2206,9 +2206,8 @@ function clear_BT_memItems(){
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
-        <center>
 
-            <div class="stations-container" style="height: 450px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
+            <div class="stations-container" style="height: 500px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
                 <table class="stations-table" id="stationsTable">
                     <thead>
                         <tr class="stations_tr">
@@ -2229,7 +2228,7 @@ function clear_BT_memItems(){
                 <div class="context-menu-item" onclick="insertRow()">Zeile einfügen</div>
                 <div class="context-menu-item" onclick="deleteRow()">Zeile löschen</div>
             </div>
-
+        <center>
             <br>
             <button class="button_80x30 buttongreen"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
