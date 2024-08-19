@@ -3293,7 +3293,7 @@ void tp_positionXY(uint16_t x, uint16_t y){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -3573,20 +3573,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
-    if(CORE_DEBUG_LEVEL > ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
-    if(request.startsWith("SD/")){ // POST request
-        if(_filename.startsWith("SD/")) _filename = _filename.substring(2);
+    if(_filename.startsWith("SD/")) {// POST request
         File sta;
         if(_f_SD_Upload){
             _f_SD_Upload = false;
-            sta = SD_MMC.open(_filename.c_str(),"w",true);
+            sta = SD_MMC.open(_filename.substring(2).c_str(),"w",true);
         }
         else{
-            sta = SD_MMC.open(_filename.c_str(),"a",true);
+            sta = SD_MMC.open(_filename.substring(2).c_str(),"a",true);
         }
-        sta.write((uint8_t*)request.substring(3).c_str(), request.length() - 3);
+        sta.write((uint8_t*)request.c_str(), request.length() );
         sta.close();
+        if(contentLength == 0) webSrv.reply("200", webSrv.TEXT);
         return;
     }
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString

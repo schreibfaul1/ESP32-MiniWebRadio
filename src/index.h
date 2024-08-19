@@ -212,14 +212,6 @@ const char index_html[] PROGMEM = R"=====(
                height : 96px; */
             border : #000 solid 2px;
         }
-        .jsgrid-header-cell {
-            padding : 0.1em !important ;
-        }
-        .jsgrid-cell {
-            overflow : hidden !important ;
-            white-space : nowrap !important ;
-            padding : 0.1em 0.2em !important ;
-        }
         .ui-widget-header {
             background : #11e9e9 !important ;
         }
@@ -421,6 +413,19 @@ const char index_html[] PROGMEM = R"=====(
 
         .context-menu-item:hover {
             background-color: #f2f2f2;
+        }
+
+        .notification {
+            position: fixed; /* Fixiert das Fenster relativ zum Ansichtsfenster */
+            top: 20px; /* Abstand von oben */
+            right: 20px; /* Abstand von rechts */
+            background-color: #444; /* Dunkler Hintergrund */
+            color: white; /* Weiße Schrift */
+            padding: 15px; /* Innenabstand */
+            border-radius: 5px; /* Abgerundete Ecken */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Schatten */
+            display: none; /* Anfangs versteckt */
+            z-index: 1000; /* Sicherstellen, dass es über anderen Elementen liegt */
         }
     </style>
 </head>
@@ -721,6 +726,7 @@ function showTab2 () {
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
     loadFromLocalStorage();
+    loadFromSD("/stations.json");
     loadTableData();
 }
 
@@ -1373,12 +1379,16 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
         // Funktion zum Anzeigen von Meldungen
         function showMessage(message) {
             console.log(message);
-            // Meldung nach 3 Sekunden ausblenden
-            setTimeout(() => {
-                messageBox.style.display = 'none';
+            // Zeige das Benachrichtigungsfenster
+            var notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+
+            // Blende das Fenster nach 3 Sekunden wieder aus
+            setTimeout(function() {
+                notification.style.display = 'none';
             }, 3000);
         }
-
         // Kontextmenü beim Klicken außerhalb ausblenden
         window.addEventListener('click', function () {
             hideContextMenu();
@@ -1388,7 +1398,7 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
 
 async function saveStationsToSD(filename, content) {
     try {
-        const response = await fetch('/SD_Upload', {
+        const response = await fetch("SD_Upload?" + encodeURIComponent(filename), {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1408,6 +1418,29 @@ async function saveStationsToSD(filename, content) {
     }
 }
 
+async function loadFromSD(file_name) {
+    try {
+        const response = await fetch("SD_Download?" + encodeURIComponent(file_name), {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Fehler beim Laden der Datei: ${response.statusText}`);
+        }
+
+        const jsonContent = await response.json();
+
+        console.log('Datei erfolgreich geladen:', jsonContent);
+        localStorage.setItem('tableData', jsonContent);  // save json to local storage
+        return jsonContent; // Inhalt der JSON-Datei
+    } catch (error) {
+        console.error('Es gab ein Problem beim Laden der Datei:', error);
+        return null; // Rückgabe von null im Fehlerfall
+    }
+}
 
 // Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
 function addRowListeners() {
@@ -1429,11 +1462,6 @@ function addRowListeners() {
         });
     }
 }
-
-
-
-
-
 
 var showDetailsDialog = function (dialogType, client) { // popUp window
     if(client.Hide === '*') $("#chkHide").prop("checked", true)
@@ -2206,7 +2234,7 @@ function clear_BT_memItems(){
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
-
+            <div id="notification" class="notification"></div>
             <div class="stations-container" style="height: 500px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
                 <table class="stations-table" id="stationsTable">
                     <thead>
