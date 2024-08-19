@@ -891,6 +891,7 @@ public:
         if(m_clicked) return;
         uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
         if(m_enabled) drawNewSpot(spotPos);
+        else m_spotPos = spotPos;
     }
     int16_t getValue(){
         return m_val;

@@ -371,6 +371,50 @@ const char index_html[] PROGMEM = R"=====(
             background-color:#007bff;
             transition:width
         }
+        .stations-container {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .stations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stations-th{
+            padding-left: 5px;
+            padding-right: 0px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            text-align: left;
+            border: 1px solid black;
+            white-space: nowrap;
+            cursor: pointer;
+            height: 25px;
+        }
+
+        /* Kontextmenü-Stil */
+        .context-menu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+            width: 150px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .context-menu-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f2f2f2;
+        }
     </style>
 </head>
 
@@ -603,8 +647,6 @@ document.addEventListener('readystatechange', event => {
     if (event.target.readyState === 'complete') {
         console.log('Now external resources are loaded too, like css,src etc... ')
         connect();  // establish websocket connection
-        loadGridFileFromSD()
-        showExcelGrid()
         audioPlayer_buildFileSystemTree("/")
         dlnaPlayer_buildFileSystemTree("/")
     }
@@ -671,7 +713,8 @@ function showTab2 () {
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    $('#jsGrid').jsGrid('refresh')
+    loadFromLocalStorage();
+    loadTableData();
 }
 
 function showTab3 () {
@@ -1152,207 +1195,193 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
 }
 // ----------------------------------- TAB CONFIG ------------------------------------
 
-function saveGridFileToSD () { // save to SD
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var strJSON = JSON.stringify(wsData)
-    var objJSON = JSON.parse(strJSON)
-    console.log(wsData.length)
-    var txt = ''
-    var l
-    var c
-    var select, opt
-    select = document.getElementById('preset') // Radio: show stationlist
-    select.options.length = 1
-    var j = 1
-    txt = 'Hide\tCy\tStationName\tStreamURL\n'
-    for (var i = 0; i < wsData.length; i++) {
-        c = ''
-        if (objJSON[i].Hide) {
-            c = objJSON[i].Hide
-            txt += c+ '\t'
-        } else txt += '\t'
-        if (objJSON[i].Hide !== '*') {
-            if (j < 1000) {
-                opt = document.createElement('OPTION')
-                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-                select.add(opt)
+        let tableData = [];
+
+        function loadTableData() {
+            const table = document.getElementById('myTable').querySelector('tbody');
+            table.innerHTML = ''; // Tabelle leeren
+
+            tableData.forEach((rowData, rowIndex) => {
+                const row = table.insertRow();
+
+                rowData.forEach((cellData, cellIndex) => {
+                    const cell = row.insertCell();
+                    cell.style.paddingLeft = "5px";
+                    cell.style.paddingRight = "5px";
+                    cell.style.paddingTop = "5px";
+                    cell.style.paddingBottom = "5px";
+                    cell.style.textAlign = "left";
+                    cell.style.border = "1px solid black";
+                    cell.style.whiteSpace = "nowrap";
+                    cell.style.cursor = "pointer";
+                    cell.style.height = "25px";
+                    cell.style.overflow = "hidden";
+                    cell.style.textOverflow = "ellipsis";
+
+                    if(cellIndex === 0) {
+                        cell.style.width = "45px";
+                        cell.style.maxWidth = "50px";
+                        cell.style.textAlign = "center";
+                    }
+                    if(cellIndex === 1) {
+                        cell.style.width = "55px";
+                        cell.style.maxWidth = "60px";
+                        cell.style.textAlign = "center";
+                    }
+
+                    if(cellIndex === 2) {
+                        cell.style.width = "100px";
+                        cell.style.maxWidth = "180px";
+                        cell.style.textAlign = "left";
+                    }
+
+                    if(cellIndex === 3) {
+                        cell.style.width = "200px";
+                        cell.style.maxWidth = "280px";
+                        cell.style.textAlign = "left";
+                    }
+ 
+                    // Jede zweite Zeile einfärben
+                    if (rowIndex % 2 === 0) {
+                        cell.style.backgroundColor = "#ffffff"; // Hintergrundfarbe für gerade Zeilen
+                    } else {
+                        cell.style.backgroundColor = "#f2f2f2"; // Hintergrundfarbe für ungerade Zeilen (kann auch weggelassen werden, wenn du keine spezielle Farbe für ungerade Zeilen möchtest)
+                    }
+
+                    cell.textContent = cellData;
+
+                    // Event zum Editieren hinzufügen
+                    cell.addEventListener('click', function () {
+                        editCell(cell, rowIndex, cellIndex);
+                    });
+                });
+
+                row.addEventListener('contextmenu', function (e) {
+                    e.preventDefault();
+                    selectedRowIndex = rowIndex;
+                    showContextMenu(e);
+                });
+
+                if (rowIndex % 2 === 1) {
+                    row.style.backgroundColor = '#f2f2f2';
+                }
+            });
+        }
+
+        function editCell(cell, rowIndex, cellIndex) {
+            if (cell.querySelector('input')) {
+                return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
             }
-            j++
+
+            const originalContent = cell.textContent.trim();
+            const cellWidth = cell.clientWidth - 5; // padding  td
+
+            // Breite der Zelle fixieren
+            cell.style.width = `${cellWidth}px`;
+
+            // Input-Feld mit reduzierter Breite erstellen
+            const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
+            cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
+                style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
+
+            const input = cell.querySelector('input');
+            input.focus();
+
+            input.addEventListener('blur', function () {
+                const newValue = input.value.trim();
+                const originalValue = input.dataset.originalValue;
+
+
+                if (newValue !== originalValue) {
+                    cell.textContent = newValue;
+                    tableData[rowIndex][cellIndex] = newValue;
+                    saveToLocalStorage();
+                    showMessage('Zelle wurde erfolgreich geändert.');
+                } else {
+                    cell.textContent = originalContent;
+                }
+            });
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    input.blur();
+                }
+            });
         }
-        if (objJSON[i].Cy) {
-            c = objJSON[i].Cy
-            c = c + '\t'
-            txt += c
-        } else txt += '\t'
-        if (objJSON[i].StationName) {
-            c = objJSON[i].StationName
-            c = c + '\t'
-            txt += c
-        } else txt += '\t'
-        if (objJSON[i].StreamURL) {
-            c = objJSON[i].StreamURL
-            txt += c
-        } else txt += '\t'
-        txt += '\n'
-    }
-    uploadTextFile('stations.csv', txt)
-    updateStationlist()
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function loadGridFileFromSD () { // load from SD
-    var XLrowObject
-    var rawFile = new XMLHttpRequest()
-    rawFile.timeout = 2000; // time in milliseconds
-    rawFile.open('POST', 'SD/stations.csv', true)
-    rawFile.onreadystatechange = function () {
-        if (rawFile.readyState === 4) {
-            var rawdata = rawFile.responseText
-            var workbook = XLSX.read(rawdata, {
-                raw: true,
-                type: 'string',
-                cellDates: false,
-                cellText: true
-            })
-            workbook.SheetNames.forEach(function (sheetName) {
-                XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
-            })
-            var strJSON = JSON.stringify(XLrowObject)
-            var objJSON = JSON.parse(strJSON)
-            $('#jsGrid').jsGrid({
-                data: objJSON
-            })
-            updateStationlist()
+
+
+        function insertRow() {
+            const newRowData = [`Neue Zelle ${tableData.length * 4 + 1}`,
+            `Neue Zelle ${tableData.length * 4 + 2}`,
+            `Neue Zelle ${tableData.length * 5 + 3}`,
+            `Neue Zelle ${tableData.length * 6 + 4}`];
+
+            if (selectedRowIndex !== null) {
+                tableData.splice(selectedRowIndex, 0, newRowData);
+                loadTableData();
+                saveToLocalStorage();  // Speichert die geänderten Daten
+                showMessage('Zeile wurde erfolgreich eingefügt.');
+            }
+
+            hideContextMenu();
         }
-    }
-    rawFile.ontimeout = (e) => {
-        // XMLHttpRequest timed out.
-        console.log("load SD/stations.csv timeout")
-    }
-    rawFile.send()
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function saveExcel () { // save xlsx to PC
-    var wb = XLSX.utils.book_new()
-    wb.Props = {
-        Title: 'Stations',
-        Subject: 'Stationlist',
-        Author: 'MiniWebRadio',
-        CreatedDate: new Date('2018.10.10')
-    }
-    wb.SheetNames.push('Stations')
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var wscols = [{
-        wch: 4
-    }, // 'characters'
-    {
-        wch: 5
-    }, // 'characters'
-    {
-        wch: 100
-    }, // 'characters'
-    {
-        wch: 150
-    }  // 'characters'
-    ]
-    var ws = XLSX.utils.json_to_sheet(wsData, {
-        header: ['Hide', 'Cy', 'StationName', 'StreamURL']
-    })
-    ws['!cols'] = wscols
-    wb.Sheets.Stations = ws
 
-    var wbout = XLSX.write(wb, {
-        bookType: 'xlsx',
-        type: 'binary'
-    })
+        function deleteRow() {
+            if (selectedRowIndex !== null && tableData.length > 1) {
+                tableData.splice(selectedRowIndex, 1);
+                loadTableData();
+                saveToLocalStorage();  // Speichert die geänderten Daten
+                showMessage('Zeile wurde erfolgreich gelöscht.');
+            }
 
-    function s2ab (s) {
-        var buf = new ArrayBuffer(s.length)
-        var view = new Uint8Array(buf)
-        for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
-        return buf
-    }
-    saveAs(
-        new Blob([s2ab(wbout)], {
-            type: 'application/octet-stream'
-        }),
-        'stations.xlsx'
-    )
-    updateStationlist()
-}
+            hideContextMenu();
+        }
 
-var clients = [ // testdata
-    {
-        Hide: '*',
-        Cy: 'D',
-        StationName: 'Station',
-        StreamURL: 'URL'
-    }
-]
+        function showContextMenu(event) {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.left = `${event.pageX}px`;
+            contextMenu.style.top = `${event.pageY}px`;
+            contextMenu.style.display = 'block';
+        }
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function showExcelGrid () {
-    $('#jsGrid').jsGrid({
-        width: '100%',
-        height: '432px',
-        editing: true,
-        sorting: true,
-        paging: false,
-        shrinkToFit: false,
-        onItemDeleted: function (args) {
-            updateStationlist()
-        },
-        onItemUpdated: function (args) {
-            updateStationlist()
-        },
-        onItemInserted: function (args) {
-            updateStationlist()
-        },
-        deleteConfirm: function (item) {
-            return 'The entry ' + item.StationName + ' will be removed. Are you sure?'
-        },
-        rowClick: function (args) {
-            showDetailsDialog('Edit', args.item)
-        },
-        data: clients,
-        fields: [{
-            name: 'Hide',
-            type: 'text',
-            width: 20,
-            align: 'center'
-        },
-        {
-            name: 'Cy',
-            type: 'text',
-            width: 25,
-            align: 'center'
-        },
-        {
-            name: 'StationName',
-            type: 'text',
-            width: 170
-        },
-        {
-            name: 'StreamURL',
-            type: 'text',
-            width: 320
-        },
-        {
-            type: 'control',
-            modeSwitchButton: false,
-            editButton: false,
-            shrinkToFit: true,
-            headerTemplate: function () {
-                return $('<button>')
-                .attr('type', 'button')
-                .text('Add')
-                .on('click', function () {
-                    showDetailsDialog('Add', {})
-                })
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // Funktion zum Speichern der Daten im Local Storage
+        function saveToLocalStorage() {
+            localStorage.setItem('tableData', JSON.stringify(tableData));
+            console.log(JSON.stringify(tableData));
+        }
+
+        // Funktion zum Laden der Daten aus dem Local Storage
+        function loadFromLocalStorage() {
+            const storedData = localStorage.getItem('tableData');
+            if (storedData) {
+                tableData = JSON.parse(storedData);
+            } else {
+                // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
+                tableData = [
+                    ["Zelle 1", "Zelle 2", "Zelle 3", "Zelle 4"],
+                    ["Zelle 5", "Zelle 6", "Zelle 7", "Zelle 8"],
+                    ["Zelle 9", "Zelle 10", "Zelle 11", "Zelle 12"]
+                ];
             }
         }
-        ]
-    })
-}
+
+        // Funktion zum Anzeigen von Meldungen
+        function showMessage(message) {
+            console.log(message);
+            // Meldung nach 3 Sekunden ausblenden
+            setTimeout(() => {
+                messageBox.style.display = 'none';
+            }, 3000);
+        }
+
+        // Kontextmenü beim Klicken außerhalb ausblenden
+        window.addEventListener('click', function () {
+            hideContextMenu();
+        });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 var showDetailsDialog = function (dialogType, client) { // popUp window
@@ -1385,48 +1414,6 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
     console.log('dialog opened')
 }
 
-var includeStation = function (client, isNew) {
-    $.extend(client, {
-        Hide: $('#txHide').val(),
-        Cy: $('#txtCy').val(),
-        StationName: $('#txtStationName').val(),
-        StreamURL: $('#txtStreamURL').val()
-    })
-
-    $('#jsGrid').jsGrid(isNew ? 'insertItem' : 'updateItem', client)
-    $('#detailsDialog').dialog('close')
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function loadDataExcel (event) { // load xlsx from PC
-    var file = event[0]
-    var reader = new FileReader()
-    var excelData = []
-    reader.onload = function (event) {
-        var data = event.target.result
-        var workbook = XLSX.read(data, {
-            type: 'binary'
-        })
-        workbook.SheetNames.forEach(function (sheetName) {
-            // Here is your object
-            var XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
-            for (var i = 0; i < XLrowObject.length; i++) {
-                excelData.push(XLrowObject[i]['your column name'])
-            }
-            var strJSON = JSON.stringify(XLrowObject)
-            var objJSON = JSON.parse(strJSON)
-            // alert(strJSON);
-            $('#jsGrid').jsGrid({
-                data: objJSON
-            })
-            updateStationlist()
-        })
-    }
-    $('#file').val('') // allow load twice
-    reader.onerror = function (ex) {
-        console.log(ex)
-    }
-    reader.readAsBinaryString(file)
-}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function updateStationlist () { // select in tab Radio
@@ -2169,10 +2156,31 @@ function clear_BT_memItems(){
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
         <center>
-            <div id="jsGrid"></div>
+
+            <div class="stations-container" style="height: 450px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
+                <table class="stations-table" id="myTable">
+                    <thead>
+                        <tr class="stations-tr">
+                            <th class="stations-th">Hide</th>
+                            <th  class="stations-th" style="text-align: center;">Cy</th>
+                            <th class="stations-th">StationName</th>
+                            <th class="stations-th">StreamURL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="stations-tbody">
+                        <!-- Zeilen werden durch das Skript hinzugefügt -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Kontextmenü -->
+            <div id="contextMenu" class="context-menu">
+                <div class="context-menu-item" onclick="insertRow()">Zeile einfügen</div>
+                <div class="context-menu-item" onclick="deleteRow()">Zeile löschen</div>
+            </div>
+
             <br>
             <button class="button_80x30 buttongreen"
-                    onclick="saveGridFileToSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"
@@ -2181,7 +2189,6 @@ function clear_BT_memItems(){
             </button>
             &nbsp;
             <button class="button_80x30 buttongreen"
-                    onclick="loadGridFileFromSD()"
                     onmousedown="this.style.backgroundColor='#D62C1A'"
                     ontouchstart="this.style.backgroundColor='#D62C1A'"
                     onmouseup="this.style.backgroundColor='#128F76'"
@@ -2189,7 +2196,7 @@ function clear_BT_memItems(){
                     id="loadSD" title="Load from SD">Load
             </button>
             &nbsp;
-            <button class="button_80x30 buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
+            <button class="button_80x30 buttonblue" title="Download to PC">save xlsx</button>
             &nbsp;
             <button class="button_80x30 buttonblue"
                     onclick="javascript:document.getElementById('file').click();"
@@ -2197,7 +2204,7 @@ function clear_BT_memItems(){
             </button>
 
             <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
-                             width: 0px;" name="img"; onchange="loadDataExcel(this.files);">
+                             width: 0px;" name="img"; ">
             <br>
         </center>
     </div>
