@@ -396,6 +396,13 @@ const char index_html[] PROGMEM = R"=====(
             height: 25px;
         }
 
+        .stations_tr{
+            padding: 0;
+        }
+        .table-row.highlight {
+            background-color: #f0edcc !important; /* Wichtig! Überschreibt die Hintergrundfarbe */
+        }
+
         /* Kontextmenü-Stil */
         .context-menu {
             display: none;
@@ -1198,12 +1205,12 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
         let tableData = [];
 
         function loadTableData() {
-            const table = document.getElementById('myTable').querySelector('tbody');
+            const table = document.getElementById('stationsTable').querySelector('tbody');
             table.innerHTML = ''; // Tabelle leeren
 
             tableData.forEach((rowData, rowIndex) => {
                 const row = table.insertRow();
-
+                row.classList.add('table-row');
                 rowData.forEach((cellData, cellIndex) => {
                     const cell = row.insertCell();
                     cell.style.paddingLeft = "5px";
@@ -1240,14 +1247,6 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
                         cell.style.maxWidth = "280px";
                         cell.style.textAlign = "left";
                     }
- 
-                    // Jede zweite Zeile einfärben
-                    if (rowIndex % 2 === 0) {
-                        cell.style.backgroundColor = "#ffffff"; // Hintergrundfarbe für gerade Zeilen
-                    } else {
-                        cell.style.backgroundColor = "#f2f2f2"; // Hintergrundfarbe für ungerade Zeilen (kann auch weggelassen werden, wenn du keine spezielle Farbe für ungerade Zeilen möchtest)
-                    }
-
                     cell.textContent = cellData;
 
                     // Event zum Editieren hinzufügen
@@ -1265,6 +1264,7 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
                 if (rowIndex % 2 === 1) {
                     row.style.backgroundColor = '#f2f2f2';
                 }
+                addRowListeners();
             });
         }
 
@@ -1409,6 +1409,26 @@ async function saveStationsToSD(filename, content) {
 }
 
 
+// Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
+    function addRowListeners() {
+    const rows = document.getElementsByClassName('table-row');
+    const info = document.getElementById('stationInfo');
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].addEventListener('mouseover', function() {
+            // Entfernen der Hervorhebung von allen Zeilen
+            for (let j = 0; j < rows.length; j++) {
+                rows[j].classList.remove('highlight');
+            }
+            // Hervorheben der aktuellen Zeile
+            this.classList.add('highlight');
+
+            // Anzeige der Zeilennummer
+            const rowIndex = i + 1;
+            info.textContent = `Station: ${rowIndex}`;
+
+        });
+    }
+}
 
 
 
@@ -2189,9 +2209,9 @@ function clear_BT_memItems(){
         <center>
 
             <div class="stations-container" style="height: 450px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
-                <table class="stations-table" id="myTable">
+                <table class="stations-table" id="stationsTable">
                     <thead>
-                        <tr class="stations-tr">
+                        <tr class="stations_tr">
                             <th class="stations-th">Hide</th>
                             <th  class="stations-th" style="text-align: center;">Cy</th>
                             <th class="stations-th">StationName</th>
@@ -2238,6 +2258,7 @@ function clear_BT_memItems(){
                              width: 0px;" name="img"; ">
             <br>
         </center>
+        <p id="stationInfo"></p>
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content3">
