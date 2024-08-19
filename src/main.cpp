@@ -3575,6 +3575,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
     if(CORE_DEBUG_LEVEL > ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
+    if(request.startsWith("SD/")){ // POST request
+        if(_filename.startsWith("SD/")) _filename = _filename.substring(2);
+        File sta;
+        if(_f_SD_Upload){
+            _f_SD_Upload = false;
+            sta = SD_MMC.open(_filename.c_str(),"w",true);
+        }
+        else{
+            sta = SD_MMC.open(_filename.c_str(),"a",true);
+        }
+        sta.write((uint8_t*)request.substring(3).c_str(), request.length() - 3);
+        sta.close();
+        return;
+    }
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return; // uninteresting Info
     if(request == "fileUpload") {
@@ -3594,6 +3608,7 @@ void WEBSRV_onInfo(const char* info) {
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info); // infos for debug
     }
+//    log_w("%s", info);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA

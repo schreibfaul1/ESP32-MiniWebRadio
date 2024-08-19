@@ -1352,6 +1352,7 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
         function saveToLocalStorage() {
             localStorage.setItem('tableData', JSON.stringify(tableData));
             console.log(JSON.stringify(tableData));
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData))
         }
 
         // Funktion zum Laden der Daten aus dem Local Storage
@@ -1384,6 +1385,36 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
         });
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+async function saveStationsToSD(filename, content) {
+    try {
+        const response = await fetch('/SD_Upload', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Filename': filename
+            },
+            body: (content),
+        });
+
+        if (!response.ok) {
+            throw new Error('Fehler beim Speichern der Datei: ' + response.statusText);
+        }
+
+        const result = await response.json();
+        console.log('Datei erfolgreich gespeichert:', result);
+    } catch (error) {
+        console.error('Es gab ein Problem:', error);
+    }
+}
+
+
+
+
+
+
+
+
 var showDetailsDialog = function (dialogType, client) { // popUp window
     if(client.Hide === '*') $("#chkHide").prop("checked", true)
     else                    $("#chkHide").prop("checked", false)

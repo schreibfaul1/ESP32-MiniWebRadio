@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 24.01.2024
+ *  updated on: 19.08.2024
  *      Author: Wolle
  */
 
@@ -374,11 +374,20 @@ String WebSrv::getContentType(String filename){
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::handlehttp() {                // HTTPserver, message received
     bool wswitch=true;
-    int16_t inx1 = 0, inx2 = 0;                 // Pos. of search string in currenLine
-    String currentLine = "";                // Build up to complete line
-    String ct;                              // contentType
-    uint32_t contentLength = 0;                        // contentLength
+    int16_t inx1 = 0, inx2 = 0;               // Pos. of search string in currenLine
+    String currentLine = "";                  // Build up to complete line
+    String request = "";
+    String ct;                                // contentType
+    String xFilename = "";
+    uint32_t contentLength = 0;               // contentLength
     uint8_t count = 0;
+    uint8_t method = HTTP_NONE;
+
+    currentLine = "";
+    http_cmd    = "";
+    http_param  = "";
+    http_arg    = "";
+    http_rqfile = "";
 
     while (wswitch==true &&  cmdclient.connected()){            // first while
         while(cmdclient.available()){
@@ -387,79 +396,74 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             // If the current line is blank, you got two newline characters in a row.
             // that's the end of the client HTTP request, so send a response:
             if (currentLine.length() <= 1) { // contains '\n' only
+
+                request = URLdecode(request);
+                inx1 = request.indexOf("?");        // Search for 1st parameter
+                inx2 = request.lastIndexOf("&");    // Search for 2nd parameter
+
+                if(inx1 > 0){     // it is a command
+                    http_cmd = request.substring(0, inx1); //isolate the command
+                    http_rqfile = "";               // No file
+                }
+                if((inx1 > 0) && (inx2 > inx1 + 1)){        // it is a parameter
+                    http_param = request.substring(inx1 + 1, inx2);//isolate the parameter
+                    if(inx2 < request.length()){
+                        http_arg = request.substring(inx2 + 1, request.length());
+                    }
+                }
+                if(inx1 > 0 && inx2 < 0){
+                    http_param = request.substring(inx1 + 1, request.length());
+                    http_arg = "";
+                }
+                if(inx1 < 0 && inx2 < 0){   // it is a filename
+                //    log_w("cl %i", contentLength);
+                    if(xFilename.length()){ http_rqfile = xFilename; http_arg = String(contentLength, DEC); http_cmd = request;}
+                    else                  { http_rqfile = request; http_cmd =   "";}
+                    http_param = "";
+                    http_arg =   "";
+                }
                 wswitch=false; // use second while
                 if (http_cmd.length()) {
+                    if(xFilename.length()) http_param = xFilename;
                     if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd).c_str());
                     if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
                 }
                 else if(http_rqfile.length()){
                     if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_rqfile).c_str());
-                    if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_rqfile), URLdecode(http_param), URLdecode(http_arg));
+                    if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_rqfile), URLdecode(http_arg));
                 }
                 else {   // An empty "GET"?
                     if(WEBSRV_onInfo) WEBSRV_onInfo("Filename is: index.html");
                     if(WEBSRV_onCommand) WEBSRV_onCommand("index.html", URLdecode(http_param), URLdecode(http_arg));
                 }
-                currentLine = "";
-                http_cmd    = "";
-                http_param  = "";
-                http_arg    = "";
-                http_rqfile = "";
-                method = HTTP_NONE;
+
                 break;
             } else {
                 // Newline seen
-                method = HTTP_NONE;
-                if (currentLine.startsWith("Content-Length:")) contentLength = currentLine.substring(15).toInt();
-
                 if (currentLine.startsWith("GET /")) {     // GET request?
                     method = HTTP_GET;
-                    currentLine = currentLine.substring(5);
+                    request    = currentLine.substring(5);
+                    int32_t posHTTP = request.indexOf(" HTTP/");
+                    if(posHTTP >= 0) request = request.substring(0, posHTTP);
+                    request.trim();
+                    continue;
                 }
                 else if (currentLine.startsWith("POST /")){ // POST request?
-                    method = HTTP_PUT;
-                    currentLine = currentLine.substring(6);}
+                    method = HTTP_POST;
+                    request = currentLine.substring(6);
+                    int32_t posHTTP = request.indexOf(" HTTP/");
+                    if(posHTTP >= 0) request = request.substring(0, posHTTP);
+                    request.trim();
+                    continue;
+                }
 
                 if(method > 0){
-                    http_cmd    = "";
-                    http_param  = "";
-                    http_arg    = "";
-                    http_rqfile = "";
-                    int32_t posHTTP = currentLine.indexOf(" HTTP/");
-                    if(posHTTP >= 0) currentLine = currentLine.substring(0, posHTTP);
-
-                    int32_t pos = currentLine.indexOf("&version="); if(pos > 0) currentLine = currentLine.substring(0, pos);
-
                     currentLine = URLdecode(currentLine);
+                //    log_w("%s",currentLine.c_str());
 
-                    //log_i("cl \"%s\"", currentLine.c_str());
-
-                    inx1 = currentLine.indexOf("?");    // Search for 1st parameter
-                    inx2 = currentLine.lastIndexOf("&");    // Search for 2nd parameter
-
-                    if(inx1 > 0){     // it is a command
-                        http_cmd = currentLine.substring(0, inx1); //isolate the command
-                        http_rqfile = "";               // No file
-                    }
-                    if((inx1 > 0) && (inx2 > inx1 + 1)){        // it is a parameter
-                        http_param = currentLine.substring(inx1 + 1, inx2);//isolate the parameter
-                        if(inx2 < currentLine.length()){
-                            http_arg = currentLine.substring(inx2 + 1, currentLine.length());
-                        }
-                    }
-                    if(inx1 > 0 && inx2 < 0){
-                        http_param = currentLine.substring(inx1 + 1, currentLine.length());
-                        http_arg = "";
-                    }
-                    if(inx1 < 0 && inx2 < 0){   // it is a filename
-                        http_rqfile = currentLine;
-                        http_cmd =   "";
-                        http_param = "";
-                        http_arg =   "";
-                    }
-                    //log_i("cmd \"%s\"  param \"%s\"  arg \"%s\"  rqfile \"%s\"", http_cmd.c_str(), http_param.c_str(), http_arg.c_str(), http_rqfile.c_str());
-
-                    currentLine = "";
+                    if(currentLine.startsWith("Content-Type:")) {ct = currentLine.substring(13); ct.trim();}
+                    if(currentLine.startsWith("X-Filename:")){xFilename = currentLine.substring(11); xFilename.trim();}
+                    if(currentLine.startsWith("Content-Length:")) contentLength = currentLine.substring(15).toInt();
                 }
             }
         }
@@ -470,8 +474,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             currentLine = cmdclient.readStringUntil('\n');
             int32_t idx = currentLine.indexOf("\r");
             if(idx > 0) currentLine[idx] = ' ';
-            // log_i("currLine %s", currentLine.c_str());
-            contentLength -= currentLine.length();
+        //    log_w("currLine %s", currentLine.c_str());
         }
         else{
             currentLine = "";
@@ -485,20 +488,26 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             count = 0;
             break;
         }
-        else{   // its the requestbody
-            if(currentLine.length() > 1){
-                if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, 0);
-                if(WEBSRV_onInfo) WEBSRV_onInfo(currentLine.c_str());
-            }
 
-            if(currentLine.startsWith("------")) {
-                count++; // WebKitFormBoundary header
-                contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
+        else{   // its the requestbody
+            if(method == HTTP_GET){
+                if(currentLine.length() > 1){
+                    if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, 0);
+                    if(WEBSRV_onInfo) WEBSRV_onInfo(currentLine.c_str());
+                }
+
+                if(currentLine.startsWith("------")) {
+                    count++; // WebKitFormBoundary header
+                    contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
+                }
+                if(currentLine.length() == 1 && count == 1){
+                    contentLength -= 7; // "\r\n\r\n..."
+                    if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
+                    count++;
+                }
             }
-            if(currentLine.length() == 1 && count == 1){
-                contentLength -= 7; // "\r\n\r\n..."
-                if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
-                count++;
+            if(method == HTTP_POST){
+                if(WEBSRV_onRequest) WEBSRV_onRequest("SD/" + currentLine, contentLength);
             }
         }
 
