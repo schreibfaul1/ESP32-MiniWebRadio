@@ -661,6 +661,7 @@ document.addEventListener('readystatechange', event => {
         connect();  // establish websocket connection
         audioPlayer_buildFileSystemTree("/")
         dlnaPlayer_buildFileSystemTree("/")
+        loadStationsFromSD("/stations.json");
     }
 })
 
@@ -725,9 +726,6 @@ function showTab2 () {
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    loadFromLocalStorage();
-    loadFromSD("/stations.json");
-    loadTableData();
 }
 
 function showTab3 () {
@@ -1301,8 +1299,9 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
                 if (newValue !== originalValue) {
                     cell.textContent = newValue;
                     tableData[rowIndex][cellIndex] = newValue;
-                    saveToLocalStorage();
+                    saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
                     showMessage('Zelle wurde erfolgreich geändert.');
+                    updateStationlist();
                 } else {
                     cell.textContent = originalContent;
                 }
@@ -1325,8 +1324,9 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
             if (selectedRowIndex !== null) {
                 tableData.splice(selectedRowIndex, 0, newRowData);
                 loadTableData();
-                saveToLocalStorage();  // Speichert die geänderten Daten
+                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
                 showMessage('Zeile wurde erfolgreich eingefügt.');
+                updateStationlist();
             }
 
             hideContextMenu();
@@ -1336,8 +1336,9 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
             if (selectedRowIndex !== null && tableData.length > 1) {
                 tableData.splice(selectedRowIndex, 1);
                 loadTableData();
-                saveToLocalStorage();  // Speichert die geänderten Daten
+                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
                 showMessage('Zeile wurde erfolgreich gelöscht.');
+                updateStationlist();
             }
 
             hideContextMenu();
@@ -1352,28 +1353,6 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
 
         function hideContextMenu() {
             document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        // Funktion zum Speichern der Daten im Local Storage
-        function saveToLocalStorage() {
-            localStorage.setItem('tableData', JSON.stringify(tableData));
-            console.log(JSON.stringify(tableData));
-            saveStationsToSD("SD/stations.json", JSON.stringify(tableData))
-        }
-
-        // Funktion zum Laden der Daten aus dem Local Storage
-        function loadFromLocalStorage() {
-            const storedData = localStorage.getItem('tableData');
-            if (storedData) {
-                tableData = JSON.parse(storedData);
-            } else {
-                // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
-                tableData = [
-                    ["Zelle 1", "Zelle 2", "Zelle 3", "Zelle 4"],
-                    ["Zelle 5", "Zelle 6", "Zelle 7", "Zelle 8"],
-                    ["Zelle 9", "Zelle 10", "Zelle 11", "Zelle 12"]
-                ];
-            }
         }
 
         // Funktion zum Anzeigen von Meldungen
@@ -1398,7 +1377,8 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
 
 async function saveStationsToSD(filename, content) {
     try {
-        const response = await fetch("SD_Upload?" + encodeURIComponent(filename), {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -1411,16 +1391,17 @@ async function saveStationsToSD(filename, content) {
             throw new Error('Fehler beim Speichern der Datei: ' + response.statusText);
         }
 
-        const result = await response.json();
+        const result = await response.text();
         console.log('Datei erfolgreich gespeichert:', result);
     } catch (error) {
         console.error('Es gab ein Problem:', error);
     }
 }
 
-async function loadFromSD(file_name) {
+async function loadStationsFromSD(file_name) {
     try {
-        const response = await fetch("SD_Download?" + encodeURIComponent(file_name), {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Download?" + encodeURIComponent(file_name) + "&cb=" + cacheBuster, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -1431,14 +1412,33 @@ async function loadFromSD(file_name) {
             throw new Error(`Fehler beim Laden der Datei: ${response.statusText}`);
         }
 
-        const jsonContent = await response.json();
+        const jsonContent = await response.text();
 
-        console.log('Datei erfolgreich geladen:', jsonContent);
-        localStorage.setItem('tableData', jsonContent);  // save json to local storage
-        return jsonContent; // Inhalt der JSON-Datei
+        console.log('Datei erfolgreich geladen: %s', jsonContent);
+        console.log('Datei erfolgreich geladen:', JSON.parse(jsonContent));
+        if (jsonContent) {
+            tableData = JSON.parse(jsonContent);
+        } else {
+            // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
+            tableData = [
+                ["Z11", "Z12", "Z13", "Z14"],
+                ["Z21", "Z22", "Z23", "Z24"],
+                ["Z31", "Z32", "Z33", "Z34"]
+            ];
+        }
+
+        // Tabelle erst laden, wenn die Daten bereitgestellt wurden
+        loadTableData();
+        updateStationlist(); // und dann die Liste in RADIO aktualisieren
+
     } catch (error) {
         console.error('Es gab ein Problem beim Laden der Datei:', error);
-        return null; // Rückgabe von null im Fehlerfall
+            tableData = [
+                ["Z11", "Z12", "Z13", "Z14"],
+                ["Z21", "Z22", "Z23", "Z24"],
+                ["Z31", "Z32", "Z33", "Z34"]
+            ];
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
     }
 }
 
@@ -1501,19 +1501,29 @@ function updateStationlist () { // select in tab Radio
     var strJSON = JSON.stringify(wsData)
     var objJSON = JSON.parse(strJSON)
     console.log(wsData.length)
-    select = document.getElementById('preset') // Radio: show stationlist
-    select.options.length = 1
-    var j = 1
-    for (var i = 0; i < wsData.length; i++) {
-        if (objJSON[i].Hide !== '*') {
-            if (j < 1000) {
-                opt = document.createElement('OPTION')
-                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-                select.add(opt)
-            }
-            j++
-        }
-    }
+    const selectElement = document.getElementById('preset') // Radio: show stationlists
+
+    // Zuerst das Select-Feld leeren, falls es bereits Optionen hat
+    selectElement.innerHTML = '';
+
+    // Durchlaufen der tableData-Array
+    tableData.forEach((row, index) => {
+        const option = document.createElement('option');
+
+        if(row[0] === '*') return;
+
+        // Dreistellige Nummerierung, beginnend mit 001
+        const prefixNumber = String(index + 1).padStart(3, '0');
+
+        // Setze den Text der Option auf die nummerierte dritte Spalte
+        option.textContent = `${prefixNumber} ${row[2]}`;  // z.B. "001 Z13"
+
+        // Setze den Wert der Option auf den Wert der vierten Spalte
+        option.value = row[3];  // Vierte Spalte (Z14, Z24, Z34...)
+
+        // Füge die Option dem Select-Element hinzu
+        selectElement.appendChild(option);
+    });
 }
 
 // ----------------------------------- TAB AUDIO PLAYER ------------------------------------

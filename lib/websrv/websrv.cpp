@@ -120,7 +120,7 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     strcpy(m_path, path);
     idx = indexOf(m_path, '?', 0);
     if(idx != -1) m_path[idx] = '\0';  // remobe all after '?'
-    if(!fs.exists(m_path)){ /* log_e("path not found %s", m_path); */  return false;}
+    if(!fs.exists(m_path)){  log_e("path not found %s", m_path);   return false;}
 
     file = fs.open(m_path, "r");
     if(!file){
