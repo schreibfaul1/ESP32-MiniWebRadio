@@ -1106,6 +1106,7 @@ function test(){
 
 function handleStation (presctrl) { // tab Radio: preset, select a station
     cmd.value = ''
+    console.log(presctrl.value)
     socket.send('set_station=' + presctrl.value)
 }
 
@@ -1230,13 +1231,17 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
                     cell.style.textOverflow = "ellipsis";
 
                     if(cellIndex === 0) {
-                        cell.style.width = "45px";
-                        cell.style.maxWidth = "50px";
+                        cell.style.paddingLeft = "0px";
+                        cell.style.paddingRight = "0px";
+                        cell.style.minWidth = "40px";
+                        cell.style.width = "42px";
+                        cell.style.maxWidth = "44px";
                         cell.style.textAlign = "center";
                     }
                     if(cellIndex === 1) {
-                        cell.style.width = "55px";
-                        cell.style.maxWidth = "60px";
+                        cell.style.minWidth = "45px";
+                        cell.style.width = "47px";
+                        cell.style.maxWidth = "50px";
                         cell.style.textAlign = "center";
                     }
 
@@ -1292,15 +1297,20 @@ function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
             input.focus();
 
             input.addEventListener('blur', function () {
-                const newValue = input.value.trim();
+                let hasChanged = true;
+                let newValue = input.value.trim();
                 const originalValue = input.dataset.originalValue;
 
-
                 if (newValue !== originalValue) {
+                    const validValues = ['*', '1', '2', '3'];
+                    if (cellIndex == 0 && !validValues.includes(newValue)) {
+                        newValue = ''; // Leert das Feld, wenn der Wert ungültig ist
+                        haschanged = false;
+                    }
                     cell.textContent = newValue;
                     tableData[rowIndex][cellIndex] = newValue;
                     saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                    showMessage('Zelle wurde erfolgreich geändert.');
+                    if (hasChanged) showMessage('Zelle wurde erfolgreich geändert.');
                     updateStationlist();
                 } else {
                     cell.textContent = originalContent;
@@ -1510,7 +1520,7 @@ function updateStationlist () { // select in tab Radio
     tableData.forEach((row, index) => {
         const option = document.createElement('option');
 
-        if(row[0] === '*') return;
+        if (!['*', '1', '2', '3'].includes(row[0])) return;
 
         // Dreistellige Nummerierung, beginnend mit 001
         const prefixNumber = String(index + 1).padStart(3, '0');
@@ -2073,7 +2083,7 @@ function clear_BT_memItems(){
     <div id="dialog">
         <table>
             <tr>
-                <td> Hide </td>
+                <td> Fav </td>
                 <td> <input type="checkbox" id="chkHide"></td>
             </tr>
             <tr>
@@ -2249,7 +2259,7 @@ function clear_BT_memItems(){
                 <table class="stations-table" id="stationsTable">
                     <thead>
                         <tr class="stations_tr">
-                            <th class="stations-th">Hide</th>
+                            <th class="stations-th">Fav</th>
                             <th  class="stations-th" style="text-align: center;">Cy</th>
                             <th class="stations-th">StationName</th>
                             <th class="stations-th">StreamURL</th>
@@ -3017,7 +3027,7 @@ const tableData = [
         <table id="myTable">
             <thead>
                 <tr>
-                    <th>Hide</th>
+                    <th>Fav</th>
                     <th>Country</th>
                     <th>Station Name</th>
                     <th>Stream URL</th>

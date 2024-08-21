@@ -522,8 +522,6 @@ boolean defaultsettings(){
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
 
-
-    if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
 
@@ -533,61 +531,6 @@ boolean defaultsettings(){
 }
 // clang-format on
 
-boolean saveStationsToNVS() {
-    String   Hide = "", Cy = "", StationName = "", StreamURL = "", currentLine = "", tmp = "";
-    uint16_t cnt = 0;
-    // StationList
-    if(!SD_MMC.exists("/stations.csv")) {
-        SerialPrintfln(ANSI_ESC_RED "SD_MMC/stations.csv not found");
-        return false;
-    }
-
-    File file = SD_MMC.open("/stations.csv");
-    if(file) { // try to read from SD_MMC
-        stations.clear();
-        currentLine = file.readStringUntil('\n'); // read the headline
-        while(file.available()) {
-            currentLine = file.readStringUntil('\n'); // read the line
-            uint p = 0, q = 0;
-            Hide = "";
-            Cy = "";
-            StationName = "";
-            StreamURL = "";
-            for(int32_t i = 0; i < currentLine.length() + 1; i++) {
-                if(currentLine[i] == '\t' || i == currentLine.length()) {
-                    if(p == 0) Hide = currentLine.substring(q, i);
-                    if(p == 1) Cy = currentLine.substring(q, i);
-                    if(p == 2) StationName = currentLine.substring(q, i);
-                    if(p == 3) StreamURL = currentLine.substring(q, i);
-                    p++;
-                    i++;
-                    q = i;
-                }
-            }
-            if(Hide == "*") continue;
-            if(StationName == "") continue; // is empty
-            if(StreamURL == "") continue;   // is empty
-            SerialPrintfln("Cy=%s, StationName=%s, StreamURL=%s", Cy.c_str(), StationName.c_str(), StreamURL.c_str());
-            cnt++;
-            if(cnt == _max_stations) {
-                SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
-                cnt--; // maxstations 999
-                break;
-            }
-            tmp = StationName + "#" + StreamURL;
-            sprintf(_chbuf, "station_%03d", cnt);
-            stations.putString(_chbuf, tmp);
-        }
-        _sum_stations = cnt;
-        stations.putLong("stations.size", file.size());
-        file.close();
-        pref.putBool("stations_filled", true);
-        SerialPrintfln("stationlist internally loaded");
-        SerialPrintfln("number of stations: " ANSI_ESC_CYAN "%i", cnt);
-        return true;
-    }
-    else return false;
-}
 
 boolean saveDefaultIRbuttonsToNVS() { // default values, first init
     pref.putShort("irAddress", 0x00);
@@ -1555,18 +1498,6 @@ void setup() {
 
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
-    SerialPrintfln("setup: ....  seek for stations.csv");
-    File file = SD_MMC.open("/stations.csv");
-    if(!file) {
-        clearAll();
-        tft.setFont(_fonts[6]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.writeText("stations.csv not found", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        SerialPrintfln(ANSI_ESC_RED "stations.csv not found");
-        while(1) {}; // endless loop, MiniWebRadio does not work without stations.csv
-    }
-    file.close();
-    SerialPrintfln("setup: ....  stations.csv found");
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
@@ -1872,7 +1803,6 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
             SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
             webSrv.sendStatus(400);
         }
-        if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
 
@@ -3386,7 +3316,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
+    if(cmd == "set_station"){       log_e("set_station: %s", param.c_str()); setStation(param.toInt()); return;}                                                                               // via websocket
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 

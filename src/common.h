@@ -184,7 +184,6 @@ struct timecounter {
 // clang-format on
 //prototypes (main.cpp)
 boolean        defaultsettings();
-boolean        saveStationsToNVS();
 boolean        saveDefaultIRbuttonsToNVS();
 void           saveIRbuttonsToNVS();
 void           loadIRbuttonsFromNVS();
