@@ -526,7 +526,7 @@ function connect() {
                                           setSlider(parts[0], parts[1])
                                         }
                                         break
-            case "stationNr":           document.getElementById('preset').selectedIndex = Number(val)
+            case "stationNr":           preselectStationList(val)
                                         break
             case "stationURL":          station.value = val
                                         break
@@ -1504,6 +1504,20 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
 }
 
 
+function preselectStationList(staNr) {
+    const selectElement = document.getElementById('preset') // Radio: show stationlists
+    idx  = 0;
+    i= 0;
+    tableData.forEach((row, index) => {
+        const option = document.createElement('option');
+        i++
+        if (!['*', '1', '2', '3'].includes(row[0])) return;
+        idx++;
+        if (i == Number(staNr)){
+            document.getElementById('preset').selectedIndex = Number(idx - 1)
+        }
+    });
+}
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function updateStationlist () { // select in tab Radio
     var opt, select
@@ -1529,7 +1543,7 @@ function updateStationlist () { // select in tab Radio
         option.textContent = `${prefixNumber} ${row[2]}`;  // z.B. "001 Z13"
 
         // Setze den Wert der Option auf den Wert der vierten Spalte
-        option.value = row[3];  // Vierte Spalte (Z14, Z24, Z34...)
+        option.value = String(index + 1);
 
         // Füge die Option dem Select-Element hinzu
         selectElement.appendChild(option);

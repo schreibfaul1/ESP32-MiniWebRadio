@@ -185,8 +185,8 @@ bool                _f_connectToLasthost = false;
 bool                _f_BTpower = false;
 bool                _f_BTcurPowerState = false;
 bool                _f_timeSpeech = false;
+bool                _f_stationsChanged = false;
 String              _station = "";
-String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
 String              _homepage = "";
 String              _filename = "";
@@ -203,24 +203,23 @@ std::vector<char*>  _PLS_content;
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
 
-Preferences    pref;
-Preferences    stations;
-WebSrv         webSrv;
-WiFiMulti      wifiMulti;
-RTIME          rtc;
-Ticker         ticker100ms;
-IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
-TP             tp(TP_CS, TP_IRQ);
-File           audioFile;
-FtpServer      ftpSrv;
-WiFiClient     client;
-WiFiUDP        udp;
-DLNA_Client    dlna;
-KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
-TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
-stationManagement staMgnt;
+Preferences         pref;
+WebSrv              webSrv;
+WiFiMulti           wifiMulti;
+RTIME               rtc;
+Ticker              ticker100ms;
+IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
+TP                  tp(TP_CS, TP_IRQ);
+File                audioFile;
+FtpServer           ftpSrv;
+WiFiClient          client;
+WiFiUDP             udp;
+DLNA_Client         dlna;
+KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
+TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+stationManagement   staMgnt;
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -825,8 +824,8 @@ void showLogoAndStationName(bool force) {
     }
 
     if(_cur_station) {
-        SN_utf8 = x_ps_calloc(_stationName_nvs.length() + 12, 1);
-        memcpy(SN_utf8, _stationName_nvs.c_str(), _stationName_nvs.length() + 1);
+        SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(_cur_station)) + 12, 1);
+        memcpy(SN_utf8, staMgnt.getStationName(_cur_station), strlen(staMgnt.getStationName(_cur_station)) + 1);
     }
     else {
         if(!_stationName_air) _stationName_air = strdup("");
@@ -1450,7 +1449,7 @@ void setup() {
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
-    stations.begin("Stations", false); // instance of preferences for stations (name, url ...)
+
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -1489,6 +1488,7 @@ void setup() {
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
+    staMgnt.updateStationsList();
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
@@ -1703,14 +1703,8 @@ void setStation(uint16_t sta) {
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
     if(sta > _sum_stations) sta = _cur_station;
-    sprintf(_chbuf, "station_%03d", sta);
-    String content = stations.getString(_chbuf, " #not_found");
-    //    SerialPrintfln("content %s", content.c_str());
-    _stationName_nvs = content.substring(0, content.indexOf("#"));           // get stationname
-    content = content.substring(content.indexOf("#") + 1, content.length()); // get URL
-    content.trim();
     free(_stationURL);
-    _stationURL = x_ps_strdup(content.c_str());
+    _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
@@ -1730,12 +1724,10 @@ void setStation(uint16_t sta) {
     dispFooter.updateStation(_cur_station);
 }
 void nextStation() {
-    if(_cur_station >= _sum_stations) setStation(1);
-    else setStation(_cur_station + 1);
+    setStation(staMgnt.nextStation());
 }
 void prevStation() {
-    if(_cur_station > 1) setStation(_cur_station - 1);
-    else setStation(_sum_stations);
+    setStation(staMgnt.prevStation());
 }
 
 void StationsItems() {
@@ -1752,7 +1744,7 @@ void StationsItems() {
         //    webSrv.send("", "stationURL=" + _lastconnectedhost);
     }
     else{
-        webSrv.send("stationLogo=", "/logo/" + _stationName_nvs + ".jpg");
+        webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(_cur_station)) + ".jpg");
         webSrv.send("stationNr=", cur_station);
         if(_stationURL) webSrv.send("stationURL=", String(_stationURL));
     }
@@ -1761,7 +1753,6 @@ void StationsItems() {
 
 void setStationViaURL(const char* url) {
     if(_stationName_air) {free(_stationName_air); _stationName_air = NULL;}
-    _stationName_nvs = "";
     _cur_station = 0;
     free(_stationURL);
     _stationURL = x_ps_strdup(url);
@@ -2549,6 +2540,12 @@ void loop() {
             dispHeader.updateVolume(_cur_volume);
             wake_up();
         }
+
+        if(_f_stationsChanged) {
+            _f_stationsChanged = false;
+            staMgnt.updateStationsList();
+        }
+
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping) {
             dispHeader.updateTime(_time_s, false);
@@ -3516,7 +3513,10 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength) {
         }
         sta.write((uint8_t*)request.c_str(), request.length() );
         sta.close();
-        if(contentLength == 0) webSrv.reply("200", webSrv.TEXT);
+        if(contentLength == 0){
+            if(_filename  == "SD/stations.json") _f_stationsChanged = true;
+            webSrv.reply("200", webSrv.TEXT);
+        }
         return;
     }
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
