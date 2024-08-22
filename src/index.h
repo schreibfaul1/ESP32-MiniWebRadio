@@ -1535,19 +1535,19 @@ function updateStationlist () { // select in tab Radio
     selectElement.innerHTML = '';
 
     // Durchlaufen der tableData-Array
+    let cnt = 0;
     tableData.forEach((row, index) => {
         const option = document.createElement('option');
-
         if (!['*', '1', '2', '3'].includes(row[0])) return;
-
+        cnt++;
         // Dreistellige Nummerierung, beginnend mit 001
         const prefixNumber = String(index + 1).padStart(3, '0');
 
         // Setze den Text der Option auf die nummerierte dritte Spalte
-        option.textContent = `${prefixNumber} ${row[2]}`;  // z.B. "001 Z13"
+        option.textContent = `${prefixNumber} ${row[2]}`;  //
 
         // Setze den Wert der Option auf den Wert der vierten Spalte
-        option.value = String(index + 1);
+        option.value = String(cnt);
 
         // Füge die Option dem Select-Element hinzu
         selectElement.appendChild(option);
@@ -1578,6 +1578,7 @@ function loadStations_json(event){
         console.log(data);
         tableData = JSON.parse(data)
         loadTableData()
+        updateStationlist();
     }
     reader.onerror = function (ex) {
         console.log(ex)
