@@ -704,7 +704,7 @@ public:
     }
 //----------------------------------------------------------------------------------------------------------
     uint16_t setCurrentStation(uint16_t staNr){
-        if(staNr > m_staCnt) staNr = m_staCnt;
+        if(staNr > m_staFavCnt) staNr = m_staFavCnt;
         m_curStation = staNr;
         return m_curStation;
     }
@@ -721,14 +721,15 @@ public:
     uint16_t nextStation(){
         if(!m_staFavCnt) return 1;
         m_curStation++;
-        if(m_curStation > m_staCnt) m_curStation = 1;
+        if(m_curStation > m_staFavCnt) m_curStation = 1;
         return m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
     uint16_t prevStation(){
+    log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
         if(!m_staFavCnt) return 1;
         m_curStation--;
-        if(m_curStation < 1) m_curStation = m_staCnt;
+        if(m_curStation < 1) m_curStation = m_staFavCnt;
         return m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------

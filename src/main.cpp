@@ -457,8 +457,8 @@ boolean defaultsettings(){
         if(jO){free(jO); jO = NULL;}
     }
 
-    if(!SD_MMC.exists("/stations.html")){  // if not found create one
-        File file1 = SD_MMC.open("/stations.html","w", true);
+    if(!SD_MMC.exists("/settings.json")){  // if not found create one
+        File file1 = SD_MMC.open("/settings.json","w", true);
         file1.write((uint8_t*)stations_html, sizeof(stations_html));
         file1.close();
     }
@@ -1485,10 +1485,11 @@ void setup() {
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
+    defaultsettings();
     staMgnt.updateStationsList();
+    staMgnt.setCurrentStation(_cur_station);
     _sum_stations = staMgnt.getSumStations();
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-    defaultsettings();
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
@@ -3311,7 +3312,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       log_e("set_station: %s", param.c_str()); setStation(param.toInt()); return;}                                                                               // via websocket
+    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
