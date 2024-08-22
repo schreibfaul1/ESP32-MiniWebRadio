@@ -716,7 +716,6 @@ public:
     uint16_t getSumStations(){
         return m_staFavCnt;
     }
-
 //----------------------------------------------------------------------------------------------------------
     uint16_t nextStation(){
         if(!m_staFavCnt) return 1;
@@ -726,7 +725,6 @@ public:
     }
 //----------------------------------------------------------------------------------------------------------
     uint16_t prevStation(){
-    log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
         if(!m_staFavCnt) return 1;
         m_curStation--;
         if(m_curStation < 1) m_curStation = m_staFavCnt;

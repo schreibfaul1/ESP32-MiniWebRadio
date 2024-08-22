@@ -90,7 +90,7 @@ const char index_html[] PROGMEM = R"=====(
         }
         #tab-content2 {
             display : none;
-            margin : 20px;
+            margin : 20px 20px 0px 20px;
         }
         #tab-content3 {
             display : none;
@@ -120,7 +120,7 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
-        .button_80x30 {
+        .button_120x30 {
             width : 120px;
             height : 30px;
             background-color : #128F76;
@@ -128,11 +128,11 @@ const char index_html[] PROGMEM = R"=====(
             color : #FFF;
             text-align : center;
             text-decoration : none;
-            display : inline-block;
             font-size : 16px;
             cursor : pointer;
             border-radius : 5px;
-            margin : 4px 2px;
+            margin : 4px 2px 0 0;
+            padding : 0;
         }
         .button_20x36 {
             width : 20px;
@@ -1554,6 +1554,36 @@ function updateStationlist () { // select in tab Radio
     });
 }
 
+function saveStations_json(){
+    // Erstellen eines Blobs mit dem Inhalt
+    const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
+
+    // Erstellen eines unsichtbaren Links zum Download der Datei
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'stations.json';
+
+    // Link-Element zum Dokument hinzufügen, Klick simulieren und wieder entfernen
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+
+function loadStations_json(event){
+    var file = event[0]
+    var reader = new FileReader()
+    reader.onload = function (event) {
+        var data = event.target.result
+        console.log(data);
+        tableData = JSON.parse(data)
+        loadTableData()
+    }
+    reader.onerror = function (ex) {
+        console.log(ex)
+    }
+    reader.readAsText(file)
+}
 // ----------------------------------- TAB AUDIO PLAYER ------------------------------------
 
 
@@ -2294,7 +2324,22 @@ function clear_BT_memItems(){
                 <div class="context-menu-item" onclick="insertRow()">Zeile einfügen</div>
                 <div class="context-menu-item" onclick="deleteRow()">Zeile löschen</div>
             </div>
-        <p id="stationInfo"></p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0px;">
+                <p style="flex: 1; min-width: 100px; padding: 0; margin: 0 auto;" id="stationInfo"></p>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 0 auto; width: 100%;">
+                    &nbsp;
+                    <button class="button_120x30 buttonblue" onclick="saveStations_json()" title="make a backup">save</button>
+                    &nbsp;
+                    <button class="button_120x30 buttonblue"
+                            onclick="javascript:document.getElementById('file').click();"
+                            title="load your own stations list">load
+                    </button>
+                </div>
+            </div>
+
+            <input id="file" type="file" accept="application/json" style="visibility: hidden;
+                             width: 0px;" onchange="loadStations_json(this.files);">
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content3">
@@ -2730,7 +2775,7 @@ function clear_BT_memItems(){
             </tr>
         </table>
         <br>
-        <button class="button_80x30 buttongreen"
+        <button class="button_120x30 buttongreen"
                 onclick="socket.send('saveIRbuttons')"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2739,7 +2784,7 @@ function clear_BT_memItems(){
                 title="Save IR buttons">Save
         </button>
         &nbsp;
-        <button class="button_80x30 buttongreen"
+        <button class="button_120x30 buttongreen"
                 onclick="loadIRbuttons()"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2848,7 +2893,7 @@ function clear_BT_memItems(){
         <br>
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
-                <button class="button_80x30 buttonblue"
+                <button class="button_120x30 buttonblue"
                    onclick="socket.send('KCX_BT_changeMode')"
                    onmousedown="this.style.backgroundColor='#D62C1A'"
                    ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2859,7 +2904,7 @@ function clear_BT_memItems(){
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
                 &nbsp;
-                <button class="button_80x30 buttonred"
+                <button class="button_120x30 buttonred"
                     onclick="clear_BT_memItems()"
                     onmousedown="this.style.backgroundColor='black'"
                     ontouchstart="this.style.backgroundColor='black'"
@@ -2973,112 +3018,6 @@ function clear_BT_memItems(){
 
 <script src="index.js"></script>
 
-</body>
-</html>
-
-)=====";
-
-
-const char stations_html[] PROGMEM = R"=====(
-<!DOCTYPE html><html lang="de">
-<head>
-<script>
-const tableData = [
-["","D","0N 70s","http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-["","D","0N 80s","http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-["","D","0N 90s","http://0n-90s.radionetz.de:8000/0n-90s.mp3"],
-["","D","0N Charts","http://0n-charts.radionetz.de:8000/0n-charts.mp3"],
-["","D","0N Dance","http://0n-dance.radionetz.de:8000/0n-dance.mp3"],
-["","D","0N Disco","http://0n-disco.radionetz.de:8000/0n-disco.mp3"],
-["","D","1000 Oldies","http://c3.auracast.net:8010/stream"],
-["*","D","Eurodance","http://www.laut.fm/eurodance"],
-["","D","extra-radio 88.0","https://www.extra-radio.de/stream/listen.m3u"],
-["","D","Hitradio SKW","http://server4.streamserver24.com:2199/tunein/hitradio.asx"],
-["","D","MacSlon's Irish Pub Radio","http://macslons-irish-pub-radio.stream.laut.fm/macslons-irish-pub-radio"],
-["","GR","Άνοιξη 100.7","http://solid1.streamupsolutions.com:55023/stream"],
-["","RU","НАШЕ Радио","http://nashe1.hostingradio.ru/nashe-128.mp3"],
-["","RU","Радио Русские Песни","http://listen.rusongs.ru/ru-mp3-128"],
-["","BG","Свежа България","http://31.13.223.148:8000/fresh.mp3"],
-["","CH","SWISS POP","https://stream.srg-ssr.ch/rsp/aacp_48.asx"],
-["","BG","BGRADIO","http://play.global.audio/bgradio_low.ogg"],
-["","D","knixx.fm","http://s1.knixx.fm:5347/dein_webradio_vbr.opus"],
-["","D","- 0 N - Christmas on Radio","https://0n-christmas.radionetz.de/0n-christmas.aac"],
-["","UK","BBC 6music","http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=96000.norewind.m3u8"],
-["","D","- 0 N - Movies on Radio","https://0n-movies.radionetz.de/0n-movies.mp3"],
-["","D","- 0 N - Top 40 on Radio","	https://0n-top40.radionetz.de/0n-top40.mp3"],
-["","D","ROCKANTENNE Alternative (mp3)","https://stream.rockantenne.de/alternative/stream/mp3"],
-["","P","Gra Wrocław","http://rmfstream2.interia.pl:8000/radio_gra_wroc"],
-["","RU","Classic EuroDisco Радио","https://live.radiospinner.com/clsscrdsc-96"],
-["","D","Hit Radio FFH - Soundtrack (AAC+)","http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u"],
-];
-</script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MiniWebRadio List Of Stations</title>
-    <style>
-        .table-container {
-            width: 100%;
-            max-width: 95vw;
-            overflow-x: auto;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border: 1px solid black;
-            white-space: nowrap;
-        }
-        /* every second line is grey */
-        tbody tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-    </style>
-</head>
-<body>
-    <h1>Station List</h1>
-    <div class="table-container">
-        <table id="myTable">
-            <thead>
-                <tr>
-                    <th>Fav</th>
-                    <th>Country</th>
-                    <th>Station Name</th>
-                    <th>Stream URL</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
-    </div>
-    <script>
-
-
-        // Funktion zum Laden der Daten aus dem Array in die Tabelle
-        function loadTableData() {
-            const table = document.getElementById('myTable').querySelector('tbody');
-            table.innerHTML = ''; // Tabelle leeren
-
-            tableData.forEach((rowData, index) => {
-                const row = table.insertRow();
-
-                rowData.forEach(cellData => {
-                    const cell = row.insertCell();
-                    cell.textContent = cellData;
-                });
-
-                // Hintergrundfarbe für jede zweite Zeile
-                if (index % 2 === 1) {
-                    row.style.backgroundColor = '#f2f2f2';
-                }
-            });
-        }
-        loadTableData();
-    </script>
 </body>
 </html>
 
