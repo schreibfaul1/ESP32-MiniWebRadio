@@ -46,7 +46,6 @@ const char index_html[] PROGMEM = R"=====(
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
@@ -56,7 +55,6 @@ const char index_html[] PROGMEM = R"=====(
 <!--  <script src="SD/js/jquery.js"></script>    -->
 <!--  <script src="SD/js/jquery-ui.js"></script> -->
 <!--  <script src="SD/js/jsgrid.js"></script>    -->
-<!--  <script src="SD/js/xlsx.js"></script>      -->
 <!--  <script src="SD/js/FileSaver.js"></script> -->
 
 
@@ -1525,10 +1523,6 @@ function preselectStationList(staNr) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 function updateStationlist () { // select in tab Radio
     var opt, select
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var strJSON = JSON.stringify(wsData)
-    var objJSON = JSON.parse(strJSON)
-    console.log(wsData.length)
     const selectElement = document.getElementById('preset') // Radio: show stationlists
 
     // Zuerst das Select-Feld leeren, falls es bereits Optionen hat
