@@ -1435,9 +1435,9 @@ async function loadStationsFromSD(file_name) {
         } else {
             // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
             tableData = [
-                ["Z11", "Z12", "Z13", "Z14"],
-                ["Z21", "Z22", "Z23", "Z24"],
-                ["Z31", "Z32", "Z33", "Z34"]
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
         }
 
@@ -1448,9 +1448,9 @@ async function loadStationsFromSD(file_name) {
     } catch (error) {
         console.error('Es gab ein Problem beim Laden der Datei:', error);
             tableData = [
-                ["Z11", "Z12", "Z13", "Z14"],
-                ["Z21", "Z22", "Z23", "Z24"],
-                ["Z31", "Z32", "Z33", "Z34"]
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
             saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
     }

@@ -64,20 +64,20 @@ char _hl_item[16][40]{"",                 // none
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
-uint8_t             _cur_volume = 0;     // will be set from stored preferences
+uint8_t             _cur_volume = 21;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeAfterAlarm = 12;
 uint8_t             _volumeSteps = 21;
 uint8_t             _volumeCurve = 1;
-uint8_t             _brightness = 0;
+uint8_t             _brightness = 100;   // percent
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
 uint8_t             _cur_Codec = 0;
 uint8_t             _numServers = 0;     //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24;    // 24 or 12
-uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
+uint8_t             _sleepMode = 1;      // 0 display off,     1 show the clock
 uint8_t             _staListPos = 0;
 uint8_t             _WiFi_disconnectCnt = 0;
 uint8_t             _reconnectCnt = 0;
@@ -100,7 +100,7 @@ int16_t             _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t            _icyBitRate = 0;      // from http response header via event
 uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
-uint16_t            _cur_station = 0;     // current station(nr), will be set later
+uint16_t            _cur_station = 1;     // current station(nr), will be set later
 uint16_t            _cur_AudioFileNr = 0; // position inside _SD_content
 uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t            _sum_stations = 0;
@@ -158,7 +158,7 @@ bool                _f_newCommercial = false;
 bool                _f_volBarVisible = false;
 bool                _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
 bool                _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
-bool                _f_timeAnnouncement = false; // time announcement every full hour
+bool                _f_timeAnnouncement = true;  // time announcement every full hour
 bool                _f_playlistEnabled = false;
 bool                _f_playlistNextFile = false;
 bool                _f_logoUnknown = false;
@@ -190,7 +190,7 @@ String              _station = "";
 char*               _stationName_air = NULL;
 String              _homepage = "";
 String              _filename = "";
-String              _lastconnectedhost = "";
+String              _lastconnectedhost = "http://0n-70s.radionetz.de:8000/0n-70s.mp3";
 String              _scannedNetworks = "";
 String              _TZName = "Europe/Berlin";
 String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
@@ -423,44 +423,9 @@ textbox       txt_BT_volume("txt_BT_volume");
 
 // clang-format off
 boolean defaultsettings(){
-    if(!SD_MMC.exists("/settings.json")){  // if not found create one
-        File file = SD_MMC.open("/settings.json","w", true);
-        char*  jO = x_ps_malloc(1024); // JSON Object
-        strcpy(jO, "{");
-        strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...volumeSteps
-        strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,"); // 21...255
-        strcat(jO, "\"ringVolume\":");        strcat(jO, "21,"); // 0...volumeSteps
-        strcat(jO, "\"volumeAfterAlarm\":");  strcat(jO, "16,"); // 0...volumeSteps
-        strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
-        strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_tue\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_wed\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_fri\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_sat\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarm_weekdays\":");    strcat(jO, "0,");
-        strcat(jO, "\"timeAnnouncing\":");    strcat(jO, "\"true\",");
-        strcat(jO, "\"mute\":");              strcat(jO, "\"false\","); // no mute
-        strcat(jO, "\"brightness\":");        strcat(jO, "100,");  // 0...100
-        strcat(jO, "\"sleeptime\":");         strcat(jO, "0,");
-        strcat(jO, "\"lastconnectedhost\":"); strcat(jO, "\"\",");
-        strcat(jO, "\"station\":");           strcat(jO, "1,");
-        strcat(jO, "\"Timezone_Name\":");     strcat(jO, "\"Europe/Berlin\",");
-        strcat(jO, "\"Timezone_String\":");   strcat(jO, "\"CET-1CEST,M3.5.0,M10.5.0/3\",");
-        strcat(jO, "\"toneLP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"toneBP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
-        strcat(jO, "\"timeFormat\":");        strcat(jO, "24,");
-        strcat(jO, "\"sleepMode\":");         strcat(jO, "0}"); // 0 display off, 1 clock
-        file.print(jO);
-        if(jO){free(jO); jO = NULL;}
-    }
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
-        File file1 = SD_MMC.open("/settings.json","w", true);
-        file1.write((uint8_t*)stations_html, sizeof(stations_html));
-        file1.close();
+        updateSettings();
     }
 
     File file2 = SD_MMC.open("/settings.json","r", false);
@@ -524,6 +489,17 @@ boolean defaultsettings(){
 
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
+
+
+    if(!SD_MMC.exists("/stations.json")){  // if not found create one
+        File file1 = SD_MMC.open("/stations.json","w", true);
+        file1.write((uint8_t*)stations_json, sizeof(stations_json) -1); // without termination
+        file1.close();
+    }
+    staMgnt.updateStationsList();
+    staMgnt.setCurrentStation(_cur_station);
+    _sum_stations = staMgnt.getSumStations();
+
     return true;
 }
 // clang-format on
@@ -821,6 +797,7 @@ void showLogoAndStationName(bool force) {
     }
 
     if(_cur_station) {
+        log_w("showLogoAndStationName: %s", staMgnt.getStationName(_cur_station));
         SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(_cur_station)) + 12, 1);
         memcpy(SN_utf8, staMgnt.getStationName(_cur_station), strlen(staMgnt.getStationName(_cur_station)) + 1);
     }
@@ -1486,9 +1463,7 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
     defaultsettings();
-    staMgnt.updateStationsList();
-    staMgnt.setCurrentStation(_cur_station);
-    _sum_stations = staMgnt.getSumStations();
+
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
