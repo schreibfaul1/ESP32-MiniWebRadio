@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3k Aug 18/2024                                                                                                                       ";
+    Version 3.4 Aug 22/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -445,7 +445,6 @@ boolean defaultsettings(){
         strcat(jO, "\"sleeptime\":");         strcat(jO, "0,");
         strcat(jO, "\"lastconnectedhost\":"); strcat(jO, "\"\",");
         strcat(jO, "\"station\":");           strcat(jO, "1,");
-        strcat(jO, "\"sumstations\":");       strcat(jO, "0,");
         strcat(jO, "\"Timezone_Name\":");     strcat(jO, "\"Europe/Berlin\",");
         strcat(jO, "\"Timezone_String\":");   strcat(jO, "\"CET-1CEST,M3.5.0,M10.5.0/3\",");
         strcat(jO, "\"toneLP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
@@ -510,7 +509,6 @@ boolean defaultsettings(){
     _brightness          = atoi(   parseJson("\"brightness\":"));
     _sleeptime           = atoi(   parseJson("\"sleeptime\":"));
     _cur_station         = atoi(   parseJson("\"station\":"));
-    _sum_stations        = atoi(   parseJson("\"sumstations\":"));
     _toneLP              = atoi(   parseJson("\"toneLP\":"));
     _toneBP              = atoi(   parseJson("\"toneBP\":"));
     _toneHP              = atoi(   parseJson("\"toneHP\":"));
@@ -614,7 +612,6 @@ void updateSettings(){
     sprintf(tmp, ",\"sleeptime\":%i", _sleeptime);                                          strcat(jO, tmp);
     sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _lastconnectedhost.c_str());              strcat(jO, tmp);
     sprintf(tmp, ",\"station\":%i", _cur_station);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"sumstations\":%i", _sum_stations);                                     strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_Name\":\"%s\"", _TZName.c_str());                             strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_String\":\"%s\"", _TZString.c_str());                         strcat(jO, tmp);
     sprintf(tmp, ",\"toneLP\":%i", _toneLP);                                                strcat(jO, tmp);
@@ -1489,6 +1486,7 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
     staMgnt.updateStationsList();
+    _sum_stations = staMgnt.getSumStations();
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
@@ -1721,7 +1719,7 @@ void setStation(uint16_t sta) {
     _cur_station = sta;
     StationsItems();
     if(_state == RADIO) showLogoAndStationName(true);
-    dispFooter.updateStation(_cur_station);
+    dispFooter.updateStation(staMgnt.getStaNr(_cur_station));
 }
 void nextStation() {
     setStation(staMgnt.nextStation());
@@ -1736,16 +1734,16 @@ void StationsItems() {
     strcpy(stationLogo_air, "/logo/");
     strcat(stationLogo_air, _stationName_air);
     strcat(stationLogo_air, ".jpg");
-    char cur_station[10]; itoa(_cur_station, cur_station, 10);
+    char staNr[10]; itoa(staMgnt.getStaNr(_cur_station), staNr, 10);
 
     if(_cur_station == 0){
         webSrv.send("stationLogo=", stationLogo_air);
-        webSrv.send("stationNr=", cur_station);
+        webSrv.send("stationNr=", staNr);
         //    webSrv.send("", "stationURL=" + _lastconnectedhost);
     }
     else{
         webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(_cur_station)) + ".jpg");
-        webSrv.send("stationNr=", cur_station);
+        webSrv.send("stationNr=", staNr);
         if(_stationURL) webSrv.send("stationURL=", String(_stationURL));
     }
     if(stationLogo_air){free(stationLogo_air); stationLogo_air = NULL;}
@@ -2047,7 +2045,7 @@ void placingGraphicObjects() { // and initialize them
     pic_RA_logo.begin(          _winLogo.x,   _winLogo.y);
     VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
+    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_PL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_PL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");

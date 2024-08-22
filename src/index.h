@@ -2273,7 +2273,7 @@ function clear_BT_memItems(){
                 <table class="stations-table" id="stationsTable">
                     <thead>
                         <tr class="stations_tr">
-                            <th class="stations-th">Fav</th>
+                            <th class="stations-th" style="text-align: center;">Fav</th>
                             <th  class="stations-th" style="text-align: center;">Cy</th>
                             <th class="stations-th">StationName</th>
                             <th class="stations-th">StreamURL</th>
