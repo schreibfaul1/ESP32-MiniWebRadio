@@ -103,7 +103,6 @@ uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t            _cur_station = 1;     // current station(nr), will be set later
 uint16_t            _cur_AudioFileNr = 0; // position inside _SD_content
 uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
-uint16_t            _sum_stations = 0;
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
 uint16_t            _dlnaMaxItems = 0;
@@ -498,7 +497,6 @@ boolean defaultsettings(){
     }
     staMgnt.updateStationsList();
     staMgnt.setCurrentStation(_cur_station);
-    _sum_stations = staMgnt.getSumStations();
 
     return true;
 }
@@ -1504,7 +1502,7 @@ void setup() {
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audioSetVolumeSteps(_volumeSteps);
 
-    SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
+    SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
@@ -1676,7 +1674,8 @@ uint8_t upvolume() {
 void setStation(uint16_t sta) {
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
-    if(sta > _sum_stations) sta = _cur_station;
+    if(sta > staMgnt.getSumStations()) sta = _cur_station;
+    staMgnt.setCurrentStation(sta);
     free(_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";

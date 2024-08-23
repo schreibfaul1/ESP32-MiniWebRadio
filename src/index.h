@@ -915,7 +915,499 @@ function uploadTextFile (fileName, content) {
     xhr.send(fd) // send
 }
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------- TAB RADIO -------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
+    const myImg = document.getElementById(id);
+    if(src == '') src = '/common/unknown.jpg'
+    src = "/SD" + src
+    src += "?" + new Date().getTime()
+    console.log("showLogo1 id=", id, "src=", src)
+    myImg.src = src;
+}
+
+function test(){
+    socket.send("test=")
+}
+
+function handleStation (presctrl) { // tab Radio: preset, select a station
+    cmd.value = ''
+    console.log(presctrl.value)
+    socket.send('set_station=' + presctrl.value)
+}
+
+function setstation () { // Radio: button play - Enter a streamURL here....
+    var sel = document.getElementById('preset')
+    sel.selectedIndex = 0
+    cmd.value = ''
+    var theUrl =  station.value;
+    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+    theUrl = theUrl.replace(/%21/g, '!') //
+    theUrl = theUrl.replace(/%22/g, '"') //
+    theUrl = theUrl.replace(/%23/g, '#') //
+    theUrl = theUrl.replace(/%3f/g, '?') //
+    theUrl = theUrl.replace(/%40/g, '@') //
+    socket.send("stationURL=" + theUrl)
+}
+
+function setSlider (elmnt, value) {
+    console.log("setSlider", elmnt, value)
+    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
+    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
+    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
+    if (elmnt === 'Balance')  slider_BAL_set(value)
+}
+
+function slider_LP_mouseUp () { // Slider LowPass mouseupevent
+    handlectrl('LowPass', I2S_eq_Val[LowPass.value])
+    console.log('LowPass=%i', Number(LowPass.value));
+}
+
+function slider_LP_change () { //  Slider LowPass changeevent
+    console.log('LowPass=%i', Number(LowPass.value))
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+}
+
+function slider_LP_set (value) { // set Slider LowPass
+    var val = Number(value)
+    document.getElementById('LowPass').value = val
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+    console.log('LowPass=%i', val)
+}
+
+function slider_BP_mouseUp () { // BandPass mouseupevent
+    handlectrl('BandPass', I2S_eq_Val[BandPass.value])
+    console.log('BandPass=%i', Number(BandPass.value));
+}
+
+function slider_BP_change () { //  BandPass changeevent
+    console.log('BandPass=%i', Number(BandPass.value))
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+}
+
+function slider_BP_set (value) { // set Slider BandPass
+    var val = Number(value)
+    document.getElementById('BandPass').value = val
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+    console.log('BandPass=%i', val)
+}
+
+function slider_HP_mouseUp () { // Slider HighPass mouseupevent
+    handlectrl('HighPass', I2S_eq_Val[HighPass.value])
+    console.log('HighPass=%i', Number(HighPass.value));
+}
+
+function slider_HP_change () { //  Slider HighPass changeevent
+    console.log('HighPass=%i', Number(HighPass.value))
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+}
+
+function slider_HP_set (value) { // set Slider HighPass
+    var val = Number(value)
+    document.getElementById('HighPass').value = val
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+    console.log('HighPass=%i', val)
+}
+
+function slider_BAL_mouseUp () { // Slider Balance mouseupevent
+    handlectrl('Balance', Balance.value)
+    console.log('Balance=%i', Number(Balance.value));
+}
+
+function slider_BAL_change () { //  Slider Balance changeevent
+    console.log('Balance=%i', Number(Balance.value))
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+}
+
+function slider_BAL_set (value) { // set Slider Balance
+    var val = Number(value)
+    document.getElementById('Balance').value = val
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+    console.log('Balance=%i', val)
+}
+
+function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
+    var theUrl = id + "=" + val
+    console.log(theUrl)
+    socket.send(theUrl)
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------- TAB CONFIG -------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+let tableData = [];
+
+function loadTableData() {
+    const table = document.getElementById('stationsTable').querySelector('tbody');
+    table.innerHTML = ''; // Tabelle leeren
+    tableData.forEach((rowData, rowIndex) => {
+        const row = table.insertRow();
+        row.classList.add('table-row');
+        rowData.forEach((cellData, cellIndex) => {
+            const cell = row.insertCell();
+            cell.style.paddingLeft = "5px";
+            cell.style.paddingRight = "5px";
+            cell.style.paddingTop = "5px";
+            cell.style.paddingBottom = "5px";
+            cell.style.textAlign = "left";
+            cell.style.border = "1px solid black";
+            cell.style.whiteSpace = "nowrap";
+            cell.style.cursor = "pointer";
+            cell.style.height = "25px";
+            cell.style.overflow = "hidden";
+            cell.style.textOverflow = "ellipsis";
+            if(cellIndex === 0) {
+                cell.style.paddingLeft = "0px";
+                cell.style.paddingRight = "0px";
+                cell.style.minWidth = "40px";
+                cell.style.width = "42px";
+                cell.style.maxWidth = "44px";
+                cell.style.textAlign = "center";
+            }
+            if(cellIndex === 1) {
+                cell.style.minWidth = "45px";
+                cell.style.width = "47px";
+                cell.style.maxWidth = "50px";
+                cell.style.textAlign = "center";
+            }
+            if(cellIndex === 2) {
+                cell.style.width = "100px";
+                cell.style.maxWidth = "180px";
+                cell.style.textAlign = "left";
+            }
+            if(cellIndex === 3) {
+                cell.style.width = "200px";
+                cell.style.maxWidth = "280px";
+                cell.style.textAlign = "left";
+            }
+            cell.textContent = cellData;
+            // Event zum Editieren hinzufügen
+            cell.addEventListener('click', function () {
+                editCell(cell, rowIndex, cellIndex);
+            });
+        });
+        row.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            selectedRowIndex = rowIndex;
+            showContextMenu(e);
+        });
+        if (rowIndex % 2 === 1) {
+            row.style.backgroundColor = '#f2f2f2';
+        }
+        addRowListeners();
+    });
+}
+
+        function editCell(cell, rowIndex, cellIndex) {
+            if (cell.querySelector('input')) {
+                return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
+            }
+
+            const originalContent = cell.textContent.trim();
+            const cellWidth = cell.clientWidth - 5; // padding  td
+
+            // Breite der Zelle fixieren
+            cell.style.width = `${cellWidth}px`;
+
+            // Input-Feld mit reduzierter Breite erstellen
+            const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
+            cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
+                style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
+
+            const input = cell.querySelector('input');
+            input.focus();
+
+            input.addEventListener('blur', function () {
+                let hasChanged = true;
+                let newValue = input.value.trim();
+                const originalValue = input.dataset.originalValue;
+
+                if (newValue !== originalValue) {
+                    const validValues = ['*', '1', '2', '3'];
+                    if (cellIndex == 0 && !validValues.includes(newValue)) {
+                        newValue = ''; // Leert das Feld, wenn der Wert ungültig ist
+                        haschanged = false;
+                    }
+                    cell.textContent = newValue;
+                    tableData[rowIndex][cellIndex] = newValue;
+                    saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+                    if (hasChanged) showMessage('Zelle wurde erfolgreich geändert.');
+                    updateStationlist();
+                } else {
+                    cell.textContent = originalContent;
+                }
+            });
+
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    input.blur();
+                }
+            });
+        }
+
+
+        function insertRow() {
+            const newRowData = [`Neue Zelle ${tableData.length * 4 + 1}`,
+            `Neue Zelle ${tableData.length * 4 + 2}`,
+            `Neue Zelle ${tableData.length * 5 + 3}`,
+            `Neue Zelle ${tableData.length * 6 + 4}`];
+
+            if (selectedRowIndex !== null) {
+                tableData.splice(selectedRowIndex, 0, newRowData);
+                loadTableData();
+                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+                showMessage('Zeile wurde erfolgreich eingefügt.');
+                updateStationlist();
+            }
+
+            hideContextMenu();
+        }
+
+        function deleteRow() {
+            if (selectedRowIndex !== null && tableData.length > 1) {
+                tableData.splice(selectedRowIndex, 1);
+                loadTableData();
+                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+                showMessage('Zeile wurde erfolgreich gelöscht.');
+                updateStationlist();
+            }
+
+            hideContextMenu();
+        }
+
+        function showContextMenu(event) {
+            const contextMenu = document.getElementById('contextMenu');
+            contextMenu.style.left = `${event.pageX}px`;
+            contextMenu.style.top = `${event.pageY}px`;
+            contextMenu.style.display = 'block';
+        }
+
+        function hideContextMenu() {
+            document.getElementById('contextMenu').style.display = 'none';
+        }
+
+        // Funktion zum Anzeigen von Meldungen
+        function showMessage(message) {
+            console.log(message);
+            // Zeige das Benachrichtigungsfenster
+            var notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+
+            // Blende das Fenster nach 3 Sekunden wieder aus
+            setTimeout(function() {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+        // Kontextmenü beim Klicken außerhalb ausblenden
+        window.addEventListener('click', function () {
+            hideContextMenu();
+        });
+
+
+
+async function saveStationsToSD(filename, content) {
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Filename': filename
+            },
+            body: (content),
+        });
+
+        if (!response.ok) {
+            throw new Error('Fehler beim Speichern der Datei: ' + response.statusText);
+        }
+
+        const result = await response.text();
+        console.log('Datei erfolgreich gespeichert:', result);
+    } catch (error) {
+        console.error('Es gab ein Problem:', error);
+    }
+}
+
+async function loadStationsFromSD(file_name) {
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Download?" + encodeURIComponent(file_name) + "&cb=" + cacheBuster, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Fehler beim Laden der Datei: ${response.statusText}`);
+        }
+
+        const jsonContent = await response.text();
+
+        console.log('Datei erfolgreich geladen: %s', jsonContent);
+        console.log('Datei erfolgreich geladen:', JSON.parse(jsonContent));
+        if (jsonContent) {
+            tableData = JSON.parse(jsonContent);
+        } else {
+            // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
+            tableData = [
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            ];
+        }
+
+        // Tabelle erst laden, wenn die Daten bereitgestellt wurden
+        loadTableData();
+        updateStationlist(); // und dann die Liste in RADIO aktualisieren
+
+    } catch (error) {
+        console.error('Es gab ein Problem beim Laden der Datei:', error);
+            tableData = [
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            ];
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
+    }
+}
+
+// Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
+function addRowListeners() {
+    const rows = document.getElementsByClassName('table-row');
+    const info = document.getElementById('stationInfo');
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].addEventListener('mouseover', function() {
+            // Entfernen der Hervorhebung von allen Zeilen
+            for (let j = 0; j < rows.length; j++) {
+                rows[j].classList.remove('highlight');
+            }
+            // Hervorheben der aktuellen Zeile
+            this.classList.add('highlight');
+
+            // Anzeige der Zeilennummer
+            const rowIndex = i + 1;
+            info.textContent = `Station: ${rowIndex}`;
+
+        });
+    }
+}
+
+var showDetailsDialog = function (dialogType, client) { // popUp window
+    if(client.Hide === '*') $("#chkHide").prop("checked", true)
+    else                    $("#chkHide").prop("checked", false)
+    $('#txtCy').val(client.Cy)
+    $('#txtStationName').val(client.StationName)
+    $('#txtStreamURL').val(client.StreamURL)
+    var divdialog = $('#dialog')
+    $('#dialog').attr('title', 'Edit')
+    $('#dialog').dialog({
+        width: 505,
+        resizable: false,
+        show: 'fade',
+        modal: false,
+        buttons: {
+            OK: function () {
+                if($('#chkHide').is(':checked')) client.Hide = '*'
+                else                             client.Hide = ''
+                client.Cy = $('#txtCy').val()
+                client.StationName = $('#txtStationName').val()
+                client.StreamURL = $('#txtStreamURL').val()
+                includeStation(client, dialogType === 'Add')
+                $(this).dialog('close')
+                console.log('dialog saved')
+            }
+        }
+    })
+    divdialog.dialog()
+    console.log('dialog opened')
+}
+
+
+function preselectStationList(staNr) {
+    const selectElement = document.getElementById('preset') // Radio: show stationlists
+    idx  = 0;
+    i= 0;
+    tableData.forEach((row, index) => {
+        const option = document.createElement('option');
+        i++
+        if (!['*', '1', '2', '3'].includes(row[0])) return;
+        idx++;
+        if (i == Number(staNr)){
+            document.getElementById('preset').selectedIndex = Number(idx - 1)
+        }
+    });
+}
+
+function updateStationlist () { // select in tab Radio
+    var opt, select
+    const selectElement = document.getElementById('preset') // Radio: show stationlists
+
+    // Zuerst das Select-Feld leeren, falls es bereits Optionen hat
+    selectElement.innerHTML = '';
+
+    // Durchlaufen der tableData-Array
+    let cnt = 0;
+    tableData.forEach((row, index) => {
+        const option = document.createElement('option');
+        if (!['*', '1', '2', '3'].includes(row[0])) return;
+        cnt++;
+        // Dreistellige Nummerierung, beginnend mit 001
+        const prefixNumber = String(index + 1).padStart(3, '0');
+
+        // Setze den Text der Option auf die nummerierte dritte Spalte
+        option.textContent = `${prefixNumber} ${row[2]}`;//
+
+        // Setze den Wert der Option auf den Wert der vierten Spalte
+        option.value = String(cnt);
+
+        // Füge die Option dem Select-Element hinzu
+        selectElement.appendChild(option);
+    });
+}
+
+function saveStations_json(){
+    // Erstellen eines Blobs mit dem Inhalt
+    const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
+
+    // Erstellen eines unsichtbaren Links zum Download der Datei
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'stations.json';
+
+    // Link-Element zum Dokument hinzufügen, Klick simulieren und wieder entfernen
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function loadStations_json(event){
+    var file = event[0]
+    var reader = new FileReader()
+    reader.onload = function (event) {
+        var data = event.target.result
+        console.log(data);
+        tableData = JSON.parse(data)
+        loadTableData()
+        updateStationlist();
+    }
+    reader.onerror = function (ex) {
+        console.log(ex)
+    }
+    reader.readAsText(file)
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------- TAB AUDIO PLAYER ------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 var dlnaLevel = 0
 
 function clearDLNAServerList(level){
@@ -1091,497 +1583,6 @@ function select_l8 (presctrl) { // preset, select level 7
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 9
  }
-// ----------------------------------- TAB RADIO ------------------------------------
-
-function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
-    const myImg = document.getElementById(id);
-    if(src == '') src = '/common/unknown.jpg'
-    src = "/SD" + src
-    src += "?" + new Date().getTime()
-    console.log("showLogo1 id=", id, "src=", src)
-    myImg.src = src;
-}
-
-function test(){
-    socket.send("test=")
-}
-
-function handleStation (presctrl) { // tab Radio: preset, select a station
-    cmd.value = ''
-    console.log(presctrl.value)
-    socket.send('set_station=' + presctrl.value)
-}
-
-function setstation () { // Radio: button play - Enter a streamURL here....
-    var sel = document.getElementById('preset')
-    sel.selectedIndex = 0
-    cmd.value = ''
-    var theUrl =  station.value;
-    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
-    theUrl = theUrl.replace(/%21/g, '!') //
-    theUrl = theUrl.replace(/%22/g, '"') //
-    theUrl = theUrl.replace(/%23/g, '#') //
-    theUrl = theUrl.replace(/%3f/g, '?') //
-    theUrl = theUrl.replace(/%40/g, '@') //
-    socket.send("stationURL=" + theUrl)
-}
-
-function setSlider (elmnt, value) {
-    console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
-    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
-    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
-    if (elmnt === 'Balance')  slider_BAL_set(value)
-}
-
-function slider_LP_mouseUp () { // Slider LowPass mouseupevent
-    handlectrl('LowPass', I2S_eq_Val[LowPass.value])
-    console.log('LowPass=%i', Number(LowPass.value));
-}
-
-function slider_LP_change () { //  Slider LowPass changeevent
-    console.log('LowPass=%i', Number(LowPass.value))
-    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
-}
-
-function slider_LP_set (value) { // set Slider LowPass
-    var val = Number(value)
-    document.getElementById('LowPass').value = val
-    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
-    console.log('LowPass=%i', val)
-}
-
-function slider_BP_mouseUp () { // BandPass mouseupevent
-    handlectrl('BandPass', I2S_eq_Val[BandPass.value])
-    console.log('BandPass=%i', Number(BandPass.value));
-}
-
-function slider_BP_change () { //  BandPass changeevent
-    console.log('BandPass=%i', Number(BandPass.value))
-    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
-}
-
-function slider_BP_set (value) { // set Slider BandPass
-    var val = Number(value)
-    document.getElementById('BandPass').value = val
-    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
-    console.log('BandPass=%i', val)
-}
-
-function slider_HP_mouseUp () { // Slider HighPass mouseupevent
-    handlectrl('HighPass', I2S_eq_Val[HighPass.value])
-    console.log('HighPass=%i', Number(HighPass.value));
-}
-
-function slider_HP_change () { //  Slider HighPass changeevent
-    console.log('HighPass=%i', Number(HighPass.value))
-    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
-}
-
-function slider_HP_set (value) { // set Slider HighPass
-    var val = Number(value)
-    document.getElementById('HighPass').value = val
-    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
-    console.log('HighPass=%i', val)
-}
-
-function slider_BAL_mouseUp () { // Slider Balance mouseupevent
-    handlectrl('Balance', Balance.value)
-    console.log('Balance=%i', Number(Balance.value));
-}
-
-function slider_BAL_change () { //  Slider Balance changeevent
-    console.log('Balance=%i', Number(Balance.value))
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
-}
-
-function slider_BAL_set (value) { // set Slider Balance
-    var val = Number(value)
-    document.getElementById('Balance').value = val
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
-    console.log('Balance=%i', val)
-}
-
-function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
-    var theUrl = id + "=" + val
-    console.log(theUrl)
-    socket.send(theUrl)
-}
-// ----------------------------------- TAB CONFIG ------------------------------------
-
-        let tableData = [];
-
-        function loadTableData() {
-            const table = document.getElementById('stationsTable').querySelector('tbody');
-            table.innerHTML = ''; // Tabelle leeren
-
-            tableData.forEach((rowData, rowIndex) => {
-                const row = table.insertRow();
-                row.classList.add('table-row');
-                rowData.forEach((cellData, cellIndex) => {
-                    const cell = row.insertCell();
-                    cell.style.paddingLeft = "5px";
-                    cell.style.paddingRight = "5px";
-                    cell.style.paddingTop = "5px";
-                    cell.style.paddingBottom = "5px";
-                    cell.style.textAlign = "left";
-                    cell.style.border = "1px solid black";
-                    cell.style.whiteSpace = "nowrap";
-                    cell.style.cursor = "pointer";
-                    cell.style.height = "25px";
-                    cell.style.overflow = "hidden";
-                    cell.style.textOverflow = "ellipsis";
-
-                    if(cellIndex === 0) {
-                        cell.style.paddingLeft = "0px";
-                        cell.style.paddingRight = "0px";
-                        cell.style.minWidth = "40px";
-                        cell.style.width = "42px";
-                        cell.style.maxWidth = "44px";
-                        cell.style.textAlign = "center";
-                    }
-                    if(cellIndex === 1) {
-                        cell.style.minWidth = "45px";
-                        cell.style.width = "47px";
-                        cell.style.maxWidth = "50px";
-                        cell.style.textAlign = "center";
-                    }
-
-                    if(cellIndex === 2) {
-                        cell.style.width = "100px";
-                        cell.style.maxWidth = "180px";
-                        cell.style.textAlign = "left";
-                    }
-
-                    if(cellIndex === 3) {
-                        cell.style.width = "200px";
-                        cell.style.maxWidth = "280px";
-                        cell.style.textAlign = "left";
-                    }
-                    cell.textContent = cellData;
-
-                    // Event zum Editieren hinzufügen
-                    cell.addEventListener('click', function () {
-                        editCell(cell, rowIndex, cellIndex);
-                    });
-                });
-
-                row.addEventListener('contextmenu', function (e) {
-                    e.preventDefault();
-                    selectedRowIndex = rowIndex;
-                    showContextMenu(e);
-                });
-
-                if (rowIndex % 2 === 1) {
-                    row.style.backgroundColor = '#f2f2f2';
-                }
-                addRowListeners();
-            });
-        }
-
-        function editCell(cell, rowIndex, cellIndex) {
-            if (cell.querySelector('input')) {
-                return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
-            }
-
-            const originalContent = cell.textContent.trim();
-            const cellWidth = cell.clientWidth - 5; // padding  td
-
-            // Breite der Zelle fixieren
-            cell.style.width = `${cellWidth}px`;
-
-            // Input-Feld mit reduzierter Breite erstellen
-            const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
-            cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
-                style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
-
-            const input = cell.querySelector('input');
-            input.focus();
-
-            input.addEventListener('blur', function () {
-                let hasChanged = true;
-                let newValue = input.value.trim();
-                const originalValue = input.dataset.originalValue;
-
-                if (newValue !== originalValue) {
-                    const validValues = ['*', '1', '2', '3'];
-                    if (cellIndex == 0 && !validValues.includes(newValue)) {
-                        newValue = ''; // Leert das Feld, wenn der Wert ungültig ist
-                        haschanged = false;
-                    }
-                    cell.textContent = newValue;
-                    tableData[rowIndex][cellIndex] = newValue;
-                    saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                    if (hasChanged) showMessage('Zelle wurde erfolgreich geändert.');
-                    updateStationlist();
-                } else {
-                    cell.textContent = originalContent;
-                }
-            });
-
-            input.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    input.blur();
-                }
-            });
-        }
-
-
-        function insertRow() {
-            const newRowData = [`Neue Zelle ${tableData.length * 4 + 1}`,
-            `Neue Zelle ${tableData.length * 4 + 2}`,
-            `Neue Zelle ${tableData.length * 5 + 3}`,
-            `Neue Zelle ${tableData.length * 6 + 4}`];
-
-            if (selectedRowIndex !== null) {
-                tableData.splice(selectedRowIndex, 0, newRowData);
-                loadTableData();
-                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                showMessage('Zeile wurde erfolgreich eingefügt.');
-                updateStationlist();
-            }
-
-            hideContextMenu();
-        }
-
-        function deleteRow() {
-            if (selectedRowIndex !== null && tableData.length > 1) {
-                tableData.splice(selectedRowIndex, 1);
-                loadTableData();
-                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                showMessage('Zeile wurde erfolgreich gelöscht.');
-                updateStationlist();
-            }
-
-            hideContextMenu();
-        }
-
-        function showContextMenu(event) {
-            const contextMenu = document.getElementById('contextMenu');
-            contextMenu.style.left = `${event.pageX}px`;
-            contextMenu.style.top = `${event.pageY}px`;
-            contextMenu.style.display = 'block';
-        }
-
-        function hideContextMenu() {
-            document.getElementById('contextMenu').style.display = 'none';
-        }
-
-        // Funktion zum Anzeigen von Meldungen
-        function showMessage(message) {
-            console.log(message);
-            // Zeige das Benachrichtigungsfenster
-            var notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.display = 'block';
-
-            // Blende das Fenster nach 3 Sekunden wieder aus
-            setTimeout(function() {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-        // Kontextmenü beim Klicken außerhalb ausblenden
-        window.addEventListener('click', function () {
-            hideContextMenu();
-        });
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-async function saveStationsToSD(filename, content) {
-    try {
-        const cacheBuster = new Date().getTime();
-        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Filename': filename
-            },
-            body: (content),
-        });
-
-        if (!response.ok) {
-            throw new Error('Fehler beim Speichern der Datei: ' + response.statusText);
-        }
-
-        const result = await response.text();
-        console.log('Datei erfolgreich gespeichert:', result);
-    } catch (error) {
-        console.error('Es gab ein Problem:', error);
-    }
-}
-
-async function loadStationsFromSD(file_name) {
-    try {
-        const cacheBuster = new Date().getTime();
-        const response = await fetch("SD_Download?" + encodeURIComponent(file_name) + "&cb=" + cacheBuster, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Fehler beim Laden der Datei: ${response.statusText}`);
-        }
-
-        const jsonContent = await response.text();
-
-        console.log('Datei erfolgreich geladen: %s', jsonContent);
-        console.log('Datei erfolgreich geladen:', JSON.parse(jsonContent));
-        if (jsonContent) {
-            tableData = JSON.parse(jsonContent);
-        } else {
-            // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
-            tableData = [
-                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
-        }
-
-        // Tabelle erst laden, wenn die Daten bereitgestellt wurden
-        loadTableData();
-        updateStationlist(); // und dann die Liste in RADIO aktualisieren
-
-    } catch (error) {
-        console.error('Es gab ein Problem beim Laden der Datei:', error);
-            tableData = [
-                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
-            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
-    }
-}
-
-// Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
-function addRowListeners() {
-    const rows = document.getElementsByClassName('table-row');
-    const info = document.getElementById('stationInfo');
-    for (let i = 0; i < rows.length; i++) {
-        rows[i].addEventListener('mouseover', function() {
-            // Entfernen der Hervorhebung von allen Zeilen
-            for (let j = 0; j < rows.length; j++) {
-                rows[j].classList.remove('highlight');
-            }
-            // Hervorheben der aktuellen Zeile
-            this.classList.add('highlight');
-
-            // Anzeige der Zeilennummer
-            const rowIndex = i + 1;
-            info.textContent = `Station: ${rowIndex}`;
-
-        });
-    }
-}
-
-var showDetailsDialog = function (dialogType, client) { // popUp window
-    if(client.Hide === '*') $("#chkHide").prop("checked", true)
-    else                    $("#chkHide").prop("checked", false)
-    $('#txtCy').val(client.Cy)
-    $('#txtStationName').val(client.StationName)
-    $('#txtStreamURL').val(client.StreamURL)
-    var divdialog = $('#dialog')
-    $('#dialog').attr('title', 'Edit')
-    $('#dialog').dialog({
-        width: 505,
-        resizable: false,
-        show: 'fade',
-        modal: false,
-        buttons: {
-            OK: function () {
-                if($('#chkHide').is(':checked')) client.Hide = '*'
-                else                             client.Hide = ''
-                client.Cy = $('#txtCy').val()
-                client.StationName = $('#txtStationName').val()
-                client.StreamURL = $('#txtStreamURL').val()
-                includeStation(client, dialogType === 'Add')
-                $(this).dialog('close')
-                console.log('dialog saved')
-            }
-        }
-    })
-    divdialog.dialog()
-    console.log('dialog opened')
-}
-
-
-function preselectStationList(staNr) {
-    const selectElement = document.getElementById('preset') // Radio: show stationlists
-    idx  = 0;
-    i= 0;
-    tableData.forEach((row, index) => {
-        const option = document.createElement('option');
-        i++
-        if (!['*', '1', '2', '3'].includes(row[0])) return;
-        idx++;
-        if (i == Number(staNr)){
-            document.getElementById('preset').selectedIndex = Number(idx - 1)
-        }
-    });
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function updateStationlist () { // select in tab Radio
-    var opt, select
-    const selectElement = document.getElementById('preset') // Radio: show stationlists
-
-    // Zuerst das Select-Feld leeren, falls es bereits Optionen hat
-    selectElement.innerHTML = '';
-
-    // Durchlaufen der tableData-Array
-    let cnt = 0;
-    tableData.forEach((row, index) => {
-        const option = document.createElement('option');
-        if (!['*', '1', '2', '3'].includes(row[0])) return;
-        cnt++;
-        // Dreistellige Nummerierung, beginnend mit 001
-        const prefixNumber = String(index + 1).padStart(3, '0');
-
-        // Setze den Text der Option auf die nummerierte dritte Spalte
-        option.textContent = `${prefixNumber} ${row[2]}`;  //
-
-        // Setze den Wert der Option auf den Wert der vierten Spalte
-        option.value = String(cnt);
-
-        // Füge die Option dem Select-Element hinzu
-        selectElement.appendChild(option);
-    });
-}
-
-function saveStations_json(){
-    // Erstellen eines Blobs mit dem Inhalt
-    const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
-
-    // Erstellen eines unsichtbaren Links zum Download der Datei
-    const link = document.createElement('a');
-    link.href = window.URL.createObjectURL(blob);
-    link.download = 'stations.json';
-
-    // Link-Element zum Dokument hinzufügen, Klick simulieren und wieder entfernen
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
-
-
-function loadStations_json(event){
-    var file = event[0]
-    var reader = new FileReader()
-    reader.onload = function (event) {
-        var data = event.target.result
-        console.log(data);
-        tableData = JSON.parse(data)
-        loadTableData()
-        updateStationlist();
-    }
-    reader.onerror = function (ex) {
-        console.log(ex)
-    }
-    reader.readAsText(file)
-}
-// ----------------------------------- TAB AUDIO PLAYER ------------------------------------
-
-
 // ----------------------------------- TAB Search Stations ------------------------------------
 
 // global var

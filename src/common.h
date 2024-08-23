@@ -720,6 +720,7 @@ public:
     uint16_t nextStation(){
         if(!m_staFavCnt) return 1;
         m_curStation++;
+log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
         if(m_curStation > m_staFavCnt) m_curStation = 1;
         return m_curStation;
     }
@@ -727,6 +728,7 @@ public:
     uint16_t prevStation(){
         if(!m_staFavCnt) return 1;
         m_curStation--;
+log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
         if(m_curStation < 1) m_curStation = m_staFavCnt;
         return m_curStation;
     }
