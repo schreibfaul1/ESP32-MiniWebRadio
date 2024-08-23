@@ -129,6 +129,7 @@
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // output on serial terminal
 #define ANSI_ESC_BLACK      "\033[30m"
+#define ANSI_ESC_GREY       "\033[90m"
 #define ANSI_ESC_RED        "\033[31m"
 #define ANSI_ESC_GREEN      "\033[32m"
 #define ANSI_ESC_YELLOW     "\033[33m"
@@ -216,6 +217,7 @@ uint8_t        upvolume();
 void           setStation(uint16_t sta);
 void           nextStation();
 void           prevStation();
+void           setStationByNumber(uint16_t staNr);
 void           StationsItems();
 void           setStationViaURL(const char* url);
 void           savefile(const char* fileName, uint32_t contentLength);
@@ -625,19 +627,20 @@ class stationManagement{
 private:
     struct sta{
         std::vector<uint8_t> fav;
-        std::vector<uint16_t>staNr;
+        std::vector<uint16_t>favStaNr;
         std::vector<char*> country;
         std::vector<char*> name;
         std::vector<char*> url;
     } m_stations;
 
-    uint16_t m_staCnt = 0;
-    uint16_t m_staFavCnt = 0;
-    uint8_t m_curStation = 0;
+    uint16_t  m_staCnt = 0;
+    uint16_t  m_staFavCnt = 0;
+    uint16_t* m_curStation = 0;
 
 public:
-    stationManagement(){
+    stationManagement(uint16_t* curStation){
         clearStations();
+        m_curStation = curStation;
     }
     ~stationManagement(){
         clearStations();
@@ -649,21 +652,19 @@ private:
         vector_clear_and_shrink(m_stations.url);
         m_stations.fav.clear();
         m_stations.fav.shrink_to_fit();
-        m_stations.staNr.clear();
-        m_stations.staNr.shrink_to_fit();
+        m_stations.favStaNr.clear();
+        m_stations.favStaNr.shrink_to_fit();
 
         m_stations.country.push_back(x_ps_strdup("unknown"));
         m_stations.name.push_back(x_ps_strdup("unknown"));
         m_stations.url.push_back(x_ps_strdup("unknown"));
         m_stations.fav.push_back('0');
-        m_stations.staNr.push_back(0);
+        m_stations.favStaNr.push_back(0);
     }
 public:
     void updateStationsList(){
         clearStations();
-        bool isFav = false;
         uint8_t item = 0;
-        uint16_t staNr = 0;
         m_staCnt = 0;
         m_staFavCnt = 0;
         if(!SD_MMC.exists("/stations.json")) {return;}
@@ -675,85 +676,83 @@ public:
             if(c == '\"') { // start of string
                 int pos =file.readBytesUntil('\"', buff, 1024);
                 buff[pos] = 0;
+
                 if(item == 0){
-                    if(buff[0] == '*') isFav = true; else isFav = false;
-                    staNr++;
-                    if(isFav){
+                    m_stations.fav.push_back(buff[0]);
+                    m_staCnt++;
+                    if(buff[0] == '*'){
                         m_staFavCnt++;
-                        m_stations.fav.push_back(buff[0]);
-                        m_stations.staNr.push_back(staNr);
+                        m_stations.favStaNr.push_back(m_staCnt);
                     }
                 }
                 if(item == 1){
-                    if(isFav) m_stations.country.push_back(x_ps_strdup(buff));
+                    m_stations.country.push_back(x_ps_strdup(buff));
                 }
                 if(item == 2){
-                    if(isFav) m_stations.name.push_back(x_ps_strdup(buff));
+                    m_stations.name.push_back(x_ps_strdup(buff));
                 }
                 if(item == 3) {
-                    if(isFav) m_stations.url.push_back(x_ps_strdup(buff));
+                    m_stations.url.push_back(x_ps_strdup(buff));
                 }
                 item++;
                 if(item > 3) item = 0;
-                if(staNr > 999) break;
+                if(m_staCnt > 999) break;
             }
         }
         file.close();
-        m_staCnt = staNr;
         log_w("Stations: %d, favorites: %d", m_staCnt, m_staFavCnt);
     }
 //----------------------------------------------------------------------------------------------------------
-    uint16_t setCurrentStation(uint16_t staNr){
-        if(staNr > m_staFavCnt) staNr = m_staFavCnt;
-        m_curStation = staNr;
-        return m_curStation;
-    }
-//----------------------------------------------------------------------------------------------------------
-    uint16_t getCurrentStation(){
-        return m_curStation;
-    }
+
+
 //----------------------------------------------------------------------------------------------------------
     uint16_t getSumStations(){
-        return m_staFavCnt;
+        return m_staCnt;
     }
 //----------------------------------------------------------------------------------------------------------
+    uint16_t getSumFavStations(){
+        return m_staFavCnt;
+    }
+
+//----------------------------------------------------------------------------------------------------------
     uint16_t nextStation(){
-        if(!m_staFavCnt) return 1;
-        m_curStation++;
-log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
-        if(m_curStation > m_staFavCnt) m_curStation = 1;
-        return m_curStation;
+        if(!m_staCnt) return 1;
+        (*m_curStation)++;
+        if(*m_curStation > m_staCnt) *m_curStation = 1;
+        return *m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
     uint16_t prevStation(){
-        if(!m_staFavCnt) return 1;
-        m_curStation--;
-log_w("m_curStation: %d, m_staFavCnt: %d", m_curStation, m_staFavCnt);
-        if(m_curStation < 1) m_curStation = m_staFavCnt;
-        return m_curStation;
+        if(!m_staCnt) return 1;
+        (*m_curStation)--;
+        if(*m_curStation < 1) *m_curStation = m_staCnt;
+        return *m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
-    uint16_t getStaNr(uint16_t staNr){
-        return m_stations.staNr[staNr];
+    uint16_t setStationByNumber(uint16_t staNr){
+        if(!m_staCnt) return 1;
+        if(staNr > m_staCnt) *m_curStation = m_staCnt;
+        else *m_curStation = staNr;
+        return *m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
     const char* getStationName(uint16_t staNr){
-        if(staNr > m_staFavCnt) return strdup("unknown");
+        if(staNr > m_staCnt) return strdup("unknown");
         if(!m_stations.name[staNr]) return strdup("unknown");
         return m_stations.name[staNr];
     }
     char getStationFav(uint16_t staNr){  // 0 = not fav, * = fav, 1..3 = fav number (notused)
-        if(staNr > m_staFavCnt) return '0';
+        if(staNr > m_staCnt) return '0';
         if(!m_stations.fav[staNr]) return '0';
         return m_stations.fav[staNr];
     }
     const char* getStationUrl(uint16_t staNr){
-        if(staNr > m_staFavCnt) return strdup("unknown");
+        if(staNr > m_staCnt) return strdup("unknown");
         if(!m_stations.url[staNr]) return strdup("unknown");
         return m_stations.url[staNr];
     }
     const char* getStatonCountry(uint16_t staNr){
-        if(staNr > m_staFavCnt) return strdup("unknown");
+        if(staNr > m_staCnt) return strdup("unknown");
         if(!m_stations.country[staNr]) return strdup("unknown");
         return m_stations.country[staNr];
     }
@@ -2577,10 +2576,15 @@ private:
             if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
 
             if((pos + m_firstStationsLineNr + 1) == *m_curSstationNr){
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, staMgnt.getStaNr( pos + m_firstStationsLineNr + 1)); // is currStationNr
+                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, ( pos + m_firstStationsLineNr + 1)); // is currStationNr
             }
             else{
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, staMgnt.getStaNr(pos + m_firstStationsLineNr + 1));
+                if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*'){
+                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (pos + m_firstStationsLineNr + 1));
+                }
+                else{
+                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (pos + m_firstStationsLineNr + 1));
+                }
             }
             strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(pos + m_firstStationsLineNr + 1));
 
@@ -2617,7 +2621,7 @@ private:
 
         tft.setFont(m_fontSize);
 
-        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, staMgnt.getStaNr(m_firstStationsLineNr + m_stationListPos + 1));
+        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, (m_firstStationsLineNr + m_stationListPos + 1));
         strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
 
         for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}

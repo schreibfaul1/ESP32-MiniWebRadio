@@ -1326,18 +1326,7 @@ var showDetailsDialog = function (dialogType, client) { // popUp window
 
 
 function preselectStationList(staNr) {
-    const selectElement = document.getElementById('preset') // Radio: show stationlists
-    idx  = 0;
-    i= 0;
-    tableData.forEach((row, index) => {
-        const option = document.createElement('option');
-        i++
-        if (!['*', '1', '2', '3'].includes(row[0])) return;
-        idx++;
-        if (i == Number(staNr)){
-            document.getElementById('preset').selectedIndex = Number(idx - 1)
-        }
-    });
+    document.getElementById('preset').selectedIndex = (staNr - 1);
 }
 
 function updateStationlist () { // select in tab Radio
@@ -1348,20 +1337,20 @@ function updateStationlist () { // select in tab Radio
     selectElement.innerHTML = '';
 
     // Durchlaufen der tableData-Array
-    let cnt = 0;
     tableData.forEach((row, index) => {
         const option = document.createElement('option');
-        if (!['*', '1', '2', '3'].includes(row[0])) return;
-        cnt++;
         // Dreistellige Nummerierung, beginnend mit 001
         const prefixNumber = String(index + 1).padStart(3, '0');
-
         // Setze den Text der Option auf die nummerierte dritte Spalte
         option.textContent = `${prefixNumber} ${row[2]}`;//
-
         // Setze den Wert der Option auf den Wert der vierten Spalte
-        option.value = String(cnt);
-
+        option.value = String(index + 1);
+        if (!['*', '1', '2', '3'].includes(row[0])) {
+            option.style.color = "grey"
+        }
+        else{
+            option.style.color = "black"
+        }
         // Füge die Option dem Select-Element hinzu
         selectElement.appendChild(option);
     });

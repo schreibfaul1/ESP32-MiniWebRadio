@@ -218,7 +218,7 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
-stationManagement   staMgnt;
+stationManagement   staMgnt(&_cur_station);
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -496,8 +496,6 @@ boolean defaultsettings(){
         file1.close();
     }
     staMgnt.updateStationsList();
-    staMgnt.setCurrentStation(_cur_station);
-
     return true;
 }
 // clang-format on
@@ -1502,7 +1500,8 @@ void setup() {
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audioSetVolumeSteps(_volumeSteps);
 
-    SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
+    SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
+    SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
@@ -1672,16 +1671,16 @@ uint8_t upvolume() {
 }
 
 void setStation(uint16_t sta) {
+    static uint16_t old_cur_station = 0;
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
-    staMgnt.setCurrentStation(sta);
     free(_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
-    if(_f_isWebConnected && sta == _cur_station && _state == RADIO) { // Station is already selected
+    if(_f_isWebConnected && sta == old_cur_station && _state == RADIO) { // Station is already selected
         _f_newStreamTitle = true;
     }
     else {
@@ -1691,16 +1690,19 @@ void setStation(uint16_t sta) {
         _f_newIcyDescription = true;
         connecttohost(_stationURL);
     }
-    _cur_station = sta;
+    old_cur_station = sta;
     StationsItems();
     if(_state == RADIO) showLogoAndStationName(true);
-    dispFooter.updateStation(staMgnt.getStaNr(_cur_station));
+    dispFooter.updateStation(_cur_station);
 }
 void nextStation() {
     setStation(staMgnt.nextStation());
 }
 void prevStation() {
     setStation(staMgnt.prevStation());
+}
+void setStationByNumber(uint16_t staNr){
+    setStation(staMgnt.setStationByNumber(staNr));
 }
 
 void StationsItems() {
@@ -1709,12 +1711,12 @@ void StationsItems() {
     strcpy(stationLogo_air, "/logo/");
     strcat(stationLogo_air, _stationName_air);
     strcat(stationLogo_air, ".jpg");
-    char staNr[10]; itoa(staMgnt.getStaNr(_cur_station), staNr, 10);
+    char staNr[10]; itoa(_cur_station, staNr, 10);
 
     if(_cur_station == 0){
         webSrv.send("stationLogo=", stationLogo_air);
         webSrv.send("stationNr=", staNr);
-        //    webSrv.send("", "stationURL=" + _lastconnectedhost);
+        webSrv.send("", "stationURL=" + _lastconnectedhost);
     }
     else{
         webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(_cur_station)) + ".jpg");
@@ -3286,7 +3288,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
+    if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                       // via websocket
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
