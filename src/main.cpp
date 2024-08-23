@@ -793,7 +793,7 @@ void showLogoAndStationName(bool force) {
     }
 
     if(_cur_station) {
-        log_w("showLogoAndStationName: %s", staMgnt.getStationName(_cur_station));
+    //    log_w("showLogoAndStationName: %s", staMgnt.getStationName(_cur_station));
         SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(_cur_station)) + 12, 1);
         memcpy(SN_utf8, staMgnt.getStationName(_cur_station), strlen(staMgnt.getStationName(_cur_station)) + 1);
     }

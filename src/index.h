@@ -1098,112 +1098,115 @@ function loadTableData() {
     });
 }
 
-        function editCell(cell, rowIndex, cellIndex) {
-            if (cell.querySelector('input')) {
-                return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
+function editCell(cell, rowIndex, cellIndex) {
+    if (cell.querySelector('input')) {
+        return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
+    }
+    const originalContent = cell.textContent.trim();
+    const cellWidth = cell.clientWidth - 5; // padding  td
+    // Breite der Zelle fixieren
+    cell.style.width = `${cellWidth}px`;
+    // Input-Feld mit reduzierter Breite erstellen
+    const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
+    cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
+        style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
+    const input = cell.querySelector('input');
+    input.focus();
+    input.addEventListener('blur', function () {
+        let hasChanged = true;
+        let newValue = input.value.trim();
+        const originalValue = input.dataset.originalValue;
+        if (newValue !== originalValue) {
+            const validValues = ['*', '1', '2', '3'];
+            if (cellIndex == 0 && !validValues.includes(newValue)) {
+                newValue = ''; // Clears the field if the value is invalid
+                haschanged = false;
             }
-
-            const originalContent = cell.textContent.trim();
-            const cellWidth = cell.clientWidth - 5; // padding  td
-
-            // Breite der Zelle fixieren
-            cell.style.width = `${cellWidth}px`;
-
-            // Input-Feld mit reduzierter Breite erstellen
-            const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
-            cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
-                style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
-
-            const input = cell.querySelector('input');
-            input.focus();
-
-            input.addEventListener('blur', function () {
-                let hasChanged = true;
-                let newValue = input.value.trim();
-                const originalValue = input.dataset.originalValue;
-
-                if (newValue !== originalValue) {
-                    const validValues = ['*', '1', '2', '3'];
-                    if (cellIndex == 0 && !validValues.includes(newValue)) {
-                        newValue = ''; // Leert das Feld, wenn der Wert ungültig ist
-                        haschanged = false;
-                    }
-                    cell.textContent = newValue;
-                    tableData[rowIndex][cellIndex] = newValue;
-                    saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                    if (hasChanged) showMessage('Zelle wurde erfolgreich geändert.');
-                    updateStationlist();
-                } else {
-                    cell.textContent = originalContent;
-                }
-            });
-
-            input.addEventListener('keydown', function (event) {
-                if (event.key === 'Enter') {
-                    input.blur();
-                }
-            });
+            cell.textContent = newValue;
+            tableData[rowIndex][cellIndex] = newValue;
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+            if (hasChanged) showMessage('Cell has been successfully modified.');
+            updateStationlist();
+        } else {
+            cell.textContent = originalContent;
         }
-
-
-        function insertRow() {
-            const newRowData = [`Neue Zelle ${tableData.length * 4 + 1}`,
-            `Neue Zelle ${tableData.length * 4 + 2}`,
-            `Neue Zelle ${tableData.length * 5 + 3}`,
-            `Neue Zelle ${tableData.length * 6 + 4}`];
-
-            if (selectedRowIndex !== null) {
-                tableData.splice(selectedRowIndex, 0, newRowData);
-                loadTableData();
-                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                showMessage('Zeile wurde erfolgreich eingefügt.');
-                updateStationlist();
-            }
-
-            hideContextMenu();
+    });
+    input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            input.blur();
         }
+    });
+}
 
-        function deleteRow() {
-            if (selectedRowIndex !== null && tableData.length > 1) {
-                tableData.splice(selectedRowIndex, 1);
-                loadTableData();
-                saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-                showMessage('Zeile wurde erfolgreich gelöscht.');
-                updateStationlist();
-            }
+let deletedRowData = ['*', '', '', 'http'];
 
-            hideContextMenu();
-        }
+function insertRow(z) { // z: 0 = above, 1 = below
+    const newRowData = deletedRowData;
+    if (selectedRowIndex !== null) {
+        tableData.splice(selectedRowIndex + z, 0, newRowData);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row successfully inserted.');
+        updateStationlist();
+    }
+    hideContextMenu();
+}
 
-        function showContextMenu(event) {
-            const contextMenu = document.getElementById('contextMenu');
-            contextMenu.style.left = `${event.pageX}px`;
-            contextMenu.style.top = `${event.pageY}px`;
-            contextMenu.style.display = 'block';
-        }
+function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
+    const newRowData = ['*', '', Name, Url];
+    let rowCount = tableData.length;
+    if (rowCount !== null) {
+        tableData.splice(rowCount + 1, 0, newRowData);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row successfully inserted.');
+        updateStationlist();
+        deletedRowData = ['*', '', '', 'http'];
+    }
+    hideContextMenu();
+}
 
-        function hideContextMenu() {
-            document.getElementById('contextMenu').style.display = 'none';
-        }
 
-        // Funktion zum Anzeigen von Meldungen
-        function showMessage(message) {
-            console.log(message);
-            // Zeige das Benachrichtigungsfenster
-            var notification = document.getElementById('notification');
-            notification.textContent = message;
-            notification.style.display = 'block';
+function deleteRow() {
+    if (selectedRowIndex !== null && tableData.length > 1) {
+        deletedRowData = tableData[selectedRowIndex];
+        tableData.splice(selectedRowIndex, 1);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row was successfully deleted.');
+        updateStationlist();
+    }
+    hideContextMenu();
+}
 
-            // Blende das Fenster nach 3 Sekunden wieder aus
-            setTimeout(function() {
-                notification.style.display = 'none';
-            }, 3000);
-        }
-        // Kontextmenü beim Klicken außerhalb ausblenden
-        window.addEventListener('click', function () {
-            hideContextMenu();
-        });
+function showContextMenu(event) {
+    const contextMenu = document.getElementById('contextMenu');
+    contextMenu.style.left = `${event.pageX}px`;
+    contextMenu.style.top = `${event.pageY}px`;
+    contextMenu.style.display = 'block';
+}
 
+function hideContextMenu() {
+    document.getElementById('contextMenu').style.display = 'none';
+}
+
+
+function showMessage(message) {
+    console.log(message);
+    // show the notification windows
+    var notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style.display = 'block';
+    // hide after 3 seconds
+    setTimeout(function() {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
+// Hide context menu when clicking outside
+window.addEventListener('click', function () {
+    hideContextMenu();
+});
 
 
 async function saveStationsToSD(filename, content) {
@@ -1219,13 +1222,13 @@ async function saveStationsToSD(filename, content) {
         });
 
         if (!response.ok) {
-            throw new Error('Fehler beim Speichern der Datei: ' + response.statusText);
+            throw new Error('Error saving the file: ' + response.statusText);
         }
 
         const result = await response.text();
-        console.log('Datei erfolgreich gespeichert:', result);
+        console.log('File saved successfully:', result);
     } catch (error) {
-        console.error('Es gab ein Problem:', error);
+        console.error('There was a problem: ', error);
     }
 }
 
@@ -1240,17 +1243,17 @@ async function loadStationsFromSD(file_name) {
         });
 
         if (!response.ok) {
-            throw new Error(`Fehler beim Laden der Datei: ${response.statusText}`);
+            throw new Error(`Error loading the file: ${response.statusText}`);
         }
 
         const jsonContent = await response.text();
 
-        console.log('Datei erfolgreich geladen: %s', jsonContent);
-        console.log('Datei erfolgreich geladen:', JSON.parse(jsonContent));
+    //    console.log('File loaded successfully : %s', jsonContent);
+        console.log('File loaded successfully :', JSON.parse(jsonContent));
         if (jsonContent) {
             tableData = JSON.parse(jsonContent);
         } else {
-            // Standarddaten verwenden, wenn keine gespeicherten Daten vorhanden sind
+            // Use default data when there is no stored data
             tableData = [
                 ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
                 ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
@@ -1294,37 +1297,6 @@ function addRowListeners() {
     }
 }
 
-var showDetailsDialog = function (dialogType, client) { // popUp window
-    if(client.Hide === '*') $("#chkHide").prop("checked", true)
-    else                    $("#chkHide").prop("checked", false)
-    $('#txtCy').val(client.Cy)
-    $('#txtStationName').val(client.StationName)
-    $('#txtStreamURL').val(client.StreamURL)
-    var divdialog = $('#dialog')
-    $('#dialog').attr('title', 'Edit')
-    $('#dialog').dialog({
-        width: 505,
-        resizable: false,
-        show: 'fade',
-        modal: false,
-        buttons: {
-            OK: function () {
-                if($('#chkHide').is(':checked')) client.Hide = '*'
-                else                             client.Hide = ''
-                client.Cy = $('#txtCy').val()
-                client.StationName = $('#txtStationName').val()
-                client.StreamURL = $('#txtStreamURL').val()
-                includeStation(client, dialogType === 'Add')
-                $(this).dialog('close')
-                console.log('dialog saved')
-            }
-        }
-    })
-    divdialog.dialog()
-    console.log('dialog opened')
-}
-
-
 function preselectStationList(staNr) {
     document.getElementById('preset').selectedIndex = (staNr - 1);
 }
@@ -1357,15 +1329,15 @@ function updateStationlist () { // select in tab Radio
 }
 
 function saveStations_json(){
-    // Erstellen eines Blobs mit dem Inhalt
+    // Create a blob with the content
     const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
 
-    // Erstellen eines unsichtbaren Links zum Download der Datei
+    // Create an invisible link to download the file
     const link = document.createElement('a');
     link.href = window.URL.createObjectURL(blob);
     link.download = 'stations.json';
 
-    // Link-Element zum Dokument hinzufügen, Klick simulieren und wieder entfernen
+    // Add link element to document, simulate click and remove it again
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1380,6 +1352,7 @@ function loadStations_json(event){
         tableData = JSON.parse(data)
         loadTableData()
         updateStationlist();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
     }
     reader.onerror = function (ex) {
         console.log(ex)
@@ -1585,9 +1558,7 @@ function open_RB_page() {
 }
 
 function addStationsToGrid () {
-    showDetailsDialog('Add', {})
-    $('#txtStreamURL').val($('#streamurl').val())
-    $('#txtStationName').val($('#stations option:selected').text().trim())
+    insertLastRow($('#stations option:selected').text().trim(), $('#streamurl').val());
 }
 
 function loadJSON (path, success, error) {
@@ -2306,8 +2277,9 @@ function clear_BT_memItems(){
 
             <!-- Kontextmenü -->
             <div id="contextMenu" class="context-menu">
-                <div class="context-menu-item" onclick="insertRow()">Zeile einfügen</div>
-                <div class="context-menu-item" onclick="deleteRow()">Zeile löschen</div>
+                <div class="context-menu-item" onclick="insertRow(0)">Insert line above</div>
+                <div class="context-menu-item" onclick="insertRow(1)">Insert line below</div>
+                <div class="context-menu-item" onclick="deleteRow()">Cut row</div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0px;">
@@ -2527,7 +2499,7 @@ function clear_BT_memItems(){
                         onmouseup="this.src='SD/png/Button_Download_Blue.png'"
                         ontouchend="this.src='SD/png/Button_Download_Blue.png'"
                         onclick="downloadCanvasImage()"/>
-                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
+                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="Add station to the end of the list"
                         onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                         ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
                         onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
