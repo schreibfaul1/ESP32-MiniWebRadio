@@ -2625,6 +2625,7 @@ private:
         strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
 
         for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
+        tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         m_browseOnRelease = 3;
         return;
     }
