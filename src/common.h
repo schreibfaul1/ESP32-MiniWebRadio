@@ -53,6 +53,7 @@
 #include "KCX_BT_Emitter.h"
 #include "BH1750.h"
 #include <freertos/task.h>
+#include <mbedtls/aes.h>
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -3279,3 +3280,32 @@ const char stations_json[] =
     "[\"\",\"P\",\"Gra Wrocław\",\"http://rmfstream2.interia.pl:8000/radio_gra_wroc\"],"
     "[\"*\",\"RU\",\"Classic EuroDisco Радио\",\"https://live.radiospinner.com/clsscrdsc-96\"],"
     "[\"*\",\"D\",\"Hit Radio FFH - Soundtrack (AAC+)\",\"http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u\"]]";
+
+const char aesKey [] = "mysecretkey12345";
+
+inline const char* aes_encrypt(const char* input) {
+    static char* output = NULL;
+    uint16_t len = strlen(input) / 16;
+    len++;
+    if(output){free (output); output = NULL;}
+    output = (char*) x_ps_calloc((len * 16) + 1, 1);
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_enc(&aes, (const unsigned char*) aesKey, 128);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*) input, (unsigned char*) output);
+    mbedtls_aes_free(&aes);
+    return output;
+}
+
+inline const char* aes_decrypt(const char* input) {
+    static char* output = NULL;
+    uint16_t len = strlen(input) + 1;
+    if(output){free (output); output = NULL;}
+    output = (char*) x_ps_calloc(len, 1);
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_dec(&aes, (const unsigned char*) aesKey, 128);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*) input, (unsigned char*) output);
+    mbedtls_aes_free(&aes);
+    return output;
+}
