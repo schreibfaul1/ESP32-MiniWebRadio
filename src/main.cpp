@@ -1698,8 +1698,14 @@ void setStation(uint16_t sta) {
 void nextStation() {
     setStation(staMgnt.nextStation());
 }
+void nextFavStation() {
+    setStation(staMgnt.nextFavStation());
+}
 void prevStation() {
     setStation(staMgnt.prevStation());
+}
+void prevFavStation() {
+    setStation(staMgnt.prevFavStation());
 }
 void setStationByNumber(uint16_t staNr){
     setStation(staMgnt.setStationByNumber(staNr));
@@ -3284,9 +3290,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "prev_station"){      prevStation(); return;}                                                                                           // via websocket
+    if(cmd == "prev_station"){      prevFavStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
+    if(cmd == "next_station"){      nextFavStation(); return;}                                                                                           // via websocket
 
     if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                       // via websocket
 
@@ -3750,8 +3756,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
 
     if(_state == RADIO) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevStation(); dispFooter.updateStation(_cur_station); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevFavStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextFavStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}

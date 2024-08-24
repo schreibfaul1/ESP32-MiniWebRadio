@@ -747,10 +747,38 @@ public:
         return *m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
+    uint16_t nextFavStation(){
+        if(!m_staCnt) return 1;
+        uint16_t cnt = 0;
+        int16_t tmp = (*m_curStation);
+        while(true){
+            tmp++;
+            cnt++;
+            if(cnt > m_staCnt) break;
+            if(tmp > m_staCnt) tmp = 1;
+            if(m_stations.fav[tmp] == '*') { *m_curStation = tmp;   break;}
+        }
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
     uint16_t prevStation(){
         if(!m_staCnt) return 1;
         (*m_curStation)--;
         if(*m_curStation < 1) *m_curStation = m_staCnt;
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t prevFavStation(){
+        if(!m_staCnt) return 1;
+        uint16_t cnt = 0;
+        int16_t tmp = (*m_curStation);
+        while(true){
+            tmp--;
+            cnt++;
+            if(cnt > m_staCnt) break;
+            if(tmp < 1) tmp = m_staCnt;
+            if(m_stations.fav[tmp] == '*') { *m_curStation = tmp;   break;}
+        }
         return *m_curStation;
     }
 //----------------------------------------------------------------------------------------------------------
