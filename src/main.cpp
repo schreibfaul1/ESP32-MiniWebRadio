@@ -384,6 +384,7 @@ button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), 
 textbox       txt_DL_fName("txt_DL_fName");
 slider        sdr_DL_volume("sdr_DL_volume");
 pictureBox    pic_DL_logo("pic_DL_logo");
+progressbar   pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
@@ -2085,6 +2086,7 @@ void placingGraphicObjects() { // and initialize them
     sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
     txt_DL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
     pic_DL_logo.begin(          _winLogo.x,   _winLogo.y);
+    pgb_DL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2203,8 +2205,8 @@ void changeState(int32_t state){
         case AUDIOFILESLIST: lst_PLAYER.disable();
                          break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_pause.disable();   btn_DL_cancel.disable();
-                         btn_DL_fileList.disable(); btn_DL_radio.disable();    txt_DL_fName.disable();
-                         sdr_DL_volume.hide();      pic_DL_logo.disable();
+                         btn_DL_fileList.disable(); btn_DL_radio.disable();   txt_DL_fName.disable();
+                         sdr_DL_volume.hide();      pic_DL_logo.disable();    pgb_DL_progress.disable();
                          break;
         case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
@@ -2311,6 +2313,8 @@ void changeState(int32_t state){
         case DLNA:{
             clearWithOutHeaderFooter();
             pic_DL_logo.enable();
+            pgb_DL_progress.setValue(0);
+            pgb_DL_progress.show();
             showFileLogo(DLNA);
             btn_DL_Mute.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             txt_DL_fName.show();
@@ -2573,13 +2577,16 @@ void loop() {
             _f_hpChanged = false;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
-        if(audioIsRunning() && _f_isFSConnected) {
-            _audioCurrentTime = audioGetCurrentTime();
+        if(audioIsRunning()){
             _audioFileDuration = audioGetFileDuration();
-            if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
-            if(_audioFileDuration) {
-                SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
-                               (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
+            if(_audioFileDuration > 0){
+                _audioCurrentTime = audioGetCurrentTime();
+                if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
+                if(_state == DLNA &&   _audioFileDuration){pgb_DL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_DL_progress.setValue(_audioCurrentTime);}
+                if(_audioFileDuration) {
+                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
+                                   (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
+                }
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
