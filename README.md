@@ -44,7 +44,7 @@ Schematic<br>
 ![Schematic ESP32-S3 with external DAC](docs/MWR_V3.1_ESP32-S3_schematic.jpg)<br>
 <br>
 
-[Display Layout](docs/MiniWebRadio%20V3.1%20Layout.pdf)<br>
+[Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
 
 [Using the Community Radio Browser](docs/Using%20the%20RadioBrowser.pdf)<br>
 
