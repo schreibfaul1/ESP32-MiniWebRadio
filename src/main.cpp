@@ -720,7 +720,7 @@ void timer100ms(){
         _f_1sec  = true;
         _time_s = rtc.gettime_s();
         if(endsWith(_time_s, "59:53"))  _f_timeSpeech = true;
-        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime); }
+        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
         if(_f_alarm)        {semaphore++;}
         if(semaphore)       {semaphore++;}
         if(semaphore >= 65) {semaphore = 0;}
@@ -1506,6 +1506,7 @@ void setup() {
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
+    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d", _volumeAfterAlarm);
     SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
@@ -1897,11 +1898,11 @@ void wake_up() {
 
 void setRTC(const char* TZString) {
     rtc.stop();
-    _f_rtc = rtc.begin(_TZString.c_str());
-    if(!_f_rtc) {
-        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
-        ESP.restart();
-    }
+    rtc.begin(_TZString.c_str());
+    // if(!_f_rtc) {
+    //     SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
+    //     ESP.restart();
+    // }
 }
 
 boolean copySDtoFFat(const char* path) {
@@ -2467,6 +2468,10 @@ void loop() {
             }
         }
 
+        if(!_f_rtc) {
+            _f_rtc = rtc.hasValidTime();
+        }
+
         // uint8_t vol = audioGetVolume();
         // uint8_t steps = _volumeSteps / 20;
         // if(_f_mute){
@@ -2519,6 +2524,7 @@ void loop() {
         }
         if(_f_eof_alarm) { // AFTER RINGING
             _f_eof_alarm = false;
+            if(!_f_rtc) return;
             _cur_volume = _volumeAfterAlarm;
             setVolume(_cur_volume);
             audioSetVolume(_cur_volume, _volumeCurve);
