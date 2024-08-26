@@ -54,6 +54,7 @@
 #include "BH1750.h"
 #include <freertos/task.h>
 #include <mbedtls/aes.h>
+#include <mbedtls/base64.h>
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -3308,4 +3309,38 @@ inline const char* aes_decrypt(const char* input) {
     mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*) input, (unsigned char*) output);
     mbedtls_aes_free(&aes);
     return output;
+}
+
+inline void encode_base64(const unsigned char* input, size_t input_len) {
+    // Buffer-Größe berechnen für Base64-Kodierung
+    size_t buffer_size = ((input_len + 2) / 3) * 4 + 1;
+    unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
+
+    size_t output_len;
+    int ret = mbedtls_base64_encode(output, buffer_size, &output_len, input, input_len);
+
+    if (ret == 0) {
+        printf("Base64-Kodierung: %s\n", output);
+    } else {
+        printf("Fehler bei der Base64-Kodierung\n");
+    }
+
+    free(output);  // Buffer freigeben
+}
+
+inline void decode_base64(const char* input, size_t input_len) {
+    size_t output_len;
+    // Buffer-Größe berechnen für Base64-Dekodierung
+    size_t buffer_size = (input_len  / 4) * 3 + 1;
+    unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
+
+    // Dekodierung
+    int ret = mbedtls_base64_decode(output, sizeof(output), &output_len, (const unsigned char*)input, input_len);
+
+    if (ret == 0) {
+        printf("Dekodierter Text: %s\n", output);
+    } else {
+        printf("Fehler bei der Base64-Dekodierung\n");
+    }
+    free(output);  // Buffer freigeben
 }

@@ -465,20 +465,16 @@ function connect() {
     socket.onopen = function () {
         console.log("Websocket connected")
         socket.send('get_tftSize')
-        loadStationsFromSD("/stations.json").then(() => {
-                socket.send('to_listen');
-                socket.send("getmute")
-                socket.send("get_timeAnnouncement")
-                socket.send("gettone=")   // Now load the tones (tab Radio)
-                socket.send("getnetworks=")
-                socket.send("change_state=" + "RADIO")
-                socket.send("getTimeFormat")
-                socket.send("getSleepMode")
-                setInterval(ping, 20000)
-            })
-            .catch((error) => {
-                console.error("Fehler beim Laden der Stationen:", error);
-            });
+        socket.send('to_listen');
+        socket.send("getmute")
+        socket.send("get_timeAnnouncement")
+        socket.send("gettone=")   // Now load the tones (tab Radio)
+        socket.send("getnetworks=")
+        socket.send("change_state=" + "RADIO")
+        socket.send("getTimeFormat")
+        socket.send("getSleepMode")
+        setInterval(ping, 20000)        
+        loadStationsFromSD("/stations.json")
     };
 
     socket.onclose = function (e) {
