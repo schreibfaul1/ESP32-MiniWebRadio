@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.3k Aug 18/2024                                                                                                                       ";
+    Version 3.4 Aug 23/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -64,20 +64,20 @@ char _hl_item[16][40]{"",                 // none
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
-uint8_t             _cur_volume = 0;     // will be set from stored preferences
+uint8_t             _cur_volume = 21;     // will be set from stored preferences
 uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t             _ringVolume = 21;
 uint8_t             _volumeAfterAlarm = 12;
 uint8_t             _volumeSteps = 21;
 uint8_t             _volumeCurve = 1;
-uint8_t             _brightness = 0;
+uint8_t             _brightness = 100;   // percent
 uint8_t             _state = UNDEFINED;  // statemaschine
 uint8_t             _commercial_dur = 0; // duration of advertising
 uint8_t             _cur_Codec = 0;
 uint8_t             _numServers = 0;     //
 uint8_t             _level = 0;
 uint8_t             _timeFormat = 24;    // 24 or 12
-uint8_t             _sleepMode = 0;      // 0 display off,     1 show the clock
+uint8_t             _sleepMode = 1;      // 0 display off,     1 show the clock
 uint8_t             _staListPos = 0;
 uint8_t             _WiFi_disconnectCnt = 0;
 uint8_t             _reconnectCnt = 0;
@@ -100,10 +100,9 @@ int16_t             _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t            _icyBitRate = 0;      // from http response header via event
 uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
-uint16_t            _cur_station = 0;     // current station(nr), will be set later
+uint16_t            _cur_station = 1;     // current station(nr), will be set later
 uint16_t            _cur_AudioFileNr = 0; // position inside _SD_content
 uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
-uint16_t            _sum_stations = 0;
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
 uint16_t            _dlnaMaxItems = 0;
@@ -158,7 +157,7 @@ bool                _f_newCommercial = false;
 bool                _f_volBarVisible = false;
 bool                _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
 bool                _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
-bool                _f_timeAnnouncement = false; // time announcement every full hour
+bool                _f_timeAnnouncement = true;  // time announcement every full hour
 bool                _f_playlistEnabled = false;
 bool                _f_playlistNextFile = false;
 bool                _f_logoUnknown = false;
@@ -185,12 +184,12 @@ bool                _f_connectToLasthost = false;
 bool                _f_BTpower = false;
 bool                _f_BTcurPowerState = false;
 bool                _f_timeSpeech = false;
+bool                _f_stationsChanged = false;
 String              _station = "";
-String              _stationName_nvs = "";
 char*               _stationName_air = NULL;
 String              _homepage = "";
 String              _filename = "";
-String              _lastconnectedhost = "";
+String              _lastconnectedhost = "http://0n-70s.radionetz.de:8000/0n-70s.mp3";
 String              _scannedNetworks = "";
 String              _TZName = "Europe/Berlin";
 String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
@@ -203,23 +202,23 @@ std::vector<char*>  _PLS_content;
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
 
-Preferences    pref;
-Preferences    stations;
-WebSrv         webSrv;
-WiFiMulti      wifiMulti;
-RTIME          rtc;
-Ticker         ticker100ms;
-IR             ir(IR_PIN); // do not change the objectname, it must be "ir"
-TP             tp(TP_CS, TP_IRQ);
-File           audioFile;
-FtpServer      ftpSrv;
-WiFiClient     client;
-WiFiUDP        udp;
-DLNA_Client    dlna;
-KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
-TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
-TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
+Preferences         pref;
+WebSrv              webSrv;
+WiFiMulti           wifiMulti;
+RTIME               rtc;
+Ticker              ticker100ms;
+IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
+TP                  tp(TP_CS, TP_IRQ);
+File                audioFile;
+FtpServer           ftpSrv;
+WiFiClient          client;
+WiFiUDP             udp;
+DLNA_Client         dlna;
+KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
+TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
+TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
+hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+stationManagement   staMgnt(&_cur_station);
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -385,6 +384,7 @@ button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), 
 textbox       txt_DL_fName("txt_DL_fName");
 slider        sdr_DL_volume("sdr_DL_volume");
 pictureBox    pic_DL_logo("pic_DL_logo");
+progressbar   pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
@@ -423,46 +423,17 @@ textbox       txt_BT_volume("txt_BT_volume");
 
 // clang-format off
 boolean defaultsettings(){
-    if(!SD_MMC.exists("/settings.json")){
-        File file = SD_MMC.open("/settings.json","w", true);
-        char*  jO = x_ps_malloc(1024); // JSON Object
-        strcpy(jO, "{");
-        strcat(jO, "\"volume\":");            strcat(jO, "12,"); // 0...volumeSteps
-        strcat(jO, "\"volumeSteps\":");       strcat(jO, "21,"); // 21...255
-        strcat(jO, "\"ringVolume\":");        strcat(jO, "21,"); // 0...volumeSteps
-        strcat(jO, "\"volumeAfterAlarm\":");  strcat(jO, "16,"); // 0...volumeSteps
-        strcat(jO, "\"BTpower\":");           strcat(jO, "\"false\","); // assume KCX_BT_Emitter not exists or is off
-        strcat(jO, "\"alarmtime_sun\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_mon\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_tue\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_wed\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_fri\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarmtime_sat\":");     strcat(jO, "00:00,");
-        strcat(jO, "\"alarm_weekdays\":");    strcat(jO, "0,");
-        strcat(jO, "\"timeAnnouncing\":");    strcat(jO, "\"true\",");
-        strcat(jO, "\"mute\":");              strcat(jO, "\"false\","); // no mute
-        strcat(jO, "\"brightness\":");        strcat(jO, "100,");  // 0...100
-        strcat(jO, "\"sleeptime\":");         strcat(jO, "0,");
-        strcat(jO, "\"lastconnectedhost\":"); strcat(jO, "\"\",");
-        strcat(jO, "\"station\":");           strcat(jO, "1,");
-        strcat(jO, "\"sumstations\":");       strcat(jO, "0,");
-        strcat(jO, "\"Timezone_Name\":");     strcat(jO, "\"Europe/Berlin\",");
-        strcat(jO, "\"Timezone_String\":");   strcat(jO, "\"CET-1CEST,M3.5.0,M10.5.0/3\",");
-        strcat(jO, "\"toneLP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"toneBP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"toneHP\":");            strcat(jO, "0,"); // -40 ... +6 (dB)        audioI2S
-        strcat(jO, "\"balance\":");           strcat(jO, "0,"); // -16 ... +16            audioI2S
-        strcat(jO, "\"timeFormat\":");        strcat(jO, "24,");
-        strcat(jO, "\"sleepMode\":");         strcat(jO, "0}"); // 0 display off, 1 clock
-        file.print(jO);
-        if(jO){free(jO); jO = NULL;}
+
+    if(!SD_MMC.exists("/settings.json")){  // if not found create one
+        updateSettings();
     }
 
-    File file = SD_MMC.open("/settings.json","r", false);
+    File file2 = SD_MMC.open("/settings.json","r", false);
     char*  jO = x_ps_calloc(1024, 1);
     char* tmp = x_ps_malloc(512);
-    file.readBytes(jO, 1024);
+    file2.readBytes(jO, 1024);
     _settingsHash = simpleHash(jO);
+    file2.close();
 
     auto parseJson = [&](const char* s) { // lambda, inner function
         int16_t pos1 = 0, pos2 = 0, pos3 = 0;
@@ -503,7 +474,6 @@ boolean defaultsettings(){
     _brightness          = atoi(   parseJson("\"brightness\":"));
     _sleeptime           = atoi(   parseJson("\"sleeptime\":"));
     _cur_station         = atoi(   parseJson("\"station\":"));
-    _sum_stations        = atoi(   parseJson("\"sumstations\":"));
     _toneLP              = atoi(   parseJson("\"toneLP\":"));
     _toneBP              = atoi(   parseJson("\"toneBP\":"));
     _toneHP              = atoi(   parseJson("\"toneHP\":"));
@@ -514,72 +484,23 @@ boolean defaultsettings(){
     _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
     _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
 
-
-    if(!pref.isKey("stations_filled")|| _sum_stations == 0) saveStationsToNVS();  // first init
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
 
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
+
+
+    if(!SD_MMC.exists("/stations.json")){  // if not found create one
+        File file1 = SD_MMC.open("/stations.json","w", true);
+        file1.write((uint8_t*)stations_json, sizeof(stations_json) -1); // without termination
+        file1.close();
+    }
+    staMgnt.updateStationsList();
     return true;
 }
 // clang-format on
 
-boolean saveStationsToNVS() {
-    String   Hide = "", Cy = "", StationName = "", StreamURL = "", currentLine = "", tmp = "";
-    uint16_t cnt = 0;
-    // StationList
-    if(!SD_MMC.exists("/stations.csv")) {
-        SerialPrintfln(ANSI_ESC_RED "SD_MMC/stations.csv not found");
-        return false;
-    }
-
-    File file = SD_MMC.open("/stations.csv");
-    if(file) { // try to read from SD_MMC
-        stations.clear();
-        currentLine = file.readStringUntil('\n'); // read the headline
-        while(file.available()) {
-            currentLine = file.readStringUntil('\n'); // read the line
-            uint p = 0, q = 0;
-            Hide = "";
-            Cy = "";
-            StationName = "";
-            StreamURL = "";
-            for(int32_t i = 0; i < currentLine.length() + 1; i++) {
-                if(currentLine[i] == '\t' || i == currentLine.length()) {
-                    if(p == 0) Hide = currentLine.substring(q, i);
-                    if(p == 1) Cy = currentLine.substring(q, i);
-                    if(p == 2) StationName = currentLine.substring(q, i);
-                    if(p == 3) StreamURL = currentLine.substring(q, i);
-                    p++;
-                    i++;
-                    q = i;
-                }
-            }
-            if(Hide == "*") continue;
-            if(StationName == "") continue; // is empty
-            if(StreamURL == "") continue;   // is empty
-            SerialPrintfln("Cy=%s, StationName=%s, StreamURL=%s", Cy.c_str(), StationName.c_str(), StreamURL.c_str());
-            cnt++;
-            if(cnt == _max_stations) {
-                SerialPrintfln(ANSI_ESC_RED "No more than %d entries in stationlist allowed!", _max_stations);
-                cnt--; // maxstations 999
-                break;
-            }
-            tmp = StationName + "#" + StreamURL;
-            sprintf(_chbuf, "station_%03d", cnt);
-            stations.putString(_chbuf, tmp);
-        }
-        _sum_stations = cnt;
-        stations.putLong("stations.size", file.size());
-        file.close();
-        pref.putBool("stations_filled", true);
-        SerialPrintfln("stationlist internally loaded");
-        SerialPrintfln("number of stations: " ANSI_ESC_CYAN "%i", cnt);
-        return true;
-    }
-    else return false;
-}
 
 boolean saveDefaultIRbuttonsToNVS() { // default values, first init
     pref.putShort("irAddress", 0x00);
@@ -664,7 +585,6 @@ void updateSettings(){
     sprintf(tmp, ",\"sleeptime\":%i", _sleeptime);                                          strcat(jO, tmp);
     sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _lastconnectedhost.c_str());              strcat(jO, tmp);
     sprintf(tmp, ",\"station\":%i", _cur_station);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"sumstations\":%i", _sum_stations);                                     strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_Name\":\"%s\"", _TZName.c_str());                             strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_String\":\"%s\"", _TZString.c_str());                         strcat(jO, tmp);
     sprintf(tmp, ",\"toneLP\":%i", _toneLP);                                                strcat(jO, tmp);
@@ -800,7 +720,7 @@ void timer100ms(){
         _f_1sec  = true;
         _time_s = rtc.gettime_s();
         if(endsWith(_time_s, "59:53"))  _f_timeSpeech = true;
-        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime); }
+        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
         if(_f_alarm)        {semaphore++;}
         if(semaphore)       {semaphore++;}
         if(semaphore >= 65) {semaphore = 0;}
@@ -874,8 +794,9 @@ void showLogoAndStationName(bool force) {
     }
 
     if(_cur_station) {
-        SN_utf8 = x_ps_calloc(_stationName_nvs.length() + 12, 1);
-        memcpy(SN_utf8, _stationName_nvs.c_str(), _stationName_nvs.length() + 1);
+    //    log_w("showLogoAndStationName: %s", staMgnt.getStationName(_cur_station));
+        SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(_cur_station)) + 12, 1);
+        memcpy(SN_utf8, staMgnt.getStationName(_cur_station), strlen(staMgnt.getStationName(_cur_station)) + 1);
     }
     else {
         if(!_stationName_air) _stationName_air = strdup("");
@@ -945,7 +866,7 @@ void showPlsFileNumber() {
 void showAudioFileNumber() {
     tft.setFont(_fonts[3]);
     char buf[15];
-    sprintf(buf, "%03u/%03u", _cur_AudioFileNr, _SD_content.getSize());
+    sprintf(buf, "%03u/%03u", _cur_AudioFileNr + 1, _SD_content.getSize());
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
@@ -1499,7 +1420,7 @@ void setup() {
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
-    stations.begin("Stations", false); // instance of preferences for stations (name, url ...)
+
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -1538,8 +1459,9 @@ void setup() {
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
-    if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     defaultsettings();
+
+    if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
@@ -1547,18 +1469,6 @@ void setup() {
 
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
-    SerialPrintfln("setup: ....  seek for stations.csv");
-    File file = SD_MMC.open("/stations.csv");
-    if(!file) {
-        clearAll();
-        tft.setFont(_fonts[6]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.writeText("stations.csv not found", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
-        SerialPrintfln(ANSI_ESC_RED "stations.csv not found");
-        while(1) {}; // endless loop, MiniWebRadio does not work without stations.csv
-    }
-    file.close();
-    SerialPrintfln("setup: ....  stations.csv found");
     updateSettings();
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
@@ -1591,10 +1501,12 @@ void setup() {
     audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audioSetVolumeSteps(_volumeSteps);
 
-    SerialPrintfln("setup: ....  Number of saved stations: " ANSI_ESC_CYAN "%d", _sum_stations);
+    SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
+    SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", _cur_station);
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
+    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d", _volumeAfterAlarm);
     SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
@@ -1761,21 +1673,16 @@ uint8_t upvolume() {
 }
 
 void setStation(uint16_t sta) {
+    static uint16_t old_cur_station = 0;
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
-    if(sta > _sum_stations) sta = _cur_station;
-    sprintf(_chbuf, "station_%03d", sta);
-    String content = stations.getString(_chbuf, " #not_found");
-    //    SerialPrintfln("content %s", content.c_str());
-    _stationName_nvs = content.substring(0, content.indexOf("#"));           // get stationname
-    content = content.substring(content.indexOf("#") + 1, content.length()); // get URL
-    content.trim();
+    if(sta > staMgnt.getSumStations()) sta = _cur_station;
     free(_stationURL);
-    _stationURL = x_ps_strdup(content.c_str());
+    _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
-    if(_f_isWebConnected && sta == _cur_station && _state == RADIO) { // Station is already selected
+    if(_f_isWebConnected && sta == old_cur_station && _state == RADIO) { // Station is already selected
         _f_newStreamTitle = true;
     }
     else {
@@ -1785,18 +1692,25 @@ void setStation(uint16_t sta) {
         _f_newIcyDescription = true;
         connecttohost(_stationURL);
     }
-    _cur_station = sta;
+    old_cur_station = sta;
     StationsItems();
     if(_state == RADIO) showLogoAndStationName(true);
     dispFooter.updateStation(_cur_station);
 }
 void nextStation() {
-    if(_cur_station >= _sum_stations) setStation(1);
-    else setStation(_cur_station + 1);
+    setStation(staMgnt.nextStation());
+}
+void nextFavStation() {
+    setStation(staMgnt.nextFavStation());
 }
 void prevStation() {
-    if(_cur_station > 1) setStation(_cur_station - 1);
-    else setStation(_sum_stations);
+    setStation(staMgnt.prevStation());
+}
+void prevFavStation() {
+    setStation(staMgnt.prevFavStation());
+}
+void setStationByNumber(uint16_t staNr){
+    setStation(staMgnt.setStationByNumber(staNr));
 }
 
 void StationsItems() {
@@ -1805,16 +1719,16 @@ void StationsItems() {
     strcpy(stationLogo_air, "/logo/");
     strcat(stationLogo_air, _stationName_air);
     strcat(stationLogo_air, ".jpg");
-    char cur_station[10]; itoa(_cur_station, cur_station, 10);
+    char staNr[10]; itoa(_cur_station, staNr, 10);
 
     if(_cur_station == 0){
         webSrv.send("stationLogo=", stationLogo_air);
-        webSrv.send("stationNr=", cur_station);
-        //    webSrv.send("", "stationURL=" + _lastconnectedhost);
+        webSrv.send("stationNr=", staNr);
+        webSrv.send("", "stationURL=" + _lastconnectedhost);
     }
     else{
-        webSrv.send("stationLogo=", "/logo/" + _stationName_nvs + ".jpg");
-        webSrv.send("stationNr=", cur_station);
+        webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(_cur_station)) + ".jpg");
+        webSrv.send("stationNr=", staNr);
         if(_stationURL) webSrv.send("stationURL=", String(_stationURL));
     }
     if(stationLogo_air){free(stationLogo_air); stationLogo_air = NULL;}
@@ -1822,7 +1736,6 @@ void StationsItems() {
 
 void setStationViaURL(const char* url) {
     if(_stationName_air) {free(_stationName_air); _stationName_air = NULL;}
-    _stationName_nvs = "";
     _cur_station = 0;
     free(_stationURL);
     _stationURL = x_ps_strdup(url);
@@ -1864,7 +1777,6 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
             SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
             webSrv.sendStatus(400);
         }
-        if(strcmp(fn, "/stations.csv") == 0) saveStationsToNVS();
     }
 }
 
@@ -1986,11 +1898,11 @@ void wake_up() {
 
 void setRTC(const char* TZString) {
     rtc.stop();
-    _f_rtc = rtc.begin(_TZString.c_str());
-    if(!_f_rtc) {
-        SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
-        ESP.restart();
-    }
+    rtc.begin(_TZString.c_str());
+    // if(!_f_rtc) {
+    //     SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
+    //     ESP.restart();
+    // }
 }
 
 boolean copySDtoFFat(const char* path) {
@@ -2118,7 +2030,7 @@ void placingGraphicObjects() { // and initialize them
     pic_RA_logo.begin(          _winLogo.x,   _winLogo.y);
     VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station, _sum_stations);
+    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_PL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_PL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2175,6 +2087,7 @@ void placingGraphicObjects() { // and initialize them
     sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
     txt_DL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
     pic_DL_logo.begin(          _winLogo.x,   _winLogo.y);
+    pgb_DL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2293,8 +2206,8 @@ void changeState(int32_t state){
         case AUDIOFILESLIST: lst_PLAYER.disable();
                          break;
         case DLNA:       btn_DL_Mute.disable();     btn_DL_pause.disable();   btn_DL_cancel.disable();
-                         btn_DL_fileList.disable(); btn_DL_radio.disable();    txt_DL_fName.disable();
-                         sdr_DL_volume.hide();      pic_DL_logo.disable();
+                         btn_DL_fileList.disable(); btn_DL_radio.disable();   txt_DL_fName.disable();
+                         sdr_DL_volume.hide();      pic_DL_logo.disable();    pgb_DL_progress.disable();
                          break;
         case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
@@ -2401,6 +2314,8 @@ void changeState(int32_t state){
         case DLNA:{
             clearWithOutHeaderFooter();
             pic_DL_logo.enable();
+            pgb_DL_progress.setValue(0);
+            pgb_DL_progress.show();
             showFileLogo(DLNA);
             btn_DL_Mute.show();    btn_DL_pause.show();   btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             txt_DL_fName.show();
@@ -2553,6 +2468,10 @@ void loop() {
             }
         }
 
+        if(!_f_rtc) {
+            _f_rtc = rtc.hasValidTime();
+        }
+
         // uint8_t vol = audioGetVolume();
         // uint8_t steps = _volumeSteps / 20;
         // if(_f_mute){
@@ -2605,12 +2524,19 @@ void loop() {
         }
         if(_f_eof_alarm) { // AFTER RINGING
             _f_eof_alarm = false;
+            if(!_f_rtc) return;
             _cur_volume = _volumeAfterAlarm;
             setVolume(_cur_volume);
             audioSetVolume(_cur_volume, _volumeCurve);
             dispHeader.updateVolume(_cur_volume);
             wake_up();
         }
+
+        if(_f_stationsChanged) {
+            _f_stationsChanged = false;
+            staMgnt.updateStationsList();
+        }
+
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping) {
             dispHeader.updateTime(_time_s, false);
@@ -2657,13 +2583,16 @@ void loop() {
             _f_hpChanged = false;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
-        if(audioIsRunning() && _f_isFSConnected) {
-            _audioCurrentTime = audioGetCurrentTime();
+        if(audioIsRunning()){
             _audioFileDuration = audioGetFileDuration();
-            if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
-            if(_audioFileDuration) {
-                SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
-                               (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
+            if(_audioFileDuration > 0){
+                _audioCurrentTime = audioGetCurrentTime();
+                if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
+                if(_state == DLNA &&   _audioFileDuration){pgb_DL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_DL_progress.setValue(_audioCurrentTime);}
+                if(_audioFileDuration) {
+                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
+                                   (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
+                }
             }
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
@@ -3285,7 +3214,7 @@ void tp_positionXY(uint16_t x, uint16_t y){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }
@@ -3374,11 +3303,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "uploadfile"){        _filename = param;  return;}
 
-    if(cmd == "prev_station"){      prevStation(); return;}                                                                                           // via websocket
+    if(cmd == "prev_station"){      prevFavStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "next_station"){      nextStation(); return;}                                                                                           // via websocket
+    if(cmd == "next_station"){      nextFavStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       setStation(param.toInt()); return;}                                                                               // via websocket
+    if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                       // via websocket
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
@@ -3565,8 +3494,25 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
-    if(CORE_DEBUG_LEVEL > ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
+    if(_filename.startsWith("SD/")) {// POST request
+        File sta;
+        if(_f_SD_Upload){
+            _f_SD_Upload = false;
+            sta = SD_MMC.open(_filename.substring(2).c_str(),"w",true);
+        }
+        else{
+            sta = SD_MMC.open(_filename.substring(2).c_str(),"a",true);
+        }
+        sta.write((uint8_t*)request.c_str(), request.length() );
+        sta.close();
+        if(contentLength == 0){
+            if(_filename  == "SD/stations.json") _f_stationsChanged = true;
+            webSrv.reply("200", webSrv.TEXT);
+        }
+        return;
+    }
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return; // uninteresting Info
     if(request == "fileUpload") {
@@ -3586,6 +3532,7 @@ void WEBSRV_onInfo(const char* info) {
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
         SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info); // infos for debug
     }
+//    log_w("%s", info);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
@@ -3822,8 +3769,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
 
     if(_state == RADIO) {
         if(strcmp(name, "btn_RA_Mute") == 0)     {muteChanged(btn_RA_Mute.getValue()); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevStation(); dispFooter.updateStation(_cur_station); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevFavStation(); dispFooter.updateStation(_cur_station); return;}
+        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextFavStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
@@ -3838,7 +3785,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "sdr_RA_volume") == 0)   {return;}
     }
     if(_state == STATIONSLIST) {
-        if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStation(ra.val1); changeState(RADIO);} return;}
+        if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubmenue = 0; setStationByNumber(ra.val1); changeState(RADIO);} return;}
     }
     if(_state == PLAYER) {
         if(strcmp(name, "btn_PL_Mute") == 0)     {muteChanged(btn_PL_Mute.getValue()); return;}

@@ -2794,6 +2794,11 @@ uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiA
                     ansiArr[chLen] = 10;
                     break;
                 } // ANSI_ESC_ORANGE
+                if(strncmp(str + idx, "\033[90m", 5) == 0) {
+                    idx += 5;
+                    ansiArr[chLen] = 11;
+                    break;
+                } // ANSI_ESC_GREY
                 if(strncmp(str + idx, "\033[0m", 4) == 0) {
                     idx += 4;
                     ansiArr[chLen] = -1;
@@ -3010,6 +3015,7 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
                 if(ansiArr[idx] ==  8) setTextColor(TFT_WHITE);
                 if(ansiArr[idx] ==  9) setTextColor(TFT_BROWN);
                 if(ansiArr[idx] == 10) setTextColor(TFT_ORANGE);
+                if(ansiArr[idx] == 11) setTextColor(TFT_GREY);
             }
             if(cnt == 0 && utfPosArr[idx] == 0x20) {
                 idx++;

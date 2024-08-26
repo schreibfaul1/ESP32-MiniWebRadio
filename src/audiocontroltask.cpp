@@ -216,7 +216,7 @@ void audioTask(void *parameter) {
                 else audio.setVolume(t_volume, t_volCurve);
             }
         }
-        vTaskDelay(7);
+        vTaskDelay(7 / portTICK_PERIOD_MS);
     }
 }
 
@@ -414,4 +414,3 @@ void audioSetCoreID(uint8_t coreId){
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }
-

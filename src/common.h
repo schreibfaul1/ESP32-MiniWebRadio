@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 18.Aug 2024
+// updated: 23.Aug 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -53,6 +53,8 @@
 #include "KCX_BT_Emitter.h"
 #include "BH1750.h"
 #include <freertos/task.h>
+#include <mbedtls/aes.h>
+#include <mbedtls/base64.h>
 
 #ifdef CONFIG_IDF_TARGET_ESP32
     // Digital I/O used
@@ -129,6 +131,15 @@
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // output on serial terminal
 #define ANSI_ESC_BLACK      "\033[30m"
+#define ANSI_ESC_GREY       "\033[90m"
+// #define ANSI_ESC_PINK       "\033[91m"
+// #define ANSI_ESC_LIME       "\033[92m"
+// #define ANSI_ESC_YELLOW     "\033[93m"
+// #define ANSI_ESC_BLUE       "\033[94m"
+// #define ANSI_ESC_MAGENTA    "\033[95m"
+// #define ANSI_ESC_CYAN       "\033[96m"
+// #define ANSI_ESC_WHITE      "\033[97m"
+// #define ANSI_ESC_RESET      "\033[0m"
 #define ANSI_ESC_RED        "\033[31m"
 #define ANSI_ESC_GREEN      "\033[32m"
 #define ANSI_ESC_YELLOW     "\033[33m"
@@ -138,12 +149,29 @@
 #define ANSI_ESC_WHITE      "\033[37m"
 #define ANSI_ESC_BROWN      "\033[38;5;130m"
 #define ANSI_ESC_ORANGE     "\033[38;5;214m"
+// #define ANSI_ESC_PURPLE     "\033[38;5;129m"
+// #define ANSI_ESC_PINK       "\033[38;5;213m"
+// #define ANSI_ESC_LIME       "\033[38;5;190m"
+// #define ANSI_ESC_NAVY       "\033[38;5;25m"
+// #define ANSI_ESC_VIOLET     "\033[38;5;129m"
+// #define ANSI_ESC_AQUA       "\033[38;5;51m"
+// #define ANSI_ESC_LAVENDER   "\033[38;5;189m"
+// #define ANSI_ESC_DARKGREEN  "\033[38;5;22m"
+// #define ANSI_ESC_DARKRED    "\033[38;5;52m"
+// #define ANSI_ESC_DARKYELLOW "\033[38;5;214m"
+// #define ANSI_ESC_DARKBLUE   "\033[38;5;17m"
+// #define ANSI_ESC_DARKMAGENTA "\033[38;5;53m"
+// #define ANSI_ESC_DARKCYAN   "\033[38;5;23m"
+// #define ANSI_ESC_DARKWHITE  "\033[38;5;188m"
 
 #define ANSI_ESC_RESET      "\033[0m"
 #define ANSI_ESC_BOLD       "\033[1m"
 #define ANSI_ESC_FAINT      "\033[2m"
 #define ANSI_ESC_ITALIC     "\033[3m"
 #define ANSI_ESC_UNDERLINE  "\033[4m"
+#define ANSI_ESC_BLINK      "\033[5m"
+#define ANSI_ESC_INVERT     "\033[7m"
+#define ANSI_ESC_STRIKE     "\033[9m"
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 static bool _newLine = false;
@@ -184,7 +212,6 @@ struct timecounter {
 // clang-format on
 //prototypes (main.cpp)
 boolean        defaultsettings();
-boolean        saveStationsToNVS();
 boolean        saveDefaultIRbuttonsToNVS();
 void           saveIRbuttonsToNVS();
 void           loadIRbuttonsFromNVS();
@@ -217,6 +244,7 @@ uint8_t        upvolume();
 void           setStation(uint16_t sta);
 void           nextStation();
 void           prevStation();
+void           setStationByNumber(uint16_t staNr);
 void           StationsItems();
 void           setStationViaURL(const char* url);
 void           savefile(const char* fileName, uint32_t contentLength);
@@ -621,6 +649,169 @@ public:
         return m_SD_content[idx];
     }
 };
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class stationManagement{
+private:
+    struct sta{
+        std::vector<uint8_t> fav;
+        std::vector<uint16_t>favStaNr;
+        std::vector<char*> country;
+        std::vector<char*> name;
+        std::vector<char*> url;
+    } m_stations;
+
+    uint16_t  m_staCnt = 0;
+    uint16_t  m_staFavCnt = 0;
+    uint16_t* m_curStation = 0;
+
+public:
+    stationManagement(uint16_t* curStation){
+        clearStations();
+        m_curStation = curStation;
+    }
+    ~stationManagement(){
+        clearStations();
+    }
+private:
+    void clearStations(){
+        vector_clear_and_shrink(m_stations.country);
+        vector_clear_and_shrink(m_stations.name);
+        vector_clear_and_shrink(m_stations.url);
+        m_stations.fav.clear();
+        m_stations.fav.shrink_to_fit();
+        m_stations.favStaNr.clear();
+        m_stations.favStaNr.shrink_to_fit();
+
+        m_stations.country.push_back(x_ps_strdup("unknown"));
+        m_stations.name.push_back(x_ps_strdup("unknown"));
+        m_stations.url.push_back(x_ps_strdup("unknown"));
+        m_stations.fav.push_back('0');
+        m_stations.favStaNr.push_back(0);
+    }
+public:
+    void updateStationsList(){
+        clearStations();
+        uint8_t item = 0;
+        m_staCnt = 0;
+        m_staFavCnt = 0;
+        if(!SD_MMC.exists("/stations.json")) {return;}
+        char buff[1024];
+        File file = SD_MMC.open("/stations.json");
+        while (file.available()) {
+            char c = file.read();
+            if (c == '[' || c == ']' || c == ',' || c == '\n' || c == '\r') {continue;} // skip
+            if(c == '\"') { // start of string
+                int pos =file.readBytesUntil('\"', buff, 1024);
+                buff[pos] = 0;
+
+                if(item == 0){
+                    m_stations.fav.push_back(buff[0]);
+                    m_staCnt++;
+                    if(buff[0] == '*'){
+                        m_staFavCnt++;
+                        m_stations.favStaNr.push_back(m_staCnt);
+                    }
+                }
+                if(item == 1){
+                    m_stations.country.push_back(x_ps_strdup(buff));
+                }
+                if(item == 2){
+                    m_stations.name.push_back(x_ps_strdup(buff));
+                }
+                if(item == 3) {
+                    m_stations.url.push_back(x_ps_strdup(buff));
+                }
+                item++;
+                if(item > 3) item = 0;
+                if(m_staCnt > 999) break;
+            }
+        }
+        file.close();
+        log_w("Stations: %d, favorites: %d", m_staCnt, m_staFavCnt);
+    }
+//----------------------------------------------------------------------------------------------------------
+
+
+//----------------------------------------------------------------------------------------------------------
+    uint16_t getSumStations(){
+        return m_staCnt;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t getSumFavStations(){
+        return m_staFavCnt;
+    }
+
+//----------------------------------------------------------------------------------------------------------
+    uint16_t nextStation(){
+        if(!m_staCnt) return 1;
+        (*m_curStation)++;
+        if(*m_curStation > m_staCnt) *m_curStation = 1;
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t nextFavStation(){
+        if(!m_staCnt) return 1;
+        uint16_t cnt = 0;
+        int16_t tmp = (*m_curStation);
+        while(true){
+            tmp++;
+            cnt++;
+            if(cnt > m_staCnt) break;
+            if(tmp > m_staCnt) tmp = 1;
+            if(m_stations.fav[tmp] == '*') { *m_curStation = tmp;   break;}
+        }
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t prevStation(){
+        if(!m_staCnt) return 1;
+        (*m_curStation)--;
+        if(*m_curStation < 1) *m_curStation = m_staCnt;
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t prevFavStation(){
+        if(!m_staCnt) return 1;
+        uint16_t cnt = 0;
+        int16_t tmp = (*m_curStation);
+        while(true){
+            tmp--;
+            cnt++;
+            if(cnt > m_staCnt) break;
+            if(tmp < 1) tmp = m_staCnt;
+            if(m_stations.fav[tmp] == '*') { *m_curStation = tmp;   break;}
+        }
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    uint16_t setStationByNumber(uint16_t staNr){
+        if(!m_staCnt) return 1;
+        if(staNr > m_staCnt) *m_curStation = m_staCnt;
+        else *m_curStation = staNr;
+        return *m_curStation;
+    }
+//----------------------------------------------------------------------------------------------------------
+    const char* getStationName(uint16_t staNr){
+        if(staNr > m_staCnt) return strdup("unknown");
+        if(!m_stations.name[staNr]) return strdup("unknown");
+        return m_stations.name[staNr];
+    }
+    char getStationFav(uint16_t staNr){  // 0 = not fav, * = fav, 1..3 = fav number (notused)
+        if(staNr > m_staCnt) return '0';
+        if(!m_stations.fav[staNr]) return '0';
+        return m_stations.fav[staNr];
+    }
+    const char* getStationUrl(uint16_t staNr){
+        if(staNr > m_staCnt) return strdup("unknown");
+        if(!m_stations.url[staNr]) return strdup("unknown");
+        return m_stations.url[staNr];
+    }
+    const char* getStatonCountry(uint16_t staNr){
+        if(staNr > m_staCnt) return strdup("unknown");
+        if(!m_stations.country[staNr]) return strdup("unknown");
+        return m_stations.country[staNr];
+    }
+};
 
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -708,6 +899,7 @@ public:
         if(m_clicked) return;
         uint16_t spotPos = map_l(val, m_minVal, m_maxVal, m_leftStop, m_rightStop); // val -> x
         if(m_enabled) drawNewSpot(spotPos);
+        else m_spotPos = spotPos;
     }
     int16_t getValue(){
         return m_val;
@@ -2325,7 +2517,7 @@ exit:
     }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern Preferences stations;
+extern stationManagement   staMgnt;
 class stationsList{
 private:
     int16_t     m_x = 0;
@@ -2337,7 +2529,6 @@ private:
     uint8_t     m_lineHight = 0;
     uint16_t    m_firstStationsLineNr = 0;
     uint16_t*   m_curSstationNr = NULL;
-    uint16_t    m_maxStations = 0;
     uint8_t     m_browseOnRelease = 0;
     uint8_t     m_fontSize = 0;
     uint8_t     m_stationListPos = 0;
@@ -2367,7 +2558,7 @@ public:
         if(m_name){free(m_name); m_name = NULL;}
         if(m_buff){free(m_buff); m_buff = NULL;}
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, uint16_t* curStationNr, uint16_t maxStations){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, uint16_t* curStationNr){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -2375,7 +2566,6 @@ public:
         m_lineHight = m_h / 10;
         m_fontSize = fontSize;
         m_curSstationNr = curStationNr;
-        m_maxStations = maxStations;
         m_enabled = false;
     }
     void show(){
@@ -2412,6 +2602,7 @@ public:
                                     }
         if(m_browseOnRelease == 3)  {   if(!m_buff) log_e("m_buff is empty");
                                         tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        vTaskDelay(300 / portTICK_PERIOD_MS);
                                         m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
                                     }
         m_browseOnRelease = 0;
@@ -2426,10 +2617,10 @@ private:
     void stationslist(bool first){
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(first){
-            if(m_maxStations <= 10) m_firstStationsLineNr = 0;
+            if(staMgnt.getSumStations() <= 10) m_firstStationsLineNr = 0;
             else  if(*m_curSstationNr < 5) m_firstStationsLineNr = 0;
-            else if(*m_curSstationNr +5 <= m_maxStations) m_firstStationsLineNr = *m_curSstationNr - 5;
-            else m_firstStationsLineNr = m_maxStations - 10;
+            else if(*m_curSstationNr +5 <= staMgnt.getSumStations()) m_firstStationsLineNr = *m_curSstationNr - 5;
+            else m_firstStationsLineNr = staMgnt.getSumStations() - 10;
         }
         else{
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -2437,25 +2628,29 @@ private:
         char* stationStr = x_ps_malloc(1024);
         tft.setFont(m_fontSize);
         for(uint8_t pos = 0; pos < 10; pos++) {
-            if(pos + m_firstStationsLineNr + 1 > m_maxStations) break;
-            char staKey[15];
-            sprintf(staKey, "station_%03d", pos + m_firstStationsLineNr + 1);
+
+            if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
+
             if((pos + m_firstStationsLineNr + 1) == *m_curSstationNr){
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, pos + m_firstStationsLineNr + 1); // is currStationNr
+                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, ( pos + m_firstStationsLineNr + 1)); // is currStationNr
             }
             else{
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, pos + m_firstStationsLineNr + 1);
+                if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*'){
+                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (pos + m_firstStationsLineNr + 1));
+                }
+                else{
+                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (pos + m_firstStationsLineNr + 1));
+                }
             }
-            stations.getString(staKey, stationStr + strlen(stationStr), 950);
+            strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(pos + m_firstStationsLineNr + 1));
+
             for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
             tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
         xSemaphoreGive(mutex_display);
     }
     void hasClicked(uint16_t x, uint16_t y){
-        char staKey[15];
         m_stationListPos = y / (m_h / 10);
-
         if(m_oldY && (m_oldY + 2 * m_lineHight < y)) { // wipe up
             if(m_browseOnRelease != 1){
                 m_browseOnRelease = 1;
@@ -2471,20 +2666,21 @@ private:
             if(m_browseOnRelease != 2){
                 m_browseOnRelease = 2;
             //    log_w("wipe up");
-                if(m_firstStationsLineNr + 10 >= m_maxStations) {m_browseOnRelease = 0; return;} // nothing to do
+                if(m_firstStationsLineNr + 10 >= staMgnt.getSumStations()) {m_browseOnRelease = 0; return;} // nothing to do
                  else m_firstStationsLineNr += 9;
             }
             return;
         }
+
+        if(!m_buff) m_buff = x_ps_malloc(1024);
+        tft.setFont(m_fontSize);
+        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, (m_firstStationsLineNr + m_stationListPos + 1));
+        strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
+
+        for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
+    //    tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         if(m_oldX || m_oldY) return;
         m_oldX = x; m_oldY = y;
-        if(!m_buff) m_buff = x_ps_malloc(1024);
-
-        tft.setFont(m_fontSize);
-        sprintf(staKey, "station_%03d", m_firstStationsLineNr + m_stationListPos + 1);
-        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, m_firstStationsLineNr + m_stationListPos + 1);
-        stations.getString(staKey, m_buff + strlen(m_buff), 950);
-        for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
         m_browseOnRelease = 3;
         return;
     }
@@ -3056,4 +3252,95 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
     //     // The array is no longer needed, free the memory it consumes.
     //     vPortFree( pxTaskStatusArray );
     // }
+}
+
+const char stations_json[] =
+    "[[\"*\",\"D\",\"0N 70s\",\"http://0n-70s.radionetz.de:8000/0n-70s.mp3\"],"
+    "[\"*\",\"D\",\"0N 80s\",\"http://0n-80s.radionetz.de:8000/0n-80s.mp3\"],"
+    "[\"*\",\"D\",\"0N 90s\",\"http://0n-90s.radionetz.de:8000/0n-90s.mp3\"],"
+    "[\"*\",\"D\",\"0N Charts\",\"http://0n-charts.radionetz.de:8000/0n-charts.mp3\"],"
+    "[\"*\",\"D\",\"0N Dance\",\"http://0n-dance.radionetz.de:8000/0n-dance.mp3\"],"
+    "[\"*\",\"D\",\"0N Disco\",\"http://0n-disco.radionetz.de:8000/0n-disco.mp3\"],"
+    "[\"*\",\"D\",\"1000 Oldies\",\"http://c3.auracast.net:8010/stream\"],"
+    "[\"*\",\"D\",\"Eurodance\",\"http://www.laut.fm/eurodance\"],"
+    "[\"\",\"D\",\"extra-radio 88.0\",\"https://www.extra-radio.de/stream/listen.m3u\"],"
+    "[\"*\",\"D\",\"Hitradio SKW\",\"http://server4.streamserver24.com:2199/tunein/hitradio.asx\"],"
+    "[\"*\",\"D\",\"MacSlon's Irish Pub Radio\",\"http://macslons-irish-pub-radio.stream.laut.fm/macslons-irish-pub-radio\"],"
+    "[\"\",\"GR\",\"Άνοιξη 100.7\",\"http://solid1.streamupsolutions.com:55023/stream\"],"
+    "[\"\",\"RU\",\"НАШЕ Радио\",\"http://nashe1.hostingradio.ru/nashe-128.mp3\"],"
+    "[\"\",\"RU\",\"Радио Русские Песни\",\"http://listen.rusongs.ru/ru-mp3-128\"],"
+    "[\"\",\"BG\",\"Свежа България\",\"http://31.13.223.148:8000/fresh.mp3\"],"
+    "[\"\",\"CH\",\"SWISS POP\",\"https://stream.srg-ssr.ch/rsp/aacp_48.asx\"],"
+    "[\"\",\"BG\",\"BGRADIO\",\"http://play.global.audio/bgradio_low.ogg\"],"
+    "[\"\",\"D\",\"knixx.fm\",\"http://s1.knixx.fm:5347/dein_webradio_vbr.opus\"],"
+    "[\"*\",\"D\",\"- 0 N - Christmas on Radio\",\"https://0n-christmas.radionetz.de/0n-christmas.aac\"],"
+    "[\"*\",\"UK\",\"BBC 6music\",\"http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=96000.norewind.m3u8\"],"
+    "[\"\",\"D\",\"- 0 N - Movies on Radio\",\"https://0n-movies.radionetz.de/0n-movies.mp3\"],"
+    "[\"*\",\"D\",\"- 0 N - Top 40 on Radio\",\"https://0n-top40.radionetz.de/0n-top40.mp3\"],"
+    "[\"\",\"D\",\"ROCKANTENNE Alternative (mp3)\",\"https://stream.rockantenne.de/alternative/stream/mp3\"],"
+    "[\"\",\"P\",\"Gra Wrocław\",\"http://rmfstream2.interia.pl:8000/radio_gra_wroc\"],"
+    "[\"*\",\"RU\",\"Classic EuroDisco Радио\",\"https://live.radiospinner.com/clsscrdsc-96\"],"
+    "[\"*\",\"D\",\"Hit Radio FFH - Soundtrack (AAC+)\",\"http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u\"]]";
+
+const char aesKey [] = "mysecretkey12345";
+
+inline const char* aes_encrypt(const char* input) {
+    static char* output = NULL;
+    uint16_t len = strlen(input) / 16;
+    len++;
+    if(output){free (output); output = NULL;}
+    output = (char*) x_ps_calloc((len * 16) + 1, 1);
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_enc(&aes, (const unsigned char*) aesKey, 128);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_ENCRYPT, (const unsigned char*) input, (unsigned char*) output);
+    mbedtls_aes_free(&aes);
+    return output;
+}
+
+inline const char* aes_decrypt(const char* input) {
+    static char* output = NULL;
+    uint16_t len = strlen(input) + 1;
+    if(output){free (output); output = NULL;}
+    output = (char*) x_ps_calloc(len, 1);
+    mbedtls_aes_context aes;
+    mbedtls_aes_init(&aes);
+    mbedtls_aes_setkey_dec(&aes, (const unsigned char*) aesKey, 128);
+    mbedtls_aes_crypt_ecb(&aes, MBEDTLS_AES_DECRYPT, (const unsigned char*) input, (unsigned char*) output);
+    mbedtls_aes_free(&aes);
+    return output;
+}
+
+inline void encode_base64(const unsigned char* input, size_t input_len) {
+    // Buffer-Größe berechnen für Base64-Kodierung
+    size_t buffer_size = ((input_len + 2) / 3) * 4 + 1;
+    unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
+
+    size_t output_len;
+    int ret = mbedtls_base64_encode(output, buffer_size, &output_len, input, input_len);
+
+    if (ret == 0) {
+        printf("Base64-Kodierung: %s\n", output);
+    } else {
+        printf("Fehler bei der Base64-Kodierung\n");
+    }
+
+    free(output);  // Buffer freigeben
+}
+
+inline void decode_base64(const char* input, size_t input_len) {
+    size_t output_len;
+    // Buffer-Größe berechnen für Base64-Dekodierung
+    size_t buffer_size = (input_len  / 4) * 3 + 1;
+    unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
+
+    // Dekodierung
+    int ret = mbedtls_base64_decode(output, sizeof(output), &output_len, (const unsigned char*)input, input_len);
+
+    if (ret == 0) {
+        printf("Dekodierter Text: %s\n", output);
+    } else {
+        printf("Fehler bei der Base64-Dekodierung\n");
+    }
+    free(output);  // Buffer freigeben
 }

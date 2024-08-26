@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.08.2024
+ *  Updated on: 23.08.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -46,7 +46,6 @@ const char index_html[] PROGMEM = R"=====(
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsgrid/1.5.3/jsgrid.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.8/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
     <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"></script>
@@ -56,7 +55,6 @@ const char index_html[] PROGMEM = R"=====(
 <!--  <script src="SD/js/jquery.js"></script>    -->
 <!--  <script src="SD/js/jquery-ui.js"></script> -->
 <!--  <script src="SD/js/jsgrid.js"></script>    -->
-<!--  <script src="SD/js/xlsx.js"></script>      -->
 <!--  <script src="SD/js/FileSaver.js"></script> -->
 
 
@@ -90,7 +88,7 @@ const char index_html[] PROGMEM = R"=====(
         }
         #tab-content2 {
             display : none;
-            margin : 20px;
+            margin : 20px 20px 0px 20px;
         }
         #tab-content3 {
             display : none;
@@ -120,7 +118,7 @@ const char index_html[] PROGMEM = R"=====(
             display : none;
             margin : 20px;
         }
-        .button_80x30 {
+        .button_120x30 {
             width : 120px;
             height : 30px;
             background-color : #128F76;
@@ -128,11 +126,11 @@ const char index_html[] PROGMEM = R"=====(
             color : #FFF;
             text-align : center;
             text-decoration : none;
-            display : inline-block;
             font-size : 16px;
             cursor : pointer;
             border-radius : 5px;
-            margin : 4px 2px;
+            margin : 4px 2px 0 0;
+            padding : 0;
         }
         .button_20x36 {
             width : 20px;
@@ -211,14 +209,6 @@ const char index_html[] PROGMEM = R"=====(
             /* width : 96px;
                height : 96px; */
             border : #000 solid 2px;
-        }
-        .jsgrid-header-cell {
-            padding : 0.1em !important ;
-        }
-        .jsgrid-cell {
-            overflow : hidden !important ;
-            white-space : nowrap !important ;
-            padding : 0.1em 0.2em !important ;
         }
         .ui-widget-header {
             background : #11e9e9 !important ;
@@ -371,6 +361,70 @@ const char index_html[] PROGMEM = R"=====(
             background-color:#007bff;
             transition:width
         }
+        .stations-container {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: auto;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+        }
+
+        .stations-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .stations-th{
+            padding-left: 5px;
+            padding-right: 0px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            text-align: left;
+            border: 1px solid black;
+            white-space: nowrap;
+            cursor: pointer;
+            height: 25px;
+        }
+
+        .stations_tr{
+            padding: 0;
+        }
+        .table-row.highlight {
+            background-color: #f0edcc !important; /* Wichtig! Überschreibt die Hintergrundfarbe */
+        }
+
+        /* Kontextmenü-Stil */
+        .context-menu {
+            display: none;
+            position: absolute;
+            z-index: 1000;
+            width: 150px;
+            background-color: white;
+            border: 1px solid #ccc;
+            box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .context-menu-item {
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .context-menu-item:hover {
+            background-color: #f2f2f2;
+        }
+
+        .notification {
+            position: fixed; /* Fixiert das Fenster relativ zum Ansichtsfenster */
+            top: 20px; /* Abstand von oben */
+            right: 20px; /* Abstand von rechts */
+            background-color: #444; /* Dunkler Hintergrund */
+            color: white; /* Weiße Schrift */
+            padding: 15px; /* Innenabstand */
+            border-radius: 5px; /* Abgerundete Ecken */
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Schatten */
+            display: none; /* Anfangs versteckt */
+            z-index: 1000; /* Sicherstellen, dass es über anderen Elementen liegt */
+        }
     </style>
 </head>
 
@@ -411,7 +465,7 @@ function connect() {
     socket.onopen = function () {
         console.log("Websocket connected")
         socket.send('get_tftSize')
-        socket.send('to_listen')
+        socket.send('to_listen');
         socket.send("getmute")
         socket.send("get_timeAnnouncement")
         socket.send("gettone=")   // Now load the tones (tab Radio)
@@ -419,7 +473,8 @@ function connect() {
         socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
         socket.send("getSleepMode")
-        setInterval(ping, 20000)
+        setInterval(ping, 20000)        
+        loadStationsFromSD("/stations.json")
     };
 
     socket.onclose = function (e) {
@@ -470,7 +525,7 @@ function connect() {
                                           setSlider(parts[0], parts[1])
                                         }
                                         break
-            case "stationNr":           document.getElementById('preset').selectedIndex = Number(val)
+            case "stationNr":           preselectStationList(val)
                                         break
             case "stationURL":          station.value = val
                                         break
@@ -603,8 +658,6 @@ document.addEventListener('readystatechange', event => {
     if (event.target.readyState === 'complete') {
         console.log('Now external resources are loaded too, like css,src etc... ')
         connect();  // establish websocket connection
-        loadGridFileFromSD()
-        showExcelGrid()
         audioPlayer_buildFileSystemTree("/")
         dlnaPlayer_buildFileSystemTree("/")
     }
@@ -671,7 +724,6 @@ function showTab2 () {
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    $('#jsGrid').jsGrid('refresh')
 }
 
 function showTab3 () {
@@ -860,7 +912,461 @@ function uploadTextFile (fileName, content) {
     xhr.send(fd) // send
 }
 
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------- TAB RADIO -------------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
+    const myImg = document.getElementById(id);
+    if(src == '') src = '/common/unknown.jpg'
+    src = "/SD" + src
+    src += "?" + new Date().getTime()
+    console.log("showLogo1 id=", id, "src=", src)
+    myImg.src = src;
+}
+
+function test(){
+    socket.send("test=")
+}
+
+function handleStation (presctrl) { // tab Radio: preset, select a station
+    cmd.value = ''
+    console.log(presctrl.value)
+    socket.send('set_station=' + presctrl.value)
+}
+
+function setstation () { // Radio: button play - Enter a streamURL here....
+    var sel = document.getElementById('preset')
+    sel.selectedIndex = 0
+    cmd.value = ''
+    var theUrl =  station.value;
+    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+    theUrl = theUrl.replace(/%21/g, '!') //
+    theUrl = theUrl.replace(/%22/g, '"') //
+    theUrl = theUrl.replace(/%23/g, '#') //
+    theUrl = theUrl.replace(/%3f/g, '?') //
+    theUrl = theUrl.replace(/%40/g, '@') //
+    socket.send("stationURL=" + theUrl)
+}
+
+function setSlider (elmnt, value) {
+    console.log("setSlider", elmnt, value)
+    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
+    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
+    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
+    if (elmnt === 'Balance')  slider_BAL_set(value)
+}
+
+function slider_LP_mouseUp () { // Slider LowPass mouseupevent
+    handlectrl('LowPass', I2S_eq_Val[LowPass.value])
+    console.log('LowPass=%i', Number(LowPass.value));
+}
+
+function slider_LP_change () { //  Slider LowPass changeevent
+    console.log('LowPass=%i', Number(LowPass.value))
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+}
+
+function slider_LP_set (value) { // set Slider LowPass
+    var val = Number(value)
+    document.getElementById('LowPass').value = val
+    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
+    console.log('LowPass=%i', val)
+}
+
+function slider_BP_mouseUp () { // BandPass mouseupevent
+    handlectrl('BandPass', I2S_eq_Val[BandPass.value])
+    console.log('BandPass=%i', Number(BandPass.value));
+}
+
+function slider_BP_change () { //  BandPass changeevent
+    console.log('BandPass=%i', Number(BandPass.value))
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+}
+
+function slider_BP_set (value) { // set Slider BandPass
+    var val = Number(value)
+    document.getElementById('BandPass').value = val
+    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
+    console.log('BandPass=%i', val)
+}
+
+function slider_HP_mouseUp () { // Slider HighPass mouseupevent
+    handlectrl('HighPass', I2S_eq_Val[HighPass.value])
+    console.log('HighPass=%i', Number(HighPass.value));
+}
+
+function slider_HP_change () { //  Slider HighPass changeevent
+    console.log('HighPass=%i', Number(HighPass.value))
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+}
+
+function slider_HP_set (value) { // set Slider HighPass
+    var val = Number(value)
+    document.getElementById('HighPass').value = val
+    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
+    console.log('HighPass=%i', val)
+}
+
+function slider_BAL_mouseUp () { // Slider Balance mouseupevent
+    handlectrl('Balance', Balance.value)
+    console.log('Balance=%i', Number(Balance.value));
+}
+
+function slider_BAL_change () { //  Slider Balance changeevent
+    console.log('Balance=%i', Number(Balance.value))
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+}
+
+function slider_BAL_set (value) { // set Slider Balance
+    var val = Number(value)
+    document.getElementById('Balance').value = val
+    document.getElementById('label_BAL_value').innerHTML = Balance.value
+    console.log('Balance=%i', val)
+}
+
+function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
+    var theUrl = id + "=" + val
+    console.log(theUrl)
+    socket.send(theUrl)
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// -------------------------------------------------------------- TAB CONFIG -------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+let tableData = [];
+
+function loadTableData() {
+    const table = document.getElementById('stationsTable').querySelector('tbody');
+    table.innerHTML = ''; // Tabelle leeren
+    tableData.forEach((rowData, rowIndex) => {
+        const row = table.insertRow();
+        row.classList.add('table-row');
+        rowData.forEach((cellData, cellIndex) => {
+            const cell = row.insertCell();
+            cell.style.paddingLeft = "5px";
+            cell.style.paddingRight = "5px";
+            cell.style.paddingTop = "5px";
+            cell.style.paddingBottom = "5px";
+            cell.style.textAlign = "left";
+            cell.style.border = "1px solid black";
+            cell.style.whiteSpace = "nowrap";
+            cell.style.cursor = "pointer";
+            cell.style.height = "25px";
+            cell.style.overflow = "hidden";
+            cell.style.textOverflow = "ellipsis";
+            if(cellIndex === 0) {
+                cell.style.paddingLeft = "0px";
+                cell.style.paddingRight = "0px";
+                cell.style.minWidth = "40px";
+                cell.style.width = "42px";
+                cell.style.maxWidth = "44px";
+                cell.style.textAlign = "center";
+            }
+            if(cellIndex === 1) {
+                cell.style.minWidth = "45px";
+                cell.style.width = "47px";
+                cell.style.maxWidth = "50px";
+                cell.style.textAlign = "center";
+            }
+            if(cellIndex === 2) {
+                cell.style.width = "100px";
+                cell.style.maxWidth = "180px";
+                cell.style.textAlign = "left";
+            }
+            if(cellIndex === 3) {
+                cell.style.width = "200px";
+                cell.style.maxWidth = "280px";
+                cell.style.textAlign = "left";
+            }
+            cell.textContent = cellData;
+            // Event zum Editieren hinzufügen
+            cell.addEventListener('click', function () {
+                editCell(cell, rowIndex, cellIndex);
+            });
+        });
+        row.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            selectedRowIndex = rowIndex;
+            showContextMenu(e);
+        });
+        if (rowIndex % 2 === 1) {
+            row.style.backgroundColor = '#f2f2f2';
+        }
+        addRowListeners();
+    });
+}
+
+function editCell(cell, rowIndex, cellIndex) {
+    if (cell.querySelector('input')) {
+        return; // Verhindert das mehrfache Hinzufügen eines Input-Feldes
+    }
+    const originalContent = cell.textContent.trim();
+    const cellWidth = cell.clientWidth - 5; // padding  td
+    // Breite der Zelle fixieren
+    cell.style.width = `${cellWidth}px`;
+    // Input-Feld mit reduzierter Breite erstellen
+    const inputFieldWidth = cellWidth - 15; // Reduziere die Breite um 15px für Padding und Rand
+    cell.innerHTML = `<input type="text" value="${originalContent}" data-original-value="${originalContent}"
+        style="width: ${inputFieldWidth}px; font-size: ${window.getComputedStyle(cell).fontSize}; font-family: ${window.getComputedStyle(cell).fontFamily};">`;
+    const input = cell.querySelector('input');
+    input.focus();
+    input.addEventListener('blur', function () {
+        let hasChanged = true;
+        let newValue = input.value.trim();
+        const originalValue = input.dataset.originalValue;
+        if (newValue !== originalValue) {
+            const validValues = ['*', '1', '2', '3'];
+            if (cellIndex == 0 && !validValues.includes(newValue)) {
+                newValue = ''; // Clears the field if the value is invalid
+                haschanged = false;
+            }
+            cell.textContent = newValue;
+            tableData[rowIndex][cellIndex] = newValue;
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+            if (hasChanged) showMessage('Cell has been successfully modified.');
+            updateStationlist();
+        } else {
+            cell.textContent = originalContent;
+        }
+    });
+    input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+            input.blur();
+        }
+    });
+}
+
+let deletedRowData = ['*', '', '', 'http'];
+
+function insertRow(z) { // z: 0 = above, 1 = below
+    const newRowData = deletedRowData;
+    if (selectedRowIndex !== null) {
+        tableData.splice(selectedRowIndex + z, 0, newRowData);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row successfully inserted.');
+        updateStationlist();
+    }
+    hideContextMenu();
+}
+
+function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
+    const newRowData = ['*', '', Name, Url];
+    let rowCount = tableData.length;
+    if (rowCount !== null) {
+        tableData.splice(rowCount + 1, 0, newRowData);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row successfully inserted.');
+        updateStationlist();
+        deletedRowData = ['*', '', '', 'http'];
+    }
+    hideContextMenu();
+}
+
+
+function deleteRow() {
+    if (selectedRowIndex !== null && tableData.length > 1) {
+        deletedRowData = tableData[selectedRowIndex];
+        tableData.splice(selectedRowIndex, 1);
+        loadTableData();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage('Row was successfully deleted.');
+        updateStationlist();
+    }
+    hideContextMenu();
+}
+
+function showContextMenu(event) {
+    const contextMenu = document.getElementById('contextMenu');
+    contextMenu.style.left = `${event.pageX}px`;
+    contextMenu.style.top = `${event.pageY}px`;
+    contextMenu.style.display = 'block';
+}
+
+function hideContextMenu() {
+    document.getElementById('contextMenu').style.display = 'none';
+}
+
+
+function showMessage(message) {
+    console.log(message);
+    // show the notification windows
+    var notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.style.display = 'block';
+    // hide after 3 seconds
+    setTimeout(function() {
+        notification.style.display = 'none';
+    }, 3000);
+}
+
+// Hide context menu when clicking outside
+window.addEventListener('click', function () {
+    hideContextMenu();
+});
+
+
+async function saveStationsToSD(filename, content) {
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Filename': filename
+            },
+            body: (content),
+        });
+
+        if (!response.ok) {
+            throw new Error('Error saving the file: ' + response.statusText);
+        }
+
+        const result = await response.text();
+        console.log('File saved successfully:', result);
+    } catch (error) {
+        console.error('There was a problem: ', error);
+    }
+}
+
+async function loadStationsFromSD(file_name) {
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Download?" + encodeURIComponent(file_name) + "&cb=" + cacheBuster, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`Error loading the file: ${response.statusText}`);
+        }
+
+        const jsonContent = await response.text();
+
+    //    console.log('File loaded successfully : %s', jsonContent);
+        console.log('File loaded successfully :', JSON.parse(jsonContent));
+        if (jsonContent) {
+            tableData = JSON.parse(jsonContent);
+        } else {
+            // Use default data when there is no stored data
+            tableData = [
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            ];
+        }
+
+        // Tabelle erst laden, wenn die Daten bereitgestellt wurden
+        loadTableData();
+        updateStationlist(); // und dann die Liste in RADIO aktualisieren
+
+    } catch (error) {
+        console.error('Es gab ein Problem beim Laden der Datei:', error);
+            tableData = [
+                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            ];
+            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
+    }
+}
+
+// Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
+function addRowListeners() {
+    const rows = document.getElementsByClassName('table-row');
+    const info = document.getElementById('stationInfo');
+    for (let i = 0; i < rows.length; i++) {
+        rows[i].addEventListener('mouseover', function() {
+            // Entfernen der Hervorhebung von allen Zeilen
+            for (let j = 0; j < rows.length; j++) {
+                rows[j].classList.remove('highlight');
+            }
+            // Hervorheben der aktuellen Zeile
+            this.classList.add('highlight');
+
+            // Anzeige der Zeilennummer
+            const rowIndex = i + 1;
+            info.textContent = `Station: ${rowIndex}`;
+
+        });
+    }
+}
+
+function preselectStationList(staNr) {
+    document.getElementById('preset').selectedIndex = (staNr - 1);
+}
+
+function updateStationlist () { // select in tab Radio
+    var opt, select
+    const selectElement = document.getElementById('preset') // Radio: show stationlists
+
+    // Zuerst das Select-Feld leeren, falls es bereits Optionen hat
+    selectElement.innerHTML = '';
+
+    // Durchlaufen der tableData-Array
+    tableData.forEach((row, index) => {
+        const option = document.createElement('option');
+        // Dreistellige Nummerierung, beginnend mit 001
+        const prefixNumber = String(index + 1).padStart(3, '0');
+        // Setze den Text der Option auf die nummerierte dritte Spalte
+        option.textContent = `${prefixNumber} ${row[2]}`;//
+        // Setze den Wert der Option auf den Wert der vierten Spalte
+        option.value = String(index + 1);
+        if (!['*', '1', '2', '3'].includes(row[0])) {
+            option.style.color = "grey"
+        }
+        else{
+            option.style.color = "black"
+        }
+        // Füge die Option dem Select-Element hinzu
+        selectElement.appendChild(option);
+    });
+}
+
+function saveStations_json(){
+    // Create a blob with the content
+    const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
+
+    // Create an invisible link to download the file
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'stations.json';
+
+    // Add link element to document, simulate click and remove it again
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function loadStations_json(event){
+    var file = event[0]
+    var reader = new FileReader()
+    reader.onload = function (event) {
+        var data = event.target.result
+        console.log(data);
+        tableData = JSON.parse(data)
+        loadTableData()
+        updateStationlist();
+        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+    }
+    reader.onerror = function (ex) {
+        console.log(ex)
+    }
+    reader.readAsText(file)
+}
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// --------------------------------------------------------- TAB AUDIO PLAYER ------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 var dlnaLevel = 0
 
 function clearDLNAServerList(level){
@@ -1036,424 +1542,6 @@ function select_l8 (presctrl) { // preset, select level 7
     console.log('DLNA_getContent=' + presctrl.value + "&" + slectedText)
     dlnaLevel = 9
  }
-// ----------------------------------- TAB RADIO ------------------------------------
-
-function showLogo1(id, src) { // get the bitmap from SD, convert to URL first
-    const myImg = document.getElementById(id);
-    if(src == '') src = '/unknown.jpg'
-    src = "/SD" + src
-    src += "?" + new Date().getTime()
-    console.log("showLogo1 id=", id, "src=", src)
-    myImg.src = src;
-}
-
-function test(){
-    socket.send("test=")
-}
-
-function handleStation (presctrl) { // tab Radio: preset, select a station
-    cmd.value = ''
-    socket.send('set_station=' + presctrl.value)
-}
-
-function setstation () { // Radio: button play - Enter a streamURL here....
-    var sel = document.getElementById('preset')
-    sel.selectedIndex = 0
-    cmd.value = ''
-    var theUrl =  station.value;
-    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
-    theUrl = theUrl.replace(/%21/g, '!') //
-    theUrl = theUrl.replace(/%22/g, '"') //
-    theUrl = theUrl.replace(/%23/g, '#') //
-    theUrl = theUrl.replace(/%3f/g, '?') //
-    theUrl = theUrl.replace(/%40/g, '@') //
-    socket.send("stationURL=" + theUrl)
-}
-
-function setSlider (elmnt, value) {
-    console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
-    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
-    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
-    if (elmnt === 'Balance')  slider_BAL_set(value)
-}
-
-function slider_LP_mouseUp () { // Slider LowPass mouseupevent
-    handlectrl('LowPass', I2S_eq_Val[LowPass.value])
-    console.log('LowPass=%i', Number(LowPass.value));
-}
-
-function slider_LP_change () { //  Slider LowPass changeevent
-    console.log('LowPass=%i', Number(LowPass.value))
-    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
-}
-
-function slider_LP_set (value) { // set Slider LowPass
-    var val = Number(value)
-    document.getElementById('LowPass').value = val
-    document.getElementById('label_LP_value').innerHTML = I2S_eq_DB[LowPass.value]
-    console.log('LowPass=%i', val)
-}
-
-function slider_BP_mouseUp () { // BandPass mouseupevent
-    handlectrl('BandPass', I2S_eq_Val[BandPass.value])
-    console.log('BandPass=%i', Number(BandPass.value));
-}
-
-function slider_BP_change () { //  BandPass changeevent
-    console.log('BandPass=%i', Number(BandPass.value))
-    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
-}
-
-function slider_BP_set (value) { // set Slider BandPass
-    var val = Number(value)
-    document.getElementById('BandPass').value = val
-    document.getElementById('label_BP_value').innerHTML = I2S_eq_DB[BandPass.value]
-    console.log('BandPass=%i', val)
-}
-
-function slider_HP_mouseUp () { // Slider HighPass mouseupevent
-    handlectrl('HighPass', I2S_eq_Val[HighPass.value])
-    console.log('HighPass=%i', Number(HighPass.value));
-}
-
-function slider_HP_change () { //  Slider HighPass changeevent
-    console.log('HighPass=%i', Number(HighPass.value))
-    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
-}
-
-function slider_HP_set (value) { // set Slider HighPass
-    var val = Number(value)
-    document.getElementById('HighPass').value = val
-    document.getElementById('label_HP_value').innerHTML = I2S_eq_DB[HighPass.value]
-    console.log('HighPass=%i', val)
-}
-
-function slider_BAL_mouseUp () { // Slider Balance mouseupevent
-    handlectrl('Balance', Balance.value)
-    console.log('Balance=%i', Number(Balance.value));
-}
-
-function slider_BAL_change () { //  Slider Balance changeevent
-    console.log('Balance=%i', Number(Balance.value))
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
-}
-
-function slider_BAL_set (value) { // set Slider Balance
-    var val = Number(value)
-    document.getElementById('Balance').value = val
-    document.getElementById('label_BAL_value').innerHTML = Balance.value
-    console.log('Balance=%i', val)
-}
-
-function handlectrl (id, val) { // Radio: BP,BP,TP, BAL
-    var theUrl = id + "=" + val
-    console.log(theUrl)
-    socket.send(theUrl)
-}
-// ----------------------------------- TAB CONFIG ------------------------------------
-
-function saveGridFileToSD () { // save to SD
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var strJSON = JSON.stringify(wsData)
-    var objJSON = JSON.parse(strJSON)
-    console.log(wsData.length)
-    var txt = ''
-    var l
-    var c
-    var select, opt
-    select = document.getElementById('preset') // Radio: show stationlist
-    select.options.length = 1
-    var j = 1
-    txt = 'Hide\tCy\tStationName\tStreamURL\n'
-    for (var i = 0; i < wsData.length; i++) {
-        c = ''
-        if (objJSON[i].Hide) {
-            c = objJSON[i].Hide
-            txt += c+ '\t'
-        } else txt += '\t'
-        if (objJSON[i].Hide !== '*') {
-            if (j < 1000) {
-                opt = document.createElement('OPTION')
-                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-                select.add(opt)
-            }
-            j++
-        }
-        if (objJSON[i].Cy) {
-            c = objJSON[i].Cy
-            c = c + '\t'
-            txt += c
-        } else txt += '\t'
-        if (objJSON[i].StationName) {
-            c = objJSON[i].StationName
-            c = c + '\t'
-            txt += c
-        } else txt += '\t'
-        if (objJSON[i].StreamURL) {
-            c = objJSON[i].StreamURL
-            txt += c
-        } else txt += '\t'
-        txt += '\n'
-    }
-    uploadTextFile('stations.csv', txt)
-    updateStationlist()
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function loadGridFileFromSD () { // load from SD
-    var XLrowObject
-    var rawFile = new XMLHttpRequest()
-    rawFile.timeout = 2000; // time in milliseconds
-    rawFile.open('POST', 'SD/stations.csv', true)
-    rawFile.onreadystatechange = function () {
-        if (rawFile.readyState === 4) {
-            var rawdata = rawFile.responseText
-            var workbook = XLSX.read(rawdata, {
-                raw: true,
-                type: 'string',
-                cellDates: false,
-                cellText: true
-            })
-            workbook.SheetNames.forEach(function (sheetName) {
-                XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
-            })
-            var strJSON = JSON.stringify(XLrowObject)
-            var objJSON = JSON.parse(strJSON)
-            $('#jsGrid').jsGrid({
-                data: objJSON
-            })
-            updateStationlist()
-        }
-    }
-    rawFile.ontimeout = (e) => {
-        // XMLHttpRequest timed out.
-        console.log("load SD/stations.csv timeout")
-    }
-    rawFile.send()
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function saveExcel () { // save xlsx to PC
-    var wb = XLSX.utils.book_new()
-    wb.Props = {
-        Title: 'Stations',
-        Subject: 'Stationlist',
-        Author: 'MiniWebRadio',
-        CreatedDate: new Date('2018.10.10')
-    }
-    wb.SheetNames.push('Stations')
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var wscols = [{
-        wch: 4
-    }, // 'characters'
-    {
-        wch: 5
-    }, // 'characters'
-    {
-        wch: 100
-    }, // 'characters'
-    {
-        wch: 150
-    }  // 'characters'
-    ]
-    var ws = XLSX.utils.json_to_sheet(wsData, {
-        header: ['Hide', 'Cy', 'StationName', 'StreamURL']
-    })
-    ws['!cols'] = wscols
-    wb.Sheets.Stations = ws
-
-    var wbout = XLSX.write(wb, {
-        bookType: 'xlsx',
-        type: 'binary'
-    })
-
-    function s2ab (s) {
-        var buf = new ArrayBuffer(s.length)
-        var view = new Uint8Array(buf)
-        for (var i = 0; i < s.length; i++) view[i] = s.charCodeAt(i) & 0xff
-        return buf
-    }
-    saveAs(
-        new Blob([s2ab(wbout)], {
-            type: 'application/octet-stream'
-        }),
-        'stations.xlsx'
-    )
-    updateStationlist()
-}
-
-var clients = [ // testdata
-    {
-        Hide: '*',
-        Cy: 'D',
-        StationName: 'Station',
-        StreamURL: 'URL'
-    }
-]
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function showExcelGrid () {
-    $('#jsGrid').jsGrid({
-        width: '100%',
-        height: '432px',
-        editing: true,
-        sorting: true,
-        paging: false,
-        shrinkToFit: false,
-        onItemDeleted: function (args) {
-            updateStationlist()
-        },
-        onItemUpdated: function (args) {
-            updateStationlist()
-        },
-        onItemInserted: function (args) {
-            updateStationlist()
-        },
-        deleteConfirm: function (item) {
-            return 'The entry ' + item.StationName + ' will be removed. Are you sure?'
-        },
-        rowClick: function (args) {
-            showDetailsDialog('Edit', args.item)
-        },
-        data: clients,
-        fields: [{
-            name: 'Hide',
-            type: 'text',
-            width: 20,
-            align: 'center'
-        },
-        {
-            name: 'Cy',
-            type: 'text',
-            width: 25,
-            align: 'center'
-        },
-        {
-            name: 'StationName',
-            type: 'text',
-            width: 170
-        },
-        {
-            name: 'StreamURL',
-            type: 'text',
-            width: 320
-        },
-        {
-            type: 'control',
-            modeSwitchButton: false,
-            editButton: false,
-            shrinkToFit: true,
-            headerTemplate: function () {
-                return $('<button>')
-                .attr('type', 'button')
-                .text('Add')
-                .on('click', function () {
-                    showDetailsDialog('Add', {})
-                })
-            }
-        }
-        ]
-    })
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-var showDetailsDialog = function (dialogType, client) { // popUp window
-    if(client.Hide === '*') $("#chkHide").prop("checked", true)
-    else                    $("#chkHide").prop("checked", false)
-    $('#txtCy').val(client.Cy)
-    $('#txtStationName').val(client.StationName)
-    $('#txtStreamURL').val(client.StreamURL)
-    var divdialog = $('#dialog')
-    $('#dialog').attr('title', 'Edit')
-    $('#dialog').dialog({
-        width: 505,
-        resizable: false,
-        show: 'fade',
-        modal: false,
-        buttons: {
-            OK: function () {
-                if($('#chkHide').is(':checked')) client.Hide = '*'
-                else                             client.Hide = ''
-                client.Cy = $('#txtCy').val()
-                client.StationName = $('#txtStationName').val()
-                client.StreamURL = $('#txtStreamURL').val()
-                includeStation(client, dialogType === 'Add')
-                $(this).dialog('close')
-                console.log('dialog saved')
-            }
-        }
-    })
-    divdialog.dialog()
-    console.log('dialog opened')
-}
-
-var includeStation = function (client, isNew) {
-    $.extend(client, {
-        Hide: $('#txHide').val(),
-        Cy: $('#txtCy').val(),
-        StationName: $('#txtStationName').val(),
-        StreamURL: $('#txtStreamURL').val()
-    })
-
-    $('#jsGrid').jsGrid(isNew ? 'insertItem' : 'updateItem', client)
-    $('#detailsDialog').dialog('close')
-}
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function loadDataExcel (event) { // load xlsx from PC
-    var file = event[0]
-    var reader = new FileReader()
-    var excelData = []
-    reader.onload = function (event) {
-        var data = event.target.result
-        var workbook = XLSX.read(data, {
-            type: 'binary'
-        })
-        workbook.SheetNames.forEach(function (sheetName) {
-            // Here is your object
-            var XLrowObject = XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName])
-            for (var i = 0; i < XLrowObject.length; i++) {
-                excelData.push(XLrowObject[i]['your column name'])
-            }
-            var strJSON = JSON.stringify(XLrowObject)
-            var objJSON = JSON.parse(strJSON)
-            // alert(strJSON);
-            $('#jsGrid').jsGrid({
-                data: objJSON
-            })
-            updateStationlist()
-        })
-    }
-    $('#file').val('') // allow load twice
-    reader.onerror = function (ex) {
-        console.log(ex)
-    }
-    reader.readAsBinaryString(file)
-}
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-function updateStationlist () { // select in tab Radio
-    var opt, select
-    var wsData = $('#jsGrid').jsGrid('option', 'data')
-    var strJSON = JSON.stringify(wsData)
-    var objJSON = JSON.parse(strJSON)
-    console.log(wsData.length)
-    select = document.getElementById('preset') // Radio: show stationlist
-    select.options.length = 1
-    var j = 1
-    for (var i = 0; i < wsData.length; i++) {
-        if (objJSON[i].Hide !== '*') {
-            if (j < 1000) {
-                opt = document.createElement('OPTION')
-                opt.text = (('000' + j).slice(-3) + ' - ' + objJSON[i].StationName)
-                select.add(opt)
-            }
-            j++
-        }
-    }
-}
-
-// ----------------------------------- TAB AUDIO PLAYER ------------------------------------
-
-
 // ----------------------------------- TAB Search Stations ------------------------------------
 
 // global var
@@ -1467,9 +1555,7 @@ function open_RB_page() {
 }
 
 function addStationsToGrid () {
-    showDetailsDialog('Add', {})
-    $('#txtStreamURL').val($('#streamurl').val())
-    $('#txtStationName').val($('#stations option:selected').text().trim())
+    insertLastRow($('#stations option:selected').text().trim(), $('#streamurl').val());
 }
 
 function loadJSON (path, success, error) {
@@ -1998,7 +2084,7 @@ function clear_BT_memItems(){
     <div id="dialog">
         <table>
             <tr>
-                <td> Hide </td>
+                <td> Fav </td>
                 <td> <input type="checkbox" id="chkHide"></td>
             </tr>
             <tr>
@@ -2058,7 +2144,7 @@ function clear_BT_memItems(){
         </div>
         <div style="display: flex;">
             <div id="div-logo" style="flex: 0 0 210px;">
-                <img id="label-logo" src="SD/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
+                <img id="label-logo" src="SD/common/unknown.jpg" alt="img" onclick="socket.send('homepage')"    >
             </div>
             <div id="div-tone-s" style="flex:1; justify-content: center;">
                 <div style="width: 380px; height:130px;">
@@ -2169,38 +2255,45 @@ function clear_BT_memItems(){
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
-        <center>
-            <div id="jsGrid"></div>
-            <br>
-            <button class="button_80x30 buttongreen"
-                    onclick="saveGridFileToSD()"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    title="Save to SD">Save
-            </button>
-            &nbsp;
-            <button class="button_80x30 buttongreen"
-                    onclick="loadGridFileFromSD()"
-                    onmousedown="this.style.backgroundColor='#D62C1A'"
-                    ontouchstart="this.style.backgroundColor='#D62C1A'"
-                    onmouseup="this.style.backgroundColor='#128F76'"
-                    ontouchend="this.style.backgroundColor='#128F76'"
-                    id="loadSD" title="Load from SD">Load
-            </button>
-            &nbsp;
-            <button class="button_80x30 buttonblue" onclick="saveExcel()" title="Download to PC">save xlsx</button>
-            &nbsp;
-            <button class="button_80x30 buttonblue"
-                    onclick="javascript:document.getElementById('file').click();"
-                    title="Load from PC">load xlsx
-            </button>
+            <div id="notification" class="notification"></div>
+            <div class="stations-container" style="height: 500px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
+                <table class="stations-table" id="stationsTable">
+                    <thead>
+                        <tr class="stations_tr">
+                            <th class="stations-th" style="text-align: center;">Fav</th>
+                            <th  class="stations-th" style="text-align: center;">Cy</th>
+                            <th class="stations-th">StationName</th>
+                            <th class="stations-th">StreamURL</th>
+                        </tr>
+                    </thead>
+                    <tbody class="stations-tbody">
+                        <!-- Zeilen werden durch das Skript hinzugefügt -->
+                    </tbody>
+                </table>
+            </div>
 
-            <input id="file" type="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="visibility: hidden;
-                             width: 0px;" name="img"; onchange="loadDataExcel(this.files);">
-            <br>
-        </center>
+            <!-- Kontextmenü -->
+            <div id="contextMenu" class="context-menu">
+                <div class="context-menu-item" onclick="insertRow(0)">Insert line above</div>
+                <div class="context-menu-item" onclick="insertRow(1)">Insert line below</div>
+                <div class="context-menu-item" onclick="deleteRow()">Cut row</div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0px;">
+                <p style="flex: 1; min-width: 100px; padding: 0; margin: 0 auto;" id="stationInfo"></p>
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 0 auto; width: 100%;">
+                    &nbsp;
+                    <button class="button_120x30 buttonblue" onclick="saveStations_json()" title="make a backup">save</button>
+                    &nbsp;
+                    <button class="button_120x30 buttonblue"
+                            onclick="javascript:document.getElementById('file').click();"
+                            title="load your own stations list">load
+                    </button>
+                </div>
+            </div>
+
+            <input id="file" type="file" accept="application/json" style="visibility: hidden;
+                             width: 0px;" onchange="loadStations_json(this.files);">
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content3">
@@ -2403,7 +2496,7 @@ function clear_BT_memItems(){
                         onmouseup="this.src='SD/png/Button_Download_Blue.png'"
                         ontouchend="this.src='SD/png/Button_Download_Blue.png'"
                         onclick="downloadCanvasImage()"/>
-                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="add to list"
+                    <img src="SD/png/Button_Previous_Blue.png" alt="addGrid" title="Add station to the end of the list"
                         onmousedown="this.src='SD/png/Button_Previous_Yellow.png'"
                         ontouchstart="this.src='SD/png/Button_Previous_Yellow.png'"
                         onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
@@ -2636,7 +2729,7 @@ function clear_BT_memItems(){
             </tr>
         </table>
         <br>
-        <button class="button_80x30 buttongreen"
+        <button class="button_120x30 buttongreen"
                 onclick="socket.send('saveIRbuttons')"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2645,7 +2738,7 @@ function clear_BT_memItems(){
                 title="Save IR buttons">Save
         </button>
         &nbsp;
-        <button class="button_80x30 buttongreen"
+        <button class="button_120x30 buttongreen"
                 onclick="loadIRbuttons()"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2754,7 +2847,7 @@ function clear_BT_memItems(){
         <br>
         <div style="display:flex">
             <div style="flex: 0 0 150px;">
-                <button class="button_80x30 buttonblue"
+                <button class="button_120x30 buttonblue"
                    onclick="socket.send('KCX_BT_changeMode')"
                    onmousedown="this.style.backgroundColor='#D62C1A'"
                    ontouchstart="this.style.backgroundColor='#D62C1A'"
@@ -2765,7 +2858,7 @@ function clear_BT_memItems(){
             </div>
             <div style="flex: 1 0; padding-left: 20px;">
                 &nbsp;
-                <button class="button_80x30 buttonred"
+                <button class="button_120x30 buttonred"
                     onclick="clear_BT_memItems()"
                     onmousedown="this.style.backgroundColor='black'"
                     ontouchstart="this.style.backgroundColor='black'"
@@ -2883,4 +2976,5 @@ function clear_BT_memItems(){
 </html>
 
 )=====";
+
 #endif /* INDEX_H_ */
