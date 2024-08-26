@@ -866,7 +866,7 @@ void showPlsFileNumber() {
 void showAudioFileNumber() {
     tft.setFont(_fonts[3]);
     char buf[15];
-    sprintf(buf, "%03u/%03u", _cur_AudioFileNr, _SD_content.getSize());
+    sprintf(buf, "%03u/%03u", _cur_AudioFileNr + 1, _SD_content.getSize());
     display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
