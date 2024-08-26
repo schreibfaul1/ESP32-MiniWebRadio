@@ -791,6 +791,7 @@ function showTab5 () {
     document.getElementById('btn5').src = 'SD/png/Search_Yellow.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
+    document.getElementById("RB_search").value = "";
 }
 
 function showTab6 () {
