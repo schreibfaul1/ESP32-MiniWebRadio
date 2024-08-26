@@ -2602,6 +2602,7 @@ public:
                                     }
         if(m_browseOnRelease == 3)  {   if(!m_buff) log_e("m_buff is empty");
                                         tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        vTaskDelay(300 / portTICK_PERIOD_MS);
                                         m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
                                     }
         m_browseOnRelease = 0;
@@ -2670,17 +2671,16 @@ private:
             }
             return;
         }
-        if(m_oldX || m_oldY) return;
-        m_oldX = x; m_oldY = y;
+
         if(!m_buff) m_buff = x_ps_malloc(1024);
-
         tft.setFont(m_fontSize);
-
         sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, (m_firstStationsLineNr + m_stationListPos + 1));
         strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
 
         for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
-        tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    //    tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_oldX || m_oldY) return;
+        m_oldX = x; m_oldY = y;
         m_browseOnRelease = 3;
         return;
     }
