@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 17.08.2024
+// updated: 27.08.2024
 
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
 #include "common.h"
@@ -216,7 +216,7 @@ void audioTask(void *parameter) {
                 else audio.setVolume(t_volume, t_volCurve);
             }
         }
-        vTaskDelay(7 / portTICK_PERIOD_MS);
+        vTaskDelay(20 / portTICK_PERIOD_MS);
     }
 }
 
