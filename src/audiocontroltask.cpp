@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 27.08.2024
+// updated: 31.08.2024
 
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
 #include "common.h"
@@ -286,6 +286,7 @@ uint32_t audioGetCodec(){
 }
 
 boolean audioConnecttohost(const char* host, const char* user, const char* pwd){
+    if((WiFi.status() != WL_CONNECTED))  return false;
     audioTxMessage.cmd = CONNECTTOHOST;
     audioTxMessage.txt1 = host;
     audioTxMessage.txt2 = user;

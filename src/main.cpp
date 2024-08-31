@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4 Aug 23/2024                                                                                                                       ";
+    Version 3.4a Aug 31/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1240,27 +1240,22 @@ bool connectToWiFi() {
         return true;
     }
     else {
+        WiFi.mode(WIFI_MODE_NULL);
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false; // can't connect to any network
     }
 }
 
 void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
-    clearAll();
-    tft.setFont(_fonts[4]);
-    tft.setTextColor(TFT_YELLOW);
-    setTFTbrightness(80);
     _f_accessPoint = true;
-    WiFi.mode(WIFI_STA);
-    WiFi.disconnect();
-    WiFi.softAP("MiniWebRadio");
-    IPAddress myIP = WiFi.softAPIP();
-    String    AccesspointIP = myIP.toString();
-//    char      buf[100];
-//    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
-//    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
-    int16_t n = WiFi.scanNetworks();
+
+    int16_t n = 0, i = 0;
+    n = WiFi.scanNetworks();
+    while(n < 1){
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        i++;
+        if(i == 8) break;
+    }
     if(n == 0) {
         SerialPrintfln("setup: ....  no WiFi networks found");
         while(true) { ; }
@@ -1272,6 +1267,16 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
             _scannedNetworks += WiFi.SSID(i) + '\n';
         }
     }
+
+    WiFi.softAP("MiniWebRadio");
+    IPAddress myIP = WiFi.softAPIP();
+    String    AccesspointIP = myIP.toString();
+//    char      buf[100];
+//    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
+//    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
+    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
+
+
     webSrv.begin(80, 81); // HTTP port, WebSocket port
     return;
 }
@@ -1482,14 +1487,13 @@ void setup() {
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
                                                                    ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
-                                                                   ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI());
-    ArduinoOTA.setHostname("MiniWebRadio");
-    ArduinoOTA.begin();
-
-    ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
-
-    setRTC(_TZString.c_str());
-
+                                                                   ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI())
+    if(!_f_accessPoint){
+        ArduinoOTA.setHostname("MiniWebRadio");
+        ArduinoOTA.begin();
+        ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
+        setRTC(_TZString.c_str());
+    }
 #if DECODER > 1 // DAC controlled by I2C
     if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
 #endif
@@ -1559,8 +1563,10 @@ void setup() {
         _resetResaon == ESP_RST_SW ||        // ESP.restart()
         _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
         _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
-        if(_cur_station > 0) setStation(_cur_station);
-        else { setStationViaURL(_lastconnectedhost.c_str()); }
+        if(!_f_accessPoint){
+            if(_cur_station > 0) setStation(_cur_station);
+            else { setStationViaURL(_lastconnectedhost.c_str()); }
+        }
     }
     else { SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr); }
 
@@ -2647,7 +2653,7 @@ void loop() {
             connecttohost(_lastconnectedhost.c_str());
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if(_f_reconnect){
+        if(_f_reconnect && !_f_accessPoint){
             _f_reconnect = false;
             _reconnectCnt ++;
             if(_reconnectCnt < 3){
@@ -2673,19 +2679,21 @@ void loop() {
             _f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if((WiFi.status() != WL_CONNECTED)) {
-            _WiFi_disconnectCnt ++;
-            if(_WiFi_disconnectCnt == 15){
-                _WiFi_disconnectCnt = 1;
-                SerialPrintfln("WiFi         :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-                WiFi.disconnect();
-                WiFi.reconnect();
+        if(!_f_accessPoint){
+            if((WiFi.status() != WL_CONNECTED)) {
+                _WiFi_disconnectCnt ++;
+                if(_WiFi_disconnectCnt == 15){
+                    _WiFi_disconnectCnt = 1;
+                    SerialPrintfln("WiFi      :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+                    WiFi.disconnect();
+                    WiFi.reconnect();
+                }
             }
-        }
-        else{
-            if(_WiFi_disconnectCnt){
-                _WiFi_disconnectCnt = 0;
-                if(_state == RADIO) audioConnecttohost(_lastconnectedhost.c_str());
+            else{
+                if(_WiFi_disconnectCnt){
+                    _WiFi_disconnectCnt = 0;
+                    if(_state == RADIO) audioConnecttohost(_lastconnectedhost.c_str());
+                }
             }
         }
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
