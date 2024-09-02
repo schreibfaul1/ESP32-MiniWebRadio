@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4a Aug 31/2024                                                                                                                       ";
+    Version 3.4b Sep 02/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -89,6 +89,7 @@ uint8_t             _clockSubMenue = 0;
 uint8_t             _ambientValue = 50;
 uint16_t            _fileListNr = 0;
 uint16_t            _irNumber = 0;
+uint16_t            _irResult = 0;
 uint8_t             _itemListPos = 0; // DLNA items
 uint16_t            _dlnaItemNr = 0;
 uint8_t             _dlnaLevel = 0;
@@ -149,6 +150,7 @@ bool                _f_reconnect = false;
 bool                _f_eof_alarm = false;
 bool                _f_alarm = false;
 bool                _f_irNumberSeen = false;
+bool                _f_irResultSeen = false;
 bool                _f_newIcyDescription = false;
 bool                _f_newStreamTitle = false;
 bool                _f_newBitRate = false;
@@ -2247,7 +2249,7 @@ void changeState(int32_t state){
             pic_RA_logo.enable();
             if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
-                if(_f_irNumberSeen){txt_RA_irNum.hide(); setStation(_irNumber); _f_irNumberSeen = false;} // ir_number, valid between 1 ... 999
+                if(_f_irResultSeen){txt_RA_irNum.hide(); setStationByNumber(_irResult); _f_irResultSeen = false;} // ir_number, valid between 1 ... 999
                 if(_state != RADIO) {showLogoAndStationName(true);}
                 setTimeCounter(0);
                 VUmeter_RA.show();
@@ -2933,6 +2935,9 @@ void ir_res(uint32_t res) {
     if(_state != RADIO) return;
     if(_f_sleeping == true) return;
     SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu", (long unsigned)res);
+    _f_irResultSeen = true;
+    _f_irNumberSeen = false;
+    _irResult = res;
     return;
 }
 void ir_number(uint16_t num) {
@@ -2959,12 +2964,12 @@ void ir_key(uint8_t key) {
                     break;
         case 12:    downvolume(); // VOLUME-
                     break;
-        case 14:    if(_state == RADIO) {nextStation(); break;} // NEXT STATION
-                    if(_state == CLOCK) {nextStation(); changeState(RADIO); _f_switchToClock = true; break;}
+        case 14:    if(_state == RADIO) {nextFavStation(); break;} // NEXT STATION
+                    if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(1); break;}
                     break;
-        case 13:    if(_state == RADIO) {prevStation(); break;} // PREV STATION
-                    if(_state == CLOCK) {prevStation(); changeState(RADIO); _f_switchToClock = true; break;}
+        case 13:    if(_state == RADIO) {prevFavStation(); break;} // PREV STATION
+                    if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(-1); break;}
                     break;
         case 10:    muteChanged(!_f_mute);
