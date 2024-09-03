@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4b Sep 02/2024                                                                                                                       ";
+    Version 3.4bc - Sep 03/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -374,6 +374,7 @@ button2state  btn_PL_Mute("btn_PL_Mute"), btn_PL_pause("btn_PL_pause");
 button1state  btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
 button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
 button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
+button1state  btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
 textbox       txt_PL_fName("txt_PL_fName");
 slider        sdr_PL_volume("sdr_PL_volume");
 pictureBox    pic_PL_logo("pic_PL_logo");
@@ -2069,6 +2070,11 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_PL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
     btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
                                                                                          btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
+    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.jpg");
+                                                                                         btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
+    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.jpg");
+                                                                                         btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.jpg");
+
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
     pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
     pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
@@ -2309,7 +2315,7 @@ void changeState(int32_t state){
                 pgb_PL_progress.show();
                 sdr_PL_volume.show();
             //    txt_PL_fName.setText("");
-                btn_PL_Mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); txt_PL_fName.show();
+                btn_PL_Mute.show(); btn_PL_pause.setOff(); btn_PL_pause.show(); btn_PL_cancel.show(); btn_PL_playNext.show();  btn_PL_playPrev.show(); txt_PL_fName.show();
             }
             break;
         }
@@ -3037,6 +3043,8 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_PL_Mute.positionXY(x, y)) return;
                 if(btn_PL_pause.positionXY(x, y)) return;
                 if(btn_PL_cancel.positionXY(x, y)) return;
+                if(btn_PL_playNext.positionXY(x, y)) return;
+                if(btn_PL_playPrev.positionXY(x, y)) return;
             }
             break;
         case AUDIOFILESLIST:
@@ -3151,7 +3159,7 @@ void tp_released(uint16_t x, uint16_t y){
         case PLAYER:
             if(_playerSubmenue == 0){btn_PL_prevFile.released(); btn_PL_nextFile.released(); btn_PL_ready.released(); btn_PL_playAll.released(); btn_PL_shuffle.released(); btn_PL_fileList.released();
                                      btn_PL_radio.released(); btn_PL_off.released();}
-            if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_pause.released(); btn_PL_cancel.released(); sdr_PL_volume.released();}
+            if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_pause.released(); btn_PL_cancel.released(); sdr_PL_volume.released(); btn_PL_playNext.released(); btn_PL_playPrev.released();}
             break;
         case AUDIOFILESLIST:
             lst_PLAYER.released(x, y);
@@ -3716,6 +3724,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_PL_fileList") == 0){return;}
         if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
         if( val && strcmp(name, "btn_PL_off") == 0)     {return;}
+        if( val && strcmp(name, "btn_PL_playPrev") == 0){_cur_AudioFileNr = _SD_content.getPrevAudioFile(_cur_AudioFileNr); return;}
+        if( val && strcmp(name, "btn_PL_playNext") == 0){_cur_AudioFileNr = _SD_content.getNextAudioFile(_cur_AudioFileNr); return;}
     }
     if(_state == AUDIOFILESLIST) {
         if( val && strcmp(name, "lst_PLAYER") == 0)     {setTimeCounter(4); return;}
@@ -3813,6 +3823,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
+        if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){SD_playFile(ra.arg1);} return;}

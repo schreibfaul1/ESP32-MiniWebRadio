@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 23.Aug 2024
+// updated: 03.Sep 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -648,6 +648,32 @@ public:
     const char* getIndex(uint16_t idx){
         return m_SD_content[idx];
     }
+    uint16_t getNextAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
+        if(m_SD_content.size() == 0) return 0;
+        if(currIdx >= m_SD_content.size()) currIdx = m_SD_content.size() -1;
+        int16_t newIdx = currIdx;
+        while(true){
+            newIdx++;
+            if(newIdx >= m_SD_content.size()) newIdx = 0;
+            if(newIdx == currIdx) break; // avoid an infinite loop
+            if(indexOf(m_SD_content[newIdx], ".m3u", 0) == -1 ) break; // skip m3u files
+        }
+        return newIdx;
+    }
+
+    uint16_t getPrevAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
+        if(m_SD_content.size() == 0) return 0;
+        if(currIdx >= m_SD_content.size()) currIdx = m_SD_content.size() -1;
+        int16_t newIdx = currIdx;
+        while(true){
+            newIdx--;
+            if(newIdx == -1) newIdx = m_SD_content.size() - 1;
+            if(newIdx == currIdx) break; // avoid an infinite loop
+            if(indexOf(m_SD_content[newIdx], ".m3u", 0) == -1 ) break; // skip m3u files
+        }
+        return newIdx;
+    }
+
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class stationManagement{
@@ -727,11 +753,7 @@ public:
             }
         }
         file.close();
-        log_w("Stations: %d, favorites: %d", m_staCnt, m_staFavCnt);
     }
-//----------------------------------------------------------------------------------------------------------
-
-
 //----------------------------------------------------------------------------------------------------------
     uint16_t getSumStations(){
         return m_staCnt;
