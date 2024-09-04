@@ -102,7 +102,7 @@ int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t            _icyBitRate = 0;      // from http response header via event
 uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t            _cur_station = 1;     // current station(nr), will be set later
-uint16_t            _cur_AudioFileNr = 0; // position inside _SD_content
+uint16_t            _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t            _plsCurPos = 0;
 uint16_t            _totalNumberReturned = 0;
@@ -127,7 +127,7 @@ char                _prefix[5] = "/s";
 char                _commercial[25];
 char                _icyDescription[512] = {};
 char                _streamTitle[512] = {};
-char*               _curAudioFolder = NULL;
+char*               _cur_AudioFolder = NULL;
 char*               _lastconnectedfile = NULL;
 char*               _stationURL = NULL;
 char*               _JSONstr = NULL;
@@ -458,34 +458,42 @@ boolean defaultsettings(){
         return h * 60 + m;
     };
 
-    _cur_volume          = atoi(   parseJson("\"volume\":"));
-    _volumeSteps         = atoi(   parseJson("\"volumeSteps\":"));
-    _ringVolume          = atoi(   parseJson("\"ringVolume\":"));
-    _volumeAfterAlarm    = atoi(   parseJson("\"volumeAfterAlarm\":"));
-    _BTvolume            = atoi(   parseJson("\"BTvolume\":"));
-    _f_BTpower           = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    _alarmtime[0]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
-    _alarmtime[1]        = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
-    _alarmtime[2]        = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
-    _alarmtime[3]        = computeMinuteOfTheDay(parseJson("\"alarmtime_wed\":"));
-    _alarmtime[4]        = computeMinuteOfTheDay(parseJson("\"alarmtime_thu\":"));
-    _alarmtime[5]        = computeMinuteOfTheDay(parseJson("\"alarmtime_fri\":"));
-    _alarmtime[6]        = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
-    _alarmdays           = atoi(   parseJson("\"alarm_weekdays\":"));
-    _f_timeAnnouncement  = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
-    _f_mute              = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
-    _brightness          = atoi(   parseJson("\"brightness\":"));
-    _sleeptime           = atoi(   parseJson("\"sleeptime\":"));
-    _cur_station         = atoi(   parseJson("\"station\":"));
-    _toneLP              = atoi(   parseJson("\"toneLP\":"));
-    _toneBP              = atoi(   parseJson("\"toneBP\":"));
-    _toneHP              = atoi(   parseJson("\"toneHP\":"));
-    _toneBAL             = atoi(   parseJson("\"balance\":"));
-    _timeFormat          = atoi(   parseJson("\"timeFormat\":"));
-    _TZName              =         parseJson("\"Timezone_Name\":");
-    _TZString            =         parseJson("\"Timezone_String\":");
-    _lastconnectedhost   =         parseJson("\"lastconnectedhost\":");
-    _sleepMode           = atoi(   parseJson("\"sleepMode\":"));
+    _cur_volume             = atoi(   parseJson("\"volume\":"));
+    _volumeSteps            = atoi(   parseJson("\"volumeSteps\":"));
+    _ringVolume             = atoi(   parseJson("\"ringVolume\":"));
+    _volumeAfterAlarm       = atoi(   parseJson("\"volumeAfterAlarm\":"));
+    _BTvolume               = atoi(   parseJson("\"BTvolume\":"));
+    _f_BTpower              = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
+    _alarmtime[0]           = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
+    _alarmtime[1]           = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
+    _alarmtime[2]           = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
+    _alarmtime[3]           = computeMinuteOfTheDay(parseJson("\"alarmtime_wed\":"));
+    _alarmtime[4]           = computeMinuteOfTheDay(parseJson("\"alarmtime_thu\":"));
+    _alarmtime[5]           = computeMinuteOfTheDay(parseJson("\"alarmtime_fri\":"));
+    _alarmtime[6]           = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
+    _alarmdays              = atoi(   parseJson("\"alarm_weekdays\":"));
+    _f_timeAnnouncement     = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
+    _f_mute                 = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
+    _brightness             = atoi(   parseJson("\"brightness\":"));
+    _sleeptime              = atoi(   parseJson("\"sleeptime\":"));
+    _cur_station            = atoi(   parseJson("\"station\":"));
+    _toneLP                 = atoi(   parseJson("\"toneLP\":"));
+    _toneBP                 = atoi(   parseJson("\"toneBP\":"));
+    _toneHP                 = atoi(   parseJson("\"toneHP\":"));
+    _toneBAL                = atoi(   parseJson("\"balance\":"));
+    _timeFormat             = atoi(   parseJson("\"timeFormat\":"));
+    _TZName                 =         parseJson("\"Timezone_Name\":");
+    _TZString               =         parseJson("\"Timezone_String\":");
+    _lastconnectedhost      =         parseJson("\"lastconnectedhost\":");
+    _sleepMode              = atoi(   parseJson("\"sleepMode\":"));
+    _cur_AudioFileNr        = atoi(   parseJson("\"cur_AudioFileNr\":")); // this is the position of the file within the (alpha ordered) folder starting with 0
+    strcpy(_cur_AudioFolder,          parseJson("\"cur_AudioFolder\":"));
+    _state                  = atoi(   parseJson("\"state\":"));
+
+    // guards------------------------------------------------------------------------------------------------------
+    if(!SD_MMC.exists(_cur_AudioFolder)) strcpy(_cur_AudioFolder, "/audiofiles"); // set default if not found
+    if(_cur_AudioFileNr > 65000) _cur_AudioFileNr = 0; // unlikely (65495 is -1)
+    // ------------------------------------------------------------------------------------------------------------
 
     if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
     loadIRbuttonsFromNVS();
@@ -595,7 +603,10 @@ void updateSettings(){
     sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                                strcat(jO, tmp);
     sprintf(tmp, ",\"balance\":%i", _toneBAL);                                              strcat(jO, tmp);
     sprintf(tmp, ",\"timeFormat\":%i", _timeFormat);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                          strcat(jO, tmp);
+    sprintf(tmp, ",\"cur_AudioFileNr\":%i", _cur_AudioFileNr);                              strcat(jO, tmp);
+    sprintf(tmp, ",\"cur_AudioFolder\":\"%s\"", _cur_AudioFolder);                          strcat(jO, tmp);
+    sprintf(tmp, ",\"state\":%i", _state);                                                  strcat(jO, tmp);
+    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                         strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -631,7 +642,7 @@ const char* SD_stringifyDirContent(String path) {
     if(!_SD_content.getSize()) return "[]"; // empty?
 
     for(int i = 0; i < _SD_content.getSize(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
-        const char* fn = _SD_content.getIndex(i);
+        const char* fn = _SD_content.getColouredSStringByIndex(i);
         if(startsWith(fn, "/.")) continue;    // ignore hidden folders
         int16_t idx = indexOf(fn, "\033", 1); // idx >0 we have size (after ANSI ESC SEQUENCE)
         if(idx > 0) {
@@ -1423,8 +1434,8 @@ void setup() {
     _f_ESPfound = true;
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
 
-    _curAudioFolder = x_ps_malloc(1024);
-    strcpy(_curAudioFolder, "/audiofiles");
+    _cur_AudioFolder = x_ps_malloc(1024);
+    strcpy(_cur_AudioFolder, "/audiofiles");
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
@@ -1822,6 +1833,9 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     changeState(PLAYER);
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
+    strncpy(_cur_AudioFolder, path, idx);
+    _cur_AudioFolder[idx] = '\0';
+
     if(showFN) {
         clearLogo();
         showFileName(path + idx + 1);
@@ -2079,7 +2093,7 @@ void placingGraphicObjects() { // and initialize them
     pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
     pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], _curAudioFolder, &_cur_AudioFileNr);
+    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_DL_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
                                                                                          btn_DL_Mute.setOnPicturePath("/btn/Button_Mute_Red.jpg");
@@ -2300,10 +2314,10 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubmenue == 0){
-                _SD_content.listDir(_curAudioFolder, true, true);
+                _SD_content.listDir(_cur_AudioFolder, true, true);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
-                showFileName(_SD_content.getIndex(_cur_AudioFileNr));
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 showAudioFileNumber();
@@ -2321,7 +2335,7 @@ void changeState(int32_t state){
         }
         case AUDIOFILESLIST: {
             clearWithOutHeaderFooter();
-            lst_PLAYER.show();
+            lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);
             setTimeCounter(4);
             break;
         }
@@ -3716,8 +3730,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_PL_Mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_PL_pause") == 0)   {return;}
         if( val && strcmp(name, "btn_PL_cancel") == 0)  {return;}
-        if( val && strcmp(name, "btn_PL_prevFile") == 0){if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
-        if( val && strcmp(name, "btn_PL_nextFile") == 0){if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+        if( val && strcmp(name, "btn_PL_prevFile") == 0){if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+        if( val && strcmp(name, "btn_PL_nextFile") == 0){if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
         if( val && strcmp(name, "btn_PL_ready") == 0)   {return;}
         if( val && strcmp(name, "btn_PL_playAll") == 0) {return;}
         if( val && strcmp(name, "btn_PL_shuffle") == 0) {return;}
@@ -3816,18 +3830,19 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
-        if(strcmp(name, "btn_PL_ready") == 0)    {_playerSubmenue = 1; SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); changeState(PLAYER); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromSDFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromSDFolder(_curAudioFolder); processPlaylist(true); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_curAudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
+        if(strcmp(name, "btn_PL_ready") == 0)    {_playerSubmenue = 1; SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); changeState(PLAYER); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_playAll") == 0)  {_playerSubmenue = 1; _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_shuffle") == 0)  {_playerSubmenue = 1; _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); changeState(PLAYER); return;}
+        if(strcmp(name, "btn_PL_fileList") == 0) {_playerSubmenue = 1; _SD_content.listDir(_cur_AudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {_playerSubmenue = 0; setStation(_cur_station); changeState(RADIO); return;}
         if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
-        if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_curAudioFolder, _SD_content.getIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
     }
     if(_state == AUDIOFILESLIST){
-        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){lst_PLAYER.show();} if(ra.val1 == 2){SD_playFile(ra.arg1);} return;}
+        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){_cur_AudioFolder = ra.arg1; _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);}
+                                                  if(ra.val1 == 2){_cur_AudioFolder = ra.arg1; _cur_AudioFileNr = ra.val2;  SD_playFile(ra.arg3); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}

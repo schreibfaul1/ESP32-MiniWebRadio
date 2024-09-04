@@ -200,6 +200,7 @@ struct dlnaHistory {
 struct releasedArg {
     char*   arg1 = NULL;
     char*   arg2 = NULL;
+    char*   arg3 = NULL;
     int16_t val1 = 0;
     int16_t val2 = 0;
 };
@@ -488,6 +489,7 @@ inline char* x_ps_calloc(uint16_t len, uint8_t size) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline char* x_ps_strdup(const char* str) {
+    if(!str){log_e("str is NULL"); return NULL;}
     char* ps_str = NULL;
     if(psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
     else { ps_str = (char*)malloc(strlen(str) + 1); }
@@ -577,22 +579,28 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class SD_content{
 private:
-    std::vector<char*>  m_SD_content;
+    struct FileInfo {
+        int32_t  fileSize;
+        char*    fileName;
+        char*    filePath;
+    };
+    std::vector<FileInfo> m_files;
+
     File m_masterFile;
     File m_slaveFile;
     char* m_buff = NULL;
 public:
     SD_content(){
-        vector_clear_and_shrink(m_SD_content);
+        m_buff = x_ps_malloc(1024);
+        freeFilesVector();
     }
     ~SD_content(){
-        vector_clear_and_shrink(m_SD_content);
+        freeFilesVector();
         if(m_buff){free(m_buff); m_buff = NULL;}
     }
     bool listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){
-        m_buff = x_ps_malloc(1024);
         if(!m_buff) {log_e("oom"); return false;}
-        vector_clear_and_shrink(m_SD_content);
+        freeFilesVector();
         if(m_masterFile) m_masterFile.close();
         if(!SD_MMC.exists(path)) {
             SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
@@ -608,72 +616,121 @@ public:
             m_slaveFile = m_masterFile.openNextFile();
             if(!m_slaveFile) break;
             if(m_slaveFile.isDirectory()) {
-                if(!withoutDirs) {
-                    m_buff[0] = 2; // ASCII: start of text, sort set dirs on first position
-                    sprintf(m_buff + 1, "%s", m_slaveFile.name());
-                    m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                if(!withoutDirs) { // folder size is -1
+                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
                 }
             }
             else {
                 if(audioFilesOnly) {
                     if(endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") || endsWith(m_slaveFile.name(), ".flac") ||
                        endsWith(m_slaveFile.name(), ".m3u") || endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
-                        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %d", m_slaveFile.name(), m_slaveFile.size());
-                        m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                        m_files.emplace_back(m_slaveFile.size(), x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
                     }
                 }
                 else {
-                    sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %d", m_slaveFile.name(), m_slaveFile.size());
-                    m_SD_content.push_back(x_ps_strdup((const char*)m_buff));
+                    m_files.emplace_back(m_slaveFile.size(), x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
                 }
             }
         }
-        for(int i = 0; i < m_SD_content.size(); i++) { // easy bubble sort
-            for(int j = 1; j < m_SD_content.size(); j++) {
-                if(strcmp(m_SD_content[j - 1], m_SD_content[i]) > 0) { swap(m_SD_content[i], m_SD_content[j - 1]); }
-            }
-        }
-        for(int i = 0; i < m_SD_content.size(); i++) {
-            if(m_SD_content[i][0] == 2) { // remove ASCII 2
-                memcpy(m_SD_content[i], m_SD_content[i] + 1, strlen(m_SD_content[i]));
-            }
-        }
+        sort();
         m_masterFile.close();
-        if(m_buff){free(m_buff); m_buff = NULL;}
         return true;
     }
+
+    bool isDir(uint16_t idx){
+        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return false;}
+        if(m_files[idx].fileSize == -1) return true;
+        return false;
+    }
     size_t getSize(){
-        return m_SD_content.size();
+        return m_files.size();
     }
-    const char* getIndex(uint16_t idx){
-        return m_SD_content[idx];
+    const char* getColouredSStringByIndex(uint16_t idx){
+        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(isDir(idx)) return m_files[idx].fileName;
+        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li" , m_files[idx].fileName, m_files[idx].fileSize);
+        return m_buff;
     }
+    const char* getFileNameByIndex(uint16_t idx){
+        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        return m_files[idx].fileName;
+    }
+
+    int32_t getFileSizeByIndex(uint16_t idx){
+        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return 0;}
+        return m_files[idx].fileSize;
+    }
+
+    const char* getFilePathByIndex(uint16_t idx){
+        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        return m_files[idx].filePath;
+    }
+
+    const char* getFileFolderByIndex(uint16_t idx){
+        if(idx >= m_files.size())  {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(isDir(idx)) return m_files[idx].filePath;
+        int lastSlashIndex = lastIndexOf(m_files[idx].filePath, '/');
+        strcpy(m_buff, m_files[idx].filePath);
+        m_buff[lastSlashIndex] = '\0';
+        return m_buff;
+    }
+
+
     uint16_t getNextAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
-        if(m_SD_content.size() == 0) return 0;
-        if(currIdx >= m_SD_content.size()) currIdx = m_SD_content.size() -1;
+        if(m_files.size() == 0) return 0;
+        if(currIdx >= m_files.size()) currIdx = m_files.size() -1;
         int16_t newIdx = currIdx;
         while(true){
             newIdx++;
-            if(newIdx >= m_SD_content.size()) newIdx = 0;
+            if(newIdx >= m_files.size()) newIdx = 0;
             if(newIdx == currIdx) break; // avoid an infinite loop
-            if(indexOf(m_SD_content[newIdx], ".m3u", 0) == -1 ) break; // skip m3u files
+            if(!endsWith(m_files[newIdx].fileName, ".m3u")) break; // skip m3u files
         }
         return newIdx;
     }
 
     uint16_t getPrevAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
-        if(m_SD_content.size() == 0) return 0;
-        if(currIdx >= m_SD_content.size()) currIdx = m_SD_content.size() -1;
+        if(m_files.size() == 0) return 0;
+        if(currIdx >= m_files.size()) currIdx = m_files.size() -1;
         int16_t newIdx = currIdx;
         while(true){
             newIdx--;
-            if(newIdx == -1) newIdx = m_SD_content.size() - 1;
+            if(newIdx == -1) newIdx = m_files.size() - 1;
             if(newIdx == currIdx) break; // avoid an infinite loop
-            if(indexOf(m_SD_content[newIdx], ".m3u", 0) == -1 ) break; // skip m3u files
+            if(!endsWith(m_files[newIdx].fileName, ".m3u")) break; // skip m3u files
         }
         return newIdx;
     }
 
+private:
+    void freeFilesVector() {
+        for (auto& file : m_files) {
+            if (file.fileName) {
+                free(file.fileName);  // free PSRAM
+                file.fileName = nullptr;
+            }
+            if(file.filePath) {
+                free(file.filePath);  // free PSRAM
+                file.filePath = nullptr;
+            }
+        }
+        m_files.clear();
+        m_files.shrink_to_fit();
+    }
+
+    void sort(){
+        std::sort(m_files.begin(), m_files.end(), [](const FileInfo& a, const FileInfo& b) {
+            // Zuerst nach Ordner vs. Datei sortieren
+            if (a.fileSize == -1 && b.fileSize != -1) {
+                return true;  // a ist Ordner, b ist Datei
+            }
+            if (a.fileSize != -1 && b.fileSize == -1) {
+                return false;  // a ist Datei, b ist Ordner
+            }
+            // Wenn beide entweder Ordner oder beide Dateien sind, alphabetisch sortieren
+            return strcmp(a.fileName, b.fileName) < 0;
+        });
+    }
 };
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class stationManagement{
@@ -2346,7 +2403,7 @@ private:
     uint8_t     m_lineHight = 0;
     uint8_t     m_fileListPos = 0;
     uint8_t     m_browseOnRelease = 0;
-    uint16_t*   m_curAudioFileNr = NULL;
+    uint16_t    m_curAudioFileNr = 0;
     uint8_t     m_fontSize = 0;
     uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
@@ -2354,7 +2411,8 @@ private:
     bool        m_state = false;
     char*       m_name = NULL;
     char*       m_curAudioFolder = NULL;
-    char*       m_buff = NULL;
+    char*       m_curAudioPath = NULL;
+    char*       m_curAudioName = NULL;
     char*       m_fileItemsPos = NULL;
     releasedArg m_ra;
 public:
@@ -2373,23 +2431,27 @@ public:
     }
     ~fileList(){
         if(m_name){free(m_name); m_name = NULL;}
-        if(m_buff){free(m_buff); m_buff = NULL;}
+        if(m_curAudioFolder){free(m_curAudioFolder); m_curAudioFolder = NULL;} //   /audiofiles/folder1
+        if(m_curAudioName  ){free(m_curAudioName);   m_curAudioName = NULL;}   //   song.mp3
+        if(m_curAudioPath  ){free(m_curAudioPath);   m_curAudioPath = NULL;}   //   /audiofiles/folder1/song.mp3
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, char* curAudioFolder, uint16_t* curAudioFileNr){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
         m_lineHight = m_h / 10;
         m_fontSize = fontSize;
-        m_curAudioFolder = curAudioFolder;
-        m_curAudioFileNr = curAudioFileNr;
         m_enabled = false;
     }
-    void show(){
+    void show(const char* cur_AudioFolder, uint16_t curAudioFileNr){
         m_browseOnRelease = 0;
         m_clicked = false;
         m_enabled = true;
+        if(m_curAudioFolder){free(m_curAudioFolder); m_curAudioFolder = NULL;}
+        m_curAudioFolder = x_ps_strdup(cur_AudioFolder);
+        m_curAudioFileNr = curAudioFileNr;
+        _SD_content.listDir(m_curAudioFolder, true, false);
         audioFileslist();
         ;
     }
@@ -2420,46 +2482,47 @@ public:
 
         char* fileName = NULL;
 
-        if(m_browseOnRelease == 1)  {   if(*m_curAudioFileNr + 9 >= _SD_content.getSize()) { goto exit; }       // wipe up
-                                        else                       {*m_curAudioFileNr += 9; m_ra.val1 = 1;}
+        if(m_browseOnRelease == 1)  {   if(m_curAudioFileNr + 9 >= _SD_content.getSize()) { goto exit; }       // wipe up
+                                        else                       {m_curAudioFileNr += 9; m_ra.val1 = 1; m_ra.val2 = m_curAudioFileNr;}
                                     }
-        if(m_browseOnRelease == 2)  {   if(*m_curAudioFileNr == 0) { goto exit; }                               // wipe down
-                                        if(*m_curAudioFileNr >  9) {*m_curAudioFileNr -= 9; m_ra.val1 = 1;}
-                                        else                       {*m_curAudioFileNr  = 0; m_ra.val1 = 1;}
+        if(m_browseOnRelease == 2)  {   if(m_curAudioFileNr == 0) { goto exit; }                               // wipe down
+                                        if(m_curAudioFileNr >  9) {m_curAudioFileNr -= 9; m_ra.val1 = 1; m_ra.val2 = m_curAudioFileNr;}
+                                        else                      {m_curAudioFileNr  = 0; m_ra.val1 = 1; m_ra.val2 = m_curAudioFileNr;}
                                     }
-        if(m_browseOnRelease == 3)  {   m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';            // previous folder
-                                        *m_curAudioFileNr = 0;
+        if(m_browseOnRelease == 3)  {   m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';           // previous folder
+                                        m_curAudioFileNr = 0;
                                         _SD_content.listDir(m_curAudioFolder, true, false);
                                         m_ra.val1 = 1;
+                                        m_ra.val2 = m_curAudioFileNr;
+                                        m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 4)  {   *m_curAudioFileNr += m_fileListPos;                                     // next folder
+        if(m_browseOnRelease == 4)  {   m_curAudioFileNr += m_fileListPos;                                     // next folder
+                                        int16_t idx = m_curAudioFileNr -1;
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
-                                        tft.writeText(_SD_content.getIndex(*m_curAudioFileNr -1), 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-                                        sprintf(m_buff, "%s",_SD_content.getIndex(*m_curAudioFileNr -1));
-                                        strcat(m_curAudioFolder, "/");
-                                        strcat(m_curAudioFolder, _SD_content.getIndex(*m_curAudioFileNr - 1));
-                                        *m_curAudioFileNr = 0;
+                                        tft.writeText(_SD_content.getColouredSStringByIndex(idx), 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        if(m_curAudioFolder) {free(m_curAudioFolder); m_curAudioFolder = NULL;}
+                                        m_curAudioFolder = x_ps_strdup(_SD_content.getFilePathByIndex(idx));
+                                        m_curAudioFileNr = 0;
                                         _SD_content.listDir(m_curAudioFolder, true, false);
-                                        m_ra.val1 = 1;
+                                        m_ra.val1 = 1;                     // isfolder
+                                        m_ra.val2 = m_curAudioFileNr;
+                                        m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 5)  {   *m_curAudioFileNr += m_fileListPos;                                     // play file
+        if(m_browseOnRelease == 5)  {   m_curAudioFileNr += m_fileListPos;                                     // play file
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
-                                        tft.writeText(m_buff, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-                                        fileName = x_ps_strdup(m_buff);
-                                        strcpy(m_buff, m_curAudioFolder);
-                                        strcat(m_buff, "/");
-                                        strcat(m_buff, fileName);
-                                        m_ra.arg1 = m_buff;      // filePath
-                                        m_ra.arg2 = fileName;    // fileName
-                                        m_ra.val1 = 2;
+                                        tft.writeText(m_curAudioName, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        m_ra.arg1 = m_curAudioFolder;      // fileFolder
+                                        m_ra.arg2 = m_curAudioName;        // fileName
+                                        m_ra.arg3 = m_curAudioPath;        // filePath
+                                        m_ra.val1 = 2;                     // isfile
+                                        m_ra.val2 = m_curAudioFileNr;   // fileNr
                                     }
     exit:
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-        if(m_buff){free(m_buff); m_buff = NULL;}
         if(fileName){free(fileName); fileName = NULL;}
         m_ra.val1 = 0;
         m_ra.arg1 = NULL;
@@ -2468,32 +2531,32 @@ public:
 private:
     void audioFileslist(){
         if(!m_curAudioFolder){ log_e("m_curAudioFolder is NULL"); return;}
-        if(*m_curAudioFileNr > _SD_content.getSize()) { log_e("m_curAudioFileNr too high"); return;}
+        if(m_curAudioFileNr > _SD_content.getSize()) { log_e("m_curAudioFileNr too high"); return;}
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
         auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
 
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        if(_SD_content.getSize() < 10) *m_curAudioFileNr = 0;
+        if(_SD_content.getSize() < 10) m_curAudioFileNr = 0;
         tft.setFont(m_fontSize);
         uint8_t lineHight = m_h / 10;
         tft.setTextColor(TFT_MAGENTA);
         tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         tft.setTextColor(TFT_WHITE);
         for(uint8_t pos = 1; pos < 10; pos++) {
-            if(pos == 1 && *m_curAudioFileNr > 0) {
+            if(pos == 1 && m_curAudioFileNr > 0) {
                 tft.setTextColor(TFT_AQUAMARINE);
                 triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
             }
-            if(pos == 9 && *m_curAudioFileNr + 9 < _SD_content.getSize()) {
+            if(pos == 9 && m_curAudioFileNr + 9 < _SD_content.getSize()) {
                 tft.setTextColor(TFT_AQUAMARINE);
                 triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
             }
-            if(*m_curAudioFileNr + pos > _SD_content.getSize()) break;
-            if(indexOf(_SD_content.getIndex(pos + *m_curAudioFileNr - 1), "\033[", 0) == -1) tft.setTextColor(TFT_ORANGE); // is folder
-            else tft.setTextColor(TFT_WHITE);                                                                       // is file
-            tft.writeText(_SD_content.getIndex(pos + *m_curAudioFileNr - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(m_curAudioFileNr + pos > _SD_content.getSize()) break;
+            if(_SD_content.isDir(pos + m_curAudioFileNr - 1)) tft.setTextColor(TFT_ORANGE); // is folder
+            else                                              tft.setTextColor(TFT_WHITE);  // is file
+            tft.writeText(_SD_content.getColouredSStringByIndex(pos + m_curAudioFileNr - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
-        uint16_t firstVal = *m_curAudioFileNr + 1;
+        uint16_t firstVal = m_curAudioFileNr + 1;
         uint16_t secondVal = firstVal + 8;
         if(secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
         sprintf(m_fileItemsPos, "%i-%i/%i", firstVal, secondVal , _SD_content.getSize()); // shows the current items pos e.g. "30-39/210"
@@ -2502,7 +2565,6 @@ private:
     }
 
     void hasReleased(uint16_t x, uint16_t y){
-        if(!m_buff) m_buff = x_ps_malloc(1024);
         m_fileListPos = y / (m_h / 10);
 
         if(m_oldY && (m_oldY - 2 * m_lineHight > y)) {      // normal wipe up
@@ -2519,19 +2581,27 @@ private:
 
         if(m_fileListPos == 0) {
             if(lastIndexOf(m_curAudioFolder, '/') > 1){  // not the first '/'
-                m_browseOnRelease = 3;
+                m_browseOnRelease = 3;  // previous folder
             }
         }
         else {
-            if(m_fileListPos + *m_curAudioFileNr > _SD_content.getSize()) goto exit;
-            sprintf(m_buff, "%s",_SD_content.getIndex(*m_curAudioFileNr + m_fileListPos -1));
-            int32_t idx = indexOf(m_buff, "\033[", 1);
-            if(idx == -1){ // is folder
-                m_browseOnRelease = 4;
+            if(m_fileListPos + m_curAudioFileNr > _SD_content.getSize()) goto exit;
+            int idx = m_curAudioFileNr + m_fileListPos -1;
+            if(_SD_content.isDir(idx)){
+                if(m_curAudioName){free(m_curAudioName); m_curAudioName = NULL;}
+                m_curAudioName = x_ps_strdup("");
+                if(m_curAudioFolder){free(m_curAudioFolder); m_curAudioFolder = NULL;}
+                m_curAudioFolder = x_ps_strdup(_SD_content.getFilePathByIndex(idx));
+                m_browseOnRelease = 4; // next folder
             }
             else {
-                m_buff[idx] = '\0';  // remove color and filesize
-                m_browseOnRelease = 5;
+                if(m_curAudioName){free(m_curAudioName); m_curAudioName = NULL;}
+                m_curAudioName = x_ps_strdup(_SD_content.getFileNameByIndex(idx));
+                if(m_curAudioFolder){free(m_curAudioFolder); m_curAudioFolder = NULL;}
+                m_curAudioFolder = x_ps_strdup(_SD_content.getFileFolderByIndex(idx));
+                if(m_curAudioPath){free(m_curAudioPath); m_curAudioPath = NULL;}
+                m_curAudioPath = x_ps_strdup(_SD_content.getFilePathByIndex(idx));
+                m_browseOnRelease = 5; // playfile
             }
         }
 exit:
