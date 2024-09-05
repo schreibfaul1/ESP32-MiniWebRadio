@@ -2317,7 +2317,6 @@ void changeState(int32_t state){
                 _SD_content.listDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
-log_w("_cur_AudioFileNr %i", _cur_AudioFileNr);
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
@@ -3843,8 +3842,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
-                                                  if(ra.val1 == 2){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder); lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
-                                                  if(ra.val1 == 3){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);} return;}
+                                                  if(ra.val1 == 2){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
+                                                  if(ra.val1 == 3){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
