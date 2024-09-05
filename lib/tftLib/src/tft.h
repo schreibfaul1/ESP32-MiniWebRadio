@@ -50,7 +50,7 @@ extern __attribute__((weak)) void tp_long_released();
 #define ST7796_WIDTH   320
 #define ST7796_HEIGHT  480
 
-// RGB565 Color definitions
+// RGB565 Color definitions            R    G    B
 #define TFT_AQUAMARINE      0x7FFA // 127, 255, 212
 #define TFT_BEIGE           0xF7BB // 245, 245, 220
 #define TFT_BLACK           0x0000 //   0,   0,   0
@@ -73,6 +73,7 @@ extern __attribute__((weak)) void tp_long_released();
 #define TFT_LAVENDER        0xE73F // 230, 230, 250
 #define TFT_LAWNGREEN       0x7FE0 // 124, 252,   0
 #define TFT_LIGHTBLUE       0xAEDC // 173, 216, 230
+#define TFT_LIGHTBROWN      0xC530 // 196, 164, 132
 #define TFT_LIGHTCYAN       0xE7FF // 224, 255, 255
 #define TFT_LIGHTGREY       0xD69A // 211, 211, 211
 #define TFT_LIGHTGREEN      0x9772 // 144, 238, 144

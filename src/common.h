@@ -2550,7 +2550,7 @@ private:
       tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
       tft.setFont(m_fontSize);
       uint8_t lineHight = m_h / 10;
-      tft.setTextColor(TFT_BROWN);
+      tft.setTextColor(TFT_LIGHTBROWN);
       tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
       tft.setTextColor(TFT_WHITE);
       for(uint8_t pos = 1; pos < 10; pos++) {
