@@ -3841,8 +3841,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
     }
     if(_state == AUDIOFILESLIST){
-        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){_cur_AudioFolder = ra.arg1; _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);}
-                                                  if(ra.val1 == 2){_cur_AudioFolder = ra.arg1; _cur_AudioFileNr = ra.val2;  SD_playFile(ra.arg3); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);} return;}
+        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
+                                                  if(ra.val1 == 2){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder); lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
+                                                  if(ra.val1 == 3){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3); log_e("_cur_AudioFileNr %i, _cur_AudioFolder %s", _cur_AudioFileNr, _cur_AudioFolder);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
