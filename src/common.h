@@ -2540,7 +2540,7 @@ public:
 private:
  void audioFileslist(uint16_t viewPos) {
       // guard -------------------------------------------------------------------------------------------------------------------------------------
-      if(_SD_content.getSize() == 0) { return;  }                                    // empty list
+      if(_SD_content.getSize() == 0) { ;  }                                           // folder empty
       if(viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; }   // viewPos too high
       //--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -2554,7 +2554,7 @@ private:
       tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
       tft.setTextColor(TFT_WHITE);
       for(uint8_t pos = 1; pos < 10; pos++) {
-          if(pos == 1 && viewPos > 0) {
+          if(pos == 1 && viewPos > 0 && _SD_content.getSize()) {
               tft.setTextColor(TFT_AQUAMARINE);
               triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
           }
