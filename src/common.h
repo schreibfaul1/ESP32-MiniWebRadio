@@ -2526,7 +2526,7 @@ public:
                                         m_ra.arg2 = m_curAudioName;        // fileName
                                         m_ra.arg3 = m_curAudioPath;        // filePath
                                         m_ra.val1 = 3;                     // isfile
-                                        m_ra.val2 = m_viewPos;             // fileNr
+                                        m_ra.val2 = m_viewPos - 1;         // fileNr (is curAudioFileNr)
                                     }
     exit:
         m_browseOnRelease = 0;
@@ -2565,7 +2565,7 @@ private:
           if(viewPos + pos > _SD_content.getSize()) break;
           if(_SD_content.isDir(pos + viewPos - 1)) tft.setTextColor(TFT_ORANGE); // is folder
           else{
-            if(pos + viewPos== m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA);  // current file
+            if(pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA);  // current file
             else tft.setTextColor(TFT_WHITE);                                    // is file
           }
           tft.writeText(_SD_content.getColouredSStringByIndex(pos + viewPos - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);

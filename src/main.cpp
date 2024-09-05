@@ -2314,9 +2314,10 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubmenue == 0){
-                _SD_content.listDir(_cur_AudioFolder, true, true);
+                _SD_content.listDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
+log_w("_cur_AudioFileNr %i", _cur_AudioFileNr);
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
