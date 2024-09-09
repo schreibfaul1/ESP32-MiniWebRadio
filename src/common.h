@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 03.Sep 2024
+// updated: 09.Sep 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -1677,7 +1677,15 @@ public:
     }
     void disable(){
         m_enabled = false;
+        m_showAll = false;
     }
+    bool isDisabled(){
+        return !m_enabled;
+    }
+    bool enable(){
+        return m_enabled = true;
+    }
+
     void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
         // minuteOfTheDay counts at 00:00, from 0...23*60+59
         // weekDay So - 0, Mo - 1 ... Sa - 6

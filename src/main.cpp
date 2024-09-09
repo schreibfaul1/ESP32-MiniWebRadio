@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4bc - Sep 03/2024                                                                                                                       ";
+    Version 3.4bd - Sep 09/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1894,6 +1894,7 @@ void fall_asleep() {
         setTFTbrightness(0);
     }
     else{
+        _clockSubMenue = 0;
         changeState(CLOCK);
     }
     if(_f_BTpower) BTpowerChanged(false);
@@ -2240,7 +2241,7 @@ void changeState(int32_t state){
         case DLNAITEMSLIST: lst_DLNA.disable();
                          break;
         case CLOCK:      btn_CL_Mute.disable();     btn_CL_alarm.disable();    btn_CL_radio.disable();
-                         clk_CL_green.disable();    sdr_CL_volume.hide();      btn_CL_off.disable();
+                      /* clk_CL_green.disable(); */ sdr_CL_volume.hide();      btn_CL_off.disable();
                          break;
         case ALARM:      clk_AL_red.disable();      btn_AL_left.disable();     btn_AL_right.disable();    btn_AL_up.disable();      btn_AL_down.disable();
                          btn_AL_ready.disable();
@@ -2258,10 +2259,8 @@ void changeState(int32_t state){
                          btn_BT_power.disable(); pic_BT_mode.disable();     txt_BT_volume.disable();   txt_BT_mode.disable();
     }
     _f_volBarVisible = false;
-    if(_timeCounter.timer){
-        setTimeCounter(0);
-    }
-
+    if(_timeCounter.timer){setTimeCounter(0);}
+    if(state != CLOCK) clk_CL_green.disable();
     dispHeader.updateItem(_hl_item[state]);
     switch(state) {
         case RADIO:{
@@ -2358,19 +2357,13 @@ void changeState(int32_t state){
         case CLOCK:{
             if(_clockSubMenue == 0){
                 setTimeCounter(0);
-                if(_state != CLOCK){
-                    clearWithOutHeaderFooter();
-                    clk_CL_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
-                }
-                else{
-                    btn_CL_Mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
-                }
-                clk_CL_green.show();
+                btn_CL_Mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
             }
             if(_clockSubMenue == 1){
                 btn_CL_Mute.show();     btn_CL_alarm.show();    btn_CL_radio.show(); sdr_CL_volume.show(); btn_CL_off.show();
                 setTimeCounter(2);
             }
+            if(clk_CL_green.isDisabled()) {clearWithOutHeaderFooter();  clk_CL_green.show();}
             break;
         }
         case ALARM:{
