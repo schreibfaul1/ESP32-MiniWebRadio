@@ -2923,6 +2923,29 @@ void audio_eof_speech(const char*) {
     _f_connectToLasthost = true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S){
+
+    // int16_t sineWaveTable[44] = {
+    //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
+    //   25311,  24908,  23825,  22113,  19848,  17136,  14082,  10793,   7377,   3743,
+    //      0,  -3743,  -7377, -10793, -14082, -17136, -19848, -22113, -23825, -24908,
+    //  -25311, -24908, -23825, -22113, -19848, -17136, -14082, -10793,  -7377,  -3743
+    // };
+
+    // static uint8_t tabPtr = 0;
+    // int16_t* sample[2]; // assume 2 channels, 16bit
+    // for(int i= 0; i < validSamples; i++){
+    //     *(sample + 0) = outBuff + i * 2;     // channel left
+    //     *(sample + 1) = outBuff + i * 2 + 1; // channel right
+
+    //     *(*sample + 0) = (sineWaveTable[tabPtr] /50 + *(*sample + 0));
+    //     *(*sample + 1) = (sineWaveTable[tabPtr] /50 + *(*sample + 1));
+    //     tabPtr++;
+    //     if(tabPtr == 44) tabPtr = 0;
+    // }
+   *continueI2S = true;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
     SerialPrintfln("ftpServer:   %s", info);
