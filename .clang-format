@@ -1,12 +1,10 @@
 ﻿---
 AccessModifierOffset: -2
-ColumnLimit: 200
 IndentWidth: 4
 ReflowComments: true
 PointerAlignment: Left
 SpaceAfterLogicalNot: false
 SpaceBeforeAssignmentOperators: true
-SpaceBeforeParens: Never
 SpaceInEmptyParentheses: false
 SpacesInParentheses: false
 UseTab: Never
@@ -15,25 +13,31 @@ IndentCaseLabels: true
 IncludeBlocks: Merge
 Cpp11BracedListStyle: true
 
-AllowShortBlocksOnASingleLine: true
-AllowShortCaseLabelsOnASingleLine: true
+
+ColumnLimit: 200  # Setzt eine maximale Zeilenlänge (erhöhe bei Bedarf)
+BinPackArguments: true  # Packt Funktionsargumente in eine Zeile
+BinPackParameters: true  # Packt Funktionsparameter in eine Zeile
+AllowShortBlocksOnASingleLine: true  # Erlaubt kleine Blöcke auf einer Zeile
+AllowShortCaseLabelsOnASingleLine: true  # Erlaubt kurze Case-Labels auf einer Zeile
+AllowShortFunctionsOnASingleLine: Inline  # Funktionen mit kurzer Implementierung auf eine Zeile packen
+AllowShortIfStatementsOnASingleLine: true  # Erlaubt kurze If-Anweisungen auf einer Zeile
+BreakBeforeBraces: Attach  # Klammern werden direkt nach dem Funktionskopf geöffnet
+SpaceBeforeParens: ControlStatements  # Leerzeichen vor Klammern bei Kontrollstrukturen
+
+
 AllowShortEnumsOnASingleLine: true
-AllowShortFunctionsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 AllowShortLambdasOnASingleLine: All
 AllowShortLoopsOnASingleLine: true
-AllowAllParametersOfDeclarationOnNextLine: true
-AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowAllArgumentsOnNextLine: false
 
 AlignTrailingComments: true
 AlignEscapedNewlines: Left
 AlignConsecutiveDeclarations: true
 AlignConsecutiveMacros: true
 AlignAfterOpenBracket: Align
-
 SortUsingDeclarations: true
 
-BreakBeforeBraces: Custom
 BraceWrapping:
   AfterCaseLabel:  false
   AfterClass:      false
@@ -45,8 +49,8 @@ BraceWrapping:
   AfterStruct:     false
   AfterUnion:      false
   AfterExternBlock: false
-  BeforeCatch:     true
-  BeforeElse:      true
+  BeforeCatch:     false
+  BeforeElse:      false
   IndentBraces:    false
   SplitEmptyFunction: false
   SplitEmptyRecord: false
