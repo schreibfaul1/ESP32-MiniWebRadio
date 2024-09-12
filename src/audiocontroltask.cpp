@@ -139,7 +139,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
                 audioTxTaskMessage.cmd = HIGHWATERMARK;
-                audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
+                audioTxTaskMessage.ret = audio.getHighWatermark();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == PAUSERESUME){
