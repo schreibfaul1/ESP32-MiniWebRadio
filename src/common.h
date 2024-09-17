@@ -299,6 +299,7 @@ uint32_t       audioGetFileDuration();
 uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
 void           audioSetCoreID(uint8_t coreId);
+bool           audioOpenAIspeech(const char* OpenAIKey, const char* text);
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

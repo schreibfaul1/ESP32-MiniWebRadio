@@ -413,7 +413,7 @@ const char index_html[] PROGMEM = R"=====(
             background-color: #f2f2f2;
         }
 
-        .notification {
+        .notification1, notification2 {
             position: fixed; /* Fixiert das Fenster relativ zum Ansichtsfenster */
             top: 20px; /* Abstand von oben */
             right: 20px; /* Abstand von rechts */
@@ -438,6 +438,8 @@ var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
 var I2S_eq_Val = [-40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -4, 0, +3, +6]
 
 var tft_size = 0        // (0)320x240, (1)480x320
+var ir_buttons
+
 
 // ---- websocket section------------------------
 
@@ -448,6 +450,7 @@ var IR_addr = ""
 var bt_RxTx = 'TX'
 var state = 'RADIO'
 var cur_volumeSteps = 21
+
 
 function ping() {
     if (socket.readyState == 1) { // reayState 'open'
@@ -473,8 +476,11 @@ function connect() {
         socket.send("change_state=" + "RADIO")
         socket.send("getTimeFormat")
         socket.send("getSleepMode")
-        setInterval(ping, 20000)        
+        setInterval(ping, 20000)
         loadStationsFromSD("/stations.json")
+
+        loadFileFromSD("/ir_buttons.json", "application/json")
+            .then(data => {ir_buttons = data;});
     };
 
     socket.onclose = function (e) {
@@ -862,6 +868,8 @@ function showTab8 () {  // Remote Control
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
+    console.log(ir_buttons)
+    writeJSONToTable(ir_buttons)
 }
 
 function showTab9 () {  // KCX BT Emitter
@@ -892,7 +900,7 @@ function showTab9 () {  // KCX BT Emitter
 }
 
 
-function uploadTextFile (fileName, content) {
+function saveTextFileToSD (fileName, content) {
     var fd = new FormData()
     fd.append('Text=', content)
     var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
@@ -910,6 +918,53 @@ function uploadTextFile (fileName, content) {
         }
     }
     xhr.send(fd) // send
+}
+
+async function saveJsonFileToSD(filename, content) {
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Filename': filename
+            },
+            body: (content),
+        });
+        if (!response.ok) {
+            throw new Error('Error saving the file: ' + response.statusText);
+        }
+        const result = await response.text();
+        console.log('File saved successfully:', result);
+    } catch (error) {
+        console.error('There was a problem: ', error);
+    }
+}
+
+async function loadFileFromSD(file_name, content_type) {
+    var ct  = 'Content-Type: ' + content_type;
+    try {
+        const cacheBuster = new Date().getTime();
+        const response = await fetch("SD_Download?" + encodeURIComponent(file_name) + "&cb=" + cacheBuster, {
+            method: 'GET',
+            headers: {
+                ct
+            }
+        });
+        if (!response.ok) {
+            throw new Error(`Error loading the file: ${response.statusText}`);
+        }
+        const content = await response.text();
+        if (content) {
+            console.log('File loaded successfully:', content);
+            return content; // Rückgabewert
+        } else {
+            return [""];
+        }
+    } catch (error) {
+        console.error('Es gab ein Problem beim Laden der Datei:', error);
+        return [""];
+    }
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1121,8 +1176,8 @@ function editCell(cell, rowIndex, cellIndex) {
             }
             cell.textContent = newValue;
             tableData[rowIndex][cellIndex] = newValue;
-            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
-            if (hasChanged) showMessage('Cell has been successfully modified.');
+            saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+            if (hasChanged) showMessage1('Cell has been successfully modified.');
             updateStationlist();
         } else {
             cell.textContent = originalContent;
@@ -1142,8 +1197,8 @@ function insertRow(z) { // z: 0 = above, 1 = below
     if (selectedRowIndex !== null) {
         tableData.splice(selectedRowIndex + z, 0, newRowData);
         loadTableData();
-        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-        showMessage('Row successfully inserted.');
+        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage1('Row successfully inserted.');
         updateStationlist();
     }
     hideContextMenu();
@@ -1155,8 +1210,8 @@ function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
     if (rowCount !== null) {
         tableData.splice(rowCount + 1, 0, newRowData);
         loadTableData();
-        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-        showMessage('Row successfully inserted.');
+        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage1('Row successfully inserted.');
         updateStationlist();
         deletedRowData = ['*', '', '', 'http'];
     }
@@ -1169,8 +1224,8 @@ function deleteRow() {
         deletedRowData = tableData[selectedRowIndex];
         tableData.splice(selectedRowIndex, 1);
         loadTableData();
-        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
-        showMessage('Row was successfully deleted.');
+        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        showMessage1('Row was successfully deleted.');
         updateStationlist();
     }
     hideContextMenu();
@@ -1187,16 +1242,15 @@ function hideContextMenu() {
     document.getElementById('contextMenu').style.display = 'none';
 }
 
-
-function showMessage(message) {
+function showMessage1(message) {
     console.log(message);
-    // show the notification windows
-    var notification = document.getElementById('notification');
-    notification.textContent = message;
-    notification.style.display = 'block';
+    // show the notification1 windows
+    var notification1 = document.getElementById('notification1');
+    notification1.textContent = message;
+    notification1.style.display = 'block';
     // hide after 3 seconds
     setTimeout(function() {
-        notification.style.display = 'none';
+        notification1.style.display = 'none';
     }, 3000);
 }
 
@@ -1205,29 +1259,6 @@ window.addEventListener('click', function () {
     hideContextMenu();
 });
 
-
-async function saveStationsToSD(filename, content) {
-    try {
-        const cacheBuster = new Date().getTime();
-        const response = await fetch("SD_Upload?" + encodeURIComponent(filename) + "&cb=" + cacheBuster, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Filename': filename
-            },
-            body: (content),
-        });
-
-        if (!response.ok) {
-            throw new Error('Error saving the file: ' + response.statusText);
-        }
-
-        const result = await response.text();
-        console.log('File saved successfully:', result);
-    } catch (error) {
-        console.error('There was a problem: ', error);
-    }
-}
 
 async function loadStationsFromSD(file_name) {
     try {
@@ -1269,7 +1300,7 @@ async function loadStationsFromSD(file_name) {
                 ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
                 ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
-            saveStationsToSD("SD/stations.json", JSON.stringify(tableData));
+            saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));
     }
 }
 
@@ -1349,7 +1380,7 @@ function loadStations_json(event){
         tableData = JSON.parse(data)
         loadTableData()
         updateStationlist();
-        saveStationsToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
     }
     reader.onerror = function (ex) {
         console.log(ex)
@@ -1904,32 +1935,45 @@ function showVolumeSteps(val){
 }
 
 // -------------------------------------- TAB Remote Control---------------------------------------
-function loadIRbuttons(){
-  var theUrl = 'loadIRbuttons?' + "" + '&version=' + Math.random()
-  var xhr = new XMLHttpRequest()
-  xhr.timeout = 2000; // time in milliseconds
-  xhr.open('POST', theUrl, true)
-  xhr.ontimeout = (e) => {
-    // XMLHttpRequest timed out.
-    alert('IR buttons not loaded, timeout')
-  }
-  xhr.onreadystatechange = function () { // Call a function when the state changes.
-    if (xhr.readyState === 4) {
-      var ir_data = xhr.responseText
-      var ir_btnVal = ir_data.split(",")
-      ir_address.value = ir_btnVal[0]
-      ir_command.value = "0x00"
 
-      for(i = 0; i < 17; i++){
-          var id
-          id = "#ir_command_" + i
-          $(id).val(ir_btnVal[i + 1]);
-          chIRcmd(-1)
-      }
-    }
-  }
-  xhr.send() // send
+function showMessage2(message) {
+    console.log(message);
+    // show the notification2 windows
+    var notification2 = document.getElementById('notification2');
+    notification2.textContent = message;
+    notification2.style.display = 'block';
+    // hide after 3 seconds
+    setTimeout(function() {
+        notification2.style.display = 'none';
+    }, 3000);
 }
+
+// function loadIRbuttons(){
+//   var theUrl = 'loadIRbuttons?' + "" + '&version=' + Math.random()
+//   var xhr = new XMLHttpRequest()
+//   xhr.timeout = 2000; // time in milliseconds
+//   xhr.open('POST', theUrl, true)
+//   xhr.ontimeout = (e) => {
+//     // XMLHttpRequest timed out.
+//     alert('IR buttons not loaded, timeout')
+//   }
+//   xhr.onreadystatechange = function () { // Call a function when the state changes.
+//     if (xhr.readyState === 4) {
+//       var ir_data = xhr.responseText
+//       var ir_btnVal = ir_data.split(",")
+//       ir_address.value = ir_btnVal[0]
+//       ir_command.value = "0x00"
+
+//       for(i = 0; i < 17; i++){
+//           var id
+//           id = "#ir_command_" + i
+//           $(id).val(ir_btnVal[i + 1]);
+//           chIRcmd(-1)
+//       }
+//     }
+//   }
+//   xhr.send() // send
+// }
 
 function IRclick(btn){
   var id = "#ir_command_" + btn
@@ -1939,7 +1983,7 @@ function IRclick(btn){
 }
 
 function chIRcmd(btn){  // IR command, value changed
-    var arrLen = 17
+    var arrLen = 23
     var irArr = []
     var val1
     var ret = true
@@ -1952,8 +1996,6 @@ function chIRcmd(btn){  // IR command, value changed
         $(id).val(val1)
         $(id).css("background-color", "white");
     }
-    console.log(irArr)
-
     for (var i = 0; i < arrLen; i++) {
         for (var j = 0; j < irArr.length; j++) {
             if(i != j && irArr[i] == irArr[j]){
@@ -1968,10 +2010,90 @@ function chIRcmd(btn){  // IR command, value changed
     if(btn == -1) return
     if(ret){
         var id = "#ir_command_" + btn
-        socket.send("setIRcmd=" + $(id).val() + "&" + btn)
         console.log("setIRcmd=" + $(id).val() + "&" + btn)
+        socket.send("setIRcmd=" + $(id).val() + "&" + btn)
     }
     return
+}
+
+function writeJSONToTable(jsonIrString) {
+    console.log(jsonIrString)
+    if (!jsonIrString) {
+        console.error("Kein JSON zum Rückschreiben verfügbar.");
+        return;
+    }
+    
+    const data = JSON.parse(jsonIrString);
+        data.forEach(item => {
+        const keys = Object.keys(item); // Hole die Schlüssel des Objekts (z.B. "0", "label")
+        const number = keys[0]; // Die erste Zahl (z.B. "0", "10", "20")
+        const command = item[number]; // Der Wert des Befehls
+        const label = item["label"]; // Das Label
+        // Schreibe den Befehl zurück in das entsprechende Input-Feld
+        const inputField = document.getElementById(`ir_command_${number}`);
+        if (inputField) {
+            inputField.value = command;
+        }
+        // Schreibe das Label zurück in die Tabelle
+        const labelCell = inputField?.parentElement?.nextElementSibling;
+        if (labelCell) {
+            labelCell.textContent = label;
+        }
+    });
+}
+
+
+function getTableDataAsJSON(tableId) {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        console.error(`Tabelle mit der ID ${tableId} nicht gefunden.`);
+        return;
+    }
+    const rows = table.getElementsByTagName('tr');
+    const data = [];
+    for (let i = 1; i < rows.length; i++) { // Überspringe die Kopfzeile
+        const cells = rows[i].getElementsByTagName('td');
+        if (cells.length > 0) {
+            // Erste Gruppe: Erste Spalte und Kommando/Label 1
+            const number1 = cells[0].textContent.trim();
+            const command1 = document.getElementById(`ir_command_${number1}`)?.value || "";
+            const label1 = cells[2].textContent.trim();
+            if (command1 && label1) {
+                const obj1 = {};
+                obj1[number1] = command1;
+                obj1["label"] = label1;
+                data.push(obj1);
+            }
+            // Zweite Gruppe: Vierte Spalte und Kommando/Label 2
+            const number2 = cells[3].textContent.trim();
+            const command2 = document.getElementById(`ir_command_${number2}`)?.value || "";
+            const label2 = cells[5].textContent.trim();
+            if (command2 && label2) {
+                const obj2 = {};
+                obj2[number2] = command2;
+                obj2["label"] = label2;
+                data.push(obj2);
+            }
+            // Dritte Gruppe: Sechste Spalte und Kommando/Label 3 (falls vorhanden)
+            const number3 = cells[6]?.textContent.trim() || "";
+            const command3 = document.getElementById(`ir_command_${number3}`)?.value || "";
+            const label3 = cells[8]?.textContent.trim() || "";
+            if (command3 && label3) {
+                const obj3 = {};
+                obj3[number3] = command3;
+                obj3["label"] = label3;
+                data.push(obj3);
+            }
+        }
+    }
+    return JSON.stringify(data); // JSON formatieren (schönere Ausgabe)
+}
+
+function IRupdateJSON(){
+    // itButtonsJson = getTableDataAsJSON("ir_table");
+    // console.log(itButtonsJson);
+    // saveJsonFileToSD("SD/ir_buttons.json", itButtonsJson);
+    // showMessage2('IR button has been successfully modified.');
 }
 
 // -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
@@ -2255,7 +2377,7 @@ function clear_BT_memItems(){
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content2">
-            <div id="notification" class="notification"></div>
+            <div id="notification1" class="notification1"></div>
             <div class="stations-container" style="height: 500px; background-color: white; border: 2px solid black; box-sizing: border-box; ">
                 <table class="stations-table" id="stationsTable">
                     <thead>
@@ -2626,9 +2748,10 @@ function clear_BT_memItems(){
         </table>
     </div>
 <!--===============================================================================================================================================-->
-    <div id="tab-content8"> <!-- IR Settings -->
-
-       <table>
+    <div id="tab-content8">   <!-- IR Settings -->
+        <div id="notification2" class="notification1"></div>
+        <div>
+        <table id="ir_table">
             <tr>
             <th></th>
             <th> <input type="text" class="boxstyle_s" id="ir_address"> </th>
@@ -2636,101 +2759,135 @@ function clear_BT_memItems(){
             <th></th>
             <th> <input type="text" class="boxstyle_s" id="ir_command"> </th>
             <th style="width:180px; text-align: left;"> IR command </th>
+            <th></th>
+            <th></th>
+            <th style="width:180px; text-align: left;"> long pressed </th>
+            <th></th>
             </tr>
 
             <tr>
             <td> 0 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onchange="chIRcmd(0)"  onclick="IRclick(0)"  onkeyup="chIRcmd(0)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="IRclick(0)"  onkeyup="chIRcmd(0)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> ZERO </td>
             <td> 10 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onchange="chIRcmd(10)" onclick="IRclick(10)" onkeyup="chIRcmd(10)"></td>
-            <td class="table_cell2">  MUTE <br> long press: SLEEP </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="IRclick(10)" onkeyup="chIRcmd(10)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> MUTE </td>
+            <td> 20 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_20" onclick="IRclick(20)" onkeyup="chIRcmd(20)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> SLEEP </td>
             </tr>
 
             <tr>
             <td> 1 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onchange="chIRcmd(1)" onclick="IRclick(1)" onkeyup="chIRcmd(1)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="IRclick(1)" onkeyup="chIRcmd(1)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> ONE</td>
             <td> 11 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onchange="setIRcmd(11)" onclick="IRclick(11)" onkeyup="chIRcmd(11)"></td>
-            <td class="table_cell2">VOLUME+ </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="IRclick(11)" onkeyup="chIRcmd(11)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> ARROW RIGHT </td>
+            <td> 21 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2">-</td>
             </tr>
 
             <tr>
             <td> 2 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onchange="chIRcmd(2)" onclick="IRclick(2)" onkeyup="chIRcmd(2)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="IRclick(2)" onkeyup="chIRcmd(2)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1">  TWO </td>
             <td> 12 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onchange="chIRcmd(12)" onclick="IRclick(12)" onkeyup="chIRcmd(12)"></td>
-            <td class="table_cell2">VOLUME- </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="IRclick(12)" onkeyup="chIRcmd(12)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> ARROW LEFT </td>
+            <td> 22 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_22" onclick="IRclick(22)" onkeyup="chIRcmd(22)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2">-</td>
             </tr>
 
             <tr>
             <td> 3 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onchange="chIRcmd(3)" onclick="IRclick(3)" onkeyup="chIRcmd(3)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="IRclick(3)" onkeyup="chIRcmd(3)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1">  THREE </td>
             <td> 13 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onchange="chIRcmd(13)" onclick="IRclick(13)" onkeyup="chIRcmd(13)"></td>
-            <td class="table_cell2"> PREVIOUS STATION </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="IRclick(13)" onkeyup="chIRcmd(13)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> ARROW DOWN</td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 4 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onchange="chIRcmd(4)" onclick="IRclick(4)" onkeyup="chIRcmd(4)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="IRclick(4)" onkeyup="chIRcmd(4)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> FOUR </td>
             <td> 14 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onchange="chIRcmd(14)" onclick="IRclick(14)" onkeyup="chIRcmd(14)"></td>
-            <td class="table_cell2">NEXT STATION </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="IRclick(14)" onkeyup="chIRcmd(14)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> ARROW UP </td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 5 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onchange="chIRcmd(5)" onclick="IRclick(5)" onkeyup="chIRcmd(5)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="IRclick(5)" onkeyup="chIRcmd(5)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> FIVE </td>
             <td> 15 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onchange="chIRcmd(15)" onclick="IRclick(15)" onkeyup="chIRcmd(15)"></td>
-            <td class="table_cell2"> CLOCK &#60; &#8722; &#62; RADIO </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="IRclick(15)" onkeyup="chIRcmd(15)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2"> MODE </td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 6 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onchange="chIRcmd(6)" onclick="IRclick(6)" onkeyup="chIRcmd(6)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="IRclick(6)" onkeyup="chIRcmd(6)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> SIX </td>
             <td> 16 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onchange="chIRcmd(16)" onclick="IRclick(16)" onkeyup="chIRcmd(16)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON()"></td>
             <td class="table_cell2">OFF TIMER </td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 7 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onchange="chIRcmd(7)" onclick="IRclick(7)" onkeyup="chIRcmd(7)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="IRclick(7)" onkeyup="chIRcmd(7)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> SEVEN </td>
-            <td>  </td>
-            <td> </td>
-            <td> </td>
+            <td> 17 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_17" onclick="IRclick(17)" onkeyup="chIRcmd(17)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2">-</td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 8 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onchange="chIRcmd(8)" onclick="IRclick(8)" onkeyup="chIRcmd(8)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="IRclick(8)" onkeyup="chIRcmd(8)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> EIGHT </td>
-            <td>  </td>
-            <td> </td>
-            <td> </td>
+            <td> 18 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_18" onclick="IRclick(18)" onkeyup="chIRcmd(18)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2">-</td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
 
             <tr>
             <td> 9 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onchange="chIRcmd(9)" onclick="IRclick(9)" onkeyup="chIRcmd(9)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="IRclick(9)" onkeyup="chIRcmd(9)" onchange="IRupdateJSON()"></td>
             <td class="table_cell1"> NINE</td>
-            <td>  </td>
-            <td> </td>
-            <td> </td>
+            <td> 19 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_19" onclick="IRclick(19)" onkeyup="chIRcmd(19)" onchange="IRupdateJSON()"></td>
+            <td class="table_cell2">-</td>
+            <td></td>
+            <td></td>
+            <td></td>
             </tr>
         </table>
         <br>
         <button class="button_120x30 buttongreen"
-                onclick="socket.send('saveIRbuttons')"
+                onclick="getTableDataAsJSON('ir_table')"
                 onmousedown="this.style.backgroundColor='#D62C1A'"
                 ontouchstart="this.style.backgroundColor='#D62C1A'"
                 onmouseup="this.style.backgroundColor='#128F76'"
@@ -2749,6 +2906,7 @@ function clear_BT_memItems(){
         <p>Here you can assign a function to the buttons on your NEC remote control. Press a button on your remote
            control and then click on the text field for the desired function. You can test the function immediately.
            Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
+        </div>
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content9"> <!-- KCX BT Emitter Settings -->

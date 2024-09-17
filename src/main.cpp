@@ -2777,7 +2777,7 @@ endbrightness:
             GetRunTimeStats(timeStatsBuffer);
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
         }
-        if(r.startsWith("a")) {
+        if(r.startsWith("cts")) {
             audioConnecttospeech("Hallo, wie geht es dir?", "de");
         }
 
@@ -2801,6 +2801,10 @@ endbrightness:
             if(r[2] == '9') strcpy(_streamTitle, "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
             log_w("st: %s", _streamTitle);
             _f_newStreamTitle = true;
+        }
+        if(r.startsWith("ais")){ // openAIspeech
+            log_w("openAI speech");
+            audioOpenAIspeech("openAI_key", "Today is a wonderful day to build something people love!");
         }
     }
 }
@@ -3437,7 +3441,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
     if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);
@@ -3545,7 +3549,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
+    if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
     if(_filename.startsWith("SD/")) {// POST request
         File sta;
