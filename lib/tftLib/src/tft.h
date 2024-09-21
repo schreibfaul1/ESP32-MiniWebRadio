@@ -194,7 +194,7 @@ class TFT{
         uint8_t   _TFT_DC  = 21;    /* Data or Command */
         uint8_t   _TFT_CS  = 22;    /* SPI Chip select */
         uint8_t  buf[1024];
-        char     chbuf[256];
+        char     chbuf[256 * 2];
 
     //    ------------GIF-------------------
 

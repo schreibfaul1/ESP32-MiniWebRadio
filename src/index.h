@@ -447,6 +447,7 @@ var socket = undefined
 var host = location.hostname
 var tm
 var IR_addr = ""
+let ir_arr = new Array(23);
 var bt_RxTx = 'TX'
 var state = 'RADIO'
 var cur_volumeSteps = 21
@@ -1800,11 +1801,18 @@ function downloadCanvasImage () {
         lnk.fireEvent('onclick')
     }
 }
-// ------------------------------------- TAB Settings-------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------  TAB Settings  -----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-// -------------------------------------- TAB Info ---------------------------------------
 
+
+
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 function getTimeZoneName() { //
     var xhr = new XMLHttpRequest()
     xhr.timeout = 2000; // time in milliseconds
@@ -1933,8 +1941,9 @@ function showVolumeSteps(val){
     const selectVolumeSteps = document.getElementById('selVolumeSteps');
     selectVolumeSteps.selectedIndex = val- 21;
 }
-
-// -------------------------------------- TAB Remote Control---------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------ TAB Remote Control--------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 function showMessage2(message) {
     console.log(message);
@@ -1948,33 +1957,6 @@ function showMessage2(message) {
     }, 3000);
 }
 
-// function loadIRbuttons(){
-//   var theUrl = 'loadIRbuttons?' + "" + '&version=' + Math.random()
-//   var xhr = new XMLHttpRequest()
-//   xhr.timeout = 2000; // time in milliseconds
-//   xhr.open('POST', theUrl, true)
-//   xhr.ontimeout = (e) => {
-//     // XMLHttpRequest timed out.
-//     alert('IR buttons not loaded, timeout')
-//   }
-//   xhr.onreadystatechange = function () { // Call a function when the state changes.
-//     if (xhr.readyState === 4) {
-//       var ir_data = xhr.responseText
-//       var ir_btnVal = ir_data.split(",")
-//       ir_address.value = ir_btnVal[0]
-//       ir_command.value = "0x00"
-
-//       for(i = 0; i < 17; i++){
-//           var id
-//           id = "#ir_command_" + i
-//           $(id).val(ir_btnVal[i + 1]);
-//           chIRcmd(-1)
-//       }
-//     }
-//   }
-//   xhr.send() // send
-// }
-
 function IRclick(btn){
   var id = "#ir_command_" + btn
   var val1 = $('#ir_command').val()
@@ -1983,7 +1965,7 @@ function IRclick(btn){
 }
 
 function chIRcmd(btn){  // IR command, value changed
-    var arrLen = 23
+    var arrLen = 20
     var irArr = []
     var val1
     var ret = true
@@ -2022,12 +2004,12 @@ function writeJSONToTable(jsonIrString) {
         console.error("Kein JSON zum Rückschreiben verfügbar.");
         return;
     }
-    
     const data = JSON.parse(jsonIrString);
         data.forEach(item => {
         const keys = Object.keys(item); // Hole die Schlüssel des Objekts (z.B. "0", "label")
         const number = keys[0]; // Die erste Zahl (z.B. "0", "10", "20")
         const command = item[number]; // Der Wert des Befehls
+        ir_arr[number] = command
         const label = item["label"]; // Das Label
         // Schreibe den Befehl zurück in das entsprechende Input-Feld
         const inputField = document.getElementById(`ir_command_${number}`);
@@ -2043,7 +2025,7 @@ function writeJSONToTable(jsonIrString) {
 }
 
 
-function getTableDataAsJSON(tableId) {
+function getTableDataAsJSON(tableId) { // make a JSON string from IR table
     const table = document.getElementById(tableId);
     if (!table) {
         console.error(`Tabelle mit der ID ${tableId} nicht gefunden.`);
@@ -2089,14 +2071,56 @@ function getTableDataAsJSON(tableId) {
     return JSON.stringify(data); // JSON formatieren (schönere Ausgabe)
 }
 
-function IRupdateJSON(){
-    // itButtonsJson = getTableDataAsJSON("ir_table");
-    // console.log(itButtonsJson);
-    // saveJsonFileToSD("SD/ir_buttons.json", itButtonsJson);
-    // showMessage2('IR button has been successfully modified.');
+function IRupdateJSON(btnNr){
+    irButtonsJson = getTableDataAsJSON("ir_table");
+    const jsonObject = JSON.parse(irButtonsJson);
+    let result = null;
+        jsonObject.forEach(item => {
+            let str = String(btnNr);
+            if (item[str]) {
+            result = item[str];
+        }
+    });
+    if(result == ir_arr[btnNr]) return;
+    console.log(irButtonsJson);
+    saveJsonFileToSD("SD/ir_buttons.json", irButtonsJson);
+    showMessage2('IR button has been successfully modified.');
 }
 
-// -------------------------------------- TAB KCX_BT_Emitter ---------------------------------------
+function saveIRbuttons_json(){ // to PC
+    // Create a blob with the content
+    irButtonsJson = getTableDataAsJSON("ir_table");
+    const blob = new Blob([irButtonsJson], { type: 'application/json' });
+
+    // Create an invisible link to download the file
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = 'ir_buttons.json';
+
+    // Add link element to document, simulate click and remove it again
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function loadIRbuttons_json(event){ // from PC
+    var file = event[0]
+    var reader = new FileReader()
+    reader.onload = function (event) {
+        var jsonIrString = event.target.result
+        console.log(jsonIrString);
+        writeJSONToTable(jsonIrString)
+        saveJsonFileToSD("SD/ir_buttons.json", jsonIrString);  // save modified data
+    }
+    reader.onerror = function (ex) {
+        console.log(ex)
+    }
+    reader.readAsText(file)
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------ TAB KCX_BT_Emitter--------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
 
 function show_BT_memItems(jsonstr){
     console.log('KCX MEM', jsonstr)
@@ -2241,6 +2265,8 @@ function clear_BT_memItems(){
         </div>
     </div>
     <hr>
+<!--===============================================================================================================================================-->
+<!--=================================================================== R A D I O =================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content1">
         <div style="height: 66px; display: flex;">
@@ -2408,13 +2434,13 @@ function clear_BT_memItems(){
                     <button class="button_120x30 buttonblue" onclick="saveStations_json()" title="make a backup">save</button>
                     &nbsp;
                     <button class="button_120x30 buttonblue"
-                            onclick="javascript:document.getElementById('file').click();"
+                            onclick="javascript:document.getElementById('file1').click();"
                             title="load your own stations list">load
                     </button>
                 </div>
             </div>
 
-            <input id="file" type="file" accept="application/json" style="visibility: hidden;
+            <input id="file1" type="file" accept="application/json" style="visibility: hidden;
                              width: 0px;" onchange="loadStations_json(this.files);">
     </div>
 <!--===============================================================================================================================================-->
@@ -2767,46 +2793,46 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 0 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="IRclick(0)"  onkeyup="chIRcmd(0)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_0" onclick="IRclick(0)"  onkeyup="chIRcmd(0)" onchange="IRupdateJSON(0)"></td>
             <td class="table_cell1"> ZERO </td>
             <td> 10 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="IRclick(10)" onkeyup="chIRcmd(10)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_10" onclick="IRclick(10)" onkeyup="chIRcmd(10)" onchange="IRupdateJSON(10)"></td>
             <td class="table_cell2"> MUTE </td>
             <td> 20 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_20" onclick="IRclick(20)" onkeyup="chIRcmd(20)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_20" onclick="IRclick(20)" onkeyup="chIRcmd(20)" onchange="IRupdateJSON(20)"></td>
             <td class="table_cell2"> SLEEP </td>
             </tr>
 
             <tr>
             <td> 1 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="IRclick(1)" onkeyup="chIRcmd(1)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_1" onclick="IRclick(1)" onkeyup="chIRcmd(1)" onchange="IRupdateJSON(1)"></td>
             <td class="table_cell1"> ONE</td>
             <td> 11 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="IRclick(11)" onkeyup="chIRcmd(11)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_11" onclick="IRclick(11)" onkeyup="chIRcmd(11)" onchange="IRupdateJSON(11)"></td>
             <td class="table_cell2"> ARROW RIGHT </td>
             <td> 21 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON(21)"></td>
             <td class="table_cell2">-</td>
             </tr>
 
             <tr>
             <td> 2 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="IRclick(2)" onkeyup="chIRcmd(2)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_2" onclick="IRclick(2)" onkeyup="chIRcmd(2)" onchange="IRupdateJSON(2)"></td>
             <td class="table_cell1">  TWO </td>
             <td> 12 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="IRclick(12)" onkeyup="chIRcmd(12)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_12" onclick="IRclick(12)" onkeyup="chIRcmd(12)" onchange="IRupdateJSON(12)"></td>
             <td class="table_cell2"> ARROW LEFT </td>
             <td> 22 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_22" onclick="IRclick(22)" onkeyup="chIRcmd(22)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_22" onclick="IRclick(22)" onkeyup="chIRcmd(22)" onchange="IRupdateJSON(22)"></td>
             <td class="table_cell2">-</td>
             </tr>
 
             <tr>
             <td> 3 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="IRclick(3)" onkeyup="chIRcmd(3)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_3" onclick="IRclick(3)" onkeyup="chIRcmd(3)" onchange="IRupdateJSON(3)"></td>
             <td class="table_cell1">  THREE </td>
             <td> 13 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="IRclick(13)" onkeyup="chIRcmd(13)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="IRclick(13)" onkeyup="chIRcmd(13)" onchange="IRupdateJSON(13)"></td>
             <td class="table_cell2"> ARROW DOWN</td>
             <td></td>
             <td></td>
@@ -2815,10 +2841,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 4 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="IRclick(4)" onkeyup="chIRcmd(4)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_4" onclick="IRclick(4)" onkeyup="chIRcmd(4)" onchange="IRupdateJSON(4)"></td>
             <td class="table_cell1"> FOUR </td>
             <td> 14 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="IRclick(14)" onkeyup="chIRcmd(14)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="IRclick(14)" onkeyup="chIRcmd(14)" onchange="IRupdateJSON(14)"></td>
             <td class="table_cell2"> ARROW UP </td>
             <td></td>
             <td></td>
@@ -2827,10 +2853,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 5 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="IRclick(5)" onkeyup="chIRcmd(5)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_5" onclick="IRclick(5)" onkeyup="chIRcmd(5)" onchange="IRupdateJSON(5)"></td>
             <td class="table_cell1"> FIVE </td>
             <td> 15 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="IRclick(15)" onkeyup="chIRcmd(15)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="IRclick(15)" onkeyup="chIRcmd(15)" onchange="IRupdateJSON(15)"></td>
             <td class="table_cell2"> MODE </td>
             <td></td>
             <td></td>
@@ -2839,10 +2865,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 6 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="IRclick(6)" onkeyup="chIRcmd(6)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_6" onclick="IRclick(6)" onkeyup="chIRcmd(6)" onchange="IRupdateJSON(6)"></td>
             <td class="table_cell1"> SIX </td>
             <td> 16 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON(16)"></td>
             <td class="table_cell2">OFF TIMER </td>
             <td></td>
             <td></td>
@@ -2851,10 +2877,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 7 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="IRclick(7)" onkeyup="chIRcmd(7)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_7" onclick="IRclick(7)" onkeyup="chIRcmd(7)" onchange="IRupdateJSON(7)"></td>
             <td class="table_cell1"> SEVEN </td>
             <td> 17 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_17" onclick="IRclick(17)" onkeyup="chIRcmd(17)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_17" onclick="IRclick(17)" onkeyup="chIRcmd(17)" onchange="IRupdateJSON(17)"></td>
             <td class="table_cell2">-</td>
             <td></td>
             <td></td>
@@ -2863,10 +2889,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 8 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="IRclick(8)" onkeyup="chIRcmd(8)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_8" onclick="IRclick(8)" onkeyup="chIRcmd(8)" onchange="IRupdateJSON(8)"></td>
             <td class="table_cell1"> EIGHT </td>
             <td> 18 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_18" onclick="IRclick(18)" onkeyup="chIRcmd(18)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_18" onclick="IRclick(18)" onkeyup="chIRcmd(18)" onchange="IRupdateJSON(18)"></td>
             <td class="table_cell2">-</td>
             <td></td>
             <td></td>
@@ -2875,10 +2901,10 @@ function clear_BT_memItems(){
 
             <tr>
             <td> 9 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="IRclick(9)" onkeyup="chIRcmd(9)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_9" onclick="IRclick(9)" onkeyup="chIRcmd(9)" onchange="IRupdateJSON(9)"></td>
             <td class="table_cell1"> NINE</td>
             <td> 19 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_19" onclick="IRclick(19)" onkeyup="chIRcmd(19)" onchange="IRupdateJSON()"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_19" onclick="IRclick(19)" onkeyup="chIRcmd(19)" onchange="IRupdateJSON(19)"></td>
             <td class="table_cell2">-</td>
             <td></td>
             <td></td>
@@ -2886,23 +2912,19 @@ function clear_BT_memItems(){
             </tr>
         </table>
         <br>
-        <button class="button_120x30 buttongreen"
-                onclick="getTableDataAsJSON('ir_table')"
-                onmousedown="this.style.backgroundColor='#D62C1A'"
-                ontouchstart="this.style.backgroundColor='#D62C1A'"
-                onmouseup="this.style.backgroundColor='#128F76'"
-                ontouchend="this.style.backgroundColor='#128F76'"
-                title="Save IR buttons">Save
-        </button>
-        &nbsp;
-        <button class="button_120x30 buttongreen"
-                onclick="loadIRbuttons()"
-                onmousedown="this.style.backgroundColor='#D62C1A'"
-                ontouchstart="this.style.backgroundColor='#D62C1A'"
-                onmouseup="this.style.backgroundColor='#128F76'"
-                ontouchend="this.style.backgroundColor='#128F76'"
-                id="load_IR_Buttons" title="Load IR buttons">Load
-        </button>
+
+        <div style="display: flex; justify-content: center; gap: 10px; margin: 0 auto; width: 100%;">
+            &nbsp;
+            <button class="button_120x30 buttonblue" onclick="saveIRbuttons_json()" title="make a backup">save</button>
+            &nbsp;
+            <button class="button_120x30 buttonblue"
+                    onclick="javascript:document.getElementById('file2').click();"
+                    title="load your own ir buttons">load
+            </button>
+        </div>
+        <input id="file2" type="file" accept="application/json" style="visibility: hidden;
+                    width: 0px;" onchange="loadIRbuttons_json(this.files);">
+
         <p>Here you can assign a function to the buttons on your NEC remote control. Press a button on your remote
            control and then click on the text field for the desired function. You can test the function immediately.
            Once all the keys you want are assigned, save the settings. This process only needs to be done once.</p>
