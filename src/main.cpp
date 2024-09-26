@@ -61,6 +61,7 @@ char _hl_item[16][40]{"",                 // none
                       ""
                       ""};
 
+settings_t          _settings;
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
@@ -426,6 +427,10 @@ textbox       txt_BT_volume("txt_BT_volume");
 
 // clang-format off
 boolean defaultsettings(){
+
+    IR_buttons irb(_settings);
+    irb.loadButtonsFromJSON("/ir_buttons.json");
+
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();

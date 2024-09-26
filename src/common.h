@@ -207,6 +207,13 @@ struct timecounter {
     uint8_t timer = 0;
     uint8_t factor = 2;
 };
+struct irButtons {
+    int16_t val;
+    char*   label;
+};
+typedef struct __settings{
+    irButtons irbuttons[25];
+} settings_t;
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // clang-format on
@@ -576,6 +583,187 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
     vec.clear();
     vec.shrink_to_fit();
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class IR_buttons{
+  private:
+    settings_t m_settings;
+
+  public:
+    IR_buttons(settings_t s){
+        m_settings = s;
+    }
+    ~IR_buttons(){
+
+    }
+
+    int16_t hexStringToInt16(const char* str) {
+        // Debug-Ausgabe für den String
+        Serial.print("Parsing string: ");
+        Serial.println(str);
+        // Prüfe, ob es der spezielle Fall "-1" ist
+        if (strcmp(str, "-1") == 0) {
+            return -1;  // Sonderfall für ungenutzte Tasten
+        }
+        // Hexadezimalwert verarbeiten
+        if (strlen(str) >= 3 && str[0] == '0' && tolower(str[1]) == 'x') {
+            return (int16_t)strtol(str, NULL, 16);  // Hexadezimalwert umwandeln
+        }
+        Serial.println("Invalid format.");  // Fehlerausgabe, falls das Format nicht stimmt
+        return 0;
+    }
+
+    const char* skipWhitespace(const char* str) {  // Helper function: Skip spaces
+        while (*str && isspace(*str)) {
+            str++;
+        }
+        return str;
+    }
+
+    const char* validateAndExtractString(const char* ptr, char** dest) {  // Error handling: Validation of quoted strings
+        if (*ptr == '\"') {
+            ptr++;  // skip '"'
+            const char* start = ptr;
+            while (*ptr && *ptr != '\"') {
+                ptr++;
+            }
+            if (*ptr == '\"') {
+                *dest = strndup(start, ptr - start);  // allocate mem for string
+                return ptr + 1;  // skip '"'
+            } else {
+                Serial.println("Error: Unterminated string.");
+                return NULL;
+            }
+        } else {
+            Serial.println("Error: Expected string.");
+            return NULL;
+        }
+    }
+
+    bool parseJSONString(const char* jsonString) {  // Function to parse the JSON string
+    const char* ptr = jsonString;
+    uint8_t buttonNr = 0;
+    size_t buttonIndex = 0;
+
+    // Überprüfe, ob der JSON-String mit '[' beginnt
+    ptr = skipWhitespace(ptr);
+    if (*ptr != '[') {
+        Serial.println("Error: Expected '[' to start array.");
+        return false;
+    }
+    ptr++;  // Überspringe '['
+
+    // Verarbeite jedes JSON-Objekt im Array
+    char key[16];
+    while (*ptr && *ptr != ']' && buttonIndex < 24) {
+        ptr = skipWhitespace(ptr);
+        if (*ptr == '{') {
+            ptr++;  // Überspringe '{'
+            int16_t val = 0xFF;
+            char* label = NULL;
+            bool validObject = false;
+
+            while (*ptr && *ptr != '}') {
+                ptr = skipWhitespace(ptr);
+
+                // Schlüssel extrahieren
+                if (*ptr == '\"') {
+                    ptr++;  // Überspringe '"'
+                    const char* keyStart = ptr;
+                    while (*ptr && *ptr != '\"') {
+                        ptr++;
+                    }
+                    memset(key, 0, 16);
+                    strncpy(key, keyStart, ptr - keyStart);
+                    ptr++;  // Überspringe '"'
+                    ptr = skipWhitespace(ptr);
+
+                    if (*ptr == ':') {
+                        ptr++;  // Überspringe ':'
+                        ptr = skipWhitespace(ptr);
+                        // Wert basierend auf dem Schlüssel
+                        if (isdigit(key[0])) {  // Nummer, z.B. "0", "10"
+                            buttonNr = atoi(key);
+                            char* str = NULL;
+                            ptr = validateAndExtractString(ptr, &str);
+                            if (!ptr) return false;  // Fehler gefunden
+
+                            val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
+                            free(str);  // String nach Nutzung freigeben
+                            validObject = true;
+                        } else if (strcmp(key, "label") == 0) {  // Label
+                            ptr = validateAndExtractString(ptr, &label);
+                            if (!ptr) return false;  // Fehler gefunden
+                        }
+                    }
+                }
+
+                ptr = skipWhitespace(ptr);
+                if (*ptr == ',') {
+                    ptr++;  // Überspringe ','
+                }
+            }
+
+            // Stelle sicher, dass beide Werte vorhanden sind
+            if (validObject && label != NULL) {
+                m_settings.irbuttons[buttonNr].val = val;
+                m_settings.irbuttons[buttonNr].label = label;
+                buttonIndex++;
+            } else {
+                Serial.println("Error: Invalid object, missing buttonNr or label.");
+                return false;
+            }
+
+            ptr = skipWhitespace(ptr);
+            if (*ptr == '}') {
+                ptr++;  // Überspringe '}'
+            }
+
+            ptr = skipWhitespace(ptr);
+            if (*ptr == ',') {
+                ptr++;  // Überspringe ','
+            }
+        } else {
+            Serial.println("Error: Expected '{' to start an object.");
+            return false;
+        }
+    }
+
+    // Überprüfe, ob das Array korrekt mit ']' endet
+    ptr = skipWhitespace(ptr);
+    if (*ptr != ']') {
+        Serial.println("Error: Expected ']' to close array.");
+        return false;
+    }
+    return true;  // JSON erfolgreich geparst
+    }
+
+    bool loadButtonsFromJSON(const char* filename) { // Function to load the JSON data
+        File file = SD_MMC.open(filename);
+        if (!file) {
+            Serial.println("Failed to open file");
+            return false;
+        }
+        String jsonString;
+        while (file.available()) {
+            jsonString += (char)file.read();
+        }
+        file.close();
+        log_w("%s", jsonString.c_str());
+        // JSON parsen
+        if (!parseJSONString(jsonString.c_str())) {
+            Serial.println("Failed to parse JSON.");
+            return false;
+        }
+        // Debug-Ausgabe
+        for (size_t i = 0; i < 24; i++) {
+            if (m_settings.irbuttons[i].label != NULL) {
+                if(m_settings.irbuttons[i].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", i, m_settings.irbuttons[i].label);
+                else                                  log_w("IR_buttonNr %02i, value 0x%02X, label %s", i, m_settings.irbuttons[i].val, m_settings.irbuttons[i].label);
+            }
+        }
+        return true;
+    }
+};
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class SD_content{
 private:
