@@ -210,6 +210,7 @@ WebSrv              webSrv;
 WiFiMulti           wifiMulti;
 RTIME               rtc;
 Ticker              ticker100ms;
+IR_buttons          irb(_settings);
 IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP                  tp(TP_CS, TP_IRQ);
 File                audioFile;
@@ -428,7 +429,12 @@ textbox       txt_BT_volume("txt_BT_volume");
 // clang-format off
 boolean defaultsettings(){
 
-    IR_buttons irb(_settings);
+    if(!SD_MMC.exists("/ir_buttons.json")){  // if not found create one
+        File file = SD_MMC.open("/ir_buttons.json", "w", true);
+        file.write((uint8_t*)ir_buttons_json, sizeof(ir_buttons_json));
+        file.close();
+    }
+
     irb.loadButtonsFromJSON("/ir_buttons.json");
 
 

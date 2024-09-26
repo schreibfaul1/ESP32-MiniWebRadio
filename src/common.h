@@ -3560,6 +3560,31 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
     // }
 }
 
+const char ir_buttons_json[] =
+    "[{\"0\":\"0x52\",\"label\":\"ZERO\"},"
+    "{\"10\":\"0x42\",\"label\":\"MUTE\"},"
+    "{\"20\":\"0x40\",\"label\":\"SLEEP\"},"
+    "{\"1\":\"0x16\",\"label\":\"ONE\"},"
+    "{\"11\":\"0x43\",\"label\":\"ARROW RIGHT\"},"
+    "{\"21\":\"-1\",\"label\":\"-\"},"
+    "{\"2\":\"0x19\",\"label\":\"TWO\"},"
+    "{\"12\":\"0x44\",\"label\":\"ARROW LEFT\"},"
+    "{\"22\":\"-1\",\"label\":\"-\"},"
+    "{\"3\":\"0x0d\",\"label\":\"THREE\"},"
+    "{\"13\":\"0x15\",\"label\":\"ARROW DOWN\"},"
+    "{\"4\":\"0x0c\",\"label\":\"FOUR\"},"
+    "{\"14\":\"0x46\",\"label\":\"ARROW UP\"},"
+    "{\"5\":\"0x18\",\"label\":\"FIVE\"},"
+    "{\"15\":\"0x4a\",\"label\":\"MODE\"},"
+    "{\"6\":\"0x5e\",\"label\":\"SIX\"},"
+    "{\"16\":\"0x40\",\"label\":\"OFF TIMER\"},"
+    "{\"7\":\"0x08\",\"label\":\"SEVEN\"},"
+    "{\"17\":\"-1\",\"label\":\"-\"},"
+    "{\"8\":\"0x1c\",\"label\":\"EIGHT\"},"
+    "{\"18\":\"-1\",\"label\":\"-\"},"
+    "{\"9\":\"0x5a\",\"label\":\"NINE\"},"
+    "{\"19\":\"-1\",\"label\":\"-\"}]";
+
 const char stations_json[] =
     "[[\"*\",\"D\",\"0N 70s\",\"http://0n-70s.radionetz.de:8000/0n-70s.mp3\"],"
     "[\"*\",\"D\",\"0N 80s\",\"http://0n-80s.radionetz.de:8000/0n-80s.mp3\"],"
