@@ -145,7 +145,7 @@ class TFT{
         bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         uint16_t  validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
-        uint16_t  fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
+        uint16_t  fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
         uint8_t   fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
         size_t    writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
 
@@ -194,7 +194,7 @@ class TFT{
         uint8_t   _TFT_DC  = 21;    /* Data or Command */
         uint8_t   _TFT_CS  = 22;    /* SPI Chip select */
         uint8_t  buf[1024];
-        char     chbuf[256];
+        char     chbuf[256 * 2];
 
     //    ------------GIF-------------------
 

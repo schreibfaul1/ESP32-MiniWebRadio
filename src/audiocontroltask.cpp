@@ -10,7 +10,7 @@ Audio audio;
 extern RTIME rtc;
 extern SemaphoreHandle_t  mutex_rtc;
 
-enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
+enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, OPENAI_SPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
                  INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
                  GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS, SET_COREID};
 
@@ -85,6 +85,11 @@ void audioTask(void *parameter) {
                 audioTxTaskMessage.ret = audio.connecttospeech(audioRxTaskMessage.txt1, audioRxTaskMessage.txt2);
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
+            else if(audioRxTaskMessage.cmd == OPENAI_SPEECH){
+                audioTxTaskMessage.cmd = OPENAI_SPEECH;
+                audioTxTaskMessage.ret = audio.openai_speech(audioRxTaskMessage.txt1, "tts-1", audioRxTaskMessage.txt2, "alloy", "mp3", "1");
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
             else if(audioRxTaskMessage.cmd == GET_VOLUME){
                 audioTxTaskMessage.cmd = GET_VOLUME;
                 audioTxTaskMessage.ret = audio.getVolume();
@@ -139,7 +144,7 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == HIGHWATERMARK){
                 audioTxTaskMessage.cmd = HIGHWATERMARK;
-                audioTxTaskMessage.ret = uxTaskGetStackHighWaterMark(NULL);
+                audioTxTaskMessage.ret = audio.getHighWatermark();
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == PAUSERESUME){
@@ -307,6 +312,14 @@ boolean audioConnecttospeech(const char* text, const char* lang){
     audioTxMessage.cmd = CONNECTTOSPEECH;
     audioTxMessage.txt1 = text;
     audioTxMessage.txt2 = lang;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    return RX.ret;
+}
+
+bool audioOpenAIspeech(const char* OpenAI_Key, const char* text){
+    audioTxMessage.cmd = OPENAI_SPEECH;
+    audioTxMessage.txt1 = OpenAI_Key;
+    audioTxMessage.txt2 = text;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;
 }

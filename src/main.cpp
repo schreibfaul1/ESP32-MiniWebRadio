@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.4bd - Sep 09/2024                                                                                                                       ";
+    Version 3.5 - Sep 28/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -61,6 +61,7 @@ char _hl_item[16][40]{"",                 // none
                       ""
                       ""};
 
+settings_t          _settings;
 const uint16_t      _max_stations = 1000;
 int8_t              _currDLNAsrvNr = -1;
 uint8_t             _alarmdays = 0;
@@ -209,6 +210,7 @@ WebSrv              webSrv;
 WiFiMulti           wifiMulti;
 RTIME               rtc;
 Ticker              ticker100ms;
+IR_buttons          irb(&_settings);
 IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP                  tp(TP_CS, TP_IRQ);
 File                audioFile;
@@ -427,6 +429,17 @@ textbox       txt_BT_volume("txt_BT_volume");
 // clang-format off
 boolean defaultsettings(){
 
+    if(!SD_MMC.exists("/ir_buttons.json")){  // if not found create one
+        File file = SD_MMC.open("/ir_buttons.json", "w", true);
+        file.write((uint8_t*)ir_buttons_json, sizeof(ir_buttons_json));
+        file.close();
+    }
+    irb.loadButtonsFromJSON("/ir_buttons.json");
+    for(uint i = 0; i < _settings.numOfIrButtons; i++) {
+    //    log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
+        ir.set_irButtons(i, _settings.irbuttons[i].val);
+    }
+
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
     }
@@ -495,9 +508,6 @@ boolean defaultsettings(){
     if(_cur_AudioFileNr > 65000) _cur_AudioFileNr = 0; // unlikely (65495 is -1)
     // ------------------------------------------------------------------------------------------------------------
 
-    if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
-    loadIRbuttonsFromNVS();
-
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
 
@@ -511,64 +521,6 @@ boolean defaultsettings(){
     return true;
 }
 // clang-format on
-
-
-boolean saveDefaultIRbuttonsToNVS() { // default values, first init
-    pref.putShort("irAddress", 0x00);
-    pref.putShort("button_0", 0x52);  // '0';
-    pref.putShort("button_1", 0x16);  // '1';
-    pref.putShort("button_2", 0x19);  // '2';
-    pref.putShort("button_3", 0x0D);  // '3';
-    pref.putShort("button_4", 0x0C);  // '4';
-    pref.putShort("button_5", 0x18);  // '5';
-    pref.putShort("button_6", 0x5E);  // '6';
-    pref.putShort("button_7", 0x08);  // '7';
-    pref.putShort("button_8", 0x1C);  // '8';
-    pref.putShort("button_9", 0x5A);  // '9';
-    pref.putShort("button_10", 0x40); // 'm';  // MUTE
-    pref.putShort("button_11", 0x46); // 'u';  // VOLUME+
-    pref.putShort("button_12", 0x15); // 'd';  // VOLUME-
-    pref.putShort("button_13", 0x43); // 'p';  // PREVIOUS STATION
-    pref.putShort("button_14", 0x44); // 'n';  // NEXT STATION
-    pref.putShort("button_15", 0x4A); // 'k';  // CLOCK <--> RADIO
-    pref.putShort("button_16", 0x42); // 's';  // OFF TIMER
-    pref.putShort("button_17", 0x00); // '0';
-    pref.putShort("button_18", 0x00); // '0';
-    pref.putShort("button_19", 0x00); // '0';
-
-    pref.putShort("IR_numButtons", 20);
-    // log_i("saveDefaultIRbuttonsToNVS");
-
-    loadIRbuttonsFromNVS();
-
-    return true;
-}
-
-void saveIRbuttonsToNVS() {
-    uint8_t  ir_addr = ir.get_irAddress();
-    uint8_t* ir_buttons = ir.get_irButtons();
-    char     buf[12];
-    pref.putShort("irAddress", ir_addr);
-    for(uint8_t i = 0; i < 20; i++) {
-        sprintf(buf, "button_%d", i);
-        pref.putShort(buf, ir_buttons[i]);
-        log_i("i=%i ir_buttons[i] %X", i, ir_buttons[i]);
-    }
-    pref.putShort("IR_numButtons", 20);
-}
-
-void loadIRbuttonsFromNVS() {
-    // load IR settings from NVS
-    uint numButtons = pref.getShort("IR_numButtons", 0);
-    ir.set_irAddress(pref.getShort("irAddress", 0));
-    char    buf[12];
-    uint8_t cmd = 0;
-    for(uint i = 0; i < numButtons; i++) {
-        sprintf(buf, "button_%d", i);
-        cmd = pref.getShort(buf, 0);
-        ir.set_irButtons(i, cmd);
-    }
-}
 
 // clang-format off
 void updateSettings(){
@@ -2777,7 +2729,7 @@ endbrightness:
             GetRunTimeStats(timeStatsBuffer);
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
         }
-        if(r.startsWith("a")) {
+        if(r.startsWith("cts")) {
             audioConnecttospeech("Hallo, wie geht es dir?", "de");
         }
 
@@ -2802,6 +2754,10 @@ endbrightness:
             log_w("st: %s", _streamTitle);
             _f_newStreamTitle = true;
         }
+        if(r.startsWith("ais")){ // openAIspeech
+            log_w("openAI speech");
+            audioOpenAIspeech("openAI_key", "Today is a wonderful day to build something people love!");
+        }
     }
 }
 
@@ -2820,7 +2776,7 @@ void audio_info(const char* info) {
 //    if(startsWith(info, "connect to"))             {IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {{SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);} return;} // all other
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_showstation(const char* info) {
     if(!info) return;
     if(_stationName_air) {free(_stationName_air); _stationName_air = NULL;}
@@ -2828,13 +2784,13 @@ void audio_showstation(const char* info) {
     SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     _f_newStationName = true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_showstreamtitle(const char* info) {
     strcpy(_streamTitle, info);
     if(!_f_irNumberSeen) _f_newStreamTitle = true;
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void show_ST_commercial(const char* info) {
     _commercial_dur = atoi(info) / 1000; // info is the duration of advertising in ms
     char cdur[10];
@@ -2847,7 +2803,7 @@ void show_ST_commercial(const char* info) {
     SerialPrintfln("StreamTitle: %s", info);
 }
 void audio_commercial(const char* info) { show_ST_commercial(info); }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -2861,7 +2817,7 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     _f_eof = true;
     _f_isFSConnected = false;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_stream(const char* info) {
     _f_isWebConnected = false;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
@@ -2875,14 +2831,14 @@ void audio_eof_stream(const char* info) {
     if(_state == RADIO) { clearWithOutHeaderFooter(); }
     _f_eof = true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
     _lastconnectedhost = info;
     SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
     webSrv.send("stationURL=", _lastconnectedhost);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) {
         SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
@@ -2890,39 +2846,62 @@ void audio_icyurl(const char* info) { // if the Radio has a homepage, this event
         if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icylogo(const char* info) { // if the Radio has a homepage, this event is calling
     if(strlen(info) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, info); }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size); }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_oggimage(File& audiofile, std::vector<uint32_t> vec) { // OGG blockpicture
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
     for(int i = 0; i < vec.size(); i += 2) { SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07ld, len %05ld", i / 2, (long unsigned int)vec[i], (long unsigned int)vec[i + 1]); }
     SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icydescription(const char* info) {
     strcpy(_icyDescription, info);
     _f_newIcyDescription = true;
     if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_bitrate(const char* info) {
     if(!strlen(info)) return; // guard
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_speech(const char*) {
     _f_connectToLasthost = true;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S){
+
+    // int16_t sineWaveTable[44] = {
+    //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
+    //   25311,  24908,  23825,  22113,  19848,  17136,  14082,  10793,   7377,   3743,
+    //      0,  -3743,  -7377, -10793, -14082, -17136, -19848, -22113, -23825, -24908,
+    //  -25311, -24908, -23825, -22113, -19848, -17136, -14082, -10793,  -7377,  -3743
+    // };
+
+    // static uint8_t tabPtr = 0;
+    // int16_t* sample[2]; // assume 2 channels, 16bit
+    // for(int i= 0; i < validSamples; i++){
+    //     *(sample + 0) = outBuff + i * 2;     // channel left
+    //     *(sample + 1) = outBuff + i * 2 + 1; // channel right
+
+    //     *(*sample + 0) = (sineWaveTable[tabPtr] /50 + *(*sample + 0));
+    //     *(*sample + 1) = (sineWaveTable[tabPtr] /50 + *(*sample + 1));
+    //     tabPtr++;
+    //     if(tabPtr == 44) tabPtr = 0;
+    // }
+   *continueI2S = true;
+}
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {
     if(startsWith(info, "File Name")) return;
     SerialPrintfln("ftpServer:   %s", info);
@@ -2961,31 +2940,32 @@ void ir_number(uint16_t num) {
     _radioSubmenue = 3;
     changeState(RADIO);
 }
-void ir_key(uint8_t key) {
-    if(_f_sleeping == true && key != 10) return;
-    if(_f_sleeping == true && key == 10) {
+void ir_short_key(uint8_t key) {
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
+    if(_f_sleeping == true && key != 16) return;
+    if(_f_sleeping == true && key == 16) {
         wake_up();
         return;
     } // awake
 
     switch(key) {
-        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // CLOCK <-> RADIO
+        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // MODE -- CLOCK <-> RADIO
                     if(_state == RADIO) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(RADIO); break;}
                     break;
-        case 11:    upvolume(); // VOLUME+
+        case 14:    upvolume(); // ARROW UP -- VOLUME+
                     break;
-        case 12:    downvolume(); // VOLUME-
+        case 13:    downvolume(); // ARROW DOWN -- VOLUME-
                     break;
-        case 14:    if(_state == RADIO) {nextFavStation(); break;} // NEXT STATION
+        case 11:    if(_state == RADIO) {nextFavStation(); break;} // ARROW RIGHT -- NEXT STATION
                     if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(1); break;}
                     break;
-        case 13:    if(_state == RADIO) {prevFavStation(); break;} // PREV STATION
+        case 12:    if(_state == RADIO) {prevFavStation(); break;} // ARROW LEFT -- PREV STATION
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(-1); break;}
                     break;
-        case 10:    muteChanged(!_f_mute);
+        case 10:    muteChanged(!_f_mute); // MUTE
                     break;
         case 16:    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
                     if(_state == SLEEP) {changeState(RADIO); break;}
@@ -2995,7 +2975,7 @@ void ir_key(uint8_t key) {
 }
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(key == 10) fall_asleep(); // long mute
+    if(key == 20) fall_asleep(); // long mute
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Event from TouchPad
@@ -3144,7 +3124,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
         lst_DLNA.longPressed(x, y);
     }
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_released(uint16_t x, uint16_t y){
 
     if(_f_sleeping){ wake_up(); return;}   // if sleeping
@@ -3266,7 +3246,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         (long unsigned)ESP.getFreeHeap(), (long unsigned)audioInbuffFilled(), (long unsigned)audioInbuffFree(),
                                         (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
                                     webSrv.send("test=", _chbuf);
-                                //    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audioGetStackHighWatermark() * 4);
+                                    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audioGetStackHighWatermark() * 4);
                                     SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                     return;}
 
@@ -3414,7 +3394,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Download  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
     if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);
@@ -3466,8 +3446,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    ir.set_irAddress(address);
                                    return;}
 
-    if(cmd == "saveIRbuttons"){    saveIRbuttonsToNVS(); return;}
-
     if(cmd == "getTimeFormat"){    webSrv.send("timeFormat=", String(_timeFormat, 10));
                                    return;}
 
@@ -3486,16 +3464,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    if(_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");
                                    if(_sleepMode == 1) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Show the time");
                                    return;}
-
-    if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
-                                   char buf[150];
-                                   uint8_t* buttons = ir.get_irButtons();
-                                   sprintf(buf,"0x%02x,", ir.get_irAddress());
-                                   for(uint8_t i = 0; i< 20; i++){
-                                        sprintf(buf + 5 + 5 * i, "0x%02x,", buttons[i]);
-                                   }
-                                   buf[5 + 5 * 20] = '\0';
-                                   webSrv.reply(buf, webSrv.TEXT); return;}
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
     if(cmd == "KCX_BT_connected") {if     (!_f_BTpower)              webSrv.send("KCX_BT_connected=", "-1");
@@ -3522,7 +3490,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength) {
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
+    if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
     if(_filename.startsWith("SD/")) {// POST request
         File sta;

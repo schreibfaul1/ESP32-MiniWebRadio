@@ -3,4 +3,5 @@
 .env
 build
 logs
+managed_components
 

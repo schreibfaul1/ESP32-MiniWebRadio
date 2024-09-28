@@ -2866,7 +2866,7 @@ uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiA
     return chLen;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-uint16_t TFT::fitInLine(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
+uint16_t TFT::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
     // cpArr contains the CodePoints of all printable characters in the string. chLength is the length of cpArr. From a starting position, the characters that fit into a width of win_W are determined.
     // The ending of a word is defined by a space or an \n. The number of characters that can be written is returned. For later alignment of the characters, the length is passed in usedPxLength.
     // narrow: no x offsets are taken into account
@@ -2910,7 +2910,7 @@ uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, 
     uint8_t currentFontSize = 0;
     uint16_t usedPxLength = 0;
     uint16_t drawableCharsTotal = 0;
-    uint16_t drawableCharsInLine = 0;
+    uint16_t drawableCharsinline = 0;
     uint16_t startPos = 0;
     uint8_t  nrOfLines = 0;
     while(true){
@@ -2923,12 +2923,12 @@ uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, 
         int16_t win_H_remain = win_H;
         while(true){
             if(win_H_remain < _current_font.line_height) {break;}
-            drawableCharsInLine = fitInLine(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
+            drawableCharsinline = fitinline(cpArr, chLength, startPos, win_W, &usedPxLength, narrow, noWrap);
             win_H_remain -= _current_font.line_height;
-        //    log_i("drawableCharsInLine  %i,chLength  %i, currentFontSize %i", drawableCharsInLine, chLength, currentFontSize);
-            drawableCharsTotal += drawableCharsInLine;
-            startPos += drawableCharsInLine;
-            if(drawableCharsInLine == 0) break;
+        //    log_i("drawableCharsinline  %i,chLength  %i, currentFontSize %i", drawableCharsinline, chLength, currentFontSize);
+            drawableCharsTotal += drawableCharsinline;
+            startPos += drawableCharsinline;
+            if(drawableCharsinline == 0) break;
             if(drawableCharsTotal == chLength) goto exit;
             nrOfLines++;
         }
@@ -2997,8 +2997,8 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     while(true) { // outer while
         if(noWrap && idx) goto exit;
         if(pH < _current_font.line_height) { goto exit; }
-        //charsToDraw = fitInLine(idx, pW, &usedPxLength);
-        charsToDraw = fitInLine(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
+        //charsToDraw = fitinline(idx, pW, &usedPxLength);
+        charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
 
         if(h_align == TFT_ALIGN_RIGHT)  { pX += win_W - (usedPxLength + 1); }
         if(h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
