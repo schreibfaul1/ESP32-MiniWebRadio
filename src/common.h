@@ -597,18 +597,14 @@ class IR_buttons{
     }
 
     int16_t hexStringToInt16(const char* str) {
-        // Debug-Ausgabe für den String
-        Serial.print("Parsing string: ");
-        Serial.println(str);
-        // Prüfe, ob es der spezielle Fall "-1" ist
-        if (strcmp(str, "-1") == 0) {
-            return -1;  // Sonderfall für ungenutzte Tasten
+        if (strcmp(str, "-1") == 0) { // Check if it's the special case '-1'
+            return -1;  // Special case for unused keys
         }
-        // Hexadezimalwert verarbeiten
+        // Processing the hexadecimal value
         if (strlen(str) >= 3 && str[0] == '0' && tolower(str[1]) == 'x') {
-            return (int16_t)strtol(str, NULL, 16);  // Hexadezimalwert umwandeln
+            return (int16_t)strtol(str, NULL, 16);  // Convert Hexadecimal Value
         }
-        Serial.println("Invalid format.");  // Fehlerausgabe, falls das Format nicht stimmt
+        Serial.println("Invalid format.");  // Error output if the format is not correct
         return 0;
     }
 
@@ -644,7 +640,7 @@ class IR_buttons{
     uint8_t buttonNr = 0;
     size_t buttonIndex = 0;
 
-    // Überprüfe, ob der JSON-String mit '[' beginnt
+    // Check if the JSON string starts with '['
     ptr = skipWhitespace(ptr);
     if (*ptr != '[') {
         Serial.println("Error: Expected '[' to start array.");
@@ -652,12 +648,12 @@ class IR_buttons{
     }
     ptr++;  // Überspringe '['
 
-    // Verarbeite jedes JSON-Objekt im Array
+    // Process each JSON object in the array
     char key[16];
     while (*ptr && *ptr != ']' && buttonIndex < 24) {
         ptr = skipWhitespace(ptr);
         if (*ptr == '{') {
-            ptr++;  // Überspringe '{'
+            ptr++;  // skip '{'
             int16_t val = 0xFF;
             char* label = NULL;
             bool validObject = false;
@@ -667,43 +663,43 @@ class IR_buttons{
 
                 // Schlüssel extrahieren
                 if (*ptr == '\"') {
-                    ptr++;  // Überspringe '"'
+                    ptr++;  // skip '"'
                     const char* keyStart = ptr;
                     while (*ptr && *ptr != '\"') {
                         ptr++;
                     }
                     memset(key, 0, 16);
                     strncpy(key, keyStart, ptr - keyStart);
-                    ptr++;  // Überspringe '"'
+                    ptr++;  // skip '"'
                     ptr = skipWhitespace(ptr);
 
                     if (*ptr == ':') {
-                        ptr++;  // Überspringe ':'
+                        ptr++;  // skip ':'
                         ptr = skipWhitespace(ptr);
-                        // Wert basierend auf dem Schlüssel
+                        // Value based on key
                         if (isdigit(key[0])) {  // Nummer, z.B. "0", "10"
                             buttonNr = atoi(key);
                             char* str = NULL;
                             ptr = validateAndExtractString(ptr, &str);
-                            if (!ptr) return false;  // Fehler gefunden
+                            if (!ptr) return false;  // error found
 
                             val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
-                            free(str);  // String nach Nutzung freigeben
+                            free(str);
                             validObject = true;
                         } else if (strcmp(key, "label") == 0) {  // Label
                             ptr = validateAndExtractString(ptr, &label);
-                            if (!ptr) return false;  // Fehler gefunden
+                            if (!ptr) return false;  // error found
                         }
                     }
                 }
 
                 ptr = skipWhitespace(ptr);
                 if (*ptr == ',') {
-                    ptr++;  // Überspringe ','
+                    ptr++;  // skip ','
                 }
             }
 
-            // Stelle sicher, dass beide Werte vorhanden sind
+            // Make sure both values are present
             if (validObject && label != NULL) {
                 m_settings->irbuttons[buttonNr].val = val;
                 m_settings->irbuttons[buttonNr].label = label;
@@ -715,12 +711,12 @@ class IR_buttons{
 
             ptr = skipWhitespace(ptr);
             if (*ptr == '}') {
-                ptr++;  // Überspringe '}'
+                ptr++;  // skip '}'
             }
 
             ptr = skipWhitespace(ptr);
             if (*ptr == ',') {
-                ptr++;  // Überspringe ','
+                ptr++;  // skip ','
             }
         } else {
             Serial.println("Error: Expected '{' to start an object.");
@@ -728,13 +724,13 @@ class IR_buttons{
         }
     }
 
-    // Überprüfe, ob das Array korrekt mit ']' endet
+    // Check that the array ends correctly with ']'
     ptr = skipWhitespace(ptr);
     if (*ptr != ']') {
         Serial.println("Error: Expected ']' to close array.");
         return false;
     }
-    return true;  // JSON erfolgreich geparst
+    return true;  // JSON parsed successfully
     }
 
     uint8_t loadButtonsFromJSON(const char* filename) { // Function to load the JSON data
@@ -748,19 +744,19 @@ class IR_buttons{
             jsonString += (char)file.read();
         }
         file.close();
-        log_w("%s", jsonString.c_str());
+    //    log_w("%s", jsonString.c_str());
         // JSON parsen
         if (!parseJSONString(jsonString.c_str())) {
             Serial.println("Failed to parse JSON.");
             return false;
         }
-        // Debug-Ausgabe
+        // debug output
         m_numOfIrButtons = 0;
         while(true) {
             if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
 
-            if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
-            else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
+        //    if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
+        //    else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
             m_numOfIrButtons++;
         }
         m_settings->numOfIrButtons = m_numOfIrButtons;
