@@ -436,25 +436,9 @@ boolean defaultsettings(){
     }
     irb.loadButtonsFromJSON("/ir_buttons.json");
     for(uint i = 0; i < _settings.numOfIrButtons; i++) {
-        log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
+    //    log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
-
-
-// void loadIRbuttonsFromNVS() {
-//     // load IR settings from NVS
-//     uint numButtons = pref.getShort("IR_numButtons", 0);
-//     ir.set_irAddress(pref.getShort("irAddress", 0));
-//     char    buf[12];
-//     uint8_t cmd = 0;
-//     for(uint i = 0; i < numButtons; i++) {
-//         sprintf(buf, "button_%d", i);
-//         cmd = pref.getShort(buf, 0);
-//         ir.set_irButtons(i, cmd);
-//     }
-// }
-
-
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
