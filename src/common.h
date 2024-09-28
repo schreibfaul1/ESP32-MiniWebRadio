@@ -213,15 +213,13 @@ struct irButtons {
 };
 typedef struct __settings{
     irButtons irbuttons[25];
+    uint8_t numOfIrButtons = 0;
 } settings_t;
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // clang-format on
 //prototypes (main.cpp)
 boolean        defaultsettings();
-boolean        saveDefaultIRbuttonsToNVS();
-void           saveIRbuttonsToNVS();
-void           loadIRbuttonsFromNVS();
 void           updateSettings();
 void           urldecode(char* str);
 const char*    SD_stringifyDirContent(String path);
@@ -586,11 +584,13 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons{
   private:
-    settings_t m_settings;
+    settings_t* m_settings;
+    uint8_t m_numOfIrButtons = 0;
 
   public:
-    IR_buttons(settings_t s){
+    IR_buttons(settings_t* s){
         m_settings = s;
+        m_numOfIrButtons = 0;
     }
     ~IR_buttons(){
 
@@ -705,8 +705,8 @@ class IR_buttons{
 
             // Stelle sicher, dass beide Werte vorhanden sind
             if (validObject && label != NULL) {
-                m_settings.irbuttons[buttonNr].val = val;
-                m_settings.irbuttons[buttonNr].label = label;
+                m_settings->irbuttons[buttonNr].val = val;
+                m_settings->irbuttons[buttonNr].label = label;
                 buttonIndex++;
             } else {
                 Serial.println("Error: Invalid object, missing buttonNr or label.");
@@ -737,7 +737,7 @@ class IR_buttons{
     return true;  // JSON erfolgreich geparst
     }
 
-    bool loadButtonsFromJSON(const char* filename) { // Function to load the JSON data
+    uint8_t loadButtonsFromJSON(const char* filename) { // Function to load the JSON data
         File file = SD_MMC.open(filename);
         if (!file) {
             Serial.println("Failed to open file");
@@ -755,13 +755,16 @@ class IR_buttons{
             return false;
         }
         // Debug-Ausgabe
-        for (size_t i = 0; i < 24; i++) {
-            if (m_settings.irbuttons[i].label != NULL) {
-                if(m_settings.irbuttons[i].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", i, m_settings.irbuttons[i].label);
-                else                                  log_w("IR_buttonNr %02i, value 0x%02X, label %s", i, m_settings.irbuttons[i].val, m_settings.irbuttons[i].label);
-            }
+        m_numOfIrButtons = 0;
+        while(true) {
+            if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
+
+            if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
+            else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
+            m_numOfIrButtons++;
         }
-        return true;
+        m_settings->numOfIrButtons = m_numOfIrButtons;
+        return m_numOfIrButtons;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

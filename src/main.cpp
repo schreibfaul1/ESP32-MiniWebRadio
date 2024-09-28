@@ -210,7 +210,7 @@ WebSrv              webSrv;
 WiFiMulti           wifiMulti;
 RTIME               rtc;
 Ticker              ticker100ms;
-IR_buttons          irb(_settings);
+IR_buttons          irb(&_settings);
 IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP                  tp(TP_CS, TP_IRQ);
 File                audioFile;
@@ -434,8 +434,26 @@ boolean defaultsettings(){
         file.write((uint8_t*)ir_buttons_json, sizeof(ir_buttons_json));
         file.close();
     }
-
     irb.loadButtonsFromJSON("/ir_buttons.json");
+    for(uint i = 0; i < _settings.numOfIrButtons; i++) {
+        log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
+        ir.set_irButtons(i, _settings.irbuttons[i].val);
+    }
+
+
+// void loadIRbuttonsFromNVS() {
+//     // load IR settings from NVS
+//     uint numButtons = pref.getShort("IR_numButtons", 0);
+//     ir.set_irAddress(pref.getShort("irAddress", 0));
+//     char    buf[12];
+//     uint8_t cmd = 0;
+//     for(uint i = 0; i < numButtons; i++) {
+//         sprintf(buf, "button_%d", i);
+//         cmd = pref.getShort(buf, 0);
+//         ir.set_irButtons(i, cmd);
+//     }
+// }
+
 
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
@@ -506,9 +524,6 @@ boolean defaultsettings(){
     if(_cur_AudioFileNr > 65000) _cur_AudioFileNr = 0; // unlikely (65495 is -1)
     // ------------------------------------------------------------------------------------------------------------
 
-    if(pref.getShort("IR_numButtons", 0) == 0) saveDefaultIRbuttonsToNVS();
-    loadIRbuttonsFromNVS();
-
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
 
@@ -522,64 +537,6 @@ boolean defaultsettings(){
     return true;
 }
 // clang-format on
-
-
-boolean saveDefaultIRbuttonsToNVS() { // default values, first init
-    pref.putShort("irAddress", 0x00);
-    pref.putShort("button_0", 0x52);  // '0';
-    pref.putShort("button_1", 0x16);  // '1';
-    pref.putShort("button_2", 0x19);  // '2';
-    pref.putShort("button_3", 0x0D);  // '3';
-    pref.putShort("button_4", 0x0C);  // '4';
-    pref.putShort("button_5", 0x18);  // '5';
-    pref.putShort("button_6", 0x5E);  // '6';
-    pref.putShort("button_7", 0x08);  // '7';
-    pref.putShort("button_8", 0x1C);  // '8';
-    pref.putShort("button_9", 0x5A);  // '9';
-    pref.putShort("button_10", 0x40); // 'm';  // MUTE
-    pref.putShort("button_11", 0x46); // 'u';  // VOLUME+
-    pref.putShort("button_12", 0x15); // 'd';  // VOLUME-
-    pref.putShort("button_13", 0x43); // 'p';  // PREVIOUS STATION
-    pref.putShort("button_14", 0x44); // 'n';  // NEXT STATION
-    pref.putShort("button_15", 0x4A); // 'k';  // CLOCK <--> RADIO
-    pref.putShort("button_16", 0x42); // 's';  // OFF TIMER
-    pref.putShort("button_17", 0x00); // '0';
-    pref.putShort("button_18", 0x00); // '0';
-    pref.putShort("button_19", 0x00); // '0';
-
-    pref.putShort("IR_numButtons", 20);
-    // log_i("saveDefaultIRbuttonsToNVS");
-
-    loadIRbuttonsFromNVS();
-
-    return true;
-}
-
-void saveIRbuttonsToNVS() {
-    uint8_t  ir_addr = ir.get_irAddress();
-    uint8_t* ir_buttons = ir.get_irButtons();
-    char     buf[12];
-    pref.putShort("irAddress", ir_addr);
-    for(uint8_t i = 0; i < 20; i++) {
-        sprintf(buf, "button_%d", i);
-        pref.putShort(buf, ir_buttons[i]);
-        log_i("i=%i ir_buttons[i] %X", i, ir_buttons[i]);
-    }
-    pref.putShort("IR_numButtons", 20);
-}
-
-void loadIRbuttonsFromNVS() {
-    // load IR settings from NVS
-    uint numButtons = pref.getShort("IR_numButtons", 0);
-    ir.set_irAddress(pref.getShort("irAddress", 0));
-    char    buf[12];
-    uint8_t cmd = 0;
-    for(uint i = 0; i < numButtons; i++) {
-        sprintf(buf, "button_%d", i);
-        cmd = pref.getShort(buf, 0);
-        ir.set_irButtons(i, cmd);
-    }
-}
 
 // clang-format off
 void updateSettings(){
@@ -2999,31 +2956,32 @@ void ir_number(uint16_t num) {
     _radioSubmenue = 3;
     changeState(RADIO);
 }
-void ir_key(uint8_t key) {
-    if(_f_sleeping == true && key != 10) return;
-    if(_f_sleeping == true && key == 10) {
+void ir_short_key(uint8_t key) {
+    SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
+    if(_f_sleeping == true && key != 16) return;
+    if(_f_sleeping == true && key == 16) {
         wake_up();
         return;
     } // awake
 
     switch(key) {
-        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // CLOCK <-> RADIO
+        case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // MODE -- CLOCK <-> RADIO
                     if(_state == RADIO) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(RADIO); break;}
                     break;
-        case 11:    upvolume(); // VOLUME+
+        case 14:    upvolume(); // ARROW UP -- VOLUME+
                     break;
-        case 12:    downvolume(); // VOLUME-
+        case 13:    downvolume(); // ARROW DOWN -- VOLUME-
                     break;
-        case 14:    if(_state == RADIO) {nextFavStation(); break;} // NEXT STATION
+        case 11:    if(_state == RADIO) {nextFavStation(); break;} // ARROW RIGHT -- NEXT STATION
                     if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(1); break;}
                     break;
-        case 13:    if(_state == RADIO) {prevFavStation(); break;} // PREV STATION
+        case 12:    if(_state == RADIO) {prevFavStation(); break;} // ARROW LEFT -- PREV STATION
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(-1); break;}
                     break;
-        case 10:    muteChanged(!_f_mute);
+        case 10:    muteChanged(!_f_mute); // MUTE
                     break;
         case 16:    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
                     if(_state == SLEEP) {changeState(RADIO); break;}
@@ -3033,7 +2991,7 @@ void ir_key(uint8_t key) {
 }
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(key == 10) fall_asleep(); // long mute
+    if(key == 20) fall_asleep(); // long mute
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Event from TouchPad
@@ -3504,8 +3462,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    ir.set_irAddress(address);
                                    return;}
 
-    if(cmd == "saveIRbuttons"){    saveIRbuttonsToNVS(); return;}
-
     if(cmd == "getTimeFormat"){    webSrv.send("timeFormat=", String(_timeFormat, 10));
                                    return;}
 
@@ -3524,16 +3480,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                    if(_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");
                                    if(_sleepMode == 1) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Show the time");
                                    return;}
-
-    if(cmd == "loadIRbuttons"){    loadIRbuttonsFromNVS(); // update IR buttons in ir.cpp
-                                   char buf[150];
-                                   uint8_t* buttons = ir.get_irButtons();
-                                   sprintf(buf,"0x%02x,", ir.get_irAddress());
-                                   for(uint8_t i = 0; i< 20; i++){
-                                        sprintf(buf + 5 + 5 * i, "0x%02x,", buttons[i]);
-                                   }
-                                   buf[5 + 5 * 20] = '\0';
-                                   webSrv.reply(buf, webSrv.TEXT); return;}
 
     if(cmd == "DLNA_GetFolder"){   webSrv.sendStatus(306); return;}  // todo
     if(cmd == "KCX_BT_connected") {if     (!_f_BTpower)              webSrv.send("KCX_BT_connected=", "-1");

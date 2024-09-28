@@ -869,7 +869,8 @@ function showTab8 () {  // Remote Control
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    console.log(ir_buttons)
+    loadFileFromSD("/ir_buttons.json", "application/json")
+        .then(data => {ir_buttons = data;});
     writeJSONToTable(ir_buttons)
 }
 
@@ -1999,7 +2000,7 @@ function chIRcmd(btn){  // IR command, value changed
 }
 
 function writeJSONToTable(jsonIrString) {
-    console.log(jsonIrString)
+    // console.log(jsonIrString)
     if (!jsonIrString) {
         console.error("Kein JSON zum Rückschreiben verfügbar.");
         return;
