@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 09.Sep 2024
+// updated: 30.Sep 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3343,8 +3343,8 @@ public:
         updateOffTime(m_offTime);
         updateRSSI(m_rssi);
         updateBitRate(m_bitRate);
-        if(m_ipAddr) setIpAddr(m_ipAddr);
-        else         setIpAddr("");
+        if(m_ipAddr) writeIpAddr(m_ipAddr);
+        else         writeIpAddr("");
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -3458,15 +3458,13 @@ public:
         m_bitRateColor = bitRateColor;
     }
     void setIpAddr(const char* ipAddr){
-        if(m_ipAddr){free(m_ipAddr); m_ipAddr = NULL;}
-
-        #pragma GCC diagnostic push
-        #pragma GCC diagnostic ignored "-Wuse-after-free"
+        if(!ipAddr)return;
+        if(m_ipAddr){free(m_ipAddr); ipAddr = NULL;}
         m_ipAddr = strdup(ipAddr);
+    }
+    void writeIpAddr(const char* ipAddr){
         char myIP[30] = "IP:";
-        strcpy(myIP + 3, ipAddr);
-        #pragma GCC diagnostic pop
-
+        strcat(myIP, ipAddr);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_ipAddrColor);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
