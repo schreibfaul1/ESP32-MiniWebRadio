@@ -212,7 +212,7 @@ struct irButtons {
     char*   label;
 };
 typedef struct __settings{
-    irButtons irbuttons[25];
+    irButtons irbuttons[35];
     uint8_t numOfIrButtons = 0;
 } settings_t;
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -650,7 +650,7 @@ class IR_buttons{
 
     // Process each JSON object in the array
     char key[16];
-    while (*ptr && *ptr != ']' && buttonIndex < 24) {
+    while (*ptr && *ptr != ']' && buttonIndex < 33) {
         ptr = skipWhitespace(ptr);
         if (*ptr == '{') {
             ptr++;  // skip '{'
@@ -677,12 +677,29 @@ class IR_buttons{
                         ptr++;  // skip ':'
                         ptr = skipWhitespace(ptr);
                         // Value based on key
-                        if (isdigit(key[0])) {  // Nummer, z.B. "0", "10"
+                        if(key[0] =='A'){ // IR Address
+                            buttonNr = 32;
+                            char* str = NULL;
+                            ptr = validateAndExtractString(ptr, &str);
+                            if (!ptr) return false;  // error found
+                            val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
+                            free(str);
+                            validObject = true;
+                        }
+                        else if(key[0] == 'C'){; // IR command unused
+                            buttonNr = 33;
+                            char* str = NULL;
+                            ptr = validateAndExtractString(ptr, &str);
+                            if (!ptr) return false;  // error found
+                            val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
+                            free(str);
+                            validObject = true;
+                        }
+                        else if (isdigit(key[0])) {  // Nummer, z.B. "0", "10"
                             buttonNr = atoi(key);
                             char* str = NULL;
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
-
                             val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
                             free(str);
                             validObject = true;
@@ -703,6 +720,7 @@ class IR_buttons{
             if (validObject && label != NULL) {
                 m_settings->irbuttons[buttonNr].val = val;
                 m_settings->irbuttons[buttonNr].label = label;
+                // log_w("buttonNr %i, val %i, label %s", buttonNr, m_settings->irbuttons[buttonNr].val, m_settings->irbuttons[buttonNr].label);
                 buttonIndex++;
             } else {
                 Serial.println("Error: Invalid object, missing buttonNr or label.");
@@ -755,8 +773,8 @@ class IR_buttons{
         while(true) {
             if (m_settings->irbuttons[m_numOfIrButtons].label == NULL) break;
 
-        //    if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
-        //    else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
+            // if(m_settings->irbuttons[m_numOfIrButtons].val == -1) log_w("IR_buttonNr %02i, value -1,   label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].label);
+            //  else log_w("IR_buttonNr %02i, value 0x%02X, label %s", m_numOfIrButtons, m_settings->irbuttons[m_numOfIrButtons].val, m_settings->irbuttons[m_numOfIrButtons].label);
             m_numOfIrButtons++;
         }
         m_settings->numOfIrButtons = m_numOfIrButtons;
@@ -3558,7 +3576,8 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
 }
 
 const char ir_buttons_json[] =
-    "[{\"0\":\"0x52\",\"label\":\"ZERO\"},"
+    "[{\"A\":\"0x00\",\"label\":\"IR address\"},"
+    "{\"0\":\"0x52\",\"label\":\"ZERO\"},"
     "{\"10\":\"0x42\",\"label\":\"MUTE\"},"
     "{\"20\":\"0x40\",\"label\":\"SLEEP\"},"
     "{\"1\":\"0x16\",\"label\":\"ONE\"},"

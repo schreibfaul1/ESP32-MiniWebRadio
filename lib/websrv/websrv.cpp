@@ -374,10 +374,11 @@ String WebSrv::getContentType(String filename){
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::handlehttp() {                // HTTPserver, message received
     bool wswitch=true;
-    int16_t inx1 = 0, inx2 = 0;                 // Pos. of search string in currenLine
-    String currentLine = "";                // Build up to complete line
-    String ct;                              // contentType
-    uint32_t contentLength = 0;                        // contentLength
+    int16_t inx1 = 0, inx2 = 0;               // Pos. of search string in currenLine
+    String currentLine = "";                  // Build up to complete line
+    String ct;                                // contentType
+    uint32_t contentLength = 0;               // contentLength
+    uint32_t bytesLeft = 0;
     uint8_t count = 0;
 
     while (wswitch==true &&  cmdclient.connected()){            // first while
@@ -410,7 +411,10 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             } else {
                 // Newline seen
                 method = HTTP_NONE;
-                if (currentLine.startsWith("Content-Length:")) contentLength = currentLine.substring(15).toInt();
+                if (currentLine.startsWith("Content-Length:")) {
+                    contentLength = currentLine.substring(15).toInt();
+                    bytesLeft = contentLength;
+                }
 
                 if (currentLine.startsWith("GET /")) {     // GET request?
                     method = HTTP_GET;
@@ -471,7 +475,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             int32_t idx = currentLine.indexOf("\r");
             if(idx > 0) currentLine[idx] = ' ';
             // log_i("currLine %s", currentLine.c_str());
-            contentLength -= currentLine.length();
+            bytesLeft -= currentLine.length();
         }
         else{
             currentLine = "";
@@ -487,17 +491,17 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         }
         else{   // its the requestbody
             if(currentLine.length() > 1){
-                if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, contentLength);
+                if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, contentLength, bytesLeft);
                 if(WEBSRV_onInfo) WEBSRV_onInfo(currentLine.c_str());
             }
 
             if(currentLine.startsWith("------")) {
                 count++; // WebKitFormBoundary header
-                contentLength -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
+                bytesLeft -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
             }
             if(currentLine.length() == 1 && count == 1){
-                contentLength -= 7; // "\r\n\r\n..."
-                if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength);
+                bytesLeft -= 7; // "\r\n\r\n..."
+                if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength, bytesLeft);
                 count++;
             }
         }

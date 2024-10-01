@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5 - Sep 28/2024                                                                                                                       ";
+    Version 3.5a - Oct 01/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -439,6 +439,7 @@ boolean defaultsettings(){
     //    log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
+    ir.set_irAddress(_settings.irbuttons[32].val);
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
@@ -2942,8 +2943,8 @@ void ir_number(uint16_t num) {
 }
 void ir_short_key(uint8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(_f_sleeping == true && key != 16) return;
-    if(_f_sleeping == true && key == 16) {
+    // if(_f_sleeping == true && key != 16) return;
+    if(_f_sleeping == true && key == 17) {
         wake_up();
         return;
     } // awake
@@ -3489,7 +3490,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     webSrv.sendStatus(400);
 }
 // clang-format on
-void WEBSRV_onRequest(const String request, uint32_t contentLength) {
+void WEBSRV_onRequest(const String request, uint32_t contentLength, uint32_t bytesLeft) {
     if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
     if(_filename.startsWith("SD/")) {// POST request
@@ -3503,7 +3504,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength) {
         }
         sta.write((uint8_t*)request.c_str(), request.length() );
         sta.close();
-        if(contentLength == 0){
+        if(bytesLeft == 0){
             if(_filename  == "SD/stations.json") _f_stationsChanged = true;
             webSrv.reply("200", webSrv.TEXT);
         }
