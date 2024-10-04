@@ -3511,7 +3511,7 @@ void WEBSRV_onRequest(const String request, uint32_t contentLength, uint32_t byt
     if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
     if(request.indexOf("form-data") > 0) return; // uninteresting Info
     if(request == "fileUpload") {
-        savefile(_filename.c_str(), contentLength);
+        savefile(_filename.c_str(), bytesLeft);
         return;
     }
     if(request.startsWith("Content")) return; // suppress Content-Disposition and Content-Type
