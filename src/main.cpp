@@ -215,8 +215,6 @@ IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
 TP                  tp(TP_CS, TP_IRQ);
 File                audioFile;
 FtpServer           ftpSrv;
-WiFiClient          client;
-WiFiUDP             udp;
 DLNA_Client         dlna;
 KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
