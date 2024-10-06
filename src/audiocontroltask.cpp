@@ -38,6 +38,7 @@ void CreateQueues(){
 }
 
 void audioTask(void *parameter) {
+    psramInit();
     CreateQueues();
     if(!audioSetQueue || !audioGetQueue){
         SerialPrintfln(ANSI_ESC_RED "Error: queues are not initialized");
