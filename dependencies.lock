@@ -301,7 +301,7 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.1.4
+    version: 5.3.0
   joltwallet/littlefs:
     component_hash: 362f1f5beb5087b0c60169aff82676d2d0ffc991ead975212b0cba95959181c5
     dependencies:
@@ -329,6 +329,6 @@ direct_dependencies:
 - espressif/rmaker_common
 - idf
 - joltwallet/littlefs
-manifest_hash: 6e90f5b15283407daa0c179aac46415cf48b3dd974c63431ebecfcee6f2c1510
+manifest_hash: 01132b798eea4df39c10ec4155b965035eb2f796281ca17199f9da368f3d20cd
 target: esp32s3
 version: 2.0.0

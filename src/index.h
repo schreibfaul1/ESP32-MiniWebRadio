@@ -623,6 +623,7 @@ function connect() {
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
                                         if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
                                         if (val == 'BLUETOOTH'&& state != 'BT') showTab9();
+                                        if (val == 'IR_SETTINGS' && state != 'IR') showTab8();
                                         break;
             case "KCX_BT_connected":    console.log(msg, val)
                                         if(val == '-1') {showLogo1('label-bt-logo', '/png/BT_off.png');}
@@ -872,6 +873,7 @@ function showTab8 () {  // Remote Control
     loadFileFromSD("/ir_buttons.json", "application/json")
         .then(data => {ir_buttons = data;});
     writeJSONToTable(ir_buttons)
+    socket.send("change_state=" + "IR_SETTINGS")
 }
 
 function showTab9 () {  // KCX BT Emitter

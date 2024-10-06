@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 01.Oct 2024
+// updated: 06.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -2855,6 +2855,7 @@ private:
     uint8_t     m_lineHight = 0;
     uint16_t    m_firstStationsLineNr = 0;
     uint16_t*   m_curSstationNr = NULL;
+    uint16_t    m_curStaNrCpy = 0;
     uint8_t     m_browseOnRelease = 0;
     uint8_t     m_fontSize = 0;
     uint8_t     m_stationListPos = 0;
@@ -2946,6 +2947,7 @@ private:
             else  if(*m_curSstationNr < 5) m_firstStationsLineNr = 0;
             else if(*m_curSstationNr +5 <= staMgnt.getSumStations()) m_firstStationsLineNr = *m_curSstationNr - 5;
             else m_firstStationsLineNr = staMgnt.getSumStations() - 10;
+            m_curStaNrCpy = *m_curSstationNr;
         }
         else{
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -2956,7 +2958,7 @@ private:
 
             if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
 
-            if((pos + m_firstStationsLineNr + 1) == *m_curSstationNr){
+            if((pos + m_firstStationsLineNr + 1) == m_curStaNrCpy){
                 sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, ( pos + m_firstStationsLineNr + 1)); // is currStationNr
             }
             else{
@@ -3007,6 +3009,77 @@ private:
         m_browseOnRelease = 3;
         return;
     }
+public:
+    void prevPage(){ // from IR control
+        if(m_firstStationsLineNr == 0) {return;} // nothing to do
+        else if(m_firstStationsLineNr < 10) {m_curStaNrCpy -=  m_firstStationsLineNr;  m_firstStationsLineNr = 0;}
+        else {m_firstStationsLineNr -= 9; m_curStaNrCpy -= 9;}
+        stationslist(false);
+    }
+    void nextPage(){ // from IR control
+        if(m_firstStationsLineNr + 10 >= staMgnt.getSumStations()) {m_browseOnRelease = 0; return;} // nothing to do
+        else {m_firstStationsLineNr += 9; m_curStaNrCpy += 9; if(m_curStaNrCpy > staMgnt.getSumStations()) m_curStaNrCpy = staMgnt.getSumStations();}
+        stationslist(false);
+    }
+    void prevStation(){ // from IR control
+        if(m_curStaNrCpy < 1) return;
+        int8_t pos = m_curStaNrCpy - m_firstStationsLineNr - 1;
+        if(pos < 0) return;
+        if(pos == 0) { // prev page
+            m_firstStationsLineNr -= 9;
+            m_curStaNrCpy--;
+            stationslist(false);
+            return;
+        }
+        char* stationStr = x_ps_malloc(1024);
+        if(!stationStr){log_e("oom"); return;}
+        if(!stationStr) return;
+        tft.setFont(m_fontSize);
+        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
+            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
+        }
+        else{
+            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
+        }
+        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
+        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        m_curStaNrCpy--;
+        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
+        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
+        tft.writeText(stationStr, 10, m_y + (pos - 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        free(stationStr);
+    }
+    void nextStation(){ // from IR control
+        if(m_curStaNrCpy >= staMgnt.getSumStations()) return;
+        int8_t pos = m_curStaNrCpy - m_firstStationsLineNr - 1;
+        if(pos > 9) return;
+        if(pos == 9) { // next Page
+            m_firstStationsLineNr += 9;
+            m_curStaNrCpy++;
+            stationslist(false);
+            return;
+        }
+        char* stationStr = x_ps_malloc(1024);
+        if(!stationStr) return;
+        tft.setFont(m_fontSize);
+        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
+            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
+        }
+        else{
+            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
+        }
+        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
+        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        m_curStaNrCpy++;
+        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
+        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
+        tft.writeText(stationStr, 10, m_y + (pos + 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        free(stationStr);
+    }
+    uint16_t getSelectedStation(){ // from IR control
+        return m_curStaNrCpy;
+    }
+
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class vuMeter{
