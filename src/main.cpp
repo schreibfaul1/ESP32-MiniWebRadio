@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5a - Oct 01/2024                                                                                                                       ";
+    Version 3.5b - Oct 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2959,6 +2959,7 @@ void ir_short_key(uint8_t key) {
         wake_up();
         return;
     } // awake
+    if(_state == IR_SETTINGS) return;  // nothing todo
 
     switch(key) {
         case 15:    if(_state == SLEEP) {changeState(RADIO); break;} // MODE -- CLOCK <-> RADIO
@@ -2968,21 +2969,27 @@ void ir_short_key(uint8_t key) {
                     if(_state == DLNA) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(RADIO); break;}
                     break;
-        case 14:    upvolume(); // ARROW UP -- VOLUME+
+        case 14:    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(4); break;}
+                    upvolume(); // ARROW UP -- VOLUME+
                     break;
-        case 13:    downvolume(); // ARROW DOWN -- VOLUME-
+        case 13:    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(4); break;}
+                    downvolume(); // ARROW DOWN -- VOLUME-
                     break;
-        case 11:    if(_state == RADIO) {nextFavStation(); break;} // ARROW RIGHT -- NEXT STATION
+        case 11:    if(_state == STATIONSLIST) {lst_RADIO.nextPage(); setTimeCounter(4); break;}
+                    if(_state == RADIO) {nextFavStation(); break;} // ARROW RIGHT -- NEXT STATION
                     if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(1); break;}
                     break;
-        case 12:    if(_state == RADIO) {prevFavStation(); break;} // ARROW LEFT -- PREV STATION
+        case 12:    if(_state == STATIONSLIST) {lst_RADIO.prevPage(); setTimeCounter(4); break;}
+                    if(_state == RADIO) {prevFavStation(); break;} // ARROW LEFT -- PREV STATION
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEP) {display_sleeptime(-1); break;}
                     break;
         case 10:    muteChanged(!_f_mute); // MUTE
                     break;
-        case 16:    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
+        case 16:    if(_f_sleeping == true){wake_up(); break;} // OK
+                    if(_state == STATIONSLIST) {changeState(RADIO); setStationByNumber(lst_RADIO.getSelectedStation()); break;}
+                    if(_state == RADIO) {changeState(SLEEP); break;} // OFF TIMER
                     if(_state == SLEEP) {changeState(RADIO); break;}
                     break;
         default:    break;
