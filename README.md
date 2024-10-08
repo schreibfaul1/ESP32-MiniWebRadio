@@ -39,9 +39,9 @@ Optional HW:
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
 Schematic<br>
-![Schematic ESP32 with external DAC](docs/MWR_V3.1_ESP32_schematic.jpg)<br>
+![Schematic ESP32 with external DAC](docs/MWR_V3.4_ESP32_schematic.jpg)<br>
 <br>
-![Schematic ESP32-S3 with external DAC](docs/MWR_V3.1_ESP32-S3_schematic.jpg)<br>
+![Schematic ESP32-S3 with external DAC](docs/MWR_V3.4_ESP32-S3_schematic.jpg)<br>
 <br>
 
 [Display Layout](docs/MiniWebRadio%20V3.4%20Layout.pdf)<br>
