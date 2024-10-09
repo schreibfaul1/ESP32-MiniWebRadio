@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5b - Oct 06/2024                                                                                                                       ";
+    Version 3.5c - Oct 09/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -3362,14 +3362,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "getTimeZoneName"){   webSrv.reply(_TZName, webSrv.TEXT); return;}
 
-    if(cmd == "change_state"){      if(_state != CLOCK){
-                                        if     (!strcmp(param.c_str(), "RADIO")       && _state != RADIO)       {setStation(_cur_station); changeState(RADIO); return;}
-                                        else if(!strcmp(param.c_str(), "PLAYER")      && _state != PLAYER)      {stopSong(); changeState(PLAYER); return;}
-                                        else if(!strcmp(param.c_str(), "DLNA")        && _state != DLNA)        {stopSong(); changeState(DLNA);   return;}
-                                        else if(!strcmp(param.c_str(), "BLUETOOTH")   && _state != BLUETOOTH)   {changeState(BLUETOOTH); return;}
-                                        else if(!strcmp(param.c_str(), "IR_SETTINGS") && _state != IR_SETTINGS) {changeState(IR_SETTINGS); return;}
-                                        else return;
-                                    }}
+    if(cmd == "change_state"){      if     (!strcmp(param.c_str(), "RADIO")       && _state != RADIO)       {setStation(_cur_station); changeState(RADIO); return;}
+                                    else if(!strcmp(param.c_str(), "PLAYER")      && _state != PLAYER)      {stopSong(); changeState(PLAYER); return;}
+                                    else if(!strcmp(param.c_str(), "DLNA")        && _state != DLNA)        {stopSong(); changeState(DLNA);   return;}
+                                    else if(!strcmp(param.c_str(), "BLUETOOTH")   && _state != BLUETOOTH)   {changeState(BLUETOOTH); return;}
+                                    else if(!strcmp(param.c_str(), "IR_SETTINGS") && _state != IR_SETTINGS) {changeState(IR_SETTINGS); return;}
+                                    else return;
+                                    }
     if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=", "audiofile stopped");
                                     return;}
 
