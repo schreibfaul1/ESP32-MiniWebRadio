@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 31.08.2024
+// updated: 09.10.2024
 
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
 #include "common.h"
@@ -78,7 +78,15 @@ void audioTask(void *parameter) {
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOFS){
                 audioTxTaskMessage.cmd = CONNECTTOFS;
-                audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
+                if(strcmp(audioRxTaskMessage.txt2, "SPIFFS")== 0){
+                    audioTxTaskMessage.ret = audio.connecttoFS(SPIFFS, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
+                }
+                if(strcmp(audioRxTaskMessage.txt2, "SD_MMC")== 0){
+                    audioTxTaskMessage.ret = audio.connecttoFS(SD_MMC, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
+                }
+                if(strcmp(audioRxTaskMessage.txt2, "FFat")== 0){
+                    audioTxTaskMessage.ret = audio.connecttoFS(FFat, audioRxTaskMessage.txt1, audioRxTaskMessage.value1);
+                }
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
             else if(audioRxTaskMessage.cmd == CONNECTTOSPEECH){
@@ -227,26 +235,42 @@ void audioTask(void *parameter) {
 }
 
 TaskHandle_t Task1;
-const size_t stack_size = 8192;
-StackType_t *stack_memory;
-StaticTask_t *task_buffer;
+// const size_t stack_size = 8192;
+// StackType_t *stack_memory;
+// StaticTask_t *task_buffer;
+// void audioInit() {
+//     stack_memory = (StackType_t *)heap_caps_malloc(stack_size * sizeof(StackType_t), MALLOC_CAP_SPIRAM);
+//     if (stack_memory == NULL) {log_e("Failed to allocate stack in PSRAM");  return;}
+//     task_buffer = (StaticTask_t *)malloc(sizeof(StaticTask_t));
+//     if (task_buffer == NULL) {free(stack_memory); log_e("Failed to allocate TCB"); return;}
+
+//     Task1 = xTaskCreateStaticPinnedToCore(  /* Task handle. */
+//         audioTask,                          /* Function to implement the task */
+//         "audioplay",                        /* Name of the task */
+//         stack_size,                         /* Stack size in words */
+//         NULL,                               /* Task input parameter */
+//         AUDIOCONTROLTASK_PRIO,              /* Priority of the task */
+//         stack_memory,
+//         task_buffer,
+//         AUDIOCONTROLTASK_CORE               /* Core where the task should run */
+//     );
+
+//     if(CORE_DEBUG_LEVEL >= 2){
+//         {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_CORE);}
+//         {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_PRIO);}
+//     }
+// }
+
 void audioInit() {
-    stack_memory = (StackType_t *)heap_caps_malloc(stack_size * sizeof(StackType_t), MALLOC_CAP_SPIRAM);
-    if (stack_memory == NULL) {log_e("Failed to allocate stack in PSRAM");  return;}
-    task_buffer = (StaticTask_t *)malloc(sizeof(StaticTask_t));
-    if (task_buffer == NULL) {free(stack_memory); log_e("Failed to allocate TCB"); return;}
-
-    Task1 = xTaskCreateStaticPinnedToCore(  /* Task handle. */
-        audioTask,                          /* Function to implement the task */
-        "audioplay",                        /* Name of the task */
-        stack_size,                         /* Stack size in words */
-        NULL,                               /* Task input parameter */
-        AUDIOCONTROLTASK_PRIO,              /* Priority of the task */
-        stack_memory,
-        task_buffer,
-        AUDIOCONTROLTASK_CORE               /* Core where the task should run */
+    xTaskCreatePinnedToCore(
+        audioTask,                  /* Function to implement the task */
+        "audioplay",                /* Name of the task */
+        7500,                       /* Stack size in words */
+        NULL,                       /* Task input parameter */
+        AUDIOCONTROLTASK_PRIO,      /* Priority of the task */
+        &Task1,                     /* Task handle. */
+        AUDIOCONTROLTASK_CORE       /* Core where the task should run */
     );
-
     if(CORE_DEBUG_LEVEL >= 2){
         {SerialPrintfln("audiotask:   is pinned to core " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_CORE);}
         {SerialPrintfln("audiotask:   priority is " ANSI_ESC_CYAN "%d", AUDIOCONTROLTASK_PRIO);}
@@ -255,8 +279,8 @@ void audioInit() {
 
 void audioControlTaskDelete(){
     vTaskDelete(Task1);
-    free(stack_memory);
-    free(task_buffer);
+//    free(stack_memory);
+//    free(task_buffer);
 }
 
 audioMessage transmitReceive(audioMessage msg){
@@ -312,9 +336,10 @@ boolean audioConnecttohost(const char* host, const char* user, const char* pwd){
     return RX.ret;
 }
 
-boolean audioConnecttoFS(const char* filename, uint32_t resumeFilePos){
+boolean audioConnecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos){
     audioTxMessage.cmd = CONNECTTOFS;
     audioTxMessage.txt1 = filename;
+    audioTxMessage.txt2 = FS;
     audioTxMessage.value1 = resumeFilePos;
     audioMessage RX = transmitReceive(audioTxMessage);
     return RX.ret;

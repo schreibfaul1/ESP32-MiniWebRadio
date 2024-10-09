@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 06.Oct 2024
+// updated: 09.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -267,7 +267,7 @@ void           sortPlayListRandom();
 void           processPlaylist(boolean first = false);
 void           changeState(int32_t state);
 void           connecttohost(const char* host);
-void           connecttoFS(const char* filename, uint32_t resumeFilePos = 0);
+void           connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
@@ -284,7 +284,7 @@ void           audioSetVolumeSteps(uint8_t steps);
 uint8_t        audioGetVolume();
 uint32_t       audioGetBitRate();
 boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
-boolean        audioConnecttoFS(const char* filename, uint32_t resumeFilePos = 0);
+boolean        audioConnecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos = 0);
 boolean        audioConnecttospeech(const char* text, const char* lang);
 uint32_t       audioStopSong();
 void           audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
