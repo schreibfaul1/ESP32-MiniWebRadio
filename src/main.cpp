@@ -1434,12 +1434,6 @@ void setup() {
     _f_SD_MMCfound = true;
     defaultsettings();
 
-  if (!SPIFFS.begin()) {
-    log_e("An Error has occurred while mounting SPIFFS");
-    return;
-  }
-
-
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
