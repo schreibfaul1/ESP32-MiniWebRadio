@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 09.Oct 2024
+// updated: 10.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -1284,6 +1284,8 @@ public:
         if(x > m_x + m_w) return false;
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
+        m_ra.val1 = map_l(x,  m_x + 1, m_x + m_w - 2, m_minVal, m_maxVal);
+        m_ra.val2 = m_ra.val1 - m_val; //offset
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
         return true;
@@ -1343,11 +1345,13 @@ private:
     void drawChanges(){
         uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
         if(pos > m_oldPos){
-            tft.fillRect(m_oldPos, m_y + 1, pos, m_h - 2, m_railColorLeft);
+            tft.fillRect(m_oldPos, m_y + 1, pos - m_oldPos, m_h - 2, m_railColorLeft);
         }
         if(pos < m_oldPos){
+
             tft.fillRect(pos, m_y + 1,  m_oldPos - pos, m_h - 2, m_railColorRight);
         }
+        m_oldPos = pos;
         if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
     }
 };

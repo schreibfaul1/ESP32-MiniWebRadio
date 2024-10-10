@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5d - Oct 09/2024                                                                                                                       ";
+    Version 3.5e - Oct 10/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -258,8 +258,8 @@ struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h = 
 struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;} const _winLogo;
 struct w_n  {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
 struct w_e  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  46;} const _winFileNr;
-struct w_a  {uint16_t x =   0; uint16_t y = 168; uint16_t w = 320; uint16_t h =   7;} const _winProgbar;
+struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  40;} const _winFileNr;
+struct w_a  {uint16_t x =   0; uint16_t y = 160; uint16_t w = 320; uint16_t h =  11;} const _winProgbar;
 struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
 struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;} const _winVUmeter;
@@ -319,8 +319,8 @@ struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h = 
 struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
 struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;} const _winName;
 struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 168; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;
-struct w_a  {uint16_t x =   0; uint16_t y = 219; uint16_t w = 480; uint16_t h =   9;} const _winProgbar;
+struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;
+struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;} const _winProgbar;  // progressbar
 struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
 struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
@@ -2457,24 +2457,6 @@ void loop() {
             _f_rtc = rtc.hasValidTime();
         }
 
-        // uint8_t vol = audioGetVolume();
-        // uint8_t steps = _volumeSteps / 20;
-        // if(_f_mute){
-        //     if(vol){
-        //         if(vol >= steps)  vol -= steps;
-        //         else vol--;
-        //         audioSetVolume(vol);
-        //     }
-        // }
-        // else{
-        //     if(vol != _cur_volume){
-        //         if      (vol > _cur_volume + steps) vol -= steps;
-        //         else if (vol > _cur_volume) vol --;
-        //         else if (vol < _cur_volume - steps) vol += steps;
-        //         else if (vol < _cur_volume) vol ++;
-        //         audioSetVolume(vol);
-        //     }
-        // }
         if(audioGetVolume() && _f_mute) audioSetVolume(0, _volumeCurve);
         if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume, _volumeCurve);
     }
@@ -3058,6 +3040,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
                 if(btn_PL_cancel.positionXY(x, y)) return;
                 if(btn_PL_playNext.positionXY(x, y)) return;
                 if(btn_PL_playPrev.positionXY(x, y)) return;
+                if(pgb_PL_progress.positionXY(x, y)) return;
             }
             break;
         case AUDIOFILESLIST:
@@ -3174,7 +3157,8 @@ void tp_released(uint16_t x, uint16_t y){
         case PLAYER:
             if(_playerSubmenue == 0){btn_PL_prevFile.released(); btn_PL_nextFile.released(); btn_PL_ready.released(); btn_PL_playAll.released(); btn_PL_shuffle.released(); btn_PL_fileList.released();
                                      btn_PL_radio.released(); btn_PL_off.released();}
-            if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_pause.released(); btn_PL_cancel.released(); sdr_PL_volume.released(); btn_PL_playNext.released(); btn_PL_playPrev.released();}
+            if(_playerSubmenue == 1){btn_PL_Mute.released(); btn_PL_pause.released(); btn_PL_cancel.released(); sdr_PL_volume.released(); btn_PL_playNext.released(); btn_PL_playPrev.released();
+                                     pgb_PL_progress.released();}
             break;
         case AUDIOFILESLIST:
             lst_PLAYER.released(x, y);
@@ -3734,6 +3718,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_PL_off") == 0)     {return;}
         if( val && strcmp(name, "btn_PL_playPrev") == 0){_cur_AudioFileNr = _SD_content.getPrevAudioFile(_cur_AudioFileNr); return;}
         if( val && strcmp(name, "btn_PL_playNext") == 0){_cur_AudioFileNr = _SD_content.getNextAudioFile(_cur_AudioFileNr); return;}
+        if( val && strcmp(name, "pgb_PL_progress") == 0){return;}
     }
     if(_state == AUDIOFILESLIST) {
         if( val && strcmp(name, "lst_PLAYER") == 0)     {setTimeCounter(4); return;}
@@ -3836,6 +3821,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
         if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
         if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(strcmp(name, "pgb_PL_progress") == 0) {audioSetTimeOffset(ra.val2); return;}
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
