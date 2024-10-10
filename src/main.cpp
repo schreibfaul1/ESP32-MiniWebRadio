@@ -2183,7 +2183,7 @@ void changeState(int32_t state){
                             txt_RA_sTitle.disable();    txt_RA_staName.disable();  txt_RA_irNum.disable();    VUmeter_RA.disable(); break;
         case STATIONSLIST:  lst_RADIO.disable();
                             break;
-        case PLAYER:        btn_PL_Mute.disable();      btn_PL_pause.disable();    btn_PL_cancel.disable();    btn_PL_off.disable();
+        case PLAYER:        btn_PL_Mute.disable();      btn_PL_pause.disable();    btn_PL_cancel.disable();   btn_PL_off.disable();
                             btn_PL_prevFile.disable();  btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
                             btn_PL_fileList.hide();     btn_PL_radio.hide();       txt_PL_fName.disable();    pgb_PL_progress.disable();
                             sdr_PL_volume.hide();       pic_PL_logo.disable();
@@ -2197,7 +2197,7 @@ void changeState(int32_t state){
         case DLNAITEMSLIST: lst_DLNA.disable();
                             break;
         case CLOCK:         btn_CL_Mute.disable();      btn_CL_alarm.disable();    btn_CL_radio.disable();
-                            /* clk_CL_green.disable(); */ sdr_CL_volume.hide();    btn_CL_off.disable();
+                            /* clk_CL_green.disable(); */ sdr_CL_volume.hide();    btn_CL_off.disable();      pic_RA_logo.disable();
                             break;
         case ALARM:         clk_AL_red.disable();       btn_AL_left.disable();     btn_AL_right.disable();    btn_AL_up.disable();      btn_AL_down.disable();
                             btn_AL_ready.disable();
