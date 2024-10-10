@@ -1660,6 +1660,7 @@ void setStation(uint16_t sta) {
         _f_newStreamTitle = true;
     }
     else {
+        if(_state != RADIO) changeState(RADIO);
         _streamTitle[0] = '\0';
         _icyDescription[0] = '\0';
         _f_newStreamTitle = true;
@@ -2197,7 +2198,7 @@ void changeState(int32_t state){
         case DLNAITEMSLIST: lst_DLNA.disable();
                             break;
         case CLOCK:         btn_CL_Mute.disable();      btn_CL_alarm.disable();    btn_CL_radio.disable();
-                            /* clk_CL_green.disable(); */ sdr_CL_volume.hide();    btn_CL_off.disable();      pic_RA_logo.disable();
+                            /* clk_CL_green.disable(); */ sdr_CL_volume.hide();    btn_CL_off.disable();
                             break;
         case ALARM:         clk_AL_red.disable();       btn_AL_left.disable();     btn_AL_right.disable();    btn_AL_up.disable();      btn_AL_down.disable();
                             btn_AL_ready.disable();
