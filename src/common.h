@@ -556,9 +556,9 @@ static std::vector<RegisterTable*> registertable_objects;
 static void register_object(RegisterTable* obj){
     registertable_objects.push_back(obj);
 }
-static void get_registred_names(){
+static void get_registered_names(){
     for (auto obj : registertable_objects) {
-        printf(ANSI_ESC_WHITE"    registred object:"ANSI_ESC_YELLOW" %-17s"ANSI_ESC_WHITE" is enabled: %-5s\n", obj->getName(), obj->isEnabled()? ANSI_ESC_RED"yes":ANSI_ESC_BLUE"no");
+        printf(ANSI_ESC_WHITE"    registered object:"ANSI_ESC_YELLOW" %-17s"ANSI_ESC_WHITE" is enabled: %-5s\n", obj->getName(), obj->isEnabled()? ANSI_ESC_RED"yes":ANSI_ESC_BLUE"no");
     }
 }
 

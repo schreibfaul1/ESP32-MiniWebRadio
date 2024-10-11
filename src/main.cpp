@@ -2757,8 +2757,8 @@ endbrightness:
             log_w("SPIFFS");
             connecttoFS("SPIFFS", "/Collide.ogg");
         }
-        if(r.startsWith("grn")){ // lost of all self registred objects
-            get_registred_names();
+        if(r.startsWith("grn")){ // lost of all self registered objects
+            get_registered_names();
         }
     }
 }
