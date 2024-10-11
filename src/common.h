@@ -400,47 +400,11 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
     return pos - haystack;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int32_t lastIndexOf(const char* haystack, const char needle) {
     const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(const char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
     int   count;
     char* sp; // start of pattern
