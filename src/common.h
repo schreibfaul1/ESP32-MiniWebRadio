@@ -550,18 +550,23 @@ class RegisterTable{
 public:
     virtual const char* getName() = 0;
     virtual bool isEnabled() = 0;
+    virtual void disable() = 0;
     virtual ~RegisterTable() {}
 };
 static std::vector<RegisterTable*> registertable_objects;
 static void register_object(RegisterTable* obj){
     registertable_objects.push_back(obj);
 }
-static void get_registered_names(){
+inline void get_registered_names() {
     for (auto obj : registertable_objects) {
-        printf(ANSI_ESC_WHITE"    registered object:"ANSI_ESC_YELLOW" %-17s"ANSI_ESC_WHITE" is enabled: %-5s\n", obj->getName(), obj->isEnabled()? ANSI_ESC_RED"yes":ANSI_ESC_BLUE"no");
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s\n", obj->getName(), obj->isEnabled()? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
     }
 }
-
+inline void disableAllObjects() {
+    for (auto obj : registertable_objects) {
+        obj->disable();
+    }
+}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
   private:
@@ -1924,7 +1929,6 @@ public:
     bool enable(){
         return m_enabled = true;
     }
-
     void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
         // minuteOfTheDay counts at 00:00, from 0...23*60+59
         // weekDay So - 0, Mo - 1 ... Sa - 6
@@ -3352,6 +3356,9 @@ public:
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
+    void enable(){
+        m_enabled = true;
+    }
     void disable(){
         m_enabled = false;
     }
@@ -3523,6 +3530,9 @@ public:
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
     }
     void disable(){
         m_enabled = false;

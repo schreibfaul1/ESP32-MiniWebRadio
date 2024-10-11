@@ -2175,58 +2175,17 @@ void placingGraphicObjects() { // and initialize them
 
 // clang-format on
 void changeState(int32_t state){
-//    log_i("new state %i, current state %i radioSubMenue %i", state, _state, _radioSubmenue);
-    switch(_state){
-        case RADIO:         sdr_RA_volume.disable();
-                            btn_RA_Mute.disable();      btn_RA_prevSta.disable();  btn_RA_nextSta.disable();
-                            btn_RA_staList.disable();   btn_RA_player.disable();   btn_RA_dlna.disable();     btn_RA_clock.disable();   btn_RA_sleep.disable();
-                            btn_RA_bright.disable();    btn_RA_equal.disable();    pic_RA_logo.disable();     btn_RA_bt.disable();      btn_RA_off.disable();
-                            txt_RA_sTitle.disable();    txt_RA_staName.disable();  txt_RA_irNum.disable();    VUmeter_RA.disable(); break;
-        case STATIONSLIST:  lst_RADIO.disable();
-                            break;
-        case PLAYER:        btn_PL_Mute.disable();      btn_PL_pause.disable();    btn_PL_cancel.disable();   btn_PL_off.disable();
-                            btn_PL_prevFile.disable();  btn_PL_nextFile.disable(); btn_PL_ready.disable();    btn_PL_playAll.disable(); btn_PL_shuffle.disable();
-                            btn_PL_fileList.hide();     btn_PL_radio.hide();       txt_PL_fName.disable();    pgb_PL_progress.disable();
-                            sdr_PL_volume.hide();       pic_PL_logo.disable();
-                            break;
-        case AUDIOFILESLIST: lst_PLAYER.disable();
-                            break;
-        case DLNA:          btn_DL_Mute.disable();      btn_DL_pause.disable();    btn_DL_cancel.disable();
-                            btn_DL_fileList.disable();  btn_DL_radio.disable();    txt_DL_fName.disable();
-                            sdr_DL_volume.hide();       pic_DL_logo.disable();     pgb_DL_progress.disable();
-                            break;
-        case DLNAITEMSLIST: lst_DLNA.disable();
-                            break;
-        case CLOCK:         btn_CL_Mute.disable();      btn_CL_alarm.disable();    btn_CL_radio.disable();
-                            /* clk_CL_green.disable(); */ sdr_CL_volume.hide();    btn_CL_off.disable();
-                            break;
-        case ALARM:         clk_AL_red.disable();       btn_AL_left.disable();     btn_AL_right.disable();    btn_AL_up.disable();      btn_AL_down.disable();
-                            btn_AL_ready.disable();
-                            break;
-        case SLEEP:         btn_SL_up.disable();        btn_SL_down.disable();     btn_SL_ready.disable();    btn_SL_cancel.disable();
-                            break;
-        case BRIGHTNESS:    sdr_BR_value.disable();     btn_BR_ready.disable();    pic_BR_logo.disable();     txt_BR_value.disable();
-                            break;
-        case EQUALIZER:     sdr_EQ_lowPass.disable();   sdr_EQ_bandPass.disable(); sdr_EQ_highPass.disable(); sdr_EQ_balance.disable();
-                            btn_EQ_lowPass.disable();   btn_EQ_bandPass.disable(); btn_EQ_highPass.disable(); btn_EQ_balance.disable(); btn_EQ_Radio.disable();
-                            txt_EQ_lowPass.disable();   txt_EQ_bandPass.disable(); txt_EQ_highPass.disable(); txt_EQ_balance.disable(); btn_EQ_Player.disable();
-                            btn_EQ_Mute.disable();
-                            break;
-        case BLUETOOTH:     btn_BT_volDown.disable();   btn_BT_volUp.disable();    btn_BT_pause.disable();    btn_BT_radio.disable();   btn_BT_mode.disable();
-                            btn_BT_power.disable();     pic_BT_mode.disable();     txt_BT_volume.disable();   txt_BT_mode.disable();
-                            break;
-        case IR_SETTINGS:   btn_IR_radio.disable();
-                            break;
-    }
+    if(state != _state) disableAllObjects();
     _f_volBarVisible = false;
     if(_timeCounter.timer){setTimeCounter(0);}
-    if(state != CLOCK) clk_CL_green.disable();
+    dispFooter.enable();
+    dispHeader.enable();
     dispHeader.updateItem(_hl_item[state]);
     switch(state) {
         case RADIO:{
+            if(_state != RADIO) clearWithOutHeaderFooter();
             txt_RA_staName.enable();
             pic_RA_logo.enable();
-            if(_state != RADIO) clearWithOutHeaderFooter();
             if(_radioSubmenue == 0){
                 if(_f_irResultSeen){txt_RA_irNum.hide(); setStationByNumber(_irResult); _f_irResultSeen = false;} // ir_number, valid between 1 ... 999
                 if(_state != RADIO) {showLogoAndStationName(true);}
