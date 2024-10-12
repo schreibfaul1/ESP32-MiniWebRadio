@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 10.Oct 2024
+// updated: 12.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
