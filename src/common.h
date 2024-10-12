@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 10.Oct 2024
+// updated: 12.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -400,47 +400,11 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
     return pos - haystack;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int32_t lastIndexOf(const char* haystack, const char needle) {
     const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-inline boolean strCompare(const char* str1, char* str2) { // returns true if str1 == str2
-    if(!str1) return false;
-    if(!str2) return false;
-    if(strlen(str1) != strlen(str2)) return false;
-    boolean  f = true;
-    uint16_t i = strlen(str1);
-    while(i) {
-        i--;
-        if(str1[i] != str2[i]) {
-            f = false;
-            break;
-        }
-    }
-    return f;
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
     int   count;
     char* sp; // start of pattern
@@ -582,7 +546,38 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
     vec.shrink_to_fit();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class IR_buttons{
+class RegisterTable{
+public:
+    virtual const char* getName() = 0;
+    virtual bool isEnabled() = 0;
+    virtual void disable() = 0;
+    virtual bool positionXY(uint16_t, uint16_t) = 0;
+    virtual ~RegisterTable() {}
+};
+static std::vector<RegisterTable*> registertable_objects;
+static void register_object(RegisterTable* obj){
+    registertable_objects.push_back(obj);
+}
+inline void get_registered_names() {
+    for (auto obj : registertable_objects) {
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s\n", obj->getName(), obj->isEnabled()? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
+    }
+}
+inline void disableAllObjects() {
+    for (auto obj : registertable_objects) {
+        obj->disable();
+    }
+}
+inline const char* isObjectClicked(uint16_t x, uint16_t y) {
+    for (auto obj : registertable_objects) {
+        if (obj->isEnabled() && obj->positionXY(x, y)) {
+            return obj->getName();
+        }
+    }
+    return NULL;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class IR_buttons {
   private:
     settings_t* m_settings;
     uint8_t m_numOfIrButtons = 0;
@@ -782,7 +777,7 @@ class IR_buttons{
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class SD_content{
+class SD_content {
 private:
     struct FileInfo {
         int32_t  fileSize;
@@ -1109,7 +1104,7 @@ extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, rel
 
 extern SemaphoreHandle_t mutex_display;
 extern SD_content _SD_content;
-class slider{
+class slider : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1134,6 +1129,7 @@ private:
     releasedArg m_ra;
 public:
     slider(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("slider");
         m_railHigh = 6;
@@ -1158,6 +1154,12 @@ public:
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
+    }
+    const char* getName() {
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -1235,7 +1237,7 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class progressbar{
+class progressbar : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1257,6 +1259,7 @@ private:
     releasedArg m_ra;
 public:
     progressbar(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("progressbar");
         m_railHigh = 6;
@@ -1277,6 +1280,12 @@ public:
         m_maxVal = maxVal;
         m_enabled = false;
         m_objectInit = true;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -1356,7 +1365,7 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class textbox{
+class textbox : public RegisterTable {
 private:
     int16_t         m_x = 0;
     int16_t         m_y = 0;
@@ -1380,6 +1389,7 @@ private:
     releasedArg     m_ra;
 public:
     textbox(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
@@ -1399,6 +1409,12 @@ public:
         m_r_margin = w / 100;
         m_t_margin = 0;
         m_b_margin = h / 50;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(){
         m_enabled = true;
@@ -1472,7 +1488,7 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button1state{ // click button
+class button1state : public RegisterTable { // click button
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1488,6 +1504,7 @@ private:
     releasedArg m_ra;
 public:
     button1state(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("button1state");
         m_bgColor = TFT_BLACK;
@@ -1508,6 +1525,12 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(bool inactive = false){
         m_clicked = false;
@@ -1567,7 +1590,7 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class button2state{ // on off switch
+class button2state : public RegisterTable { // on off switch
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1586,6 +1609,7 @@ private:
     releasedArg m_ra;
 public:
     button2state(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("button2state");
         m_bgColor = TFT_BLACK;
@@ -1611,6 +1635,12 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(bool inactive = false){
         m_clicked = false;
@@ -1700,7 +1730,7 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class pictureBox{
+class pictureBox : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1715,6 +1745,7 @@ private:
     releasedArg m_ra;
 public:
     pictureBox(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("pictureBox");
         setPicturePath(NULL);
@@ -1728,6 +1759,12 @@ public:
         m_x = x; // x pos
         m_y = y; // y pos
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     bool show(){
         if(!GetImageSize(m_PicturePath)){
@@ -1826,7 +1863,7 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock{ // draw a clock in 12 or 24h format
+class imgClock : public RegisterTable { // draw a clock in 12 or 24h format
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -1852,6 +1889,7 @@ private:
     releasedArg m_ra;
 public:
     imgClock(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("imgClock");
         m_bgColor = TFT_BLACK;
@@ -1869,6 +1907,12 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(bool inactive = false){
         m_clicked = false;
@@ -1894,7 +1938,6 @@ public:
     bool enable(){
         return m_enabled = true;
     }
-
     void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
         // minuteOfTheDay counts at 00:00, from 0...23*60+59
         // weekDay So - 0, Mo - 1 ... Sa - 6
@@ -1984,7 +2027,7 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class alarmClock{ // draw a clock in 12 or 24h format
+class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 private:
     int16_t  m_x = 0;
     int16_t  m_y = 0;
@@ -2028,6 +2071,7 @@ private:
 
 public:
     alarmClock(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("alarmClock");
         m_bgColor = TFT_BLACK;
@@ -2051,6 +2095,12 @@ public:
         m_alarmdaysYPos    = m_y; // m_y;
         m_alarmtimeYPos    = m_alarmdaysYPos + 25 + 1;
         m_digitsYPos       = m_alarmtimeYPos + 25 + 1;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(bool inactive = false){
         m_clicked = false;
@@ -2284,7 +2334,7 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class dlnaList{
+class dlnaList : public RegisterTable {
 private:
     int16_t                   m_x = 0;
     int16_t                   m_y = 0;
@@ -2317,6 +2367,7 @@ private:
 
 public:
     dlnaList(const char* name, DLNA_Client *dlna, dlnaHistory* dh, uint8_t dhSize){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("dlnaList");
         m_dlna    = dlna;
@@ -2344,6 +2395,12 @@ public:
         m_fontSize = fontSize;
         m_enabled = false;
         m_lineHight = m_h / 10;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(int8_t number, DLNA_Client::dlnaServer_t dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t* dlnaLevel,  uint16_t maxItems){
         m_browseOnRelease = 0;
@@ -2609,7 +2666,7 @@ exit:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class fileList{
+class fileList : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -2635,6 +2692,7 @@ private:
     releasedArg m_ra;
 public:
     fileList(const char* name){
+        register_object(this);
         if(name) m_name  = x_ps_strdup(name);
         else     m_name  = x_ps_strdup("fileList");
         m_fileItemsPos   = x_ps_malloc(30);
@@ -2665,6 +2723,12 @@ public:
         m_lineHight = m_h / 10;
         m_fontSize = fontSize;
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(const char* cur_AudioFolder, uint16_t curAudioFileNr){
         m_browseOnRelease = 0;
@@ -2848,7 +2912,7 @@ exit:
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 extern stationManagement   staMgnt;
-class stationsList{
+class stationsList : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -2873,6 +2937,7 @@ private:
     releasedArg m_ra;
 public:
     stationsList(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("stationsList");
         m_bgColor = TFT_BLACK;
@@ -2898,6 +2963,12 @@ public:
         m_fontSize = fontSize;
         m_curSstationNr = curStationNr;
         m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(){
         m_clicked = false;
@@ -3086,7 +3157,7 @@ public:
 
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class vuMeter{
+class vuMeter : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -3107,6 +3178,7 @@ private:
     uint16_t    m_real_h = 0;
 public:
     vuMeter(const char* name){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("vuMeter");
         m_bgColor = TFT_BLACK;
@@ -3128,6 +3200,12 @@ public:
 #endif
         m_w = 2 *  m_segm_w  +  3 * m_frameSize;
         m_h = 12 * m_segm_h + 13 * m_frameSize;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(){
         m_enabled = true;
@@ -3214,7 +3292,7 @@ private:
     };
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayHeader{
+class displayHeader : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -3253,6 +3331,7 @@ private:
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("displayHeader");
         m_bgColor = TFT_BLACK;
@@ -3268,6 +3347,12 @@ public:
         m_w = w;
         m_h = h;
     }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
     void show(){
         m_enabled = true;
         m_clicked = false;
@@ -3279,6 +3364,9 @@ public:
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
     }
     void disable(){
         m_enabled = false;
@@ -3367,7 +3455,7 @@ public:
 private:
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class displayFooter{
+class displayFooter : public RegisterTable {
 private:
     int16_t     m_x = 0;
     int16_t     m_y = 0;
@@ -3414,6 +3502,7 @@ private:
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
+        register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("displayFooter");
         m_bgColor = TFT_BLACK;
@@ -3428,6 +3517,12 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
     }
     void show(){
         m_enabled = true;
@@ -3444,6 +3539,9 @@ public:
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
     }
     void disable(){
         m_enabled = false;
