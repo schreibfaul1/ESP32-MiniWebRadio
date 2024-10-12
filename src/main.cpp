@@ -2277,14 +2277,15 @@ void changeState(int32_t state){
         }
         case CLOCK:{
             if(_clockSubMenue == 0){
+                if(_state != CLOCK) {clearWithOutHeaderFooter(); }
                 setTimeCounter(0);
+                clk_CL_green.show();
                 btn_CL_Mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
             }
             if(_clockSubMenue == 1){
-                btn_CL_Mute.show();     btn_CL_alarm.show();    btn_CL_radio.show(); sdr_CL_volume.show(); btn_CL_off.show();
                 setTimeCounter(2);
+                btn_CL_Mute.show();     btn_CL_alarm.show();    btn_CL_radio.show(); sdr_CL_volume.show(); btn_CL_off.show();
             }
-            if(clk_CL_green.isDisabled()) {clearWithOutHeaderFooter();  clk_CL_green.show();}
             break;
         }
         case ALARM:{
