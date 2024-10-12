@@ -267,7 +267,7 @@ struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h = 
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
 struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
-struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;} const _sdrOvBtns;
+struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
 struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;} const _winAlarm;
@@ -1433,7 +1433,6 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     _f_SD_MMCfound = true;
     defaultsettings();
-
     if(ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if(TFT_BL >= 0){_f_brightnessIsChangeable = true;}
 #if ESP_IDF_VERSION_MAJOR == 5
@@ -1441,16 +1440,19 @@ void setup() {
 #endif
 
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
+
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     updateSettings();
+    if(_brightness < 5) _brightness = 5;
+    if(_volumeSteps < 21) _volumeSteps = 21;
+    setTFTbrightness(_brightness);
+
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         openAccessPoint();
     }
 
-    if(_brightness < 5) _brightness = 5;
-    if(_volumeSteps < 21) _volumeSteps = 21;
-    setTFTbrightness(_brightness);
+
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
@@ -2955,7 +2957,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     if(_f_sleeping) return;  // awake in tp_released()
     const char* objName = NULL;
-    if(_state == RADIO && y > _winHeader.y && y < _winButton.y){
+    if(_state == RADIO && y > _winHeader.y && y < _sdrOvBtns.y){
         objName = "backpane";
         _radioSubmenue++;
         if(_radioSubmenue == 3) _radioSubmenue = 0;
