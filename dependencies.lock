@@ -46,6 +46,20 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 0.0.11
+  espressif/esp-sr:
+    component_hash: 4aff7847709bd996ea8c381b794fe44a9db9fb5050684dc5715de07331eb70bc
+    dependencies:
+    - name: espressif/esp-dsp
+      registry_url: https://components.espressif.com/
+      require: private
+      version: <=1.5.0
+    - name: idf
+      require: private
+      version: '>=4.4'
+    source:
+      registry_url: https://components.espressif.com/
+      type: service
+    version: 1.9.2
   espressif/esp-zboss-lib:
     component_hash: ceb89aaab088a3bc037c608bb7b7925e7116b0a7dda7c3476f44d9b06ff66c0a
     dependencies:
@@ -67,7 +81,7 @@ dependencies:
       type: service
     version: 1.5.0
   espressif/esp_diag_data_store:
-    component_hash: 8849195251dbb8a2d7268335277cfa310cef36e4ac1e90cd59ad3be4269a30d7
+    component_hash: c1e5cf62f545d2b136db299f4df1b228b9840be5bc3410c9ad2d2a882b5c0d64
     dependencies:
     - name: idf
       require: private
@@ -75,9 +89,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.0.1
+    version: 1.0.2
   espressif/esp_diagnostics:
-    component_hash: 2ea46a907cad1842e41a74b9efbd533ddd4908d3ccd06370c1f8355d41dd0342
+    component_hash: 5ea8e8da8217ed9ed778db3973139e726e17cd27ef5cf6429c787d19226c79f3
     dependencies:
     - name: espressif/rmaker_common
       registry_url: https://components.espressif.com/
@@ -89,7 +103,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.2.0
+    version: 1.2.1
   espressif/esp_insights:
     component_hash: c2b5219b3343e79e6d62aa5589a204612416abe8bdb6ba11224dca1b9a3c62ba
     dependencies:
@@ -112,6 +126,7 @@ dependencies:
       require: private
       version: ~1.4.0
     - name: idf
+      registry_url: https://components.espressif.com
       require: private
       version: '>=4.1'
     source:
@@ -302,6 +317,7 @@ direct_dependencies:
 - chmorgan/esp-libhelix-mp3
 - espressif/esp-dsp
 - espressif/esp-modbus
+- espressif/esp-sr
 - espressif/esp-zboss-lib
 - espressif/esp-zigbee-lib
 - espressif/esp_insights
@@ -315,5 +331,5 @@ direct_dependencies:
 - idf
 - joltwallet/littlefs
 manifest_hash: 6e90f5b15283407daa0c179aac46415cf48b3dd974c63431ebecfcee6f2c1510
-target: esp32
+target: esp32s3
 version: 2.0.0

@@ -322,7 +322,7 @@ struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 
 struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;
 struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;} const _winProgbar;  // progressbar
 struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;   // streamTitle, space for VUmeter
 struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
@@ -2175,7 +2175,7 @@ void placingGraphicObjects() { // and initialize them
 
 // clang-format on
 void changeState(int32_t state){
-    if(state != _state) disableAllObjects();
+    disableAllObjects();
     _f_volBarVisible = false;
     if(_timeCounter.timer){setTimeCounter(0);}
     dispFooter.enable();
@@ -2952,135 +2952,20 @@ void ir_long_key(int8_t key) {
 // Event from TouchPad
 // clang-format off
 void tp_pressed(uint16_t x, uint16_t y) {
-    //  SerialPrintfln("tp_pressed, state is: %i", _state);
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-
     if(_f_sleeping) return;  // awake in tp_released()
-
-    // all state
-    if(dispFooter.positionXY(x, y)) return;
-
-    switch(_state) {
-        case RADIO:
-            if(_radioSubmenue == 1){
-                if(sdr_RA_volume.positionXY(x,y)) return;
-                if(btn_RA_Mute.positionXY(x, y)) return;
-                if(btn_RA_prevSta.positionXY(x, y)) return;
-                if(btn_RA_nextSta.positionXY(x, y)) return;
-                if(btn_RA_staList.positionXY(x, y)) return;
-                if(VUmeter_RA.positionXY(x, y)) return;
-            }
-            if(_radioSubmenue == 2){
-                if(btn_RA_player.positionXY(x, y)) return;
-                if(btn_RA_dlna.positionXY(x, y)) return;
-                if(btn_RA_clock.positionXY(x, y)) return;
-                if(btn_RA_sleep.positionXY(x, y)) return;
-                if(btn_RA_bright.positionXY(x, y)) return;
-                if(btn_RA_equal.positionXY(x, y)) return;
-                if(btn_RA_bt.positionXY(x, y)) return;
-                if(btn_RA_off.positionXY(x, y)) return;
-            }
-            _radioSubmenue++;
-            if(_radioSubmenue == 3) _radioSubmenue = 0;
-            changeState(RADIO);
-            return;
-            break;
-        case PLAYER:
-            if(_playerSubmenue == 0){
-                if(btn_PL_prevFile.positionXY(x, y)) return;
-                if(btn_PL_nextFile.positionXY(x, y)) return;
-                if(btn_PL_ready.positionXY(x, y)) return;;
-                if(btn_PL_playAll.positionXY(x, y)) return;
-                if(btn_PL_shuffle.positionXY(x, y)) return;
-                if(btn_PL_fileList.positionXY(x, y)) return;
-                if(btn_PL_radio.positionXY(x, y)) return;
-                if(btn_PL_off.positionXY(x, y)) return;
-            }
-            if(_playerSubmenue == 1){
-                if(sdr_PL_volume.positionXY(x,y)) return;
-                if(btn_PL_Mute.positionXY(x, y)) return;
-                if(btn_PL_pause.positionXY(x, y)) return;
-                if(btn_PL_cancel.positionXY(x, y)) return;
-                if(btn_PL_playNext.positionXY(x, y)) return;
-                if(btn_PL_playPrev.positionXY(x, y)) return;
-                if(pgb_PL_progress.positionXY(x, y)) return;
-            }
-            break;
-        case AUDIOFILESLIST:
-                if(lst_PLAYER.positionXY(x, y)) return;
-                break;
-        case DLNA:
-                if(sdr_DL_volume.positionXY(x,y)) return;
-                if(btn_DL_Mute.positionXY(x, y)) return;
-                if(btn_DL_pause.positionXY(x, y)) return;
-                if(btn_DL_radio.positionXY(x, y)) return;
-                if(btn_DL_fileList.positionXY(x, y)) return;
-                if(btn_DL_cancel.positionXY(x, y)) return;
-                break;
-        case DLNAITEMSLIST:
-                if(lst_DLNA.positionXY(x, y)) return;
-                break;
-        case CLOCK:
-            if(_clockSubMenue == 0){
-                if(clk_CL_green.positionXY(x, y)) return;
-            }
-            if(_clockSubMenue == 1){
-                if(btn_CL_Mute.positionXY(x, y)) return;
-                if(btn_CL_alarm.positionXY(x, y)) return;
-                if(btn_CL_radio.positionXY(x, y)) return;
-                if(sdr_CL_volume.positionXY(x,y)) return;
-                if(btn_CL_off.positionXY(x, y)) return;
-            }
-            break;
-        case ALARM:
-                if(clk_AL_red.positionXY(x, y)) return;
-                if(btn_AL_left.positionXY(x, y)) return;
-                if(btn_AL_right.positionXY(x, y)) return;
-                if(btn_AL_up.positionXY(x, y)) return;
-                if(btn_AL_down.positionXY(x, y)) return;
-                if(btn_AL_ready.positionXY(x, y)) return;
-                break;
-        case SLEEP:
-                if(btn_SL_up.positionXY(x, y)) return;
-                if(btn_SL_down.positionXY(x, y)) return;
-                if(btn_SL_ready.positionXY(x, y)) return;
-                if(btn_SL_cancel.positionXY(x, y)) return;
-                break;
-        case BRIGHTNESS:
-                if(sdr_BR_value.positionXY(x,y)) return;
-                if(btn_BR_ready.positionXY(x, y)) return;
-                if(pic_BR_logo.positionXY(x, y)) return;
-                break;
-        case EQUALIZER:
-                if(sdr_EQ_lowPass.positionXY(x,y)) return;
-                if(sdr_EQ_bandPass.positionXY(x,y)) return;
-                if(sdr_EQ_highPass.positionXY(x,y)) return;
-                if(sdr_EQ_balance.positionXY(x,y)) return;
-                if(btn_EQ_lowPass.positionXY(x, y)) return;
-                if(btn_EQ_bandPass.positionXY(x, y)) return;
-                if(btn_EQ_highPass.positionXY(x, y)) return;
-                if(btn_EQ_balance.positionXY(x, y)) return;
-                if(txt_EQ_lowPass.positionXY(x, y)) return;
-                if(txt_EQ_bandPass.positionXY(x, y)) return;
-                if(txt_EQ_highPass.positionXY(x, y)) return;
-                if(txt_EQ_balance.positionXY(x, y)) return;
-                if(btn_EQ_Radio.positionXY(x, y)) return;
-                if(btn_EQ_Player.positionXY(x,y)) return;
-                if(btn_EQ_Mute.positionXY(x, y)) return;
-                break;
-        case BLUETOOTH:
-                if(btn_BT_volUp.positionXY(x, y)) return;
-                if(btn_BT_volDown.positionXY(x, y)) return;
-                if(btn_BT_pause.positionXY(x, y)) return;
-                if(btn_BT_mode.positionXY(x, y)) return;
-                if(btn_BT_radio.positionXY(x, y)) return;
-                if(btn_BT_power.positionXY(x, y)) return;
-                break;
-        case IR_SETTINGS:
-                if(btn_IR_radio.positionXY(x, y))return;
-        default:
-                break;
+    const char* objName = NULL;
+    if(_state == RADIO && y > _winHeader.y && y < _winButton.y){
+        objName = "backpane";
+        _radioSubmenue++;
+        if(_radioSubmenue == 3) _radioSubmenue = 0;
+        changeState(RADIO);
+        goto exit;
     }
+    objName = isObjectClicked(x, y);
+exit:
+    if(objName) SerialPrintfln("click on ..  %s", objName);
+    return;
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
 

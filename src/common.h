@@ -551,6 +551,7 @@ public:
     virtual const char* getName() = 0;
     virtual bool isEnabled() = 0;
     virtual void disable() = 0;
+    virtual bool positionXY(uint16_t, uint16_t) = 0;
     virtual ~RegisterTable() {}
 };
 static std::vector<RegisterTable*> registertable_objects;
@@ -566,6 +567,14 @@ inline void disableAllObjects() {
     for (auto obj : registertable_objects) {
         obj->disable();
     }
+}
+inline const char* isObjectClicked(uint16_t x, uint16_t y) {
+    for (auto obj : registertable_objects) {
+        if (obj->isEnabled() && obj->positionXY(x, y)) {
+            return obj->getName();
+        }
+    }
+    return NULL;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
