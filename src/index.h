@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 04.10.2024
+ *  Updated on: 14.10.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -2818,7 +2818,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ARROW RIGHT </td>
             <td> 21 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON(21)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> CANCEL </td>
             </tr>
 
             <tr>
@@ -2875,7 +2875,7 @@ function clear_BT_memItems(){
             <td class="table_cell1"> SIX </td>
             <td> 16 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON(16)"></td>
-            <td class="table_cell2"> OFF TIMER </td>
+            <td class="table_cell2"> OK </td>
             <td></td>
             <td></td>
             <td></td>
@@ -2887,7 +2887,7 @@ function clear_BT_memItems(){
             <td class="table_cell1"> SEVEN </td>
             <td> 17 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_17" onclick="IRclick(17)" onkeyup="chIRcmd(17)" onchange="IRupdateJSON(17)"></td>
-            <td class="table_cell2"> AWAKE </td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>

@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 12.Oct 2024
+// updated: 14.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3752,12 +3752,13 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
 
 const char ir_buttons_json[] =
     "[{\"A\":\"0x00\",\"label\":\"IR address\"},"
+    "{\"C\":\"0x4a\",\"label\":\"IR command\"},"
     "{\"0\":\"0x52\",\"label\":\"ZERO\"},"
     "{\"10\":\"0x42\",\"label\":\"MUTE\"},"
     "{\"20\":\"0x40\",\"label\":\"SLEEP\"},"
     "{\"1\":\"0x16\",\"label\":\"ONE\"},"
     "{\"11\":\"0x43\",\"label\":\"ARROW RIGHT\"},"
-    "{\"21\":\"-1\",\"label\":\"-\"},"
+    "{\"21\":\"0x4a\",\"label\":\"CANCEL\"},"
     "{\"2\":\"0x19\",\"label\":\"TWO\"},"
     "{\"12\":\"0x44\",\"label\":\"ARROW LEFT\"},"
     "{\"22\":\"-1\",\"label\":\"-\"},"
@@ -3768,9 +3769,9 @@ const char ir_buttons_json[] =
     "{\"5\":\"0x18\",\"label\":\"FIVE\"},"
     "{\"15\":\"0x4a\",\"label\":\"MODE\"},"
     "{\"6\":\"0x5e\",\"label\":\"SIX\"},"
-    "{\"16\":\"0x40\",\"label\":\"OFF TIMER\"},"
+    "{\"16\":\"0x40\",\"label\":\"OK\"},"
     "{\"7\":\"0x08\",\"label\":\"SEVEN\"},"
-    "{\"17\":\"-1\",\"label\":\"-\"},"
+    "{\"17\":\"0x20\",\"label\":\"-\"},"
     "{\"8\":\"0x1c\",\"label\":\"EIGHT\"},"
     "{\"18\":\"-1\",\"label\":\"-\"},"
     "{\"9\":\"0x5a\",\"label\":\"NINE\"},"
