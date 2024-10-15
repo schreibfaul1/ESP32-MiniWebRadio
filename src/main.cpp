@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5h - Oct 14/2024                                                                                                                       ";
+    Version 3.5i - Oct 15/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2227,6 +2227,7 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             lst_RADIO.show();
             setTimeCounter(4);
+            
             break;
         }
 
@@ -2919,18 +2920,18 @@ void ir_short_key(uint8_t key) {
     switch(key) {
         case 15:    // MODE
                     if(_state == SLEEP) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEP
-                    if(_state == RADIO) {changeState(STATIONSLIST); break;}
+                    if(_state == RADIO) {changeState(STATIONSLIST); setTimeCounter(40); break;}
                     if(_state == STATIONSLIST) { _playerSubmenue = 0; changeState(PLAYER); break;}
                     if(_state == PLAYER) {changeState(DLNA); break;}
                     if(_state == DLNA) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(SLEEP); break;}
                     break;
         case 14:    // ARROW UP
-                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(4); break;} // station--
+                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
                     upvolume(); // VOLUME++
                     break;
         case 13:    // ARROW DOWN
-                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(4); break;} // station++
+                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
                     downvolume(); // VOLUME--
                     break;
         case 11:    // ARROW RIGHT

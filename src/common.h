@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 14.Oct 2024
+// updated: 15.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3023,6 +3023,7 @@ private:
             else if(*m_curSstationNr +5 <= staMgnt.getSumStations()) m_firstStationsLineNr = *m_curSstationNr - 5;
             else m_firstStationsLineNr = staMgnt.getSumStations() - 10;
             m_curStaNrCpy = *m_curSstationNr;
+            if(m_curStaNrCpy == 0) m_curStaNrCpy = 1;
         }
         else{
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
