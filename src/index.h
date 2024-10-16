@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 14.10.2024
+ *  Updated on: 16.10.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1983,6 +1983,7 @@ function chIRcmd(btn){  // IR command, value changed
     }
     for (var i = 0; i < arrLen; i++) {
         for (var j = 0; j < irArr.length; j++) {
+            if(irArr[i] == "-1") continue
             if(i != j && irArr[i] == irArr[j]){
                 var id = "#ir_command_" + i
                 if(irArr[j] != ""){
@@ -1997,8 +1998,8 @@ function chIRcmd(btn){  // IR command, value changed
         var id = "#ir_command_" + btn
         console.log("setIRcmd=" + $(id).val() + "&" + btn)
         socket.send("setIRcmd=" + $(id).val() + "&" + btn)
-        IRupdateJSON(btn)
     }
+    IRupdateJSON(btn)
     return
 }
 
