@@ -230,7 +230,7 @@ void audioTask(void *parameter) {
                 else audio.setVolume(t_volume, t_volCurve);
             }
         }
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(5 / portTICK_PERIOD_MS);
     }
 }
 
