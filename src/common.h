@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 15.Oct 2024
+// updated: 22.Oct 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -304,6 +304,7 @@ uint32_t       audioGetCurrentTime();
 bool           audioSetTimeOffset(int16_t timeOffset);
 void           audioSetCoreID(uint8_t coreId);
 bool           audioOpenAIspeech(const char* OpenAIKey, const char* text);
+void           audioForceMono(bool f_mono);
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -1730,6 +1731,87 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class numbersBox : public RegisterTable { // range 000...999
+private:
+    bool        m_enabled = false;
+    uint8_t     m_segmWidth = 0;
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint32_t    m_bgColor = 0;
+    bool        m_clicked = false;
+    releasedArg m_ra;
+    char*       m_name = NULL;
+    char        m_root[20] = "/digits_small/";
+    char        m_numbers[4] = "000";
+public:
+    numbersBox(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("numbersBox");
+
+        if(TFT_CONTROLLER < 2) {m_segmWidth = 48;}
+        else                   {m_segmWidth = 64;}
+    }
+    ~numbersBox(){
+        if(m_name){free(m_name); m_name = NULL;}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool show(){
+        if(!m_enabled) return false;
+        char path[50];
+        for(uint8_t i = 0; i < 3; i++){
+            sprintf(path,"%s%csbl.jpg", m_root, m_numbers[i]);
+            if(!drawImage(path, m_x + i * m_segmWidth, m_y)) return false;;
+        }
+        return true;
+    }
+    void hide(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void setNumbers(uint16_t numbers){
+        if(numbers > 999) return;
+        snprintf(m_numbers, sizeof(m_numbers), "%03u", numbers);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class pictureBox : public RegisterTable {
 private:
     int16_t     m_x = 0;
@@ -1752,6 +1834,7 @@ public:
         setAlternativPicturePath(NULL);
     }
     ~pictureBox(){
+        if(m_name){free(m_name); m_name = NULL;}
         if(m_PicturePath) {free(m_PicturePath);  m_PicturePath = NULL;}
         if(m_altPicturePath) {free(m_altPicturePath);  m_altPicturePath = NULL;}
     }
@@ -1899,6 +1982,7 @@ public:
         m_pathBuff = x_ps_malloc(50);
     }
     ~imgClock(){
+        if(m_name){free(m_name); m_name = NULL;}
         if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){

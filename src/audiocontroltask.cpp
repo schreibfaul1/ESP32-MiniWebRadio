@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 09.10.2024
+// updated: 22.10.2024
 
 #include "Audio.h"     // see my repository at github "ESP32-audioI2S"
 #include "common.h"
@@ -11,7 +11,7 @@ extern RTIME rtc;
 extern SemaphoreHandle_t  mutex_rtc;
 
 enum : uint8_t { SET_VOLUME, GET_VOLUME, GET_BITRATE, CONNECTTOHOST, CONNECTTOFS, CONNECTTOSPEECH, OPENAI_SPEECH, STOPSONG, SETTONE, INBUFF_FILLED,
-                 INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE,
+                 INBUFF_FREE, INBUFF_SIZE, ISRUNNING, HIGHWATERMARK, GET_CODEC, PAUSERESUME, CONNECTION_TIMEOUT, GET_FILESIZE, FORCE_MONO,
                  GET_FILEPOSITION, GET_VULEVEL, GET_AUDIOFILEDURATION, GET_AUDIOCURRENTTIME, SET_TIMEOFFSET, SET_VOLUME_STEPS, SET_COREID};
 
 struct audioMessage{
@@ -209,6 +209,12 @@ void audioTask(void *parameter) {
             else if(audioRxTaskMessage.cmd == SET_COREID){
                 audioTxTaskMessage.cmd = SET_COREID;
                 audio.setAudioTaskCore(audioRxTaskMessage.value1);
+                audioTxTaskMessage.ret = 1;
+                xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
+            }
+            else if(audioRxTaskMessage.cmd == FORCE_MONO){
+                audioTxTaskMessage.cmd = FORCE_MONO;
+                audio.forceMono(audioRxTaskMessage.value1);
                 audioTxTaskMessage.ret = 1;
                 xQueueSend(audioGetQueue, &audioTxTaskMessage, portMAX_DELAY);
             }
@@ -462,6 +468,13 @@ bool audioSetTimeOffset(int16_t timeOffset){
 void audioSetCoreID(uint8_t coreId){
     audioTxMessage.cmd = SET_COREID;
     audioTxMessage.value1 = coreId;
+    audioMessage RX = transmitReceive(audioTxMessage);
+    (void)RX;
+}
+
+void audioForceMono(bool f_mono){
+    audioTxMessage.cmd = FORCE_MONO;
+    audioTxMessage.value1 = f_mono;
     audioMessage RX = transmitReceive(audioTxMessage);
     (void)RX;
 }

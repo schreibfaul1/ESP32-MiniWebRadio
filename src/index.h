@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 16.10.2024
+ *  Updated on: 22.10.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1395,9 +1395,17 @@ function loadStations_json(event){
 // --------------------------------------------------------- TAB AUDIO PLAYER ------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 
-
-
-
+function playWebURL() { // Radio: button play - Enter a streamURL here....
+    cmd.value = ''
+    var theUrl =  resultstr3.value;
+    theUrl = theUrl.replace(/%3d/g, '=') // %3d convert to =
+    theUrl = theUrl.replace(/%21/g, '!') //
+    theUrl = theUrl.replace(/%22/g, '"') //
+    theUrl = theUrl.replace(/%23/g, '#') //
+    theUrl = theUrl.replace(/%3f/g, '?') //
+    theUrl = theUrl.replace(/%40/g, '@') //
+    socket.send("webFileURL=" + theUrl)
+}
 
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------- DLNA -----------------------------------------------------------------------------
@@ -2451,6 +2459,8 @@ function clear_BT_memItems(){
                              width: 0px;" onchange="loadStations_json(this.files);">
     </div>
 <!--===============================================================================================================================================-->
+<!--====================================================== P L A Y E R ============================================================================-->
+<!--===============================================================================================================================================-->
     <div id="tab-content3">
         <div class="container" id="filetreeContainer">
             <fieldset>
@@ -2464,9 +2474,17 @@ function clear_BT_memItems(){
                 <div style="height: 66px; display: flex;">
                     <div style="flex:1;">
                         <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
-                               id="resultstr3" placeholder="Waiting for a command....">
+                               id="resultstr3" placeholder="Your WebFile-URL....">
                     </div>
                     <div style="flex: 0 0 2px;">
+                    </div>
+                    <div style="flex: 0 0 42px;">
+                        <img src="SD/png/Button_Ready_Blue_s.png" alt="Upload" title="PLAY WEBFILE"
+                            onmousedown="this.src='SD/png/Button_Ready_Yellow_s.png'"
+                            ontouchstart="this.src='SD/png/Button_Ready_Yellow_s.png'"
+                            onmouseup="this.src='SD/png/Button_Ready_Blue_s.png'"
+                            ontouchend="this.src='SD/png/Button_Ready_Blue_s.png'"
+                            onclick="playWebURL()">
                     </div>
                     <div style="flex: 0 0 42px;">
                         <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD FOLDER"
@@ -2502,7 +2520,7 @@ function clear_BT_memItems(){
         </div>
     </div>
 
-<!--===============================================================================================================================================-->
+<!--=====================================================DLNA======================================================================================-->
     <div id="tab-content4">
         <center>
             <div style="flex: 0 0 calc(100% - 0px);">

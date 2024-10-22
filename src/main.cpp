@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5i - Oct 15/2024                                                                                                                       ";
+    Version 3.5j - Oct 22/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -35,7 +35,7 @@ enum status {
     CLOCK = 4,
     BRIGHTNESS = 5,
     ALARM = 6,
-    SLEEP = 7,
+    SLEEPTIMER = 7,
     STATIONSLIST = 8,
     AUDIOFILESLIST = 9,
     DLNAITEMSLIST = 10,
@@ -259,6 +259,7 @@ struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 
 struct w_n  {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;} const _winName;
 struct w_e  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;} const _winFName;
 struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  40;} const _winFileNr;
+struct w_v  {uint16_t x = 138; uint16_t y =  34; uint16_t w = 144; uint16_t h =  72;} const _winVolBox;   // volumeBox
 struct w_a  {uint16_t x =   0; uint16_t y = 160; uint16_t w = 320; uint16_t h =  11;} const _winProgbar;
 struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;} const _winSTitle;
@@ -317,9 +318,10 @@ const uint8_t _fonts[9] = {21, 25, 27, 34, 38, 43, 56, 66, 156};
 
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
 struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
-struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;} const _winName;
+struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;} const _winName;     // station nane
 struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;} const _winFName;
 struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;} const _winVolBox;   // volumeBox
 struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;} const _winProgbar;  // progressbar
 struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;} const _winSTitle;   // streamTitle, space for VUmeter
@@ -358,6 +360,7 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 // ALL STATE
 displayHeader dispHeader("dispHeader", _fonts[1]);
 displayFooter dispFooter("dispFooter", _fonts[1]);
+numbersBox    volBox("volBox");
 // RADIO
 button2state  btn_RA_Mute("btn_RA_Mute");
 button1state  btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
@@ -405,7 +408,7 @@ button1state  btn_BR_ready("btn_BR_ready");
 pictureBox    pic_BR_logo("pic_BR_logo");
 slider        sdr_BR_value("sdr_BR_value");
 textbox       txt_BR_value("txt_BR_value");
-// SLEEP
+// SLEEPTIMER
 button1state  btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
 slider        sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
@@ -1974,6 +1977,7 @@ void placingGraphicObjects() { // and initialize them
     // ALL STATE
     dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
     dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
+    volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_RA_volume.begin(      _sdrOvBtns.x,  _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, 0, _volumeSteps); sdr_RA_volume.setValue(_cur_volume);
     btn_RA_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
@@ -2102,7 +2106,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_AL_down.setClickedPicturePath("/btn/Button_Down_Yellow.jpg");
     btn_AL_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
                                                                                          btn_AL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
-    // SLEEP -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    // SLEEPTIMER -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SL_up.begin(      0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_up.setDefaultPicturePath("/btn/Button_Up_Blue.jpg");
                                                                                          btn_SL_up.setClickedPicturePath("/btn/Button_Up_Yellow.jpg");
     btn_SL_down.begin(    1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_down.setDefaultPicturePath("/btn/Button_Down_Blue.jpg");
@@ -2227,7 +2231,6 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             lst_RADIO.show();
             setTimeCounter(4);
-            
             break;
         }
 
@@ -2299,7 +2302,7 @@ void changeState(int32_t state){
             btn_AL_ready.show();
             break;
         }
-        case SLEEP:{
+        case SLEEPTIMER:{
             clearWithOutHeaderFooter();
             display_sleeptime();
             btn_SL_up.show();           btn_SL_down.show();       btn_SL_ready.show();    btn_SL_cancel.show();
@@ -2405,8 +2408,18 @@ void loop() {
                     dispFooter.updateTC(0);
                     if(_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
                     if(_state == RADIO) {
-                        _radioSubmenue = 0;
-                        changeState(RADIO);
+                        if(!txt_RA_staName.isEnabled()){ // assume volBox is shown
+                            txt_RA_staName.show();
+                        }
+                        else{
+                            _radioSubmenue = 0;
+                            changeState(RADIO);
+                        }
+                    }
+                    else if(_state == PLAYER){
+                        if(!txt_PL_fName.isEnabled()){ // assume volBox is shown
+                            txt_PL_fName.show();
+                        }
                     }
                     else if(_state == CLOCK) {
                         _clockSubMenue = 0;
@@ -2727,6 +2740,12 @@ endbrightness:
         if(r.startsWith("grn")){ // lost of all self registered objects
             get_registered_names();
         }
+        if(r.startsWith("fm")){ // force mono
+            static bool f_mono = false;
+            f_mono = !f_mono;
+            audioForceMono(f_mono);
+            f_mono? log_w("mono"): log_w("stereo");
+        }
     }
 }
 
@@ -2778,8 +2797,8 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER) {
         if(!_f_playlistEnabled) {
-            _f_clearLogo = true;
-            _f_clearStationName = true;
+            _playerSubmenue = 0;
+            changeState(PLAYER);
         }
     }
     webSrv.send("SD_playFile=", "end of audiofile");
@@ -2919,39 +2938,43 @@ void ir_short_key(uint8_t key) {
 
     switch(key) {
         case 15:    // MODE
-                    if(_state == SLEEP) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEP
+                    if(_state == SLEEPTIMER) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEPTIMER
                     if(_state == RADIO) {changeState(STATIONSLIST); setTimeCounter(40); break;}
                     if(_state == STATIONSLIST) { _playerSubmenue = 0; changeState(PLAYER); break;}
                     if(_state == PLAYER) {changeState(DLNA); break;}
                     if(_state == DLNA) {changeState(CLOCK); break;}
-                    if(_state == CLOCK) {changeState(SLEEP); break;}
+                    if(_state == CLOCK) {changeState(SLEEPTIMER); break;}
                     break;
         case 14:    // ARROW UP
                     if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
                     upvolume(); // VOLUME++
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
                     break;
         case 13:    // ARROW DOWN
                     if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
                     downvolume(); // VOLUME--
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
                     break;
         case 11:    // ARROW RIGHT
                     if(_state == STATIONSLIST) {lst_RADIO.nextPage(); setTimeCounter(4); break;}  // next page
                     if(_state == RADIO) {nextFavStation(); break;} // NEXT STATION
                     if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
-                    if(_state == SLEEP) {display_sleeptime(1); break;}
+                    if(_state == SLEEPTIMER) {display_sleeptime(1); break;}
                     break;
         case 12:    // ARROW LEFT
                     if(_state == STATIONSLIST) {lst_RADIO.prevPage(); setTimeCounter(4); break;}  // prev page
                     if(_state == RADIO) {prevFavStation(); break;} // PREV STATION
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
-                    if(_state == SLEEP) {display_sleeptime(-1); break;}
+                    if(_state == SLEEPTIMER) {display_sleeptime(-1); break;}
                     break;
         case 10:    muteChanged(!_f_mute); // MUTE
                     break;
         case 16:    // OK
                     if(_state == STATIONSLIST) {changeState(RADIO); setStationByNumber(lst_RADIO.getSelectedStation()); break;}
                     if(_state == RADIO) {break;}
-                    if(_state == SLEEP) {dispFooter.updateOffTime(_sleeptime); _radioSubmenue = 0; changeState(RADIO); break;}
+                    if(_state == SLEEPTIMER) {dispFooter.updateOffTime(_sleeptime); _radioSubmenue = 0; changeState(RADIO); break;}
                     break;
         default:    break;
     }
@@ -2961,7 +2984,7 @@ void ir_long_key(int8_t key) {
     if(key == 20) fall_asleep(); // long mute
     if(key == 21){ // cancel
         if(_state == STATIONSLIST) {_radioSubmenue = 0; changeState(RADIO);}
-        if(_state == SLEEP)        {_radioSubmenue = 0; changeState(RADIO);}
+        if(_state == SLEEPTIMER)        {_radioSubmenue = 0; changeState(RADIO);}
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3039,7 +3062,7 @@ void tp_released(uint16_t x, uint16_t y){
         case ALARM:
             clk_AL_red.released(); btn_AL_left.released(); btn_AL_right.released(); btn_AL_up.released(); btn_AL_down.released(); btn_AL_ready.released();
             break;
-        case SLEEP:
+        case SLEEPTIMER:
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
             break;
         case BRIGHTNESS:
@@ -3196,9 +3219,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "next_station"){      nextFavStation(); return;}                                                                                           // via websocket
 
-    if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                       // via websocket
+    if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                          // via websocket
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
+
+    if(cmd == "webFileURL"){        audioConnecttohost(param.c_str())? _playerSubmenue = 1 : _playerSubmenue = 0; changeState(PLAYER); return;}          // via websocket
 
     if(cmd == "getnetworks"){       webSrv.send("networks=", WiFi.SSID()); return;}                                                  // via websocket
 
@@ -3612,7 +3637,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_AL_down") == 0)    {return;}
         if( val && strcmp(name, "btn_AL_ready") == 0)   {return;}
     }
-    if(_state == SLEEP) {
+    if(_state == SLEEPTIMER) {
         if( val && strcmp(name, "btn_SL_up") == 0)      {return;}
         if( val && strcmp(name, "btn_SL_down") == 0)    {return;}
         if( val && strcmp(name, "btn_SL_ready") == 0)   {return;}
@@ -3658,7 +3683,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); _playerSubmenue = 0; changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
         if(strcmp(name, "btn_RA_clock") == 0)    {_radioSubmenue = 0; changeState(CLOCK); return;}
-        if(strcmp(name, "btn_RA_sleep") == 0)    {_radioSubmenue = 0; changeState(SLEEP); return;}
+        if(strcmp(name, "btn_RA_sleep") == 0)    {_radioSubmenue = 0; changeState(SLEEPTIMER); return;}
         if(strcmp(name, "btn_RA_bright") == 0)   {_radioSubmenue = 0; changeState(BRIGHTNESS); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
@@ -3721,7 +3746,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_AL_down") == 0)     {clk_AL_red.digitDown(); return;}
         if(strcmp(name, "btn_AL_ready") == 0)    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
     }
-    if(_state == SLEEP) {
+    if(_state == SLEEPTIMER) {
         if(strcmp(name, "btn_SL_up") == 0)       {display_sleeptime(1); return;}
         if(strcmp(name, "btn_SL_down") == 0)     {display_sleeptime(-1); return;}
         if(strcmp(name, "btn_SL_ready") == 0)    {dispFooter.updateOffTime(_sleeptime);  changeState(RADIO); return;}
