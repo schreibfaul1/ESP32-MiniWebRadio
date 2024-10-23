@@ -17,7 +17,7 @@
 
 extern __attribute__((weak)) void WEBSRV_onInfo(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
-extern __attribute__((weak)) void WEBSRV_onRequest(const String, uint32_t contentLength, uint32_t bytesLeft);
+extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength);
 
 
 
@@ -60,6 +60,7 @@ protected:
     boolean handleWS();
     void    parseWsMessage(uint32_t len);
     String  URLdecode(String str);
+    void    url_decode_in_place(char* url);
     String  UTF8toASCII(String str);
     String  responseCodeToString(int32_t code);
 
@@ -115,6 +116,24 @@ private:
         return pos - base;
     }
 
+    int indexOf (const char* base, const char* str, int startIndex = 0) {
+    //fb
+        const char *p = base;
+        for (; startIndex > 0; startIndex--)
+            if (*p++ == '\0') return -1;
+        char* pos = strstr(p, str);
+        if (pos == nullptr) return -1;
+        return pos - base;
+    }
+
+    bool startsWith (const char* base, const char* str) {
+    //fb
+        char c;
+        while ( (c = *str++) != '\0' )
+          if (c != *base++) return false;
+        return true;
+    }
+
     int32_t lastIndexOf(const char* haystack, const char needle) {
     //fb
         const char *p = strrchr(haystack, needle);
@@ -126,6 +145,24 @@ private:
         if(psramFound()){ps_str = (char*) ps_malloc(len);}
         else            {ps_str = (char*)    malloc(len);}
         return ps_str;
+}
+void trim(char *str) {
+    char *start = str;  // keep the original pointer
+    char *end;
+    while (isspace((unsigned char)*start)) start++; // find the first non-space character
+
+    if (*start == 0) {  // all characters were spaces
+        str[0] = '\0';  // return a empty string
+        return;
+    }
+
+    end = start + strlen(start) - 1;  // find the end of the string
+
+    while (end > start && isspace((unsigned char)*end)) end--;
+    end[1] = '\0';  // Null-terminate the string after the last non-space character
+
+    // Move the trimmed string to the beginning of the memory area
+    memmove(str, start, strlen(start) + 1);  // +1 for '\0'
 }
 
 

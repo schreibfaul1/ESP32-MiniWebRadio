@@ -1737,7 +1737,7 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
         if(!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
         if(webSrv.uploadB64image(SD_MMC, fn, contentLength)) {
-            SerialPrintfln("save image " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.sendStatus(200);
         }
         else webSrv.sendStatus(400);
@@ -3401,9 +3401,17 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
 }
+
+void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
+    log_e("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength); return;}
+    if(strcmp(cmd, "uploadfile") == 0){savefile(param, contentLength); return;}
+}
+
+
 // clang-format on
 void WEBSRV_onRequest(const String request, uint32_t contentLength, uint32_t bytesLeft) {
-    if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
+    // if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
     if(_filename.startsWith("SD/")) {// POST request
         File sta;

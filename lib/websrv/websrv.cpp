@@ -254,7 +254,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     String str="";
     int32_t n=0;
     File file;
-    fs.remove(path); // Remove a previous version, otherwise data is appended the file again
+    if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
 
     log_i("ContentLength %i", contentLength);
@@ -373,140 +373,170 @@ String WebSrv::getContentType(String filename){
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::handlehttp() {                // HTTPserver, message received
-    bool wswitch=true;
-    int16_t inx1 = 0, inx2 = 0;               // Pos. of search string in currenLine
-    String currentLine = "";                  // Build up to complete line
-    String ct;                                // contentType
-    uint32_t contentLength = 0;               // contentLength
-    uint32_t bytesLeft = 0;
-    uint8_t count = 0;
 
-    while (wswitch==true &&  cmdclient.connected()){            // first while
-        while(cmdclient.available()){
-            currentLine = cmdclient.readStringUntil('\n');
-            // log_i("currLine %s", currentLine.c_str());
-            // If the current line is blank, you got two newline characters in a row.
-            // that's the end of the client HTTP request, so send a response:
-            if (currentLine.length() <= 1) { // contains '\n' only
-                wswitch=false; // use second while
-                if (http_cmd.length()) {
-                    if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_cmd).c_str());
-                    if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_cmd), URLdecode(http_param), URLdecode(http_arg));
+    bool method_GET = false;
+    bool method_POST = false;
+    int16_t posColon = 0;
+    uint32_t ctime = millis();
+    uint32_t timeout = 4500; // ms
+    uint32_t contentLength = 0;
+    char rhl[512] = {0}; // requestHeaderline
+    char http_cmd[512] = {0};
+    char http_param[512] = {0};
+    char http_arg[512] = {0};
+    char contentType[50] = {0};
+
+
+    static uint32_t stime;
+    static bool     f_time = false;
+    if(cmdclient.available() == 0) {
+        if(!f_time) {
+            stime = millis();
+            f_time = true;
+        }
+        if((millis() - stime) > timeout) {
+            log_e("timeout");
+            f_time = false;
+            return false;
+        }
+    }
+    f_time = false;
+
+    while(true) { // outer while
+        uint16_t pos = 0;
+        if((millis() - ctime) > timeout) {
+            log_e("timeout");
+            goto exit;
+        }
+        while(cmdclient.available()) {
+            uint8_t b = cmdclient.read();
+            if(b == '\n') {
+                if(!pos) { // empty line received, is the last line of this responseHeader
+                    goto lastToDo;
                 }
-                else if(http_rqfile.length()){
-                    if(WEBSRV_onInfo) WEBSRV_onInfo(URLdecode(http_rqfile).c_str());
-                    if(WEBSRV_onCommand) WEBSRV_onCommand(URLdecode(http_rqfile), URLdecode(http_param), URLdecode(http_arg));
-                }
-                else {   // An empty "GET"?
-                    if(WEBSRV_onInfo) WEBSRV_onInfo("Filename is: index.html");
-                    if(WEBSRV_onCommand) WEBSRV_onCommand("index.html", URLdecode(http_param), URLdecode(http_arg));
-                }
-                currentLine = "";
-                http_cmd    = "";
-                http_param  = "";
-                http_arg    = "";
-                http_rqfile = "";
-                method = HTTP_NONE;
                 break;
-            } else {
-                // Newline seen
-                method = HTTP_NONE;
-                if (currentLine.startsWith("Content-Length:")) {
-                    contentLength = currentLine.substring(15).toInt();
-                    bytesLeft = contentLength;
-                }
+            }
+            if(b == '\r') rhl[pos] = 0;
+            if(b < 0x20) continue;
+            rhl[pos] = b;
+            pos++;
+            if(pos == 511) {
+                pos = 510;
+                continue;
+            }
+            if(pos == 510) {
+                rhl[pos] = '\0';
+                 log_i("requestHeaderline overflow");
+            }
+        } // inner while
 
-                if (currentLine.startsWith("GET /")) {     // GET request?
-                    method = HTTP_GET;
-                    currentLine = currentLine.substring(5);
-                }
-                else if (currentLine.startsWith("POST /")){ // POST request?
-                    method = HTTP_PUT;
-                    currentLine = currentLine.substring(6);}
+        if(!pos) {
+            vTaskDelay(5);
+            continue;
+        }
+        // log_w("rhl %s", rhl);
 
-                if(method > 0){
-                    http_cmd    = "";
-                    http_param  = "";
-                    http_arg    = "";
-                    http_rqfile = "";
-                    int32_t posHTTP = currentLine.indexOf(" HTTP/");
-                    if(posHTTP >= 0) currentLine = currentLine.substring(0, posHTTP);
+        posColon = indexOf(rhl, ":", 0); // lowercase all letters up to the colon
+        if(posColon >= 0) {
+            for(int i = 0; i < posColon; i++) { rhl[i] = toLowerCase(rhl[i]); }
+        }
 
-                    int32_t pos = currentLine.indexOf("&version="); if(pos > 0) currentLine = currentLine.substring(0, pos);
-
-                    currentLine = URLdecode(currentLine);
-
-                    //log_i("cl \"%s\"", currentLine.c_str());
-
-                    inx1 = currentLine.indexOf("?");    // Search for 1st parameter
-                    inx2 = currentLine.lastIndexOf("&");    // Search for 2nd parameter
-
-                    if(inx1 > 0){     // it is a command
-                        http_cmd = currentLine.substring(0, inx1); //isolate the command
-                        http_rqfile = "";               // No file
-                    }
-                    if((inx1 > 0) && (inx2 > inx1 + 1)){        // it is a parameter
-                        http_param = currentLine.substring(inx1 + 1, inx2);//isolate the parameter
-                        if(inx2 < currentLine.length()){
-                            http_arg = currentLine.substring(inx2 + 1, currentLine.length());
-                        }
-                    }
-                    if(inx1 > 0 && inx2 < 0){
-                        http_param = currentLine.substring(inx1 + 1, currentLine.length());
-                        http_arg = "";
-                    }
-                    if(inx1 < 0 && inx2 < 0){   // it is a filename
-                        http_rqfile = currentLine;
-                        http_cmd =   "";
-                        http_param = "";
-                        http_arg =   "";
-                    }
-                    //log_i("cmd \"%s\"  param \"%s\"  arg \"%s\"  rqfile \"%s\"", http_cmd.c_str(), http_param.c_str(), http_arg.c_str(), http_rqfile.c_str());
-
-                    currentLine = "";
-                }
+        if(startsWith(rhl, "HTTP/")) { // HTTP status error code
+            char statusCode[5];
+            statusCode[0] = rhl[9];
+            statusCode[1] = rhl[10];
+            statusCode[2] = rhl[11];
+            statusCode[3] = '\0';
+            int sc = atoi(statusCode);
+            if(sc > 310) { // e.g. HTTP/1.1 301 Moved Permanently
+                log_e("%s", rhl);
+                goto exit;
             }
         }
-    } //end first while
-    while(wswitch==false){                          // second while
-        if(cmdclient.available()) {
-            //log_i("%i", cmdclient.available());
-            currentLine = cmdclient.readStringUntil('\n');
-            int32_t idx = currentLine.indexOf("\r");
-            if(idx > 0) currentLine[idx] = ' ';
-            // log_i("currLine %s", currentLine.c_str());
-            bytesLeft -= currentLine.length();
+        else if(startsWith(rhl, "content-type:")) { // content-type: text/html; charset=UTF-8
+            // log_i("cT: %s", rhl);
+            int idx = indexOf(rhl + 13, ";");
+            if(idx > 0) rhl[13 + idx] = '\0';
+            strcpy(contentType, rhl + 13);
+            trim(contentType);
         }
-        else{
-            currentLine = "";
-        }
-        if(!currentLine.length()){
-            return true;
-        }
-        if((currentLine.length() == 1 && count == 0) || count >= 2){
-            wswitch=true;  // use first while
-            currentLine = "";
-            count = 0;
-            break;
-        }
-        else{   // its the requestbody
-            if(currentLine.length() > 1){
-                if(WEBSRV_onRequest) WEBSRV_onRequest(currentLine, contentLength, bytesLeft);
-                if(WEBSRV_onInfo) WEBSRV_onInfo(currentLine.c_str());
+        else if(startsWith(rhl, "GET /")){
+            method_GET = true;
+            int pos_http = indexOf(rhl, "HTTP/", 0);
+            int pos_question   = indexOf(rhl, "?", 0);  // questionmark
+            int pos_ampersand   = indexOf(rhl, "&", 0);  // ampersand
+            if(pos_http == -1) {log_w("GET without HTTP?"); goto exit;}
+
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 5; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : (pos_ampersand != -1) ? pos_ampersand : pos_http;
+            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+
+            // param between "?" and "&" or HTTP, if "?" exists
+            if(pos_question != -1){
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
             }
 
-            if(currentLine.startsWith("------")) {
-                count++; // WebKitFormBoundary header
-                bytesLeft -= (currentLine.length() + 2); // WebKitFormBoundary footer is 2 chars longer
-            }
-            if(currentLine.length() == 1 && count == 1){
-                bytesLeft -= 7; // "\r\n\r\n..."
-                if(WEBSRV_onRequest) WEBSRV_onRequest("fileUpload", contentLength, bytesLeft);
-                count++;
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
             }
         }
+        else if(startsWith(rhl, "POST /")){
+            method_POST = true;
+            int pos_http = indexOf(rhl, "HTTP/", 0);
+            int pos_question   = indexOf(rhl, "?", 0);  // questionmark
+            int pos_ampersand   = indexOf(rhl, "&", 0);  // ampersand
+            if(pos_http == -1) {log_w("GET without HTTP?"); goto exit;}
 
-    } // end second while
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 6; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
+            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+
+            // param between "?" and "&" or HTTP, if "?" exists
+            if(pos_question != -1){
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
+            }
+
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
+            }
+        }
+        else if(startsWith(rhl, "content-length:")) {
+            const char* c_cl = (rhl + 15);
+            contentLength = atoi(c_cl);
+
+        }
+        else{;}
+    }
+
+lastToDo:
+    if(method_GET){
+        url_decode_in_place(http_cmd); trim(http_cmd);
+        url_decode_in_place(http_param); trim(http_param);
+        url_decode_in_place(http_arg); trim(http_arg);
+        log_e("GET cmd %s, param %s, arg %s", http_cmd, http_param, http_arg);
+        if(strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
+        if(WEBSRV_onInfo) WEBSRV_onInfo(http_cmd);
+        if(WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
+    }
+    if(method_POST){
+        url_decode_in_place(http_cmd); trim(http_cmd);
+        url_decode_in_place(http_param); trim(http_param);
+        url_decode_in_place(http_arg); trim(http_arg);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(http_cmd);
+        if(WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
+    }
+exit:
+
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -750,8 +780,37 @@ String WebSrv::URLdecode(String str){
             res+=char((hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2])); i+=3;}
         else{res+=str[i]; i++;}
     }
+    
     return res;
 }
+
+void WebSrv::url_decode_in_place(char* url) {
+    int length = strlen(url);
+    int write_pos = 0;  // Die Position, an die das dekodierte Zeichen geschrieben wird
+
+    auto from_hex = [](char ch) {
+       return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10;
+    };
+
+    for (int i = 0; i < length; ++i) {
+        if (url[i] == '%') {
+            if (i + 2 < length) {
+                // Dekodiere die beiden folgenden Hex-Zeichen
+                int hex_value = from_hex(url[i + 1]) * 16 + from_hex(url[i + 2]);
+                url[write_pos++] = static_cast<char>(hex_value);  // Schreibe dekodiertes Zeichen
+                i += 2;  // Überspringe die beiden Hex-Zeichen
+            }
+        } else if (url[i] == '+') {
+            // Ersetze '+' durch ein Leerzeichen
+            url[write_pos++] = ' ';
+        } else {
+            // Normales Zeichen einfach kopieren
+            url[write_pos++] = url[i];
+        }
+    }
+    url[write_pos] = '\0'; // Add a null termination character to mark the end of the string
+}
+
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::responseCodeToString(int32_t code) {
   switch (code) {
