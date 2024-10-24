@@ -1180,7 +1180,7 @@ function editCell(cell, rowIndex, cellIndex) {
             }
             cell.textContent = newValue;
             tableData[rowIndex][cellIndex] = newValue;
-            saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+            saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // save modified data
             if (hasChanged) showMessage1('Cell has been successfully modified.');
             updateStationlist();
         } else {
@@ -1201,7 +1201,7 @@ function insertRow(z) { // z: 0 = above, 1 = below
     if (selectedRowIndex !== null) {
         tableData.splice(selectedRowIndex + z, 0, newRowData);
         loadTableData();
-        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
         showMessage1('Row successfully inserted.');
         updateStationlist();
     }
@@ -1214,7 +1214,7 @@ function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
     if (rowCount !== null) {
         tableData.splice(rowCount + 1, 0, newRowData);
         loadTableData();
-        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
         showMessage1('Row successfully inserted.');
         updateStationlist();
         deletedRowData = ['*', '', '', 'http'];
@@ -1228,7 +1228,7 @@ function deleteRow() {
         deletedRowData = tableData[selectedRowIndex];
         tableData.splice(selectedRowIndex, 1);
         loadTableData();
-        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
         showMessage1('Row was successfully deleted.');
         updateStationlist();
     }
@@ -1304,7 +1304,7 @@ async function loadStationsFromSD(file_name) {
                 ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
                 ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
-            saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));
+            saveJsonFileToSD("/stations.json", JSON.stringify(tableData));
     }
 }
 
@@ -1384,7 +1384,7 @@ function loadStations_json(event){
         tableData = JSON.parse(data)
         loadTableData()
         updateStationlist();
-        saveJsonFileToSD("SD/stations.json", JSON.stringify(tableData));  // save modified data
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // save modified data
     }
     reader.onerror = function (ex) {
         console.log(ex)
@@ -1771,7 +1771,7 @@ function uploadCanvasImage () {
     var fd = new FormData(document.forms.form1)
     var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
     var xhr = new XMLHttpRequest()
-    xhr.timeout = 2000; // time in milliseconds
+    xhr.timeout = 4000; // time in milliseconds
     xhr.open('POST', theUrl, true)
 
     xhr.upload.onprogress = function (e) {
@@ -1789,7 +1789,7 @@ function uploadCanvasImage () {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
           if (xhr.responseText === 'OK') alert(filename + ' successfully uploaded')
-            else alert(filename + ' successfully uploaded')
+            else alert(filename + 'not successfully uploaded')
         }
     }
     xhr.send(fd)
@@ -1855,7 +1855,7 @@ function loadTimeZones() { // load from SD
     g_timeZoneName = getTimeZoneName()
     var tzFile = new XMLHttpRequest()
     tzFile.timeout = 2000; // time in milliseconds
-    tzFile.open('POST', 'SD/timezones.csv', true)
+    tzFile.open('GET', 'SD_Download?/timezones.csv', true)
     tzFile.onreadystatechange = function () {
         if (tzFile.readyState === 4) {
             var tzdata = tzFile.responseText
@@ -2083,7 +2083,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
             }
         }
     }
-    return JSON.stringify(data); // JSON formatieren (schönere Ausgabe)
+    return JSON.stringify(data, null, 2); // JSON formatieren (schönere Ausgabe)
 }
 
 function IRupdateJSON(btnNr){
@@ -2098,7 +2098,7 @@ function IRupdateJSON(btnNr){
     });
     if(result == ir_arr[btnNr]) return;
     console.log(irButtonsJson);
-    saveJsonFileToSD("SD/ir_buttons.json", irButtonsJson);
+    saveJsonFileToSD("/ir_buttons.json", irButtonsJson);
     showMessage2('IR button has been successfully modified.');
 }
 
@@ -2125,7 +2125,7 @@ function loadIRbuttons_json(event){ // from PC
         var jsonIrString = event.target.result
         console.log(jsonIrString);
         writeJSONToTable(jsonIrString)
-        saveJsonFileToSD("SD/ir_buttons.json", jsonIrString);  // save modified data
+        saveJsonFileToSD("/ir_buttons.json", jsonIrString);  // save modified data
     }
     reader.onerror = function (ex) {
         console.log(ex)

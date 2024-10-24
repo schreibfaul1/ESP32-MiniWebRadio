@@ -2,7 +2,7 @@
  *  index.js.h
  *
  *  Created on: 29.06.2023
- *  Updated on: 21.09.2023
+ *  Updated on: 25.10.2024
  *      Author: Wolle
  *
  *
@@ -129,10 +129,10 @@ function getData(path, callback) {
 function deleteNode(nodeId) {
     var ref = $('#audioFileTree').jstree(true);
     var node = ref.get_node(nodeId);
-    var theUrl = "SD_delete?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
+    var theUrl = "SD/?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
     var xhr = new XMLHttpRequest()
     xhr.timeout = 2000; // time in milliseconds
-    xhr.open('POST', theUrl, true)
+    xhr.open('DELETE', theUrl, true)
     xhr.ontimeout = (e) => {
         // XMLHttpRequest timed out.
         alert('delete ' + node.data.path, 'timeout')

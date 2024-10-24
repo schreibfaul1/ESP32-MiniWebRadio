@@ -1737,7 +1737,7 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
         if(!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
         if(webSrv.uploadB64image(SD_MMC, fn, contentLength)) {
-            SerialPrintfln("save image " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
             webSrv.sendStatus(200);
         }
         else webSrv.sendStatus(400);
@@ -3337,10 +3337,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else webSrv.sendStatus(400);
                                     return;}
 
-    if(cmd == "SD_delete"){         bool res = SD_delete(param.c_str());
-                                    if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                // via XMLHttpRequest
-                                    return;}
 
     if(cmd == "SD_Upload"){        _filename = param;
                                    _f_SD_Upload = true;
@@ -3350,7 +3346,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setIRcmd"){         int32_t command = (int32_t)strtol(param.c_str(), NULL, 16);
                                    int32_t btnNr = (int32_t)strtol(arg.c_str(), NULL, 10);
                                    SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02lx, "
-                                   ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "0x%02lx", (long signed)command, (long signed)btnNr);
+                                   ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "%02li", (long signed)command, (long signed)btnNr);
                                    ir.set_irButtons(btnNr,  command);
                                    return;}
     if(cmd == "setIRadr"){         SerialPrintfln("set_IR_adr:  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s",
@@ -3401,37 +3397,27 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd.c_str(), param.c_str());
     webSrv.sendStatus(400);
 }
-// clang-format on
-void WEBSRV_onRequest(const String request, uint32_t contentLength, uint32_t bytesLeft) {
-    if(true) { SerialPrintfln("WS_onReq:    " ANSI_ESC_YELLOW "%s contentLength %lu", request.c_str(), (long unsigned)contentLength); }
 
-    if(_filename.startsWith("SD/")) {// POST request
-        File sta;
-        if(_f_SD_Upload){
-            _f_SD_Upload = false;
-            sta = SD_MMC.open(_filename.substring(2).c_str(),"w",true);
-        }
-        else{
-            sta = SD_MMC.open(_filename.substring(2).c_str(),"a",true);
-        }
-        sta.write((uint8_t*)request.c_str(), request.length() );
-        sta.close();
-        if(bytesLeft == 0){
-            if(_filename  == "SD/stations.json") _f_stationsChanged = true;
-            webSrv.reply("200", webSrv.TEXT);
-        }
-        return;
-    }
-    if(request.startsWith("------")) return;     // uninteresting WebKitFormBoundaryString
-    if(request.indexOf("form-data") > 0) return; // uninteresting Info
-    if(request == "fileUpload") {
-        savefile(_filename.c_str(), bytesLeft);
-        return;
-    }
-    if(request.startsWith("Content")) return; // suppress Content-Disposition and Content-Type
-
-    SerialPrintfln(ANSI_ESC_RED "unknown request: %s", request.c_str());
+void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
+    // log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength);
+                                       if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
+                                       return;}
+    if(strcmp(cmd, "uploadfile") == 0){savefile(param, contentLength); return;}
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
+    webSrv.sendStatus(400);
 }
+
+void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg){  // via XMLHttpRequest
+    if(startsWith(cmd, "SD")){      bool res = SD_delete(param);
+                                    if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Delete " ANSI_ESC_ORANGE "\"%s\"", param);
+                                    return;}
+    SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
+    webSrv.sendStatus(400);
+}
+// clang-format on
+
 void WEBSRV_onInfo(const char* info) {
     if(startsWith(info, "WebSocket")) return;      // suppress WebSocket client available
     if(!strcmp("ping", info)) return;              // suppress ping
