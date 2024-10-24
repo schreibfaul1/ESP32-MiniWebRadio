@@ -557,7 +557,6 @@ lastToDo:
         url_decode_in_place(http_cmd); trim(http_cmd);
         url_decode_in_place(http_param); trim(http_param);
         url_decode_in_place(http_arg); trim(http_arg);
-        log_e("GET cmd %s, param %s, arg %s", http_cmd, http_param, http_arg);
         if(strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
         if(WEBSRV_onInfo) WEBSRV_onInfo(http_cmd);
         if(WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);

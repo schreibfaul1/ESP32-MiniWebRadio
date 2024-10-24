@@ -129,7 +129,7 @@ function getData(path, callback) {
 function deleteNode(nodeId) {
     var ref = $('#audioFileTree').jstree(true);
     var node = ref.get_node(nodeId);
-    var theUrl = "SD_delete?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
+    var theUrl = "SD/?" + encodeURIComponent(node.data.path) + '&version=' + Math.random().toString()
     var xhr = new XMLHttpRequest()
     xhr.timeout = 2000; // time in milliseconds
     xhr.open('DELETE', theUrl, true)
