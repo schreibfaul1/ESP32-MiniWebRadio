@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 22.10.2024
+ *  Updated on: 24.10.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -701,7 +701,7 @@ function showTab1 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
-    document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
