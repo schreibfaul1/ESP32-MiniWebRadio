@@ -384,6 +384,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
 
     bool method_GET = false;
     bool method_POST = false;
+    bool method_DELETE = false;
     int16_t posColon = 0;
     uint32_t ctime = millis();
     uint32_t timeout = 4500; // ms
@@ -518,6 +519,31 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
                 strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
             }
         }
+        else if(startsWith(rhl, "DELETE /")){
+            method_DELETE = true;
+            int pos_http = indexOf(rhl, "HTTP/", 0);
+            int pos_question   = indexOf(rhl, "?", 0);  // questionmark
+            int pos_ampersand   = indexOf(rhl, "&", 0);  // ampersand
+            if(pos_http == -1) {log_w("GET without HTTP?"); goto exit;}
+
+            // cmd between "GET /" and "?" or "HTTP"
+            int start_part1 = 8; // after "GET /"
+            int end_part1 = (pos_question != -1) ? pos_question : pos_http;
+            strncpy(http_cmd, rhl + start_part1, end_part1 - start_part1);
+
+            // param between "?" and "&" or HTTP, if "?" exists
+            if(pos_question != -1){
+                int start_part2 = pos_question + 1;
+                int end_part2 = (pos_ampersand != -1) ? pos_ampersand : pos_http;
+                strncpy(http_param, rhl + start_part2, end_part2 - start_part2);
+            }
+
+            // arg between "&" and "HTTP" if "&" exists
+            if (pos_ampersand != -1) {
+                int start_part3 = pos_ampersand + 1;
+                strncpy(http_arg, rhl + start_part3, pos_http - start_part3);
+            }
+        }
         else if(startsWith(rhl, "content-length:")) {
             const char* c_cl = (rhl + 15);
             contentLength = atoi(c_cl);
@@ -542,6 +568,13 @@ lastToDo:
         url_decode_in_place(http_arg); trim(http_arg);
         if(WEBSRV_onInfo) WEBSRV_onInfo(http_cmd);
         if(WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
+    }
+    if(method_DELETE){
+        url_decode_in_place(http_cmd); trim(http_cmd);
+        url_decode_in_place(http_param); trim(http_param);
+        url_decode_in_place(http_arg); trim(http_arg);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(http_cmd);
+        if(WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
     }
 exit:
 

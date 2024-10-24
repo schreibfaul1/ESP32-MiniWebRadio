@@ -18,7 +18,7 @@
 extern __attribute__((weak)) void WEBSRV_onInfo(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength);
-
+extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg);
 
 
 class WebSrv
