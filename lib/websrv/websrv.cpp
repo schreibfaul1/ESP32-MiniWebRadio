@@ -257,9 +257,17 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
     file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
 
-    log_i("ContentLength %i", contentLength);
     str = str + cmdclient.readStringUntil(','); // data:image/jpeg;base64,
-    len -= str.length();
+    int idx = str.indexOf("\n");
+    if(idx > 0){
+        if(str.startsWith("-----")){        // is WebKitFormBoundary header
+            len -= str.length() + idx + 2;  // ------WebKitFormBoundaryEnlfueBZaFBBzAm7
+        }
+        else{
+            len -= str.length();
+        }
+    }
+
     while(cmdclient.available()){
         av=cmdclient.available();
         if(av==0) break;

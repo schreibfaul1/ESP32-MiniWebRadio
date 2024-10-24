@@ -1771,7 +1771,7 @@ function uploadCanvasImage () {
     var fd = new FormData(document.forms.form1)
     var theUrl = '/uploadfile?' + filename + '&version=' + Math.random()
     var xhr = new XMLHttpRequest()
-    xhr.timeout = 2000; // time in milliseconds
+    xhr.timeout = 4000; // time in milliseconds
     xhr.open('POST', theUrl, true)
 
     xhr.upload.onprogress = function (e) {
@@ -1789,7 +1789,7 @@ function uploadCanvasImage () {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
           if (xhr.responseText === 'OK') alert(filename + ' successfully uploaded')
-            else alert(filename + ' successfully uploaded')
+            else alert(filename + 'not successfully uploaded')
         }
     }
     xhr.send(fd)
