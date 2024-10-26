@@ -2441,17 +2441,17 @@ void loop() {
             _f_rtc = rtc.hasValidTime();
         }
 
-        uint8_t audioVol = audio.getVolume();
+        int16_t audioVol = audio.getVolume();
         uint8_t currVol = _cur_volume;
         if(_f_mute) currVol = 0;
-        uint8_t steps = _volumeSteps / 5;
-        if (audioVol > currVol){
-            if(audioVol >= currVol + steps) {if(audioVol - steps <   0) audio.setVolume(0, _volumeCurve);   else  audio.setVolume(audioVol- steps, _volumeCurve);}
-            else audio.setVolume(currVol, _volumeCurve);
+        uint8_t steps = _volumeSteps / 7;
+        if (audioVol > currVol){ // downvolume
+            if(audioVol - steps >= currVol ) {if(audioVol - steps <   0) audio.setVolume(0, _volumeCurve);   else  audio.setVolume(audioVol- steps, _volumeCurve);}
+            else audio.setVolume(audioVol - 1, _volumeCurve);
         }
-        if (audioVol < currVol){
-            if(_cur_volume + steps >= audioVol) {if(audioVol + steps > 255) audio.setVolume(255, _volumeCurve); else audio.setVolume(audioVol + steps, _volumeCurve);}
-            else audio.setVolume(currVol, _volumeCurve);
+        if (audioVol < currVol){ // upvolume
+            if(audioVol + steps <= currVol) {if(audioVol + steps > 255) audio.setVolume(255, _volumeCurve); else audio.setVolume(audioVol + steps, _volumeCurve);}
+            else {audio.setVolume(audioVol + 1, _volumeCurve);}
         }
 
     }
