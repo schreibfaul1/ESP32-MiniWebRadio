@@ -205,7 +205,7 @@ std::vector<char*>  _PLS_content;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
-
+Audio               audio;
 Preferences         pref;
 WebSrv              webSrv;
 WiFiMulti           wifiMulti;
@@ -1269,7 +1269,7 @@ void connecttohost(const char* host) {
 
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
-        _f_isWebConnected = audioConnecttohost(host);
+        _f_isWebConnected = audio.connecttohost(host);
         _f_isFSConnected = false;
         return;
     }
@@ -1277,7 +1277,7 @@ void connecttohost(const char* host) {
         idx2 = indexOf(host, "|", idx1 + 1);
         // log_i("idx2 = %i", idx2);
         if(idx2 == -1) { // second pipe not found
-            _f_isWebConnected = audioConnecttohost(host);
+            _f_isWebConnected = audio.connecttohost(host);
             _f_isFSConnected = false;
             return;
         }
@@ -1285,7 +1285,7 @@ void connecttohost(const char* host) {
             url = strndup(host, idx1); // extract url
             user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
             pwd = strdup(host + idx2 + 1);
-            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audioConnecttohost(url, user, pwd);
+            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audio.connecttohost(url, user, pwd);
             _f_isFSConnected = false;
             if(url) free(url);
             if(user) free(user);
@@ -1298,13 +1298,13 @@ void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
     _icyBitRate = 0;
     _decoderBitRate = 0;
     _cur_Codec = 0;
-    _f_isFSConnected = audioConnecttoFS(FS, filename, resumeFilePos);
+    _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, resumeFilePos);
     _f_isWebConnected = false;
     //    log_w("Filesize %d", audioGetFileSize());
     //    log_w("FilePos %d", audioGetFilePosition());
 }
 void stopSong() {
-    audioStopSong();
+    audio.stopSong();
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     _f_playlistEnabled = false;
@@ -1473,10 +1473,11 @@ void setup() {
 
     placingGraphicObjects();
 
-    audioInit();
-    audioSetCoreID(AUDIOTASK_CORE);
-    audioConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    audioSetVolumeSteps(_volumeSteps);
+    audio.setAudioTaskCore(AUDIOTASK_CORE);
+    audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
+    audio.setVolumeSteps(_volumeSteps);
+    audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
+    audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
@@ -1765,7 +1766,8 @@ String setI2STone() {
     int8_t BP = _toneBP;
     int8_t HP = _toneHP;
     int8_t BAL = _toneBAL;
-    audioSetTone(LP, BP, HP, BAL);
+    audio.setTone(LP, BP, HP);
+    audio.setBalance(BAL);
     sprintf(_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", LP, BP, HP, BAL);
     String tone = String(_chbuf);
     return tone;
@@ -1847,7 +1849,7 @@ void fall_asleep() {
     _f_playlistEnabled = false;
     _f_isFSConnected = false;
     _f_isWebConnected = false;
-    audioStopSong();
+    audio.stopSong();
     if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, LOW);}
     if(_sleepMode == 0){
         clearAll();
@@ -2356,9 +2358,10 @@ void changeState(int32_t state){
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 void loop() {
-    if(!_f_ESPfound) return;    // Guard:  wrong chip?
-    if(!_f_SD_MMCfound) return; // Guard:  SD_MMC could not be initialisized
+    if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
+    if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
     vTaskDelay(1); // feed the watchdog
+    audio.loop();
     webSrv.loop();
     ir.loop();
     tp.loop();
@@ -2373,7 +2376,7 @@ void loop() {
 
     if(_f_playlistEnabled) {
         if(!_f_playlistNextFile) {
-            if(!audioIsRunning() && !_f_pauseResume) {
+            if(!audio.isRunning() && !_f_pauseResume) {
                 SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "next playlist file");
                 processPlaylist(false);
                 _playlistTime = millis();
@@ -2388,7 +2391,7 @@ void loop() {
     if(_f_100ms) { // calls every 0.1 second
         _f_100ms = false;
 
-        if(_state == RADIO && _radioSubmenue == 0) VUmeter_RA.update(audioGetVUlevel());
+        if(_state == RADIO && _radioSubmenue == 0) VUmeter_RA.update(audio.getVUlevel());
 
         static uint8_t factor = 0;
         static bool f_tc = false;
@@ -2438,8 +2441,19 @@ void loop() {
             _f_rtc = rtc.hasValidTime();
         }
 
-        if(audioGetVolume() && _f_mute) audioSetVolume(0, _volumeCurve);
-        if(!_f_mute && (audioGetVolume() != _cur_volume)) audioSetVolume(_cur_volume, _volumeCurve);
+        int16_t audioVol = audio.getVolume();
+        uint8_t currVol = _cur_volume;
+        if(_f_mute) currVol = 0;
+        uint8_t steps = _volumeSteps / 7;
+        if (audioVol > currVol){ // downvolume
+            if(audioVol - steps >= currVol ) {if(audioVol - steps <   0) audio.setVolume(0, _volumeCurve);   else  audio.setVolume(audioVol- steps, _volumeCurve);}
+            else audio.setVolume(audioVol - 1, _volumeCurve);
+        }
+        if (audioVol < currVol){ // upvolume
+            if(audioVol + steps <= currVol) {if(audioVol + steps > 255) audio.setVolume(255, _volumeCurve); else audio.setVolume(audioVol + steps, _volumeCurve);}
+            else {audio.setVolume(audioVol + 1, _volumeCurve);}
+        }
+
     }
     //-----------------------------------------------------1 SEC--------------------------------------------------------------------------------------
 
@@ -2461,7 +2475,7 @@ void loop() {
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
                 if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                 setVolume(_ringVolume);
-                audioSetVolume(_ringVolume, _volumeCurve);
+                audio.setVolume(_ringVolume, _volumeCurve);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
             }
@@ -2475,7 +2489,7 @@ void loop() {
             if(!_f_rtc) return;
             _cur_volume = _volumeAfterAlarm;
             setVolume(_cur_volume);
-            audioSetVolume(_cur_volume, _volumeCurve);
+            audio.setVolume(_cur_volume, _volumeCurve);
             dispHeader.updateVolume(_cur_volume);
             wake_up();
         }
@@ -2531,10 +2545,10 @@ void loop() {
             _f_hpChanged = false;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
-        if(audioIsRunning()){
-            _audioFileDuration = audioGetFileDuration();
+        if(audio.isRunning()){
+            _audioFileDuration = audio.getAudioFileDuration();
             if(_audioFileDuration > 0){
-                _audioCurrentTime = audioGetCurrentTime();
+                _audioCurrentTime = audio.getAudioCurrentTime();
                 if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
                 if(_state == DLNA &&   _audioFileDuration){pgb_DL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_DL_progress.setValue(_audioCurrentTime);}
                 if(_audioFileDuration) {
@@ -2578,7 +2592,7 @@ void loop() {
         }
         //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
         if(_cur_Codec == 0) {
-            uint8_t c = audioGetCodec();
+            uint8_t c = audio.getCodec();
             if(c != 0 && c != 8 && c < 10) { // unknown or OGG, guard: c {1 ... 7, 9}
                 _cur_Codec = c;
                 SerialPrintfln("Audiocodec:  " ANSI_ESC_YELLOW "%s", codecname[c]);
@@ -2602,7 +2616,7 @@ void loop() {
                 SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _lastconnectedhost.c_str(), _reconnectCnt);
                 connectToWiFi();
                 connecttohost(_lastconnectedhost.c_str());
-                if(audioIsRunning()) _reconnectCnt = 0;
+                if(audio.isRunning()) _reconnectCnt = 0;
             }
         }
         //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
@@ -2634,7 +2648,7 @@ void loop() {
             else{
                 if(_WiFi_disconnectCnt){
                     _WiFi_disconnectCnt = 0;
-                    if(_state == RADIO) audioConnecttohost(_lastconnectedhost.c_str());
+                    if(_state == RADIO) audio.connecttohost(_lastconnectedhost.c_str());
                 }
             }
         }
@@ -2666,7 +2680,7 @@ endbrightness:
     if(_f_10sec == true) { // calls every 10 seconds
         _f_10sec = false;
         if(_state == RADIO && !_icyBitRate && !_f_sleeping) {
-            _decoderBitRate = audioGetBitRate();
+            _decoderBitRate = audio.getBitRate();
             static uint32_t oldBr = 0;
             if(_decoderBitRate != oldBr){
                 oldBr = _decoderBitRate;
@@ -2691,7 +2705,7 @@ endbrightness:
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s", r.c_str());
         if(r.startsWith("p")) {
-            bool res = audioPauseResume();
+            bool res = audio.pauseResume();
             if(res) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume"); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible"); }
         }
@@ -2705,16 +2719,16 @@ endbrightness:
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
         }
         if(r.startsWith("cts")) {
-            audioConnecttospeech("Hallo, wie geht es dir?", "de");
+            audio.connecttospeech("Hallo, wie geht es dir?", "de");
         }
 
         if(r.toInt() != 0) { // is integer?
-            if(audioSetTimeOffset(r.toInt())) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt()); }
+            if(audio.setTimeOffset(r.toInt())) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt()); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible"); }
         }
         if(r.startsWith("bfi")){ // buffer filled
-            SerialPrintfln("inBuffer  :  filled %lu bytes", (long unsigned)audioInbuffFilled());
-            SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audioInbuffFree());
+            SerialPrintfln("inBuffer  :  filled %lu bytes", (long unsigned)audio.inBufferFilled());
+            SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
         }
         if(r.startsWith("st")){ // testtext for streamtitle
             if(r[2] == '0') strcpy(_streamTitle, "A B C D E F G H I");
@@ -2743,7 +2757,7 @@ endbrightness:
         if(r.startsWith("fm")){ // force mono
             static bool f_mono = false;
             f_mono = !f_mono;
-            audioForceMono(f_mono);
+            audio.forceMono(f_mono);
             f_mono? log_w("mono"): log_w("stereo");
         }
         if(r.startsWith("btp")){ // bluetooth RX/TX protocol
@@ -3154,10 +3168,10 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "favicon.ico"){       webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
     if(cmd == "test"){              sprintf(_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu",
-                                        (long unsigned)ESP.getFreeHeap(), (long unsigned)audioInbuffFilled(), (long unsigned)audioInbuffFree(),
+                                        (long unsigned)ESP.getFreeHeap(), (long unsigned)audio.inBufferFilled(), (long unsigned)audio.inBufferFree(),
                                         (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
                                     webSrv.send("test=", _chbuf);
-                                    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audioGetStackHighWatermark() * 4);
+                                    SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audio.getHighWatermark() * 4);
                                     SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                     return;}
 
@@ -3174,7 +3188,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "setVolumeSteps"){    _cur_volume = map_l(_cur_volume, 0, _volumeSteps, 0, param.toInt());
                                     _ringVolume = map_l(_ringVolume, 0, _volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(_ringVolume));
                                     _volumeAfterAlarm = map_l(_volumeAfterAlarm, 0, _volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(_volumeAfterAlarm));
-                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audioSetVolumeSteps(_volumeSteps);
+                                    _volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(_volumeSteps);
                                     // log_w("_volumeSteps  %i", _volumeSteps);
                                     sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps);
                                     sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps);
@@ -3230,7 +3244,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
-    if(cmd == "webFileURL"){        audioConnecttohost(param.c_str())? _playerSubmenue = 1 : _playerSubmenue = 0; changeState(PLAYER); return;}          // via websocket
+    if(cmd == "webFileURL"){        audio.connecttohost(param.c_str())? _playerSubmenue = 1 : _playerSubmenue = 0; changeState(PLAYER); return;}          // via websocket
 
     if(cmd == "getnetworks"){       webSrv.send("networks=", WiFi.SSID()); return;}                                                  // via websocket
 
@@ -3253,7 +3267,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else if(!strcmp(param.c_str(), "IR_SETTINGS") && _state != IR_SETTINGS) {changeState(IR_SETTINGS); return;}
                                     else return;
                                     }
-    if(cmd == "stopfile"){          _resumeFilePos = audioStopSong(); webSrv.send("stopfile=", "audiofile stopped");
+    if(cmd == "stopfile"){          _resumeFilePos = audio.stopSong(); webSrv.send("stopfile=", "audiofile stopped");
                                     return;}
 
     if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=", "nothing to resume");
@@ -3685,7 +3699,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == PLAYER) {
         if(strcmp(name, "btn_PL_Mute") == 0)     {muteChanged(btn_PL_Mute.getValue()); return;}
-        if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {audioPauseResume();} return;}
+        if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {audio.pauseResume();} return;}
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubmenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
@@ -3698,7 +3712,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
         if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
         if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
-        if(strcmp(name, "pgb_PL_progress") == 0) {audioSetTimeOffset(ra.val2); return;}
+        if(strcmp(name, "pgb_PL_progress") == 0) {audio.setTimeOffset(ra.val2); return;}
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
@@ -3707,7 +3721,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
-        if(strcmp(name, "btn_DL_pause") == 0)    {audioPauseResume(); return;}
+        if(strcmp(name, "btn_DL_pause") == 0)    {audio.pauseResume(); return;}
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); return;}

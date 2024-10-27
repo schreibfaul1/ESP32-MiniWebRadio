@@ -47,6 +47,7 @@
 #include "tft.h"
 #include "SPIFFS.h"
 #include "ESP32FtpServer.h"
+#include "Audio.h"
 #include "AC101.h"
 #include "ES8388.h"
 #include "DLNAClient.h"
@@ -276,35 +277,6 @@ void           BTpowerChanged(int8_t newState); // true -> power on, false -> po
 void           setTimeCounter(uint8_t sec);
 
 
-//prototypes (audiotask.cpp)
-void           audioInit();
-void           audioControlTaskDelete();
-void           audioSetVolume(uint8_t vol, uint8_t curve);
-void           audioSetVolumeSteps(uint8_t steps);
-uint8_t        audioGetVolume();
-uint32_t       audioGetBitRate();
-boolean        audioConnecttohost(const char* host, const char* user = "", const char* pwd = "");
-boolean        audioConnecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos = 0);
-boolean        audioConnecttospeech(const char* text, const char* lang);
-uint32_t       audioStopSong();
-void           audioSetTone(int8_t param0, int8_t param1, int8_t param2, int8_t param3);
-uint32_t       audioInbuffFilled();
-uint32_t       audioInbuffFree();
-uint32_t       audioInbuffSize();
-boolean        audioIsRunning();
-uint32_t       audioGetStackHighWatermark();
-uint32_t       audioGetCodec();
-boolean        audioPauseResume();
-void           audioConnectionTimeout(uint32_t timeout_ms, uint32_t timeout_ms_ssl);
-uint32_t       audioGetFileSize();
-uint32_t       audioGetFilePosition();
-uint16_t       audioGetVUlevel();
-uint32_t       audioGetFileDuration();
-uint32_t       audioGetCurrentTime();
-bool           audioSetTimeOffset(int16_t timeOffset);
-void           audioSetCoreID(uint8_t coreId);
-bool           audioOpenAIspeech(const char* OpenAIKey, const char* text);
-void           audioForceMono(bool f_mono);
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
