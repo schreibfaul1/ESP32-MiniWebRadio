@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 26.08.2024
+ *  updated on: 28.08.2024
  *      Author: Wolle
  */
 
@@ -820,7 +820,6 @@ String WebSrv::URLdecode(String str){
             res+=char((hex.indexOf(str[i+1])<<4) + hex.indexOf(str[i+2])); i+=3;}
         else{res+=str[i]; i++;}
     }
-    
     return res;
 }
 
@@ -841,8 +840,8 @@ void WebSrv::url_decode_in_place(char* url) {
                 i += 2;  // Überspringe die beiden Hex-Zeichen
             }
         } else if (url[i] == '+') {
-            // Ersetze '+' durch ein Leerzeichen
-            url[write_pos++] = ' ';
+            // do nothing
+            url[write_pos++] = '+';
         } else {
             // Normales Zeichen einfach kopieren
             url[write_pos++] = url[i];
