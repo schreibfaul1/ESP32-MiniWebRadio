@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5l - Oct 27/2024                                                                                                                       ";
+    Version 3.5m - Oct 28/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -45,163 +45,162 @@ enum status {
     UNDEFINED = 255
 };
 
-char _hl_item[16][40]{"",                 // none
-                      "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
-                      "Audio player",     // "** цифрово́й плеер **
-                      "DLNA",             // Digital Living Network Alliance
-                      "Clock",            // Clock "** часы́ **"  "** ρολόι **"
-                      "Brightness",       // Brightness яркость λάμψη
-                      "Alarm (hh:mm)",    // Alarm
-                      "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
-                      "Stations List",
-                      "Audio Files",
-                      "DLNA List",
-                      "Bluetooth",
-                      "Equalizer",
-                      "IR Settings",
-                      ""
-                      ""};
+char _hl_item[16][40]{  "",                 // none
+                        "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
+                        "Audio player",     // "** цифрово́й плеер **
+                        "DLNA",             // Digital Living Network Alliance
+                        "Clock",            // Clock "** часы́ **"  "** ρολόι **"
+                        "Brightness",       // Brightness яркость λάμψη
+                        "Alarm (hh:mm)",    // Alarm
+                        "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+                        "Stations List",
+                        "Audio Files",
+                        "DLNA List",
+                        "Bluetooth",
+                        "Equalizer",
+                        "IR Settings",
+                        ""
+                        ""};
 
-settings_t          _settings;
-const uint16_t      _max_stations = 1000;
-int8_t              _currDLNAsrvNr = -1;
-uint8_t             _alarmdays = 0;
-uint8_t             _cur_volume = 21;     // will be set from stored preferences
-uint8_t             _BTvolume = 16;      // KCX-BT_Emitter volume
-uint8_t             _ringVolume = 21;
-uint8_t             _volumeAfterAlarm = 12;
-uint8_t             _volumeSteps = 21;
-uint8_t             _volumeCurve = 1;
-uint8_t             _brightness = 100;   // percent
-uint8_t             _state = UNDEFINED;  // statemaschine
-uint8_t             _commercial_dur = 0; // duration of advertising
-uint8_t             _cur_Codec = 0;
-uint8_t             _numServers = 0;     //
-uint8_t             _level = 0;
-uint8_t             _timeFormat = 24;    // 24 or 12
-uint8_t             _sleepMode = 1;      // 0 display off,     1 show the clock
-uint8_t             _staListPos = 0;
-uint8_t             _WiFi_disconnectCnt = 0;
-uint8_t             _reconnectCnt = 0;
-uint16_t            _staListNr = 0;
-uint8_t             _fileListPos = 0;
-uint8_t             _radioSubmenue = 0;
-uint8_t             _playerSubmenue = 0;
-uint8_t             _clockSubMenue = 0;
-uint8_t             _ambientValue = 50;
-uint16_t            _fileListNr = 0;
-uint16_t            _irNumber = 0;
-uint16_t            _irResult = 0;
-uint8_t             _itemListPos = 0; // DLNA items
-uint16_t            _dlnaItemNr = 0;
-uint8_t             _dlnaLevel = 0;
-int8_t              _rssi_bt = -127;
-int16_t             _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
-int16_t             _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t             _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t             _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t             _toneBAL = 0;         // -16...0....+16         audioI2S
-uint16_t            _icyBitRate = 0;      // from http response header via event
-uint32_t            _decoderBitRate = 0;  // from decoder via getBitRate(false)
-uint16_t            _cur_station = 1;     // current station(nr), will be set later
-uint16_t            _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
-uint16_t            _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
-uint16_t            _plsCurPos = 0;
-uint16_t            _totalNumberReturned = 0;
-uint16_t            _dlnaMaxItems = 0;
-uint16_t            _bh1750Value = 50;
-uint32_t            _resumeFilePos = 0; //
-uint32_t            _playlistTime = 0;  // playlist start time millis() for timeout
-uint32_t            _settingsHash = 0;
-uint32_t            _audioFileSize = 0;
-uint32_t            _media_downloadPort = 0;
-uint32_t            _audioCurrentTime = 0;
-uint32_t            _audioFileDuration = 0;
-uint8_t             _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-const char*         _pressBtn[8];
-const char*         _releaseBtn[8];
-const char*         _time_s = "";
-char                _chbuf[512];
-char                _fName[256];
-char                _myIP[25] = {0};
-char                _path[128];
-char                _prefix[5] = "/s";
-char                _commercial[25];
-char                _icyDescription[512] = {};
-char                _streamTitle[512] = {};
-char*               _cur_AudioFolder = NULL;
-char*               _lastconnectedfile = NULL;
-char*               _stationURL = NULL;
-char*               _JSONstr = NULL;
-char*               _BT_metaData = NULL;
-char*               _playlistPath = NULL;
-bool                _f_rtc = false; // true if time from ntp is received
-bool                _f_100ms = false;
-bool                _f_1sec = false;
-bool                _f_10sec = false;
-bool                _f_1min = false;
-bool                _f_mute = false;
-bool                _f_muteIsPressed = false;
-bool                _f_volumeDownIsPressed = false;
-bool                _f_volumeUpIsPressed = false;
-bool                _f_sleeping = false;
-bool                _f_isWebConnected = false;
-bool                _f_isFSConnected = false;
-bool                _f_eof = false;
-bool                _f_reconnect = false;
-bool                _f_eof_alarm = false;
-bool                _f_alarm = false;
-bool                _f_irNumberSeen = false;
-bool                _f_irResultSeen = false;
-bool                _f_newIcyDescription = false;
-bool                _f_newStreamTitle = false;
-bool                _f_newBitRate = false;
-bool                _f_newStationName = false;
-bool                _f_newCommercial = false;
-bool                _f_volBarVisible = false;
-bool                _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
-bool                _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
-bool                _f_timeAnnouncement = true;  // time announcement every full hour
-bool                _f_playlistEnabled = false;
-bool                _f_playlistNextFile = false;
-bool                _f_logoUnknown = false;
-bool                _f_pauseResume = false;
-bool                _f_accessPoint = false;
-bool                _f_SD_Upload = false;
-bool                _f_PSRAMfound = false;
-bool                _f_FFatFound = false;
-bool                _f_SD_MMCfound = false;
-bool                _f_ESPfound = false;
-bool                _f_BH1750_found = false;
-bool                _f_clearLogo = false;
-bool                _f_clearStationName = false;
-bool                _f_shuffle = false;
-bool                _f_dlnaBrowseServer = false;
-bool                _f_dlnaWaitForResponse = false;
-bool                _f_dlnaSeekServer = false;
-bool                _f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
-bool                _f_dlna_browseReady = false;
-bool                _f_BtEmitterFound = false;
-bool                _f_BTEmitterConnected = false;
-bool                _f_brightnessIsChangeable = false;
-bool                _f_connectToLasthost = false;
-bool                _f_BTpower = false;
-bool                _f_BTcurPowerState = false;
-bool                _f_timeSpeech = false;
-bool                _f_stationsChanged = false;
-String              _station = "";
-char*               _stationName_air = NULL;
-String              _homepage = "";
-String              _filename = "";
-String              _lastconnectedhost = "http://0n-70s.radionetz.de:8000/0n-70s.mp3";
-String              _scannedNetworks = "";
-String              _TZName = "Europe/Berlin";
-String              _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
-String              _media_downloadIP = "";
-dlnaHistory         _dlnaHistory[10];
-timecounter         _timeCounter;
-SD_content          _SD_content;
-std::vector<char*>  _PLS_content;
+settings_t              _settings;
+const uint16_t          _max_stations = 1000;
+int8_t                  _currDLNAsrvNr = -1;
+uint8_t                 _alarmdays = 0;
+uint8_t                 _cur_volume = 21;     // will be set from stored preferences
+uint8_t                 _BTvolume = 16;      // KCX-BT_Emitter volume
+uint8_t                 _ringVolume = 21;
+uint8_t                 _volumeAfterAlarm = 12;
+uint8_t                 _volumeSteps = 21;
+uint8_t                 _volumeCurve = 1;
+uint8_t                 _brightness = 100;   // percent
+uint8_t                 _state = UNDEFINED;  // statemaschine
+uint8_t                 _commercial_dur = 0; // duration of advertising
+uint8_t                 _cur_Codec = 0;
+uint8_t                 _numServers = 0;     //
+uint8_t                 _level = 0;
+uint8_t                 _timeFormat = 24;    // 24 or 12
+uint8_t                 _sleepMode = 1;      // 0 display off,     1 show the clock
+uint8_t                 _staListPos = 0;
+uint8_t                 _WiFi_disconnectCnt = 0;
+uint8_t                 _reconnectCnt = 0;
+uint16_t                _staListNr = 0;
+uint8_t                 _fileListPos = 0;
+uint8_t                 _radioSubmenue = 0;
+uint8_t                 _playerSubmenue = 0;
+uint8_t                 _clockSubMenue = 0;
+uint8_t                 _ambientValue = 50;
+uint16_t                _fileListNr = 0;
+uint16_t                _irNumber = 0;
+uint16_t                _irResult = 0;
+uint8_t                 _itemListPos = 0; // DLNA items
+uint16_t                _dlnaItemNr = 0;
+uint8_t                 _dlnaLevel = 0;
+int8_t                  _rssi_bt = -127;
+int16_t                 _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t                 _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                 _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                 _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                 _toneBAL = 0;         // -16...0....+16         audioI2S
+uint16_t                _icyBitRate = 0;      // from http response header via event
+uint32_t                _decoderBitRate = 0;  // from decoder via getBitRate(false)
+uint16_t                _cur_station = 1;     // current station(nr), will be set later
+uint16_t                _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint16_t                _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
+uint16_t                _plsCurPos = 0;
+uint16_t                _totalNumberReturned = 0;
+uint16_t                _dlnaMaxItems = 0;
+uint16_t                _bh1750Value = 50;
+uint32_t                _resumeFilePos = 0; //
+uint32_t                _playlistTime = 0;  // playlist start time millis() for timeout
+uint32_t                _settingsHash = 0;
+uint32_t                _audioFileSize = 0;
+uint32_t                _media_downloadPort = 0;
+uint32_t                _audioCurrentTime = 0;
+uint32_t                _audioFileDuration = 0;
+uint8_t                 _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+const char*             _pressBtn[8];
+const char*             _releaseBtn[8];
+const char*             _time_s = "";
+char                    _chbuf[512];
+char                    _fName[256];
+char                    _myIP[25] = {0};
+char                    _path[128];
+char                    _prefix[5] = "/s";
+char                    _commercial[25];
+char                    _icyDescription[512] = {};
+char                    _streamTitle[512] = {};
+char*                   _cur_AudioFolder = NULL;
+char*                   _lastconnectedfile = NULL;
+char*                   _stationURL = NULL;
+char*                   _JSONstr = NULL;
+char*                   _BT_metaData = NULL;
+char*                   _playlistPath = NULL;
+bool                    _f_rtc = false; // true if time from ntp is received
+bool                    _f_100ms = false;
+bool                    _f_1sec = false;
+bool                    _f_10sec = false;
+bool                    _f_1min = false;
+bool                    _f_mute = false;
+bool                    _f_muteIsPressed = false;
+bool                    _f_volumeDownIsPressed = false;
+bool                    _f_volumeUpIsPressed = false;
+bool                    _f_sleeping = false;
+bool                    _f_isWebConnected = false;
+bool                    _f_isFSConnected = false;
+bool                    _f_eof = false;
+bool                    _f_reconnect = false;
+bool                    _f_eof_alarm = false;
+bool                    _f_alarm = false;
+bool                    _f_irNumberSeen = false;
+bool                    _f_irResultSeen = false;
+bool                    _f_newIcyDescription = false;
+bool                    _f_newStreamTitle = false;
+bool                    _f_newBitRate = false;
+bool                    _f_newStationName = false;
+bool                    _f_newCommercial = false;
+bool                    _f_volBarVisible = false;
+bool                    _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
+bool                    _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
+bool                    _f_timeAnnouncement = true;  // time announcement every full hour
+bool                    _f_playlistEnabled = false;
+bool                    _f_playlistNextFile = false;
+bool                    _f_logoUnknown = false;
+bool                    _f_pauseResume = false;
+bool                    _f_accessPoint = false;
+bool                    _f_SD_Upload = false;
+bool                    _f_PSRAMfound = false;
+bool                    _f_FFatFound = false;
+bool                    _f_SD_MMCfound = false;
+bool                    _f_ESPfound = false;
+bool                    _f_BH1750_found = false;
+bool                    _f_clearLogo = false;
+bool                    _f_clearStationName = false;
+bool                    _f_shuffle = false;
+bool                    _f_dlnaBrowseServer = false;
+bool                    _f_dlnaWaitForResponse = false;
+bool                    _f_dlnaSeekServer = false;
+bool                    _f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
+bool                    _f_dlna_browseReady = false;
+bool                    _f_BtEmitterFound = false;
+bool                    _f_BTEmitterConnected = false;
+bool                    _f_brightnessIsChangeable = false;
+bool                    _f_connectToLastStation = false;
+bool                    _f_BTpower = false;
+bool                    _f_BTcurPowerState = false;
+bool                    _f_timeSpeech = false;
+bool                    _f_stationsChanged = false;
+String                  _station = "";
+char*                   _stationName_air = NULL;
+String                  _homepage = "";
+String                  _filename = "";
+String                  _scannedNetworks = "";
+String                  _TZName = "Europe/Berlin";
+String                  _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+String                  _media_downloadIP = "";
+dlnaHistory             _dlnaHistory[10];
+timecounter             _timeCounter;
+SD_content              _SD_content;
+std::vector<char*>      _PLS_content;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
@@ -476,37 +475,39 @@ boolean defaultsettings(){
         return h * 60 + m;
     };
 
-    _cur_volume             = atoi(   parseJson("\"volume\":"));
-    _volumeSteps            = atoi(   parseJson("\"volumeSteps\":"));
-    _ringVolume             = atoi(   parseJson("\"ringVolume\":"));
-    _volumeAfterAlarm       = atoi(   parseJson("\"volumeAfterAlarm\":"));
-    _BTvolume               = atoi(   parseJson("\"BTvolume\":"));
-    _f_BTpower              = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    _alarmtime[0]           = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
-    _alarmtime[1]           = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
-    _alarmtime[2]           = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
-    _alarmtime[3]           = computeMinuteOfTheDay(parseJson("\"alarmtime_wed\":"));
-    _alarmtime[4]           = computeMinuteOfTheDay(parseJson("\"alarmtime_thu\":"));
-    _alarmtime[5]           = computeMinuteOfTheDay(parseJson("\"alarmtime_fri\":"));
-    _alarmtime[6]           = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
-    _alarmdays              = atoi(   parseJson("\"alarm_weekdays\":"));
-    _f_timeAnnouncement     = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
-    _f_mute                 = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
-    _brightness             = atoi(   parseJson("\"brightness\":"));
-    _sleeptime              = atoi(   parseJson("\"sleeptime\":"));
-    _cur_station            = atoi(   parseJson("\"station\":"));
-    _toneLP                 = atoi(   parseJson("\"toneLP\":"));
-    _toneBP                 = atoi(   parseJson("\"toneBP\":"));
-    _toneHP                 = atoi(   parseJson("\"toneHP\":"));
-    _toneBAL                = atoi(   parseJson("\"balance\":"));
-    _timeFormat             = atoi(   parseJson("\"timeFormat\":"));
-    _TZName                 =         parseJson("\"Timezone_Name\":");
-    _TZString               =         parseJson("\"Timezone_String\":");
-    _lastconnectedhost      =         parseJson("\"lastconnectedhost\":");
-    _sleepMode              = atoi(   parseJson("\"sleepMode\":"));
-    _cur_AudioFileNr        = atoi(   parseJson("\"cur_AudioFileNr\":")); // this is the position of the file within the (alpha ordered) folder starting with 0
-    strcpy(_cur_AudioFolder,          parseJson("\"cur_AudioFolder\":"));
-    _state                  = atoi(   parseJson("\"state\":"));
+    mwr_free(_settings.lastconnectedhost);
+
+    _cur_volume                 = atoi(   parseJson("\"volume\":"));
+    _volumeSteps                = atoi(   parseJson("\"volumeSteps\":"));
+    _ringVolume                 = atoi(   parseJson("\"ringVolume\":"));
+    _volumeAfterAlarm           = atoi(   parseJson("\"volumeAfterAlarm\":"));
+    _BTvolume                   = atoi(   parseJson("\"BTvolume\":"));
+    _f_BTpower                  = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
+    _alarmtime[0]               = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
+    _alarmtime[1]               = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
+    _alarmtime[2]               = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
+    _alarmtime[3]               = computeMinuteOfTheDay(parseJson("\"alarmtime_wed\":"));
+    _alarmtime[4]               = computeMinuteOfTheDay(parseJson("\"alarmtime_thu\":"));
+    _alarmtime[5]               = computeMinuteOfTheDay(parseJson("\"alarmtime_fri\":"));
+    _alarmtime[6]               = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
+    _alarmdays                  = atoi(       parseJson("\"alarm_weekdays\":"));
+    _f_timeAnnouncement         = (strcmp(    parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
+    _f_mute                     = (strcmp(    parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
+    _brightness                 = atoi(       parseJson("\"brightness\":"));
+    _sleeptime                  = atoi(       parseJson("\"sleeptime\":"));
+    _cur_station                = atoi(       parseJson("\"station\":"));
+    _toneLP                     = atoi(       parseJson("\"toneLP\":"));
+    _toneBP                     = atoi(       parseJson("\"toneBP\":"));
+    _toneHP                     = atoi(       parseJson("\"toneHP\":"));
+    _toneBAL                    = atoi(       parseJson("\"balance\":"));
+    _timeFormat                 = atoi(       parseJson("\"timeFormat\":"));
+    _TZName                     =             parseJson("\"Timezone_Name\":");
+    _TZString                   =             parseJson("\"Timezone_String\":");
+    _settings.lastconnectedhost = x_ps_strdup(parseJson("\"lastconnectedhost\":"));
+    _sleepMode                  = atoi(       parseJson("\"sleepMode\":"));
+    _cur_AudioFileNr            = atoi(       parseJson("\"cur_AudioFileNr\":")); // this is the position of the file within the (alpha ordered) folder starting with 0
+    strcpy(_cur_AudioFolder,                  parseJson("\"cur_AudioFolder\":"));
+    _state                      = atoi(       parseJson("\"state\":"));
 
     // guards------------------------------------------------------------------------------------------------------
     if(!SD_MMC.exists(_cur_AudioFolder)) strcpy(_cur_AudioFolder, "/audiofiles"); // set default if not found
@@ -529,9 +530,9 @@ boolean defaultsettings(){
 
 // clang-format off
 void updateSettings(){
-    if(!_lastconnectedhost)_lastconnectedhost = "";
-    char*  jO = x_ps_malloc(1024 + _lastconnectedhost.length()); // JSON Object
-    char tmp[40 + _lastconnectedhost.length()];
+    if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
+    char*  jO = x_ps_malloc(1024 + strlen(_settings.lastconnectedhost)); // JSON Object
+    char tmp[40 + strlen(_settings.lastconnectedhost)];
     strcpy(jO,   "{");
     sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
     sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
@@ -551,7 +552,7 @@ void updateSettings(){
     strcat(jO,   ",\"mute\":");           (_f_mute == true)             ?                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
     sprintf(tmp, ",\"brightness\":%i", _brightness);                                        strcat(jO, tmp);
     sprintf(tmp, ",\"sleeptime\":%i", _sleeptime);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _lastconnectedhost.c_str());              strcat(jO, tmp);
+    sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _settings.lastconnectedhost);             strcat(jO, tmp);
     sprintf(tmp, ",\"station\":%i", _cur_station);                                          strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_Name\":\"%s\"", _TZName.c_str());                             strcat(jO, tmp);
     sprintf(tmp, ",\"Timezone_String\":\"%s\"", _TZString.c_str());                         strcat(jO, tmp);
@@ -965,7 +966,7 @@ bool preparePlaylistFromFile(const char* path) {  // *.m3u
         }
         _PLS_content.push_back(x_ps_strdup((const char*)buff1));
     }
-    _playlistPath = strdup(playlistFile.path());
+    _playlistPath = x_ps_strdup(playlistFile.path());
     int idx = lastIndexOf((const char*)_playlistPath, '/');
     if(idx < 0) log_e("wrong playlist path");
     _playlistPath[idx] = '\0';
@@ -1475,6 +1476,7 @@ void setup() {
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
+    audio.setVolume(0);
     audio.setVolumeSteps(_volumeSteps);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
@@ -1485,7 +1487,7 @@ void setup() {
     SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", _cur_volume);
     SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", _volumeSteps);
     SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d", _volumeAfterAlarm);
-    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _lastconnectedhost.c_str());
+    SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", _settings.lastconnectedhost);
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
 
@@ -1539,7 +1541,7 @@ void setup() {
         _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
         if(!_f_accessPoint){
             if(_cur_station > 0) setStation(_cur_station);
-            else { setStationViaURL(_lastconnectedhost.c_str()); }
+            else { setStationViaURL(_settings.lastconnectedhost); }
         }
     }
     else { SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr); }
@@ -1657,7 +1659,7 @@ void setStation(uint16_t sta) {
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
-    free(_stationURL);
+    mwr_free(_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
@@ -1672,6 +1674,7 @@ void setStation(uint16_t sta) {
         _f_newStreamTitle = true;
         _f_newIcyDescription = true;
         connecttohost(_stationURL);
+        if(!_f_isWebConnected) _cur_station = old_cur_station; // host is not connected
     }
     old_cur_station = sta;
     StationsItems();
@@ -1705,7 +1708,7 @@ void StationsItems() {
     if(_cur_station == 0){
         webSrv.send("stationLogo=", stationLogo_air);
         webSrv.send("stationNr=", staNr);
-        webSrv.send("", "stationURL=" + _lastconnectedhost);
+        webSrv.send("stationURL=", _settings.lastconnectedhost);
     }
     else{
         webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(_cur_station)) + ".jpg");
@@ -1873,7 +1876,8 @@ void wake_up() {
     clearAll();
     setTFTbrightness(_brightness);
     if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
-    connecttohost(_lastconnectedhost.c_str());
+    if(_cur_station) setStation(_cur_station);
+    else connecttohost(_settings.lastconnectedhost);
     _radioSubmenue = 0;
     changeState(RADIO);
     showLogoAndStationName(true);
@@ -2534,7 +2538,8 @@ void loop() {
         if(f_resume && _f_eof){
             f_resume = false;
             _f_eof = false;
-            connecttohost(_lastconnectedhost.c_str());
+            if(_cur_station) setStation(_cur_station);
+            else connecttohost(_settings.lastconnectedhost);
             return;
         }
         //------------------------------------------HEADPHONE / LOUDSPEAKER --------------------------------------------------------------------------
@@ -2604,18 +2609,19 @@ void loop() {
             }
         }
         //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
-        if(_f_connectToLasthost){
-            _f_connectToLasthost = false;
-            connecttohost(_lastconnectedhost.c_str());
+        if(_f_connectToLastStation){
+            _f_connectToLastStation = false;
+            if(_cur_station) setStation(_cur_station);
+            else connecttohost(_settings.lastconnectedhost);
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
         if(_f_reconnect && !_f_accessPoint){
             _f_reconnect = false;
             _reconnectCnt ++;
             if(_reconnectCnt < 3){
-                SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _lastconnectedhost.c_str(), _reconnectCnt);
+                SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _settings.lastconnectedhost, _reconnectCnt);
                 connectToWiFi();
-                connecttohost(_lastconnectedhost.c_str());
+                connecttohost(_settings.lastconnectedhost);
                 if(audio.isRunning()) _reconnectCnt = 0;
             }
         }
@@ -2648,7 +2654,7 @@ void loop() {
             else{
                 if(_WiFi_disconnectCnt){
                     _WiFi_disconnectCnt = 0;
-                    if(_state == RADIO) audio.connecttohost(_lastconnectedhost.c_str());
+                    if(_state == RADIO) audio.connecttohost(_settings.lastconnectedhost);
                 }
             }
         }
@@ -2843,9 +2849,10 @@ void audio_eof_stream(const char* info) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
-    _lastconnectedhost = info;
-    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _lastconnectedhost.c_str());
-    webSrv.send("stationURL=", _lastconnectedhost);
+    mwr_free(_settings.lastconnectedhost);
+    _settings.lastconnectedhost = x_ps_strdup(info);
+    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _settings.lastconnectedhost);
+    webSrv.send("stationURL=", _settings.lastconnectedhost);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
@@ -2885,7 +2892,7 @@ void audio_bitrate(const char* info) {
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_speech(const char*) {
-    _f_connectToLasthost = true;
+    _f_connectToLastStation = true;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S){
@@ -3301,7 +3308,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "DLNA_getRoot")    {  _currDLNAsrvNr = param.toInt(); dlna.browseServer(_currDLNAsrvNr, "0"); return;}
 
     if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); showFileName(arg.c_str()); return;}
-                                    if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = strdup(param.c_str());
+                                    if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = x_ps_strdup(param.c_str());
                                     _totalNumberReturned = 0;
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
