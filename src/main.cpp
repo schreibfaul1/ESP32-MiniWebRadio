@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5m - Oct 28/2024                                                                                                                       ";
+    Version 3.5n - Oct 28/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -130,7 +130,6 @@ char                    _commercial[25];
 char                    _icyDescription[512] = {};
 char                    _streamTitle[512] = {};
 char*                   _cur_AudioFolder = NULL;
-char*                   _lastconnectedfile = NULL;
 char*                   _stationURL = NULL;
 char*                   _JSONstr = NULL;
 char*                   _BT_metaData = NULL;
@@ -449,9 +448,9 @@ boolean defaultsettings(){
     }
 
     File file2 = SD_MMC.open("/settings.json","r", false);
-    char*  jO = x_ps_calloc(1024, 1);
-    char* tmp = x_ps_malloc(512);
-    file2.readBytes(jO, 1024);
+    char*  jO = x_ps_calloc(2048, 1);
+    char* tmp = x_ps_malloc(1024);
+    file2.readBytes(jO, 2048);
     _settingsHash = simpleHash(jO);
     file2.close();
 
@@ -460,11 +459,15 @@ boolean defaultsettings(){
         pos1 = indexOf(jO, s, 0);
         if(pos1 < 0) {log_e("index %s not found", s); return "0";}
         pos2 = indexOf(jO, ":", pos1) + 1;
-        pos3 = indexOf(jO, ",\"", pos2);
-        if(pos3 < 0) pos3 = indexOf(jO, "}", pos2);
+        if(jO[pos2] == '\"') pos3 = indexOf(jO, "\"", pos2 + 1) + 1;
+        else pos3 = indexOf(jO, ",", pos2);
+        if(pos3 < 0) pos3 = find_first_of(jO, "}\n", pos2);
         if(jO[pos2] == '\"'){pos2++; pos3--;}  // remove \" embraced strings
+
+log_w("pos1 %i pos2 %i pos3 %i", pos1, pos2, pos3);
         strncpy(tmp, jO + pos2, pos3 - pos2);
         tmp[pos3 - pos2] = '\0';
+log_e("s %s  tmp %s", s, tmp);
         return (const char*)tmp;
     };
 
@@ -504,6 +507,7 @@ boolean defaultsettings(){
     _TZName                     =             parseJson("\"Timezone_Name\":");
     _TZString                   =             parseJson("\"Timezone_String\":");
     _settings.lastconnectedhost = x_ps_strdup(parseJson("\"lastconnectedhost\":"));
+    _settings.lastconnectedfile = x_ps_strdup(parseJson("\"lastconnectedfile\":"));
     _sleepMode                  = atoi(       parseJson("\"sleepMode\":"));
     _cur_AudioFileNr            = atoi(       parseJson("\"cur_AudioFileNr\":")); // this is the position of the file within the (alpha ordered) folder starting with 0
     strcpy(_cur_AudioFolder,                  parseJson("\"cur_AudioFolder\":"));
@@ -531,40 +535,41 @@ boolean defaultsettings(){
 // clang-format off
 void updateSettings(){
     if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
-    char*  jO = x_ps_malloc(1024 + strlen(_settings.lastconnectedhost)); // JSON Object
+    char*  jO = x_ps_malloc(2048 + strlen(_settings.lastconnectedhost)); // JSON Object
     char tmp[40 + strlen(_settings.lastconnectedhost)];
-    strcpy(jO,   "{");
-    sprintf(tmp, "\"volume\":%i", _cur_volume);                                             strcat(jO, tmp);
-    sprintf(tmp, ",\"volumeSteps\":%i", _volumeSteps);                                      strcat(jO, tmp);
-    sprintf(tmp, ",\"ringVolume\":%i", _ringVolume);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"volumeAfterAlarm\":%i", _volumeAfterAlarm);                            strcat(jO, tmp);
-    sprintf(tmp, ",\"BTvolume\":%i", _BTvolume);                                            strcat(jO, tmp);
-    strcat(jO,   ",\"BTpower\":"); (_f_BTpower == true) ?                                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    sprintf(tmp, ",\"alarmtime_sun\":%02d:%02d", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_mon\":%02d:%02d", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_tue\":%02d:%02d", _alarmtime[2] / 60, _alarmtime[2] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_wed\":%02d:%02d", _alarmtime[3] / 60, _alarmtime[3] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_thu\":%02d:%02d", _alarmtime[4] / 60, _alarmtime[4] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_fri\":%02d:%02d", _alarmtime[5] / 60, _alarmtime[5] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarmtime_sat\":%02d:%02d", _alarmtime[6] / 60, _alarmtime[6] % 60);   strcat(jO, tmp);
-    sprintf(tmp, ",\"alarm_weekdays\":%i", _alarmdays);                                     strcat(jO, tmp);
-    strcat(jO,   ",\"timeAnnouncing\":"); (_f_timeAnnouncement == true) ?                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    strcat(jO,   ",\"mute\":");           (_f_mute == true)             ?                   strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
-    sprintf(tmp, ",\"brightness\":%i", _brightness);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"sleeptime\":%i", _sleeptime);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"lastconnectedhost\":\"%s\"", _settings.lastconnectedhost);             strcat(jO, tmp);
-    sprintf(tmp, ",\"station\":%i", _cur_station);                                          strcat(jO, tmp);
-    sprintf(tmp, ",\"Timezone_Name\":\"%s\"", _TZName.c_str());                             strcat(jO, tmp);
-    sprintf(tmp, ",\"Timezone_String\":\"%s\"", _TZString.c_str());                         strcat(jO, tmp);
-    sprintf(tmp, ",\"toneLP\":%i", _toneLP);                                                strcat(jO, tmp);
-    sprintf(tmp, ",\"toneBP\":%i", _toneBP);                                                strcat(jO, tmp);
-    sprintf(tmp, ",\"toneHP\":%i", _toneHP);                                                strcat(jO, tmp);
-    sprintf(tmp, ",\"balance\":%i", _toneBAL);                                              strcat(jO, tmp);
-    sprintf(tmp, ",\"timeFormat\":%i", _timeFormat);                                        strcat(jO, tmp);
-    sprintf(tmp, ",\"cur_AudioFileNr\":%i", _cur_AudioFileNr);                              strcat(jO, tmp);
-    sprintf(tmp, ",\"cur_AudioFolder\":\"%s\"", _cur_AudioFolder);                          strcat(jO, tmp);
-    sprintf(tmp, ",\"state\":%i", _state);                                                  strcat(jO, tmp);
-    sprintf(tmp, ",\"sleepMode\":%i}", _sleepMode);                                         strcat(jO, tmp);
+    strcpy(jO,   "{\n");
+    sprintf(tmp, "  \"volume\":%i", _cur_volume);                                                   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"volumeSteps\":%i", _volumeSteps);                                          strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"ringVolume\":%i", _ringVolume);                                            strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"volumeAfterAlarm\":%i", _volumeAfterAlarm);                                strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"BTvolume\":%i", _BTvolume);                                                strcat(jO, tmp);
+    strcat(jO,   ",\n  \"BTpower\":"); (_f_BTpower == true) ?                                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    sprintf(tmp, ",\n  \"alarmtime_sun\":\"%02d:%02d\"", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_mon\":\"%02d:%02d\"", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_tue\":\"%02d:%02d\"", _alarmtime[2] / 60, _alarmtime[2] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_wed\":\"%02d:%02d\"", _alarmtime[3] / 60, _alarmtime[3] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_thu\":\"%02d:%02d\"", _alarmtime[4] / 60, _alarmtime[4] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_fri\":\"%02d:%02d\"", _alarmtime[5] / 60, _alarmtime[5] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarmtime_sat\":\"%02d:%02d\"", _alarmtime[6] / 60, _alarmtime[6] % 60);   strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"alarm_weekdays\":%i", _alarmdays);                                         strcat(jO, tmp);
+    strcat(jO,   ",\n  \"timeAnnouncing\":"); (_f_timeAnnouncement == true) ?                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    strcat(jO,   ",\n  \"mute\":");           (_f_mute == true)             ?                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    sprintf(tmp, ",\n  \"brightness\":%i", _brightness);                                            strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"sleeptime\":%i", _sleeptime);                                              strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"lastconnectedhost\":\"%s\"", _settings.lastconnectedhost);                 strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"lastconnectedfile\":\"%s\"", _settings.lastconnectedfile);                 strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"station\":%i", _cur_station);                                              strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"Timezone_Name\":\"%s\"", _TZName.c_str());                                 strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"Timezone_String\":\"%s\"", _TZString.c_str());                             strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"toneLP\":%i", _toneLP);                                                    strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"toneBP\":%i", _toneBP);                                                    strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"toneHP\":%i", _toneHP);                                                    strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"balance\":%i", _toneBAL);                                                  strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"timeFormat\":%i", _timeFormat);                                            strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"cur_AudioFileNr\":%i", _cur_AudioFileNr);                                  strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"cur_AudioFolder\":\"%s\"", _cur_AudioFolder);                              strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"state\":%i", _state);                                                      strcat(jO, tmp);
+    sprintf(tmp, ",\n  \"sleepMode\":%i\n}", _sleepMode);                                           strcat(jO, tmp);
 
     if(_settingsHash != simpleHash(jO)) {
         File file = SD_MMC.open("/settings.json", "w", false);
@@ -1810,8 +1815,8 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     connecttoFS("SD_MMC", (const char*)path, resumeFilePos);
     if(_f_playlistEnabled) showPlsFileNumber();
     if(_f_isFSConnected) {
-        free(_lastconnectedfile);
-        _lastconnectedfile = x_ps_strdup(path);
+        free(_settings.lastconnectedfile);
+        _settings.lastconnectedfile = x_ps_strdup(path);
         _resumeFilePos = 0;
     }
 }
@@ -3279,9 +3284,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "stopfile"){          _resumeFilePos = audio.stopSong(); webSrv.send("stopfile=", "audiofile stopped");
                                     return;}
 
-    if(cmd == "resumefile"){        if(!_lastconnectedfile) webSrv.send("resumefile=", "nothing to resume");
+    if(cmd == "resumefile"){        if(!_settings.lastconnectedfile) webSrv.send("resumefile=", "nothing to resume");
                                     else {
-                                        SD_playFile(_lastconnectedfile, _resumeFilePos);
+                                        SD_playFile(_settings.lastconnectedfile, _resumeFilePos);
                                         webSrv.send("resumefile=", "audiofile resumed");
                                     }
                                     return;}

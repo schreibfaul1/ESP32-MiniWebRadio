@@ -216,6 +216,7 @@ typedef struct __settings{
     irButtons irbuttons[35];
     uint8_t numOfIrButtons = 0;
     char*   lastconnectedhost = NULL;
+    char*   lastconnectedfile = NULL;
 } settings_t;
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -439,6 +440,17 @@ inline char* x_ps_strdup(const char* str) {
     else { ps_str = (char*)malloc(strlen(str) + 1); }
     strcpy(ps_str, str);
     return ps_str;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int find_first_of(const char* source, const char* delimiters, int start = 0) {
+    for (int i = start; source[i] != '\0'; ++i) { // search at start
+        for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
+            if (source[i] == delimiters[j]) {
+                return i; // position of first found delimiter
+            }
+        }
+    }
+    return -1; // not found
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
