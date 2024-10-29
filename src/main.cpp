@@ -3696,7 +3696,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubmenue = 0; changeState(STATIONSLIST); return;}
         if(strcmp(name, "btn_RA_player") == 0)   {_radioSubmenue = 0; stopSong(); _playerSubmenue = 0; changeState(PLAYER); return;}
         if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubmenue = 0; stopSong(); changeState(DLNA); return;}
-        if(strcmp(name, "btn_RA_clock") == 0)    {_radioSubmenue = 0; changeState(CLOCK); return;}
+        if(strcmp(name, "btn_RA_clock") == 0)    {_radioSubmenue = 0; _clockSubMenue = 0; changeState(CLOCK); return;}
         if(strcmp(name, "btn_RA_sleep") == 0)    {_radioSubmenue = 0; changeState(SLEEPTIMER); return;}
         if(strcmp(name, "btn_RA_bright") == 0)   {_radioSubmenue = 0; changeState(BRIGHTNESS); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubmenue = 0; changeState(EQUALIZER); return;}
