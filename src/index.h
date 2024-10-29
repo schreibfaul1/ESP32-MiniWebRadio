@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 24.10.2024
+ *  Updated on: 29.10.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1180,7 +1180,7 @@ function editCell(cell, rowIndex, cellIndex) {
             }
             cell.textContent = newValue;
             tableData[rowIndex][cellIndex] = newValue;
-            saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // save modified data
+            saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // save modified data
             if (hasChanged) showMessage1('Cell has been successfully modified.');
             updateStationlist();
         } else {
@@ -1201,7 +1201,7 @@ function insertRow(z) { // z: 0 = above, 1 = below
     if (selectedRowIndex !== null) {
         tableData.splice(selectedRowIndex + z, 0, newRowData);
         loadTableData();
-        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
         showMessage1('Row successfully inserted.');
         updateStationlist();
     }
@@ -1214,7 +1214,7 @@ function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
     if (rowCount !== null) {
         tableData.splice(rowCount + 1, 0, newRowData);
         loadTableData();
-        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
         showMessage1('Row successfully inserted.');
         updateStationlist();
         deletedRowData = ['*', '', '', 'http'];
@@ -1228,7 +1228,7 @@ function deleteRow() {
         deletedRowData = tableData[selectedRowIndex];
         tableData.splice(selectedRowIndex, 1);
         loadTableData();
-        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // Speichert die geänderten Daten
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
         showMessage1('Row was successfully deleted.');
         updateStationlist();
     }
@@ -1304,7 +1304,7 @@ async function loadStationsFromSD(file_name) {
                 ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
                 ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
-            saveJsonFileToSD("/stations.json", JSON.stringify(tableData));
+            saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
     }
 }
 
@@ -1362,7 +1362,7 @@ function updateStationlist () { // select in tab Radio
 
 function saveStations_json(){
     // Create a blob with the content
-    const blob = new Blob([JSON.stringify(tableData)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(tableData, 0, 2)], { type: 'application/json' });
 
     // Create an invisible link to download the file
     const link = document.createElement('a');
@@ -1384,7 +1384,7 @@ function loadStations_json(event){
         tableData = JSON.parse(data)
         loadTableData()
         updateStationlist();
-        saveJsonFileToSD("/stations.json", JSON.stringify(tableData));  // save modified data
+        saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // save modified data
     }
     reader.onerror = function (ex) {
         console.log(ex)
