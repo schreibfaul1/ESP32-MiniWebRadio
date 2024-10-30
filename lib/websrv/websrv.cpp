@@ -330,7 +330,6 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
                 rnrn = indexOf(m_transBuf, "\r\n\r\n");
                 if(rnrn < 0) rnrn = 0;
                 else rnrn += 4;
-                log_e("webkit found %i", rnrn);
             }
             if(file.write((uint8_t*)m_transBuf + rnrn, av)!=av) f_werror=true;  // write error?
         }
