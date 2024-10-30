@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 28.08.2024
+ *  updated on: 30.10.2024
  *      Author: Wolle
  */
 
@@ -316,15 +316,23 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
 
     file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
     uint32_t t = millis();
+
     while(true){
         if(cmdclient.available()){
             t = millis();
-            av=cmdclient.available();
-            if(av>m_bytesPerTransaction) av=m_bytesPerTransaction;
-            if(av>len) av=len;
+            av = cmdclient.available();
+            if(av > m_bytesPerTransaction) av = m_bytesPerTransaction;
+            int rnrn = 0; // "\r\n\r\n"
+            if(av > len) av = len;
             len -= av;
             cmdclient.read((uint8_t*)m_transBuf, av);
-            if(file.write((uint8_t*)m_transBuf, av)!=av) f_werror=true;  // write error?
+            if(startsWith(m_transBuf, "------")) {  // ------WebKitFormBoundary
+                rnrn = indexOf(m_transBuf, "\r\n\r\n");
+                if(rnrn < 0) rnrn = 0;
+                else rnrn += 4;
+                log_e("webkit found %i", rnrn);
+            }
+            if(file.write((uint8_t*)m_transBuf + rnrn, av)!=av) f_werror=true;  // write error?
         }
         if((t + 2000) < millis()) { log_e("timeout"); goto exit;}
         if(len == 0) break;
