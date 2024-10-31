@@ -309,7 +309,8 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
 
     uint16_t av;
     uint32_t len = contentLength;
-    boolean f_werror=false;
+    bool     f_werror=false;
+    bool     f_first = true;
     String str="";
     File file;
     if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
@@ -326,12 +327,20 @@ boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){
             if(av > len) av = len;
             len -= av;
             cmdclient.read((uint8_t*)m_transBuf, av);
-            if(startsWith(m_transBuf, "------")) {  // ------WebKitFormBoundary
-                rnrn = indexOf(m_transBuf, "\r\n\r\n");
-                if(rnrn < 0) rnrn = 0;
-                else rnrn += 4;
+            if(f_first){
+                f_first = false;
+                if(startsWith(m_transBuf, "------")) {  // ------WebKitFormBoundary
+                    rnrn = indexOf(m_transBuf, "\r\n\r\n");
+                    if(rnrn < 0) rnrn = 0;
+                    else rnrn += 4;
+                }
             }
-            if(file.write((uint8_t*)m_transBuf + rnrn, av)!=av) f_werror=true;  // write error?
+            if(av > contentLength) av = contentLength;
+            int bytes = file.write((uint8_t*)m_transBuf + rnrn, av);
+            if(bytes) contentLength -= bytes;
+
+            if(bytes != av) f_werror=true;  // write error?
+            if(contentLength == 0) break;
         }
         if((t + 2000) < millis()) { log_e("timeout"); goto exit;}
         if(len == 0) break;

@@ -66,7 +66,7 @@ settings_t              _settings;
 const uint16_t          _max_stations = 1000;
 int8_t                  _currDLNAsrvNr = -1;
 uint8_t                 _alarmdays = 0;
-uint8_t                 _cur_volume = 21;     // will be set from stored preferences
+uint8_t                 _cur_volume = 21;
 uint8_t                 _BTvolume = 16;      // KCX-BT_Emitter volume
 uint8_t                 _ringVolume = 21;
 uint8_t                 _volumeAfterAlarm = 12;
@@ -1156,11 +1156,7 @@ bool connectToWiFi() {
     char* line = x_ps_malloc(512);
     uint16_t idx = 0;
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
-    if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
-        String ap_ssid = pref.getString("ap_ssid", ""); // credentials from accesspoint
-        String ap_pw = pref.getString("ap_pw", "");
-        if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
-    }
+    SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", _SSID);
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
         while(file.available()) {
@@ -1193,6 +1189,7 @@ bool connectToWiFi() {
             if(strlen(s_ssid) == 0) continue;               // ssid is empty
         //    log_i("%s, %s, %s",  s_ssid, s_password, s_info);
             wifiMulti.addAP(s_ssid, s_password);
+            SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", s_ssid);
             (void) s_info; // unused
         }
         file.close();
@@ -1203,6 +1200,7 @@ bool connectToWiFi() {
     for(int i = 0; i < n; i++){
         SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
     } */
+    wifiMulti.setStrictMode(true);
     wifiMulti.run();
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -1400,9 +1398,6 @@ void setup() {
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
-
-    pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
-
 #if CONFIG_IDF_TARGET_ESP32
     tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32
 #else
@@ -2785,7 +2780,7 @@ endbrightness:
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); WiFi.disconnect();  WiFi.begin();}
+    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); /* WiFi.disconnect();  WiFi.begin(); */}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
@@ -3317,14 +3312,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
-
-    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
-                                    String AP_PW =   param.substring(param.indexOf("\n") + 1);
-                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
-                                    AP_SSID.c_str(), AP_PW.c_str());
-                                    pref.putString("ap_ssid", AP_SSID);
-                                    pref.putString("ap_pw", AP_PW);
-                                    ESP.restart();}
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
