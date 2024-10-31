@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 20.01.2024
+ *  updated on: 31.10.2024
  *      Author: Wolle
  */
 
@@ -165,7 +165,12 @@ void trim(char *str) {
     memmove(str, start, strlen(start) + 1);  // +1 for '\0'
 }
 
-
+int32_t min3(int32_t a, int32_t b, int32_t c){
+    uint32_t min_val = a;
+    if (b < min_val) min_val = b;
+    if (c < min_val) min_val = c;
+    return min_val;
+}
 
 //--------------------------------------------------------------------------------------------------------------
 

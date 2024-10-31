@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 30.10.2024
+ *  updated on: 31.10.2024
  *      Author: Wolle
  */
 
@@ -305,59 +305,75 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::uploadfile(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer file from webbrowser to sd
-
-    uint16_t av;
-    uint32_t len = contentLength;
-    bool     f_werror=false;
-    bool     f_first = true;
-    String str="";
+boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength) {
+    uint32_t av;
+    uint32_t nrOfBytesToWrite = contentLength;
+    int bytesWritten = 0;
+    int bytesInTransBuf = 0;
+    int startBoundaryLength = 0; // "\r\n\r\n"
+    int endBoundaryLength = 0;
+    bool boundaryDetected = false;
+    String str = "";
     File file;
-    if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
+    if (fs.exists(path)) fs.remove(path); // Vorherige Version entfernen, falls vorhanden
 
-    file = fs.open(path, FILE_WRITE);  // Open the file for writing in SD (create it, if doesn't exist)
+    file = fs.open(path, FILE_WRITE); // Datei zum Schreiben öffnen
     uint32_t t = millis();
 
-    while(true){
-        if(cmdclient.available()){
+    while (true) {
+        if (cmdclient.available()) {
             t = millis();
-            av = cmdclient.available();
-            if(av > m_bytesPerTransaction) av = m_bytesPerTransaction;
-            int rnrn = 0; // "\r\n\r\n"
-            if(av > len) av = len;
-            len -= av;
-            cmdclient.read((uint8_t*)m_transBuf, av);
-            if(f_first){
-                f_first = false;
-                if(startsWith(m_transBuf, "------")) {  // ------WebKitFormBoundary
-                    rnrn = indexOf(m_transBuf, "\r\n\r\n");
-                    if(rnrn < 0) rnrn = 0;
-                    else rnrn += 4;
+
+            av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
+            bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
+            if (bytesInTransBuf != av) {
+                sprintf(buff, "read error in %s, available %lu bytes, read %i bytes\n", path, av, bytesInTransBuf);
+                goto exit;
+            }
+
+            if (nrOfBytesToWrite == contentLength) { // first round
+                if (startsWith(m_transBuf, "------")) { // ------WebKitFormBoundary
+                    int startBoundaryEndPos = indexOf(m_transBuf, "\r\n\r\n") + 4;
+                    if (startBoundaryEndPos > 20) {
+                        startBoundaryLength = startBoundaryEndPos;
+                        boundaryDetected = true;}
+                        nrOfBytesToWrite -= startBoundaryLength;
                 }
             }
-            if(av > contentLength) av = contentLength;
-            int bytes = file.write((uint8_t*)m_transBuf + rnrn, av);
-            if(bytes) contentLength -= bytes;
 
-            if(bytes != av) f_werror=true;  // write error?
-            if(contentLength == 0) break;
+            if(nrOfBytesToWrite <= m_bytesPerTransaction && boundaryDetected){ // last round
+                for(int i = startBoundaryLength; i < startBoundaryLength + nrOfBytesToWrite; i++){
+                    if(m_transBuf[i] == '\r' && m_transBuf[i + 1] == '\n' && startsWith(m_transBuf + i + 2, "------")){// \r\n------WebKitFormBoundary)
+                        endBoundaryLength = bytesInTransBuf - i;
+                        nrOfBytesToWrite -= endBoundaryLength;
+                        break;
+                    }
+                }
+            }
+            if(bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite;
+            bytesWritten = file.write((uint8_t*)m_transBuf + startBoundaryLength, bytesInTransBuf);
+            if (bytesWritten != bytesInTransBuf) {
+                sprintf(buff, "write error in %s, available %i bytes, written %i bytes\n", path, bytesInTransBuf, bytesWritten);
+                goto exit;
+            }
+            startBoundaryLength = 0;
+            nrOfBytesToWrite -= bytesWritten;
+            if (nrOfBytesToWrite == 0) break;
         }
-        if((t + 2000) < millis()) { log_e("timeout"); goto exit;}
-        if(len == 0) break;
-        if(f_werror) {log_e("error while writing on SD"); goto exit;}
+        if ((t + 2000) < millis()) {
+            sprintf(buff, "timeout in webSrv uploadfile()\n");
+            goto exit;
+        }
     }
-    cmdclient.readStringUntil('\n'); // read the remains, first \n
-    cmdclient.readStringUntil('\n'); // read the remains  webkit\n
+
+    while (cmdclient.available()) cmdclient.read(); // Reste lesen
     file.close();
-    if(f_werror) {
-        sprintf(buff, "File: %s write error", path);
-        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-        goto exit;
-    }
-    sprintf(buff, "File: %s written, FileSize %ld: ", path, (long unsigned int)contentLength);
-    if(WEBSRV_onInfo)  WEBSRV_onInfo(buff);
+    sprintf(buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return true;
+
 exit:
+    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
