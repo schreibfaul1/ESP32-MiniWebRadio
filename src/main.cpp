@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5p - Oct 29/2024                                                                                                                       ";
+    Version 3.5q - Nov 01/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2242,6 +2242,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubmenue == 0){
+                if(_cur_AudioFolder[0]== '\0') strcpy(_cur_AudioFolder, "/audiofiles");
                 _SD_content.listDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -3432,10 +3433,7 @@ void WEBSRV_onInfo(const char* info) {
     if(!strcmp("to_listen", info)) return;         // suppress to_isten
     if(startsWith(info, "Command client")) return; // suppress Command client available
     if(startsWith(info, "Content-D")) return;      // Content-Disposition
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_DEBUG) {
-        SerialPrintfln("HTML_info:   " ANSI_ESC_YELLOW "\"%s\"", info); // infos for debug
-    }
-//    log_w("%s", info);
+//    SerialPrintfln("WebSrv Info: " ANSI_ESC_YELLOW "%s", info); // infos for debug
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA

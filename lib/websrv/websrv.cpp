@@ -246,8 +246,8 @@ void WebSrv::sendPong(){  // heartbeat, keep alive via websockets
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer imagefile from webbrowser to SD
-    size_t   m_bytesPerTransaction = 1024;
-    uint8_t  tBuf[m_bytesPerTransaction];
+    size_t   bytesPerTransaction = 1024;
+    uint8_t  tBuf[bytesPerTransaction];
     uint16_t av, i, j;
     uint32_t len = contentLength;
     boolean f_werror=false;
@@ -271,7 +271,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     while(cmdclient.available()){
         av=cmdclient.available();
         if(av==0) break;
-        if(av>m_bytesPerTransaction) av=m_bytesPerTransaction;
+        if(av>bytesPerTransaction) av=bytesPerTransaction;
         if(av>len) av=len;
         len -= av;
         i=0; j=0;
@@ -308,12 +308,10 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
 boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength) {
     uint32_t av;
     uint32_t nrOfBytesToWrite = contentLength;
-    int bytesWritten = 0;
-    int bytesInTransBuf = 0;
-    int startBoundaryLength = 0; // "\r\n\r\n"
-    int endBoundaryLength = 0;
-    bool boundaryDetected = false;
-    String str = "";
+    int32_t bytesWritten = 0;
+    int32_t bytesInTransBuf = 0;
+    int32_t startBoundaryLength = 0;
+    int32_t endBoundaryLength = 0;
     File file;
     if (fs.exists(path)) fs.remove(path); // Vorherige Version entfernen, falls vorhanden
 
@@ -327,36 +325,32 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
             av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
             bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
             if (bytesInTransBuf != av) {
-                sprintf(buff, "read error in %s, available %lu bytes, read %i bytes\n", path, av, bytesInTransBuf);
+                sprintf(buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
                 goto exit;
             }
 
             if (nrOfBytesToWrite == contentLength) { // first round
-                if (startsWith(m_transBuf, "------")) { // ------WebKitFormBoundary
+                if (startsWith(m_transBuf, "------")) { // ------WebKitFormBoundary\r\nContent-Disposition ....  \r\n\r\n
                     int startBoundaryEndPos = indexOf(m_transBuf, "\r\n\r\n") + 4;
                     if (startBoundaryEndPos > 20) {
                         startBoundaryLength = startBoundaryEndPos;
-                        boundaryDetected = true;}
-                        nrOfBytesToWrite -= startBoundaryLength;
-                }
-            }
 
-            if(nrOfBytesToWrite <= m_bytesPerTransaction && boundaryDetected){ // last round
-                for(int i = startBoundaryLength; i < startBoundaryLength + nrOfBytesToWrite; i++){
-                    if(m_transBuf[i] == '\r' && m_transBuf[i + 1] == '\n' && startsWith(m_transBuf + i + 2, "------")){// \r\n------WebKitFormBoundary)
-                        endBoundaryLength = bytesInTransBuf - i;
+                        nrOfBytesToWrite -= startBoundaryLength;
+                        bytesInTransBuf -= startBoundaryLength;
+
+                        endBoundaryLength = indexOf(m_transBuf, "\r\n"); // same length as startBoundary + \r\n--\r\n
+                        endBoundaryLength += 2 + 4;  // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
                         nrOfBytesToWrite -= endBoundaryLength;
-                        break;
                     }
                 }
             }
-            if(bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite;
+            if(bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite; // only if endBoundary is in first round
             bytesWritten = file.write((uint8_t*)m_transBuf + startBoundaryLength, bytesInTransBuf);
+            startBoundaryLength = 0;
             if (bytesWritten != bytesInTransBuf) {
-                sprintf(buff, "write error in %s, available %i bytes, written %i bytes\n", path, bytesInTransBuf, bytesWritten);
+                sprintf(buff, "write error in %s, available %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
                 goto exit;
             }
-            startBoundaryLength = 0;
             nrOfBytesToWrite -= bytesWritten;
             if (nrOfBytesToWrite == 0) break;
         }

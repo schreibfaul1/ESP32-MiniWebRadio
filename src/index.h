@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 29.10.2024
+ *  Updated on: 01.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -166,6 +166,7 @@ const char index_html[] PROGMEM = R"=====(
             width : 128px;
             height : 128px;
             margin-top: 5px;
+            background-image : url(SD/common/unknown.jpg);
         }
         #label-bt-logo {
             margin-left : 4px;
@@ -917,8 +918,8 @@ function saveTextFileToSD (fileName, content) {
     }
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
-            if (xhr.responseText === 'OK') alert(fileName + ' successfully uploaded')
-            else alert(fileName + ' successfully uploaded')
+            if (xhr.status === 200) alert(fileName + ' successfully uploaded')
+            else alert(fileName + 'not successfully uploaded')
         }
     }
     xhr.send(fd) // send
@@ -1788,7 +1789,7 @@ function uploadCanvasImage () {
     }
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
-          if (xhr.responseText === 'OK') alert(filename + ' successfully uploaded')
+            if(xhr.status === 200) alert(filename + ' successfully uploaded')
             else alert(filename + 'not successfully uploaded')
         }
     }
