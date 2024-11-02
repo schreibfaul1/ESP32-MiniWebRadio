@@ -1647,6 +1647,16 @@ function getFlagEmoji(countryCode) {
     return String.fromCodePoint(...codePoints);
 }
 
+function validateStationname() {
+    const inputField = document.getElementById("rb_stationname");
+    const invalidChars = /[\\/:*?"<>|]/
+    if (invalidChars.test(inputField.value)) { // If invalid characters are found, turn text red
+        inputField.style.color = "red";
+    } else { // If all characters are valid, colour text black
+        inputField.style.color = "black";
+    }
+}
+
 function gotCountries (data) { // fill select countries
     var select = document.getElementById('item')
     var opt
@@ -1768,6 +1778,7 @@ function selectstation () { // select a station
     scaleCanvasImage(favi)
     var j = document.getElementById('rb_stationname')
     j.value = countryallstations[value].name.trim()
+    validateStationname()
 }
 
 function teststreamurl () { // Search: button play - enter a url to play from
@@ -2716,11 +2727,13 @@ function clear_BT_memItems(){
             <div style="flex: 0 0 130px; padding 1px 5px 5px 1px; ">
                 <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
             </div>
-                                            
             <div style="flex: 1;">
                 <div style="flex: 1; height: 38px; padding-left: 10px;">
                     <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
-                                id="rb_stationname" placeholder="Change the Stationname here">
+                                id="rb_stationname" placeholder="Change the Stationname here"
+                                oninput="validateStationname()"
+                                title="Here the station name can be changed. Since the station name is the same as the file name of the logo,
+                                 invalid characters colour the content red.">
                 </div>
                 <div style="flex: 1; justify-content: flex-end; padding-top: 4px; padding-left: 10px;">
                     <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
@@ -2742,10 +2755,11 @@ function clear_BT_memItems(){
                         ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
                         onclick="addStationsToGrid()"/>
 
-                    <input class="boxstyle" style="width: 50px; text-align: center; margin-top: 15px;  vertical-align: top; margin-left: 10px;" type="text" id="CountryCode" placeholder="CC">
+                    <input class="boxstyle" style="width: 50px; text-align: center; margin-top: 15px;
+                           vertical-align: top; margin-left: 10px;" type="text" id="CountryCode" placeholder="CC"
+                           title="Country Code">
                 </div>
             </div>
-                                             
             <form method="post" accept-charset="utf-8" name="form1">
                 <input name="hidden_data" id="hidden_data" type="hidden">
             </form>
