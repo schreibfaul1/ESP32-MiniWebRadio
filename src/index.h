@@ -1624,20 +1624,21 @@ function loadJSON (path, success, error) {
 
 function selectcategory (presctrl) { // tab Search: preset, select a category
 
-  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries#name', gotItems, 'jsonp'); category="country"}
-  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages', gotItems, 'jsonp'); category="language"}
-  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags',      gotItems, 'jsonp'); category="tag"}
+  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries#name', gotCountries, 'jsonp'); category="country"}
+  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages/?hidebroken=true&limit=100&reverse=true&order=stationcount', gotLanguages, 'jsonp'); category="language"}
+  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags/?hidebroken=true&limit=100&reverse=true&order=stationcount',      gotTags, 'jsonp'); category="tag"}
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
   if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountrycodeexact/'  + presctrl.value.substring(0, 2) + "#name", gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value, gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value, gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
 
 }
 
 function getFlagEmoji(countryCode) {
     // Normalisiere die Eingabe und nimm nur die ersten beiden Zeichen
+    if(!countryCode) return ""
     const codePoints = countryCode
         .toUpperCase()
         .split('')
@@ -1646,12 +1647,15 @@ function getFlagEmoji(countryCode) {
     return String.fromCodePoint(...codePoints);
 }
 
-function gotItems (data) { // fill select countries
+function gotCountries (data) { // fill select countries
     var select = document.getElementById('item')
     var opt
     select.options.length = 1
     for (var i = 0; i < data.length; i++) {
         if (i < 2) continue
+        // if(!data[i].iso_3166_1) continue
+        // if(!data[i].name) continue
+        // if(!data[i].stationcount) continue
         opt = document.createElement('OPTION')
         flag = getFlagEmoji(data[i].iso_3166_1)  // 🇵🇹
         const firstChar = data[i].iso_3166_1.charAt(0)
@@ -1664,10 +1668,29 @@ function gotItems (data) { // fill select countries
     stations.options.length = 1
     const options = Array.from(select.options);
 
-    // const uniqueOptions = options.filter((option, index, self) => {
-    //     return self.findIndex(o => o.text === option.text) === index;
-    // });
-    //uniqueOptions.sort((a, b) => a.text.localeCompare(b.text));
+    select.options.length = 0; // clear select
+    options.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
+    const selectElement = document.getElementById("stations");
+    selectElement.options.length = 0;
+}
+
+function gotLanguages (data) { // fill select countries
+    var select = document.getElementById('item')
+    var opt
+    select.options.length = 1
+    for (var i = 0; i < data.length; i++) {
+        if (i < 2) continue
+        opt = document.createElement('OPTION')
+        const firstChar = data[i].name.charAt(0)
+        if(firstChar === '#') continue; // # are not valid
+        opt.text = data[i].name + "  (" + data[i].stationcount + ")"
+        select.add(opt)
+    }
+    console.log(data.uuid)
+    var stations = document.getElementById('stations') // set stations to default
+    stations.options.length = 1
+    const options = Array.from(select.options);
 
     select.options.length = 0; // clear select
     options.forEach(option => select.appendChild(option));
@@ -1675,6 +1698,31 @@ function gotItems (data) { // fill select countries
     const selectElement = document.getElementById("stations");
     selectElement.options.length = 0;
 }
+
+function gotTags (data) { // fill select countries
+    var select = document.getElementById('item')
+    var opt
+    select.options.length = 1
+    for (var i = 0; i < data.length; i++) {
+        if (i < 2) continue
+        opt = document.createElement('OPTION')
+        // const firstChar = data[i].name.charAt(0)
+        // if(firstChar === '#') continue; // # are not valid
+        opt.text = data[i].name + "  (" + data[i].stationcount + ")"
+        select.add(opt)
+    }
+    console.log(data.uuid)
+    var stations = document.getElementById('stations') // set stations to default
+    stations.options.length = 1
+    const options = Array.from(select.options);
+
+    select.options.length = 0; // clear select
+    options.forEach(option => select.appendChild(option));
+    select.selectedIndex = 0; // set default
+    const selectElement = document.getElementById("stations");
+    selectElement.options.length = 0;
+}
+
 
 function gotStations (data) { // fill select stations
     var select = document.getElementById('stations')
