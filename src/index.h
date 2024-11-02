@@ -1727,8 +1727,8 @@ function gotTags (data) { // fill select countries
 function gotStations (data) { // fill select stations
     const cc = document.getElementById('CountryCode')
     const it = document.getElementById('item')
-    cc.value = it.value.substring(0, 2)
-
+    if(category === "country") cc.value = it.value.substring(0, 2)
+    else cc.value = ''
     var select = document.getElementById('stations')
     var opt
     select.options.length = 1
