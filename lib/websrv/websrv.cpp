@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 31.10.2024
+ *  updated on: 01.11.2024
  *      Author: Wolle
  */
 
@@ -245,64 +245,89 @@ void WebSrv::sendPong(){  // heartbeat, keep alive via websockets
     webSocketClient.write(buff,2);
 }
 //--------------------------------------------------------------------------------------------------------------
+// e.g.  startBoundary        ------WebKitFormBoundaryi52Pv7aBYloXIuZB\r\n
+//                            Content-Disposition: form-data; name="hidden_data"\r\n\r\n
+//                            data:image/jpeg;base64,
+//
+//       endBoundary          ------WebKitFormBoundaryi52Pv7aBYloXIuZB--
+//
 boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLength){ // transfer imagefile from webbrowser to SD
-    size_t   bytesPerTransaction = 1024;
-    uint8_t  tBuf[bytesPerTransaction];
-    uint16_t av, i, j;
-    uint32_t len = contentLength;
-    boolean f_werror=false;
-    String str="";
-    int32_t n=0;
+    int16_t idx = 0;
+    uint32_t av = 0;
+    uint32_t nrOfBytesToWrite = contentLength;
+    int32_t bytesWritten = 0;
+    int32_t bytesInTransBuf = 0;
+    int32_t startBoundaryLength = 0;
+    int32_t endBoundaryLength = 0;
     File file;
-    if(fs.exists(path)) fs.remove(path); // Remove a previous version, otherwise data is appended the file again
-    file = fs.open(path, FILE_WRITE);  // Open the file for writing (create it, if doesn't exist)
+    uint32_t t = millis();
+    uint8_t* b64buff = (uint8_t*)x_ps_malloc(m_bytesPerTransaction);
+    if(!b64buff){strcpy(buff, "out of memory (b64buff, uploadB64image()"); goto exit;}
 
-    str = str + cmdclient.readStringUntil(','); // data:image/jpeg;base64,
-    int idx = str.indexOf("\n");
-    if(idx > 0){
-        if(str.startsWith("-----")){        // is WebKitFormBoundary header
-            len -= str.length() + idx + 2;  // ------WebKitFormBoundaryEnlfueBZaFBBzAm7
+    while(true){ // read startBoundary until ','
+        if ((t + 2000) < millis()) {
+            strcpy(buff, "timeout while reading startBoundary (uploadB64image()");
+            goto exit;
         }
-        else{
-            len -= str.length();
+        if (cmdclient.available()){
+            buff[idx] = cmdclient.read();
+            if(buff[idx] == ',') {buff[idx + 1] = '\0'; break;}
+            idx++;
+            if(idx == 255){strcpy(buff, "buffer overflow (buff[256], uploadB64image()"); goto exit;}
         }
     }
 
-    while(cmdclient.available()){
-        av=cmdclient.available();
-        if(av==0) break;
-        if(av>bytesPerTransaction) av=bytesPerTransaction;
-        if(av>len) av=len;
-        len -= av;
-        i=0; j=0;
-        cmdclient.read(tBuf, av); // b64 decode
-        while(i<av){
-            if(tBuf[i]==0)break; // ignore all other stuff
-            n=B64index[tBuf[i]]<<18 | B64index[tBuf[i+1]]<<12 | B64index[tBuf[i+2]]<<6 | B64index[tBuf[i+3]];
-            tBuf[j  ]= n>>16;
-            tBuf[j+1]= n>>8 & 0xFF;
-            tBuf[j+2]= n & 0xFF;
-            i+=4;
-            j+=3;
-        }
-        if(tBuf[j]=='=') j--;
-        if(tBuf[j]=='=') j--; // remove =
+    startBoundaryLength = idx + 1;
+    idx = indexOf(buff, "\r\n");
+    endBoundaryLength = idx + 2 + 4;  // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
+    nrOfBytesToWrite -= (startBoundaryLength + endBoundaryLength);
 
-        if(file.write(tBuf, j)!=j) f_werror=true;  // write error?
-        if(len == 0) break;
+    if (fs.exists(path)) fs.remove(path); // delete file if exists
+    file = fs.open(path, FILE_WRITE);
+
+    while (true) {
+        if (cmdclient.available()) {
+            t = millis();
+
+            av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
+            bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
+            if (bytesInTransBuf != av) {
+                sprintf(buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
+                goto exit;
+            }
+            nrOfBytesToWrite -= bytesInTransBuf;
+
+            size_t bytesInb64buff = 0;
+            int ret = mbedtls_base64_decode(b64buff, m_bytesPerTransaction, &bytesInb64buff, (const unsigned char *)m_transBuf, bytesInTransBuf);
+            log_e("ret %i, bytesInTransBuf %li, bytesInb64buff %u, startBoundaryLength %li", ret, bytesInTransBuf, bytesInb64buff, startBoundaryLength);
+
+            if(ret != 0) {strcpy(buff, "error while b64 decoding"); goto exit;}
+
+            bytesWritten = file.write((uint8_t*)b64buff, bytesInb64buff);
+            if (bytesWritten != bytesInb64buff) {
+                sprintf(buff, "write error in %s, available %u bytes, written %li bytes\n", path, bytesInb64buff, bytesWritten);
+                goto exit;
+            }
+
+            if (nrOfBytesToWrite == 0) break;
+        }
+        if ((t + 2000) < millis()) {
+            sprintf(buff, "timeout in webSrv uploadfile()\n");
+            goto exit;
+        }
     }
-    cmdclient.readStringUntil('\n'); // read the remains, first \n
-    cmdclient.readStringUntil('\n'); // read the remains  webkit\n
+
+    while (cmdclient.available()) cmdclient.read(); // read endBoundary
     file.close();
-    if(f_werror) {
-        sprintf(buff, "File: %s write error", path);
-        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-        return false;
-    }
-    sprintf(buff, "File: %s written, FileSize: %ld", path, (unsigned long)contentLength);
-    //log_i(buff);
-    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    sprintf(buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    if(b64buff){free(b64buff); b64buff = NULL;}
     return true;
+
+exit:
+    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    if(b64buff){free(b64buff); b64buff = NULL;}
+    return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength) {

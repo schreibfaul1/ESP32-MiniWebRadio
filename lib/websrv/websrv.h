@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 31.10.2024
+ *  updated on: 01.11.2024
  *      Author: Wolle
  */
 
@@ -12,8 +12,9 @@
 #include "WiFi.h"
 #include "SD.h"
 #include "FS.h"
-#include "mbedtls/sha1.h"
 #include "base64.h"
+#include "mbedtls/sha1.h"
+#include "mbedtls/base64.h"
 
 extern __attribute__((weak)) void WEBSRV_onInfo(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
@@ -94,17 +95,6 @@ public:
     const char PNG[15]   = "image/png";
 
 private:
-    const int32_t B64index[123] ={
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-        0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  62, 63, 62, 62, 63,
-        52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 0,  0,  0,  0,  0,  0,
-        0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14,
-        15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 0,  0,  0,  0,  63,
-        0,  26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-        41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
-    };
-
 
     int32_t indexOf (const char* base, char ch, int32_t startIndex = 0) {
     //fb
