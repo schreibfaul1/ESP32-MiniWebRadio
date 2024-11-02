@@ -1209,8 +1209,8 @@ function insertRow(z) { // z: 0 = above, 1 = below
     hideContextMenu();
 }
 
-function insertLastRow(Name, Url) { // z: 0 = above, 1 = below
-    const newRowData = ['*', '', Name, Url];
+function insertLastRow(CountryCode, Name, Url) { // z: 0 = above, 1 = below
+    const newRowData = ['*', CountryCode, Name, Url];
     let rowCount = tableData.length;
     if (rowCount !== null) {
         tableData.splice(rowCount + 1, 0, newRowData);
@@ -1599,7 +1599,7 @@ function open_RB_page() {
 }
 
 function addStationsToGrid () {
-    insertLastRow($('#stations option:selected').text().trim(), $('#streamurl').val());
+    insertLastRow($('#CountryCode').val(), $('#rb_stationname').val(), $('#streamurl').val());
 }
 
 function loadJSON (path, success, error) {
@@ -1725,6 +1725,10 @@ function gotTags (data) { // fill select countries
 
 
 function gotStations (data) { // fill select stations
+    const cc = document.getElementById('CountryCode')
+    const it = document.getElementById('item')
+    cc.value = it.value.substring(0, 2)
+
     var select = document.getElementById('stations')
     var opt
     select.options.length = 1
@@ -2712,12 +2716,13 @@ function clear_BT_memItems(){
             <div style="flex: 0 0 130px; padding 1px 5px 5px 1px; ">
                 <canvas id="canvas" width="96" height="96" class="playable-canvas"></canvas>
             </div>
+                                            
             <div style="flex: 1;">
                 <div style="flex: 1; height: 38px; padding-left: 10px;">
                     <input type="text" class="boxstyle" style="width: calc(100% - 74px);"
                                 id="rb_stationname" placeholder="Change the Stationname here">
                 </div>
-                <div style="flex: 1;  padding-top: 4px; padding-left: 10px;">
+                <div style="flex: 1; justify-content: flex-end; padding-top: 4px; padding-left: 10px;">
                     <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
                         onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
                         ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
@@ -2736,11 +2741,14 @@ function clear_BT_memItems(){
                         onmouseup="this.src='SD/png/Button_Previous_Blue.png'"
                         ontouchend="this.src='SD/png/Button_Previous_Blue.png'"
                         onclick="addStationsToGrid()"/>
-                    <form method="post" accept-charset="utf-8" name="form1">
-                        <input name="hidden_data" id="hidden_data" type="hidden">
-                    </form>
+
+                    <input class="boxstyle" style="width: 50px; text-align: center; margin-top: 15px;  vertical-align: top; margin-left: 10px;" type="text" id="CountryCode" placeholder="CC">
                 </div>
             </div>
+                                             
+            <form method="post" accept-charset="utf-8" name="form1">
+                <input name="hidden_data" id="hidden_data" type="hidden">
+            </form>
         </div>
     </div>
 <!--===============================================================================================================================================-->
