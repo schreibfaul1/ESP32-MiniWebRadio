@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5r - Nov 03/2024                                                                                                                       ";
+    Version 3.5s - Nov 03/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1509,7 +1509,6 @@ void setup() {
         digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
         _f_BTcurPowerState = true;
     }
-    bt_emitter.begin();
 
     _dlnaLevel = 0;
     _dlnaHistory[0].name = strdup("Media Server");
@@ -1556,6 +1555,7 @@ void setup() {
         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
+    bt_emitter.begin();
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
