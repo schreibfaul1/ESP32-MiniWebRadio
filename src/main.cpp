@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5q - Nov 01/2024                                                                                                                       ";
+    Version 3.5r - Nov 03/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1210,6 +1210,7 @@ bool connectToWiFi() {
            SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
         }
         WiFi.setAutoReconnect(true);
+        if(WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
         return true;
     }
     else {
@@ -1231,7 +1232,7 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     }
     if(n == 0) {
         SerialPrintfln("setup: ....  no WiFi networks found");
-        while(true) { ; }
+        while(true) { vTaskDelay(10 / portTICK_PERIOD_MS); }
     }
     else {
         SerialPrintfln("setup: ....  %d WiFi networks found", n);

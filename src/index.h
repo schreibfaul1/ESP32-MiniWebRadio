@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 02.11.2024
+ *  Updated on: 03.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1385,7 +1385,10 @@ function loadStations_json(event){
         tableData = JSON.parse(data)
         loadTableData()
         updateStationlist();
-        saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // save modified data
+        let rowCount = tableData.length;
+        if (rowCount !== null) {
+            saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // save modified data
+        }
     }
     reader.onerror = function (ex) {
         console.log(ex)

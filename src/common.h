@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 28.Oct 2024
+// updated: 03.Nov 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -21,7 +21,7 @@
 #define FTP_PASSWORD            "esp32"
 #define CONN_TIMEOUT            2500                            // unencrypted connection timeout in ms (http://...)
 #define CONN_TIMEOUT_SSL        3500                            // encrypted connection timeout in ms (https://...)
-
+#define WIFI_TX_POWER           5                               // 2 ... 21 (dBm) Adjust the WiFi transmission power to optimise power consumption or increase range, default: 5
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 #include <Arduino.h>
