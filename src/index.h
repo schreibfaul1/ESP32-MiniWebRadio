@@ -706,6 +706,7 @@ function showTab1 () {
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
+    await delay(200);
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
