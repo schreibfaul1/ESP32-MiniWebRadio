@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 03.11.2024
+ *  Updated on: 05.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1903,25 +1903,30 @@ function downloadCanvasImage () {
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // ------------------------------------------------------------    TAB Info    -----------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
-function getTimeZoneName() { //
-    var xhr = new XMLHttpRequest()
-    xhr.timeout = 2000; // time in milliseconds
-    xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true)
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            if (xhr.status === 200) {
-                g_timeZoneName =xhr.responseText
-                console.log("tzName=", g_timeZoneName)
-                return g_timeZoneName
+function getTimeZoneName() {
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.timeout = 2000; // Zeit in Millisekunden
+        xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true);
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status === 200) {
+                    const timeZoneName = xhr.responseText;
+                    console.log("tzName=", timeZoneName);
+                    resolve(timeZoneName); // Promise mit dem erhaltenen Wert auflösen
+                } else {
+                    console.log("xhr.status=", xhr.status);
+                    reject(`Fehler: Status ${xhr.status}`); // Promise ablehnen, falls ein Fehler auftritt
+                }
             }
-            console.log("xhr.status=", xhr.status)
-        }
-    }
-    xhr.ontimeout = (e) => {
-        // XMLHttpRequest timed out. Do something here.
-        console.log("timeout in getTimeZoneName()")
-    }
-    xhr.send()
+        };
+        xhr.ontimeout = () => {
+            console.log("timeout in getTimeZoneName()");
+            reject("Fehler: Anfragezeitüberschreitung"); // Promise ablehnen, falls ein Timeout auftritt
+        };
+
+        xhr.send();
+    });
 }
 
 function setTimeZone(selectObject){
@@ -1930,40 +1935,49 @@ function setTimeZone(selectObject){
     socket.send("setTimeZone=" + txt + "&" + value)
 }
 
-function loadTimeZones() { // load from SD
-    g_timeZoneName = getTimeZoneName()
-    var tzFile = new XMLHttpRequest()
-    tzFile.timeout = 2000; // time in milliseconds
-    tzFile.open('GET', 'SD_Download?/timezones.csv', true)
-    tzFile.onreadystatechange = function () {
-        if (tzFile.readyState === 4) {
-            var tzdata = tzFile.responseText
-            var tzNames = tzdata.split("\n")
-            select = document.getElementById('TimeZoneSelect') // show Time Zones List
-            select.options.length = 0
-            var j = 0
-            for (var i = 0; i < tzNames.length; i++) {
-                var [tzItem1, tzItem2] = tzNames[i].split("\t")
-                opt = document.createElement('OPTION')
-                opt.text = (tzItem1)
-                opt.value = (tzItem2)
-                if(tzItem1.length == 0 || tzItem2.length == 0) continue
-                select.add(opt)
-            }
-            for(var i = 0, j = select.options.length; i < j; ++i) {
-                if(select.options[i].innerHTML === g_timeZoneName) {
-                    select.selectedIndex = i;
-                    break;
+async function loadTimeZones() {
+    try {
+        g_timeZoneName = await getTimeZoneName(); // Warten, bis getTimeZoneName abgeschlossen ist
+        const tzFile = new XMLHttpRequest();
+        tzFile.timeout = 2000; // Zeit in Millisekunden
+        tzFile.open('GET', 'SD_Download?/timezones.csv', true);
+
+        tzFile.onreadystatechange = function () {
+            if (tzFile.readyState === 4) {
+                const tzdata = tzFile.responseText;
+                const tzNames = tzdata.split("\n");
+                const select = document.getElementById('TimeZoneSelect');
+                select.options.length = 0;
+
+                for (let i = 0; i < tzNames.length; i++) {
+                    const [tzItem1, tzItem2] = tzNames[i].split("\t");
+                    if (!tzItem1 || !tzItem2) continue;
+
+                    const opt = document.createElement('OPTION');
+                    opt.text = tzItem1;
+                    opt.value = tzItem2;
+                    select.add(opt);
+                }
+
+                // Auswahl basierend auf g_timeZoneName setzen
+                for (let i = 0; i < select.options.length; i++) {
+                    if (select.options[i].text === g_timeZoneName) {
+                        select.selectedIndex = i;
+                        break;
+                    }
                 }
             }
-        }
+        };
+
+        tzFile.ontimeout = () => {
+            console.log("load SD/timezones.csv timeout");
+        };
+
+        tzFile.send();
+    } catch (error) {
+        console.error("Fehler beim Laden des Zeitzonennamens:", error);
     }
-    tzFile.ontimeout = (e) => {
-        // XMLHttpRequest timed out.
-        console.log("load SD/timezones.csv timeout")
-    }
-    tzFile.send()
-}  // END loadTimeZones
+}
 
 function loadRingVolume(){
     const selectRingVolume = document.getElementById('selRingVolume');
