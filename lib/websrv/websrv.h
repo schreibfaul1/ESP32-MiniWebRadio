@@ -34,6 +34,7 @@ private:
     bool            http_reponse_flag = false ;               // Response required
     bool            ws_conn_request_flag = false;             // websocket connection attempt
     bool            hasclient_WS = false;
+    bool            hasClient_CMD = false;
     String          http_rqfile ;                             // Requested file
     String          http_cmd ;                                // Content of command
     String          http_param;                               // Content of parameter

@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 01.11.2024
+ *  updated on: 05.11.2024
  *      Author: Wolle
  */
 
@@ -135,14 +135,14 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
 
     // HTTP header
     httpheader += "HTTP/1.1 200 OK\r\n";
-    httpheader += "Connection: close\r\n";
+    httpheader += "Connection: keep-alive\r\n";
     httpheader += "Content-type: " + getContentType(String(m_path)) + "\r\n";
     httpheader += "Content-Length: " + String(file.size(),10) + "\r\n";
     httpheader += "Cache-Control: max-age=86400\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
 
-    while(wIndex+m_bytesPerTransaction < file.size()){
+    while(wIndex + m_bytesPerTransaction < file.size()){
         file.read((uint8_t*)m_transBuf, m_bytesPerTransaction);
         res=cmdclient.write(m_transBuf, m_bytesPerTransaction);
         wIndex+=res;
@@ -152,18 +152,17 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
             goto error;
         }
     }
-    leftover=file.size()-wIndex;
+    leftover = file.size() - wIndex;
     file.read((uint8_t*)m_transBuf, leftover);
-    res=cmdclient.write(m_transBuf, leftover);
-    wIndex+=res;
+    res = cmdclient.write(m_transBuf, leftover);
+    wIndex += res;
     if(res!=leftover){
         log_i("write error %s", m_path);
         cmdclient.clearWriteError();
         goto error;
     }
-    if(wIndex!=file.size()) log_e("file %s not correct sent", m_path);
+    if(wIndex != file.size()) log_e("file %s not correct sent", m_path);
     file.close();
-    cmdclient.stop();
     return true;
 
 error:
@@ -468,10 +467,13 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             log_e("timeout");
             goto exit;
         }
+        if(!cmdclient.available()) goto exit;
+
         while(cmdclient.available()) {
             uint8_t b = cmdclient.read();
             if(b == '\n') {
                 if(!pos) { // empty line received, is the last line of this responseHeader
+                    hasClient_CMD = true;
                     goto lastToDo;
                 }
                 break;
@@ -491,7 +493,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
         } // inner while
 
         if(!pos) {
-            vTaskDelay(5);
+            vTaskDelay(1);
             continue;
         }
         // log_w("rhl %s", rhl);
@@ -790,10 +792,16 @@ exit:
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::loop() {
 
-    cmdclient = cmdserver.accept();
-    if(cmdclient){
+    if(cmdclient.available()){
         handlehttp();
+        return;
     }
+
+    if(cmdclient.connected()){
+        hasClient_CMD = false;
+    }
+
+    if(!hasClient_CMD) cmdclient = cmdserver.accept();
 
     if (webSocketClient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");

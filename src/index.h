@@ -706,7 +706,6 @@ function showTab1 () {
     document.getElementById('btn1').src = 'SD/png/Radio_Yellow.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Green.png'
-    await delay(200);
     document.getElementById('btn4').src = 'SD/png/Button_DLNA_Green.png'
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
@@ -2366,8 +2365,8 @@ function clear_BT_memItems(){
             <img id="btn3" src="SD/png/MP3_Green.png" alt="mp3" onclick="showTab3()">
             <img id="btn4" src="SD/png/Button_DLNA_Green.png" alt="mp3" onclick="showTab4()">
             <img id="btn5" src="SD/png/Search_Green.png" alt="search" onclick="showTab5()">
-            <img id="btn6" src="SD/png/Settings_Green.png" alt="radio" onclick="showTab6()">
-            <img id="btn7" src="SD/png/About_Green.png" alt="radio" onclick="showTab7()">
+            <img id="btn6" src="SD/png/Settings_Green.png" alt="settings" onclick="showTab6()">
+            <img id="btn7" src="SD/png/About_Green.png" alt="info" onclick="showTab7()">
         </div>
         <div style="font-size: 50px; text-align: center; flex: 1; padding-left: 0;">
             MiniWebRadio
