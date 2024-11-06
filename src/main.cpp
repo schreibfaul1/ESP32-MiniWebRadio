@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5t - Nov 04/2024                                                                                                                       ";
+    Version 3.5u - Nov 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -83,6 +83,7 @@ uint8_t                 _sleepMode = 1;      // 0 display off,     1 show the cl
 uint8_t                 _staListPos = 0;
 uint8_t                 _WiFi_disconnectCnt = 0;
 uint8_t                 _reconnectCnt = 0;
+uint8_t                 _cthFailCounter = 0; // connecttohost fail
 uint16_t                _staListNr = 0;
 uint8_t                 _fileListPos = 0;
 uint8_t                 _radioSubmenue = 0;
@@ -1276,6 +1277,10 @@ void connecttohost(const char* host) {
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
         _f_isWebConnected = audio.connecttohost(host);
+
+        if(!_f_isWebConnected){_cthFailCounter++; if(_cthFailCounter >= 3) audio.connecttospeech("The last hosts were not connected", "en");}
+        else(_cthFailCounter = 0);
+
         _f_isFSConnected = false;
         return;
     }
@@ -1284,6 +1289,10 @@ void connecttohost(const char* host) {
         // log_i("idx2 = %i", idx2);
         if(idx2 == -1) { // second pipe not found
             _f_isWebConnected = audio.connecttohost(host);
+
+            if(!_f_isWebConnected) {_cthFailCounter++; if(_cthFailCounter >= 3) audio.connecttospeech("The last hosts were not connected", "en");}
+            else(_cthFailCounter = 0);
+
             _f_isFSConnected = false;
             return;
         }
@@ -2624,7 +2633,7 @@ void loop() {
             if(_reconnectCnt < 3){
                 SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _settings.lastconnectedhost, _reconnectCnt);
                 connectToWiFi();
-                connecttohost(_settings.lastconnectedhost);
+                if(_cthFailCounter < 3) connecttohost(_settings.lastconnectedhost);
                 if(audio.isRunning()) _reconnectCnt = 0;
             }
         }
