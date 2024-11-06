@@ -129,6 +129,7 @@ char                    _prefix[5] = "/s";
 char                    _commercial[25];
 char                    _icyDescription[512] = {};
 char                    _streamTitle[512] = {};
+char                    _timeSpeechLang[10] = "en";
 char*                   _cur_AudioFolder = NULL;
 char*                   _stationURL = NULL;
 char*                   _JSONstr = NULL;
@@ -492,6 +493,7 @@ boolean defaultsettings(){
     _alarmtime[6]               = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
     _alarmdays                  = atoi(       parseJson("\"alarm_weekdays\":"));
     _f_timeAnnouncement         = (strcmp(    parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
+    strcpy(_timeSpeechLang,                   parseJson("\"timeSpeechLang\":"));
     _f_mute                     = (strcmp(    parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
     _brightness                 = atoi(       parseJson("\"brightness\":"));
     _sleeptime                  = atoi(       parseJson("\"sleeptime\":"));
@@ -551,6 +553,7 @@ void updateSettings(){
     sprintf(tmp, ",\n  \"alarmtime_sat\":\"%02d:%02d\"", _alarmtime[6] / 60, _alarmtime[6] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\n  \"alarm_weekdays\":%i", _alarmdays);                                         strcat(jO, tmp);
     strcat(jO,   ",\n  \"timeAnnouncing\":"); (_f_timeAnnouncement == true) ?                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    sprintf(tmp, ",\n  \"timeSpeechLang\":\"%s\"", _timeSpeechLang);                                strcat(jO, tmp);
     strcat(jO,   ",\n  \"mute\":");           (_f_mute == true)             ?                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
     sprintf(tmp, ",\n  \"brightness\":%i", _brightness);                                            strcat(jO, tmp);
     sprintf(tmp, ",\n  \"sleeptime\":%i", _sleeptime);                                              strcat(jO, tmp);
@@ -2529,7 +2532,7 @@ void loop() {
                 f_resume = true;
                 _f_eof = false;
                 if(_timeFormat == 12) {if(hour > 12) hour -= 12;}
-                sprintf(_chbuf, "/voice_time/%d_00.mp3", hour);
+                sprintf(_chbuf, "/voice_time/%s/%d_00.mp3", _timeSpeechLang, hour);
                 SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS("SD_MMC", _chbuf);
                 return;
             }
@@ -2777,6 +2780,9 @@ endbrightness:
                 log_e("%s", bt_emitter.list_protokol(i));
                 i++;
             }
+        }
+        if(r.startsWith("tsp")){
+            _f_timeSpeech = true;
         }
     }
 }
@@ -3306,6 +3312,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "set_timeAnnouncement"){ if(param == "true" ) {_f_timeAnnouncement = true;}
                                     if(   param == "false") {_f_timeAnnouncement = false;}
                                     SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "%s", (_f_timeAnnouncement == 1) ? "on" : "off");
+                                    return;}
+
+    if(cmd == "getTimeSpeechLang"){ webSrv.send("getTimeSpeechLang=", String(_timeSpeechLang, 10)); return;}
+
+    if(cmd == "setTimeSpeechLang"){ if(param.length() > 2){log_e("set_timeSpeechLang too long %s", param.c_str()); return;}
+                                    strcpy(_timeSpeechLang, param.c_str());
+                                    SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "%s", param.c_str());
                                     return;}
 
     if(cmd == "DLNA_getServer")  {  webSrv.send("DLNA_Names=", dlna.stringifyServer()); _currDLNAsrvNr = -1; return;}
