@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 01.11.2024
+ *  updated on: 06.11.2024
  *      Author: Wolle
  */
 
@@ -34,7 +34,7 @@ private:
     bool            http_reponse_flag = false ;               // Response required
     bool            ws_conn_request_flag = false;             // websocket connection attempt
     bool            hasclient_WS = false;
-    bool            hasClient_CMD = false;
+    bool            cmdClientAccept = true;
     String          http_rqfile ;                             // Requested file
     String          http_cmd ;                                // Content of command
     String          http_param;                               // Content of parameter

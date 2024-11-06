@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 05.11.2024
+ *  updated on: 06.11.2024
  *      Author: Wolle
  */
 
@@ -473,7 +473,7 @@ boolean WebSrv::handlehttp() {                // HTTPserver, message received
             uint8_t b = cmdclient.read();
             if(b == '\n') {
                 if(!pos) { // empty line received, is the last line of this responseHeader
-                    hasClient_CMD = true;
+                    cmdClientAccept = false;
                     goto lastToDo;
                 }
                 break;
@@ -629,7 +629,7 @@ lastToDo:
         if(WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
     }
 exit:
-
+    cmdClientAccept = true;
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -791,17 +791,19 @@ exit:
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::loop() {
+    static uint32_t timer;
+    if(cmdClientAccept) timer = millis();
+    if(timer + 2000 < millis()){
+        log_e("cmdClient timeout");
+        cmdClientAccept = true;
+    }
 
     if(cmdclient.available()){
         handlehttp();
         return;
     }
 
-    if(cmdclient.connected()){
-        hasClient_CMD = false;
-    }
-
-    if(!hasClient_CMD) cmdclient = cmdserver.accept();
+    if(cmdClientAccept) cmdclient = cmdserver.accept();
 
     if (webSocketClient.available()){
         if(WEBSRV_onInfo) WEBSRV_onInfo("WebSocket client available");
