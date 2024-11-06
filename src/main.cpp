@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5u - Nov 06/2024                                                                                                                       ";
+    Version 3.5v - Nov 06/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -478,6 +478,7 @@ boolean defaultsettings(){
     };
 
     mwr_free(_settings.lastconnectedhost);
+    mwr_free(_settings.lastconnectedfile);
 
     _cur_volume                 = atoi(   parseJson("\"volume\":"));
     _volumeSteps                = atoi(   parseJson("\"volumeSteps\":"));
@@ -1278,7 +1279,7 @@ void connecttohost(const char* host) {
     if(idx1 == -1) { // no pipe found
         _f_isWebConnected = audio.connecttohost(host);
 
-        if(!_f_isWebConnected){_cthFailCounter++; if(_cthFailCounter >= 3) audio.connecttospeech("The last hosts were not connected", "en");}
+        if(!_f_isWebConnected){_cthFailCounter++;}
         else(_cthFailCounter = 0);
 
         _f_isFSConnected = false;
@@ -1290,7 +1291,7 @@ void connecttohost(const char* host) {
         if(idx2 == -1) { // second pipe not found
             _f_isWebConnected = audio.connecttohost(host);
 
-            if(!_f_isWebConnected) {_cthFailCounter++; if(_cthFailCounter >= 3) audio.connecttospeech("The last hosts were not connected", "en");}
+            if(!_f_isWebConnected) {_cthFailCounter++;}
             else(_cthFailCounter = 0);
 
             _f_isFSConnected = false;
@@ -1306,6 +1307,11 @@ void connecttohost(const char* host) {
             if(user) free(user);
             if(pwd) free(pwd);
         }
+    }
+    if(_cthFailCounter >= 3){
+        audio.connecttospeech("The last hosts were not connected", "en");
+        mwr_free(_settings.lastconnectedhost);
+        _settings.lastconnectedhost = strdup("");
     }
 }
 void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
@@ -2621,7 +2627,7 @@ void loop() {
             }
         }
         //------------------------------------------CONNECT TO LASTHOST-------------------------------------------------------------------------------
-        if(_f_connectToLastStation){
+        if(_f_connectToLastStation){ // not used yet
             _f_connectToLastStation = false;
             if(_cur_station) setStation(_cur_station);
             else connecttohost(_settings.lastconnectedhost);
@@ -2629,13 +2635,7 @@ void loop() {
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
         if(_f_reconnect && !_f_accessPoint){
             _f_reconnect = false;
-            _reconnectCnt ++;
-            if(_reconnectCnt < 3){
-                SerialPrintfln("RECONNECTION " ANSI_ESC_RED "to %s, try %i", _settings.lastconnectedhost, _reconnectCnt);
-                connectToWiFi();
-                if(_cthFailCounter < 3) connecttohost(_settings.lastconnectedhost);
-                if(audio.isRunning()) _reconnectCnt = 0;
-            }
+            connecttohost(_settings.lastconnectedhost);
         }
         //------------------------------------------SEEK DLNA SERVER----------------------------------------------------------------------------------
         if(_f_dlnaSeekServer) {
@@ -2802,7 +2802,7 @@ endbrightness:
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); /* WiFi.disconnect();  WiFi.begin(); */}
+    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); _f_reconnect = true; return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
@@ -2912,7 +2912,7 @@ void audio_bitrate(const char* info) {
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_speech(const char*) {
-    _f_connectToLastStation = true;
+    ;  // not used yet
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S){
