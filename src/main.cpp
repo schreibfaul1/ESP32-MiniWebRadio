@@ -2382,7 +2382,6 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
-    vTaskDelay(1); // feed the watchdog
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -2774,7 +2773,7 @@ endbrightness:
         //     log_w("SPIFFS");
         //     connecttoFS("SPIFFS", "/Collide.ogg");
         // }
-        if(r.startsWith("grn")){ // lost of all self registered objects
+        if(r.startsWith("grn")){ // list of all self registered objects
             get_registered_names();
         }
         if(r.startsWith("fm")){ // force mono

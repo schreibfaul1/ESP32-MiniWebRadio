@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 03.Nov 2024
+// updated: 07.Nov 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3174,7 +3174,7 @@ public:
     void prevStation(){ // from IR control
         if(m_curStaNrCpy < 1) return;
         int8_t pos = m_curStaNrCpy - m_firstStationsLineNr - 1;
-        if(pos < 0) return;
+        if(pos < 1) return;
         if(pos == 0) { // prev page
             m_firstStationsLineNr -= 9;
             m_curStaNrCpy--;
