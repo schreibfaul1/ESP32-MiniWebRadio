@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5v - Nov 06/2024                                                                                                                       ";
+    Version 3.5w - Nov 08/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1285,7 +1285,7 @@ void connecttohost(const char* host) {
         _f_isFSConnected = false;
         return;
     }
-    else { // pipe found
+    else { // pipe found     e.g. http://xxx.com/ext|user|pw
         idx2 = indexOf(host, "|", idx1 + 1);
         // log_i("idx2 = %i", idx2);
         if(idx2 == -1) { // second pipe not found
@@ -1307,11 +1307,6 @@ void connecttohost(const char* host) {
             if(user) free(user);
             if(pwd) free(pwd);
         }
-    }
-    if(_cthFailCounter >= 3){
-        audio.connecttospeech("The last hosts were not connected", "en");
-        mwr_free(_settings.lastconnectedhost);
-        _settings.lastconnectedhost = strdup("");
     }
 }
 void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
@@ -1691,7 +1686,7 @@ void setStation(uint16_t sta) {
         _f_newStreamTitle = true;
         _f_newIcyDescription = true;
         connecttohost(_stationURL);
-        if(!_f_isWebConnected) _cur_station = old_cur_station; // host is not connected
+    //    if(!_f_isWebConnected) _cur_station = old_cur_station; // host is not connected
     }
     old_cur_station = sta;
     StationsItems();
@@ -2801,9 +2796,9 @@ endbrightness:
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); _f_reconnect = true; return;}
+    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", info); _f_newStreamTitle = true; log_e("st %s", _streamTitle); return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
-    if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(startsWith(info, "StreamTitle="))           {return;}
     if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
