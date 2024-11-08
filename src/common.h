@@ -853,11 +853,36 @@ public:
     }
 
     const char* getFilePathByIndex(uint16_t idx){
+    /*
+        dir_a
+            dir_b
+                file_a
+                file_b
+            file_c
+            file_d
+
+        getFilePathByIndex(0) returns "/dir_a"
+        getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
+        getFilePathByIndex(5) returns "/dir_a/file_d"
+    */
         if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
         return m_files[idx].filePath;
     }
 
     const char* getFileFolderByIndex(uint16_t idx){
+    /*
+        dir_a
+            dir_b
+                file_a
+                file_b
+            file_c
+            file_d
+
+        getFileFolderByIndex(0) returns "/dir_a"
+        getFileFolderByIndex(1) returns "/dir_a/dir_b"
+        getFileFolderByIndex(5) returns "/dir_a"
+    */
+
         if(idx >= m_files.size())  {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
         if(isDir(idx)) return m_files[idx].filePath;
         int lastSlashIndex = lastIndexOf(m_files[idx].filePath, '/');
@@ -866,6 +891,27 @@ public:
         return m_buff;
     }
 
+    int16_t getIndexByName(const char* path){
+    /*
+        dir_a
+            dir_b
+                file_a
+                file_b
+            file_c
+            file_d
+
+        getIndexByName("/dir_a") returns 0
+        getIndexByName("/dir_a/dir_b/file_b") returns 3
+        getIndexByName("/dir_a/dir_b/file_y") returns -1
+    */
+        if(!path) return -1;
+        for(int i = 0; i <  m_files.size(); i++){
+            if(strcmp((const char*)m_files[i].filePath, path) == 0){
+                return i;
+            }
+        }
+        return -1;
+    }
 
     uint16_t getNextAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
         if(m_files.size() == 0) return 0;
