@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5w - Nov 08/2024                                                                                                                       ";
+    Version 3.5w - Nov 10/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -132,6 +132,7 @@ char                    _icyDescription[512] = {};
 char                    _streamTitle[512] = {};
 char                    _timeSpeechLang[10] = "en";
 char*                   _cur_AudioFolder = NULL;
+char*                   _cur_AudioFileName = NULL;
 char*                   _stationURL = NULL;
 char*                   _JSONstr = NULL;
 char*                   _BT_metaData = NULL;
@@ -510,13 +511,13 @@ boolean defaultsettings(){
     _settings.lastconnectedhost = x_ps_strdup(parseJson("\"lastconnectedhost\":"));
     _settings.lastconnectedfile = x_ps_strdup(parseJson("\"lastconnectedfile\":"));
     _sleepMode                  = atoi(       parseJson("\"sleepMode\":"));
-    _cur_AudioFileNr            = atoi(       parseJson("\"cur_AudioFileNr\":")); // this is the position of the file within the (alpha ordered) folder starting with 0
-    strcpy(_cur_AudioFolder,                  parseJson("\"cur_AudioFolder\":"));
     _state                      = atoi(       parseJson("\"state\":"));
 
-    // guards------------------------------------------------------------------------------------------------------
-    if(!SD_MMC.exists(_cur_AudioFolder)) strcpy(_cur_AudioFolder, "/audiofiles"); // set default if not found
-    if(_cur_AudioFileNr > 65000) _cur_AudioFileNr = 0; // unlikely (65495 is -1)
+    // set some settings-------------------------------------------------------------------------------------------
+    _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
+    free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+    free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+    _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     // ------------------------------------------------------------------------------------------------------------
 
     if(jO) {free(jO);   jO = NULL;}
@@ -569,8 +570,6 @@ void updateSettings(){
     sprintf(tmp, ",\n  \"toneHP\":%i", _toneHP);                                                    strcat(jO, tmp);
     sprintf(tmp, ",\n  \"balance\":%i", _toneBAL);                                                  strcat(jO, tmp);
     sprintf(tmp, ",\n  \"timeFormat\":%i", _timeFormat);                                            strcat(jO, tmp);
-    sprintf(tmp, ",\n  \"cur_AudioFileNr\":%i", _cur_AudioFileNr);                                  strcat(jO, tmp);
-    sprintf(tmp, ",\n  \"cur_AudioFolder\":\"%s\"", _cur_AudioFolder);                              strcat(jO, tmp);
     sprintf(tmp, ",\n  \"state\":%i", _state);                                                      strcat(jO, tmp);
     sprintf(tmp, ",\n  \"sleepMode\":%i\n}", _sleepMode);                                           strcat(jO, tmp);
 
@@ -600,7 +599,7 @@ const char* SD_stringifyDirContent(String path) {
         free(_JSONstr);
         _JSONstr = NULL;
     }
-    if(!_SD_content.listDir(path.c_str(), false, false)) return "[]"; // if success: result will be in _SD_content
+    if(!_SD_content.listFilesInDir(path.c_str(), false, false)) return "[]"; // if success: result will be in _SD_content
     if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
     else { _JSONstr = (char*)malloc(2); }
     JSONstrLength += 2;
@@ -1308,14 +1307,29 @@ void connecttohost(const char* host) {
             if(pwd) free(pwd);
         }
     }
+    if(_cthFailCounter >= 3){
+        audio.connecttospeech("The last hosts were not connected", "en");
+        mwr_free(_settings.lastconnectedhost);
+        _settings.lastconnectedhost = strdup("");
+    }
 }
 void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
+    if(!filename) return;
     dispFooter.updateBitRate(0);
     _icyBitRate = 0;
     _decoderBitRate = 0;
     _cur_Codec = 0;
     _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, resumeFilePos);
     _f_isWebConnected = false;
+    if(!startsWith(filename, "/audiofiles")) {return;}
+    if(_f_isFSConnected && isAudio(filename)) {
+        mwr_free(_settings.lastconnectedfile);
+        _settings.lastconnectedfile = x_ps_strdup(filename);
+        _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
+        free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+        free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+        _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
+    }
     //    log_w("Filesize %d", audioGetFileSize());
     //    log_w("FilePos %d", audioGetFilePosition());
 }
@@ -2257,14 +2271,13 @@ void changeState(int32_t state){
             pic_PL_logo.enable();
             if(_playerSubmenue == 0){
                 if(_cur_AudioFolder[0]== '\0') strcpy(_cur_AudioFolder, "/audiofiles");
-                _SD_content.listDir(_cur_AudioFolder, true, false);
+                _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
-                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 showAudioFileNumber();
-                txt_PL_fName.show();
                 btn_PL_prevFile.show(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
             if(_playerSubmenue == 1){
@@ -2273,10 +2286,10 @@ void changeState(int32_t state){
                 btn_PL_off.hide();
                 pgb_PL_progress.setValue(0); pgb_PL_progress.show();
                 sdr_PL_volume.show();
-            //    txt_PL_fName.setText("");
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
                 btn_PL_Mute.show();
                 btn_PL_pause.setOff(); btn_PL_pause.show();
-                btn_PL_cancel.show(); btn_PL_playNext.show(); btn_PL_playPrev.show(); txt_PL_fName.show();
+                btn_PL_cancel.show(); btn_PL_playNext.show();
             }
             break;
         }
@@ -2377,6 +2390,7 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
+    vTaskDelay(1);
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -2983,12 +2997,14 @@ void ir_short_key(uint8_t key) {
                     if(_state == SLEEPTIMER) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEPTIMER
                     if(_state == RADIO) {changeState(STATIONSLIST); setTimeCounter(40); break;}
                     if(_state == STATIONSLIST) { _playerSubmenue = 0; changeState(PLAYER); break;}
-                    if(_state == PLAYER) {changeState(DLNA); break;}
+                    if(_state == PLAYER) {changeState(AUDIOFILESLIST); break;}
+                    if(_state == AUDIOFILESLIST) {changeState(DLNA); break;}
                     if(_state == DLNA) {changeState(CLOCK); break;}
                     if(_state == CLOCK) {changeState(SLEEPTIMER); break;}
                     break;
         case 14:    // ARROW UP
                     if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
                     upvolume(); // VOLUME++
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
@@ -2996,28 +3012,35 @@ void ir_short_key(uint8_t key) {
                     break;
         case 13:    // ARROW DOWN
                     if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file-
                     downvolume(); // VOLUME--
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
                     if(_state == CLOCK)  if(_clockSubMenue == 0){ _clockSubMenue = 1; changeState(CLOCK);}
                     break;
         case 11:    // ARROW RIGHT
-                    if(_state == STATIONSLIST) {lst_RADIO.nextPage(); setTimeCounter(4); break;}  // next page
-                    if(_state == RADIO) {nextFavStation(); break;} // NEXT STATION
+                    if(_state == STATIONSLIST) {lst_RADIO.nextPage(); setTimeCounter(4); break;}    // next page
+                    if(_state == RADIO) {nextFavStation(); break;}                                  // NEXT STATION
+                    if(_state == PLAYER){if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+                    if(_state == AUDIOFILESLIST) {lst_PLAYER.nextPage(); setTimeCounter(4); break;} // next page
                     if(_state == CLOCK) {nextFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEPTIMER) {display_sleeptime(1); break;}
                     break;
         case 12:    // ARROW LEFT
-                    if(_state == STATIONSLIST) {lst_RADIO.prevPage(); setTimeCounter(4); break;}  // prev page
-                    if(_state == RADIO) {prevFavStation(); break;} // PREV STATION
+                    if(_state == STATIONSLIST) {lst_RADIO.prevPage(); setTimeCounter(4); break;}    // prev page
+                    if(_state == RADIO) {prevFavStation(); break;}                                  // PREV STATION
+                    if(_state == PLAYER){if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+                    if(_state == AUDIOFILESLIST) {lst_PLAYER.prevPage(); setTimeCounter(4); break;} // prev page
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEPTIMER) {display_sleeptime(-1); break;}
                     break;
         case 10:    muteChanged(!_f_mute); // MUTE
                     break;
         case 16:    // OK
-                    if(_state == STATIONSLIST) {changeState(RADIO); setStationByNumber(lst_RADIO.getSelectedStation()); break;}
                     if(_state == RADIO) {break;}
+                    if(_state == STATIONSLIST)   {setStationByNumber(lst_RADIO.getSelectedStation()); changeState(RADIO); break;}
+                    if(_state == PLAYER){ SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubmenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
+                    if(_state == AUDIOFILESLIST) {const char* r = lst_PLAYER.getSelectedFile(); if(r){connecttoFS("SD_MMC", r); _playerSubmenue = 1; changeState(PLAYER);} break;}
                     if(_state == SLEEPTIMER) {dispFooter.updateOffTime(_sleeptime); _radioSubmenue = 0; changeState(RADIO); break;}
                     break;
         default:    break;
@@ -3725,7 +3748,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_ready") == 0)    { SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubmenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
         if(strcmp(name, "btn_PL_playAll") == 0)  { _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubmenue = 1; changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_shuffle") == 0)  { _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubmenue = 1; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listDir(_cur_AudioFolder, true, false);_playerSubmenue = 1;  changeState(AUDIOFILESLIST); return;}
+        if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false);_playerSubmenue = 1;  changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {setStation(_cur_station);_playerSubmenue = 0;  changeState(RADIO); return;}
         if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}

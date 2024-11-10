@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 07.Nov 2024
+// updated: 10.Nov 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -442,6 +442,18 @@ inline char* x_ps_strdup(const char* str) {
     return ps_str;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' termination
+    if(!str){log_e("str is NULL"); return NULL;}
+    char* ps_str = NULL;
+    if(psramFound()) { ps_str = (char*)ps_malloc(n + 1); }
+    else { ps_str = (char*)malloc(n + 1); }
+    strncpy(ps_str, str, n);
+    ps_str[n] = '\0';
+    return ps_str;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 int find_first_of(const char* source, const char* delimiters, int start = 0) {
     for (int i = start; source[i] != '\0'; ++i) { // search at start
         for (int j = 0; delimiters[j] != '\0'; ++j) { // search delimiters
@@ -780,6 +792,9 @@ private:
     File m_masterFile;
     File m_slaveFile;
     char* m_buff = NULL;
+    char* m_lastConnectedFile = NULL;
+    char* m_lastConnectedFolder = NULL;
+    char* m_lastConnectedFileName = NULL;
 public:
     SD_content(){
         m_buff = x_ps_malloc(1024);
@@ -789,7 +804,7 @@ public:
         freeFilesVector();
         if(m_buff){free(m_buff); m_buff = NULL;}
     }
-    bool listDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){
+    bool listFilesInDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){
         if(!m_buff) {log_e("oom"); return false;}
         freeFilesVector();
         if(m_masterFile) m_masterFile.close();
@@ -913,7 +928,7 @@ public:
         return -1;
     }
 
-    uint16_t getNextAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
+    uint16_t getNextAudioFile(uint16_t currIdx){ // assume listFilesInDir with "audioFilesOnly"
         if(m_files.size() == 0) return 0;
         if(currIdx >= m_files.size()) currIdx = m_files.size() -1;
         int16_t newIdx = currIdx;
@@ -926,7 +941,7 @@ public:
         return newIdx;
     }
 
-    uint16_t getPrevAudioFile(uint16_t currIdx){ // assume listDir with "audioFilesOnly"
+    uint16_t getPrevAudioFile(uint16_t currIdx){ // assume listFilesInDir with "audioFilesOnly"
         if(m_files.size() == 0) return 0;
         if(currIdx >= m_files.size()) currIdx = m_files.size() -1;
         int16_t newIdx = currIdx;
@@ -937,6 +952,44 @@ public:
             if(!endsWith(m_files[newIdx].fileName, ".m3u")) break; // skip m3u files
         }
         return newIdx;
+    }
+
+    void setLastConnectedFile(const char* lastconnectedfile){
+        free(m_lastConnectedFile);
+        m_lastConnectedFile = x_ps_strdup(lastconnectedfile);
+        int pos = lastIndexOf(m_lastConnectedFile, '/');
+        if(pos == -1){
+            free(m_lastConnectedFileName);
+            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile);
+            free(m_lastConnectedFolder);
+            m_lastConnectedFolder = x_ps_strdup("");
+        }
+        else{
+            free(m_lastConnectedFileName);
+            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile + pos);
+            free(m_lastConnectedFolder);
+            m_lastConnectedFolder = x_ps_strndup(m_lastConnectedFile, pos);
+        }
+        // log_e("lastConnectedFile %s", lastconnectedfile);
+        // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
+        // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
+        listFilesInDir(m_lastConnectedFolder, true, false);
+        sort();
+        log_e("pos %i", getPosByFileName(m_lastConnectedFileName));
+
+    }
+    const char* getLastConnectedFolder(){
+        return m_lastConnectedFolder;
+    }
+
+    const char* getLastConnectedFileName(){
+        return m_lastConnectedFileName;
+    }
+    int getPosByFileName(const char* fileName){
+        for(int i = 0; i < m_files.size(); i++){
+            if(!strcmp(m_files[i].fileName, fileName + 1)) return i; // fileName without '/'
+        }
+        return -1;
     }
 
 private:
@@ -2797,7 +2850,7 @@ private:
     uint8_t     m_lineHight = 0;
     uint8_t     m_browseOnRelease = 0;
     uint16_t    m_fileListPos = 0;
-    uint16_t    m_curAudioFileNr = 0;
+    int16_t    m_curAudioFileNr = 0;
     uint16_t    m_viewPos = 0;
     uint8_t     m_fontSize = 0;
     uint32_t    m_bgColor = 0;
@@ -2857,7 +2910,7 @@ public:
         if(!cur_AudioFolder) {log_w("cur_AudioFolder set to /audiofiles"); strcpy(m_curAudioFolder, (char*)"/audiofiles");}
         else m_curAudioFolder = strcpy(m_curAudioFolder, cur_AudioFolder);
         m_curAudioFileNr = curAudioFileNr;
-        _SD_content.listDir(m_curAudioFolder, true, false);
+        _SD_content.listFilesInDir(m_curAudioFolder, true, false);
         if(m_curAudioFileNr >= _SD_content.getSize()) m_curAudioFileNr = _SD_content.getSize(); // guard
         m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);        // calculate viewPos
         audioFileslist(m_viewPos);
@@ -2901,7 +2954,7 @@ public:
         if(m_browseOnRelease == 3)  {   m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
                                         m_curAudioFileNr = 0;
                                         m_viewPos = 0;
-                                        _SD_content.listDir(m_curAudioFolder, true, false);
+                                        _SD_content.listFilesInDir(m_curAudioFolder, true, false);
                                         m_ra.val1 = 2;
                                         m_ra.val2 = m_curAudioFileNr;
                                         m_ra.arg1 = m_curAudioFolder;
@@ -2914,7 +2967,7 @@ public:
                                         strcpy(m_curAudioFolder, _SD_content.getFilePathByIndex(idx));
                                         m_curAudioFileNr = 0;
                                         m_viewPos = 0;
-                                        _SD_content.listDir(m_curAudioFolder, true, false);
+                                        _SD_content.listFilesInDir(m_curAudioFolder, true, false);
                                         m_ra.val1 = 2;                     // isfolder
                                         m_ra.val2 = m_viewPos;
                                         m_ra.arg1 = m_curAudioFolder;
@@ -2938,46 +2991,152 @@ public:
         m_ra.arg1 = NULL;
         return true;
     }
+
+    void prevPage(){ // from IR control
+        if(m_viewPos == 0) return;
+        if(m_viewPos > 9) {
+            m_viewPos -= 9;
+            m_curAudioFileNr -= 9;
+        }
+        else {
+            m_curAudioFileNr -= m_viewPos;
+            m_viewPos = 0;
+        }
+        audioFileslist(m_viewPos);
+        return;
+    }
+    void nextPage(){ // from IR control
+        if(m_viewPos + 9 <= _SD_content.getSize() - 1) {
+            m_viewPos += 9;
+            m_curAudioFileNr += 9;
+            if(m_curAudioFileNr > _SD_content.getSize() - 1) m_curAudioFileNr = _SD_content.getSize() - 1;
+            audioFileslist(m_viewPos);
+            return;
+        }
+    }
+
+/*
+Audio Files                   Vol11    15:32:18
+/audiofiles/myPlaylist                   1-9/11     <- parent folder  m_curAudioFileNr = -1
+  320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
+  If_I_Had_a_Chicken_mono_mp3 1591510
+  If_I_Had_a_Chicken_mono_16bit.wav 13257580
+  If_I_Had_a_Chicken_mono_8bit.wav 6628972
+  If_I_Had_a_Chicken_stereo_mp3 6012554
+  If_I_Had_a_Chicken_stereo_16bit.wav 26514608
+  If_I_Had_a_Chicken_stereo_8bit.wav 1327260
+  beep.mp3 75302
+  click.mp3 3360                                    <-                m_curAudioFileNr - m_viewpos = 8
+  003       0:00      0K       IP:192.168.178.24
+*/
+
+    void prevFile(){ // from IR control
+        if(m_curAudioFileNr < 0) return;
+        uint8_t lineHight = m_h / 10;
+
+        if(m_curAudioFileNr && m_curAudioFileNr - m_viewPos == 0) {
+            if(m_viewPos >= 9) m_viewPos -= 9; else m_viewPos = 0;
+            m_curAudioFileNr--; audioFileslist(m_viewPos); return;
+        }
+        tft.setFont(m_fontSize);
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
+        else tft.setTextColor(TFT_WHITE);                                    // is file
+        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        m_curAudioFileNr--;
+
+        if(m_curAudioFileNr == -1) { // parent folder
+            tft.setTextColor(TFT_VIOLET);
+            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            return;
+        }
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
+        else tft.setTextColor(TFT_MAGENTA);  // current file
+        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    void nextFile(){ // from IR control
+        if(m_curAudioFileNr == _SD_content.getSize() - 1) return;
+        if(m_curAudioFileNr - m_viewPos == 8) {
+            if(m_viewPos + 9 < _SD_content.getSize()) m_viewPos += 9; else m_viewPos = _SD_content.getSize() - 1;
+            m_curAudioFileNr++; audioFileslist(m_viewPos); return;
+        }
+        tft.setFont(m_fontSize);
+        uint8_t lineHight = m_h / 10;
+        if(m_curAudioFileNr == -1){
+            tft.setTextColor(TFT_LIGHTBROWN);// is parent folder
+            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        }
+        else{
+            if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
+            else tft.setTextColor(TFT_WHITE);// is file
+            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        }
+         m_curAudioFileNr++;
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
+        else tft.setTextColor(TFT_MAGENTA);  // current file
+        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    const char* getSelectedFile(){
+        if(m_curAudioFileNr == -1) { // parent folder
+            if(!strcmp(m_curAudioFolder, "/audiofiles")) return NULL;
+            m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
+            m_curAudioFileNr = 0;
+            m_viewPos = 0;
+            _SD_content.listFilesInDir(m_curAudioFolder, true, false);
+            show(m_curAudioFolder, 0);
+            return NULL;
+        }
+        if(_SD_content.isDir(m_curAudioFileNr)){
+            strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
+            show(m_curAudioPath, 0);
+            return NULL;
+        }
+        return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+    }
+
+
 private:
- void audioFileslist(uint16_t viewPos) {
-      // guard -------------------------------------------------------------------------------------------------------------------------------------
-      if(_SD_content.getSize() == 0) { ;  }                                           // folder empty
-      if(viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; }   // viewPos too high
-      //--------------------------------------------------------------------------------------------------------------------------------------------
+    void audioFileslist(uint16_t viewPos) {
+        // guard -------------------------------------------------------------------------------------------------------------------------------------
+        if(_SD_content.getSize() == 0) { ;  }                                           // folder empty
+        if(viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; }   // viewPos too high
+        //--------------------------------------------------------------------------------------------------------------------------------------------
 
-      auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-      auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
+        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
+        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
 
-      tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-      tft.setFont(m_fontSize);
-      uint8_t lineHight = m_h / 10;
-      tft.setTextColor(TFT_LIGHTBROWN);
-      tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-      tft.setTextColor(TFT_WHITE);
-      for(uint8_t pos = 1; pos < 10; pos++) {
-          if(pos == 1 && viewPos > 0 && _SD_content.getSize()) {
-              tft.setTextColor(TFT_AQUAMARINE);
-              triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
-          }
-          if(pos == 9 && viewPos + 9 < _SD_content.getSize()) {
-              tft.setTextColor(TFT_AQUAMARINE);
-              triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
-          }
-          if(viewPos + pos > _SD_content.getSize()) break;
-          if(_SD_content.isDir(pos + viewPos - 1)) tft.setTextColor(TFT_ORANGE); // is folder
-          else{
-            if(pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA);  // current file
-            else tft.setTextColor(TFT_WHITE);                                    // is file
-          }
-          tft.writeText(_SD_content.getColouredSStringByIndex(pos + viewPos - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-      }
-      uint16_t firstVal = viewPos + 1;
-      uint16_t secondVal = firstVal + 8;
-      if(secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
-      sprintf(m_fileItemsPos, "%i-%i/%i", firstVal, secondVal, _SD_content.getSize()); // shows the current items pos e.g. "30-39/210"
-      tft.setTextColor(TFT_ORANGE);
-      tft.writeText(m_fileItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
-      return;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        tft.setFont(m_fontSize);
+        uint8_t lineHight = m_h / 10;
+        tft.setTextColor(TFT_LIGHTBROWN);
+        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        tft.setTextColor(TFT_WHITE);
+        for (uint8_t pos = 1; pos < 10; pos++) {
+            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) {
+                tft.setTextColor(TFT_AQUAMARINE);
+                triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
+            }
+            if (pos == 9 && viewPos + 9 < _SD_content.getSize()) {
+                tft.setTextColor(TFT_AQUAMARINE);
+                triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
+            }
+            if (viewPos + pos > _SD_content.getSize()) break;
+            if (_SD_content.isDir(pos + viewPos - 1)){
+                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_VIOLET); // is current folder
+                else tft.setTextColor(TFT_ORANGE); // is folder
+            }
+            else {
+                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA); // current file
+                else tft.setTextColor(TFT_WHITE); // is file
+            }
+            tft.writeText(_SD_content.getColouredSStringByIndex(pos + viewPos - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        }
+        uint16_t firstVal = viewPos + 1;
+        uint16_t secondVal = firstVal + 8;
+        if(secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
+        sprintf(m_fileItemsPos, "%i-%i/%i", firstVal, secondVal, _SD_content.getSize()); // shows the current items pos e.g. "30-39/210"
+        tft.setTextColor(TFT_ORANGE);
+        tft.writeText(m_fileItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        return;
   }
 
     int calculateDisplayStartPosition(int list_size, int current_position) {
@@ -3927,6 +4086,33 @@ const char stations_json[] =
     "[\"*\",\"D\",\"Hit Radio FFH - Soundtrack (AAC+)\",\"http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u\"]]";
 
 const char aesKey [] = "mysecretkey12345";
+
+const char voice_time_de[24][50] = {
+    "Beim dritten Ton ist es genau Mitternacht",
+    "Beim dritten Ton ist es genau ein Uhr",
+    "Beim dritten Ton ist es genau zwei Uhr",
+    "Beim dritten Ton ist es genau drei Uhr",
+    "Beim dritten Ton ist es genau vier Uhr",
+    "Beim dritten Ton ist es genau fünf Uhr",
+    "Beim dritten Ton ist es genau sechs Uhr",
+    "Beim dritten Ton ist es genau sieben Uhr",
+    "Beim dritten Ton ist es genau acht Uhr",
+    "Beim dritten Ton ist es genau neun Uhr",
+    "Beim dritten Ton ist es genau zehn Uhr",
+    "Beim dritten Ton ist es genau elf Uhr",
+    "Beim dritten Ton ist es genau zwölf Uhr",
+    "Beim dritten Ton ist es genau dreizehn Uhr",
+    "Beim dritten Ton ist es genau vierzehn Uhr",
+    "Beim dritten Ton ist es genau fünfzehn Uhr",
+    "Beim dritten Ton ist es genau sechszehn Uhr",
+    "Beim dritten Ton ist es genau siebzehn Uhr",
+    "Beim dritten Ton ist es genau achtzehn Uhr",
+    "Beim dritten Ton ist es genau neunzehn Uhr",
+    "Beim dritten Ton ist es genau zwanzig Uhr",
+    "Beim dritten Ton ist es genau einundzwanzig Uhr",
+    "Beim dritten Ton ist es genau zweiundzwanzig Uhr",
+    "Beim dritten Ton ist es genau dreiundzwanzig Uhr"
+};
 
 inline const char* aes_encrypt(const char* input) {
     static char* output = NULL;
