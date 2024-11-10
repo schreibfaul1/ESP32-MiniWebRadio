@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 06.11.2024
+ *  updated on: 10.11.2024
  *      Author: Wolle
  */
 
@@ -11,12 +11,6 @@
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::WebSrv(String Name, String Version){
     _Name=Name; _Version=Version;
-    method = HTTP_NONE;
-    m_bytesPerTransaction = 16384;
-    m_transBuf = x_ps_malloc(m_bytesPerTransaction);
-    if(!m_transBuf){log_e("WebServer: not enough memory");}
-    m_pathLength = 255;
-    m_path = x_ps_malloc(m_pathLength);
 }
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::~WebSrv(){
@@ -396,6 +390,12 @@ exit:
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
+    method = HTTP_NONE;
+    m_bytesPerTransaction = 16384;
+    m_transBuf = x_ps_malloc(m_bytesPerTransaction);
+    if(!m_transBuf){log_e("WebServer: not enough memory");}
+    m_pathLength = 255;
+    m_path = x_ps_malloc(m_pathLength);
     cmdserver.begin(http_port);
     webSocketServer.begin(websocket_port);
 }
