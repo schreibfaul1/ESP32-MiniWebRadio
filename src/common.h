@@ -975,8 +975,6 @@ public:
         // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
         listFilesInDir(m_lastConnectedFolder, true, false);
         sort();
-        log_e("pos %i", getPosByFileName(m_lastConnectedFileName));
-
     }
     const char* getLastConnectedFolder(){
         return m_lastConnectedFolder;

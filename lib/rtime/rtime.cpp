@@ -3,7 +3,7 @@
  *
  *  Created on: 04.08.2017
  *      Author: Wolle
- *  Updated on: 08.08.2024
+ *  Updated on: 11.11.2024
  *
  */
 
@@ -317,11 +317,21 @@ const char* RTIME::gettime_l(){  // Montag, 04. August 2017 13:12:44
 }
 
 const char* RTIME::gettime_s(){  // hh:mm:ss
-	time(&now);
-	localtime_r(&now, &timeinfo);
-	sprintf(strftime_buf,"%02d:%02d:%02d",  timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-	return strftime_buf;
+    time_t now;
+    struct tm timeinfo;
+
+    if (time(&now) == -1) { // Get current time
+        return "Error: time failed";
+    }
+    if (localtime_r(&now, &timeinfo) == nullptr) {   // Convert Local Time
+        return "Error: localtime_r failed";
+    }
+
+    snprintf(tmBuff, sizeof(tmBuff), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+
+    return tmBuff;
 }
+
 
 const char* RTIME::gettime_xs(){  // hh:mm
     time(&now);

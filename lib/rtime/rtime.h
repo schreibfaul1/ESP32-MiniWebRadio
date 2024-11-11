@@ -2,7 +2,7 @@
  * RTC.h
  *
  *  Created on: 04.08.2017
- *  Updated on: 06.08.2024
+ *  Updated on: 11.11.2024
  *      Author: Wolle
  */
 
@@ -38,6 +38,7 @@ protected:
 	boolean obtain_time();
 private:
 	char sbuf[256];
+	char tmBuff[9];
 	String RTIME_TZ="";
 	struct tm timeinfo;
 	time_t now;
