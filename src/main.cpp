@@ -487,6 +487,7 @@ boolean defaultsettings(){
     _volumeAfterAlarm           = atoi(   parseJson("\"volumeAfterAlarm\":"));
     _BTvolume                   = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower                  = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
+    bt_emitter.setMode           ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     _alarmtime[0]               = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]               = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     _alarmtime[2]               = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -547,6 +548,7 @@ void updateSettings(){
     sprintf(tmp, ",\n  \"volumeAfterAlarm\":%i", _volumeAfterAlarm);                                strcat(jO, tmp);
     sprintf(tmp, ",\n  \"BTvolume\":%i", _BTvolume);                                                strcat(jO, tmp);
     strcat(jO,   ",\n  \"BTpower\":"); (_f_BTpower == true) ?                                       strcat(jO, "\"true\"") : strcat(jO, "\"false\"");
+    sprintf(tmp, ",\n  \"BTmode\":\"%s\"", bt_emitter.getMode());                                   strcat(jO, tmp);
     sprintf(tmp, ",\n  \"alarmtime_sun\":\"%02d:%02d\"", _alarmtime[0] / 60, _alarmtime[0] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\n  \"alarmtime_mon\":\"%02d:%02d\"", _alarmtime[1] / 60, _alarmtime[1] % 60);   strcat(jO, tmp);
     sprintf(tmp, ",\n  \"alarmtime_tue\":\"%02d:%02d\"", _alarmtime[2] / 60, _alarmtime[2] % 60);   strcat(jO, tmp);
