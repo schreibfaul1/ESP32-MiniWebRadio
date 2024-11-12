@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 05.11.2024
+ *  Updated on: 11.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -460,7 +460,7 @@ function ping() {
         console.log("send ping")
         tm = setTimeout(function () {
             toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!')
-        }, 20000)
+        }, 40000)
     }
 }
 

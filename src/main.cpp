@@ -478,8 +478,8 @@ boolean defaultsettings(){
         return h * 60 + m;
     };
 
-    mwr_free(_settings.lastconnectedhost);
-    mwr_free(_settings.lastconnectedfile);
+    x_ps_free(_settings.lastconnectedhost);
+    x_ps_free(_settings.lastconnectedfile);
 
     _cur_volume                 = atoi(   parseJson("\"volume\":"));
     _volumeSteps                = atoi(   parseJson("\"volumeSteps\":"));
@@ -1311,7 +1311,7 @@ void connecttohost(const char* host) {
     }
     if(_cthFailCounter >= 3){
         audio.connecttospeech("The last hosts were not connected", "en");
-        mwr_free(_settings.lastconnectedhost);
+        x_ps_free(_settings.lastconnectedhost);
         _settings.lastconnectedhost = strdup("");
     }
 }
@@ -1325,9 +1325,9 @@ void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
     _f_isWebConnected = false;
     if(!startsWith(filename, "/audiofiles")) {return;}
     if(_f_isFSConnected && isAudio(filename)) {
-        mwr_free(_settings.lastconnectedfile);
+        x_ps_free(_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(filename);
-        _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
+        _SD_content.setLastConnectedFile(filename);
         free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
         free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
         _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
@@ -1423,8 +1423,7 @@ void setup() {
     _f_ESPfound = true;
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
 
-    _cur_AudioFolder = x_ps_malloc(1024);
-    strcpy(_cur_AudioFolder, "/audiofiles");
+    _cur_AudioFolder = strdup("/audiofiles");
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
@@ -1687,7 +1686,7 @@ void setStation(uint16_t sta) {
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
-    mwr_free(_stationURL);
+    x_ps_free(_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
@@ -1826,8 +1825,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     changeState(PLAYER);
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
-    strncpy(_cur_AudioFolder, path, idx);
-    _cur_AudioFolder[idx] = '\0';
+    free(_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
 
     if(showFN) {
         clearLogo();
@@ -2272,7 +2270,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubmenue == 0){
-                if(_cur_AudioFolder[0]== '\0') strcpy(_cur_AudioFolder, "/audiofiles");
+                if(_cur_AudioFolder[0]== '\0') {free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles");}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2879,7 +2877,7 @@ void audio_eof_stream(const char* info) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
-    mwr_free(_settings.lastconnectedhost);
+    x_ps_free(_settings.lastconnectedhost);
     _settings.lastconnectedhost = x_ps_strdup(info);
     SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _settings.lastconnectedhost);
     webSrv.send("stationURL=", _settings.lastconnectedhost);
