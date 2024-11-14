@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 10.Nov 2024
+// updated: 14.Nov 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -421,6 +421,7 @@ inline char* x_ps_malloc(uint16_t len) {
     char* ps_str = NULL;
     if(psramFound()){ps_str = (char*) ps_malloc(len);}
     else             {ps_str = (char*)    malloc(len);}
+    if(!ps_str){log_e("oom");}
     return ps_str;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -429,6 +430,7 @@ inline char* x_ps_calloc(uint16_t len, uint8_t size) {
     char* ps_str = NULL;
     if(psramFound()){ps_str = (char*) ps_calloc(len, size);}
     else             {ps_str = (char*)    calloc(len, size);}
+    if(!ps_str){log_e("oom");}
     return ps_str;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -438,6 +440,7 @@ inline char* x_ps_strdup(const char* str) {
     char* ps_str = NULL;
     if(psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
     else { ps_str = (char*)malloc(strlen(str) + 1); }
+    if(!ps_str){log_e("oom"); return NULL;}
     strcpy(ps_str, str);
     return ps_str;
 }
@@ -448,6 +451,7 @@ inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' terminatio
     char* ps_str = NULL;
     if(psramFound()) { ps_str = (char*)ps_malloc(n + 1); }
     else { ps_str = (char*)malloc(n + 1); }
+    if(!ps_str){log_e("oom"); return NULL;}
     strncpy(ps_str, str, n);
     ps_str[n] = '\0';
     return ps_str;
