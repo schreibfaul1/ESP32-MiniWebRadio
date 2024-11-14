@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5w - Nov 10/2024                                                                                                                       ";
+    Version 3.5x - Nov 14/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -157,6 +157,7 @@ bool                    _f_irNumberSeen = false;
 bool                    _f_irResultSeen = false;
 bool                    _f_newIcyDescription = false;
 bool                    _f_newStreamTitle = false;
+bool                    _f_webFailed = false;
 bool                    _f_newBitRate = false;
 bool                    _f_newStationName = false;
 bool                    _f_newCommercial = false;
@@ -1275,6 +1276,7 @@ void connecttohost(const char* host) {
     //    if(_state == RADIO) clearStreamTitle();
     _icyBitRate = 0;
     _decoderBitRate = 0;
+    _f_webFailed = false;
 
     idx1 = indexOf(host, "|", 0);
     if(idx1 == -1) { // no pipe found
@@ -1321,6 +1323,7 @@ void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
     _icyBitRate = 0;
     _decoderBitRate = 0;
     _cur_Codec = 0;
+    _f_webFailed = false;
     _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, resumeFilePos);
     _f_isWebConnected = false;
     if(!startsWith(filename, "/audiofiles")) {return;}
@@ -2678,6 +2681,17 @@ void loop() {
                 }
             }
         }
+        //------------------------------------------CONNECTTOHOST FAIL--------------------------------------------------------------------------------
+        static uint8_t failCnt = 0;
+        if(_f_webFailed){
+            failCnt++;
+            if(failCnt == 30){
+                failCnt = 0;
+                if(WiFi.isConnected()) connecttohost(_settings.lastconnectedhost);
+                else ESP.restart();
+            }
+        }
+        else failCnt = 0;
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if(_f_isFSConnected) {
             //    uint32_t t = 0;
@@ -2810,7 +2824,8 @@ endbrightness:
 
 // Events from audioI2S library
 void audio_info(const char* info) {
-    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", info); _f_newStreamTitle = true; log_e("st %s", _streamTitle); return;}
+    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", info);
+                                                    _f_newStreamTitle = true; _f_webFailed = true; log_e("st %s", _streamTitle); return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
