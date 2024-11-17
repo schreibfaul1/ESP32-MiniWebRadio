@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 11.11.2024
+ *  Updated on: 17.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -612,7 +612,7 @@ function connect() {
                                         break
             case "test":                resultstr1.value = val
                                         break
-            case "IR_address":          if(IR_addr != val){
+            case "IR_address":          if(state === 'IR' && IR_addr != val){
                                             IR_addr = val
                                             ir_command_A.value=val
                                             socket.send("setIRadr=" + val)
@@ -2079,7 +2079,7 @@ function IRclick(btn){
 }
 
 function chIRcmd(btn){  // IR command, value changed
-    var arrLen = 20
+    var arrLen = 30
     var irArr = []
     var val1
     var ret = true
@@ -2174,7 +2174,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj2["label"] = label2;
                 data.push(obj2);
             }
-            // Dritte Gruppe: Sechste Spalte und Kommando/Label 3 (falls vorhanden)
+            // Dritte Gruppe: Sechste Spalte und Kommando/Label 3
             const number3 = cells[6]?.textContent.trim() || "";
             const command3 = document.getElementById(`ir_command_${number3}`)?.value || "";
             const label3 = cells[8]?.textContent.trim() || "";
@@ -2183,6 +2183,16 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj3[number3] = command3;
                 obj3["label"] = label3;
                 data.push(obj3);
+            }
+            // Vierte Gruppe: Achte Spalte und Kommando/Label 4
+            const number4 = cells[9]?.textContent.trim() || "";
+            const command4 = document.getElementById(`ir_command_${number4}`)?.value || "";
+            const label4 = cells[11]?.textContent.trim() || "";
+            if (command4 && label4) {
+                const obj4 = {};
+                obj4[number4] = command4;
+                obj4["label"] = label4;
+                data.push(obj4);
             }
         }
     }
@@ -2926,6 +2936,9 @@ function clear_BT_memItems(){
             <th style="width:180px; text-align: left;"> IR command </th>
             <th></th>
             <th></th>
+            <th style="width:180px; text-align: left;"> short pressed </th>
+            <th></th>
+            <th></th>
             <th style="width:180px; text-align: left;"> long pressed </th>
             <th></th>
             </tr>
@@ -2939,6 +2952,9 @@ function clear_BT_memItems(){
             <td class="table_cell2"> MUTE </td>
             <td> 20 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_20" onclick="IRclick(20)" onkeyup="chIRcmd(20)" onchange="IRupdateJSON(20)"></td>
+            <td class="table_cell2"> - </td>
+            <td> 30 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_30" onclick="IRclick(30)" onkeyup="chIRcmd(30)" onchange="IRupdateJSON(30)"></td>
             <td class="table_cell2"> SLEEP </td>
             </tr>
 
@@ -2951,6 +2967,9 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ARROW RIGHT </td>
             <td> 21 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON(21)"></td>
+            <td class="table_cell2"> - </td>
+            <td> 31 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_31" onclick="IRclick(31)" onkeyup="chIRcmd(31)" onchange="IRupdateJSON(31)"></td>
             <td class="table_cell2"> CANCEL </td>
             </tr>
 
@@ -2964,6 +2983,9 @@ function clear_BT_memItems(){
             <td> 22 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_22" onclick="IRclick(22)" onkeyup="chIRcmd(22)" onchange="IRupdateJSON(22)"></td>
             <td class="table_cell2"> - </td>
+            <td> 32 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_32" onclick="IRclick(32)" onkeyup="chIRcmd(32)" onchange="IRupdateJSON(32)"></td>
+            <td class="table_cell2"> - </td>
             </tr>
 
             <tr>
@@ -2972,7 +2994,10 @@ function clear_BT_memItems(){
             <td class="table_cell1">  THREE </td>
             <td> 13 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_13" onclick="IRclick(13)" onkeyup="chIRcmd(13)" onchange="IRupdateJSON(13)"></td>
-            <td class="table_cell2"> ARROW DOWN</td>
+            <td class="table_cell2"> ARROW DOWN </td>
+            <td> 23 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_23" onclick="IRclick(23)" onkeyup="chIRcmd(23)" onchange="IRupdateJSON(23)"></td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>
@@ -2985,6 +3010,9 @@ function clear_BT_memItems(){
             <td> 14 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="IRclick(14)" onkeyup="chIRcmd(14)" onchange="IRupdateJSON(14)"></td>
             <td class="table_cell2"> ARROW UP </td>
+            <td> 24 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_24" onclick="IRclick(14)" onkeyup="chIRcmd(24)" onchange="IRupdateJSON(24)"></td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>
@@ -2997,6 +3025,9 @@ function clear_BT_memItems(){
             <td> 15 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="IRclick(15)" onkeyup="chIRcmd(15)" onchange="IRupdateJSON(15)"></td>
             <td class="table_cell2"> MODE </td>
+            <td> 25 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_25" onclick="IRclick(15)" onkeyup="chIRcmd(25)" onchange="IRupdateJSON(25)"></td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3009,6 +3040,9 @@ function clear_BT_memItems(){
             <td> 16 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON(16)"></td>
             <td class="table_cell2"> OK </td>
+            <td> 26 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_26" onclick="IRclick(16)" onkeyup="chIRcmd(26)" onchange="IRupdateJSON(26)"></td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3020,6 +3054,9 @@ function clear_BT_memItems(){
             <td class="table_cell1"> SEVEN </td>
             <td> 17 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_17" onclick="IRclick(17)" onkeyup="chIRcmd(17)" onchange="IRupdateJSON(17)"></td>
+            <td class="table_cell2"> - </td>
+            <td> 27 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_27" onclick="IRclick(27)" onkeyup="chIRcmd(27)" onchange="IRupdateJSON(27)"></td>
             <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
@@ -3033,6 +3070,9 @@ function clear_BT_memItems(){
             <td> 18 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_18" onclick="IRclick(18)" onkeyup="chIRcmd(18)" onchange="IRupdateJSON(18)"></td>
             <td class="table_cell2"> - </td>
+            <td> 28 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_28" onclick="IRclick(28)" onkeyup="chIRcmd(28)" onchange="IRupdateJSON(28)"></td>
+            <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3044,6 +3084,9 @@ function clear_BT_memItems(){
             <td class="table_cell1"> NINE </td>
             <td> 19 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_19" onclick="IRclick(19)" onkeyup="chIRcmd(19)" onchange="IRupdateJSON(19)"></td>
+            <td class="table_cell2"> - </td>
+            <td> 29 </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_29" onclick="IRclick(29)" onkeyup="chIRcmd(29)" onchange="IRupdateJSON(29)"></td>
             <td class="table_cell2"> - </td>
             <td></td>
             <td></td>

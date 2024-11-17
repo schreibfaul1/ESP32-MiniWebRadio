@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5x - Nov 14/2024                                                                                                                       ";
+    Version 3.5y - Nov 17/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2393,7 +2393,7 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
-    vTaskDelay(1);
+//    vTaskDelay(1);
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -3063,8 +3063,8 @@ void ir_short_key(uint8_t key) {
 }
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(key == 20) fall_asleep(); // long mute
-    if(key == 21){ // cancel
+    if(key == 30) fall_asleep(); // long mute
+    if(key == 31){ // cancel
         if(_state == STATIONSLIST) {_radioSubmenue = 0; changeState(RADIO);}
         if(_state == SLEEPTIMER)        {_radioSubmenue = 0; changeState(RADIO);}
     }
