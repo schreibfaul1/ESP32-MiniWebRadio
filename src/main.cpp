@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5y - Nov 17/2024                                                                                                                       ";
+    Version 3.5z - Nov 17/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -147,6 +147,7 @@ bool                    _f_muteIsPressed = false;
 bool                    _f_volumeDownIsPressed = false;
 bool                    _f_volumeUpIsPressed = false;
 bool                    _f_sleeping = false;
+bool                    _f_irOnOff = false;
 bool                    _f_isWebConnected = false;
 bool                    _f_isFSConnected = false;
 bool                    _f_eof = false;
@@ -442,10 +443,9 @@ boolean defaultsettings(){
     }
     irb.loadButtonsFromJSON("/ir_buttons.json");
     for(uint i = 0; i < _settings.numOfIrButtons; i++) {
-    //    log_w("%i, 0x%x", i, _settings.irbuttons[i].val);
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
-    ir.set_irAddress(_settings.irbuttons[32].val);
+    ir.set_irAddress(_settings.irbuttons[42].val);
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
@@ -1899,6 +1899,7 @@ void fall_asleep() {
 
 void wake_up() {
     _f_sleeping = false;
+    _f_irOnOff = false;
     SerialPrintfln("awake");
     _f_mute = true;
     muteChanged(false);
@@ -2393,7 +2394,7 @@ void changeState(int32_t state){
 void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
-//    vTaskDelay(1);
+    vTaskDelay(1);
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -3001,37 +3002,15 @@ void ir_number(uint16_t num) {
 }
 void ir_short_key(uint8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(_f_sleeping == true){
+    if(_f_sleeping == true && ! _f_irOnOff){
         wake_up();
         return;
     }
     if(_state == IR_SETTINGS) return;  // nothing todo
 
     switch(key) {
-        case 15:    // MODE
-                    if(_state == SLEEPTIMER) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEPTIMER
-                    if(_state == RADIO) {changeState(STATIONSLIST); setTimeCounter(40); break;}
-                    if(_state == STATIONSLIST) { _playerSubmenue = 0; changeState(PLAYER); break;}
-                    if(_state == PLAYER) {changeState(AUDIOFILESLIST); break;}
-                    if(_state == AUDIOFILESLIST) {changeState(DLNA); break;}
-                    if(_state == DLNA) {changeState(CLOCK); break;}
-                    if(_state == CLOCK) {changeState(SLEEPTIMER); break;}
-                    break;
-        case 14:    // ARROW UP
-                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
-                    if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
-                    upvolume(); // VOLUME++
-                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
-                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
-                    if(_state == CLOCK)  if(_clockSubMenue == 0){ _clockSubMenue = 1; changeState(CLOCK);}
-                    break;
-        case 13:    // ARROW DOWN
-                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
-                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file-
-                    downvolume(); // VOLUME--
-                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
-                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
-                    if(_state == CLOCK)  if(_clockSubMenue == 0){ _clockSubMenue = 1; changeState(CLOCK);}
+
+        case 10:    muteChanged(!_f_mute); // MUTE
                     break;
         case 11:    // ARROW RIGHT
                     if(_state == STATIONSLIST) {lst_RADIO.nextPage(); setTimeCounter(4); break;}    // next page
@@ -3049,7 +3028,30 @@ void ir_short_key(uint8_t key) {
                     if(_state == CLOCK) {prevFavStation(); changeState(RADIO); _f_switchToClock = true; break;}
                     if(_state == SLEEPTIMER) {display_sleeptime(-1); break;}
                     break;
-        case 10:    muteChanged(!_f_mute); // MUTE
+        case 13:    // ARROW DOWN
+                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file-
+                    downvolume(); // VOLUME--
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == CLOCK)  if(_clockSubMenue == 0){ _clockSubMenue = 1; changeState(CLOCK);}
+                    break;
+        case 14:    // ARROW UP
+                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
+                    upvolume(); // VOLUME++
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;}
+                    if(_state == CLOCK)  if(_clockSubMenue == 0){ _clockSubMenue = 1; changeState(CLOCK);}
+                    break;
+        case 15:    // MODE
+                    if(_state == SLEEPTIMER) {changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEPTIMER
+                    if(_state == RADIO) {changeState(STATIONSLIST); setTimeCounter(40); break;}
+                    if(_state == STATIONSLIST) { _playerSubmenue = 0; changeState(PLAYER); break;}
+                    if(_state == PLAYER) {changeState(AUDIOFILESLIST); break;}
+                    if(_state == AUDIOFILESLIST) {changeState(DLNA); break;}
+                    if(_state == DLNA) {changeState(CLOCK); break;}
+                    if(_state == CLOCK) {changeState(SLEEPTIMER); break;}
                     break;
         case 16:    // OK
                     if(_state == RADIO) {break;}
@@ -3057,6 +3059,10 @@ void ir_short_key(uint8_t key) {
                     if(_state == PLAYER){ SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubmenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
                     if(_state == AUDIOFILESLIST) {const char* r = lst_PLAYER.getSelectedFile(); if(r){connecttoFS("SD_MMC", r); _playerSubmenue = 1; changeState(PLAYER);} break;}
                     if(_state == SLEEPTIMER) {dispFooter.updateOffTime(_sleeptime); _radioSubmenue = 0; changeState(RADIO); break;}
+                    break;
+        case 20:    _f_irOnOff = ! _f_irOnOff;
+                    if(_f_irOnOff) fall_asleep();
+                    else           wake_up();
                     break;
         default:    break;
     }
@@ -3066,7 +3072,7 @@ void ir_long_key(int8_t key) {
     if(key == 30) fall_asleep(); // long mute
     if(key == 31){ // cancel
         if(_state == STATIONSLIST) {_radioSubmenue = 0; changeState(RADIO);}
-        if(_state == SLEEPTIMER)        {_radioSubmenue = 0; changeState(RADIO);}
+        if(_state == SLEEPTIMER)   {_radioSubmenue = 0; changeState(RADIO);}
     }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------

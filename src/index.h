@@ -2952,7 +2952,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> MUTE </td>
             <td> 20 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_20" onclick="IRclick(20)" onkeyup="chIRcmd(20)" onchange="IRupdateJSON(20)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> ON/OFF </td>
             <td> 30 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_30" onclick="IRclick(30)" onkeyup="chIRcmd(30)" onchange="IRupdateJSON(30)"></td>
             <td class="table_cell2"> SLEEP </td>

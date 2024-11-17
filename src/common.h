@@ -213,7 +213,7 @@ struct irButtons {
     char*   label;
 };
 typedef struct __settings{
-    irButtons irbuttons[35];
+    irButtons irbuttons[45];
     uint8_t numOfIrButtons = 0;
     char*   lastconnectedhost = NULL;
     char*   lastconnectedfile = NULL;
@@ -652,7 +652,7 @@ class IR_buttons {
 
     // Process each JSON object in the array
     char key[16];
-    while (*ptr && *ptr != ']' && buttonIndex < 33) {
+    while (*ptr && *ptr != ']' && buttonIndex < 43) {
         ptr = skipWhitespace(ptr);
         if (*ptr == '{') {
             ptr++;  // skip '{'
@@ -680,7 +680,7 @@ class IR_buttons {
                         ptr = skipWhitespace(ptr);
                         // Value based on key
                         if(key[0] =='A'){ // IR Address
-                            buttonNr = 32;
+                            buttonNr = 42;
                             char* str = NULL;
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
@@ -689,7 +689,7 @@ class IR_buttons {
                             validObject = true;
                         }
                         else if(key[0] == 'C'){; // IR command unused
-                            buttonNr = 33;
+                            buttonNr = 43;
                             char* str = NULL;
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
