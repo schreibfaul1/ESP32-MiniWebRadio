@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5z - Nov 17/2024                                                                                                                       ";
+    Version 3.5.1 - Nov 18/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -3006,6 +3006,7 @@ void ir_short_key(uint8_t key) {
         wake_up();
         return;
     }
+    if(_f_irOnOff == true && key != 20) return;
     if(_state == IR_SETTINGS) return;  // nothing todo
 
     switch(key) {
@@ -3060,10 +3061,19 @@ void ir_short_key(uint8_t key) {
                     if(_state == AUDIOFILESLIST) {const char* r = lst_PLAYER.getSelectedFile(); if(r){connecttoFS("SD_MMC", r); _playerSubmenue = 1; changeState(PLAYER);} break;}
                     if(_state == SLEEPTIMER) {dispFooter.updateOffTime(_sleeptime); _radioSubmenue = 0; changeState(RADIO); break;}
                     break;
+        case 18:    if(_state == PLAYER){if(_f_isFSConnected) audio.pauseResume();} break;
+        case 19:    if(_state == PLAYER){if(_f_isFSConnected) audio.stopSong(); _playerSubmenue = 0; changeState(PLAYER);} break;
         case 20:    _f_irOnOff = ! _f_irOnOff;
                     if(_f_irOnOff) fall_asleep();
                     else           wake_up();
                     break;
+        case 21:    if(_state != RADIO) {changeState(RADIO);} break;
+        case 22:    if(_state != PLAYER) {_playerSubmenue = 0; changeState(PLAYER);} break;
+        case 23:    if(_state != DLNA) {changeState(DLNA);} break;
+        case 24:    if(_state != CLOCK) {changeState(CLOCK);} break;
+        case 25:    if(_state != SLEEPTIMER) {changeState(SLEEPTIMER);} break;
+        case 28:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(-30);} break;
+        case 29:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(+30);} break;
         default:    break;
     }
 }

@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 17.11.2024
+ *  Updated on: 18.11.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -2967,7 +2967,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ARROW RIGHT </td>
             <td> 21 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_21" onclick="IRclick(21)" onkeyup="chIRcmd(21)" onchange="IRupdateJSON(21)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> RADIO </td>
             <td> 31 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_31" onclick="IRclick(31)" onkeyup="chIRcmd(31)" onchange="IRupdateJSON(31)"></td>
             <td class="table_cell2"> CANCEL </td>
@@ -2982,7 +2982,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ARROW LEFT </td>
             <td> 22 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_22" onclick="IRclick(22)" onkeyup="chIRcmd(22)" onchange="IRupdateJSON(22)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> PLAYER </td>
             <td> 32 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_32" onclick="IRclick(32)" onkeyup="chIRcmd(32)" onchange="IRupdateJSON(32)"></td>
             <td class="table_cell2"> - </td>
@@ -2997,7 +2997,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ARROW DOWN </td>
             <td> 23 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_23" onclick="IRclick(23)" onkeyup="chIRcmd(23)" onchange="IRupdateJSON(23)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> DLNA </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3011,8 +3011,8 @@ function clear_BT_memItems(){
             <td> <input type="text" class="boxstyle_s" id="ir_command_14" onclick="IRclick(14)" onkeyup="chIRcmd(14)" onchange="IRupdateJSON(14)"></td>
             <td class="table_cell2"> ARROW UP </td>
             <td> 24 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_24" onclick="IRclick(14)" onkeyup="chIRcmd(24)" onchange="IRupdateJSON(24)"></td>
-            <td class="table_cell2"> - </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_24" onclick="IRclick(24)" onkeyup="chIRcmd(24)" onchange="IRupdateJSON(24)"></td>
+            <td class="table_cell2"> CLOCK </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3026,8 +3026,8 @@ function clear_BT_memItems(){
             <td> <input type="text" class="boxstyle_s" id="ir_command_15" onclick="IRclick(15)" onkeyup="chIRcmd(15)" onchange="IRupdateJSON(15)"></td>
             <td class="table_cell2"> MODE </td>
             <td> 25 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_25" onclick="IRclick(15)" onkeyup="chIRcmd(25)" onchange="IRupdateJSON(25)"></td>
-            <td class="table_cell2"> - </td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_25" onclick="IRclick(25)" onkeyup="chIRcmd(25)" onchange="IRupdateJSON(25)"></td>
+            <td class="table_cell2"> OFF TIMER </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3041,7 +3041,7 @@ function clear_BT_memItems(){
             <td> <input type="text" class="boxstyle_s" id="ir_command_16" onclick="IRclick(16)" onkeyup="chIRcmd(16)" onchange="IRupdateJSON(16)"></td>
             <td class="table_cell2"> OK </td>
             <td> 26 </td>
-            <td> <input type="text" class="boxstyle_s" id="ir_command_26" onclick="IRclick(16)" onkeyup="chIRcmd(26)" onchange="IRupdateJSON(26)"></td>
+            <td> <input type="text" class="boxstyle_s" id="ir_command_26" onclick="IRclick(26)" onkeyup="chIRcmd(26)" onchange="IRupdateJSON(26)"></td>
             <td class="table_cell2"> - </td>
             <td></td>
             <td></td>
@@ -3069,10 +3069,10 @@ function clear_BT_memItems(){
             <td class="table_cell1"> EIGHT </td>
             <td> 18 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_18" onclick="IRclick(18)" onkeyup="chIRcmd(18)" onchange="IRupdateJSON(18)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> PAUSE/RESUME </td>
             <td> 28 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_28" onclick="IRclick(28)" onkeyup="chIRcmd(28)" onchange="IRupdateJSON(28)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> << 30s </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3084,10 +3084,10 @@ function clear_BT_memItems(){
             <td class="table_cell1"> NINE </td>
             <td> 19 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_19" onclick="IRclick(19)" onkeyup="chIRcmd(19)" onchange="IRupdateJSON(19)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> STOP </td>
             <td> 29 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_29" onclick="IRclick(29)" onkeyup="chIRcmd(29)" onchange="IRupdateJSON(29)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> >> 30s </td>
             <td></td>
             <td></td>
             <td></td>
