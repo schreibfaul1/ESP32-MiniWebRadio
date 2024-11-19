@@ -110,6 +110,14 @@ This is how the DAC CS4344 is connected:<br>
 ![CS4344 Board](docs/DAC_CS434.jpg)<br>
 If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
 
+### IR Receíver
+Various 38KHz IR receivers can be used. While the TSOP4838 can be used without any problems, the VS1838B is very sensitive to high frequency fields despite its metal shielding. The VS1838B should not be installed near the WiFi antenna.<br>
+![IR Receiver](docs/IR_Receiver.jpg)<br>
+
+### IR Remote Control
+The remote control must support the NEC protocol. If several remote controls are operated in one room, they must have different address codes to avoid mutual interference. The "Arduino" remote control on the left in the picture uses the address code 0x00FF and the "Android X96" remote control (right) uses the address code 0x01FE.<br>
+![IR Transmitter](docs/IR_Transmitter.jpg)<br>
+
 ### KCX_BT_EMITTER
 The RT pin is not part of the soldering strip, but is located in the middle of the right side.<br>
 ![PCM5102A Board](docs/KCX_BT_EMITTER_pins.jpg)<br>
