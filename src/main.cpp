@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5.1 - Nov 18/2024                                                                                                                       ";
+    Version 3.5.1a - Nov 21/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1164,6 +1164,14 @@ bool connectToWiFi() {
     uint16_t idx = 0;
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
     SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", _SSID);
+
+    if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
+        String ap_ssid = pref.getString("ap_ssid", ""); // credentials from accesspoint
+        String ap_pw = pref.getString("ap_pw", "");
+        if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
+        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", ap_ssid.c_str());
+    }
+
     File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
     if(file) {                                // try to read from SD_MMC
         while(file.available()) {
@@ -1430,6 +1438,9 @@ void setup() {
 
     if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
     else                   strcpy(_prefix, "/m");
+
+    pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
+
 #if CONFIG_IDF_TARGET_ESP32
     tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32
 #else
@@ -3389,6 +3400,15 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
+
+    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
+                                    String AP_PW =   param.substring(param.indexOf("\n") + 1);
+                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
+                                    AP_SSID.c_str(), AP_PW.c_str());
+                                    pref.putString("ap_ssid", AP_SSID);
+                                    pref.putString("ap_pw", AP_PW);
+                                    ESP.restart();}
+
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
