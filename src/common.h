@@ -1590,6 +1590,7 @@ private:
     char*       m_defaultPicturePath = NULL;
     char*       m_clickedPicturePath = NULL;
     char*       m_inactivePicturePath = NULL;
+    char*       m_alternativePicturePath = NULL; // e.g. IR select
     bool        m_enabled = false;
     bool        m_clicked = false;
     char*       m_name = NULL;
@@ -1605,11 +1606,13 @@ public:
         setDefaultPicturePath(NULL);
         setClickedPicturePath(NULL);
         setInactivePicturePath(NULL);
+        setAlternativePicturePath(NULL);
     }
     ~button1state(){
-        if(m_defaultPicturePath) {free(m_defaultPicturePath);  m_defaultPicturePath = NULL;}
-        if(m_clickedPicturePath) {free(m_clickedPicturePath);  m_clickedPicturePath = NULL;}
-        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        if(m_defaultPicturePath)    {free(m_defaultPicturePath);     m_defaultPicturePath = NULL;}
+        if(m_clickedPicturePath)    {free(m_clickedPicturePath);     m_clickedPicturePath = NULL;}
+        if(m_inactivePicturePath)   {free(m_inactivePicturePath);    m_inactivePicturePath = NULL;}
+        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1644,6 +1647,12 @@ public:
         drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
+    void showAlternativePic(){
+        drawImage(m_alternativePicturePath, m_x, m_y, m_w, m_h);
+    }
+    void showClickedPic(){
+        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+    }
     void setDefaultPicturePath(const char* path){
         if(m_defaultPicturePath){free(m_defaultPicturePath); m_defaultPicturePath = NULL;}
         if(path) m_defaultPicturePath = x_ps_strdup(path);
@@ -1658,6 +1667,11 @@ public:
         if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
         if(path) m_inactivePicturePath = x_ps_strdup(path);
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    }
+    void setAlternativePicturePath(const char* path){
+        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
+        if(path) m_alternativePicturePath = x_ps_strdup(path);
+        else m_alternativePicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -1694,6 +1708,8 @@ private:
     char*       m_clickedOffPicturePath = NULL;
     char*       m_clickedOnPicturePath = NULL;
     char*       m_inactivePicturePath = NULL;
+    char*       m_alternativeOnPicturePath = NULL;
+    char*       m_alternativeOffPicturePath = NULL;
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_state = false;
@@ -1743,6 +1759,24 @@ public:
         if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
         else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
         m_enabled = true;
+    }
+    void showClickedPic(){
+        if(m_state){drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);}
+        else       {drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);}
+    }
+    void showAlternativePic(){
+        if(m_state){drawImage(m_alternativeOnPicturePath, m_x, m_y, m_w, m_h);}
+        else       {drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);}
+    }
+    void setAlternativeOnPicturePath(const char* path){
+        if(m_alternativeOnPicturePath){free(m_alternativeOnPicturePath); m_alternativeOnPicturePath = NULL;}
+        if(path) m_alternativeOnPicturePath = x_ps_strdup(path);
+        else m_alternativeOnPicturePath = x_ps_strdup("alternativePicturePath is not set");
+    }
+    void setAlternativeOffPicturePath(const char* path){
+        if(m_alternativeOffPicturePath){free(m_alternativeOffPicturePath); m_alternativeOffPicturePath = NULL;}
+        if(path) m_alternativeOffPicturePath = x_ps_strdup(path);
+        else m_alternativeOffPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
