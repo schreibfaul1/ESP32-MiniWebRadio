@@ -3225,15 +3225,23 @@ void ir_short_key(uint8_t key) {
                     if(_state == STATIONSLIST)   {setStationByNumber(lst_RADIO.getSelectedStation()); _radioSubmenue = 0; changeState(RADIO); break;}
                     if(_state == PLAYER){
                         if(_playerSubmenue == 0){_playerSubmenue = 2; btnNr = 0; changeState(PLAYER); setTimeCounter(2); break;}
+                        if(_playerSubmenue == 1){_playerSubmenue = 3; btnNr = 0; changeState(PLAYER); setTimeCounter(2); break;}
                         if(_playerSubmenue == 2){
-                            if(btnNr == 0){btn_PL_prevFile.showClickedPic(); vTaskDelay(50); btn_PL_prevFile.showAlternativePic(); if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
-                            if(btnNr == 1){btn_PL_nextFile.showClickedPic(); vTaskDelay(50); btn_PL_nextFile.showAlternativePic(); if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
-                            if(btnNr == 2){btn_PL_ready.showClickedPic(); vTaskDelay(100);  SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubmenue = 4; changeState(PLAYER); showAudioFileNumber(); return;}
-                            if(btnNr == 3){btn_PL_playAll.showClickedPic(); vTaskDelay(100); changeState(SLEEPTIMER); break;}
-                            if(btnNr == 4){btn_PL_shuffle.showClickedPic(); vTaskDelay(100); changeState(BRIGHTNESS); break;}
-                            if(btnNr == 5){btn_PL_fileList.showClickedPic(); vTaskDelay(100); changeState(EQUALIZER); break;}
-                            if(btnNr == 6){btn_PL_radio.showClickedPic(); vTaskDelay(100); changeState(BLUETOOTH); break;}
-                            if(btnNr == 7){btn_PL_off.showClickedPic(); vTaskDelay(100); fall_asleep(); break;}
+                            if(btnNr == 0){btn_PL_prevFile.showClickedPic(); vTaskDelay(50); btn_PL_prevFile.showAlternativePic(); if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--;
+                                            showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2);} return;}
+                            if(btnNr == 1){btn_PL_nextFile.showClickedPic(); vTaskDelay(50); btn_PL_nextFile.showAlternativePic();
+                                            if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
+                                            showAudioFileNumber(); setTimeCounter(2);} return;}
+                            if(btnNr == 2){btn_PL_ready.showClickedPic(); vTaskDelay(100);  SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
+                                            _playerSubmenue = 3; changeState(PLAYER); showAudioFileNumber(); return;}
+                            if(btnNr == 3){btn_PL_playAll.showClickedPic(); _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
+                                            _playerSubmenue = 1; changeState(PLAYER); return;}
+                            if(btnNr == 4){btn_PL_shuffle.showClickedPic(); vTaskDelay(100);  _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
+                                            _playerSubmenue = 1; changeState(PLAYER); return;}
+                            if(btnNr == 5){btn_PL_fileList.showClickedPic(); vTaskDelay(100); _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
+                                            _playerSubmenue = 1;  changeState(AUDIOFILESLIST); return;}
+                            if(btnNr == 6){btn_PL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubmenue = 0; _radioSubmenue = 0; changeState(RADIO); return;}
+                            if(btnNr == 7){btn_PL_off.showClickedPic(); vTaskDelay(100); fall_asleep(); return;}
                         }
                         if(_playerSubmenue == 3){
                             break;    ;
