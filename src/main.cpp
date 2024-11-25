@@ -1237,7 +1237,7 @@ bool connectToWiFi() {
 
 void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
     _f_accessPoint = true;
-
+    char buf[200];
     int16_t n = 0, i = 0;
     n = WiFi.scanNetworks();
     while(n < 1){
@@ -1247,6 +1247,11 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     }
     if(n == 0) {
         SerialPrintfln("setup: ....  no WiFi networks found");
+        tft.setFont(_fonts[4]);
+        tft.setTextColor(TFT_YELLOW);
+        tft.fillScreen(TFT_BLACK);
+        sprintf(buf, "No WiFi networks found");
+        tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
         while(true) { vTaskDelay(10 / portTICK_PERIOD_MS); }
     }
     else {
@@ -1260,11 +1265,13 @@ void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.
     WiFi.softAP("MiniWebRadio");
     IPAddress myIP = WiFi.softAPIP();
     String    AccesspointIP = myIP.toString();
-//    char      buf[100];
-//    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
-//    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
 
+    tft.setFont(_fonts[4]);
+    tft.setTextColor(TFT_YELLOW);
+    tft.fillScreen(TFT_BLACK);
+    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
+    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
+    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
     return;
@@ -1495,9 +1502,8 @@ void setup() {
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         openAccessPoint();
+        return;
     }
-
-
 
     strcpy(_myIP, WiFi.localIP().toString().c_str());
     SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
@@ -3584,7 +3590,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
 
-    if(cmd == "AP_ready"){          webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
+    if(cmd == "AP_ready"){          SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "send scanned networks");  webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
 
     if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
