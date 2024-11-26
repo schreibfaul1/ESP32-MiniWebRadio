@@ -1841,8 +1841,9 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
         }
         return;
     }
-    _playerSubmenue = 1;
-    changeState(PLAYER);
+    if(_playerSubmenue != 1 && _playerSubmenue != 3){
+        _playerSubmenue = 1; changeState(PLAYER);
+    }
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
     free(_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
@@ -2343,8 +2344,6 @@ void changeState(int32_t state){
                 btn_PL_fileList.hide();
                 btn_PL_radio.hide();
                 btn_PL_off.hide();
-                btn_PL_shuffle.hide();
-                btn_PL_playAll.hide();
                 pgb_PL_progress.setValue(0); pgb_PL_progress.show();
                 sdr_PL_volume.show();
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
@@ -2364,8 +2363,6 @@ void changeState(int32_t state){
                 btn_PL_prevFile.showAlternativePic(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
             if(_playerSubmenue == 3){ // same as submenue 1 for IR
-                btn_PL_playAll.hide();
-                btn_PL_shuffle.hide();
                 btn_PL_fileList.hide();
                 btn_PL_radio.hide();
                 btn_PL_off.hide();
@@ -2525,28 +2522,29 @@ void loop() {
                     f_tc = false;
                     dispFooter.updateTC(0);
                     if(_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
+
                     if(_state == RADIO) {
-                        if(!txt_RA_staName.isEnabled()){ // assume volBox is shown
-                            txt_RA_staName.show();
-                        }
-                        else{
-                            _radioSubmenue = 0;
-                            changeState(RADIO);
-                        }
+                                            if(!txt_RA_staName.isEnabled()){  txt_RA_staName.show(); }// assume volBox is shown
+                                            else{ _radioSubmenue = 0; changeState(RADIO);}
                     }
                     else if(_state == PLAYER){
-                        if(!txt_PL_fName.isEnabled()){ // assume volBox is shown
-                            txt_PL_fName.show();
-                        }
+                                            if(!txt_PL_fName.isEnabled()){txt_PL_fName.show();} // assume volBox is shown
+                                            if(_playerSubmenue == 2) {_playerSubmenue = 0; changeState(PLAYER);}
+                                            if(_playerSubmenue == 3){ _playerSubmenue = 1; changeState(PLAYER);}
                     }
-                    else if(_state == CLOCK) {
-                        _clockSubMenue = 0;
-                        changeState(CLOCK);
+                    else if(_state == CLOCK){
+                                            _clockSubMenue = 0; changeState(CLOCK);
                     }
                     //    else if(_state == RADIO && _f_switchToClock) { changeState(CLOCK); _f_switchToClock = false; }
-                    else if(_state == STATIONSLIST) { _radioSubmenue = 0; changeState(RADIO); }
-                    else if(_state == AUDIOFILESLIST) { _playerSubmenue = 0; changeState(PLAYER); }
-                    else if(_state == DLNAITEMSLIST) { changeState(DLNA); }
+                    else if(_state == STATIONSLIST) {
+                                            _radioSubmenue = 0; changeState(RADIO);
+                    }
+                    else if(_state == AUDIOFILESLIST) {
+                                            _playerSubmenue = 0; changeState(PLAYER);
+                    }
+                    else if(_state == DLNAITEMSLIST) {
+                                            changeState(DLNA);
+                    }
                     else { ; } // all other, do nothing
                 }
             }
@@ -2672,10 +2670,6 @@ void loop() {
                                    (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
                 }
             }
-        }
-        //-------------------------------------------- IR MENUE --------------------------------------------------------------------------------------
-        if(_state == PLAYER && !_timeCounter.timer){
-            if(_playerSubmenue == 2) {_playerSubmenue = 0; changeState(PLAYER);}
         }
         //------------------------------------------NEW STREAMTITLE-----------------------------------------------------------------------------------
         if(_f_newStreamTitle && !_timeCounter.timer) {
@@ -3133,6 +3127,15 @@ void ir_short_key(uint8_t key) {
                             setTimeCounter(2);
                             return;
                         }
+                        if(_playerSubmenue == 3){ // scroll forward (mute, pause, cancel, prev, next)
+                            if(btnNr < 4) btnNr++;
+                            if(btnNr == 1){btn_PL_Mute.show(); btn_PL_pause.showAlternativePic();}
+                            if(btnNr == 2){btn_PL_pause.show(); btn_PL_cancel.showAlternativePic();}
+                            if(btnNr == 3){btn_PL_cancel.show(); btn_PL_playPrev.showAlternativePic();}
+                            if(btnNr == 4){btn_PL_playPrev.show(); btn_PL_playNext.showAlternativePic();}
+                            setTimeCounter(2);
+                            return;
+                        }
                         if(_cur_AudioFileNr + 1 < _SD_content.getSize()) { // all _playerSubmenus
                                 _cur_AudioFileNr++;
                                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();
@@ -3172,6 +3175,15 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 4){btn_PL_shuffle.showAlternativePic(); btn_PL_fileList.show();}
                             if(btnNr == 5){btn_PL_fileList.showAlternativePic(); btn_PL_radio.show();}
                             if(btnNr == 6){btn_PL_radio.showAlternativePic(); btn_PL_off.show();}
+                            setTimeCounter(2);
+                            return;
+                        }
+                        if(_playerSubmenue == 3){ // scroll forward (mute, pause, cancel, prev, next)
+                            if(btnNr > 0) btnNr--;
+                            if(btnNr == 0){btn_PL_Mute.showAlternativePic(); btn_PL_pause.show();}
+                            if(btnNr == 1){btn_PL_pause.showAlternativePic(); btn_PL_cancel.show();}
+                            if(btnNr == 2){btn_PL_cancel.showAlternativePic(); btn_PL_playPrev.show();}
+                            if(btnNr == 3){btn_PL_playPrev.showAlternativePic(); btn_PL_playNext.show();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3233,24 +3245,48 @@ void ir_short_key(uint8_t key) {
                         if(_playerSubmenue == 0){_playerSubmenue = 2; btnNr = 0; changeState(PLAYER); setTimeCounter(2); break;}
                         if(_playerSubmenue == 1){_playerSubmenue = 3; btnNr = 0; changeState(PLAYER); setTimeCounter(2); break;}
                         if(_playerSubmenue == 2){
-                            if(btnNr == 0){btn_PL_prevFile.showClickedPic(); vTaskDelay(50); btn_PL_prevFile.showAlternativePic(); if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--;
+                            if(btnNr == 0){ // prev AudioFile
+                                            btn_PL_prevFile.showClickedPic(); vTaskDelay(50); btn_PL_prevFile.showAlternativePic(); if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--;
                                             showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2);} return;}
-                            if(btnNr == 1){btn_PL_nextFile.showClickedPic(); vTaskDelay(50); btn_PL_nextFile.showAlternativePic();
-                                            if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
-                                            showAudioFileNumber(); setTimeCounter(2);} return;}
-                            if(btnNr == 2){btn_PL_ready.showClickedPic(); vTaskDelay(100);  SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
-                                            _playerSubmenue = 3; changeState(PLAYER); showAudioFileNumber(); return;}
-                            if(btnNr == 3){btn_PL_playAll.showClickedPic(); _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
+                            if(btnNr == 1){ // next AudioFile
+                                            btn_PL_nextFile.showClickedPic(); vTaskDelay(50); btn_PL_nextFile.showAlternativePic(); if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++;
+                                            showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2);} return;}
+                            if(btnNr == 2){ // play file
+                                            btn_PL_ready.showClickedPic(); vTaskDelay(100);  SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
+                                            btnNr = 0; _playerSubmenue = 3; changeState(PLAYER); showAudioFileNumber(); setTimeCounter(2); return;}
+                            if(btnNr == 3){ // play all files
+                                            btn_PL_playAll.showClickedPic(); _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
                                             _playerSubmenue = 1; changeState(PLAYER); return;}
-                            if(btnNr == 4){btn_PL_shuffle.showClickedPic(); vTaskDelay(100);  _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
+                            if(btnNr == 4){ // shuffle and play all files
+                                            btn_PL_shuffle.showClickedPic(); vTaskDelay(100);  _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
                                             _playerSubmenue = 1; changeState(PLAYER); return;}
-                            if(btnNr == 5){btn_PL_fileList.showClickedPic(); vTaskDelay(100); _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
+                            if(btnNr == 5){ // show file list
+                                            btn_PL_fileList.showClickedPic(); vTaskDelay(100); _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                                             _playerSubmenue = 1;  changeState(AUDIOFILESLIST); return;}
-                            if(btnNr == 6){btn_PL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubmenue = 0; _radioSubmenue = 0; changeState(RADIO); return;}
-                            if(btnNr == 7){btn_PL_off.showClickedPic(); vTaskDelay(100); fall_asleep(); return;}
+                            if(btnNr == 6){ // back to radio
+                                            btn_PL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubmenue = 0; _radioSubmenue = 0; changeState(RADIO); return;}
+                            if(btnNr == 7){ // off
+                                            btn_PL_off.showClickedPic(); vTaskDelay(100); fall_asleep(); return;}
                         }
                         if(_playerSubmenue == 3){
-                            break;    ;
+                            if(btnNr == 0){ // mute
+                                            btn_PL_Mute.showClickedPic(); muteChanged(!_f_mute); vTaskDelay(100); btn_PL_Mute.showAlternativePic(); setTimeCounter(2); return;
+                            }
+                            if(btnNr == 1){ // pause
+                                            btn_PL_pause.showClickedPic(); if(_f_isFSConnected) {audio.pauseResume(); if(!audio.isRunning()) btn_PL_pause.setOn(); else btn_PL_pause.setOff();}
+                                            vTaskDelay(100); btn_PL_pause.showAlternativePic(); setTimeCounter(2); return;
+                            }
+                            if(btnNr == 2){ // cancel
+                                            btn_PL_cancel.showClickedPic(); vTaskDelay(100); btnNr = 0; _playerSubmenue = 2; stopSong(); changeState(PLAYER); return;
+                            }
+                            if(btnNr == 3){ // prev
+                                            btn_PL_playPrev.showClickedPic(); vTaskDelay(100); btn_PL_playPrev.showAlternativePic(); _cur_AudioFileNr = _SD_content.getPrevAudioFile(_cur_AudioFileNr);
+                                            SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2); return;
+                            }
+                            if(btnNr == 4){ // next
+                                            btn_PL_playNext.showClickedPic(); vTaskDelay(100); btn_PL_playNext.showAlternativePic(); _cur_AudioFileNr = _SD_content.getNextAudioFile(_cur_AudioFileNr);
+                                            SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2); return;
+                            }
                         }
 
                     }
