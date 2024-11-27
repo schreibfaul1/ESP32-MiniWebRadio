@@ -1425,6 +1425,10 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
+    void reset(){
+        m_val = m_minVal;
+        tft.fillRect(m_x, m_y + 1,  m_w  -  m_h - 1, m_h - 2, m_railColorRight);
+    }
 private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
@@ -1711,6 +1715,7 @@ private:
     char*       m_alternativeOnPicturePath = NULL;
     char*       m_alternativeOffPicturePath = NULL;
     bool        m_enabled = false;
+    bool        m_active = true;
     bool        m_clicked = false;
     bool        m_state = false;
     char*       m_name = NULL;
@@ -1743,6 +1748,7 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        m_active = true;
     }
     const char* getName(){
         return m_name;
@@ -1750,15 +1756,16 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(bool inactive = false){
+    void show(){
         m_clicked = false;
-        if(inactive){
-            setInactive();
-            return;
+        if(m_active){
+            if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+            else        drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+            m_enabled = true;
         }
-        if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
-        else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
-        m_enabled = true;
+        else {
+            drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        }
     }
     void showClickedPic(){
         if(m_state){drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);}
@@ -1801,10 +1808,14 @@ public:
     void setOff(){
         m_state = false;
     }
-    void setInactive(){
-        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
-        m_enabled = false;
+    void setActive(bool act){
+        m_active = act;
     }
+    bool getActive(){
+        return m_active;
+    }
+
+
     void setOffPicturePath(const char* path){
         if(m_offPicturePath){free(m_offPicturePath); m_offPicturePath = NULL;}
         if(path) m_offPicturePath = x_ps_strdup(path);
