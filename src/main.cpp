@@ -91,6 +91,7 @@ uint8_t                 _playerSubMenue = 0;
 uint8_t                 _dlnaSubMenue = 0;
 uint8_t                 _clockSubMenue = 0;
 uint8_t                 _alarmSubMenue = 0;
+uint8_t                 _sleepTimerSubMenue = 0;
 uint8_t                 _ambientValue = 50;
 uint16_t                _fileListNr = 0;
 uint16_t                _irNumber = 0;
@@ -2460,11 +2461,17 @@ void changeState(int32_t state){
             break;
         }
         case SLEEPTIMER:{
-            clearWithOutHeaderFooter();
-            display_sleeptime();
-            btn_SL_up.show();           btn_SL_down.show();       btn_SL_ready.show();    btn_SL_cancel.show();
-            if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
-            else                   drawImage("/common/Night_Gown.bmp", 280, 45);
+            if(_state != SLEEPTIMER) {
+                clearWithOutHeaderFooter(); display_sleeptime();
+                if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
+                else                   drawImage("/common/Night_Gown.bmp", 280, 45);
+            }
+            if(_sleepTimerSubMenue == 0){
+                btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
+            }
+            if(_sleepTimerSubMenue == 1){
+                btn_SL_up.showAlternativePic(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
+            }
             break;
         }
         case BRIGHTNESS:{
@@ -3226,8 +3233,16 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
-
-                    if(_state == SLEEPTIMER) {display_sleeptime(1); return;}
+                    if(_state == SLEEPTIMER){
+                        if(_sleepTimerSubMenue == 1){ // scroll forward (up, down, ready, cancel)
+                            if(btnNr < 3) btnNr++;
+                            if(btnNr == 1){btn_SL_up.show(); btn_SL_down.showAlternativePic();}
+                            if(btnNr == 2){btn_SL_down.show(); btn_SL_ready.showAlternativePic();}
+                            if(btnNr == 3){btn_SL_ready.show(); btn_SL_cancel.showAlternativePic();}
+                            setTimeCounter(2);
+                            return;
+                        }
+                    }
                     break;
         case 12:    // ARROW LEFT
                     if(_state == RADIO) {
@@ -3277,6 +3292,9 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
+                    if(_state == AUDIOFILESLIST) {
+                            lst_PLAYER.prevPage(); setTimeCounter(4); break; // prev page
+                    }
                     if(_state == DLNA){
                         if(_dlnaSubMenue == 1){ // scroll backward (mute, pause, cancel, prev, next)
                             if(btnNr > 0) btnNr--;
@@ -3309,9 +3327,16 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
-                    if(_state == AUDIOFILESLIST) {lst_PLAYER.prevPage(); setTimeCounter(4); break;} // prev page
-                    if(_state == CLOCK) {prevFavStation(); _radioSubMenue = 0; changeState(RADIO); _f_switchToClock = true; break;}
-                    if(_state == SLEEPTIMER) {display_sleeptime(-1); break;}
+                    if(_state == SLEEPTIMER){
+                        if(_sleepTimerSubMenue == 1){ // scroll backward (up, down, ready, cancel)
+                            if(btnNr > 0) btnNr--;
+                            if(btnNr == 0){btn_SL_up.showAlternativePic(); btn_SL_down.show();}
+                            if(btnNr == 1){btn_SL_down.showAlternativePic(); btn_SL_ready.show();}
+                            if(btnNr == 2){btn_SL_ready.showAlternativePic(); btn_SL_cancel.show();}
+                            setTimeCounter(2);
+                            return;
+                        }
+                    }
                     break;
         case 13:    // ARROW DOWN
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
@@ -3320,6 +3345,7 @@ void ir_short_key(uint8_t key) {
                     if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file-
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == CLOCK) {downvolume(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == SLEEPTIMER) {downvolume(); setTimeCounter(2); break;} // VOLUME--
                     break;
         case 14:    // ARROW UP
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
@@ -3328,6 +3354,7 @@ void ir_short_key(uint8_t key) {
                     if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == CLOCK) {upvolume(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == SLEEPTIMER) {upvolume(); setTimeCounter(2); break;} // VOLUME++
                     break;
         case 15:    // MODE
                     if(_state == SLEEPTIMER) {_radioSubMenue = 0; changeState(RADIO); break;} //  RADIO -> STATIONSLIST -> PLAYER -> DLNA -> CLOCK -> SLEEPTIMER
@@ -3341,10 +3368,10 @@ void ir_short_key(uint8_t key) {
         case 16:    // OK
                     if(_state == RADIO) {
                         if(_radioSubMenue == 4){
-                            if(btnNr == 0){btn_RA_player.showClickedPic(); vTaskDelay(100); btnNr = 0; _playerSubMenue = 2; changeState(PLAYER); setTimeCounter(2); break;}
-                            if(btnNr == 1){btn_RA_dlna.showClickedPic();   vTaskDelay(100); btnNr = 0; _dlnaSubMenue = 1;   changeState(DLNA);   setTimeCounter(2); break;}
-                            if(btnNr == 2){btn_RA_clock.showClickedPic();  vTaskDelay(100); btnNr = 0; _clockSubMenue = 2;  changeState(CLOCK);  setTimeCounter(2); break;}
-                            if(btnNr == 3){btn_RA_sleep.showClickedPic();  vTaskDelay(100); btnNr = 0; changeState(SLEEPTIMER); break;}
+                            if(btnNr == 0){btn_RA_player.showClickedPic(); vTaskDelay(100); btnNr = 0; _playerSubMenue = 2;     changeState(PLAYER);     setTimeCounter(2); break;}
+                            if(btnNr == 1){btn_RA_dlna.showClickedPic();   vTaskDelay(100); btnNr = 0; _dlnaSubMenue = 1;       changeState(DLNA);       setTimeCounter(2); break;}
+                            if(btnNr == 2){btn_RA_clock.showClickedPic();  vTaskDelay(100); btnNr = 0; _clockSubMenue = 2;      changeState(CLOCK);      setTimeCounter(2); break;}
+                            if(btnNr == 3){btn_RA_sleep.showClickedPic();  vTaskDelay(100); btnNr = 0; _sleepTimerSubMenue = 1; changeState(SLEEPTIMER); setTimeCounter(2); break;}
                             if(btnNr == 4){btn_RA_bright.showClickedPic(); vTaskDelay(100); btnNr = 0; changeState(BRIGHTNESS); break;}
                             if(btnNr == 5){btn_RA_equal.showClickedPic();  vTaskDelay(100); btnNr = 0; changeState(EQUALIZER); break;}
                             if(btnNr == 6){btn_RA_bt.showClickedPic();     vTaskDelay(100); btnNr = 0; changeState(BLUETOOTH); break;}
@@ -3453,7 +3480,20 @@ void ir_short_key(uint8_t key) {
                                 btn_AL_ready.showClickedPic(); vTaskDelay(100); updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
                         }
                     }
-                    if(_state == SLEEPTIMER) {dispFooter.updateOffTime(_sleeptime); _radioSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); break;}
+                    if(_state == SLEEPTIMER) {
+                        if(_sleepTimerSubMenue == 0){
+                            _sleepTimerSubMenue = 1; btnNr = 0; changeState(SLEEPTIMER); setTimeCounter(2); break;}
+                        if(_sleepTimerSubMenue == 1){
+                            if(btnNr == 0){
+                                btn_SL_up.showClickedPic(); display_sleeptime(1); btn_SL_up.showAlternativePic(); return;}
+                            if(btnNr == 1){
+                                btn_SL_down.showClickedPic(); display_sleeptime(-1); btn_SL_down.showAlternativePic(); return;}
+                            if(btnNr == 2){
+                                btn_SL_ready.showClickedPic(); vTaskDelay(100); dispFooter.updateOffTime(_sleeptime); _radioSubMenue = 0; changeState(RADIO); return;}
+                            if(btnNr == 3){
+                                btn_SL_cancel.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
+                        }
+                    }
                     break;
         case 18:    if(_state == PLAYER){if(_f_isFSConnected) audio.pauseResume();} break;
         case 19:    if(_state == PLAYER){if(_f_isFSConnected) audio.stopSong(); _playerSubMenue = 0; changeState(PLAYER);} break;
@@ -3461,13 +3501,13 @@ void ir_short_key(uint8_t key) {
                     if(_f_irOnOff) fall_asleep();
                     else           wake_up();
                     break;
-        case 21:    if(_state != RADIO) {_radioSubMenue  = 0; changeState(RADIO);}  break;
-        case 22:    if(_state != PLAYER){_playerSubMenue = 0; changeState(PLAYER);} break;
-        case 23:    if(_state != DLNA)  {_dlnaSubMenue   = 0; changeState(DLNA);}   break;
-        case 24:    if(_state != CLOCK) {_clockSubMenue  = 0; changeState(CLOCK);}  break;
-        case 25:    if(_state != SLEEPTIMER) {changeState(SLEEPTIMER);} break;
-        case 28:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(-30);} break;
-        case 29:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(+30);} break;
+        case 21:    if(_state != RADIO)      {_radioSubMenue      = 0; changeState(RADIO);}      break;
+        case 22:    if(_state != PLAYER)     {_playerSubMenue     = 0; changeState(PLAYER);}     break;
+        case 23:    if(_state != DLNA)       {_dlnaSubMenue       = 0; changeState(DLNA);}       break;
+        case 24:    if(_state != CLOCK)      {_clockSubMenue      = 0; changeState(CLOCK);}      break;
+        case 25:    if(_state != SLEEPTIMER) {_sleepTimerSubMenue = 0; changeState(SLEEPTIMER);} break;
+        case 28:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(-30);}       break;
+        case 29:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(+30);}       break;
         default:    break;
     }
 }
