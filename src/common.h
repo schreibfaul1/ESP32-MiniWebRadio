@@ -1651,7 +1651,12 @@ public:
         drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
-    void showAlternativePic(){
+    void showAlternativePic(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+            setInactive();
+            return;
+        }
         drawImage(m_alternativePicturePath, m_x, m_y, m_w, m_h);
     }
     void showClickedPic(){

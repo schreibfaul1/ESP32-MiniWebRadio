@@ -59,6 +59,7 @@ char _hl_item[16][40]{  "",                 // none
                         "DLNA List",
                         "Bluetooth",
                         "Equalizer",
+                        "Settings",
                         "IR Settings",
                         ""
                         ""};
@@ -93,6 +94,9 @@ uint8_t                 _dlnaSubMenue = 0;
 uint8_t                 _clockSubMenue = 0;
 uint8_t                 _alarmSubMenue = 0;
 uint8_t                 _sleepTimerSubMenue = 0;
+uint8_t                 _settingsSubMenue = 0;
+uint8_t                 _brightnessSubMenue = 0;
+uint8_t                 _equalizerSubMenue = 0;
 uint8_t                 _ambientValue = 50;
 uint16_t                _fileListNr = 0;
 uint16_t                _irNumber = 0;
@@ -411,6 +415,7 @@ alarmClock    clk_AL_red("clk_CL_green");
 button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
 button1state  btn_AL_ready("btn_AL_ready");
 // SETTINGS
+pictureBox    pic_SE_logo("pic_SE_logo");
 button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_radio("btn_SE_radio");
 // BRIGHTNESS
 button1state  btn_BR_ready("btn_BR_ready");
@@ -834,6 +839,13 @@ void showFileLogo(uint8_t state) {
         pic_PL_logo.setPicturePath(logo.c_str());
         pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
         pic_PL_logo.show();
+        return;
+    }
+    if(state == SETTINGS) {
+        logo = "/common/Settings.jpg";
+        pic_SE_logo.setPicturePath(logo.c_str());
+        pic_SE_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_SE_logo.show();
         return;
     }
 }
@@ -2217,20 +2229,22 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.jpg");
                                                                                          btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.jpg");
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_SE_bright.begin(  1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
+    btn_SE_bright.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
                                                                                          btn_SE_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
                                                                                          btn_SE_bright.setAlternativePicturePath("/btn/Bulb_Magenta.jpg");
                                                                                          btn_SE_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
-    btn_SE_equal.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
+    btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
                                                                                          btn_SE_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
                                                                                          btn_SE_equal.setAlternativePicturePath("/btn/Button_EQ_Magenta.jpg");
-    btn_SE_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
+    btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Radio_Magenta.jpg");
+    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(      _sdrOvBtns.x,  _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, 5, 100); sdr_BR_value.setValue(_brightness);
     btn_BR_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.jpg");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.jpg");
+                                                                                         btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.jpg");
     pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2487,15 +2501,29 @@ void changeState(int32_t state){
             break;
         }
         case SETTINGS:{
-                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show();
-                break;
+            if(_state != SETTINGS){
+                clearWithOutHeaderFooter();
+                showFileLogo(SETTINGS);
+            }
+            if(_settingsSubMenue == 0){
+                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+            }
+            if(_settingsSubMenue == 1){
+                btn_SE_bright.showAlternativePic(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+            }
+            break;
         }
         case BRIGHTNESS:{
-            clearWithOutHeaderFooter();
-            btn_BR_ready.show(); pic_BR_logo.show();
+            if(_state != BRIGHTNESS) {clearWithOutHeaderFooter(); pic_BR_logo.show();}
             sdr_BR_value.show();
             txt_BR_value.setText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_BR_value.show();
+            if(_brightnessSubMenue == 0){
+                btn_BR_ready.show();
+            }
+            if(_brightnessSubMenue == 1){ // same as _brightnessSubMenue for IR
+                btn_BR_ready.showAlternativePic();
+            }
             break;
         }
         case EQUALIZER:
@@ -2612,18 +2640,20 @@ void loop() {
                                             if(_dlnaSubMenue == 1) {_dlnaSubMenue = 0; changeState(DLNA);}
                     }
                     else if(_state == DLNAITEMSLIST) {
-                                            _dlnaSubMenue = 0; changeState(DLNA);
+                                            _dlnaSubMenue = 0;       changeState(DLNA);
                     }
                     else if(_state == CLOCK){
-                                            _clockSubMenue = 0; changeState(CLOCK);
+                                            _clockSubMenue = 0;      changeState(CLOCK);
                     }
                     else if(_state == ALARM){
-                                            _alarmSubMenue = 0; changeState(ALARM);
+                                            _alarmSubMenue = 0;      changeState(ALARM);
                     }
-
-
-                    //    else if(_state == RADIO && _f_switchToClock) { changeState(CLOCK); _f_switchToClock = false; }
-
+                    else if(_state == SETTINGS){
+                                            _settingsSubMenue = 0;   changeState(SETTINGS);
+                    }
+                    else if(_state == BRIGHTNESS){
+                                            _brightnessSubMenue = 0; changeState(BRIGHTNESS);
+                    }
                     else { ; } // all other, do nothing
                 }
             }
@@ -3262,6 +3292,22 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
+                    if(_state == SETTINGS){
+                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
+                            if(btnNr < 2) btnNr++;
+                            if(btnNr == 1){btn_SE_bright.show(); btn_SE_equal.showAlternativePic();}
+                            if(btnNr == 2){btn_SE_equal.show(); btn_SE_radio.showAlternativePic();}
+                            setTimeCounter(2);
+                            return;
+                        }
+                    }
+                    if(_state == BRIGHTNESS){
+                        if(_brightnessSubMenue == 1){
+                            _brightness += 5;
+                            if(_brightness > 100) _brightness = 100;
+                            sdr_BR_value.setValue(_brightness); setTimeCounter(2);
+                        }
+                    }
                     break;
         case 12:    // ARROW LEFT
                     if(_state == RADIO) {
@@ -3356,6 +3402,22 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
+                    if(_state == SETTINGS){
+                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
+                            if(btnNr > 0) btnNr--;
+                            if(btnNr == 0){btn_SE_bright.showAlternativePic(); btn_SE_equal.show();}
+                            if(btnNr == 1){btn_SE_equal.showAlternativePic(); btn_SE_radio.show();}
+                            setTimeCounter(2);
+                            return;
+                        }
+                    }
+                    if(_state == BRIGHTNESS){
+                        if(_brightnessSubMenue == 1){
+                            if(_brightness > 5) _brightness -= 5;
+                            if(_brightness < 5) _brightness = 5;
+                            sdr_BR_value.setValue(_brightness); setTimeCounter(2);
+                        }
+                    }
                     break;
         case 13:    // ARROW DOWN
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
@@ -3381,18 +3443,18 @@ void ir_short_key(uint8_t key) {
                     if(_state == STATIONSLIST) { _playerSubMenue = 0; changeState(PLAYER); break;}
                     if(_state == PLAYER) {changeState(AUDIOFILESLIST); break;}
                     if(_state == AUDIOFILESLIST) {_dlnaSubMenue = 0; changeState(DLNA); break;}
-                    if(_state == DLNA) {changeState(CLOCK); break;}
-                    if(_state == CLOCK) {changeState(SLEEPTIMER); break;}
+                    if(_state == DLNA) {_clockSubMenue = 0; changeState(CLOCK); break;}
+                    if(_state == CLOCK) {_sleepTimerSubMenue =0; changeState(SLEEPTIMER); break;}
                     break;
         case 16:    // OK
                     if(_state == RADIO) {
                         if(_radioSubMenue == 4){
-                            if(btnNr == 0){btn_RA_staList.showClickedPic(); vTaskDelay(100); btnNr = 0;                         changeState(STATIONSLIST); setTimeCounter(4); break;}
-                            if(btnNr == 1){btn_RA_player.showClickedPic(); vTaskDelay(100); btnNr = 0; _playerSubMenue = 2;     changeState(PLAYER);     setTimeCounter(2); break;}
-                            if(btnNr == 2){btn_RA_dlna.showClickedPic();   vTaskDelay(100); btnNr = 0; _dlnaSubMenue = 1;       changeState(DLNA);       setTimeCounter(2); break;}
-                            if(btnNr == 3){btn_RA_clock.showClickedPic();  vTaskDelay(100); btnNr = 0; _clockSubMenue = 2;      changeState(CLOCK);      setTimeCounter(2); break;}
-                            if(btnNr == 4){btn_RA_sleep.showClickedPic();  vTaskDelay(100); btnNr = 0; _sleepTimerSubMenue = 1; changeState(SLEEPTIMER); setTimeCounter(2); break;}
-                            if(btnNr == 5){btn_RA_settings.showClickedPic(); vTaskDelay(100); btnNr = 0; changeState(SETTINGS); break;}
+                            if(btnNr == 0){btn_RA_staList.showClickedPic(); vTaskDelay(100); btnNr = 0;                            changeState(STATIONSLIST); setTimeCounter(4); break;}
+                            if(btnNr == 1){btn_RA_player.showClickedPic(); vTaskDelay(100); btnNr = 0;    _playerSubMenue = 2;     changeState(PLAYER);       setTimeCounter(2); break;}
+                            if(btnNr == 2){btn_RA_dlna.showClickedPic();   vTaskDelay(100); btnNr = 0;    _dlnaSubMenue = 1;       changeState(DLNA);         setTimeCounter(2); break;}
+                            if(btnNr == 3){btn_RA_clock.showClickedPic();  vTaskDelay(100); btnNr = 0;    _clockSubMenue = 2;      changeState(CLOCK);        setTimeCounter(2); break;}
+                            if(btnNr == 4){btn_RA_sleep.showClickedPic();  vTaskDelay(100); btnNr = 0;    _sleepTimerSubMenue = 1; changeState(SLEEPTIMER);   setTimeCounter(2); break;}
+                            if(btnNr == 5){btn_RA_settings.showClickedPic(); vTaskDelay(100); btnNr = 0;  _settingsSubMenue = 1;   changeState(SETTINGS);     setTimeCounter(2); break;}
                             if(btnNr == 6){btn_RA_bt.showClickedPic();     vTaskDelay(100); btnNr = 0; changeState(BLUETOOTH); break;}
                             if(btnNr == 7){btn_RA_off.showClickedPic();    vTaskDelay(100); fall_asleep(); break;}
                         }
@@ -3513,6 +3575,23 @@ void ir_short_key(uint8_t key) {
                                 btn_SL_cancel.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
                         }
                     }
+                    if(_state == SETTINGS){
+                        if(_settingsSubMenue == 0){_settingsSubMenue = 1; btnNr = 0; changeState(SETTINGS); setTimeCounter(2); break;}
+                        if(_settingsSubMenue == 1){
+                            if(btnNr == 0){
+                                btn_SE_bright.showClickedPic(); vTaskDelay(100); _brightnessSubMenue = 1;  changeState(BRIGHTNESS); setTimeCounter(2); return;}
+                            if(btnNr == 1){
+                                btn_SE_equal.showClickedPic(); vTaskDelay(100); _equalizerSubMenue = 1; changeState(EQUALIZER); setTimeCounter(2);}
+                            if(btnNr == 2){
+                                btn_SE_radio.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
+                        }
+                    }
+                    if(_state == BRIGHTNESS){
+                        if(_brightnessSubMenue == 0){_brightnessSubMenue = 1; btnNr = 0; changeState(BRIGHTNESS); setTimeCounter(2); break;}
+                        if(_brightnessSubMenue == 1){
+                            _radioSubMenue = 0; changeState(RADIO);
+                        }
+                    }
                     break;
         case 18:    if(_state == PLAYER){if(_f_isFSConnected) audio.pauseResume();} break;
         case 19:    if(_state == PLAYER){if(_f_isFSConnected) audio.stopSong(); _playerSubMenue = 0; changeState(PLAYER);} break;
@@ -3621,6 +3700,9 @@ void tp_released(uint16_t x, uint16_t y){
             break;
         case SLEEPTIMER:
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
+            break;
+        case SETTINGS:
+            btn_SE_bright.released(); btn_SE_equal.released(); btn_SE_radio.released();
             break;
         case BRIGHTNESS:
             sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
@@ -4186,6 +4268,11 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_SL_ready") == 0)   {return;}
         if( val && strcmp(name, "btn_SL_cancel") == 0)  {return;}
     }
+    if(_state == SETTINGS) {
+        if( val && strcmp(name, "btn_SE_bright") == 0)  {return;}
+        if( val && strcmp(name, "btn_SE_equal") == 0)   {return;}
+        if( val && strcmp(name, "btn_SE_radio") == 0)   {return;}
+    }
     if(_state == BRIGHTNESS){
         if( val && strcmp(name, "btn_BR_ready") == 0)   {return;}
         if( val && strcmp(name, "pic_BR_logo") == 0)    {return;}
@@ -4223,12 +4310,11 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_RA_prevSta") == 0)  {prevFavStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_nextSta") == 0)  {nextFavStation(); dispFooter.updateStation(_cur_station); return;}
         if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubMenue = 0; changeState(STATIONSLIST); return;}
-        if(strcmp(name, "btn_RA_player") == 0)   {_radioSubMenue = 0; stopSong(); _playerSubMenue = 0; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_RA_dlna") == 0)     {_radioSubMenue = 0; stopSong(); _dlnaSubMenue = 0; changeState(DLNA); return;}
-        if(strcmp(name, "btn_RA_clock") == 0)    {_radioSubMenue = 0; _clockSubMenue = 0; changeState(CLOCK); return;}
+        if(strcmp(name, "btn_RA_player") == 0)   {_playerSubMenue = 0; stopSong(); _playerSubMenue = 0; changeState(PLAYER); return;}
+        if(strcmp(name, "btn_RA_dlna") == 0)     {_dlnaSubMenue = 0; stopSong(); _dlnaSubMenue = 0; changeState(DLNA); return;}
+        if(strcmp(name, "btn_RA_clock") == 0)    {_clockSubMenue = 0; _clockSubMenue = 0; changeState(CLOCK); return;}
         if(strcmp(name, "btn_RA_sleep") == 0)    {_radioSubMenue = 0; changeState(SLEEPTIMER); return;}
-        if(strcmp(name, "btn_RA_bright") == 0)   {_radioSubMenue = 0; changeState(BRIGHTNESS); return;}
-        if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubMenue = 0; changeState(EQUALIZER); return;}
+        if(strcmp(name, "btn_RA_settings") == 0) {_settingsSubMenue = 0; changeState(SETTINGS); return;}
         if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubMenue = 0; changeState(EQUALIZER); return;}
         if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubMenue = 0; changeState(BLUETOOTH); return;}
         if(strcmp(name, "btn_RA_off") == 0)      {fall_asleep(); return;}
@@ -4303,6 +4389,11 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_EQ_Radio") == 0)    {setStation(_cur_station); _radioSubMenue = 0; changeState(RADIO); return;}
         if(strcmp(name, "btn_EQ_Player") == 0)   {_playerSubMenue = 0; changeState(PLAYER); return;}
         if(strcmp(name, "btn_EQ_Mute") == 0)     {muteChanged(btn_EQ_Mute.getValue()); return;}
+    }
+    if(_state == SETTINGS) {
+        if(strcmp(name, "btn_SE_bright") == 0)   { changeState(BRIGHTNESS);  return;}
+        if(strcmp(name, "btn_SE_equal") == 0)    { changeState(EQUALIZER);   return;}
+        if(strcmp(name, "btn_SE_radio") == 0)    {_radioSubMenue = 0; changeState(RADIO); return;}
     }
     if(_state == BLUETOOTH) {
         if(strcmp(name, "btn_BT_pause") == 0)    {return;}
