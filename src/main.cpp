@@ -2669,6 +2669,9 @@ void loop() {
                     else if(_state == BRIGHTNESS){
                                             _brightnessSubMenue = 0; changeState(BRIGHTNESS);
                     }
+                    else if(_state == EQUALIZER){
+                                            _equalizerSubMenue = 0;  changeState(EQUALIZER);
+                    }
                     else { ; } // all other, do nothing
                 }
             }
@@ -3276,6 +3279,9 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
+                    if(_state == DLNAITEMSLIST){
+                        lst_DLNA.nextPage(); setTimeCounter(4); return; // nextpage
+                    }
                     if(_state == CLOCK){
                         if(_clockSubMenue == 2){ // scroll forward (alarm, radio, mute, off)
                             if(btnNr < 3) btnNr++;
@@ -3330,8 +3336,8 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 20){if(_toneLP < 6){_toneLP++; itoa(_toneLP, c, 10); txt_EQ_lowPass.writeText(c); sdr_EQ_lowPass.setValue(_toneLP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // HP
                             if(btnNr == 30){if(_toneBP < 6){_toneBP++; itoa(_toneBP, c, 10); txt_EQ_bandPass.writeText(c); sdr_EQ_bandPass.setValue(_toneBP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // BP
                             if(btnNr == 40){if(_toneHP < 6){_toneHP++; itoa(_toneHP, c, 10); txt_EQ_highPass.writeText(c); sdr_EQ_highPass.setValue(_toneHP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // LP
-                            if(btnNr == 1) {btnNr = 2; btn_EQ_Player.show(); btn_EQ_Mute.showAlternativePic();}
-                            if(btnNr == 0) {btnNr = 1; btn_EQ_Radio.show(); btn_EQ_Player.showAlternativePic();}
+                            if(btnNr == 1) {btnNr = 2; btn_EQ_Player.show(); btn_EQ_Mute.showAlternativePic(); setTimeCounter(2); return;}
+                            if(btnNr == 0) {btnNr = 1; btn_EQ_Radio.show(); btn_EQ_Player.showAlternativePic(); setTimeCounter(2); return;}
                         }
                     }
                     break;
@@ -3397,6 +3403,10 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
+                    if(_state == DLNAITEMSLIST){
+                        lst_DLNA.prevPage(); setTimeCounter(4); return; // prev page
+                    }
+
                     if(_state == CLOCK){
                         if(_clockSubMenue == 2){ // scroll backward (alarm, radio, mute, off)
                             if(btnNr > 0) btnNr--;
@@ -3452,8 +3462,8 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 20){if(_toneLP > -40){_toneLP--; itoa(_toneLP, c, 10); txt_EQ_lowPass.writeText(c); sdr_EQ_lowPass.setValue(_toneLP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // LP
                             if(btnNr == 30){if(_toneBP > -40){_toneBP--; itoa(_toneBP, c, 10); txt_EQ_bandPass.writeText(c); sdr_EQ_bandPass.setValue(_toneBP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // BP
                             if(btnNr == 40){if(_toneHP > -40){_toneHP--; itoa(_toneHP, c, 10); txt_EQ_highPass.writeText(c); sdr_EQ_highPass.setValue(_toneHP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // HP
-                            if(btnNr == 1) {btnNr = 0; btn_EQ_Player.show(); btn_EQ_Radio.showAlternativePic();}
-                            if(btnNr == 2) {btnNr = 1; btn_EQ_Mute.show(); btn_EQ_Player.showAlternativePic();}
+                            if(btnNr == 1) {btnNr = 0; btn_EQ_Player.show(); btn_EQ_Radio.showAlternativePic(); setTimeCounter(2); return;}
+                            if(btnNr == 2) {btnNr = 1; btn_EQ_Mute.show(); btn_EQ_Player.showAlternativePic(); setTimeCounter(2); return;}
                         }
                     }
                     break;
@@ -3470,6 +3480,7 @@ void ir_short_key(uint8_t key) {
                         else if(btnNr == 20){btnNr = 10; btn_EQ_balance.showAlternativePic();  btn_EQ_lowPass.show();}
                         else if(btnNr == 30){btnNr = 20; btn_EQ_lowPass.showAlternativePic();  btn_EQ_bandPass.show();}
                         else if(btnNr == 40){btnNr = 30; btn_EQ_bandPass.showAlternativePic(); btn_EQ_highPass.show();}
+                        setTimeCounter(2); return;
                     }
                     break;
         case 14:    // ARROW UP
@@ -3485,6 +3496,7 @@ void ir_short_key(uint8_t key) {
                         else if(btnNr == 10){btnNr = 20; btn_EQ_lowPass.showAlternativePic();  btn_EQ_balance.show();}
                         else if(btnNr == 20){btnNr = 30; btn_EQ_bandPass.showAlternativePic(); btn_EQ_lowPass.show();}
                         else if(btnNr == 30){btnNr = 40; btn_EQ_highPass.showAlternativePic(); btn_EQ_bandPass.show();}
+                        setTimeCounter(2); return;
                     }
                     break;
         case 15:    // MODE
@@ -3638,12 +3650,13 @@ void ir_short_key(uint8_t key) {
                         if(_equalizerSubMenue == 1){
                             if(btnNr == 0){btn_EQ_Radio.showClickedPic(); vTaskDelay(100);  setStation(_cur_station); _radioSubMenue = 0; changeState(RADIO); return;} // Radio
                             if(btnNr == 1){btn_EQ_Player.showClickedPic(); vTaskDelay(100); _playerSubMenue = 0; changeState(PLAYER); return;} // Player
-                            if(btnNr == 2){btn_EQ_Mute.showClickedPic(); vTaskDelay(100);  muteChanged(!_f_mute); btn_EQ_Mute.showAlternativePic(); return;} // Mute
+                            if(btnNr == 2){btn_EQ_Mute.showClickedPic(); vTaskDelay(100);  muteChanged(!_f_mute); btn_EQ_Mute.showAlternativePic(); setTimeCounter(2); return;} // Mute
                             if(btnNr == 10){btn_EQ_balance.showClickedPic(); _toneBAL = 0; txt_EQ_balance.writeText("0");  sdr_EQ_balance.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_balance.showAlternativePic();}
                             if(btnNr == 20){btn_EQ_lowPass.showClickedPic();  _toneLP = 0; txt_EQ_lowPass.writeText("0");  sdr_EQ_lowPass.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_lowPass.showAlternativePic();}
                             if(btnNr == 30){btn_EQ_bandPass.showClickedPic(); _toneBP = 0; txt_EQ_bandPass.writeText("0"); sdr_EQ_bandPass.setValue(_toneLP); webSrv.send("settone=", setI2STone()); btn_EQ_bandPass.showAlternativePic();}
                             if(btnNr == 40){btn_EQ_highPass.showClickedPic(); _toneHP = 0; txt_EQ_highPass.writeText("0"); sdr_EQ_highPass.setValue(_toneLP); webSrv.send("settone=", setI2STone()); btn_EQ_highPass.showAlternativePic();}
                         }
+                        setTimeCounter(2); return;
                     }
                     break;
         case 18:    if(_state == PLAYER){if(_f_isFSConnected) audio.pauseResume();} break;
@@ -3702,7 +3715,7 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     // }
 
     if(_state == DLNAITEMSLIST){
-        lst_DLNA.longPressed(x, y);
+    //    lst_DLNA.longPressed(x, y);
     }
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3776,7 +3789,7 @@ void tp_released(uint16_t x, uint16_t y){
 
 void tp_long_released(){
 //    log_w("long released)");
-    if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
+//    if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void tp_positionXY(uint16_t x, uint16_t y){
