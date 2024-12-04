@@ -2595,6 +2595,7 @@ public:
         register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("dlnaList");
+        m_buff = x_ps_malloc(512);
         m_dlna    = dlna;
         m_bgColor = TFT_BLACK;
         m_enabled = false;
@@ -2670,7 +2671,6 @@ public:
             m_chptr = NULL;
             vTaskDelay(300);
         }
-        if(m_buff){free(m_buff); m_buff = NULL;}
 
         if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
         if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // content list
@@ -2686,7 +2686,6 @@ public:
 
 private:
     void dlnaItemsList(){
-        if(!m_buff) m_buff = x_ps_malloc(512);
         uint16_t itemsSize = 0;
         uint8_t pos = 0;
         if(*m_dlnaLevel == 0) {itemsSize = m_dlnaServer.size;}
@@ -2711,11 +2710,11 @@ private:
         tft.setTextColor(TFT_ORANGE);
         tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
 
-        if(m_buff){free(m_buff); m_buff = NULL;}
         return;
     }
 
     void drawItem(uint8_t pos){
+        tft.setFont(m_fontSize);
         if(*m_dlnaLevel == 0) { // level 0 (DLNA server)
             if(m_currItemNr[*m_dlnaLevel] != (pos - 1) + m_viewPoint ){ // is not current item, show std color
                 sprintf(m_buff, ANSI_ESC_WHITE "%s", m_dlnaServer.friendlyName[pos - 1]);
@@ -2726,6 +2725,7 @@ private:
             tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
         else { // level > 0 (dlna entries)
+
             if(m_currItemNr[*m_dlnaLevel] != (pos - 1) + m_viewPoint ){ // is not current item, show std color
                 if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
                     if(m_srvContent.isAudio[pos - 1] == true) {
@@ -2749,7 +2749,7 @@ private:
                     else { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
                 }
                 else {
-                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
+                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_GREY"%s", m_srvContent.title[pos - 1]); }
                     else { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
                 }
                 tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
@@ -2763,7 +2763,6 @@ private:
         bool guard2 = false; if(m_srvContent.itemURL.size() >  (m_itemListPos - 1)) guard2 = true;
         bool guard3 = false; if(m_srvContent.title.size() > (m_itemListPos - 1)) guard3 = true;
 
-        if(!m_buff) m_buff = x_ps_malloc(512);
         m_itemListPos = y / (m_h / 10);
 
         if(m_oldY && (m_oldY + 7 * m_lineHight < y)) {     // fast wipe down
@@ -2868,6 +2867,8 @@ public:
         if(m_viewPoint == 0) return;
         if     (m_viewPoint > 9) m_viewPoint -= 9;
         else    m_viewPoint = 0;
+        if(m_currItemNr[*m_dlnaLevel] > 9){m_currItemNr[*m_dlnaLevel] -= 9;}
+        else{m_currItemNr[*m_dlnaLevel] = 0;}
         m_chptr = NULL;
         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
         m_dlna->loop();
@@ -2878,8 +2879,10 @@ public:
     }
     void nextPage(){ // from IR control
         if(m_dlnaMaxItems - 9 == m_viewPoint) return;
-        if(m_dlnaMaxItems - 9 > m_viewPoint) m_viewPoint += 9;
-        else(m_viewPoint = m_dlnaMaxItems - 9);
+        if(m_dlnaMaxItems - 9 > m_viewPoint){m_viewPoint += 9;}
+        else{m_viewPoint = m_dlnaMaxItems - 9;}
+        if( m_dlnaMaxItems - 9 > m_currItemNr[*m_dlnaLevel]){m_currItemNr[*m_dlnaLevel] += 9;}
+        else{m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems;}
         m_chptr = NULL;
         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
         m_dlna->loop();
@@ -2889,10 +2892,37 @@ public:
         return;
     }
     void prevItem(){
-
+        if(m_currItemNr[*m_dlnaLevel] == 0) return;
+        m_currItemNr[*m_dlnaLevel]--;
+        if(m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
+            m_viewPoint -= 9;
+            if(m_viewPoint < 0) m_viewPoint = 0;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);
+        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1);
     }
     void nextItem(){
-
+        if(m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
+        m_currItemNr[*m_dlnaLevel]++;
+        if(m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
+            m_viewPoint += 9;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);
+        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1);
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

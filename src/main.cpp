@@ -3471,8 +3471,9 @@ void ir_short_key(uint8_t key) {
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
-                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file-
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file++
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == DLNAITEMSLIST){lst_DLNA.nextItem(); setTimeCounter(2); return;} // item++
                     if(_state == CLOCK) {downvolume(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == SLEEPTIMER) {downvolume(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == EQUALIZER && _equalizerSubMenue == 1){
@@ -3489,6 +3490,7 @@ void ir_short_key(uint8_t key) {
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == DLNAITEMSLIST){lst_DLNA.prevItem(); setTimeCounter(2); return;} // item++
                     if(_state == CLOCK) {upvolume(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == SLEEPTIMER) {upvolume(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == EQUALIZER && _equalizerSubMenue == 1){
@@ -4150,7 +4152,7 @@ void dlna_browseResult(const char* objectId, const char* parentId, uint16_t chil
 }
 
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
-    SerialPrintfln("DLNA_server: returned %i from %i", numberReturned + _totalNumberReturned, totalMatches);
+    SerialPrintfln("DLNA_server: returned %i from %i", numberReturned /*+ _totalNumberReturned*/, totalMatches);
     _dlnaMaxItems = totalMatches;
     _totalNumberReturned += numberReturned;
     if(numberReturned == 50 && !_f_dlnaMakePlaylistOTF) { // next round
