@@ -2665,9 +2665,7 @@ public:
         m_clicked = false;
 
         if(m_chptr) {
-            tft.setTextColor(TFT_CYAN);
-            tft.setFont(m_fontSize);
-            tft.writeText(m_chptr, 20, m_y + (m_itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            drawItem(m_itemListPos, -1, true);
             m_chptr = NULL;
             vTaskDelay(300);
         }
@@ -2713,49 +2711,32 @@ private:
         return;
     }
 
-    void drawItem(uint8_t pos){
+    void drawItem(int8_t pos, bool colouredLine = false, bool selectedLine = false){ // pos 0 is parent, pos 1...9 are itens, selectedLine means released
+        if(pos < 0 || pos > 9) {log_e("pos oor"); return;}                                          // guard
+        if(*m_dlnaLevel == 0 && pos > m_dlnaServer.size) {log_e("pos too high %i", pos); return;}   // guard
+        if(*m_dlnaLevel >  0 && pos > m_srvContent.size) {log_e("pos too high %i", pos); return;}   // guard
+        bool isAudio = false;
+        bool isURL = false;
+        const char* item = NULL; char* duration = NULL; const char* itemURL = NULL; (void)itemURL;
+        char color[20];
+        uint16_t posX = m_x + 20, posY = m_y + m_lineHight, width = m_w - 20, height = m_lineHight;
+        int32_t itemSize = 0;
+        int16_t childCount = 0;
+        if(*m_dlnaLevel == 0) {item = m_dlnaServer.friendlyName[pos - 1];}
+        else {                 item = m_srvContent.title[pos - 1]; itemSize = m_srvContent.itemSize[pos - 1]; childCount = m_srvContent.childCount[pos -1]; duration = m_srvContent.duration[pos - 1];
+                               itemURL = m_srvContent.itemURL[pos -1]; isAudio = m_srvContent.isAudio[pos - 1]; if(startsWith(m_srvContent.itemURL[pos -1], "http")) isURL = true;}
         tft.setFont(m_fontSize);
-        if(*m_dlnaLevel == 0) { // level 0 (DLNA server)
-            if(m_currItemNr[*m_dlnaLevel] != (pos - 1) + m_viewPoint ){ // is not current item, show std color
-                sprintf(m_buff, ANSI_ESC_WHITE "%s", m_dlnaServer.friendlyName[pos - 1]);
-            }
-            else{
-                sprintf(m_buff, ANSI_ESC_MAGENTA "%s", m_dlnaServer.friendlyName[pos - 1]);
-            }
-            tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        }
-        else { // level > 0 (dlna entries)
-
-            if(m_currItemNr[*m_dlnaLevel] != (pos - 1) + m_viewPoint ){ // is not current item, show std color
-                if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
-                    if(m_srvContent.isAudio[pos - 1] == true) {
-                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
-                        else { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                    }
-                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                }
-                else {
-                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
-                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
-                }
-                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            }
-            else{ // is current item, paint magenta
-                if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
-                    if(m_srvContent.isAudio[pos - 1] == true) {
-                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
-                        else { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                    }
-                    else { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                }
-                else {
-                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_GREY"%s", m_srvContent.title[pos - 1]); }
-                    else { sprintf(m_buff, ANSI_ESC_MAGENTA "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
-                }
-                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            }
-        }
+        posY= m_y + (pos) * m_lineHight;
+        if(colouredLine) {strcpy(color, ANSI_ESC_MAGENTA);} else if(isURL && isAudio) {strcpy(color, ANSI_ESC_YELLOW);} else {strcpy(color, ANSI_ESC_WHITE);}
+        if(selectedLine) strcpy(color, ANSI_ESC_CYAN);
+        sprintf(m_buff, "%s%s", color, item);
+        if(childCount) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%i)", childCount);
+        if(isURL && isAudio) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%s)", duration);
+        if(isURL && !isAudio) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%li)", itemSize);
+        tft.writeText(m_buff, posX, posY, width, height, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
+
+
 
     void hasReleased(uint16_t x, uint16_t y){
 
@@ -2875,6 +2856,7 @@ public:
         while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
         m_srvContent = m_dlna->getBrowseResult();
         dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1, true);  // make magenta
         return;
     }
     void nextPage(){ // from IR control
@@ -2882,13 +2864,14 @@ public:
         if(m_dlnaMaxItems - 9 > m_viewPoint){m_viewPoint += 9;}
         else{m_viewPoint = m_dlnaMaxItems - 9;}
         if( m_dlnaMaxItems - 9 > m_currItemNr[*m_dlnaLevel]){m_currItemNr[*m_dlnaLevel] += 9;}
-        else{m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems;}
+        else{m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;}
         m_chptr = NULL;
         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
         m_dlna->loop();
         while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
         m_srvContent = m_dlna->getBrowseResult();
         dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1, true);  // make magenta
         return;
     }
     void prevItem(){
@@ -2905,8 +2888,8 @@ public:
             dlnaItemsList();
             return;
         }
-        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);
-        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1);
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1, true);  // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1, false); // std colour
     }
     void nextItem(){
         if(m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
@@ -2921,8 +2904,16 @@ public:
             dlnaItemsList();
             return;
         }
-        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);
-        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1);
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1, true);  // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1, false); // std colour
+    }
+    const char* getSelectedURL(){ // ok from IR
+        if(*m_dlnaLevel == 0){log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]); return NULL;}
+        char* res = m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
+        log_e("res %s", res);
+        res = m_srvContent.title[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
+        log_e("res %s", res);
+        return NULL;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
