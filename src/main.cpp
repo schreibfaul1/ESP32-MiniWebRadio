@@ -3597,7 +3597,7 @@ void ir_short_key(uint8_t key) {
                         }
                         break;
                     }
-                    if(_state == DLNAITEMSLIST) {const char* r = lst_DLNA.getSelectedURL(); if(r){connecttohost(r); _dlnaSubMenue = 0; changeState(DLNA);} break;}
+                    if(_state == DLNAITEMSLIST) {setTimeCounter(2); const char* r = lst_DLNA.getSelectedURL();if(r){ _dlnaSubMenue = 0; changeState(DLNA); connecttohost(r);} break;}
                     if(_state == CLOCK){
                         if(_clockSubMenue == 0) { _clockSubMenue = 2; btnNr = 0; changeState(CLOCK); setTimeCounter(2); break;}
                         if(_clockSubMenue == 2){

@@ -2912,7 +2912,7 @@ public:
         drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1);  // std colour
     }
     const char* getSelectedURL(){ // ok from IR
-        if(*m_dlnaLevel == 0){
+        if(*m_dlnaLevel == 0){ //------------------------------------------------------------------------------------------------------- choose server
             // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_chptr = m_dlnaServer.friendlyName[m_currItemNr[0]];
             m_currDLNAsrvNr = m_currItemNr[0];
@@ -2934,7 +2934,7 @@ public:
             dlnaItemsList();
             return NULL;
         }
-        if(m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item
+        if(m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
             // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
             drawItem(0, true);  // make cyan
             vTaskDelay(300);
@@ -2948,12 +2948,27 @@ public:
             dlnaItemsList();
             return NULL;
         }
-
-
-        char* res = m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
-        log_e("res %s", res);
-        res = m_srvContent.title[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
-        log_e("res %s", res);
+        if(strcmp(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "?") == 0){ // --------------------------------------- choose folder
+            m_viewPoint = 0;
+            drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel) ++;
+            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
+            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return NULL;
+        }
+        if(startsWith(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "http") != 0){ // ---------------------------------- choose file
+            drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
+            return m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
+        }
         return NULL;
     }
 };
