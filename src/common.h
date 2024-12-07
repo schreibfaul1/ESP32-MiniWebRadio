@@ -2719,7 +2719,8 @@ private:
         int16_t childCount = 0;
         tft.setFont(m_fontSize);
         if(pos == 0){
-            if((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {strcpy(color, ANSI_ESC_MAGENTA);} else {strcpy(color, ANSI_ESC_ORANGE);}
+            if(pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) strcpy(color, ANSI_ESC_MAGENTA); else strcpy(color, ANSI_ESC_ORANGE);
+            if(selectedLine) strcpy(color, ANSI_ESC_CYAN);
             sprintf(m_buff, "%s%s", color, m_dlnaHistory[*m_dlnaLevel].name);
             tft.writeText(m_buff, 10, posY , m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
             return;
@@ -2912,10 +2913,12 @@ public:
     }
     const char* getSelectedURL(){ // ok from IR
         if(*m_dlnaLevel == 0){
-            log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_chptr = m_dlnaServer.friendlyName[m_currItemNr[0]];
             m_currDLNAsrvNr = m_currItemNr[0];
             m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
+            drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
             (*m_dlnaLevel) ++;
             if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
             if(m_dlnaServer.friendlyName[m_currItemNr[0]] == NULL){
@@ -2923,8 +2926,6 @@ public:
                 m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
                 return NULL;
             }
-            drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1, true);  // make cyan
-            vTaskDelay(300);
             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_currItemNr[0]]);
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);
             m_dlna->loop();
@@ -2933,16 +2934,20 @@ public:
             dlnaItemsList();
             return NULL;
         }
-
-
-
-
-
-
-
-
-        if(m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) {log_e("%s", m_dlnaHistory[*m_dlnaLevel].name); return m_dlnaHistory[*m_dlnaLevel].name;} // DLNA history
-
+        if(m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item
+            // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
+            drawItem(0, true);  // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel) --;
+            m_viewPoint  = 0;
+            m_currItemNr[*m_dlnaLevel] = 0;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return NULL;
+        }
 
 
         char* res = m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
