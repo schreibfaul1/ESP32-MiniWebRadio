@@ -2560,6 +2560,23 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*
+  ———————————————————————————————————————————————————————
+  | DLNA List                       Vol3    01:10:32    |           m_itemsListPos
+  | Musik                                      1-9/6    |           <-- 0
+  |   Videos(7)                                         |           <-- 1
+  |   Interpreten(2)                                    |           <-- 2
+  |   Alben                                             |           <-- 3
+  |   Alle Titel(7)                                     |           <-- 4
+  |   Genres                                            |           <-- 5
+  |   Ordner(1)                                         |           <-- 6
+  |   Wiedergabelisten                                  |           <-- 7
+  |   Filme(23)                                         |           <-- 8
+  |                                                     |           <-- 9
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
+
 class dlnaList : public RegisterTable {
 private:
     int16_t                   m_x = 0;
@@ -2666,16 +2683,17 @@ public:
         hasReleased(x - m_x, y - m_y);
         m_clicked = false;
 
-        if(m_chptr) {
+        if(m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
             drawItem(m_itemListPos, true);
             m_chptr = NULL;
             vTaskDelay(300);
         }
 
-        if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
-        if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // content list
-        if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder
-        if(m_browseOnRelease == 4){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);}   // scroll up / down
+        if(m_browseOnRelease == 0){;}                                                                                                              // file
+        if(m_browseOnRelease == 1){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
+        if(m_browseOnRelease == 2){(*m_dlnaLevel) --; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // previous level
+        if(m_browseOnRelease == 3){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder
+        if(m_browseOnRelease == 4){                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);}   // scroll up / down
 
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
@@ -2791,8 +2809,8 @@ private:
         }
 
         if(m_itemListPos == 0){ // previous level, content list
+            if(*m_dlnaLevel == 0) goto exit;
             m_viewPoint = 0;
-            (*m_dlnaLevel) --;
             m_browseOnRelease = 2;
             goto exit;
         }
@@ -2802,14 +2820,13 @@ private:
                 m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
-                (*m_dlnaLevel) ++;
-                if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[(*m_dlnaLevel) + 1].name); m_dlnaHistory[(*m_dlnaLevel) + 1].name = NULL;}
                 if(m_dlnaServer.friendlyName[m_itemListPos - 1] == NULL){
                     log_e("invalid pointer in dlna history");
-                    m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                    m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
                     goto exit;
                 }
-                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
+                m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
                 m_browseOnRelease = 1;
                 goto exit;
             }
@@ -2834,12 +2851,11 @@ private:
             m_viewPoint = 0;
             sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
             m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
-            (*m_dlnaLevel) ++;
             m_chptr = m_buff;
-            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
-            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_itemListPos - 1]);
+            if(m_dlnaHistory[(*m_dlnaLevel) + 1].objId){free(m_dlnaHistory[(*m_dlnaLevel) + 1].objId); m_dlnaHistory[(*m_dlnaLevel) + 1].objId = NULL;}
+            m_dlnaHistory[   (*m_dlnaLevel) + 1].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
+            if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[ (*m_dlnaLevel) + 1].name); m_dlnaHistory[ (*m_dlnaLevel) + 1].name = NULL;}
+            m_dlnaHistory[(   *m_dlnaLevel) + 1].name = strdup(m_srvContent.title[m_itemListPos - 1]);
             m_browseOnRelease = 3;
             goto exit;
         }
@@ -2878,7 +2894,7 @@ public:
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
         return;
     }
-    void prevItem(){
+    void prevItem(){ // from IR control
         if(*m_dlnaLevel == 0 && m_currItemNr[*m_dlnaLevel] == 0) return;
         if(m_currItemNr[*m_dlnaLevel] < 0) return;
         if(m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
@@ -2896,7 +2912,7 @@ public:
         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
         drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1);  // std colour
     }
-    void nextItem(){
+    void nextItem(){ // from IR control
         if(m_dlnaMaxItems == m_currItemNr[*m_dlnaLevel] - 1) return;
         if(m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
         m_currItemNr[*m_dlnaLevel]++;
