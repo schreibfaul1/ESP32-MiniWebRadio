@@ -526,10 +526,10 @@ boolean defaultsettings(){
     _sleepMode                  = atoi(       parseJson("\"sleepMode\":"));
     _state                      = atoi(       parseJson("\"state\":"));
 
-    // set some settings-------------------------------------------------------------------------------------------
+    // set some items ---------------------------------------------------------------------------------------------
     _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
-    free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
-    free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+    x_ps_free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+    x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
     _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     // ------------------------------------------------------------------------------------------------------------
 
@@ -550,7 +550,7 @@ boolean defaultsettings(){
 // clang-format off
 void updateSettings(){
     if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
-    if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("");
+    if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("/audiofiles");
     char*  jO = x_ps_malloc(2048 + strlen(_settings.lastconnectedhost)); // JSON Object
     char tmp[40 + strlen(_settings.lastconnectedhost)];
     strcpy(jO,   "{\n");

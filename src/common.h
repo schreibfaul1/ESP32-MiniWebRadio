@@ -960,19 +960,20 @@ public:
     }
 
     void setLastConnectedFile(const char* lastconnectedfile){
-        free(m_lastConnectedFile);
+        if(lastconnectedfile[0] != '/') return; // guard
+        x_ps_free(m_lastConnectedFile);
         m_lastConnectedFile = x_ps_strdup(lastconnectedfile);
         int pos = lastIndexOf(m_lastConnectedFile, '/');
-        if(pos == -1){
-            free(m_lastConnectedFileName);
-            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile);
-            free(m_lastConnectedFolder);
-            m_lastConnectedFolder = x_ps_strdup("");
+        if(pos == 0){
+            x_ps_free(m_lastConnectedFileName);
+            m_lastConnectedFileName = x_ps_strdup("");
+            x_ps_free(m_lastConnectedFolder);
+            m_lastConnectedFolder = x_ps_strdup(lastconnectedfile);
         }
         else{
-            free(m_lastConnectedFileName);
+            x_ps_free(m_lastConnectedFileName);
             m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile + pos);
-            free(m_lastConnectedFolder);
+            x_ps_free(m_lastConnectedFolder);
             m_lastConnectedFolder = x_ps_strndup(m_lastConnectedFile, pos);
         }
         // log_e("lastConnectedFile %s", lastconnectedfile);
