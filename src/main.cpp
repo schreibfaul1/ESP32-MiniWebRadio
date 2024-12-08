@@ -3226,7 +3226,8 @@ void ir_short_key(uint8_t key) {
                             nextFavStation(); return;                                  // NEXT STATION
                         }
                         if(_radioSubMenue == 4){ // scroll forward
-                            if(btnNr < 7) btnNr++;
+                            if(btnNr > 7) btnNr = 0; // guard
+                            btnNr++;
                             if(btnNr == 1){btn_RA_staList.show(); btn_RA_player.showAlternativePic();}
                             if(btnNr == 2){btn_RA_player.show(); btn_RA_dlna.showAlternativePic();}
                             if(btnNr == 3){btn_RA_dlna.show(); btn_RA_clock.showAlternativePic();}
@@ -3234,6 +3235,7 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 5){btn_RA_sleep.show(); btn_RA_settings.showAlternativePic();}
                             if(btnNr == 6){btn_RA_settings.show(); btn_RA_bt.showAlternativePic();}
                             if(btnNr == 7){btn_RA_bt.show(); btn_RA_off.showAlternativePic();}
+                            if(btnNr == 8){btn_RA_off.show(); btn_RA_staList.showAlternativePic(); btnNr = 0;}
                             setTimeCounter(2);
                             return;
                         }
@@ -3244,7 +3246,8 @@ void ir_short_key(uint8_t key) {
                     }
                     if(_state == PLAYER){
                         if(_playerSubMenue == 2){ // scroll forward
-                            if(btnNr < 7) btnNr++;
+                            if(btnNr > 7) btnNr = 0; // guard
+                            btnNr++;
                             if(btnNr == 1){btn_PL_prevFile.show(); btn_PL_nextFile.showAlternativePic();}
                             if(btnNr == 2){btn_PL_nextFile.show(); btn_PL_ready.showAlternativePic();}
                             if(btnNr == 3){btn_PL_ready.show(); btn_PL_playAll.showAlternativePic();}
@@ -3252,6 +3255,7 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 5){btn_PL_shuffle.show(); btn_PL_fileList.showAlternativePic();}
                             if(btnNr == 6){btn_PL_fileList.show(); btn_PL_radio.showAlternativePic();}
                             if(btnNr == 7){btn_PL_radio.show(); btn_PL_off.showAlternativePic();}
+                            if(btnNr == 8){btn_PL_off.show(); btn_PL_prevFile.showAlternativePic(); btnNr = 0;}
                             setTimeCounter(2);
                             return;
                         }
@@ -3347,7 +3351,9 @@ void ir_short_key(uint8_t key) {
                              prevFavStation(); return;               // PREV STATION
                         }
                         if(_radioSubMenue == 4){ // scroll backward
-                            if(btnNr >  0) btnNr--;
+                            if(btnNr > 7) btnNr = 0; // guard
+                            if(btnNr == 0) btnNr = 8;
+                            btnNr--;
                             if(btnNr == 0){btn_RA_staList.showAlternativePic(); btn_RA_player.show();}
                             if(btnNr == 1){btn_RA_player.showAlternativePic(); btn_RA_dlna.show();}
                             if(btnNr == 2){btn_RA_dlna.showAlternativePic(); btn_RA_clock.show();}
@@ -3355,6 +3361,7 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 4){btn_RA_sleep.showAlternativePic(); btn_RA_settings.show();}
                             if(btnNr == 5){btn_RA_settings.showAlternativePic(); btn_RA_bt.show();}
                             if(btnNr == 6){btn_RA_bt.showAlternativePic(); btn_RA_off.show();}
+                            if(btnNr == 7){btn_RA_off.showAlternativePic(); btn_RA_staList.show();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3362,7 +3369,9 @@ void ir_short_key(uint8_t key) {
                     if(_state == STATIONSLIST) {lst_RADIO.prevPage(); setTimeCounter(4); break;}    // prev page
                     if(_state == PLAYER){
                         if(_playerSubMenue == 2){ // scroll backward
-                            if(btnNr > 0) btnNr--;
+                            if(btnNr > 7) btnNr = 0; // guard
+                            if(btnNr == 0) btnNr = 8;
+                            btnNr--;
                             if(btnNr == 0){btn_PL_prevFile.showAlternativePic(); btn_PL_nextFile.show();}
                             if(btnNr == 1){btn_PL_nextFile.showAlternativePic(); btn_PL_ready.show();}
                             if(btnNr == 2){btn_PL_ready.showAlternativePic(); btn_PL_playAll.show();}
@@ -3370,6 +3379,7 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 4){btn_PL_shuffle.showAlternativePic(); btn_PL_fileList.show();}
                             if(btnNr == 5){btn_PL_fileList.showAlternativePic(); btn_PL_radio.show();}
                             if(btnNr == 6){btn_PL_radio.showAlternativePic(); btn_PL_off.show();}
+                            if(btnNr == 7){btn_PL_off.showAlternativePic(); btn_PL_prevFile.show();}
                             setTimeCounter(2);
                             return;
                         }
