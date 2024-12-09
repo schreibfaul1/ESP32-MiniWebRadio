@@ -1799,6 +1799,24 @@ void setStationViaURL(const char* url) {
 
 void savefile(const char* fileName, uint32_t contentLength) { // save the uploadfile on SD_MMC
     char fn[256];
+    _f_SD_Upload = false;
+    if(!startsWith(fileName, "/")) {
+        strcpy(fn, "/");
+        strcat(fn, fileName);
+    }
+    else { strcpy(fn, fileName); }
+    if(webSrv.uploadfile(SD_MMC, fn, contentLength)) {
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+        webSrv.sendStatus(200);
+    }
+    else {
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
+        webSrv.sendStatus(400);
+    }
+}
+
+void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg image on SD_MMC
+    char fn[256];
 
     if(!_f_SD_Upload && endsWith(fileName, "jpg")) {
         strcpy(fn, "/logo");
@@ -1810,22 +1828,6 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
             webSrv.sendStatus(200);
         }
         else webSrv.sendStatus(400);
-    }
-    else {
-        _f_SD_Upload = false;
-        if(!startsWith(fileName, "/")) {
-            strcpy(fn, "/");
-            strcat(fn, fileName);
-        }
-        else { strcpy(fn, fileName); }
-        if(webSrv.uploadfile(SD_MMC, fn, contentLength)) {
-            SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
-            webSrv.sendStatus(200);
-        }
-        else {
-            SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
-            webSrv.sendStatus(400);
-        }
     }
 }
 
@@ -3935,7 +3937,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     char bal[30] = "Balance set to "; strcat(bal, param.c_str());
                                     webSrv.send("tone=", bal); setI2STone(); return;}
 
-    if(cmd == "uploadfile"){        _filename = param;  return;}
+    if(cmd == "uploadfile"){        _filename = param; return;}
 
     if(cmd == "prev_station"){      prevFavStation(); return;}                                                                                           // via websocket
 
@@ -4117,11 +4119,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    // log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
-    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength);
+    log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
-    if(strcmp(cmd, "uploadfile") == 0){savefile(param, contentLength); return;}
+    if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);
 }
