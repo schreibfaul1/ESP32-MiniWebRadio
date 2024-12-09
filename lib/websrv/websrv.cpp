@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 10.11.2024
+ *  updated on: 09.12.2024
  *      Author: Wolle
  */
 
@@ -19,7 +19,13 @@ WebSrv::~WebSrv(){
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show_not_found(){
-    cmdclient.print("HTTP/1.1 404 Not Found\n\n");
+    cmdclient.print(
+        "HTTP/1.1 404 Not Found\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 13\r\n"
+        "\r\n"
+        "404 Not Found"
+    );
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -114,7 +120,12 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     strcpy(m_path, path);
     idx = indexOf(m_path, '?', 0);
     if(idx != -1) m_path[idx] = '\0';  // remobe all after '?'
-    if(!fs.exists(m_path)){ return false;}
+    if(!fs.exists(m_path)){
+        sprintf(buff, "File %s does not exist", m_path);
+        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
+        show_not_found();
+        return false;
+    }
 
     file = fs.open(m_path, "r");
     if(!file){
