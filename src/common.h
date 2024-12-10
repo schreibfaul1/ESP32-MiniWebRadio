@@ -2044,7 +2044,7 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {/*log_w("file %s not exists, objName: %s", scaledPicPath, m_name);*/ return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
         if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];

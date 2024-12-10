@@ -3042,7 +3042,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> OK </td>
             <td> 26 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_26" onclick="IRclick(26)" onkeyup="chIRcmd(26)" onchange="IRupdateJSON(26)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> VOLUME+ </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3057,7 +3057,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> - </td>
             <td> 27 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_27" onclick="IRclick(27)" onkeyup="chIRcmd(27)" onchange="IRupdateJSON(27)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> VOLUME- </td>
             <td></td>
             <td></td>
             <td></td>

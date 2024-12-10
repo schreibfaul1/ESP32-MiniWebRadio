@@ -3689,6 +3689,20 @@ void ir_short_key(uint8_t key) {
         case 23:    if(_state != DLNA)       {_dlnaSubMenue       = 0; changeState(DLNA);}       break;
         case 24:    if(_state != CLOCK)      {_clockSubMenue      = 0; changeState(CLOCK);}      break;
         case 25:    if(_state != SLEEPTIMER) {_sleepTimerSubMenue = 0; changeState(SLEEPTIMER);} break;
+        case 26:    // VOLUME+
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == CLOCK) {upvolume(); setTimeCounter(2); break;} // VOLUME++
+                    if(_state == SLEEPTIMER) {upvolume(); setTimeCounter(2); break;} // VOLUME++
+                    upvolume(); break;
+        case 27:    // VOLUME-
+                    if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == CLOCK) {downvolume(); setTimeCounter(2); break;} // VOLUME--
+                    if(_state == SLEEPTIMER) {downvolume(); setTimeCounter(2); break;} // VOLUME--
+                    downvolume(); break;
         case 28:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(-30);}       break;
         case 29:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(+30);}       break;
         default:    break;
@@ -4119,7 +4133,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 }
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    // log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
     if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
