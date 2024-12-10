@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.5.1a - Nov 21/2024                                                                                                                       ";
+    Version 3.6.0 - Dec 10/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -4065,8 +4065,9 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "SD_playAllFiles"){   webSrv.send("SD_playFolder=", "" + param);
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
-                                    preparePlaylistFromSDFolder(param.c_str());
-                                    processPlaylist(true);
+                                    preparePlaylistFromSDFolder(param.c_str()); processPlaylist(true);
+                                    _playerSubMenue = 1;
+                                    changeState(PLAYER);
                                     return;}
 
     if(cmd == "SD_rename"){         String arg1 = arg.substring(0, arg.indexOf("&")); // only the first argument is used
