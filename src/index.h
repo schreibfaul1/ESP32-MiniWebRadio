@@ -2593,35 +2593,39 @@ function clear_BT_memItems(){
                     </div>
                     <div style="flex: 0 0 42px;">
                         <img src="SD/png/Button_Ready_Blue_s.png" alt="Upload" title="PLAY WEBFILE"
-                            onmousedown="this.src='SD/png/Button_Ready_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Ready_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Ready_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Ready_Blue_s.png'"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
                             onclick="playWebURL()">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD FOLDER"
-                            onmousedown="this.src='SD/png/Button_Upload_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Upload_Blue_s.png'"
+                        <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Upload_Blue.png'"
                             onclick="javascript:document.getElementById('audioPlayer_File').click();">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Pause_Blue_s.png" alt="Pause" title="PAUSE"
-                            onmousedown="this.src='SD/png/Button_Pause_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Pause_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Pause_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Pause_Blue_s.png'"
+                        <img src="SD/png/Button_Stop_Blue.png" alt="Pause" title="STOP"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Stop_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Stop_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Stop_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Stop_Blue.png'"
                             onclick="socket.send('stopfile');">
                     </div>
-                    <div style="flex: 0 0 40px;">
-                        <img src="SD/png/Button_Right_Blue_s.png" alt="Resume" title="RESUME"
-                            onmousedown="this.src='SD/png/Button_Right_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Right_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Right_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Right_Blue_s.png'"
-                            onclick="socket.send('resumefile');" />
+                    <div style="flex: 0 0 42px;">
+                        <img src="SD/png/Button_Pause_Resume_Blue.png" alt="Pause Resume" title="PAUSE / RESUME"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Pause_Resume_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Pause_Resume_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Pause_Resume_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Pause_Resume_Blue.png'"
+                            onclick="socket.send('pause_resume');" />
                     </div>
                 </div>
                 <div id="explorerUploadProgress" class="progress-bar" role="progressbar"> </div>
@@ -2633,7 +2637,9 @@ function clear_BT_memItems(){
         </div>
     </div>
 
-<!--=====================================================DLNA======================================================================================-->
+<!--===============================================================================================================================================-->
+<!--=======================================================  D L N A  =============================================================================-->
+<!--===============================================================================================================================================-->
     <div id="tab-content4">
         <center>
             <div style="flex: 0 0 calc(100% - 0px);">

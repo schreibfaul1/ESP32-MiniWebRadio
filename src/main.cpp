@@ -119,7 +119,6 @@ uint16_t                _plsCurPos = 0;
 uint16_t                _totalNumberReturned = 0;
 uint16_t                _dlnaMaxItems = 0;
 uint16_t                _bh1750Value = 50;
-uint32_t                _resumeFilePos = 0; //
 uint32_t                _playlistTime = 0;  // playlist start time millis() for timeout
 uint32_t                _settingsHash = 0;
 uint32_t                _audioFileSize = 0;
@@ -1879,7 +1878,6 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     if(_f_isFSConnected) {
         free(_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(path);
-        _resumeFilePos = 0;
     }
 }
 
@@ -2389,7 +2387,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubMenue == 0){ // prev, next, ready, play_all, shuffle, list, radio, off
-                if(_cur_AudioFolder[0]== '\0') {free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles");}
+                if(!_cur_AudioFolder) {x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles");}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2411,7 +2409,7 @@ void changeState(int32_t state){
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
             }
             if(_playerSubMenue == 2){ // same as submenue 0 for IR
-                if(_cur_AudioFolder[0]== '\0') {free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles");}
+                if(!_cur_AudioFolder) {_cur_AudioFolder = strdup("/audiofiles"); _cur_AudioFileNr = 0;}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2959,8 +2957,8 @@ endbrightness:
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s", r.c_str());
         if(r.startsWith("p")) {
-            bool res = audio.pauseResume();
-            if(res) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume"); }
+            _f_pauseResume = audio.pauseResume();
+            if(_f_pauseResume) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume"); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible"); }
         }
         if(r.startsWith("h")) { // A hardcopy of the display is created and written to the SD card
@@ -3072,6 +3070,9 @@ void show_ST_commercial(const char* info) {
 void audio_commercial(const char* info) { show_ST_commercial(info); }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
+    _f_pauseResume = false;
+    _f_eof = true;
+    _f_isFSConnected = false;
     if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER) {
@@ -3081,8 +3082,6 @@ void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
         }
     }
     webSrv.send("SD_playFile=", "end of audiofile");
-    _f_eof = true;
-    _f_isFSConnected = false;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_eof_stream(const char* info) {
@@ -3561,7 +3560,7 @@ void ir_short_key(uint8_t key) {
                                             _playerSubMenue = 1; changeState(PLAYER); return;}
                             if(btnNr == 5){ // show file list
                                             btn_PL_fileList.showClickedPic(); vTaskDelay(100); _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
-                                            _playerSubMenue = 1;  changeState(AUDIOFILESLIST); return;}
+                                            changeState(AUDIOFILESLIST); return;}
                             if(btnNr == 6){ // back to radio
                                             btn_PL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
                             if(btnNr == 7){ // off
@@ -3572,7 +3571,7 @@ void ir_short_key(uint8_t key) {
                                             btn_PL_Mute.showClickedPic(); muteChanged(!_f_mute); vTaskDelay(100); btn_PL_Mute.showAlternativePic(); setTimeCounter(2); return;
                             }
                             if(btnNr == 1){ // pause
-                                            btn_PL_pause.showClickedPic(); if(_f_isFSConnected) {audio.pauseResume(); if(!audio.isRunning()) btn_PL_pause.setOn(); else btn_PL_pause.setOff();}
+                                            btn_PL_pause.showClickedPic(); if(_f_isFSConnected) {_f_pauseResume = audio.pauseResume(); if(!audio.isRunning()) btn_PL_pause.setOn(); else btn_PL_pause.setOff();}
                                             vTaskDelay(100); btn_PL_pause.showAlternativePic(); setTimeCounter(2); return;
                             }
                             if(btnNr == 2){ // cancel
@@ -3589,7 +3588,9 @@ void ir_short_key(uint8_t key) {
                         }
 
                     }
-                    if(_state == AUDIOFILESLIST) {const char* r = lst_PLAYER.getSelectedFile(); if(r){connecttoFS("SD_MMC", r); _playerSubMenue = 1; changeState(PLAYER);} break;}
+                    if(_state == AUDIOFILESLIST){   const char* r = lst_PLAYER.getSelectedFile();
+                                            if(r){SD_playFile(lst_PLAYER.getSelectedFilePath(), 0, true); _cur_AudioFileNr = lst_PLAYER.getSelectedFileNr();}
+                    }
                     if(_state == DLNA) {
                         if(_dlnaSubMenue == 0) { _dlnaSubMenue = 1; btnNr = 0; changeState(DLNA); setTimeCounter(2); break;}
                         if(_dlnaSubMenue == 1) {
@@ -3597,7 +3598,7 @@ void ir_short_key(uint8_t key) {
                                             btn_DL_Mute.showClickedPic(); muteChanged(!_f_mute); vTaskDelay(100); btn_DL_Mute.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 1){ // pause
                                             if(!btn_DL_pause.getActive()) {setTimeCounter(2); return;}// is inactive
-                                            btn_DL_pause.showClickedPic(); if(_f_isWebConnected) {audio.pauseResume(); if(!audio.isRunning()) btn_DL_pause.setOn(); else btn_DL_pause.setOff();}
+                                            btn_DL_pause.showClickedPic(); if(_f_isWebConnected) {_f_pauseResume = audio.pauseResume(); if(!audio.isRunning()) btn_DL_pause.setOn(); else btn_DL_pause.setOff();}
                                             vTaskDelay(100); btn_DL_pause.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 2){ // cancel
                                             btn_DL_cancel.showClickedPic(); vTaskDelay(100); btn_DL_cancel.show(); stopSong(); txt_DL_fName.setText(""); txt_DL_fName.hide(); pgb_DL_progress.reset();
@@ -3678,7 +3679,7 @@ void ir_short_key(uint8_t key) {
                         setTimeCounter(2); return;
                     }
                     break;
-        case 18:    if(_state == PLAYER){if(_f_isFSConnected) audio.pauseResume();} break;
+        case 18:    if(_state == PLAYER){if(_f_isFSConnected) _f_pauseResume = audio.pauseResume();} break;
         case 19:    if(_state == PLAYER){if(_f_isFSConnected) audio.stopSong(); _playerSubMenue = 0; changeState(PLAYER);} break;
         case 20:    _f_irOnOff = ! _f_irOnOff;
                     if(_f_irOnOff) fall_asleep();
@@ -3982,15 +3983,20 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else if(!strcmp(param.c_str(), "DLNA")        && _state != DLNA)        {stopSong(); _dlnaSubMenue = 0; changeState(DLNA);   return;}
                                     else if(!strcmp(param.c_str(), "BLUETOOTH")   && _state != BLUETOOTH)   {changeState(BLUETOOTH); return;}
                                     else if(!strcmp(param.c_str(), "IR_SETTINGS") && _state != IR_SETTINGS) {changeState(IR_SETTINGS); return;}
-                                    else return;
-                                    }
-    if(cmd == "stopfile"){          _resumeFilePos = audio.stopSong(); webSrv.send("stopfile=", "audiofile stopped");
+                                    else return;}
+
+    if(cmd == "stopfile"){          if(!_f_isFSConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
+                                    _playerSubMenue = 0; stopSong(); changeState(PLAYER); webSrv.send("stopfile=", "audiofile stopped");
                                     return;}
 
-    if(cmd == "resumefile"){        if(!_settings.lastconnectedfile) webSrv.send("resumefile=", "nothing to resume");
-                                    else {
-                                        SD_playFile(_settings.lastconnectedfile, _resumeFilePos);
+    if(cmd == "pause_resume"){      _f_pauseResume = audio.pauseResume();
+                                    if(!_f_isFSConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
+                                    if(audio.isRunning()){
                                         webSrv.send("resumefile=", "audiofile resumed");
+                                        btn_PL_pause.setOff(); btn_PL_pause.show();
+                                    } else {
+                                        webSrv.send("resumefile=", "audiofile paused");
+                                        btn_PL_pause.setOn(); btn_PL_pause.show();
                                     }
                                     return;}
 
@@ -4030,14 +4036,11 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "AP_ready"){          SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "send scanned networks");  webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
 
-    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n"));                                                         // via websocket
+    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n")); // from accesspoint.h                                   // via websocket
                                     String AP_PW =   param.substring(param.indexOf("\n") + 1);
                                     SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
                                     AP_SSID.c_str(), AP_PW.c_str());
-                                    pref.putString("ap_ssid", AP_SSID);
-                                    pref.putString("ap_pw", AP_PW);
-                                    ESP.restart();}
-
+                                    pref.putString("ap_ssid", AP_SSID); pref.putString("ap_pw", AP_PW); ESP.restart();}
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
@@ -4045,33 +4048,35 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                         webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
 
-    if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());
+    if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());                                                                         // via XMLHttpRequest
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+    if(cmd == "SD_GetFolder"){      webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_newFolder"){      bool res = SD_newFolder(param.c_str());
+    if(cmd == "SD_newFolder"){      bool res = SD_newFolder(param.c_str());                                                                           // via XMLHttpRequest
                                     if(res) webSrv.sendStatus(200); else webSrv.sendStatus(400);
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());             // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_playFile"){       webSrv.reply("SD_playFile=" + param, webSrv.TEXT);
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());                  // via XMLHttpRequest
+    if(cmd == "SD_playFile"){       if(audio.isRunning()) stopSong();
+                                    webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     SD_playFile(param.c_str());
                                     return;}
 
-    if(cmd == "SD_playAllFiles"){   webSrv.send("SD_playFolder=", "" + param);
+    if(cmd == "SD_playAllFiles"){   if(audio.isRunning()) stopSong();
+                                    webSrv.send("SD_playFolder=", "" + param);                                                                        // via websocket
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     preparePlaylistFromSDFolder(param.c_str()); processPlaylist(true);
                                     _playerSubMenue = 1;
                                     changeState(PLAYER);
                                     return;}
 
-    if(cmd == "SD_rename"){         String arg1 = arg.substring(0, arg.indexOf("&")); // only the first argument is used
-                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",                 // via XMLHttpRequest
+    if(cmd == "SD_rename"){         String arg1 = arg.substring(0, arg.indexOf("&")); // only the first argument is used                              // via XMLHttpRequest
+                                    SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Rename " ANSI_ESC_ORANGE "old \"%s\" new \"%s\"",
                                     param.c_str(), arg1.c_str());
                                     bool res = SD_rename(param.c_str(), arg1.c_str());
                                     if(res) webSrv.reply("refresh", webSrv.TEXT);
@@ -4426,14 +4431,14 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == PLAYER) {
         if(strcmp(name, "btn_PL_Mute") == 0)     {muteChanged(btn_PL_Mute.getValue()); return;}
-        if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {audio.pauseResume();} return;}
+        if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {_f_pauseResume = audio.pauseResume();} return;}
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubMenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
         if(strcmp(name, "btn_PL_ready") == 0)    { SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubMenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
         if(strcmp(name, "btn_PL_playAll") == 0)  { _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_shuffle") == 0)  { _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false);_playerSubMenue = 1;  changeState(AUDIOFILESLIST); return;}
+        if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
         if(strcmp(name, "btn_PL_radio") == 0)    {setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
         if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
@@ -4448,7 +4453,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
-        if(strcmp(name, "btn_DL_pause") == 0)    {audio.pauseResume(); return;}
+        if(strcmp(name, "btn_DL_pause") == 0)    {_f_pauseResume = audio.pauseResume(); return;}
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); _radioSubMenue = 0; changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
         if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}

@@ -3256,6 +3256,15 @@ Audio Files                   Vol11    15:32:18
         }
         return _SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
+    const char* getSelectedFileName(){
+        return _SD_content.getFileNameByIndex(m_curAudioFileNr);
+    }
+    const char* getSelectedFilePath(){
+        return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+    }
+    uint16_t getSelectedFileNr(){
+        return m_curAudioFileNr;
+    }
 
 
 private:
