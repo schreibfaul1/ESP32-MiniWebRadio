@@ -133,7 +133,7 @@ char                    _chbuf[512];
 char                    _fName[256];
 char                    _myIP[25] = {0};
 char                    _path[128];
-char                    _prefix[5] = "/s";
+char                    _prefix[5] = "s/";
 char                    _commercial[25];
 char                    _icyDescription[512] = {};
 char                    _streamTitle[512] = {};
@@ -526,6 +526,7 @@ boolean defaultsettings(){
     _state                      = atoi(       parseJson("\"state\":"));
 
     // set some items ---------------------------------------------------------------------------------------------
+    if(!startsWith(_settings.lastconnectedfile, "/")) {x_ps_free(_settings.lastconnectedfile); _settings.lastconnectedfile = x_ps_strdup("/audiofiles/");} // guard
     _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
     x_ps_free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
     x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
@@ -549,7 +550,7 @@ boolean defaultsettings(){
 // clang-format off
 void updateSettings(){
     if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
-    if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("/audiofiles");
+    if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("/audiofiles/");
     char*  jO = x_ps_malloc(2048 + strlen(_settings.lastconnectedhost)); // JSON Object
     char tmp[40 + strlen(_settings.lastconnectedhost)];
     strcpy(jO,   "{\n");
@@ -1358,13 +1359,13 @@ void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
     _f_webFailed = false;
     _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, resumeFilePos);
     _f_isWebConnected = false;
-    if(!startsWith(filename, "/audiofiles")) {return;}
+    if(!startsWith(filename, "/audiofiles/")) {return;}
     if(_f_isFSConnected && isAudio(filename)) {
         x_ps_free(_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(filename);
         _SD_content.setLastConnectedFile(filename);
-        free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
-        free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+        x_ps_free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+        x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
         _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     }
     //    log_w("Filesize %d", audioGetFileSize());
@@ -1458,10 +1459,10 @@ void setup() {
     _f_ESPfound = true;
     SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
 
-    _cur_AudioFolder = strdup("/audiofiles");
+    _cur_AudioFolder = strdup("/audiofiles/");
 
-    if(TFT_CONTROLLER < 2) strcpy(_prefix, "/s");
-    else                   strcpy(_prefix, "/m");
+    if(TFT_CONTROLLER < 2) strcpy(_prefix, "s/");
+    else                   strcpy(_prefix, "m/");
 
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
@@ -1632,14 +1633,12 @@ const char* scaleImage(const char* path) {
     }
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
-    char* pch = strstr(path + 1, "/");
-    if(pch) {
-        strncpy(pathBuff, path, (pch - path));
-        strcat(pathBuff, _prefix);
-        strcat(pathBuff, pch);
-    }
+    int idx = lastIndexOf(path, '/');
+    if(idx < 0) return path; // invalid path
     else {
-        return path; // invalid path
+        strncpy(pathBuff, path, idx + 1);
+        strcat(pathBuff, _prefix);
+        strcat(pathBuff, path + idx + 1);
     }
     return pathBuff;
 }
@@ -1818,7 +1817,7 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
     char fn[256];
 
     if(!_f_SD_Upload && endsWith(fileName, "jpg")) {
-        strcpy(fn, "/logo");
+        strcpy(fn, "/logo/");
         strcat(fn, _prefix);
         if(!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
@@ -1842,8 +1841,10 @@ String setI2STone() {
     return tone;
 }
 
-void SD_playFile(const char* path, const char* fileName) {
-    sprintf(_chbuf, "%s/%s", path, fileName);
+void SD_playFile(const char* pathWoFileName, const char* fileName) { // pathWithoutFileName e.g. /audiofiles/playlist/
+log_e("SD_playFile: %s%s", pathWoFileName, fileName);
+    sprintf(_chbuf, "%s%s", pathWoFileName, fileName);
+log_e("SD_playFile: %s", _chbuf);
     int32_t idx = indexOf(_chbuf, "\033[", 1);
     if(idx == -1) { ; }          // do nothing
     else { _chbuf[idx] = '\0'; } // remove color and filesize
@@ -2387,7 +2388,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubMenue == 0){ // prev, next, ready, play_all, shuffle, list, radio, off
-                if(!_cur_AudioFolder) {x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles");}
+                if(!_cur_AudioFolder) {x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles/");}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2409,7 +2410,7 @@ void changeState(int32_t state){
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
             }
             if(_playerSubMenue == 2){ // same as submenue 0 for IR
-                if(!_cur_AudioFolder) {_cur_AudioFolder = strdup("/audiofiles"); _cur_AudioFileNr = 0;}
+                if(!_cur_AudioFolder) {_cur_AudioFolder = strdup("/audiofiles/"); _cur_AudioFileNr = 0;}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);

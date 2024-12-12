@@ -259,7 +259,7 @@ void           StationsItems();
 void           setStationViaURL(const char* url);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
-void           SD_playFile(const char* path, const char* fileName);
+void           SD_playFile(const char* pathWoFileName, const char* fileName);
 void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool           SD_rename(const char* src, const char* dest);
 bool           SD_newFolder(const char* folderPathName);
@@ -380,6 +380,17 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
 inline int32_t lastIndexOf(const char* haystack, const char needle) {
     const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
+    if (!str) return -1; // if str is NULL
+    int len = strlen(str);
+    if (start == -1 || start >= len) start = len - 1; // Default: Search from the end of the string
+
+    for (int i = start; i >= 0; --i) {
+        if (str[i] == ch) return i; // character found
+    }
+    return -1; // character not found
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
@@ -828,7 +839,8 @@ public:
             if(!m_slaveFile) break;
             if(m_slaveFile.isDirectory()) {
                 if(!withoutDirs) { // folder size is -1
-                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
+                    char* path = x_ps_malloc(strlen(m_slaveFile.path()) + 3); strcpy(path, (const char*)m_slaveFile.path()); strcat(path, "/"); // add '/'
+                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), path);
                 }
             }
             else {
@@ -857,57 +869,61 @@ public:
         return m_files.size();
     }
     const char* getColouredSStringByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
         if(isDir(idx)) return m_files[idx].fileName;
         sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li" , m_files[idx].fileName, m_files[idx].fileSize);
         return m_buff;
     }
     const char* getFileNameByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
         return m_files[idx].fileName;
     }
 
     int32_t getFileSizeByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return 0;}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return 0;}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return 0;}
         return m_files[idx].fileSize;
     }
 
     const char* getFilePathByIndex(uint16_t idx){
-    /*
-        dir_a
-            dir_b
-                file_a
-                file_b
-            file_c
-            file_d
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
+        /*
+            dir_a
+                dir_b
+                    file_a
+                    file_b
+                file_c
+                file_d
 
-        getFilePathByIndex(0) returns "/dir_a"
-        getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
-        getFilePathByIndex(5) returns "/dir_a/file_d"
-    */
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+            getFilePathByIndex(0) returns "/dir_a/"
+            getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
+            getFilePathByIndex(5) returns "/dir_a/file_d"
+        */
         return m_files[idx].filePath;
     }
 
     const char* getFileFolderByIndex(uint16_t idx){
-    /*
-        dir_a
-            dir_b
-                file_a
-                file_b
-            file_c
-            file_d
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
+        /*
+            dir_a
+                dir_b
+                    file_a
+                    file_b
+                file_c
+                file_d
 
-        getFileFolderByIndex(0) returns "/dir_a"
-        getFileFolderByIndex(1) returns "/dir_a/dir_b"
-        getFileFolderByIndex(5) returns "/dir_a"
-    */
-
-        if(idx >= m_files.size())  {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+            getFileFolderByIndex(0) returns "/dir_a/"
+            getFileFolderByIndex(1) returns "/dir_a/dir_b/"
+            getFileFolderByIndex(5) returns "/dir_a/"
+        */
         if(isDir(idx)) return m_files[idx].filePath;
         int lastSlashIndex = lastIndexOf(m_files[idx].filePath, '/');
         strcpy(m_buff, m_files[idx].filePath);
-        m_buff[lastSlashIndex] = '\0';
+        m_buff[lastSlashIndex + 1] = '\0';
         return m_buff;
     }
 
@@ -959,26 +975,52 @@ public:
         return newIdx;
     }
 
-    void setLastConnectedFile(const char* lastconnectedfile){
-        if(lastconnectedfile[0] != '/') return; // guard
-        x_ps_free(m_lastConnectedFile);
-        m_lastConnectedFile = x_ps_strdup(lastconnectedfile);
-        int pos = lastIndexOf(m_lastConnectedFile, '/');
-        if(pos == 0){
+    void setLastConnectedFile(const char* lastconnectedItem){
+/*  lastconnectedItem                       m_lastConnectedFolder       m_lastConnectedFileName     m_lastConnectedFile
+    "/audiofiles/wavfiles/chicken.wav"      "/audiofiles/wavfiles/"     "chicken.wav"               "/audiofiles/wavfiles/chicken.wav"
+    "xyz/chicken.wav"                       "/audiofiles/"              ""                          "/audiofiles/"                      // does not start with "/"
+    "/audiofiles/wavfiles/chickenwav"       "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no extension
+    "/chicken.wav"                          "/"                         "chicken.wav"               "/chicken.wav"                      // we have no folder
+    "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // we have no file
+    "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no name
+*/
+        x_ps_free(m_lastConnectedFileName);
+        x_ps_free(m_lastConnectedFolder);
+        int posFirst = 0, posLast = 0, posDot = 0;
+        if(!lastconnectedItem) { // guard, lastconnectedItem == NULL
+            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            goto exit;
+        }
+        posFirst = indexOf(lastconnectedItem, "/", 0);
+        posLast = lastIndexOf(lastconnectedItem, '/');
+        if(posFirst != 0) { // guard, does not start with /
+            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            goto exit;
+        }
+        if(posLast == 0){m_lastConnectedFolder = x_ps_strdup("/");} // we have no folder name
+        else {m_lastConnectedFolder = x_ps_strndup(lastconnectedItem, posLast + 1);}
+
+        if(posLast == strlen(lastconnectedItem) - 1){m_lastConnectedFileName = x_ps_strdup("");} // we have no file name
+        else{m_lastConnectedFileName = x_ps_strdup(lastconnectedItem + posLast + 1);}
+
+        //log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
+        posDot = indexOf(m_lastConnectedFileName, ".", 0);
+        if(posDot == -1){ // no extension
             x_ps_free(m_lastConnectedFileName);
             m_lastConnectedFileName = x_ps_strdup("");
-            x_ps_free(m_lastConnectedFolder);
-            m_lastConnectedFolder = x_ps_strdup(lastconnectedfile);
         }
-        else{
-            x_ps_free(m_lastConnectedFileName);
-            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile + pos);
-            x_ps_free(m_lastConnectedFolder);
-            m_lastConnectedFolder = x_ps_strndup(m_lastConnectedFile, pos);
-        }
-        // log_e("lastConnectedFile %s", lastconnectedfile);
-        // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
-        // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
+
+    exit:
+        x_ps_free(m_lastConnectedFile);
+        m_lastConnectedFile = x_ps_malloc(strlen(m_lastConnectedFolder) + strlen(m_lastConnectedFileName) + 1);
+        strcpy(m_lastConnectedFile, m_lastConnectedFolder);
+        strcat(m_lastConnectedFile, m_lastConnectedFileName);
+        log_e("lastconnectedItem %s", lastconnectedItem);
+        log_e("lastConnectedFile %s", m_lastConnectedFile);
+        log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
+        log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
         listFilesInDir(m_lastConnectedFolder, true, false);
         sort();
     }
@@ -991,9 +1033,9 @@ public:
     }
     int getPosByFileName(const char* fileName){
         for(int i = 0; i < m_files.size(); i++){
-            if(!strcmp(m_files[i].fileName, fileName + 1)) return i; // fileName without '/'
+            if(!strcmp(m_files[i].fileName, fileName)) return i; // fileName e.g. "file.mp3"
         }
-        return -1;
+        return 0;
     }
 
 private:
@@ -3071,12 +3113,12 @@ public:
         m_browseOnRelease = 0;
         m_clicked = false;
         m_enabled = true;
-        if(!cur_AudioFolder) {log_w("cur_AudioFolder set to /audiofiles"); strcpy(m_curAudioFolder, (char*)"/audiofiles");}
-        else m_curAudioFolder = strcpy(m_curAudioFolder, cur_AudioFolder);
+        if(!cur_AudioFolder) {log_w("cur_AudioFolder set to /audiofiles/"); strcpy(m_curAudioFolder, (char*)"/audiofiles/");}
+        else if(cur_AudioFolder != m_curAudioFolder) strcpy(m_curAudioFolder, cur_AudioFolder); // cur_AudioFolder can have the same address as m_curAudioFolder
         m_curAudioFileNr = curAudioFileNr;
         _SD_content.listFilesInDir(m_curAudioFolder, true, false);
         if(m_curAudioFileNr >= _SD_content.getSize()) m_curAudioFileNr = _SD_content.getSize(); // guard
-        m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);        // calculate viewPos
+        m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);     // calculate viewPos
         audioFileslist(m_viewPos);
     }
     void hide(){
@@ -3106,16 +3148,26 @@ public:
 
         char* fileName = NULL;
 
-        if(m_browseOnRelease == 1)  {   if(m_viewPos + 9 >= _SD_content.getSize()) { goto exit; }       // wipe up
+        if(m_browseOnRelease == 1)  {   if(m_viewPos + 9 >= _SD_content.getSize()) { goto exit; }                                   // wipe up
                                         else                     {m_viewPos += 9; m_ra.val1 = 1;}
                                         audioFileslist(m_viewPos);
                                     }
-        if(m_browseOnRelease == 2)  {   if(m_viewPos == 0) { goto exit; }                               // wipe down
+        if(m_browseOnRelease == 2)  {   if(m_viewPos == 0) { goto exit; }                                                           // wipe down
                                         if(m_viewPos >  9) {m_viewPos -= 9; m_ra.val1 = 1;}
                                         else               {m_viewPos  = 0; m_ra.val1 = 1;}
                                         audioFileslist(m_viewPos);
                                     }
-        if(m_browseOnRelease == 3)  {   m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
+        if(m_browseOnRelease == 3)  {   //log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
+                                        if(!strcmp(m_curAudioFolder, "/audiofiles/")) goto exit; // is already the root
+                                        tft.setTextColor(TFT_CYAN);
+                                        tft.setFont(m_fontSize);
+                                        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        int lastSlash = rfind(m_curAudioFolder, '/');
+                                        if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
+                                            int secondLastSlash = rfind(m_curAudioFolder, '/', lastSlash - 1);
+                                            if(secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
+                                        }
+                                        log_e("m_curAudioFolder = %s", m_curAudioFolder);
                                         m_curAudioFileNr = 0;
                                         m_viewPos = 0;
                                         _SD_content.listFilesInDir(m_curAudioFolder, true, false);
@@ -3123,7 +3175,7 @@ public:
                                         m_ra.val2 = m_curAudioFileNr;
                                         m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 4)  {   m_viewPos += m_fileListPos;                                     // next folder
+        if(m_browseOnRelease == 4)  {   m_viewPos += m_fileListPos;                                                                 // next folder
                                         int16_t idx = m_viewPos -1;
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
@@ -3136,7 +3188,7 @@ public:
                                         m_ra.val2 = m_viewPos;
                                         m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 5)  {   m_viewPos += m_fileListPos;                                     // play file
+        if(m_browseOnRelease == 5)  {   m_viewPos += m_fileListPos;                                                                 // play file
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
                                         tft.writeText(m_curAudioName, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
@@ -3181,7 +3233,7 @@ public:
 
 /*
 Audio Files                   Vol11    15:32:18
-/audiofiles/myPlaylist                   1-9/11     <- parent folder  m_curAudioFileNr = -1
+/audiofiles/myPlaylist/                  1-9/11     <- parent folder  m_curAudioFileNr = -1
   320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
   If_I_Had_a_Chicken_mono_mp3 1591510
   If_I_Had_a_Chicken_mono_16bit.wav 13257580
@@ -3204,7 +3256,7 @@ Audio Files                   Vol11    15:32:18
         }
         tft.setFont(m_fontSize);
         if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
-        else tft.setTextColor(TFT_WHITE);                                    // is file
+        else tft.setTextColor(TFT_WHITE);                                     // is file
         tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         m_curAudioFileNr--;
 
@@ -3235,21 +3287,33 @@ Audio Files                   Vol11    15:32:18
             tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
          m_curAudioFileNr++;
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET);   // is folder
         else tft.setTextColor(TFT_MAGENTA);  // current file
         tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     const char* getSelectedFile(){
-        if(m_curAudioFileNr == -1) { // parent folder
-            if(!strcmp(m_curAudioFolder, "/audiofiles")) return NULL;
-            m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
+        if(m_curAudioFileNr == -1) { // get parent folder
+            if(!strcmp(m_curAudioFolder, "/audiofiles/")) return NULL; // is already the root
+            tft.setTextColor(TFT_CYAN);
+            tft.setFont(m_fontSize);
+            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            vTaskDelay(300 / portTICK_PERIOD_MS);
+            int lastSlash = rfind(m_curAudioFolder, '/');
+            if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
+                int secondLastSlash = rfind(m_curAudioFolder, '/', lastSlash - 1);
+                if(secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';    // previous folder
+            }
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             _SD_content.listFilesInDir(m_curAudioFolder, true, false);
             show(m_curAudioFolder, 0);
             return NULL;
         }
-        if(_SD_content.isDir(m_curAudioFileNr)){
+        if(_SD_content.isDir(m_curAudioFileNr)){ // is child folder
+            tft.setTextColor(TFT_CYAN);
+            tft.setFont(m_fontSize);
+            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
             show(m_curAudioPath, 0);
             return NULL;
@@ -3339,7 +3403,7 @@ private:
         }
 
         if(m_fileListPos == 0) { //  ----------------------------------------------------------- previous folder
-            if(lastIndexOf(m_curAudioFolder, '/') > 1){  // not the first '/'
+            if(lastIndexOf(m_curAudioFolder, '/') > 0){  // not the first '/'
                 m_browseOnRelease = 3;
             }
         }
@@ -3348,7 +3412,7 @@ private:
             int idx = m_viewPos + m_fileListPos -1;
             if(_SD_content.isDir(idx)){
                 strcpy(m_curAudioName, "");
-                strcpy(m_curAudioFolder, _SD_content.getFilePathByIndex(idx));
+                strcpy(m_curAudioFolder, _SD_content.getFileFolderByIndex(idx));
                 m_browseOnRelease = 4;
             }
             else { // -------------------------------------------------------------------------- playfile
