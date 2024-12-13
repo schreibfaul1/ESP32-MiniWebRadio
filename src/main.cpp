@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.0 - Dec 10/2024                                                                                                                       ";
+    Version 3.6.0a - Dec 13/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1375,7 +1375,12 @@ void stopSong() {
     audio.stopSong();
     _f_isFSConnected = false;
     _f_isWebConnected = false;
-    _f_playlistEnabled = false;
+    if(_f_playlistEnabled){
+        vector_clear_and_shrink(_PLS_content);
+        _f_playlistEnabled = false;
+        SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "playlist stopped");
+        webSrv.send("SD_playFile=", "playlist stopped");
+    }
     _f_pauseResume = false;
     _f_playlistNextFile = false;
     _f_shuffle = false;
@@ -4062,13 +4067,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "NewFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     return;}
 
-    if(cmd == "SD_playFile"){       if(audio.isRunning()) stopSong();
+    if(cmd == "SD_playFile"){       stopSong();
                                     webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     SD_playFile(param.c_str());
                                     return;}
 
-    if(cmd == "SD_playAllFiles"){   if(audio.isRunning()) stopSong();
+    if(cmd == "SD_playAllFiles"){   stopSong();
                                     webSrv.send("SD_playFolder=", "" + param);                                                                        // via websocket
                                     SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                     preparePlaylistFromSDFolder(param.c_str()); processPlaylist(true);
