@@ -1017,10 +1017,10 @@ public:
         m_lastConnectedFile = x_ps_malloc(strlen(m_lastConnectedFolder) + strlen(m_lastConnectedFileName) + 1);
         strcpy(m_lastConnectedFile, m_lastConnectedFolder);
         strcat(m_lastConnectedFile, m_lastConnectedFileName);
-        log_e("lastconnectedItem %s", lastconnectedItem);
-        log_e("lastConnectedFile %s", m_lastConnectedFile);
-        log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
-        log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
+        // log_e("lastconnectedItem %s", lastconnectedItem);
+        // log_e("lastConnectedFile %s", m_lastConnectedFile);
+        // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
+        // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
         listFilesInDir(m_lastConnectedFolder, true, false);
         sort();
     }
