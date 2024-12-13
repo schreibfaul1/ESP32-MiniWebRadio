@@ -2056,7 +2056,7 @@ public:
         m_enabled = true;
     }
     void setPicturePath(const char* path){
-        if(m_PicturePath){free(m_PicturePath); m_PicturePath = NULL;}
+        if(m_PicturePath){x_ps_free(m_PicturePath); m_PicturePath = NULL;}
         if(path) m_PicturePath = x_ps_strdup(path);
         else m_PicturePath = x_ps_strdup("picturePath is not set");
         if(path){GetImageSize(path);}
@@ -3231,20 +3231,20 @@ public:
         }
     }
 
-/*
-Audio Files                   Vol11    15:32:18
-/audiofiles/myPlaylist/                  1-9/11     <- parent folder  m_curAudioFileNr = -1
-  320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
-  If_I_Had_a_Chicken_mono_mp3 1591510
-  If_I_Had_a_Chicken_mono_16bit.wav 13257580
-  If_I_Had_a_Chicken_mono_8bit.wav 6628972
-  If_I_Had_a_Chicken_stereo_mp3 6012554
-  If_I_Had_a_Chicken_stereo_16bit.wav 26514608
-  If_I_Had_a_Chicken_stereo_8bit.wav 1327260
-  beep.mp3 75302
-  click.mp3 3360                                    <-                m_curAudioFileNr - m_viewpos = 8
-  003       0:00      0K       IP:192.168.178.24
-*/
+    /*
+    Audio Files                   Vol11    15:32:18
+    /audiofiles/myPlaylist/                  1-9/11     <- parent folder  m_curAudioFileNr = -1
+      320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
+      If_I_Had_a_Chicken_mono_mp3 1591510
+      If_I_Had_a_Chicken_mono_16bit.wav 13257580
+      If_I_Had_a_Chicken_mono_8bit.wav 6628972
+      If_I_Had_a_Chicken_stereo_mp3 6012554
+      If_I_Had_a_Chicken_stereo_16bit.wav 26514608
+      If_I_Had_a_Chicken_stereo_8bit.wav 1327260
+      beep.mp3 75302
+      click.mp3 3360                                    <-                m_curAudioFileNr - m_viewpos = 8
+      003       0:00      0K       IP:192.168.178.24
+    */
 
     void prevFile(){ // from IR control
         if(m_curAudioFileNr < 0) return;
@@ -3313,7 +3313,7 @@ Audio Files                   Vol11    15:32:18
             tft.setTextColor(TFT_CYAN);
             tft.setFont(m_fontSize);
             tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(300 / portTICK_PERIOD_MS);
             strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
             show(m_curAudioPath, 0);
             return NULL;

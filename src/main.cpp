@@ -1866,7 +1866,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     }
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
-    free(_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
+    x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
 
     if(showFN) {
         clearLogo();
@@ -1877,7 +1877,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     connecttoFS("SD_MMC", (const char*)path, resumeFilePos);
     if(_f_playlistEnabled) showPlsFileNumber();
     if(_f_isFSConnected) {
-        free(_settings.lastconnectedfile);
+        x_ps_free(_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(path);
     }
 }
@@ -4449,8 +4449,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
-                                                  if(ra.val1 == 2){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
-                                                  if(ra.val1 == 3){strcpy(_cur_AudioFolder, ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3);} return;}
+                                                  if(ra.val1 == 2){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
+                                                  if(ra.val1 == 3){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
