@@ -3192,6 +3192,7 @@ public:
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
                                         tft.writeText(m_curAudioName, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        vTaskDelay(300 / portTICK_PERIOD_MS);
                                         m_ra.arg1 = m_curAudioFolder;      // fileFolder
                                         m_ra.arg2 = m_curAudioName;        // fileName
                                         m_ra.arg3 = m_curAudioPath;        // filePath
@@ -3318,6 +3319,10 @@ public:
             show(m_curAudioPath, 0);
             return NULL;
         }
+        tft.setTextColor(TFT_CYAN); // is file
+        tft.setFont(m_fontSize);
+        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
         return _SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
     const char* getSelectedFileName(){
