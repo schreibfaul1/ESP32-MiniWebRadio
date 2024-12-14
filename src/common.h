@@ -3266,11 +3266,11 @@ public:
         m_curAudioFileNr--;
 
         if(m_curAudioFileNr == -1) { // parent folder
-            tft.setTextColor(TFT_VIOLET);
+            tft.setTextColor(TFT_LIGHTMAGENTA);
             tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
             return;
         }
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_LIGHTMAGENTA); // is folder
         else tft.setTextColor(TFT_MAGENTA);  // current file
         tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
@@ -3292,7 +3292,7 @@ public:
             tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         }
          m_curAudioFileNr++;
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET);   // is folder
+        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_LIGHTMAGENTA);   // is folder
         else tft.setTextColor(TFT_MAGENTA);  // current file
         tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
