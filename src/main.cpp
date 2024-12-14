@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.0a - Dec 13/2024                                                                                                                       ";
+    Version 3.6.0b - Dec 14/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1638,7 +1638,7 @@ const char* scaleImage(const char* path) {
     }
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
-    int idx = lastIndexOf(path, '/');
+    int idx = indexOf(path, "/", 1);
     if(idx < 0) return path; // invalid path
     else {
         strncpy(pathBuff, path, idx + 1);
