@@ -3556,7 +3556,7 @@ void ir_short_key(uint8_t key) {
                                             btn_PL_nextFile.showClickedPic(); vTaskDelay(50); btn_PL_nextFile.showAlternativePic(); if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++;
                                             showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); setTimeCounter(2);} return;}
                             if(btnNr == 2){ // play file
-                                            btn_PL_ready.showClickedPic(); vTaskDelay(100);  SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
+                                            btn_PL_ready.showClickedPic(); vTaskDelay(100); stopSong(); SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr));
                                             btnNr = 0; _playerSubMenue = 3; changeState(PLAYER); showAudioFileNumber(); setTimeCounter(2); return;}
                             if(btnNr == 3){ // play all files
                                             btn_PL_playAll.showClickedPic(); _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true);
@@ -3595,7 +3595,7 @@ void ir_short_key(uint8_t key) {
 
                     }
                     if(_state == AUDIOFILESLIST){   const char* r = lst_PLAYER.getSelectedFile();
-                                            if(r){SD_playFile(lst_PLAYER.getSelectedFilePath(), 0, true); _cur_AudioFileNr = lst_PLAYER.getSelectedFileNr();}
+                                            if(r){stopSong(); SD_playFile(lst_PLAYER.getSelectedFilePath(), 0, true); _cur_AudioFileNr = lst_PLAYER.getSelectedFileNr();}
                     }
                     if(_state == DLNA) {
                         if(_dlnaSubMenue == 0) { _dlnaSubMenue = 1; btnNr = 0; changeState(DLNA); setTimeCounter(2); break;}
@@ -4441,7 +4441,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubMenue = 0; stopSong(); changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
         if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
-        if(strcmp(name, "btn_PL_ready") == 0)    { SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubMenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
+        if(strcmp(name, "btn_PL_ready") == 0)    {stopSong(); SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubMenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
         if(strcmp(name, "btn_PL_playAll") == 0)  { _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_shuffle") == 0)  { _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
         if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
@@ -4455,7 +4455,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
                                                   if(ra.val1 == 2){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
-                                                  if(ra.val1 == 3){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; SD_playFile(ra.arg3);} return;}
+                                                  if(ra.val1 == 3){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; stopSong(); SD_playFile(ra.arg3);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}
