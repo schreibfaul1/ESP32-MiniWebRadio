@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.0b - Dec 14/2024                                                                                                                       ";
+    Version 3.6.0c - Dec 18/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1565,17 +1565,17 @@ void setup() {
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    if(HP_DETECT != -1) {
+    if(HP_DETECT >= 0){ {
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
     }
-    if(AMP_ENABLED != -1) { // enable onboard amplifier
+    if(AMP_ENABLED >= 0) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
     }
 
     ticker100ms.attach(0.1, timer100ms);
-    if(BT_EMITTER_CONNECT != -1){
+    if(BT_EMITTER_CONNECT >= 0){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
         digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
         _f_BTcurPowerState = true;
@@ -3001,10 +3001,10 @@ endbrightness:
             log_w("st: %s", _streamTitle);
             _f_newStreamTitle = true;
         }
-        // if(r.startsWith("ais")){ // openAIspeech
-        //     log_w("openAI speech");
-        //     audioOpenAIspeech("openAI_key", "Today is a wonderful day to build something people love!");
-        // }
+        if(r.startsWith("ais")){ // openAIspeech
+            log_w("openAI speech");
+            audio.openai_speech("openAI-key", "tts-1", "shimmer", "Today is a wonderful day to build something people love!", "mp3", "1");
+        }
         // if(r.startsWith("ctfs")){ // connecttoFS
         //     log_w("SPIFFS");
         //     connecttoFS("SPIFFS", "/Collide.ogg");
@@ -3038,7 +3038,7 @@ endbrightness:
 // Events from audioI2S library
 void audio_info(const char* info) {
     if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", info);
-                                                    _f_newStreamTitle = true; _f_webFailed = true; log_e("st %s", _streamTitle); return;}
+                                                    _f_newStreamTitle = true; _f_webFailed = true; return;}
     if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); return;}
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
