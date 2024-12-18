@@ -1565,7 +1565,7 @@ void setup() {
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    if(HP_DETECT >= 0){ {
+    if(HP_DETECT >= 0) {
         pinMode(HP_DETECT, INPUT);
         attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
     }
