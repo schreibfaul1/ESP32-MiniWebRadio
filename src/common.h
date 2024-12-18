@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 14.Dec 2024
+// updated: 18.Dec 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3623,11 +3623,12 @@ public:
         stationslist(false);
     }
     void prevStation(){ // from IR control
-        if(m_curStaNrCpy < 1) return;
+        if(m_curStaNrCpy < 2) return;
         int8_t pos = m_curStaNrCpy - m_firstStationsLineNr - 1;
-        if(pos < 1) return;
+        if(pos < 0) return;
         if(pos == 0) { // prev page
-            m_firstStationsLineNr -= 9;
+            if(m_firstStationsLineNr > 8) m_firstStationsLineNr -= 9;
+            else m_firstStationsLineNr = 0;
             m_curStaNrCpy--;
             stationslist(false);
             return;
