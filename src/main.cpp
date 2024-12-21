@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.0c - Dec 18/2024                                                                                                                       ";
+    Version 3.6.0d - Dec 21/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -3486,11 +3486,11 @@ void ir_short_key(uint8_t key) {
                     break;
         case 13:    // ARROW DOWN
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
-                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(20); break;} // station++
+                    if(_state == STATIONSLIST) {lst_RADIO.nextStation(); setTimeCounter(4); break;} // station++
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
-                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(20); break;} // file++
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.nextFile(); setTimeCounter(4); break;} // file++
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); downvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME--
-                    if(_state == DLNAITEMSLIST){lst_DLNA.nextItem(); setTimeCounter(2); return;} // item++
+                    if(_state == DLNAITEMSLIST){lst_DLNA.nextItem(); setTimeCounter(4); return;} // item++
                     if(_state == CLOCK) {downvolume(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == SLEEPTIMER) {downvolume(); setTimeCounter(2); break;} // VOLUME--
                     if(_state == EQUALIZER && _equalizerSubMenue == 1){
@@ -3503,11 +3503,11 @@ void ir_short_key(uint8_t key) {
                     break;
         case 14:    // ARROW UP
                     if(_state == RADIO)  {txt_RA_staName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
-                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(20); break;} // station--
+                    if(_state == STATIONSLIST) {lst_RADIO.prevStation(); setTimeCounter(4); break;} // station--
                     if(_state == PLAYER) {txt_PL_fName.hide();   volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
-                    if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(20); break;} // file-
+                    if(_state == AUDIOFILESLIST){lst_PLAYER.prevFile(); setTimeCounter(4); break;} // file-
                     if(_state == DLNA)  {txt_DL_fName.hide(); volBox.enable(); upvolume(); volBox.setNumbers(_cur_volume); volBox.show(); setTimeCounter(2); break;} // VOLUME++
-                    if(_state == DLNAITEMSLIST){lst_DLNA.prevItem(); setTimeCounter(2); return;} // item++
+                    if(_state == DLNAITEMSLIST){lst_DLNA.prevItem(); setTimeCounter(4); return;} // item++
                     if(_state == CLOCK) {upvolume(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == SLEEPTIMER) {upvolume(); setTimeCounter(2); break;} // VOLUME++
                     if(_state == EQUALIZER && _equalizerSubMenue == 1){
