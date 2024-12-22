@@ -2674,14 +2674,19 @@ public:
     }
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        for(int i = 0; i < 10; i++){
+            free(m_txt[i]); m_txt[i] = strdup("");
+            free(m_ext[i]); m_ext[i] = strdup("");
+            m_nr[i] = -1;
+        }
     }
     void drawLine(uint8_t pos, const char* txt, const char* ext, const char* color = ANSI_ESC_WHITE, int16_t nr = -1){
         if(pos > 9) return;
         tft.setFont(m_fontSize);
         if(m_mode == RADIO){
             sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , nr, color, txt);
-            if(txt){free(m_txt[pos]); m_txt[pos] = NULL; m_txt[pos] = strdup(txt);}
-            if(ext){free(m_ext[pos]); m_ext[pos] = NULL; m_ext[pos] = strdup(ext);}
+            if(txt){free(m_txt[pos]); m_txt[pos] = strdup(txt);}
+            if(ext){free(m_ext[pos]); m_ext[pos] = strdup(ext);}
             m_nr[pos] = nr;
         }
         tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
@@ -3530,7 +3535,22 @@ exit:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern stationManagement   staMgnt;
+extern stationManagement   staMgnt; /*
+  ———————————————————————————————————————————————————————
+  | Stations List                   Vol3    01:16:32    |           m_stationListPos
+  | 017 BGRADIOk                                        |           <-- 0
+  | 018 knixx.fm                                        |           <-- 1
+  | 019 -0N-Chrismas on Radio                           |           <-- 2
+  | 020 BBC 6music                                      |           <-- 3
+  | 021 -0N-Movues on Radio                             |           <-- 4
+  | 022 -0N-Top40 on Radio                              |           <-- 5
+  | 023 Rockantenne Alternative (mp3)                   |           <-- 6
+  | 024 Gra Wroclaw                                     |           <-- 7
+  | 025 Classic EuroDisco                               |           <-- 8
+  | 026 Hit Radio FFH - Soundtrack (AAC+)               |           <-- 9
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
 class stationsList : public RegisterTable {
 private:
     int16_t     m_x = 0;
@@ -3684,7 +3704,7 @@ private:
             }
             return;
         }
-
+        if(myList.getNumberByPos(m_stationListPos) == -1) return;
         if(m_oldX || m_oldY) return;
         m_oldX = x; m_oldY = y;
         m_browseOnRelease = 3;  // pos has clicked
