@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 18.Dec 2024
+// updated: 22.Dec 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -178,9 +178,29 @@
 #define ANSI_ESC_STRIKE         "\033[9m"
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+enum status {
+    NONE = 0,
+    RADIO = 1,
+    PLAYER = 2,
+    DLNA = 3,
+    CLOCK = 4,
+    BRIGHTNESS = 5,
+    ALARM = 6,
+    SLEEPTIMER = 7,
+    STATIONSLIST = 8,
+    AUDIOFILESLIST = 9,
+    DLNAITEMSLIST = 10,
+    BLUETOOTH = 11,
+    EQUALIZER = 12,
+    SETTINGS = 13,
+    IR_SETTINGS = 14,
+    UNDEFINED = 255
+};
+
 static bool _newLine = false;
 extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
+
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
  /* line feed */            if(_newLine){_newLine = false; Serial.println("");} \
                             rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
@@ -2607,6 +2627,82 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class uniList {
+
+private:
+    int16_t                   m_x = 0;
+    int16_t                   m_y = 0;
+    int16_t                   m_w = 0;
+    int16_t                   m_h = 0;
+    int16_t                   m_nr[10] = {0};
+    uint8_t                   m_fontSize = 0;
+    uint8_t                   m_lineHight = 0;
+    uint8_t                   m_mode = 0;
+    uint8_t                   m_insert = 0;
+    uint32_t                  m_bgColor = 0;
+    char*                     m_name = NULL;
+    char*                     m_buff = NULL;
+    char*                     m_txt[10] = {0};
+    char*                     m_ext[10] = {0};
+    bool                      m_enabled = false;
+
+public:
+    uniList(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("dlnaList");
+        m_bgColor = TFT_BLACK;
+    }
+    ~uniList(){
+        if(m_name){free(m_name); m_name = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
+        for(int i = 0; i < 10; i++){if(m_txt[i]) free(m_txt[i]); if(m_ext[i]) free(m_ext[i]);}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_fontSize = fontSize;
+        m_enabled = false;
+        m_lineHight = m_h / 10;
+        m_buff = x_ps_malloc(1024);
+    }
+    void setMode(uint8_t mode){
+        if(mode == RADIO)  {m_mode = RADIO; m_insert = 10;}
+        if(mode == PLAYER) m_mode = PLAYER;
+        if(mode == DLNA)   m_mode = DLNA;
+    }
+    void clearList(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void drawLine(uint8_t pos, const char* txt, const char* ext, const char* color = ANSI_ESC_WHITE, int16_t nr = -1){
+        if(pos > 9) return;
+        tft.setFont(m_fontSize);
+        if(m_mode == RADIO){
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , nr, color, txt);
+            if(txt){free(m_txt[pos]); m_txt[pos] = NULL; m_txt[pos] = strdup(txt);}
+            if(ext){free(m_ext[pos]); m_ext[pos] = NULL; m_ext[pos] = strdup(ext);}
+            m_nr[pos] = nr;
+        }
+        tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    void colourLine(uint8_t pos, const char* color = ANSI_ESC_WHITE) {
+        if(pos > 9) return;
+        tft.setFont(m_fontSize);
+        if(m_mode == RADIO){
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , m_nr[pos], color, m_txt[pos]);
+        }
+        tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    const char* getTxtByPos(uint8_t pos){
+        return m_txt[pos];
+    }
+    int16_t getNumberByPos(uint8_t pos){
+        return m_nr[pos];
+    }
+};
+extern uniList myList;
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*
   ———————————————————————————————————————————————————————
   | DLNA List                       Vol3    01:10:32    |           m_itemsListPos
@@ -2739,7 +2835,7 @@ public:
         if(m_browseOnRelease == 0){;}                                                                                                              // file
         if(m_browseOnRelease == 1){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
         if(m_browseOnRelease == 2){(*m_dlnaLevel) --; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // previous level
-        if(m_browseOnRelease == 3){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder
+        if(m_browseOnRelease == 3){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder, next level
         if(m_browseOnRelease == 4){                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);}   // scroll up / down
 
         m_browseOnRelease = 0;
@@ -2804,8 +2900,6 @@ private:
         if(isURL && !isAudio) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%li)", itemSize);
         tft.writeText(m_buff, posX, posY, width, height, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
-
-
 
     void hasReleased(uint16_t x, uint16_t y){
 
@@ -2950,7 +3044,7 @@ public:
             m_chptr = NULL;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
             m_dlna->loop();
-            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse ready
             m_srvContent = m_dlna->getBrowseResult();
             dlnaItemsList();
             return;
@@ -3017,7 +3111,7 @@ public:
             dlnaItemsList();
             return NULL;
         }
-        if(strcmp(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "?") == 0){ // ----------------------------------------------------- choose folder
+        if(strcmp(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "?") == 0){ // --------------------------------------- choose folder
             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);  // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel) ++;
@@ -3460,6 +3554,10 @@ private:
     char*       m_pathBuff = NULL;
     char*       m_buff = NULL;
     releasedArg m_ra;
+    const char* m_colorToDraw = NULL;
+    const char* m_staNameToDraw = NULL;
+    uint16_t    m_staNrToDraw = 0;
+
 public:
     stationsList(const char* name){
         register_object(this);
@@ -3527,9 +3625,10 @@ public:
                                     }
         if(m_browseOnRelease == 2)  {   stationslist(false);                                             // wipe down
                                     }
-        if(m_browseOnRelease == 3)  {   tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_browseOnRelease == 3)  {   myList.getTxtByPos(m_stationListPos);                            // click
+                                        myList.colourLine(m_stationListPos, ANSI_ESC_CYAN);
                                         vTaskDelay(300 / portTICK_PERIOD_MS);
-                                        m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
+                                        m_ra.val1 = myList.getNumberByPos(m_stationListPos);
                                     }
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
@@ -3550,30 +3649,18 @@ private:
             m_curStaNrCpy = *m_curSstationNr;
             if(m_curStaNrCpy == 0) m_curStaNrCpy = 1;
         }
-        else{
-            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
-        char* stationStr = x_ps_malloc(1024);
-        tft.setFont(m_fontSize);
+        myList.clearList();
+        myList.setMode(RADIO);
+
         for(uint8_t pos = 0; pos < 10; pos++) {
-
             if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
+            if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*') m_colorToDraw = ANSI_ESC_WHITE;   // is fav station
+            else                                                              m_colorToDraw = ANSI_ESC_GREY;    // is not a fav station
+            if((pos + m_firstStationsLineNr + 1) == m_curStaNrCpy)            m_colorToDraw = ANSI_ESC_MAGENTA; // is the current station
 
-            if((pos + m_firstStationsLineNr + 1) == m_curStaNrCpy){
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, ( pos + m_firstStationsLineNr + 1)); // is currStationNr
-            }
-            else{
-                if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*'){
-                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (pos + m_firstStationsLineNr + 1));
-                }
-                else{
-                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (pos + m_firstStationsLineNr + 1));
-                }
-            }
-            strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(pos + m_firstStationsLineNr + 1));
-
-            for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
-            tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1);                          // the station name
+            m_staNrToDraw = pos + m_firstStationsLineNr + 1;                                                    // the station number
+            myList.drawLine(pos, m_staNameToDraw, "", m_colorToDraw, m_staNrToDraw);
         }
         xSemaphoreGive(mutex_display);
     }
@@ -3598,16 +3685,9 @@ private:
             return;
         }
 
-        if(!m_buff) m_buff = x_ps_malloc(1024);
-        tft.setFont(m_fontSize);
-        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, (m_firstStationsLineNr + m_stationListPos + 1));
-        strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
-
-        for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
-    //    tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
         if(m_oldX || m_oldY) return;
         m_oldX = x; m_oldY = y;
-        m_browseOnRelease = 3;
+        m_browseOnRelease = 3;  // pos has clicked
         return;
     }
 public:
@@ -3633,23 +3713,9 @@ public:
             stationslist(false);
             return;
         }
-        char* stationStr = x_ps_malloc(1024);
-        if(!stationStr){log_e("oom"); return;}
-        if(!stationStr) return;
-        tft.setFont(m_fontSize);
-        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
-        }
-        else{
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
-        }
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos,staMgnt.getStationFav(m_curStaNrCpy) == '*'? ANSI_ESC_WHITE : ANSI_ESC_GREY);
+        myList.colourLine(pos - 1, ANSI_ESC_MAGENTA);
         m_curStaNrCpy--;
-        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos - 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        free(stationStr);
     }
     void nextStation(){ // from IR control
         if(m_curStaNrCpy >= staMgnt.getSumStations()) return;
@@ -3661,27 +3727,13 @@ public:
             stationslist(false);
             return;
         }
-        char* stationStr = x_ps_malloc(1024);
-        if(!stationStr) return;
-        tft.setFont(m_fontSize);
-        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
-        }
-        else{
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
-        }
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos,staMgnt.getStationFav(m_curStaNrCpy) == '*'? ANSI_ESC_WHITE : ANSI_ESC_GREY);
+        myList.colourLine(pos + 1, ANSI_ESC_MAGENTA);
         m_curStaNrCpy++;
-        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos + 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        free(stationStr);
     }
     uint16_t getSelectedStation(){ // from IR control
         return m_curStaNrCpy;
     }
-
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class vuMeter : public RegisterTable {

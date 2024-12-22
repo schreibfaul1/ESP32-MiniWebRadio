@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.0d - Dec 21/2024                                                                                                                       ";
+    Version 3.6.0e - Dec 22/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -26,25 +26,6 @@
 SET_LOOP_TASK_STACK_SIZE(10 * 1024);
 
 // global variables
-
-enum status {
-    NONE = 0,
-    RADIO = 1,
-    PLAYER = 2,
-    DLNA = 3,
-    CLOCK = 4,
-    BRIGHTNESS = 5,
-    ALARM = 6,
-    SLEEPTIMER = 7,
-    STATIONSLIST = 8,
-    AUDIOFILESLIST = 9,
-    DLNAITEMSLIST = 10,
-    BLUETOOTH = 11,
-    EQUALIZER = 12,
-    SETTINGS = 13,
-    IR_SETTINGS = 14,
-    UNDEFINED = 255
-};
 
 char _hl_item[16][40]{  "",                 // none
                         "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
@@ -371,6 +352,7 @@ TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 displayHeader dispHeader("dispHeader", _fonts[1]);
 displayFooter dispFooter("dispFooter", _fonts[1]);
 numbersBox    volBox("volBox");
+uniList       myList("myList");
 // RADIO
 button2state  btn_RA_Mute("btn_RA_Mute");
 button1state  btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
@@ -2056,6 +2038,7 @@ void placingGraphicObjects() { // and initialize them
     dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
     dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
     volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
+    myList.begin(             _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_RA_volume.begin(      _sdrOvBtns.x,  _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, 0, _volumeSteps); sdr_RA_volume.setValue(_cur_volume);
     btn_RA_Mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_Mute.setOffPicturePath("/btn/Button_Mute_Green.jpg");
