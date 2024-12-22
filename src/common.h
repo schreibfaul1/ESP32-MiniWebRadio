@@ -2643,7 +2643,8 @@ private:
     char*                     m_name = NULL;
     char*                     m_buff = NULL;
     char*                     m_txt[10] = {0};
-    char*                     m_ext[10] = {0};
+    char*                     m_ext1[10] = {0};
+    char*                     m_ext2[10] = {0};
     bool                      m_enabled = false;
 
 public:
@@ -2655,7 +2656,7 @@ public:
     ~uniList(){
         if(m_name){free(m_name); m_name = NULL;}
         if(m_buff){free(m_buff); m_buff = NULL;}
-        for(int i = 0; i < 10; i++){if(m_txt[i]) free(m_txt[i]); if(m_ext[i]) free(m_ext[i]);}
+        for(int i = 0; i < 10; i++){if(m_txt[i]) free(m_txt[i]); if(m_ext1[i]) free(m_ext1[i]); if(m_ext2[i]) free(m_ext2[i]);}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
@@ -2669,25 +2670,38 @@ public:
     }
     void setMode(uint8_t mode){
         if(mode == RADIO)  {m_mode = RADIO; m_insert = 10;}
-        if(mode == PLAYER) m_mode = PLAYER;
-        if(mode == DLNA)   m_mode = DLNA;
+        if(mode == PLAYER) m_mode  = PLAYER;
+        if(mode == DLNA)   {m_mode = DLNA;  m_insert = 10;}
     }
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         for(int i = 0; i < 10; i++){
-            free(m_txt[i]); m_txt[i] = strdup("");
-            free(m_ext[i]); m_ext[i] = strdup("");
+            free(m_txt[i]);  m_txt[i]  = NULL;
+            free(m_ext1[i]); m_ext1[i] = NULL;
+            free(m_ext2[i]); m_ext2[i] = NULL;
             m_nr[i] = -1;
         }
     }
-    void drawLine(uint8_t pos, const char* txt, const char* ext, const char* color = ANSI_ESC_WHITE, int16_t nr = -1){
+    void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int16_t nr = -1){
         if(pos > 9) return;
+        if(!txt) return;
         tft.setFont(m_fontSize);
         if(m_mode == RADIO){
             sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , nr, color, txt);
-            if(txt){free(m_txt[pos]); m_txt[pos] = strdup(txt);}
-            if(ext){free(m_ext[pos]); m_ext[pos] = strdup(ext);}
+            if(txt ){free(m_txt[pos]);  m_txt[pos]  = strdup(txt);}
+            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
             m_nr[pos] = nr;
+        }
+        if(m_mode == DLNA){
+            if(!txt) {log_e("txt is NULL"); return;}
+            if(!ext1)                sprintf(m_buff, "%s%s", color, txt);
+            else if(ext1[0] == '\0') sprintf(m_buff, "%s%s", color, txt);
+            else                     sprintf(m_buff, "%s%s " ANSI_ESC_CYAN "(%s)" , color, txt, ext1);
+            m_insert = pos? 20 : 10;
+            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = 1;}
+            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
         }
         tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
@@ -2705,6 +2719,15 @@ public:
     int16_t getNumberByPos(uint8_t pos){
         return m_nr[pos];
     }
+    void drawTriangeUp(){
+        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
+         triangleUp(0, m_y + (1 * m_lineHight), m_lineHight / 3.5);
+    }
+    void drawTriangeDown(){
+        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
+        triangleDown(0, m_y + (9 * m_lineHight), m_lineHight / 3.5);
+    }
+
 };
 extern uniList myList;
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2746,6 +2769,8 @@ private:
     bool                      m_enabled = false;
     bool                      m_clicked = false;
     bool                      m_state = false;
+    bool                      m_isAudio = false;
+    bool                      m_isURL = false;
     char*                     m_name = NULL;
     char*                     m_pathBuff = NULL;
     char*                     m_chptr = NULL;
@@ -2853,18 +2878,15 @@ public:
 private:
     void dlnaItemsList(){
         uint8_t pos = 0;
-
-        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
-        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
-
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.setMode(DLNA);
+        myList.clearList();
+        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
         tft.setTextColor(TFT_WHITE);
         for(pos = 1; pos < 10; pos++) {
-            if(pos == 1 && m_viewPoint > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
-            if(pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
+            if(pos == 1 && m_viewPoint > 0)                      { myList.drawTriangeUp();}
+            if(pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown();}
+            if(*m_dlnaLevel == 0 && pos > m_dlnaServer.size) {/* log_e("pos too high %i", pos);*/ break;}   // guard
+            if(*m_dlnaLevel >  0 && pos > m_srvContent.size) {/* log_e("pos too high %i", pos);*/ break;}   // guard
             drawItem(pos);
         }
         sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
@@ -2878,32 +2900,40 @@ private:
         if(pos < 0 || pos > 9) {log_e("pos oor %i", pos); return;}                                          // guard
         if(*m_dlnaLevel == 0 && pos > m_dlnaServer.size) {/* log_e("pos too high %i", pos);*/ return;}   // guard
         if(*m_dlnaLevel >  0 && pos > m_srvContent.size) {/* log_e("pos too high %i", pos);*/ return;}   // guard
+        char extension[15] = {0};
+        char dummy[] = "";
         bool isAudio = false;
         bool isURL = false;
-        const char* item = NULL; char* duration = NULL; const char* itemURL = NULL; (void)itemURL;
-        char color[20];
-        uint16_t posX = m_x + 20, posY = m_y + pos * m_lineHight, width = m_w - 20, height = m_lineHight;
+        const char *item = dummy, *duration = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE; (void)itemURL;
         int32_t itemSize = 0;
         int16_t childCount = 0;
-        tft.setFont(m_fontSize);
         if(pos == 0){
-            if(pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) strcpy(color, ANSI_ESC_MAGENTA); else strcpy(color, ANSI_ESC_ORANGE);
-            if(selectedLine) strcpy(color, ANSI_ESC_CYAN);
-            sprintf(m_buff, "%s%s", color, m_dlnaHistory[*m_dlnaLevel].name);
-            tft.writeText(m_buff, 10, posY , m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) color = ANSI_ESC_MAGENTA; else color = ANSI_ESC_ORANGE;
+            if(selectedLine) color = ANSI_ESC_CYAN;
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
             return;
         }
-        if(*m_dlnaLevel == 0) {item = m_dlnaServer.friendlyName[pos - 1];}
-        else {                 item = m_srvContent.title[pos - 1]; itemSize = m_srvContent.itemSize[pos - 1]; childCount = m_srvContent.childCount[pos -1]; duration = m_srvContent.duration[pos - 1];
-                               itemURL = m_srvContent.itemURL[pos -1]; isAudio = m_srvContent.isAudio[pos - 1]; if(startsWith(m_srvContent.itemURL[pos -1], "http")) isURL = true;}
+        if(*m_dlnaLevel == 0) {
+            if(m_dlnaServer.friendlyName[pos - 1]) item = m_dlnaServer.friendlyName[pos - 1];
+        }
+        else {
+            if(m_srvContent.title[pos - 1]) item = m_srvContent.title[pos - 1];
+            itemSize = m_srvContent.itemSize[pos - 1];
+            childCount = m_srvContent.childCount[pos -1];
+            if(m_srvContent.duration[pos - 1]) duration = m_srvContent.duration[pos - 1];
+            isAudio = m_srvContent.isAudio[pos - 1];
+            if(startsWith(m_srvContent.itemURL[pos -1], "http")) {isURL = true; itemURL = m_srvContent.itemURL[pos -1];}
+        }
 
-        if((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {strcpy(color, ANSI_ESC_MAGENTA);} else if(isURL && isAudio) {strcpy(color, ANSI_ESC_YELLOW);} else {strcpy(color, ANSI_ESC_WHITE);}
-        if(selectedLine) strcpy(color, ANSI_ESC_CYAN);
-        sprintf(m_buff, "%s%s", color, item);
-        if(childCount) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%i)", childCount);
-        if(isURL && isAudio) {if(strcmp(duration, "0:00:00") == 0) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%li)", itemSize); else sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%s)", duration);}
-        if(isURL && !isAudio) sprintf(m_buff + strlen(m_buff), ANSI_ESC_CYAN " (%li)", itemSize);
-        tft.writeText(m_buff, posX, posY, width, height, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]){ color = ANSI_ESC_MAGENTA;}
+        else if(isURL && isAudio)                                { color = ANSI_ESC_YELLOW;}
+        else                                                     { color = ANSI_ESC_WHITE;}
+        if(selectedLine)                                         { color = ANSI_ESC_CYAN;}
+
+        if(childCount)        {sprintf(extension, "%i", childCount);}
+        if(itemSize)          {sprintf(extension, "%li", itemSize);}
+        if(duration[0] != '?'){if(strcmp(duration, "0:00:00") != 0) sprintf(extension, "%s", duration);}
+        myList.drawLine(pos, item, extension, itemURL, color, 1);
     }
 
     void hasReleased(uint16_t x, uint16_t y){
@@ -3134,6 +3164,10 @@ public:
             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
             // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
             dlnaItemsList();
+            if(!m_dlnaMaxItems) { // folder is empty
+                m_currItemNr[*m_dlnaLevel]--;
+                drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+            }
             return NULL;
         }
         if(startsWith(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "http") != 0){ // ---------------------------------- choose file
@@ -3680,7 +3714,7 @@ private:
 
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1);                          // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                                                    // the station number
-            myList.drawLine(pos, m_staNameToDraw, "", m_colorToDraw, m_staNrToDraw);
+            myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw, m_staNrToDraw);
         }
         xSemaphoreGive(mutex_display);
     }
