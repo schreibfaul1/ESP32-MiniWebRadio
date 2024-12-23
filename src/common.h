@@ -168,6 +168,8 @@
 #define ANSI_ESC_AQUAMARINE     "\033[38;5;51m"
 #define ANSI_ESC_LAVENDER       "\033[38;5;189m"
 
+#define ANSI_ESC_LIGHTBROWN     "\033[38;2;210;180;140m"
+
 #define ANSI_ESC_RESET          "\033[0m"
 #define ANSI_ESC_BOLD           "\033[1m"
 #define ANSI_ESC_FAINT          "\033[2m"
@@ -2634,11 +2636,10 @@ private:
     int16_t                   m_y = 0;
     int16_t                   m_w = 0;
     int16_t                   m_h = 0;
-    int16_t                   m_nr[10] = {0};
+    int32_t                   m_nr[10] = {0};
     uint8_t                   m_fontSize = 0;
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_mode = 0;
-    uint8_t                   m_insert = 0;
     uint32_t                  m_bgColor = 0;
     char*                     m_name = NULL;
     char*                     m_buff = NULL;
@@ -2669,9 +2670,9 @@ public:
         m_buff = x_ps_malloc(1024);
     }
     void setMode(uint8_t mode){
-        if(mode == RADIO)  {m_mode = RADIO; m_insert = 10;}
-        if(mode == PLAYER) m_mode  = PLAYER;
-        if(mode == DLNA)   {m_mode = DLNA;  m_insert = 10;}
+        if(mode == RADIO)  {m_mode = RADIO;}
+        if(mode == PLAYER) {m_mode  = PLAYER;}
+        if(mode == DLNA)   {m_mode = DLNA;}
     }
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -2682,12 +2683,12 @@ public:
             m_nr[i] = -1;
         }
     }
-    void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int16_t nr = -1){
+    void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int32_t nr = -1){
         if(pos > 9) return;
         if(!txt) return;
         tft.setFont(m_fontSize);
         if(m_mode == RADIO){
-            sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , nr, color, txt);
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , nr, color, txt);
             if(txt ){free(m_txt[pos]);  m_txt[pos]  = strdup(txt);}
             if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
             if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
@@ -2698,20 +2699,33 @@ public:
             if(!ext1)                sprintf(m_buff, "%s%s", color, txt);
             else if(ext1[0] == '\0') sprintf(m_buff, "%s%s", color, txt);
             else                     sprintf(m_buff, "%s%s " ANSI_ESC_CYAN "(%s)" , color, txt, ext1);
-            m_insert = pos? 20 : 10;
             if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = 1;}
             if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
             if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
         }
-        tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_mode == PLAYER){
+            if(!txt) {log_e("txt is NULL"); return;}
+            if(!nr)  sprintf(m_buff, "%s%s", color, txt);
+            else     sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li" , color, txt, nr);
+            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
+        }
+        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, const char* color){ // e.g. 1-9/65
+        sprintf(m_buff, "%s%i-%i/%i", color, firstVal, secondVal, total);
+        tft.writeText(m_buff, 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
     }
     void colourLine(uint8_t pos, const char* color = ANSI_ESC_WHITE) {
         if(pos > 9) return;
         tft.setFont(m_fontSize);
         if(m_mode == RADIO){
-            sprintf(m_buff, ANSI_ESC_YELLOW "%03d %s%s" , m_nr[pos], color, m_txt[pos]);
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , m_nr[pos], color, m_txt[pos]);
         }
-        tft.writeText(m_buff, m_insert, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_mode == PLAYER){
+            if(m_nr[pos]) sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, m_txt[pos], m_nr[pos]); // file
+            else          sprintf(m_buff, "%s%s", color, m_txt[pos]);                                   // directory
+        }
+        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     const char* getTxtByPos(uint8_t pos){
         return m_txt[pos];
@@ -3182,6 +3196,23 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*
+  ———————————————————————————————————————————————————————
+  | Audio Files                     Vol11    15:32:18   |
+  | /audiofiles/myPlaylist/                    1-9/11   |           <- parent folder  m_curAudioFileNr = -1
+  |   320_test.mpr 9610227                              |           <--               m_curAudioFileNr - m_viewpos = 0
+  |   If_I_Had_a_Chicken_mono_mp3 1591510               |           <--
+  |   If_I_Had_a_Chicken_mono_16bit.wav 13257580        |           <--
+  |   If_I_Had_a_Chicken_mono_8bit.wav 6628972          |           <--
+  |   If_I_Had_a_Chicken_stereo_mp3 6012554             |           <--
+  |   If_I_Had_a_Chicken_stereo_16bit.wav 26514608      |           <--
+  |   If_I_Had_a_Chicken_stereo_8bit.wav 1327260        |           <--
+  |   beep.mp3 75302                                    |           <--
+  |     click.mp3 3360                                  |           <--               m_curAudioFileNr - m_viewpos = 8
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
+
 class fileList : public RegisterTable {
 private:
     int16_t     m_x = 0;
@@ -3205,6 +3236,12 @@ private:
     char*       m_curAudioPath = NULL;
     char*       m_curAudioName = NULL;
     char*       m_fileItemsPos = NULL;
+    const char* m_rootColor = ANSI_ESC_LIGHTBROWN;
+    const char* m_folderColor = ANSI_ESC_ORANGE;
+    const char* m_fileColor = ANSI_ESC_WHITE;
+    const char* m_seletColor = ANSI_ESC_CYAN;
+    const char* m_irColor = ANSI_ESC_MAGENTA;
+    const char* m_currentColor = ANSI_ESC_LIGHTRED;
     releasedArg m_ra;
 public:
     fileList(const char* name){
@@ -3369,43 +3406,18 @@ public:
         }
     }
 
-    /*
-    Audio Files                   Vol11    15:32:18
-    /audiofiles/myPlaylist/                  1-9/11     <- parent folder  m_curAudioFileNr = -1
-      320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
-      If_I_Had_a_Chicken_mono_mp3 1591510
-      If_I_Had_a_Chicken_mono_16bit.wav 13257580
-      If_I_Had_a_Chicken_mono_8bit.wav 6628972
-      If_I_Had_a_Chicken_stereo_mp3 6012554
-      If_I_Had_a_Chicken_stereo_16bit.wav 26514608
-      If_I_Had_a_Chicken_stereo_8bit.wav 1327260
-      beep.mp3 75302
-      click.mp3 3360                                    <-                m_curAudioFileNr - m_viewpos = 8
-      003       0:00      0K       IP:192.168.178.24
-    */
-
     void prevFile(){ // from IR control
         if(m_curAudioFileNr < 0) return;
-        uint8_t lineHight = m_h / 10;
-
         if(m_curAudioFileNr && m_curAudioFileNr - m_viewPos == 0) {
             if(m_viewPos >= 9) m_viewPos -= 9; else m_viewPos = 0;
             m_curAudioFileNr--; audioFileslist(m_viewPos); return;
         }
-        tft.setFont(m_fontSize);
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
-        else tft.setTextColor(TFT_WHITE);                                     // is file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        int pos = m_curAudioFileNr - m_viewPos + 1;
+        const char* color = m_fileColor;                               // assume is file
+        if(_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
+        myList.colourLine(pos, color);
         m_curAudioFileNr--;
-
-        if(m_curAudioFileNr == -1) { // parent folder
-            tft.setTextColor(TFT_LIGHTMAGENTA);
-            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            return;
-        }
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_LIGHTMAGENTA); // is folder
-        else tft.setTextColor(TFT_MAGENTA);  // current file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos - 1, m_irColor);
     }
     void nextFile(){ // from IR control
         if(m_curAudioFileNr == _SD_content.getSize() - 1) return;
@@ -3413,21 +3425,16 @@ public:
             if(m_viewPos + 9 < _SD_content.getSize()) m_viewPos += 9; else m_viewPos = _SD_content.getSize() - 1;
             m_curAudioFileNr++; audioFileslist(m_viewPos); return;
         }
-        tft.setFont(m_fontSize);
-        uint8_t lineHight = m_h / 10;
-        if(m_curAudioFileNr == -1){
-            tft.setTextColor(TFT_LIGHTBROWN);// is parent folder
-            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        }
+        const char* color;
+        int pos = m_curAudioFileNr - m_viewPos + 1;
+        if(m_curAudioFileNr == -1){                 color = m_rootColor;}  // is root dir
         else{
-            if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
-            else tft.setTextColor(TFT_WHITE);// is file
-            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
+            else                                    color = m_fileColor;   // is file
         }
-         m_curAudioFileNr++;
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_LIGHTMAGENTA);   // is folder
-        else tft.setTextColor(TFT_MAGENTA);  // current file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos, color);
+        m_curAudioFileNr++;
+        myList.colourLine(pos + 1, m_irColor);
     }
     const char* getSelectedFile(){
         if(m_curAudioFileNr == -1) { // get parent folder
@@ -3480,41 +3487,35 @@ private:
         if(viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; }   // viewPos too high
         //--------------------------------------------------------------------------------------------------------------------------------------------
 
-        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
-
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
-        uint8_t lineHight = m_h / 10;
-        tft.setTextColor(TFT_LIGHTBROWN);
-        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        tft.setTextColor(TFT_WHITE);
+        myList.setMode(PLAYER);
+        myList.clearList();
+        const char* color;
+
+        color = m_folderColor;
+        if(strcmp(m_curAudioFolder, "/audiofiles/") == 0) color = m_rootColor; // is root
+        myList.drawLine(0, m_curAudioFolder, "", "", color, 0);
+        color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
-            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) {
-                tft.setTextColor(TFT_AQUAMARINE);
-                triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
-            }
-            if (pos == 9 && viewPos + 9 < _SD_content.getSize()) {
-                tft.setTextColor(TFT_AQUAMARINE);
-                triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
-            }
+            int idx = pos + viewPos - 1;
+            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) { myList.drawTriangeUp();}
+            if (pos == 9 && viewPos + 9 < _SD_content.getSize())  { myList.drawTriangeDown();}
             if (viewPos + pos > _SD_content.getSize()) break;
-            if (_SD_content.isDir(pos + viewPos - 1)){
-                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_VIOLET); // is current folder
-                else tft.setTextColor(TFT_ORANGE); // is folder
+            if (_SD_content.isDir(idx)){
+                if (idx== m_curAudioFileNr){color = m_seletColor;}            // is current folder
+                else                       {color = m_folderColor;}           // is folder
             }
             else {
-                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA); // current file
-                else tft.setTextColor(TFT_WHITE); // is file
+                if (idx== m_curAudioFileNr){color = m_seletColor;}            // current file
+                else                       {color = m_fileColor;}             // is file
             }
-            tft.writeText(_SD_content.getColouredSStringByIndex(pos + viewPos - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(_SD_content.isDir(idx)) myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, 0);
+            else                       myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, _SD_content.getFileSizeByIndex(idx));
         }
         uint16_t firstVal = viewPos + 1;
         uint16_t secondVal = firstVal + 8;
         if(secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
-        sprintf(m_fileItemsPos, "%i-%i/%i", firstVal, secondVal, _SD_content.getSize()); // shows the current items pos e.g. "30-39/210"
-        tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_fileItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        myList.drawPosInfo(firstVal, secondVal, _SD_content.getSize(), ANSI_ESC_ORANGE); // shows the current items pos e.g. "30-39/210"
         return;
   }
 
