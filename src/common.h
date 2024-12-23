@@ -3787,6 +3787,9 @@ public:
         m_curStaNrCpy++;
     }
     uint16_t getSelectedStation(){ // from IR control
+        int8_t pos = m_curStaNrCpy - m_firstStationsLineNr;
+        myList.colourLine(pos - 1, ANSI_ESC_CYAN);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
         return m_curStaNrCpy;
     }
 };
