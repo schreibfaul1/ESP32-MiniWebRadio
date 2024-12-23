@@ -1,4 +1,4 @@
-# ESP32-MiniWebRadio V3.4
+# ESP32-MiniWebRadio V3.6
 
 ![Display](docs/MiniWebRadio.jpg)
 
