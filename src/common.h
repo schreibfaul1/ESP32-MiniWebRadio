@@ -3239,9 +3239,9 @@ private:
     const char* m_rootColor = ANSI_ESC_LIGHTBROWN;
     const char* m_folderColor = ANSI_ESC_ORANGE;
     const char* m_fileColor = ANSI_ESC_WHITE;
-    const char* m_seletColor = ANSI_ESC_CYAN;
+    const char* m_selectColor = ANSI_ESC_CYAN;
     const char* m_irColor = ANSI_ESC_MAGENTA;
-    const char* m_currentColor = ANSI_ESC_LIGHTRED;
+    const char* m_currentColor = ANSI_ESC_MAGENTA;
     releasedArg m_ra;
 public:
     fileList(const char* name){
@@ -3473,6 +3473,8 @@ public:
         return _SD_content.getFileNameByIndex(m_curAudioFileNr);
     }
     const char* getSelectedFilePath(){
+        myList.colourLine(m_curAudioFileNr - m_viewPos + 1, m_selectColor);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
         return _SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
     uint16_t getSelectedFileNr(){
@@ -3502,11 +3504,11 @@ private:
             if (pos == 9 && viewPos + 9 < _SD_content.getSize())  { myList.drawTriangeDown();}
             if (viewPos + pos > _SD_content.getSize()) break;
             if (_SD_content.isDir(idx)){
-                if (idx== m_curAudioFileNr){color = m_seletColor;}            // is current folder
+                if (idx== m_curAudioFileNr){color = m_currentColor;}          // is current folder
                 else                       {color = m_folderColor;}           // is folder
             }
             else {
-                if (idx== m_curAudioFileNr){color = m_seletColor;}            // current file
+                if (idx== m_curAudioFileNr){color = m_currentColor;}          // current file
                 else                       {color = m_fileColor;}             // is file
             }
             if(_SD_content.isDir(idx)) myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, 0);
