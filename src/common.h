@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 14.Nov 2024
+// updated: 23.Dec 2024
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -130,53 +130,79 @@
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // output on serial terminal
-#define ANSI_ESC_BLACK      "\033[30m"
-#define ANSI_ESC_GREY       "\033[90m"
-// #define ANSI_ESC_PINK       "\033[91m"
-// #define ANSI_ESC_LIME       "\033[92m"
-// #define ANSI_ESC_YELLOW     "\033[93m"
-// #define ANSI_ESC_BLUE       "\033[94m"
-// #define ANSI_ESC_MAGENTA    "\033[95m"
-// #define ANSI_ESC_CYAN       "\033[96m"
-// #define ANSI_ESC_WHITE      "\033[97m"
-// #define ANSI_ESC_RESET      "\033[0m"
-#define ANSI_ESC_RED        "\033[31m"
-#define ANSI_ESC_GREEN      "\033[32m"
-#define ANSI_ESC_YELLOW     "\033[33m"
-#define ANSI_ESC_BLUE       "\033[34m"
-#define ANSI_ESC_MAGENTA    "\033[35m"
-#define ANSI_ESC_CYAN       "\033[36m"
-#define ANSI_ESC_WHITE      "\033[37m"
-#define ANSI_ESC_BROWN      "\033[38;5;130m"
-#define ANSI_ESC_ORANGE     "\033[38;5;214m"
-// #define ANSI_ESC_PURPLE     "\033[38;5;129m"
-// #define ANSI_ESC_PINK       "\033[38;5;213m"
-// #define ANSI_ESC_LIME       "\033[38;5;190m"
-// #define ANSI_ESC_NAVY       "\033[38;5;25m"
-// #define ANSI_ESC_VIOLET     "\033[38;5;129m"
-// #define ANSI_ESC_AQUA       "\033[38;5;51m"
-// #define ANSI_ESC_LAVENDER   "\033[38;5;189m"
-// #define ANSI_ESC_DARKGREEN  "\033[38;5;22m"
-// #define ANSI_ESC_DARKRED    "\033[38;5;52m"
-// #define ANSI_ESC_DARKYELLOW "\033[38;5;214m"
-// #define ANSI_ESC_DARKBLUE   "\033[38;5;17m"
-// #define ANSI_ESC_DARKMAGENTA "\033[38;5;53m"
-// #define ANSI_ESC_DARKCYAN   "\033[38;5;23m"
-// #define ANSI_ESC_DARKWHITE  "\033[38;5;188m"
+#define ANSI_ESC_RESET          "\033[0m"
+#define ANSI_ESC_BLACK          "\033[30m"
+#define ANSI_ESC_RED            "\033[31m"
+#define ANSI_ESC_GREEN          "\033[32m"
+#define ANSI_ESC_YELLOW         "\033[33m"
+#define ANSI_ESC_BLUE           "\033[34m"
+#define ANSI_ESC_MAGENTA        "\033[35m"
+#define ANSI_ESC_CYAN           "\033[36m"
+#define ANSI_ESC_WHITE          "\033[37m"
 
-#define ANSI_ESC_RESET      "\033[0m"
-#define ANSI_ESC_BOLD       "\033[1m"
-#define ANSI_ESC_FAINT      "\033[2m"
-#define ANSI_ESC_ITALIC     "\033[3m"
-#define ANSI_ESC_UNDERLINE  "\033[4m"
-#define ANSI_ESC_BLINK      "\033[5m"
-#define ANSI_ESC_INVERT     "\033[7m"
-#define ANSI_ESC_STRIKE     "\033[9m"
+#define ANSI_ESC_GREY           "\033[90m"
+#define ANSI_ESC_LIGHTRED       "\033[91m"
+#define ANSI_ESC_LIGHTGREEN     "\033[92m"
+#define ANSI_ESC_LIGHTYELLOW    "\033[93m"
+#define ANSI_ESC_LIGHTBLUE      "\033[94m"
+#define ANSI_ESC_LIGHTMAGENTA   "\033[95m"
+#define ANSI_ESC_LIGHTCYAN      "\033[96m"
+#define ANSI_ESC_LIGHTGREY      "\033[97m"
+
+#define ANSI_ESC_DARKRED        "\033[38;5;52m"
+#define ANSI_ESC_DARKGREEN      "\033[38;5;22m"
+#define ANSI_ESC_DARKYELLOW     "\033[38;5;136m"
+#define ANSI_ESC_DARKBLUE       "\033[38;5;17m"
+#define ANSI_ESC_DARKMAGENTA    "\033[38;5;53m"
+#define ANSI_ESC_DARKCYAN       "\033[38;5;23m"
+#define ANSI_ESC_DARKGREY       "\033[38;5;240m"
+
+#define ANSI_ESC_BROWN          "\033[38;5;130m"
+#define ANSI_ESC_ORANGE         "\033[38;5;214m"
+#define ANSI_ESC_DARKORANGE     "\033[38;5;166m"
+#define ANSI_ESC_LIGHTORANGE    "\033[38;5;215m"
+#define ANSI_ESC_PURPLE         "\033[38;5;129m"
+#define ANSI_ESC_PINK           "\033[38;5;213m"
+#define ANSI_ESC_LIME           "\033[38;5;190m"
+#define ANSI_ESC_NAVY           "\033[38;5;25m"
+#define ANSI_ESC_AQUAMARINE     "\033[38;5;51m"
+#define ANSI_ESC_LAVENDER       "\033[38;5;189m"
+
+#define ANSI_ESC_LIGHTBROWN     "\033[38;2;210;180;140m"
+
+#define ANSI_ESC_RESET          "\033[0m"
+#define ANSI_ESC_BOLD           "\033[1m"
+#define ANSI_ESC_FAINT          "\033[2m"
+#define ANSI_ESC_ITALIC         "\033[3m"
+#define ANSI_ESC_UNDERLINE      "\033[4m"
+#define ANSI_ESC_BLINK          "\033[5m"
+#define ANSI_ESC_INVERT         "\033[7m"
+#define ANSI_ESC_STRIKE         "\033[9m"
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+enum status {
+    NONE = 0,
+    RADIO = 1,
+    PLAYER = 2,
+    DLNA = 3,
+    CLOCK = 4,
+    BRIGHTNESS = 5,
+    ALARM = 6,
+    SLEEPTIMER = 7,
+    STATIONSLIST = 8,
+    AUDIOFILESLIST = 9,
+    DLNAITEMSLIST = 10,
+    BLUETOOTH = 11,
+    EQUALIZER = 12,
+    SETTINGS = 13,
+    IR_SETTINGS = 14,
+    UNDEFINED = 255
+};
+
 static bool _newLine = false;
 extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
+
 #define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
  /* line feed */            if(_newLine){_newLine = false; Serial.println("");} \
                             rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
@@ -194,8 +220,9 @@ extern RTIME rtc;
                             xSemaphoreGive(mutex_rtc);}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct dlnaHistory {
-    char*  objId = NULL;
-    char*   name = NULL;
+    char*    objId = NULL;
+    char*    name = NULL;
+    uint16_t maxItems = 0;
 };
 struct releasedArg {
     char*   arg1 = NULL;
@@ -258,7 +285,7 @@ void           StationsItems();
 void           setStationViaURL(const char* url);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
-void           SD_playFile(const char* path, const char* fileName);
+void           SD_playFile(const char* pathWoFileName, const char* fileName);
 void           SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool           SD_rename(const char* src, const char* dest);
 bool           SD_newFolder(const char* folderPathName);
@@ -379,6 +406,17 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
 inline int32_t lastIndexOf(const char* haystack, const char needle) {
     const char* p = strrchr(haystack, needle);
     return (p ? p - haystack : -1);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline int rfind(const char* str, char ch, int start = -1) { // same as indexof() burt from right to left
+    if (!str) return -1; // if str is NULL
+    int len = strlen(str);
+    if (start == -1 || start >= len) start = len - 1; // Default: Search from the end of the string
+
+    for (int i = start; i >= 0; --i) {
+        if (str[i] == ch) return i; // character found
+    }
+    return -1; // character not found
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
@@ -827,7 +865,8 @@ public:
             if(!m_slaveFile) break;
             if(m_slaveFile.isDirectory()) {
                 if(!withoutDirs) { // folder size is -1
-                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
+                    char* path = x_ps_malloc(strlen(m_slaveFile.path()) + 3); strcpy(path, (const char*)m_slaveFile.path()); strcat(path, "/"); // add '/'
+                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), path);
                 }
             }
             else {
@@ -856,57 +895,61 @@ public:
         return m_files.size();
     }
     const char* getColouredSStringByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
         if(isDir(idx)) return m_files[idx].fileName;
         sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li" , m_files[idx].fileName, m_files[idx].fileSize);
         return m_buff;
     }
     const char* getFileNameByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
         return m_files[idx].fileName;
     }
 
     int32_t getFileSizeByIndex(uint16_t idx){
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return 0;}
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return 0;}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return 0;}
         return m_files[idx].fileSize;
     }
 
     const char* getFilePathByIndex(uint16_t idx){
-    /*
-        dir_a
-            dir_b
-                file_a
-                file_b
-            file_c
-            file_d
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
+        /*
+            dir_a
+                dir_b
+                    file_a
+                    file_b
+                file_c
+                file_d
 
-        getFilePathByIndex(0) returns "/dir_a"
-        getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
-        getFilePathByIndex(5) returns "/dir_a/file_d"
-    */
-        if(idx >= m_files.size()) {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+            getFilePathByIndex(0) returns "/dir_a/"
+            getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
+            getFilePathByIndex(5) returns "/dir_a/file_d"
+        */
         return m_files[idx].filePath;
     }
 
     const char* getFileFolderByIndex(uint16_t idx){
-    /*
-        dir_a
-            dir_b
-                file_a
-                file_b
-            file_c
-            file_d
+        if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
+        if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
+        /*
+            dir_a
+                dir_b
+                    file_a
+                    file_b
+                file_c
+                file_d
 
-        getFileFolderByIndex(0) returns "/dir_a"
-        getFileFolderByIndex(1) returns "/dir_a/dir_b"
-        getFileFolderByIndex(5) returns "/dir_a"
-    */
-
-        if(idx >= m_files.size())  {log_e("idx %i is oor, max = %i", idx, m_files.size() - 1); return "";}
+            getFileFolderByIndex(0) returns "/dir_a/"
+            getFileFolderByIndex(1) returns "/dir_a/dir_b/"
+            getFileFolderByIndex(5) returns "/dir_a/"
+        */
         if(isDir(idx)) return m_files[idx].filePath;
         int lastSlashIndex = lastIndexOf(m_files[idx].filePath, '/');
         strcpy(m_buff, m_files[idx].filePath);
-        m_buff[lastSlashIndex] = '\0';
+        m_buff[lastSlashIndex + 1] = '\0';
         return m_buff;
     }
 
@@ -958,23 +1001,50 @@ public:
         return newIdx;
     }
 
-    void setLastConnectedFile(const char* lastconnectedfile){
-        free(m_lastConnectedFile);
-        m_lastConnectedFile = x_ps_strdup(lastconnectedfile);
-        int pos = lastIndexOf(m_lastConnectedFile, '/');
-        if(pos == -1){
-            free(m_lastConnectedFileName);
-            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile);
-            free(m_lastConnectedFolder);
-            m_lastConnectedFolder = x_ps_strdup("");
+    void setLastConnectedFile(const char* lastconnectedItem){
+/*  lastconnectedItem                       m_lastConnectedFolder       m_lastConnectedFileName     m_lastConnectedFile
+    "/audiofiles/wavfiles/chicken.wav"      "/audiofiles/wavfiles/"     "chicken.wav"               "/audiofiles/wavfiles/chicken.wav"
+    "xyz/chicken.wav"                       "/audiofiles/"              ""                          "/audiofiles/"                      // does not start with "/"
+    "/audiofiles/wavfiles/chickenwav"       "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no extension
+    "/chicken.wav"                          "/"                         "chicken.wav"               "/chicken.wav"                      // we have no folder
+    "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // we have no file
+    "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no name
+*/
+        x_ps_free(m_lastConnectedFileName);
+        x_ps_free(m_lastConnectedFolder);
+        int posFirst = 0, posLast = 0, posDot = 0;
+        if(!lastconnectedItem) { // guard, lastconnectedItem == NULL
+            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            goto exit;
         }
-        else{
-            free(m_lastConnectedFileName);
-            m_lastConnectedFileName = x_ps_strdup(m_lastConnectedFile + pos);
-            free(m_lastConnectedFolder);
-            m_lastConnectedFolder = x_ps_strndup(m_lastConnectedFile, pos);
+        posFirst = indexOf(lastconnectedItem, "/", 0);
+        posLast = lastIndexOf(lastconnectedItem, '/');
+        if(posFirst != 0) { // guard, does not start with /
+            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            goto exit;
         }
-        // log_e("lastConnectedFile %s", lastconnectedfile);
+        if(posLast == 0){m_lastConnectedFolder = x_ps_strdup("/");} // we have no folder name
+        else {m_lastConnectedFolder = x_ps_strndup(lastconnectedItem, posLast + 1);}
+
+        if(posLast == strlen(lastconnectedItem) - 1){m_lastConnectedFileName = x_ps_strdup("");} // we have no file name
+        else{m_lastConnectedFileName = x_ps_strdup(lastconnectedItem + posLast + 1);}
+
+        //log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
+        posDot = indexOf(m_lastConnectedFileName, ".", 0);
+        if(posDot == -1){ // no extension
+            x_ps_free(m_lastConnectedFileName);
+            m_lastConnectedFileName = x_ps_strdup("");
+        }
+
+    exit:
+        x_ps_free(m_lastConnectedFile);
+        m_lastConnectedFile = x_ps_malloc(strlen(m_lastConnectedFolder) + strlen(m_lastConnectedFileName) + 1);
+        strcpy(m_lastConnectedFile, m_lastConnectedFolder);
+        strcat(m_lastConnectedFile, m_lastConnectedFileName);
+        // log_e("lastconnectedItem %s", lastconnectedItem);
+        // log_e("lastConnectedFile %s", m_lastConnectedFile);
         // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
         // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
         listFilesInDir(m_lastConnectedFolder, true, false);
@@ -989,9 +1059,9 @@ public:
     }
     int getPosByFileName(const char* fileName){
         for(int i = 0; i < m_files.size(); i++){
-            if(!strcmp(m_files[i].fileName, fileName + 1)) return i; // fileName without '/'
+            if(!strcmp(m_files[i].fileName, fileName)) return i; // fileName e.g. "file.mp3"
         }
-        return -1;
+        return 0;
     }
 
 private:
@@ -1425,6 +1495,10 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
+    void reset(){
+        m_val = m_minVal;
+        tft.fillRect(m_x, m_y + 1,  m_w  -  m_h - 1, m_h - 2, m_railColorRight);
+    }
 private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
@@ -1590,6 +1664,7 @@ private:
     char*       m_defaultPicturePath = NULL;
     char*       m_clickedPicturePath = NULL;
     char*       m_inactivePicturePath = NULL;
+    char*       m_alternativePicturePath = NULL; // e.g. IR select
     bool        m_enabled = false;
     bool        m_clicked = false;
     char*       m_name = NULL;
@@ -1605,11 +1680,13 @@ public:
         setDefaultPicturePath(NULL);
         setClickedPicturePath(NULL);
         setInactivePicturePath(NULL);
+        setAlternativePicturePath(NULL);
     }
     ~button1state(){
-        if(m_defaultPicturePath) {free(m_defaultPicturePath);  m_defaultPicturePath = NULL;}
-        if(m_clickedPicturePath) {free(m_clickedPicturePath);  m_clickedPicturePath = NULL;}
-        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        if(m_defaultPicturePath)    {free(m_defaultPicturePath);     m_defaultPicturePath = NULL;}
+        if(m_clickedPicturePath)    {free(m_clickedPicturePath);     m_clickedPicturePath = NULL;}
+        if(m_inactivePicturePath)   {free(m_inactivePicturePath);    m_inactivePicturePath = NULL;}
+        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1644,6 +1721,17 @@ public:
         drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
+    void showAlternativePic(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+            setInactive();
+            return;
+        }
+        drawImage(m_alternativePicturePath, m_x, m_y, m_w, m_h);
+    }
+    void showClickedPic(){
+        drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
+    }
     void setDefaultPicturePath(const char* path){
         if(m_defaultPicturePath){free(m_defaultPicturePath); m_defaultPicturePath = NULL;}
         if(path) m_defaultPicturePath = x_ps_strdup(path);
@@ -1658,6 +1746,11 @@ public:
         if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
         if(path) m_inactivePicturePath = x_ps_strdup(path);
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
+    }
+    void setAlternativePicturePath(const char* path){
+        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
+        if(path) m_alternativePicturePath = x_ps_strdup(path);
+        else m_alternativePicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -1694,7 +1787,10 @@ private:
     char*       m_clickedOffPicturePath = NULL;
     char*       m_clickedOnPicturePath = NULL;
     char*       m_inactivePicturePath = NULL;
+    char*       m_alternativeOnPicturePath = NULL;
+    char*       m_alternativeOffPicturePath = NULL;
     bool        m_enabled = false;
+    bool        m_active = true;
     bool        m_clicked = false;
     bool        m_state = false;
     char*       m_name = NULL;
@@ -1727,6 +1823,7 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        m_active = true;
     }
     const char* getName(){
         return m_name;
@@ -1734,15 +1831,34 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(bool inactive = false){
+    void show(){
         m_clicked = false;
-        if(inactive){
-            setInactive();
-            return;
+        if(m_active){
+            if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
+            else        drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
+            m_enabled = true;
         }
-        if(m_state) drawImage(m_onPicturePath, m_x, m_y, m_w, m_h);
-        else drawImage(m_offPicturePath, m_x, m_y, m_w, m_h);
-        m_enabled = true;
+        else {
+            drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
+        }
+    }
+    void showClickedPic(){
+        if(m_state){drawImage(m_clickedOnPicturePath, m_x, m_y, m_w, m_h);}
+        else       {drawImage(m_clickedOffPicturePath, m_x, m_y, m_w, m_h);}
+    }
+    void showAlternativePic(){
+        if(m_state){drawImage(m_alternativeOnPicturePath, m_x, m_y, m_w, m_h);}
+        else       {drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);}
+    }
+    void setAlternativeOnPicturePath(const char* path){
+        if(m_alternativeOnPicturePath){free(m_alternativeOnPicturePath); m_alternativeOnPicturePath = NULL;}
+        if(path) m_alternativeOnPicturePath = x_ps_strdup(path);
+        else m_alternativeOnPicturePath = x_ps_strdup("alternativePicturePath is not set");
+    }
+    void setAlternativeOffPicturePath(const char* path){
+        if(m_alternativeOffPicturePath){free(m_alternativeOffPicturePath); m_alternativeOffPicturePath = NULL;}
+        if(path) m_alternativeOffPicturePath = x_ps_strdup(path);
+        else m_alternativeOffPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -1767,10 +1883,14 @@ public:
     void setOff(){
         m_state = false;
     }
-    void setInactive(){
-        drawImage(m_inactivePicturePath, m_x, m_y, m_w, m_h);
-        m_enabled = false;
+    void setActive(bool act){
+        m_active = act;
     }
+    bool getActive(){
+        return m_active;
+    }
+
+
     void setOffPicturePath(const char* path){
         if(m_offPicturePath){free(m_offPicturePath); m_offPicturePath = NULL;}
         if(path) m_offPicturePath = x_ps_strdup(path);
@@ -1962,7 +2082,7 @@ public:
         m_enabled = true;
     }
     void setPicturePath(const char* path){
-        if(m_PicturePath){free(m_PicturePath); m_PicturePath = NULL;}
+        if(m_PicturePath){x_ps_free(m_PicturePath); m_PicturePath = NULL;}
         if(path) m_PicturePath = x_ps_strdup(path);
         else m_PicturePath = x_ps_strdup("picturePath is not set");
         if(path){GetImageSize(path);}
@@ -1992,7 +2112,7 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {/*log_w("file %s not exists, objName: %s", scaledPicPath, m_name);*/ return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
         if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
@@ -2509,6 +2629,139 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class uniList {
+
+private:
+    int16_t                   m_x = 0;
+    int16_t                   m_y = 0;
+    int16_t                   m_w = 0;
+    int16_t                   m_h = 0;
+    int32_t                   m_nr[10] = {0};
+    uint8_t                   m_fontSize = 0;
+    uint8_t                   m_lineHight = 0;
+    uint8_t                   m_mode = 0;
+    uint32_t                  m_bgColor = 0;
+    char*                     m_name = NULL;
+    char*                     m_buff = NULL;
+    char*                     m_txt[10] = {0};
+    char*                     m_ext1[10] = {0};
+    char*                     m_ext2[10] = {0};
+    bool                      m_enabled = false;
+
+public:
+    uniList(const char* name){
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("dlnaList");
+        m_bgColor = TFT_BLACK;
+    }
+    ~uniList(){
+        if(m_name){free(m_name); m_name = NULL;}
+        if(m_buff){free(m_buff); m_buff = NULL;}
+        for(int i = 0; i < 10; i++){if(m_txt[i]) free(m_txt[i]); if(m_ext1[i]) free(m_ext1[i]); if(m_ext2[i]) free(m_ext2[i]);}
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_fontSize = fontSize;
+        m_enabled = false;
+        m_lineHight = m_h / 10;
+        m_buff = x_ps_malloc(1024);
+    }
+    void setMode(uint8_t mode){
+        if(mode == RADIO)  {m_mode = RADIO;}
+        if(mode == PLAYER) {m_mode  = PLAYER;}
+        if(mode == DLNA)   {m_mode = DLNA;}
+    }
+    void clearList(){
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        for(int i = 0; i < 10; i++){
+            free(m_txt[i]);  m_txt[i]  = NULL;
+            free(m_ext1[i]); m_ext1[i] = NULL;
+            free(m_ext2[i]); m_ext2[i] = NULL;
+            m_nr[i] = -1;
+        }
+    }
+    void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int32_t nr = -1){
+        if(pos > 9) return;
+        if(!txt) return;
+        tft.setFont(m_fontSize);
+        if(m_mode == RADIO){
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , nr, color, txt);
+            if(txt ){free(m_txt[pos]);  m_txt[pos]  = strdup(txt);}
+            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
+            m_nr[pos] = nr;
+        }
+        if(m_mode == DLNA){
+            if(!txt) {log_e("txt is NULL"); return;}
+            if(!ext1)                sprintf(m_buff, "%s%s", color, txt);
+            else if(ext1[0] == '\0') sprintf(m_buff, "%s%s", color, txt);
+            else                     sprintf(m_buff, "%s%s " ANSI_ESC_CYAN "(%s)" , color, txt, ext1);
+            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = 1;}
+            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
+        }
+        if(m_mode == PLAYER){
+            if(!txt) {log_e("txt is NULL"); return;}
+            if(!nr)  sprintf(m_buff, "%s%s", color, txt);
+            else     sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li" , color, txt, nr);
+            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
+        }
+        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, const char* color){ // e.g. 1-9/65
+        sprintf(m_buff, "%s%i-%i/%i", color, firstVal, secondVal, total);
+        tft.writeText(m_buff, 0, m_y, m_w, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+    }
+    void colourLine(uint8_t pos, const char* color = ANSI_ESC_WHITE) {
+        if(pos > 9) return;
+        tft.setFont(m_fontSize);
+        if(m_mode == RADIO){
+            sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , m_nr[pos], color, m_txt[pos]);
+        }
+        if(m_mode == PLAYER){
+            if(m_nr[pos]) sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, m_txt[pos], m_nr[pos]); // file
+            else          sprintf(m_buff, "%s%s", color, m_txt[pos]);                                   // directory
+        }
+        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+    }
+    const char* getTxtByPos(uint8_t pos){
+        return m_txt[pos];
+    }
+    int16_t getNumberByPos(uint8_t pos){
+        return m_nr[pos];
+    }
+    void drawTriangeUp(){
+        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
+         triangleUp(0, m_y + (1 * m_lineHight), m_lineHight / 3.5);
+    }
+    void drawTriangeDown(){
+        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
+        triangleDown(0, m_y + (9 * m_lineHight), m_lineHight / 3.5);
+    }
+
+};
+extern uniList myList;
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*
+  ———————————————————————————————————————————————————————
+  | DLNA List                       Vol3    01:10:32    |           m_itemsListPos
+  | Musik                                      1-9/6    |           <-- 0
+  |   Videos(7)                                         |           <-- 1
+  |   Interpreten(2)                                    |           <-- 2
+  |   Alben                                             |           <-- 3
+  |   Alle Titel(7)                                     |           <-- 4
+  |   Genres                                            |           <-- 5
+  |   Ordner(1)                                         |           <-- 6
+  |   Wiedergabelisten                                  |           <-- 7
+  |   Filme(23)                                         |           <-- 8
+  |                                                     |           <-- 9
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
+
 class dlnaList : public RegisterTable {
 private:
     int16_t                   m_x = 0;
@@ -2523,17 +2776,19 @@ private:
     uint8_t                   m_browseOnRelease = 0;
     uint8_t                   m_itemListPos = 0;
     int8_t                    m_currDLNAsrvNr = -1;
-    int16_t                   m_currItemNr = -1;
+    int16_t                   m_currItemNr[10] = {0};
+    int16_t                   m_viewPoint = 0;
     uint16_t                  m_dlnaMaxItems = 0;
     uint32_t                  m_bgColor = 0;
     bool                      m_enabled = false;
     bool                      m_clicked = false;
     bool                      m_state = false;
+    bool                      m_isAudio = false;
+    bool                      m_isURL = false;
     char*                     m_name = NULL;
     char*                     m_pathBuff = NULL;
     char*                     m_chptr = NULL;
     char*                     m_buff = NULL;
-    char*                     m_dlnaItemsPos = NULL;
     DLNA_Client::dlnaServer_t m_dlnaServer;
     DLNA_Client::srvContent_t m_srvContent;
     DLNA_Client*              m_dlna;
@@ -2545,18 +2800,19 @@ public:
         register_object(this);
         if(name) m_name = x_ps_strdup(name);
         else     m_name = x_ps_strdup("dlnaList");
+        m_buff = x_ps_malloc(512);
         m_dlna    = dlna;
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
-        m_dlnaItemsPos = x_ps_malloc(30);
         m_ra.arg1 = NULL;
         m_ra.arg2 = NULL;
         m_ra.val1 = 0;
         m_ra.val2 = 0;
         m_dlnaHistory = dh;
+        for(uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
     }
     ~dlnaList(){
         if(m_name){free(m_name); m_name = NULL;}
@@ -2586,6 +2842,7 @@ public:
         m_clicked = false;
         m_enabled = true;
         m_dlnaMaxItems = maxItems;
+        m_dlnaHistory[0].maxItems = m_dlna->getNrOfServers();
         dlnaItemsList();
     }
     void hide(){
@@ -2613,19 +2870,17 @@ public:
         hasReleased(x - m_x, y - m_y);
         m_clicked = false;
 
-        if(m_chptr) {
-            tft.setTextColor(TFT_CYAN);
-            tft.setFont(m_fontSize);
-            tft.writeText(m_chptr, 20, m_y + (m_itemListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
+            drawItem(m_itemListPos, true);
             m_chptr = NULL;
             vTaskDelay(300);
         }
-        if(m_buff){free(m_buff); m_buff = NULL;}
 
-        if(m_browseOnRelease == 1){ m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
-        if(m_browseOnRelease == 2){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // content list
-        if(m_browseOnRelease == 3){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder
-        if(m_browseOnRelease == 4){ m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_currItemNr + 1 , 9);} // scroll up / down
+        if(m_browseOnRelease == 0){;}                                                                                                              // file
+        if(m_browseOnRelease == 1){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);}                                          // get serverlist
+        if(m_browseOnRelease == 2){(*m_dlnaLevel) --; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // previous level
+        if(m_browseOnRelease == 3){(*m_dlnaLevel) ++; m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);}            // folder, next level
+        if(m_browseOnRelease == 4){                   m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);}   // scroll up / down
 
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
@@ -2634,106 +2889,65 @@ public:
         return true;
     }
 
-    void longPressed(uint16_t x, uint16_t y){
-        bool maybe_a_server = false;
-        bool maybe_a_file = false;
-        bool maybe_a_folder = false;
-        m_clicked = false;                    // ignore tp released event, wait of next clicked
-        m_itemListPos = (y / (m_h / 10));
-        if(m_itemListPos == 0) goto exit;    // is header
-        if(m_itemListPos == 1) { /* log_i("long pressed at return item %s", m_dlnaHistory[*m_dlnaLevel].name); */ goto exit;}
-        if(m_itemListPos >= 11) goto exit;   // is footer
-
-        m_itemListPos -= 2;
-
-        if(*m_dlnaLevel == 0){
-            if( m_dlnaServer.friendlyName.size() > m_itemListPos) maybe_a_server = true;
-        }
-        else{
-            if(m_srvContent.itemURL.size() > m_itemListPos) maybe_a_file   = true;
-            if(m_srvContent.title.size()   > m_itemListPos) maybe_a_folder = true;
-        }
-
-        if(maybe_a_server){
-            /* log_i("long pressed at server %s", m_dlnaServer.friendlyName[m_itemListPos]); */ goto exit;
-        }
-
-        if(maybe_a_file){
-            if(startsWith(m_srvContent.itemURL[m_itemListPos], "http")){
-                /* log_i("long pressed at file %s", m_srvContent.itemURL[m_itemListPos]); */ goto exit;
-            }
-        }
-
-        if(maybe_a_folder){
-            // log_i("long pressed at folder x %s",m_srvContent.title[m_itemListPos]);
-            tft.setTextColor(TFT_MAGENTA);
-            tft.setFont(m_fontSize);
-            tft.writeText(m_srvContent.title[m_itemListPos], 20, m_y + (m_itemListPos + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-
-            m_ra.arg1 = m_srvContent.objectId[m_itemListPos];
-            m_ra.val2 = m_currDLNAsrvNr;
-            m_ra.val1 = 2;
-            goto exit;
-        }
-
-        log_i("something went wrong or out of range");
-    exit:
-        return;
-    }
-
-    void longReleased(){
-        if(!m_enabled) return;
-        if(!m_clicked) return;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-        m_ra.val1 = 0;
-        m_clicked = false;
-    }
-
 private:
     void dlnaItemsList(){
-        if(!m_buff) m_buff = x_ps_malloc(512);
-        uint16_t itemsSize = 0;
         uint8_t pos = 0;
-        if(*m_dlnaLevel == 0) {
-            itemsSize = m_dlnaServer.size;
-        }
-        else { itemsSize = m_srvContent.size; }
-
-        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + s, y + 0, x + 0, y + 2  *  s, x + 2  *  s, y + 2  *  s, TFT_RED); };
-        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) {  tft.fillTriangle(x + 0, y + 0, x + 2  *  s, y + 0, x + s, y + 2  *  s, TFT_RED); };
-
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_dlnaHistory[*m_dlnaLevel].name, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.setMode(DLNA);
+        myList.clearList();
+        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
         tft.setTextColor(TFT_WHITE);
         for(pos = 1; pos < 10; pos++) {
-            if(pos == 1 && m_currItemNr > 0) { triangleUp(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
-            if(pos == 9 && m_currItemNr + 9 < m_dlnaMaxItems - 1) { triangleDown(0, m_y + (pos * m_lineHight), m_lineHight / 3.5); }
-            if(pos > 9) break;
-            if(pos > itemsSize) break;
-            if(*m_dlnaLevel == 0) { tft.writeText(m_dlnaServer.friendlyName[pos - 1], 20, m_y + (pos) * m_lineHight, m_w- 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true); }
-            else {
-                if(startsWith(m_srvContent.itemURL[pos - 1], "http")) {
-                    if(m_srvContent.isAudio[pos - 1] == true) {
-                        if(m_srvContent.duration[pos - 1][0] != '?') { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%s)", m_srvContent.title[pos - 1], m_srvContent.duration[pos - 1]); }
-                        else { sprintf(m_buff, ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                    }
-                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%li)", m_srvContent.title[pos - 1], (long int)m_srvContent.itemSize[pos - 1]); }
-                }
-                else {
-                    if(m_srvContent.childCount[pos - 1] == 0) { sprintf(m_buff, ANSI_ESC_WHITE "%s", m_srvContent.title[pos - 1]); }
-                    else { sprintf(m_buff, ANSI_ESC_WHITE "%s" ANSI_ESC_CYAN " (%i)", m_srvContent.title[pos - 1], m_srvContent.childCount[pos - 1]); }
-                }
-                tft.writeText(m_buff, 20, m_y + (pos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            }
+            if(pos == 1 && m_viewPoint > 0)                      { myList.drawTriangeUp();}
+            if(pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown();}
+            if(*m_dlnaLevel == 0 && pos > m_dlnaServer.size) {/* log_e("pos too high %i", pos);*/ break;}   // guard
+            if(*m_dlnaLevel >  0 && pos > m_srvContent.size) {/* log_e("pos too high %i", pos);*/ break;}   // guard
+            drawItem(pos);
         }
-        sprintf(m_dlnaItemsPos, "%i-%i/%i", m_currItemNr + 2, m_currItemNr + pos , m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
         tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_dlnaItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
 
-        if(m_buff){free(m_buff); m_buff = NULL;}
         return;
+    }
+
+    void drawItem(int8_t pos, bool selectedLine = false){ // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
+        if(pos < 0 || pos > 9) {log_e("pos oor %i", pos); return;}                                          // guard
+        if(*m_dlnaLevel == 0 && pos > m_dlnaServer.size) {/* log_e("pos too high %i", pos);*/ return;}   // guard
+        if(*m_dlnaLevel >  0 && pos > m_srvContent.size) {/* log_e("pos too high %i", pos);*/ return;}   // guard
+        char extension[15] = {0};
+        char dummy[] = "";
+        bool isAudio = false;
+        bool isURL = false;
+        const char *item = dummy, *duration = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE; (void)itemURL;
+        int32_t itemSize = 0;
+        int16_t childCount = 0;
+        if(pos == 0){
+            if(pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1) color = ANSI_ESC_MAGENTA; else color = ANSI_ESC_ORANGE;
+            if(selectedLine) color = ANSI_ESC_CYAN;
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
+            return;
+        }
+        if(*m_dlnaLevel == 0) {
+            if(m_dlnaServer.friendlyName[pos - 1]) item = m_dlnaServer.friendlyName[pos - 1];
+        }
+        else {
+            if(m_srvContent.title[pos - 1]) item = m_srvContent.title[pos - 1];
+            itemSize = m_srvContent.itemSize[pos - 1];
+            childCount = m_srvContent.childCount[pos -1];
+            if(m_srvContent.duration[pos - 1]) duration = m_srvContent.duration[pos - 1];
+            isAudio = m_srvContent.isAudio[pos - 1];
+            if(startsWith(m_srvContent.itemURL[pos -1], "http")) {isURL = true; itemURL = m_srvContent.itemURL[pos -1];}
+        }
+
+        if((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]){ color = ANSI_ESC_MAGENTA;}
+        else if(isURL && isAudio)                                { color = ANSI_ESC_YELLOW;}
+        else                                                     { color = ANSI_ESC_WHITE;}
+        if(selectedLine)                                         { color = ANSI_ESC_CYAN;}
+
+        if(childCount)        {sprintf(extension, "%i", childCount);}
+        if(itemSize)          {sprintf(extension, "%li", itemSize);}
+        if(duration[0] != '?'){if(strcmp(duration, "0:00:00") != 0) sprintf(extension, "%s", duration);}
+        myList.drawLine(pos, item, extension, itemURL, color, 1);
     }
 
     void hasReleased(uint16_t x, uint16_t y){
@@ -2742,35 +2956,34 @@ private:
         bool guard2 = false; if(m_srvContent.itemURL.size() >  (m_itemListPos - 1)) guard2 = true;
         bool guard3 = false; if(m_srvContent.title.size() > (m_itemListPos - 1)) guard3 = true;
 
-        if(!m_buff) m_buff = x_ps_malloc(512);
         m_itemListPos = y / (m_h / 10);
 
-        if(m_oldY && (m_oldY + 6 * m_lineHight < y)) {     // fast wipe down
+        if(m_oldY && (m_oldY + 7 * m_lineHight < y)) {     // fast wipe down
             m_ra.val1 = 0;
-            if(m_currItemNr == -1) goto exit;
-            if     (m_currItemNr > 36) m_currItemNr -= 36;
-            else    m_currItemNr = -1;
+            if(m_viewPoint == 0) goto exit;
+            if     (m_viewPoint > 36) m_viewPoint -= 36;
+            else    m_viewPoint = 0;
             m_browseOnRelease = 4;
             m_chptr = NULL;
             goto exit;
         }
 
-        if(m_oldY && (m_oldY + 2 * m_lineHight < y)) {     // normal wipe down
+        if(m_oldY && (m_oldY + 1 * m_lineHight < y)) {     // normal wipe down
             m_ra.val1 = 0;
-            if(m_currItemNr == -1) goto exit;
-            if(m_currItemNr >  9) m_currItemNr -= 9;
-            else m_currItemNr = -1;
+            if(m_viewPoint == 0) goto exit;
+            if(m_viewPoint >  9) m_viewPoint -= 9;
+            else m_viewPoint = 0;
             m_browseOnRelease = 4;
             m_chptr = NULL;
             goto exit;
         }
 
-        if(m_oldY && (m_oldY - 6 * m_lineHight > y)) {     // fast wipe up
+        if(m_oldY && (m_oldY - 8 * m_lineHight > y)) {     // fast wipe up
             m_ra.val1 = 0;
-            if(m_currItemNr + 9 >= m_dlnaMaxItems - 1) goto exit;
-            int16_t diff = (m_dlnaMaxItems - 1) - (m_currItemNr + 9);
-            if(diff >= 36) m_currItemNr += 36;
-            else m_currItemNr += diff;
+            if(m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
+            int16_t diff = (m_dlnaMaxItems - 1) - (m_viewPoint + 9);
+            if(diff >= 36) m_viewPoint += 36;
+            else m_viewPoint += diff;
             m_browseOnRelease = 4;
             m_chptr = NULL;
             goto exit;
@@ -2778,16 +2991,16 @@ private:
 
         if(m_oldY && (m_oldY - 2 * m_lineHight > y)) {      // normal wipe up
             m_ra.val1 = 0;
-            if(m_currItemNr + 9 >= m_dlnaMaxItems - 1) goto exit;
-            m_currItemNr += 9;
+            if(m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
+            m_viewPoint += 9;
             m_browseOnRelease = 4;
             m_chptr = NULL;
             goto exit;
         }
 
-        if(m_itemListPos == 0){ // content list
-            m_currItemNr = -1;
-            (*m_dlnaLevel) --;
+        if(m_itemListPos == 0){ // previous level, content list
+            if(*m_dlnaLevel == 0) goto exit;
+            m_viewPoint = 0;
             m_browseOnRelease = 2;
             goto exit;
         }
@@ -2796,14 +3009,14 @@ private:
             if(*m_dlnaLevel == 0){
                 m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
                 m_currDLNAsrvNr = m_itemListPos - 1;
-                (*m_dlnaLevel) ++;
-                if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+                m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
+                if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[(*m_dlnaLevel) + 1].name); m_dlnaHistory[(*m_dlnaLevel) + 1].name = NULL;}
                 if(m_dlnaServer.friendlyName[m_itemListPos - 1] == NULL){
                     log_e("invalid pointer in dlna history");
-                    m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                    m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
                     goto exit;
                 }
-                m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
+                m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_dlnaServer.friendlyName[m_itemListPos - 1]);
                 m_browseOnRelease = 1;
                 goto exit;
             }
@@ -2811,6 +3024,7 @@ private:
 
         if(guard2){ // is file
             if(startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")){
+                m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
                 if(m_srvContent.isAudio[m_itemListPos - 1]){
                     sprintf(m_buff, "%s",m_srvContent.title[m_itemListPos - 1]);
                     m_chptr = m_buff;
@@ -2824,14 +3038,14 @@ private:
         }
 
         if(guard3){ // is folder
-            m_currItemNr = -1;
+            m_viewPoint = 0;
             sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
-            (*m_dlnaLevel) ++;
+            m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
             m_chptr = m_buff;
-            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
-            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_itemListPos - 1]);
+            if(m_dlnaHistory[(*m_dlnaLevel) + 1].objId){free(m_dlnaHistory[(*m_dlnaLevel) + 1].objId); m_dlnaHistory[(*m_dlnaLevel) + 1].objId = NULL;}
+            m_dlnaHistory[   (*m_dlnaLevel) + 1].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
+            if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[ (*m_dlnaLevel) + 1].name); m_dlnaHistory[ (*m_dlnaLevel) + 1].name = NULL;}
+            m_dlnaHistory[(   *m_dlnaLevel) + 1].name = strdup(m_srvContent.title[m_itemListPos - 1]);
             m_browseOnRelease = 3;
             goto exit;
         }
@@ -2839,8 +3053,166 @@ private:
 exit:
         return;
     }
+public:
+    void prevPage(){ // from IR control
+        if(m_viewPoint == 0) return;
+        if     (m_viewPoint > 9) m_viewPoint -= 9;
+        else    m_viewPoint = 0;
+        if(m_currItemNr[*m_dlnaLevel] > 9){m_currItemNr[*m_dlnaLevel] -= 9;}
+        else{m_currItemNr[*m_dlnaLevel] = 0;}
+        m_chptr = NULL;
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->loop();
+        while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+        m_srvContent = m_dlna->getBrowseResult();
+        dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+        return;
+    }
+    void nextPage(){ // from IR control
+        if(m_dlnaMaxItems <= m_viewPoint + 9) return;
+        if(m_dlnaMaxItems - 9 > m_viewPoint){m_viewPoint += 9;}
+        else{m_viewPoint = m_dlnaMaxItems - 9;}
+        if( m_dlnaMaxItems - 9 > m_currItemNr[*m_dlnaLevel]){m_currItemNr[*m_dlnaLevel] += 9;}
+        else{m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;}
+        m_chptr = NULL;
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->loop();
+        while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+        m_srvContent = m_dlna->getBrowseResult();
+        dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+        return;
+    }
+    void prevItem(){ // from IR control
+        if(*m_dlnaLevel == 0 && m_currItemNr[*m_dlnaLevel] == 0) return;
+        if(m_currItemNr[*m_dlnaLevel] < 0) return;
+        if(m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
+            m_viewPoint -= 9;
+            if(m_viewPoint < 0) m_viewPoint = 0;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse ready
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        m_currItemNr[*m_dlnaLevel]--;
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1);  // std colour
+    }
+    void nextItem(){ // from IR control
+        if(m_dlnaMaxItems == m_currItemNr[*m_dlnaLevel] - 1) return;
+        if(m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
+        m_currItemNr[*m_dlnaLevel]++;
+        if(m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
+            m_viewPoint += 9;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1);  // std colour
+    }
+    const char* getSelectedURL(){ // ok from IR
+        if(*m_dlnaLevel == 0){ //------------------------------------------------------------------------------------------------------- choose server
+            // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            m_chptr = m_dlnaServer.friendlyName[m_currItemNr[0]];
+            m_currDLNAsrvNr = m_currItemNr[0];
+            m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
+            drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel) ++;
+            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            if(m_dlnaServer.friendlyName[m_currItemNr[0]] == NULL){
+                log_e("invalid pointer in dlna history");
+                m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                return NULL;
+            }
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            m_dlna->browseServer(m_currDLNAsrvNr, "0", 0 , 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            m_dlnaMaxItems = m_dlna->getTotalMatches();
+            m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
+            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
+            dlnaItemsList();
+            return NULL;
+        }
+        if(m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
+            // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
+            drawItem(0, true);  // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel) --;
+            m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
+            m_viewPoint  = 0;
+            m_currItemNr[*m_dlnaLevel] = 0;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return NULL;
+        }
+        if(strcmp(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "?") == 0){ // --------------------------------------- choose folder
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel) ++;
+            m_currItemNr[*m_dlnaLevel] = 0;
+            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
+            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
+            m_viewPoint = 0;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
+            m_dlna->loop();
+            while(m_dlna->getState() != m_dlna->IDLE) {m_dlna->loop(); vTaskDelay(10);} // wait of browse rady
+            m_srvContent = m_dlna->getBrowseResult();
+            m_dlnaMaxItems = m_dlna->getTotalMatches();
+            m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
+            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
+            dlnaItemsList();
+            if(!m_dlnaMaxItems) { // folder is empty
+                m_currItemNr[*m_dlnaLevel]--;
+                drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1);  // make magenta
+            }
+            return NULL;
+        }
+        if(startsWith(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "http") != 0){ // ---------------------------------- choose file
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);  // make cyan
+            vTaskDelay(300);
+            return m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
+        }
+        return NULL;
+    }
+    const char* getSelectedTitle(){
+            return m_srvContent.title[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
+    }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*
+  ———————————————————————————————————————————————————————
+  | Audio Files                     Vol11    15:32:18   |
+  | /audiofiles/myPlaylist/                    1-9/11   |           <- parent folder  m_curAudioFileNr = -1
+  |   320_test.mpr 9610227                              |           <--               m_curAudioFileNr - m_viewpos = 0
+  |   If_I_Had_a_Chicken_mono_mp3 1591510               |           <--
+  |   If_I_Had_a_Chicken_mono_16bit.wav 13257580        |           <--
+  |   If_I_Had_a_Chicken_mono_8bit.wav 6628972          |           <--
+  |   If_I_Had_a_Chicken_stereo_mp3 6012554             |           <--
+  |   If_I_Had_a_Chicken_stereo_16bit.wav 26514608      |           <--
+  |   If_I_Had_a_Chicken_stereo_8bit.wav 1327260        |           <--
+  |   beep.mp3 75302                                    |           <--
+  |     click.mp3 3360                                  |           <--               m_curAudioFileNr - m_viewpos = 8
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
+
 class fileList : public RegisterTable {
 private:
     int16_t     m_x = 0;
@@ -2864,6 +3236,12 @@ private:
     char*       m_curAudioPath = NULL;
     char*       m_curAudioName = NULL;
     char*       m_fileItemsPos = NULL;
+    const char* m_rootColor = ANSI_ESC_LIGHTBROWN;
+    const char* m_folderColor = ANSI_ESC_ORANGE;
+    const char* m_fileColor = ANSI_ESC_WHITE;
+    const char* m_seletColor = ANSI_ESC_CYAN;
+    const char* m_irColor = ANSI_ESC_MAGENTA;
+    const char* m_currentColor = ANSI_ESC_LIGHTRED;
     releasedArg m_ra;
 public:
     fileList(const char* name){
@@ -2909,12 +3287,12 @@ public:
         m_browseOnRelease = 0;
         m_clicked = false;
         m_enabled = true;
-        if(!cur_AudioFolder) {log_w("cur_AudioFolder set to /audiofiles"); strcpy(m_curAudioFolder, (char*)"/audiofiles");}
-        else m_curAudioFolder = strcpy(m_curAudioFolder, cur_AudioFolder);
+        if(!cur_AudioFolder) {log_w("cur_AudioFolder set to /audiofiles/"); strcpy(m_curAudioFolder, (char*)"/audiofiles/");}
+        else if(cur_AudioFolder != m_curAudioFolder) strcpy(m_curAudioFolder, cur_AudioFolder); // cur_AudioFolder can have the same address as m_curAudioFolder
         m_curAudioFileNr = curAudioFileNr;
         _SD_content.listFilesInDir(m_curAudioFolder, true, false);
         if(m_curAudioFileNr >= _SD_content.getSize()) m_curAudioFileNr = _SD_content.getSize(); // guard
-        m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);        // calculate viewPos
+        m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);     // calculate viewPos
         audioFileslist(m_viewPos);
     }
     void hide(){
@@ -2944,16 +3322,26 @@ public:
 
         char* fileName = NULL;
 
-        if(m_browseOnRelease == 1)  {   if(m_viewPos + 9 >= _SD_content.getSize()) { goto exit; }       // wipe up
+        if(m_browseOnRelease == 1)  {   if(m_viewPos + 9 >= _SD_content.getSize()) { goto exit; }                                   // wipe up
                                         else                     {m_viewPos += 9; m_ra.val1 = 1;}
                                         audioFileslist(m_viewPos);
                                     }
-        if(m_browseOnRelease == 2)  {   if(m_viewPos == 0) { goto exit; }                               // wipe down
+        if(m_browseOnRelease == 2)  {   if(m_viewPos == 0) { goto exit; }                                                           // wipe down
                                         if(m_viewPos >  9) {m_viewPos -= 9; m_ra.val1 = 1;}
                                         else               {m_viewPos  = 0; m_ra.val1 = 1;}
                                         audioFileslist(m_viewPos);
                                     }
-        if(m_browseOnRelease == 3)  {   m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
+        if(m_browseOnRelease == 3)  {   //log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
+                                        if(!strcmp(m_curAudioFolder, "/audiofiles/")) goto exit; // is already the root
+                                        tft.setTextColor(TFT_CYAN);
+                                        tft.setFont(m_fontSize);
+                                        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        int lastSlash = rfind(m_curAudioFolder, '/');
+                                        if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
+                                            int secondLastSlash = rfind(m_curAudioFolder, '/', lastSlash - 1);
+                                            if(secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';
+                                        }
+                                        log_e("m_curAudioFolder = %s", m_curAudioFolder);
                                         m_curAudioFileNr = 0;
                                         m_viewPos = 0;
                                         _SD_content.listFilesInDir(m_curAudioFolder, true, false);
@@ -2961,7 +3349,7 @@ public:
                                         m_ra.val2 = m_curAudioFileNr;
                                         m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 4)  {   m_viewPos += m_fileListPos;                                     // next folder
+        if(m_browseOnRelease == 4)  {   m_viewPos += m_fileListPos;                                                                 // next folder
                                         int16_t idx = m_viewPos -1;
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
@@ -2974,10 +3362,11 @@ public:
                                         m_ra.val2 = m_viewPos;
                                         m_ra.arg1 = m_curAudioFolder;
                                     }
-        if(m_browseOnRelease == 5)  {   m_viewPos += m_fileListPos;                                     // play file
+        if(m_browseOnRelease == 5)  {   m_viewPos += m_fileListPos;                                                                 // play file
                                         tft.setTextColor(TFT_CYAN);
                                         tft.setFont(m_fontSize);
                                         tft.writeText(m_curAudioName, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        vTaskDelay(300 / portTICK_PERIOD_MS);
                                         m_ra.arg1 = m_curAudioFolder;      // fileFolder
                                         m_ra.arg2 = m_curAudioName;        // fileName
                                         m_ra.arg3 = m_curAudioPath;        // filePath
@@ -3017,43 +3406,18 @@ public:
         }
     }
 
-/*
-Audio Files                   Vol11    15:32:18
-/audiofiles/myPlaylist                   1-9/11     <- parent folder  m_curAudioFileNr = -1
-  320_test.mpr 9610227                              <-                m_curAudioFileNr - m_viewpos = 0
-  If_I_Had_a_Chicken_mono_mp3 1591510
-  If_I_Had_a_Chicken_mono_16bit.wav 13257580
-  If_I_Had_a_Chicken_mono_8bit.wav 6628972
-  If_I_Had_a_Chicken_stereo_mp3 6012554
-  If_I_Had_a_Chicken_stereo_16bit.wav 26514608
-  If_I_Had_a_Chicken_stereo_8bit.wav 1327260
-  beep.mp3 75302
-  click.mp3 3360                                    <-                m_curAudioFileNr - m_viewpos = 8
-  003       0:00      0K       IP:192.168.178.24
-*/
-
     void prevFile(){ // from IR control
         if(m_curAudioFileNr < 0) return;
-        uint8_t lineHight = m_h / 10;
-
         if(m_curAudioFileNr && m_curAudioFileNr - m_viewPos == 0) {
             if(m_viewPos >= 9) m_viewPos -= 9; else m_viewPos = 0;
             m_curAudioFileNr--; audioFileslist(m_viewPos); return;
         }
-        tft.setFont(m_fontSize);
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
-        else tft.setTextColor(TFT_WHITE);                                    // is file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        int pos = m_curAudioFileNr - m_viewPos + 1;
+        const char* color = m_fileColor;                               // assume is file
+        if(_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
+        myList.colourLine(pos, color);
         m_curAudioFileNr--;
-
-        if(m_curAudioFileNr == -1) { // parent folder
-            tft.setTextColor(TFT_VIOLET);
-            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-            return;
-        }
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
-        else tft.setTextColor(TFT_MAGENTA);  // current file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos - 1, m_irColor);
     }
     void nextFile(){ // from IR control
         if(m_curAudioFileNr == _SD_content.getSize() - 1) return;
@@ -3061,38 +3425,58 @@ Audio Files                   Vol11    15:32:18
             if(m_viewPos + 9 < _SD_content.getSize()) m_viewPos += 9; else m_viewPos = _SD_content.getSize() - 1;
             m_curAudioFileNr++; audioFileslist(m_viewPos); return;
         }
-        tft.setFont(m_fontSize);
-        uint8_t lineHight = m_h / 10;
-        if(m_curAudioFileNr == -1){
-            tft.setTextColor(TFT_LIGHTBROWN);// is parent folder
-            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        }
+        const char* color;
+        int pos = m_curAudioFileNr - m_viewPos + 1;
+        if(m_curAudioFileNr == -1){                 color = m_rootColor;}  // is root dir
         else{
-            if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_ORANGE); // is folder
-            else tft.setTextColor(TFT_WHITE);// is file
-            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
+            else                                    color = m_fileColor;   // is file
         }
-         m_curAudioFileNr++;
-        if(_SD_content.isDir(m_curAudioFileNr)) tft.setTextColor(TFT_VIOLET); // is folder
-        else tft.setTextColor(TFT_MAGENTA);  // current file
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr - m_viewPos + 1)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos, color);
+        m_curAudioFileNr++;
+        myList.colourLine(pos + 1, m_irColor);
     }
     const char* getSelectedFile(){
-        if(m_curAudioFileNr == -1) { // parent folder
-            if(!strcmp(m_curAudioFolder, "/audiofiles")) return NULL;
-            m_curAudioFolder[lastIndexOf(m_curAudioFolder, '/')] = '\0';    // previous folder
+        if(m_curAudioFileNr == -1) { // get parent folder
+            if(!strcmp(m_curAudioFolder, "/audiofiles/")) return NULL; // is already the root
+            tft.setTextColor(TFT_CYAN);
+            tft.setFont(m_fontSize);
+            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            vTaskDelay(300 / portTICK_PERIOD_MS);
+            int lastSlash = rfind(m_curAudioFolder, '/');
+            if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
+                int secondLastSlash = rfind(m_curAudioFolder, '/', lastSlash - 1);
+                if(secondLastSlash != -1) m_curAudioFolder[secondLastSlash + 1] = '\0';    // previous folder
+            }
             m_curAudioFileNr = 0;
             m_viewPos = 0;
             _SD_content.listFilesInDir(m_curAudioFolder, true, false);
             show(m_curAudioFolder, 0);
             return NULL;
         }
-        if(_SD_content.isDir(m_curAudioFileNr)){
+        if(_SD_content.isDir(m_curAudioFileNr)){ // is child folder
+            tft.setTextColor(TFT_CYAN);
+            tft.setFont(m_fontSize);
+            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            vTaskDelay(300 / portTICK_PERIOD_MS);
             strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
             show(m_curAudioPath, 0);
             return NULL;
         }
+        tft.setTextColor(TFT_CYAN); // is file
+        tft.setFont(m_fontSize);
+        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        vTaskDelay(300 / portTICK_PERIOD_MS);
         return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+    }
+    const char* getSelectedFileName(){
+        return _SD_content.getFileNameByIndex(m_curAudioFileNr);
+    }
+    const char* getSelectedFilePath(){
+        return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+    }
+    uint16_t getSelectedFileNr(){
+        return m_curAudioFileNr;
     }
 
 
@@ -3103,41 +3487,35 @@ private:
         if(viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; }   // viewPos too high
         //--------------------------------------------------------------------------------------------------------------------------------------------
 
-        auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-        auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
-
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
-        uint8_t lineHight = m_h / 10;
-        tft.setTextColor(TFT_LIGHTBROWN);
-        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        tft.setTextColor(TFT_WHITE);
+        myList.setMode(PLAYER);
+        myList.clearList();
+        const char* color;
+
+        color = m_folderColor;
+        if(strcmp(m_curAudioFolder, "/audiofiles/") == 0) color = m_rootColor; // is root
+        myList.drawLine(0, m_curAudioFolder, "", "", color, 0);
+        color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
-            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) {
-                tft.setTextColor(TFT_AQUAMARINE);
-                triangleUp(0, m_y + (pos * lineHight), lineHight / 3.5);
-            }
-            if (pos == 9 && viewPos + 9 < _SD_content.getSize()) {
-                tft.setTextColor(TFT_AQUAMARINE);
-                triangleDown(0, m_y + (pos * lineHight), lineHight / 3.5);
-            }
+            int idx = pos + viewPos - 1;
+            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) { myList.drawTriangeUp();}
+            if (pos == 9 && viewPos + 9 < _SD_content.getSize())  { myList.drawTriangeDown();}
             if (viewPos + pos > _SD_content.getSize()) break;
-            if (_SD_content.isDir(pos + viewPos - 1)){
-                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_VIOLET); // is current folder
-                else tft.setTextColor(TFT_ORANGE); // is folder
+            if (_SD_content.isDir(idx)){
+                if (idx== m_curAudioFileNr){color = m_seletColor;}            // is current folder
+                else                       {color = m_folderColor;}           // is folder
             }
             else {
-                if (pos + viewPos - 1 == m_curAudioFileNr) tft.setTextColor(TFT_MAGENTA); // current file
-                else tft.setTextColor(TFT_WHITE); // is file
+                if (idx== m_curAudioFileNr){color = m_seletColor;}            // current file
+                else                       {color = m_fileColor;}             // is file
             }
-            tft.writeText(_SD_content.getColouredSStringByIndex(pos + viewPos - 1), 20, m_y + (pos)*lineHight, m_w - 20, lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            if(_SD_content.isDir(idx)) myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, 0);
+            else                       myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, _SD_content.getFileSizeByIndex(idx));
         }
         uint16_t firstVal = viewPos + 1;
         uint16_t secondVal = firstVal + 8;
         if(secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
-        sprintf(m_fileItemsPos, "%i-%i/%i", firstVal, secondVal, _SD_content.getSize()); // shows the current items pos e.g. "30-39/210"
-        tft.setTextColor(TFT_ORANGE);
-        tft.writeText(m_fileItemsPos, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+        myList.drawPosInfo(firstVal, secondVal, _SD_content.getSize(), ANSI_ESC_ORANGE); // shows the current items pos e.g. "30-39/210"
         return;
   }
 
@@ -3168,7 +3546,7 @@ private:
         }
 
         if(m_fileListPos == 0) { //  ----------------------------------------------------------- previous folder
-            if(lastIndexOf(m_curAudioFolder, '/') > 1){  // not the first '/'
+            if(lastIndexOf(m_curAudioFolder, '/') > 0){  // not the first '/'
                 m_browseOnRelease = 3;
             }
         }
@@ -3177,7 +3555,7 @@ private:
             int idx = m_viewPos + m_fileListPos -1;
             if(_SD_content.isDir(idx)){
                 strcpy(m_curAudioName, "");
-                strcpy(m_curAudioFolder, _SD_content.getFilePathByIndex(idx));
+                strcpy(m_curAudioFolder, _SD_content.getFileFolderByIndex(idx));
                 m_browseOnRelease = 4;
             }
             else { // -------------------------------------------------------------------------- playfile
@@ -3192,7 +3570,22 @@ exit:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern stationManagement   staMgnt;
+extern stationManagement   staMgnt; /*
+  ———————————————————————————————————————————————————————
+  | Stations List                   Vol3    01:16:32    |           m_stationListPos
+  | 017 BGRADIOk                                        |           <-- 0
+  | 018 knixx.fm                                        |           <-- 1
+  | 019 -0N-Chrismas on Radio                           |           <-- 2
+  | 020 BBC 6music                                      |           <-- 3
+  | 021 -0N-Movues on Radio                             |           <-- 4
+  | 022 -0N-Top40 on Radio                              |           <-- 5
+  | 023 Rockantenne Alternative (mp3)                   |           <-- 6
+  | 024 Gra Wroclaw                                     |           <-- 7
+  | 025 Classic EuroDisco                               |           <-- 8
+  | 026 Hit Radio FFH - Soundtrack (AAC+)               |           <-- 9
+  | 003   0:00    128K              IP:192.168.178.24   |
+  ———————————————————————————————————————————————————————
+*/
 class stationsList : public RegisterTable {
 private:
     int16_t     m_x = 0;
@@ -3216,6 +3609,10 @@ private:
     char*       m_pathBuff = NULL;
     char*       m_buff = NULL;
     releasedArg m_ra;
+    const char* m_colorToDraw = NULL;
+    const char* m_staNameToDraw = NULL;
+    uint16_t    m_staNrToDraw = 0;
+
 public:
     stationsList(const char* name){
         register_object(this);
@@ -3283,9 +3680,10 @@ public:
                                     }
         if(m_browseOnRelease == 2)  {   stationslist(false);                                             // wipe down
                                     }
-        if(m_browseOnRelease == 3)  {   tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(m_browseOnRelease == 3)  {   myList.getTxtByPos(m_stationListPos);                            // click
+                                        myList.colourLine(m_stationListPos, ANSI_ESC_CYAN);
                                         vTaskDelay(300 / portTICK_PERIOD_MS);
-                                        m_ra.val1 = m_firstStationsLineNr + m_stationListPos + 1;   // station number
+                                        m_ra.val1 = myList.getNumberByPos(m_stationListPos);
                                     }
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
@@ -3306,30 +3704,18 @@ private:
             m_curStaNrCpy = *m_curSstationNr;
             if(m_curStaNrCpy == 0) m_curStaNrCpy = 1;
         }
-        else{
-            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        }
-        char* stationStr = x_ps_malloc(1024);
-        tft.setFont(m_fontSize);
+        myList.clearList();
+        myList.setMode(RADIO);
+
         for(uint8_t pos = 0; pos < 10; pos++) {
-
             if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
+            if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*') m_colorToDraw = ANSI_ESC_WHITE;   // is fav station
+            else                                                              m_colorToDraw = ANSI_ESC_GREY;    // is not a fav station
+            if((pos + m_firstStationsLineNr + 1) == m_curStaNrCpy)            m_colorToDraw = ANSI_ESC_MAGENTA; // is the current station
 
-            if((pos + m_firstStationsLineNr + 1) == m_curStaNrCpy){
-                sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, ( pos + m_firstStationsLineNr + 1)); // is currStationNr
-            }
-            else{
-                if(staMgnt.getStationFav(pos + m_firstStationsLineNr + 1) == '*'){
-                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (pos + m_firstStationsLineNr + 1));
-                }
-                else{
-                    sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (pos + m_firstStationsLineNr + 1));
-                }
-            }
-            strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(pos + m_firstStationsLineNr + 1));
-
-            for(int i = 0; i < strlen(stationStr); i++) {if(stationStr[i] == '#') stationStr[i] = '\0';}
-            tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1);                          // the station name
+            m_staNrToDraw = pos + m_firstStationsLineNr + 1;                                                    // the station number
+            myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw, m_staNrToDraw);
         }
         xSemaphoreGive(mutex_display);
     }
@@ -3353,17 +3739,10 @@ private:
             }
             return;
         }
-
-        if(!m_buff) m_buff = x_ps_malloc(1024);
-        tft.setFont(m_fontSize);
-        sprintf(m_buff, ANSI_ESC_YELLOW "%03d " ANSI_ESC_CYAN, (m_firstStationsLineNr + m_stationListPos + 1));
-        strcpy(m_buff + strlen(m_buff), staMgnt.getStationName(m_firstStationsLineNr + m_stationListPos + 1));
-
-        for(int i = 0; i < strlen(m_buff); i++) {if(m_buff[i] == '#') m_buff[i] = '\0';}
-    //    tft.writeText(m_buff, 10, m_y + (m_stationListPos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        if(myList.getNumberByPos(m_stationListPos) == -1) return;
         if(m_oldX || m_oldY) return;
         m_oldX = x; m_oldY = y;
-        m_browseOnRelease = 3;
+        m_browseOnRelease = 3;  // pos has clicked
         return;
     }
 public:
@@ -3379,32 +3758,19 @@ public:
         stationslist(false);
     }
     void prevStation(){ // from IR control
-        if(m_curStaNrCpy < 1) return;
+        if(m_curStaNrCpy < 2) return;
         int8_t pos = m_curStaNrCpy - m_firstStationsLineNr - 1;
-        if(pos < 1) return;
+        if(pos < 0) return;
         if(pos == 0) { // prev page
-            m_firstStationsLineNr -= 9;
+            if(m_firstStationsLineNr > 8) m_firstStationsLineNr -= 9;
+            else m_firstStationsLineNr = 0;
             m_curStaNrCpy--;
             stationslist(false);
             return;
         }
-        char* stationStr = x_ps_malloc(1024);
-        if(!stationStr){log_e("oom"); return;}
-        if(!stationStr) return;
-        tft.setFont(m_fontSize);
-        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
-        }
-        else{
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
-        }
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos,staMgnt.getStationFav(m_curStaNrCpy) == '*'? ANSI_ESC_WHITE : ANSI_ESC_GREY);
+        myList.colourLine(pos - 1, ANSI_ESC_MAGENTA);
         m_curStaNrCpy--;
-        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos - 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        free(stationStr);
     }
     void nextStation(){ // from IR control
         if(m_curStaNrCpy >= staMgnt.getSumStations()) return;
@@ -3416,27 +3782,13 @@ public:
             stationslist(false);
             return;
         }
-        char* stationStr = x_ps_malloc(1024);
-        if(!stationStr) return;
-        tft.setFont(m_fontSize);
-        if(staMgnt.getStationFav(m_curStaNrCpy) == '*'){
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_WHITE, (m_curStaNrCpy));
-        }
-        else{
-            sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_GREY, (m_curStaNrCpy));
-        }
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(pos,staMgnt.getStationFav(m_curStaNrCpy) == '*'? ANSI_ESC_WHITE : ANSI_ESC_GREY);
+        myList.colourLine(pos + 1, ANSI_ESC_MAGENTA);
         m_curStaNrCpy++;
-        sprintf(stationStr, ANSI_ESC_YELLOW "%03d " ANSI_ESC_MAGENTA, (m_curStaNrCpy));
-        strcpy(stationStr + strlen(stationStr), staMgnt.getStationName(m_curStaNrCpy));
-        tft.writeText(stationStr, 10, m_y + (pos + 1)*m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
-        free(stationStr);
     }
     uint16_t getSelectedStation(){ // from IR control
         return m_curStaNrCpy;
     }
-
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class vuMeter : public RegisterTable {

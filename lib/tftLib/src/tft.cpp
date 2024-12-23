@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Aug 08 2024
+// updated on Dec 14 2024
 
 #include "tft.h"
 #include "Arduino.h"
@@ -2744,92 +2744,46 @@ uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiA
     while((uint8_t)str[idx] != 0) {
         switch((uint8_t)str[idx]) {
             case '\033': // ANSI sequence
-                if(strncmp(str + idx, "\033[30m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 1;
-                    break;
-                } // ANSI_ESC_BLACK
-                if(strncmp(str + idx, "\033[31m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 2;
-                    break;
-                } // ANSI_ESC_RED
-                if(strncmp(str + idx, "\033[32m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 3;
-                    break;
-                } // ANSI_ESC_GREEN
-                if(strncmp(str + idx, "\033[33m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 4;
-                    break;
-                } // ANSI_ESC_YELLOW
-                if(strncmp(str + idx, "\033[34m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 5;
-                    break;
-                } // ANSI_ESC_BLUE
-                if(strncmp(str + idx, "\033[35m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 6;
-                    break;
-                } // ANSI_ESC_MAGENTA
-                if(strncmp(str + idx, "\033[36m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 7;
-                    break;
-                } // ANSI_ESC_CYAN
-                if(strncmp(str + idx, "\033[37m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 8;
-                    break;
-                } // ANSI_ESC_WHITE
-                if(strncmp(str + idx, "\033[38;5;130m", 11) == 0) {
-                    idx += 11;
-                    ansiArr[chLen] = 9;
-                    break;
-                } // ANSI_ESC_BROWN
-                if(strncmp(str + idx, "\033[38;5;214m", 11) == 0) {
-                    idx += 11;
-                    ansiArr[chLen] = 10;
-                    break;
-                } // ANSI_ESC_ORANGE
-                if(strncmp(str + idx, "\033[90m", 5) == 0) {
-                    idx += 5;
-                    ansiArr[chLen] = 11;
-                    break;
-                } // ANSI_ESC_GREY
-                if(strncmp(str + idx, "\033[0m", 4) == 0) {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // ANSI_ESC_RESET       unused
-                if(strncmp(str + idx, "\033[1m", 4) == 0) {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // ANSI_ESC_BOLD        unused
-                if(strncmp(str + idx, "\033[2m", 4) == 0) {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // ANSI_ESC_FAINT       unused
-                if(strncmp(str + idx, "\033[3m", 4) == 0) {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // ANSI_ESC_ITALIC      unused
-                if(strncmp(str + idx, "\033[4m", 4) == 0) {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // ANSI_ESC_UNDERLINE   unused
-                log_w("unknown ANSI ESC SEQUENCE");
-                {
-                    idx += 4;
-                    ansiArr[chLen] = -1;
-                    break;
-                } // unknown
+                if(strncmp(str + idx, "\033[30m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 1;  break;} // ANSI_ESC_BLACK
+                if(strncmp(str + idx, "\033[31m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 2;  break;} // ANSI_ESC_RED
+                if(strncmp(str + idx, "\033[32m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 3;  break;} // ANSI_ESC_GREEN
+                if(strncmp(str + idx, "\033[33m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 4;  break;} // ANSI_ESC_YELLOW
+                if(strncmp(str + idx, "\033[34m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 5;  break;} // ANSI_ESC_BLUE
+                if(strncmp(str + idx, "\033[35m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 6;  break;} // ANSI_ESC_MAGENTA
+                if(strncmp(str + idx, "\033[36m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 7;  break;} // ANSI_ESC_CYAN
+                if(strncmp(str + idx, "\033[37m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 8;  break;} // ANSI_ESC_WHITE
+                if(strncmp(str + idx, "\033[38;5;130m", 11) == 0)           {idx += 11; ansiArr[chLen] = 9;  break;} // ANSI_ESC_BROWN
+                if(strncmp(str + idx, "\033[38;5;214m", 11) == 0)           {idx += 11; ansiArr[chLen] = 10; break;} // ANSI_ESC_ORANGE
+                if(strncmp(str + idx, "\033[90m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 11; break;} // ANSI_ESC_GREY
+                if(strncmp(str + idx, "\033[91m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 12; break;} // ANSI_ESC_LIGHTRED
+                if(strncmp(str + idx, "\033[92m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 13; break;} // ANSI_ESC_LIGHTGREEN
+                if(strncmp(str + idx, "\033[93m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 14; break;} // ANSI_ESC_LIGHTYELLOW
+                if(strncmp(str + idx, "\033[94m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 15; break;} // ANSI_ESC_LIGHTBLUE
+                if(strncmp(str + idx, "\033[95m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 16; break;} // ANSI_ESC_LIGHTMAGENTA
+                if(strncmp(str + idx, "\033[96m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 17; break;} // ANSI_ESC_LIGHTCYAN
+                if(strncmp(str + idx, "\033[97m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 18; break;} // ANSI_ESC_LIGHTGREY
+                if(strncmp(str + idx, "\033[38;5;52m", 10) == 0)            {idx += 10; ansiArr[chLen] = 19; break;} // ANSI_ESC_DARKRED
+                if(strncmp(str + idx, "\033[38;5;22m", 10) == 0)            {idx += 10; ansiArr[chLen] = 20; break;} // ANSI_ESC_DARKGREEN
+                if(strncmp(str + idx, "\033[38;5;136m", 11) == 0)           {idx += 11; ansiArr[chLen] = 21; break;} // ANSI_ESC_DARKYELLOW
+                if(strncmp(str + idx, "\033[38;5;17m", 10) == 0)            {idx += 10; ansiArr[chLen] = 22; break;} // ANSI_ESC_DARKBLUE
+                if(strncmp(str + idx, "\033[38;5;53m", 10) == 0)            {idx += 10; ansiArr[chLen] = 23; break;} // ANSI_ESC_DARKMAGENTA
+                if(strncmp(str + idx, "\033[38;5;23m", 10) == 0)            {idx += 10; ansiArr[chLen] = 24; break;} // ANSI_ESC_DARKCYAN
+                if(strncmp(str + idx, "\033[38;5;240m", 11) == 0)           {idx += 11; ansiArr[chLen] = 25; break;} // ANSI_ESC_DARKGREY
+                if(strncmp(str + idx, "\033[38;5;166m", 11) == 0)           {idx += 11; ansiArr[chLen] = 26; break;} // ANSI_ESC_DARKORANGE
+                if(strncmp(str + idx, "\033[38;5;215m", 11) == 0)           {idx += 11; ansiArr[chLen] = 27; break;} // ANSI_ESC_LIGHTORANGE
+                if(strncmp(str + idx, "\033[38;5;129m", 11) == 0)           {idx += 11; ansiArr[chLen] = 28; break;} // ANSI_ESC_PURPLE
+                if(strncmp(str + idx, "\033[38;5;213m", 11) == 0)           {idx += 11; ansiArr[chLen] = 29; break;} // ANSI_ESC_PINK
+                if(strncmp(str + idx, "\033[38;5;190m", 11) == 0)           {idx += 11; ansiArr[chLen] = 30; break;} // ANSI_ESC_LIME
+                if(strncmp(str + idx, "\033[38;5;25m", 10) == 0)            {idx += 10; ansiArr[chLen] = 31; break;} // ANSI_ESC_NAVY
+                if(strncmp(str + idx, "\033[38;5;51m", 10) == 0)            {idx += 10; ansiArr[chLen] = 32; break;} // ANSI_ESC_AQUAMARINE
+                if(strncmp(str + idx, "\033[38;5;189m", 11) == 0)           {idx += 11; ansiArr[chLen] = 33; break;} // ANSI_ESC_LAVENDER
+                if(strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0)   {idx += 19; ansiArr[chLen] = 34; break;} // ANSI_ESC_LIGHTBROWN
+                if(strncmp(str + idx, "\033[0m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_RESET       unused
+                if(strncmp(str + idx, "\033[1m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_BOLD        unused
+                if(strncmp(str + idx, "\033[2m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_FAINT       unused
+                if(strncmp(str + idx, "\033[3m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_ITALIC      unused
+                if(strncmp(str + idx, "\033[4m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_UNDERLINE   unused
+                log_w("unknown ANSI ESC SEQUENCE");                         {idx += 4;  ansiArr[chLen] = -1; break;} // unknown
                 break;
             case 0x20 ... 0x7F:                   // is ASCII
                 chArr[chLen] = (uint8_t)str[idx]; // codepoint
@@ -3016,6 +2970,29 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
                 if(ansiArr[idx] ==  9) setTextColor(TFT_BROWN);
                 if(ansiArr[idx] == 10) setTextColor(TFT_ORANGE);
                 if(ansiArr[idx] == 11) setTextColor(TFT_GREY);
+                if(ansiArr[idx] == 12) setTextColor(TFT_LIGHTRED);
+                if(ansiArr[idx] == 13) setTextColor(TFT_LIGHTGREEN);
+                if(ansiArr[idx] == 14) setTextColor(TFT_LIGHTYELLOW);
+                if(ansiArr[idx] == 15) setTextColor(TFT_LIGHTBLUE);
+                if(ansiArr[idx] == 16) setTextColor(TFT_LIGHTMAGENTA);
+                if(ansiArr[idx] == 17) setTextColor(TFT_LIGHTCYAN);
+                if(ansiArr[idx] == 18) setTextColor(TFT_LIGHTGREY);
+                if(ansiArr[idx] == 19) setTextColor(TFT_DARKRED);
+                if(ansiArr[idx] == 20) setTextColor(TFT_DARKGREEN);
+                if(ansiArr[idx] == 21) setTextColor(TFT_DARKYELLOW);
+                if(ansiArr[idx] == 22) setTextColor(TFT_DARKBLUE);
+                if(ansiArr[idx] == 23) setTextColor(TFT_DARKMAGENTA);
+                if(ansiArr[idx] == 24) setTextColor(TFT_DARKCYAN);
+                if(ansiArr[idx] == 25) setTextColor(TFT_DARKGREY);
+                if(ansiArr[idx] == 26) setTextColor(TFT_DARKORANGE);
+                if(ansiArr[idx] == 27) setTextColor(TFT_LIGHTORANGE);
+                if(ansiArr[idx] == 28) setTextColor(TFT_PURPLE);
+                if(ansiArr[idx] == 29) setTextColor(TFT_PINK);
+                if(ansiArr[idx] == 30) setTextColor(TFT_LIME);
+                if(ansiArr[idx] == 31) setTextColor(TFT_NAVY);
+                if(ansiArr[idx] == 32) setTextColor(TFT_AQUAMARINE);
+                if(ansiArr[idx] == 33) setTextColor(TFT_LAVENDER);
+                if(ansiArr[idx] == 34) setTextColor(TFT_LIGHTBROWN);
             }
             if(cnt == 0 && utfPosArr[idx] == 0x20) {
                 idx++;

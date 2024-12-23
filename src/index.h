@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 18.11.2024
+ *  Updated on: 14.12.2024
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -465,6 +465,14 @@ function ping() {
 }
 
 function connect() {
+
+    if (socket) {
+        // Prüfe, ob der Socket noch geöffnet oder im Verbindungsaufbau ist
+        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+            socket.close(); // Schließe die bestehende Verbindung
+        }
+    }
+
     socket = new WebSocket('ws://'+window.location.hostname+':81/');
 
     socket.onopen = function () {
@@ -699,6 +707,17 @@ toastr.options = {
     "showMethod": "fadeIn",
     "hideMethod": "fadeOut"
 }
+
+// Reload images from invisible tabs when the page is fully loaded
+window.onload = function () {
+    const allLazyImages = document.querySelectorAll('img[data-src]');
+    allLazyImages.forEach(img => {
+        img.src = img.dataset.src; // load the rest of the images
+        console.log("load image", img.src)
+        img.removeAttribute('data-src'); // remove data-src
+    });
+};
+
 
 function showTab1 () {
     state = 'RADIO'
@@ -2320,39 +2339,51 @@ function clear_BT_memItems(){
 <div id="content" >
     <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
     <div id="preloaded-images">
-        <img src="SD/png/Radio_Green.png"               width="1" height="1" loading="lazy" alt="Image 01">
-        <img src="SD/png/Radio_Yellow.png"              width="1" height="1" loading="lazy" alt="Image 02">
-        <img src="SD/png/Station_Green.png"             width="1" height="1" loading="lazy" alt="Image 03">
-        <img src="SD/png/Station_Yellow.png"            width="1" height="1" loading="lazy" alt="Image 04">
-        <img src="SD/png/MP3_Green.png"                 width="1" height="1" loading="lazy" alt="Image 05">
-        <img src="SD/png/MP3_Yellow.png"                width="1" height="1" loading="lazy" alt="Image 06">
-        <img src="SD/png/Search_Green.png"              width="1" height="1" loading="lazy" alt="Image 06">
-        <img src="SD/png/Search_Yellow.png"             width="1" height="1" loading="lazy" alt="Image 07">
-        <img src="SD/png/About_Green.png"               width="1" height="1" loading="lazy" alt="Image 08">
-        <img src="SD/png/About_Yellow.png"              width="1" height="1" loading="lazy" alt="Image 09">
-        <img src="SD/png/Button_Previous_Green.png"     width="1" height="1" loading="lazy" alt="Image 10">
-        <img src="SD/png/Button_Previous_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 11">
-        <img src="SD/png/Button_Previous_Blue.png"      width="1" height="1" loading="lazy" alt="Image 12">
-        <img src="SD/png/Button_Next_Green.png"         width="1" height="1" loading="lazy" alt="Image 13">
-        <img src="SD/png/Button_Next_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 14">
-        <img src="SD/png/Button_Volume_Down_Blue.png"   width="1" height="1" loading="lazy" alt="Image 15">
-        <img src="SD/png/Button_Volume_Down_Yellow.png" width="1" height="1" loading="lazy" alt="Image 16">
-        <img src="SD/png/Button_Volume_Up_Blue.png"     width="1" height="1" loading="lazy" alt="Image 17">
-        <img src="SD/png/Button_Volume_Up_Yellow.png"   width="1" height="1" loading="lazy" alt="Image 18">
-        <img src="SD/png/Button_Mute_Green.png"         width="1" height="1" loading="lazy" alt="Image 19">
-        <img src="SD/png/Button_Mute_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 20">
-        <img src="SD/png/Button_Mute_Red.png"           width="1" height="1" loading="lazy" alt="Image 21">
-        <img src="SD/png/Button_Ready_Blue.png"         width="1" height="1" loading="lazy" alt="Image 22">
-        <img src="SD/png/Button_Ready_Yellow.png"       width="1" height="1" loading="lazy" alt="Image 23">
-        <img src="SD/png/Button_Test_Green.png"         width="1" height="1" loading="lazy" alt="Image 24">
-        <img src="SD/png/Button_Test_Yellow.png"        width="1" height="1" loading="lazy" alt="Image 25">
-        <img src="SD/png/Button_Upload_Blue.png"        width="1" height="1" loading="lazy" alt="Image 26">
-        <img src="SD/png/Button_Upload_Yellow.png"      width="1" height="1" loading="lazy" alt="Image 27">
-        <img src="SD/png/Button_Download_Blue.png"      width="1" height="1" loading="lazy" alt="Image 28">
-        <img src="SD/png/Button_Download_Yellow.png"    width="1" height="1" loading="lazy" alt="Image 29">
-        <img src="SD/png/Remote_Control_Yellow.png"     width="1" height="1" loading="lazy" alt="Image 30">
-        <img src="SD/png/Remote_Control_Blue.png"       width="1" height="1" loading="lazy" alt="Image 30">
-        <img src="SD/common/MiniWebRadioV3.jpg"         width="1" height="1" loading="lazy" alt="Image 31">
+        <img data-src="SD/png/Radio_Green.png"                   >
+        <img data-src="SD/png/Radio_Yellow.png"                  >
+        <img data-src="SD/png/Station_Green.png"                 >
+        <img data-src="SD/png/Station_Yellow.png"                >
+        <img data-src="SD/png/MP3_Green.png"                     >
+        <img data-src="SD/png/MP3_Yellow.png"                    >
+        <img data-src="SD/png/Button_DLNA_Green.png"             >
+        <img data-src="SD/png/Button_DLNA_Yellow.png"            >
+        <img data-src="SD/png/Search_Green.png"                  >
+        <img data-src="SD/png/Search_Yellow.png"                 >
+        <img data-src="SD/png/Settings_Green.png"                >
+        <img data-src="SD/png/Settings_Yellow.png"               >
+        <img data-src="SD/png/About_Green.png"                   >
+        <img data-src="SD/png/About_Yellow.png"                  >
+        <img data-src="SD/png/Button_Previous_Green.png"         >
+        <img data-src="SD/png/Button_Previous_Blue.png"          >
+        <img data-src="SD/png/Button_Previous_Yellow.png"        >
+        <img data-src="SD/png/Button_Next_Green.png"             >
+        <img data-src="SD/png/Button_Next_Yellow.png"            >
+        <img data-src="SD/png/Button_Volume_Down_Blue.png"       >
+        <img data-src="SD/png/Button_Volume_Down_Yellow.png"     >
+        <img data-src="SD/png/Button_Volume_Up_Blue.png"         >
+        <img data-src="SD/png/Button_Volume_Up_Yellow.png"       >
+        <img data-src="SD/png/Button_Mute_Green.png"             >
+        <img data-src="SD/png/Button_Mute_Yellow.png"            >
+        <img data-src="SD/png/Button_Mute_Red.png"               >
+        <img data-src="SD/png/Button_Ready_Blue.png"             >
+        <img data-src="SD/png/Button_Ready_Yellow.png"           >
+        <img data-src="SD/png/Button_Test_Green.png"             >
+        <img data-src="SD/png/Button_Test_Yellow.png"            >
+        <img data-src="SD/png/Button_Upload_Blue.png"            >
+        <img data-src="SD/png/Button_Upload_Yellow.png"          >
+        <img data-src="SD/png/Button_Stop_Blue.png"              >
+        <img data-src="SD/png/Button_Stop_Yellow.png"            >
+        <img data-src="SD/png/Button_Pause_Resume_Blue.png"      >
+        <img data-src="SD/png/Button_Pause_Resume_Yellow.png"    >
+        <img data-src="SD/png/Remote_Control_Yellow.png"         >
+        <img data-src="SD/png/Remote_Control_Blue.png"           >
+        <img data-src="SD/png/Button_BT_Yellow.png"              >
+        <img data-src="SD/png/Button_BT_Blue.png"                >
+        <img data-src="SD/png/Button_Pause_Blue.png"             >
+        <img data-src="SD/png/Button_Pause_Yellow.png"           >
+        <img data-src="SD/png/Button_Download_Blue.png"          >
+        <img data-src="SD/png/Button_Download_Yellow.png"        >
+        <img data-src="SD/common/MiniWebRadioV3.jpg"             >
     </div>
 
     <div id="dialog">
@@ -2592,36 +2623,40 @@ function clear_BT_memItems(){
                     <div style="flex: 0 0 2px;">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Ready_Blue_s.png" alt="Upload" title="PLAY WEBFILE"
-                            onmousedown="this.src='SD/png/Button_Ready_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Ready_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Ready_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Ready_Blue_s.png'"
+                        <img src="SD/png/Button_Ready_Blue.png" alt="Upload" title="PLAY WEBFILE"
+                            style="width: 42px; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
                             onclick="playWebURL()">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Upload_Blue_s.png" alt="Upload" title="UPLOAD TO SD FOLDER"
-                            onmousedown="this.src='SD/png/Button_Upload_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Upload_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Upload_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Upload_Blue_s.png'"
+                        <img src="SD/png/Button_Upload_Blue.png" alt="Upload" title="UPLOAD TO SD FOLDER"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Upload_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Upload_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Upload_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Upload_Blue.png'"
                             onclick="javascript:document.getElementById('audioPlayer_File').click();">
                     </div>
                     <div style="flex: 0 0 42px;">
-                        <img src="SD/png/Button_Pause_Blue_s.png" alt="Pause" title="PAUSE"
-                            onmousedown="this.src='SD/png/Button_Pause_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Pause_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Pause_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Pause_Blue_s.png'"
+                        <img src="SD/png/Button_Stop_Blue.png" alt="Pause" title="STOP"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Stop_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Stop_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Stop_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Stop_Blue.png'"
                             onclick="socket.send('stopfile');">
                     </div>
-                    <div style="flex: 0 0 40px;">
-                        <img src="SD/png/Button_Right_Blue_s.png" alt="Resume" title="RESUME"
-                            onmousedown="this.src='SD/png/Button_Right_Yellow_s.png'"
-                            ontouchstart="this.src='SD/png/Button_Right_Yellow_s.png'"
-                            onmouseup="this.src='SD/png/Button_Right_Blue_s.png'"
-                            ontouchend="this.src='SD/png/Button_Right_Blue_s.png'"
-                            onclick="socket.send('resumefile');" />
+                    <div style="flex: 0 0 42px;">
+                        <img src="SD/png/Button_Pause_Resume_Blue.png" alt="Pause Resume" title="PAUSE / RESUME"
+                            style="width: 98%; height: auto;"
+                            onmousedown="this.src='SD/png/Button_Pause_Resume_Yellow.png'"
+                            ontouchstart="this.src='SD/png/Button_Pause_Resume_Yellow.png'"
+                            onmouseup="this.src='SD/png/Button_Pause_Resume_Blue.png'"
+                            ontouchend="this.src='SD/png/Button_Pause_Resume_Blue.png'"
+                            onclick="socket.send('pause_resume');" />
                     </div>
                 </div>
                 <div id="explorerUploadProgress" class="progress-bar" role="progressbar"> </div>
@@ -2633,7 +2668,9 @@ function clear_BT_memItems(){
         </div>
     </div>
 
-<!--=====================================================DLNA======================================================================================-->
+<!--===============================================================================================================================================-->
+<!--=======================================================  D L N A  =============================================================================-->
+<!--===============================================================================================================================================-->
     <div id="tab-content4">
         <center>
             <div style="flex: 0 0 calc(100% - 0px);">
@@ -2688,7 +2725,8 @@ function clear_BT_memItems(){
         </div>
 
     </div>
-
+<!--===============================================================================================================================================-->
+<!--=======================================================  S E A R C H ==========================================================================-->
 <!--===============================================================================================================================================-->
     <div id="tab-content5">
         <div style="display: inline-block; width: 400px;">
@@ -2721,13 +2759,14 @@ function clear_BT_memItems(){
                 <input type="text" class="boxstyle" style="width: calc(100% - 8px);"
                 id="streamurl" placeholder="StreamURL">
             </div>
-             <div style="flex: 1; padding-left: 2px; height: 66px;">
+             <div style="flex: 2 0 42px;">
                 <img src="SD/png/Button_Ready_Blue.png" alt="Vol_up"
-                onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
-                ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
-                onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
-                ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
-                onclick="teststreamurl()">
+                    style="width: 98%; height: auto;"
+                    onmousedown="this.src='SD/png/Button_Ready_Yellow.png'"
+                    ontouchstart="this.src='SD/png/Button_Ready_Yellow.png'"
+                    onmouseup="this.src='SD/png/Button_Ready_Blue.png'"
+                    ontouchend="this.src='SD/png/Button_Ready_Blue.png'"
+                    onclick="teststreamurl()">
             </div>
         </div>
         <div style="display: flex;">
@@ -3042,7 +3081,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> OK </td>
             <td> 26 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_26" onclick="IRclick(26)" onkeyup="chIRcmd(26)" onchange="IRupdateJSON(26)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> VOLUME+ </td>
             <td></td>
             <td></td>
             <td></td>
@@ -3057,7 +3096,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> - </td>
             <td> 27 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_27" onclick="IRclick(27)" onkeyup="chIRcmd(27)" onchange="IRupdateJSON(27)"></td>
-            <td class="table_cell2"> - </td>
+            <td class="table_cell2"> VOLUME- </td>
             <td></td>
             <td></td>
             <td></td>
