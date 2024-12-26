@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1  - Dec 23/2024                                                                                                                       ";
+    Version 3.6.1a  - Dec 26/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2818,7 +2818,7 @@ void loop() {
         //------------------------------------------END OF COMMERCIALS--------------------------------------------------------------------------------
         if(_commercial_dur > 0) {
             _commercial_dur--;
-            if((_commercial_dur == 2) && (_state == RADIO)) clearStreamTitle(); // end of commercial? clear streamtitle
+            if((_commercial_dur == 2) && (_state == RADIO)) /* showStreamTitle(""); */ _f_newStreamTitle = true; // end of commercial? clear streamtitle
         }
         //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
         if(_cur_Codec == 0) {
