@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1a  - Dec 26/2024                                                                                                                       ";
+    Version 3.6.1b  - Dec 27/2024                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -515,6 +515,9 @@ boolean defaultsettings(){
     x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
     _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     // ------------------------------------------------------------------------------------------------------------
+
+
+
 
     if(jO) {free(jO);   jO = NULL;}
     if(tmp){free(tmp); tmp = NULL;}
@@ -1529,10 +1532,15 @@ void setup() {
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    audio.setVolume(0);
     audio.setVolumeSteps(_volumeSteps);
+    audio.setVolume(0);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
+
+    sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps);
+    sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps);
+    sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps);
+    sdr_RA_volume.setNewMinMaxVal(0, _volumeSteps);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
