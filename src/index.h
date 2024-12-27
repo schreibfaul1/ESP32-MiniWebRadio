@@ -468,9 +468,9 @@ function connect() {
 
     if (socket) {
         // Prüfe, ob der Socket noch geöffnet oder im Verbindungsaufbau ist
-        if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
+        // if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
             socket.close(); // Schließe die bestehende Verbindung
-        }
+        //}
     }
 
     socket = new WebSocket('ws://'+window.location.hostname+':81/');

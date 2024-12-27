@@ -110,6 +110,7 @@ uint8_t                 _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*             _pressBtn[8];
 const char*             _releaseBtn[8];
 const char*             _time_s = "";
+const char*             _btEmitterMode = NULL;
 char                    _chbuf[512];
 char                    _fName[256];
 char                    _myIP[25] = {0};
@@ -480,7 +481,7 @@ boolean defaultsettings(){
     _volumeAfterAlarm           = atoi(   parseJson("\"volumeAfterAlarm\":"));
     _BTvolume                   = atoi(   parseJson("\"BTvolume\":"));
     _f_BTpower                  = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    bt_emitter.setMode           ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
+    _btEmitterMode              = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     _alarmtime[0]               = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     _alarmtime[1]               = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     _alarmtime[2]               = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -4199,6 +4200,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
 void kcx_bt_info(const char* info, const char* val) {
     if(endsWith(info, "Emitter found")){
         _f_BtEmitterFound = true;
+        if(_btEmitterMode) bt_emitter.setMode(_btEmitterMode); else bt_emitter.setMode("TX");
         bt_emitter.userCommand("AT+GMR?");                      // get version
         bt_emitter.userCommand("AT+VOL?");                      // get volume (in receiver mode 0 ... 31)
         bt_emitter.userCommand("AT+BT_MODE?");                  // transmitter or receiver

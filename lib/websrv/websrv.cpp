@@ -407,7 +407,9 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
     if(!m_transBuf){log_e("WebServer: not enough memory");}
     m_pathLength = 255;
     m_path = x_ps_malloc(m_pathLength);
+    cmdserver.stop();
     cmdserver.begin(http_port);
+    webSocketServer.stop();
     webSocketServer.begin(websocket_port);
 }
 //--------------------------------------------------------------------------------------------------------------
