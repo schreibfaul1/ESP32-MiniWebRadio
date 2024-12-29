@@ -3604,7 +3604,7 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 3){ // dlna list
                                             changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
                             if(btnNr == 4){ // back to radio
-                                            btn_DL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
+                                            btn_DL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station); _playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
                         }
                         break;
                     }
@@ -3683,7 +3683,7 @@ void ir_short_key(uint8_t key) {
                     if(_f_irOnOff) fall_asleep();
                     else           wake_up();
                     break;
-        case 21:    if(_state != RADIO)      {_radioSubMenue      = 0; changeState(RADIO);}      break;
+        case 21:    if(_state != RADIO)      {_radioSubMenue      = 0; setStation(_cur_station); changeState(RADIO);}      break;
         case 22:    if(_state != PLAYER)     {_playerSubMenue     = 0; changeState(PLAYER);}     break;
         case 23:    if(_state != DLNA)       {_dlnaSubMenue       = 0; changeState(DLNA);}       break;
         case 24:    if(_state != CLOCK)      {_clockSubMenue      = 0; changeState(CLOCK);}      break;
