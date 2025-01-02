@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 14.12.2024
+ *  Updated on: 02.01.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -639,6 +639,7 @@ function connect() {
                                         break;
             case "changeState":         if (val == 'RADIO' && state != 'RADIO') showTab1();
                                         if (val == 'PLAYER'&& state != 'PLAYER') showTab3();
+                                        if (val == 'DLNA'&& state != 'DLNA') showTab4();
                                         if (val == 'BLUETOOTH'&& state != 'BT') showTab9();
                                         if (val == 'IR_SETTINGS' && state != 'IR') showTab8();
                                         break;
@@ -715,6 +716,7 @@ window.onload = function () {
         console.log("load image", img.src)
         img.removeAttribute('data-src'); // remove data-src
     });
+    console.log("all images are loaded");
 };
 
 
