@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1b  - Dec 27/2024                                                                                                                       ";
+    Version 3.6.1c  - Jan 02/2025                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -93,7 +93,7 @@ int16_t                 _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t                 _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t                _icyBitRate = 0;      // from http response header via event
 uint32_t                _decoderBitRate = 0;  // from decoder via getBitRate(false)
-uint16_t                _cur_station = 1;     // current station(nr), will be set later
+uint16_t                _cur_station = 0;     // current station(nr), will be set later
 uint16_t                _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t                _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t                _plsCurPos = 0;
@@ -472,8 +472,8 @@ boolean defaultsettings(){
         return h * 60 + m;
     };
 
-    x_ps_free(_settings.lastconnectedhost);
-    x_ps_free(_settings.lastconnectedfile);
+    x_ps_free(&_settings.lastconnectedhost);
+    x_ps_free(&_settings.lastconnectedfile);
 
     _cur_volume                 = atoi(   parseJson("\"volume\":"));
     _volumeSteps                = atoi(   parseJson("\"volumeSteps\":"));
@@ -509,19 +509,14 @@ boolean defaultsettings(){
     _state                      = atoi(       parseJson("\"state\":"));
 
     // set some items ---------------------------------------------------------------------------------------------
-    if(!startsWith(_settings.lastconnectedfile, "/")) {x_ps_free(_settings.lastconnectedfile); _settings.lastconnectedfile = x_ps_strdup("/audiofiles/");} // guard
+    if(!startsWith(_settings.lastconnectedfile, "/")) {x_ps_free(&_settings.lastconnectedfile); _settings.lastconnectedfile = x_ps_strdup("/audiofiles/");} // guard
     _SD_content.setLastConnectedFile(_settings.lastconnectedfile);
-    x_ps_free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
-    x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+    x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+    x_ps_free(&_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
     _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     // ------------------------------------------------------------------------------------------------------------
-
-
-
-
-    if(jO) {free(jO);   jO = NULL;}
-    if(tmp){free(tmp); tmp = NULL;}
-
+    x_ps_free(&jO);
+    x_ps_free(&tmp);
 
     if(!SD_MMC.exists("/stations.json")){  // if not found create one
         File file1 = SD_MMC.open("/stations.json","w", true);
@@ -582,7 +577,7 @@ void updateSettings(){
         file.print(jO);
         _settingsHash = simpleHash(jO);
     }
-    if(jO){free(jO); jO = NULL;}
+    x_ps_free(&jO);
 }
 // clang-format on
 
@@ -595,10 +590,7 @@ const char* SD_stringifyDirContent(String path) {
     uint8_t  isDir = 0;
     uint16_t fnLen = 0; // length of file mame
     uint8_t  fsLen = 0; // length of file size
-    if(_JSONstr) {
-        free(_JSONstr);
-        _JSONstr = NULL;
-    }
+    x_ps_free(&_JSONstr);
     if(!_SD_content.listFilesInDir(path.c_str(), false, false)) return "[]"; // if success: result will be in _SD_content
     if(psramFound()) { _JSONstr = (char*)ps_malloc(2); }
     else { _JSONstr = (char*)malloc(2); }
@@ -762,14 +754,14 @@ void showStreamTitle(const char* streamtitle) {
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
     txt_RA_sTitle.writeText(st, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
 
-    if(st){free(st); st = NULL;}
+    x_ps_free(&st);
 }
 
 void showLogoAndStationName(bool force) {
     char* SN_utf8 = NULL;
     static char* old_SN_utf8 = strdup("");
     if(force){
-        if(old_SN_utf8){free(old_SN_utf8); old_SN_utf8 = strdup("");}
+        if(old_SN_utf8){x_ps_free(&old_SN_utf8); old_SN_utf8 = strdup("");}
     }
 
     if(_cur_station) {
@@ -784,7 +776,7 @@ void showLogoAndStationName(bool force) {
     }
     trim(SN_utf8);
     if(strcmp(old_SN_utf8, SN_utf8) == 0) {goto exit;}
-    if(old_SN_utf8){free(old_SN_utf8); old_SN_utf8 = NULL;}
+    x_ps_free(&old_SN_utf8);
     old_SN_utf8 = x_ps_strdup(SN_utf8);
     txt_RA_staName.setTextColor(TFT_CYAN);
     txt_RA_staName.writeText(SN_utf8, TFT_ALIGN_LEFT, TFT_ALIGN_TOP);
@@ -796,7 +788,7 @@ void showLogoAndStationName(bool force) {
     pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
     pic_RA_logo.show();
 exit:
-    if(SN_utf8){free(SN_utf8); SN_utf8 = NULL;}
+    x_ps_free(&SN_utf8);
 }
 
 void showFileLogo(uint8_t state) {
@@ -946,10 +938,7 @@ bool preparePlaylistFromFile(const char* path) {  // *.m3u
         playlistFile.close();
         return false;
     }
-    if(_playlistPath) {
-        free(_playlistPath);
-        _playlistPath = NULL;
-    }
+    x_ps_free(&_playlistPath);
     vector_clear_and_shrink(_PLS_content); // clear _PLS_content first
     char* buff1 = x_ps_malloc(2024);
     char* buff2 = x_ps_malloc(1048);
@@ -985,14 +974,8 @@ bool preparePlaylistFromFile(const char* path) {  // *.m3u
     if(idx < 0) log_e("wrong playlist path");
     _playlistPath[idx] = '\0';
     playlistFile.close();
-    if(buff1) {
-        free(buff1);
-        buff1 = NULL;
-    }
-    if(buff2) {
-        free(buff2);
-        buff2 = NULL;
-    }
+    x_ps_free(&buff1);
+    x_ps_free(&buff2);
     return true;
 }
 //____________________________________________________________________________________________________________________________________________________
@@ -1137,10 +1120,7 @@ void processPlaylist(boolean first) {
         webSrv.send("SD_playFile=", playFile);
         if(f_has_EXTINF) SD_playFile(playFile, 0, false);
         else SD_playFile(playFile, 0, true);
-        if(playFile) {
-            free(playFile);
-            playFile = NULL;
-        }
+        x_ps_free(&playFile);
     }
     _plsCurPos++;
     showPlsFileNumber();
@@ -1153,10 +1133,7 @@ exit:
     _playerSubMenue = 0;
     changeState(PLAYER);
     _plsCurPos = 0;
-    if(_playlistPath) {
-        free(_playlistPath);
-        _playlistPath = NULL;
-    }
+    x_ps_free(&_playlistPath);
     return;
 }
 /*****************************************************************************************************************************************************
@@ -1212,7 +1189,7 @@ bool connectToWiFi() {
             (void) s_info; // unused
         }
         file.close();
-        if(line){free(line); line = NULL;}
+        x_ps_free(&line);
     }
     /* int16_t n = WiFi.scanNetworks();
     SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
@@ -1325,14 +1302,14 @@ void connecttohost(const char* host) {
             pwd = strdup(host + idx2 + 1);
             SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audio.connecttohost(url, user, pwd);
             _f_isFSConnected = false;
-            if(url) free(url);
-            if(user) free(user);
-            if(pwd) free(pwd);
+            x_ps_free(&url);
+            x_ps_free(&user);
+            x_ps_free(&pwd);
         }
     }
     if(_cthFailCounter >= 3){
         audio.connecttospeech("The last hosts were not connected", "en");
-        x_ps_free(_settings.lastconnectedhost);
+        x_ps_free(&_settings.lastconnectedhost);
         _settings.lastconnectedhost = strdup("");
     }
 }
@@ -1347,11 +1324,11 @@ void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
     _f_isWebConnected = false;
     if(!startsWith(filename, "/audiofiles/")) {return;}
     if(_f_isFSConnected && isAudio(filename)) {
-        x_ps_free(_settings.lastconnectedfile);
+        x_ps_free(&_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(filename);
         _SD_content.setLastConnectedFile(filename);
-        x_ps_free(_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
-        x_ps_free(_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
+        x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = x_ps_strdup(_SD_content.getLastConnectedFolder());
+        x_ps_free(&_cur_AudioFileName); _cur_AudioFileName = x_ps_strdup(_SD_content.getLastConnectedFileName());
         _cur_AudioFileNr = _SD_content.getPosByFileName(_cur_AudioFileName);
     }
     //    log_w("Filesize %d", audioGetFileSize());
@@ -1718,7 +1695,7 @@ void setStation(uint16_t sta) {
     // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) return;
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
-    x_ps_free(_stationURL);
+    x_ps_free(&_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
     _homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
@@ -1774,13 +1751,13 @@ void StationsItems() {
         webSrv.send("stationNr=", staNr);
         if(_stationURL) webSrv.send("stationURL=", String(_stationURL));
     }
-    if(stationLogo_air){free(stationLogo_air); stationLogo_air = NULL;}
+    x_ps_free(&stationLogo_air);
 }
 
 void setStationViaURL(const char* url) {
-    if(_stationName_air) {free(_stationName_air); _stationName_air = NULL;}
+    x_ps_free(&_stationName_air);
     _cur_station = 0;
-    free(_stationURL);
+    x_ps_free(&_stationURL);
     _stationURL = x_ps_strdup(url);
     connecttohost(url);
     StationsItems();
@@ -1862,7 +1839,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     }
     int32_t idx = lastIndexOf(path, '/');
     if(idx < 0) return;
-    x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
+    x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(path); _cur_AudioFolder[idx] = '\0';
 
     if(showFN) {
         clearLogo();
@@ -1873,7 +1850,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     connecttoFS("SD_MMC", (const char*)path, resumeFilePos);
     if(_f_playlistEnabled) showPlsFileNumber();
     if(_f_isFSConnected) {
-        x_ps_free(_settings.lastconnectedfile);
+        x_ps_free(&_settings.lastconnectedfile);
         _settings.lastconnectedfile = x_ps_strdup(path);
     }
 }
@@ -2385,7 +2362,7 @@ void changeState(int32_t state){
             if(_state != PLAYER) clearWithOutHeaderFooter();
             pic_PL_logo.enable();
             if(_playerSubMenue == 0){ // prev, next, ready, play_all, shuffle, list, radio, off
-                if(!_cur_AudioFolder) {x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles/");}
+                if(!_cur_AudioFolder) {x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup("/audiofiles/");}
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
@@ -2560,7 +2537,7 @@ void changeState(int32_t state){
             txt_BT_mode.setBGcolor(TFT_BROWN); txt_BT_mode.show();
             char c[10]; sprintf(c, "Vol: %02i", bt_emitter.getVolume()); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_volume.show();
             if(_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
-            if(mode){ free(mode); mode = NULL;}
+            x_ps_free(&mode);
             break;
         }
         case IR_SETTINGS:
@@ -3042,7 +3019,7 @@ void audio_info(const char* info) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_showstation(const char* info) {
     if(!info) return;
-    if(_stationName_air) {free(_stationName_air); _stationName_air = NULL;}
+    x_ps_free(&_stationName_air);
     _stationName_air = x_ps_strdup(info);
     SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     _f_newStationName = true;
@@ -3099,7 +3076,7 @@ void audio_eof_stream(const char* info) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_lasthost(const char* info) { // really connected URL
     if(_f_playlistEnabled) return;
-    x_ps_free(_settings.lastconnectedhost);
+    x_ps_free(&_settings.lastconnectedhost);
     _settings.lastconnectedhost = x_ps_strdup(info);
     SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _settings.lastconnectedhost);
     webSrv.send("stationURL=", _settings.lastconnectedhost);
@@ -4027,7 +4004,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd == "DLNA_getRoot")    {  _currDLNAsrvNr = param.toInt(); dlna.browseServer(_currDLNAsrvNr, "0"); return;}
 
     if(cmd == "DLNA_getContent") {  if(param.startsWith("http")) {connecttohost(param.c_str()); showFileName(arg.c_str()); return;}
-                                    if(_dlnaHistory[_dlnaLevel].objId){free(_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = NULL;} _dlnaHistory[_dlnaLevel].objId = x_ps_strdup(param.c_str());
+                                    x_ps_free(&_dlnaHistory[_dlnaLevel].objId); _dlnaHistory[_dlnaLevel].objId = x_ps_strdup(param.c_str());
                                     _totalNumberReturned = 0;
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
@@ -4447,8 +4424,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == AUDIOFILESLIST){
         if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
-                                                  if(ra.val1 == 2){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
-                                                  if(ra.val1 == 3){x_ps_free(_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; stopSong(); SD_playFile(ra.arg3);} return;}
+                                                  if(ra.val1 == 2){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
+                                                  if(ra.val1 == 3){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; stopSong(); SD_playFile(ra.arg3);} return;}
     }
     if(_state == DLNA) {
         if(strcmp(name, "btn_DL_Mute") == 0)     {muteChanged(btn_DL_Mute.getValue()); return;}

@@ -444,7 +444,7 @@ var ir_buttons
 
 // ---- websocket section------------------------
 
-var socket = undefined
+var socket = null; // Globale Variable, um die Verbindung zu verfolgen
 var host = location.hostname
 var tm
 var IR_addr = ""
@@ -466,11 +466,9 @@ function ping() {
 
 function connect() {
 
-    if (socket) {
-        // Prüfe, ob der Socket noch geöffnet oder im Verbindungsaufbau ist
-        // if (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING) {
-            socket.close(); // Schließe die bestehende Verbindung
-        //}
+    if (socket && (socket.readyState === WebSocket.OPEN || socket.readyState === WebSocket.CONNECTING)) {
+        console.log("WebSocket is already open or connecting.");
+        return; // Verhindere mehrfachen Verbindungsaufbau
     }
 
     socket = new WebSocket('ws://'+window.location.hostname+':81/');
@@ -503,7 +501,8 @@ function connect() {
     }
 
     socket.onerror = function (err) {
-        console.log(err)
+        console.log("WebSocket error", err);
+        socket.close(); // Fehlerhafte Verbindung schließen
     }
 
     socket.onmessage = function(event) {

@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 23.Dec 2024
+// updated: 02.Jan 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -575,21 +575,22 @@ inline void hardcopy(){
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline void x_ps_free(char** b){
+    if(*b){free(*b); *b = NULL;}
+}
+inline void x_ps_free(unsigned char** b){
+    if(*b){free(*b); *b = NULL;}
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline void vector_clear_and_shrink(vector<char*>& vec) {
     uint size = vec.size();
     for(int32_t i = 0; i < size; i++) {
-        if(vec[i]) {
-            free(vec[i]);
-            vec[i] = NULL;
-        }
+        x_ps_free(&vec[i]);
     }
     vec.clear();
     vec.shrink_to_fit();
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline void x_ps_free(void* b) {
-    if(b) {free(b); b = NULL;} // free(b);
-}
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class RegisterTable{
 public:
@@ -723,7 +724,7 @@ class IR_buttons {
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
                             val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
-                            free(str);
+                            x_ps_free(&str);
                             validObject = true;
                         }
                         else if(key[0] == 'C'){; // IR command unused
@@ -732,7 +733,7 @@ class IR_buttons {
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
                             val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
-                            free(str);
+                            x_ps_free(&str);
                             validObject = true;
                         }
                         else if (isdigit(key[0])) {  // Nummer, z.B. "0", "10"
@@ -741,7 +742,7 @@ class IR_buttons {
                             ptr = validateAndExtractString(ptr, &str);
                             if (!ptr) return false;  // error found
                             val = hexStringToInt16(str);  // Hex in uint8_t umwandeln
-                            free(str);
+                            x_ps_free(&str);
                             validObject = true;
                         } else if (strcmp(key, "label") == 0) {  // Label
                             ptr = validateAndExtractString(ptr, &label);
@@ -844,7 +845,7 @@ public:
     }
     ~SD_content(){
         freeFilesVector();
-        if(m_buff){free(m_buff); m_buff = NULL;}
+        x_ps_free(&m_buff);
     }
     bool listFilesInDir(const char* path, boolean audioFilesOnly, boolean withoutDirs){
         if(!m_buff) {log_e("oom"); return false;}
@@ -1010,8 +1011,8 @@ public:
     "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // we have no file
     "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no name
 */
-        x_ps_free(m_lastConnectedFileName);
-        x_ps_free(m_lastConnectedFolder);
+        x_ps_free(&m_lastConnectedFileName);
+        x_ps_free(&m_lastConnectedFolder);
         int posFirst = 0, posLast = 0, posDot = 0;
         if(!lastconnectedItem) { // guard, lastconnectedItem == NULL
             m_lastConnectedFileName = x_ps_strdup("");
@@ -1034,12 +1035,12 @@ public:
         //log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
         posDot = indexOf(m_lastConnectedFileName, ".", 0);
         if(posDot == -1){ // no extension
-            x_ps_free(m_lastConnectedFileName);
+            x_ps_free(&m_lastConnectedFileName);
             m_lastConnectedFileName = x_ps_strdup("");
         }
 
     exit:
-        x_ps_free(m_lastConnectedFile);
+        x_ps_free(&m_lastConnectedFile);
         m_lastConnectedFile = x_ps_malloc(strlen(m_lastConnectedFolder) + strlen(m_lastConnectedFileName) + 1);
         strcpy(m_lastConnectedFile, m_lastConnectedFolder);
         strcat(m_lastConnectedFile, m_lastConnectedFileName);
@@ -1067,14 +1068,8 @@ public:
 private:
     void freeFilesVector() {
         for (auto& file : m_files) {
-            if (file.fileName) {
-                free(file.fileName);  // free PSRAM
-                file.fileName = nullptr;
-            }
-            if(file.filePath) {
-                free(file.filePath);  // free PSRAM
-                file.filePath = nullptr;
-            }
+            x_ps_free(&file.fileName);  // free PSRAM
+            x_ps_free(&file.filePath);  // free PSRAM
         }
         m_files.clear();
         m_files.shrink_to_fit();
@@ -1563,8 +1558,8 @@ public:
         m_fontSize = 1;
     }
     ~textbox(){
-        if(m_text){free(m_text); m_text = NULL;}
-        if(m_name){free(m_name); m_name = NULL;}
+        x_ps_free(&m_text);
+        x_ps_free(&m_name);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1627,7 +1622,7 @@ public:
     }
     void setText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT,  uint8_t v_align = TFT_ALIGN_TOP){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
-        if(m_text){free(m_text); m_text = NULL;}
+        x_ps_free(&m_text);
         m_text = x_ps_strdup(txt);
         m_h_align = h_align;
         m_v_align = v_align;
@@ -1635,7 +1630,7 @@ public:
     void writeText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT, uint8_t v_align = TFT_ALIGN_TOP){
         if(!txt){txt = strdup("");}
         if(txt != m_text){ // no self copy
-            if(m_text){free(m_text); m_text = NULL;}
+            x_ps_free(&m_text);
             m_text = x_ps_strdup(txt);
         }
         m_h_align = h_align;
@@ -1683,10 +1678,10 @@ public:
         setAlternativePicturePath(NULL);
     }
     ~button1state(){
-        if(m_defaultPicturePath)    {free(m_defaultPicturePath);     m_defaultPicturePath = NULL;}
-        if(m_clickedPicturePath)    {free(m_clickedPicturePath);     m_clickedPicturePath = NULL;}
-        if(m_inactivePicturePath)   {free(m_inactivePicturePath);    m_inactivePicturePath = NULL;}
-        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
+        x_ps_free(&m_defaultPicturePath);
+        x_ps_free(&m_clickedPicturePath);
+        x_ps_free(&m_inactivePicturePath);
+        x_ps_free(&m_alternativePicturePath);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1733,22 +1728,22 @@ public:
         drawImage(m_clickedPicturePath, m_x, m_y, m_w, m_h);
     }
     void setDefaultPicturePath(const char* path){
-        if(m_defaultPicturePath){free(m_defaultPicturePath); m_defaultPicturePath = NULL;}
+        x_ps_free(&m_defaultPicturePath);
         if(path) m_defaultPicturePath = x_ps_strdup(path);
         else m_defaultPicturePath = x_ps_strdup("defaultPicturePath is not set");
     }
     void setClickedPicturePath(const char* path){
-        if(m_clickedPicturePath){free(m_clickedPicturePath); m_clickedPicturePath = NULL;}
+        x_ps_free(&m_clickedPicturePath);
         if(path) m_clickedPicturePath = x_ps_strdup(path);
         else m_clickedPicturePath = x_ps_strdup("clickedPicturePath is not set");
     }
     void setInactivePicturePath(const char* path){
-        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        x_ps_free(&m_inactivePicturePath);
         if(path) m_inactivePicturePath = x_ps_strdup(path);
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     }
     void setAlternativePicturePath(const char* path){
-        if(m_alternativePicturePath){free(m_alternativePicturePath); m_alternativePicturePath = NULL;}
+        x_ps_free(&m_alternativePicturePath);
         if(path) m_alternativePicturePath = x_ps_strdup(path);
         else m_alternativePicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
@@ -1811,11 +1806,11 @@ public:
         setInactivePicturePath(NULL);
     }
     ~button2state(){
-        if(m_offPicturePath) {free(m_offPicturePath);  m_offPicturePath = NULL;}
-        if(m_onPicturePath) {free(m_onPicturePath);  m_onPicturePath = NULL;}
-        if(m_clickedOffPicturePath){free(m_clickedOffPicturePath); m_clickedOffPicturePath = NULL;}
-        if(m_clickedOnPicturePath){free(m_clickedOnPicturePath); m_clickedOnPicturePath = NULL;}
-        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        x_ps_free(&m_offPicturePath);
+        x_ps_free(&m_onPicturePath);
+        x_ps_free(&m_clickedOffPicturePath);
+        x_ps_free(&m_clickedOnPicturePath);
+        x_ps_free(&m_inactivePicturePath);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -1851,12 +1846,12 @@ public:
         else       {drawImage(m_alternativeOffPicturePath, m_x, m_y, m_w, m_h);}
     }
     void setAlternativeOnPicturePath(const char* path){
-        if(m_alternativeOnPicturePath){free(m_alternativeOnPicturePath); m_alternativeOnPicturePath = NULL;}
+        x_ps_free(&m_alternativeOnPicturePath);
         if(path) m_alternativeOnPicturePath = x_ps_strdup(path);
         else m_alternativeOnPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
     void setAlternativeOffPicturePath(const char* path){
-        if(m_alternativeOffPicturePath){free(m_alternativeOffPicturePath); m_alternativeOffPicturePath = NULL;}
+        x_ps_free(&m_alternativeOffPicturePath);
         if(path) m_alternativeOffPicturePath = x_ps_strdup(path);
         else m_alternativeOffPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
@@ -1892,27 +1887,27 @@ public:
 
 
     void setOffPicturePath(const char* path){
-        if(m_offPicturePath){free(m_offPicturePath); m_offPicturePath = NULL;}
+        x_ps_free(&m_offPicturePath);
         if(path) m_offPicturePath = x_ps_strdup(path);
         else m_offPicturePath = x_ps_strdup("defaultPicturePath is not set");
     }
     void setClickedOffPicturePath(const char* path){
-        if(m_clickedOffPicturePath){free(m_clickedOffPicturePath); m_clickedOffPicturePath = NULL;}
+        x_ps_free(&m_clickedOffPicturePath);
         if(path) m_clickedOffPicturePath = x_ps_strdup(path);
         else m_clickedOffPicturePath = x_ps_strdup("clickedOffPicturePath is not set");
     }
     void setClickedOnPicturePath(const char* path){
-        if(m_clickedOnPicturePath){free(m_clickedOnPicturePath); m_clickedOnPicturePath = NULL;}
+        x_ps_free(&m_clickedOnPicturePath);
         if(path) m_clickedOnPicturePath = x_ps_strdup(path);
         else m_clickedOnPicturePath = x_ps_strdup("clickedOnPicturePath is not set");
     }
     void setOnPicturePath(const char* path){
-        if(m_onPicturePath){free(m_onPicturePath); m_onPicturePath = NULL;}
+        x_ps_free(&m_onPicturePath);
         if(path) m_onPicturePath = x_ps_strdup(path);
         else m_onPicturePath = x_ps_strdup("clickedPicturePath is not set");
     }
     void setInactivePicturePath(const char* path){
-        if(m_inactivePicturePath){free(m_inactivePicturePath); m_inactivePicturePath = NULL;}
+        x_ps_free(&m_inactivePicturePath);
         if(path) m_inactivePicturePath = x_ps_strdup(path);
         else m_inactivePicturePath = x_ps_strdup("inactivePicturePath is not set");
     }
@@ -1966,7 +1961,7 @@ public:
         else                   {m_segmWidth = 64;}
     }
     ~numbersBox(){
-        if(m_name){free(m_name); m_name = NULL;}
+        x_ps_free(&m_name);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -2045,9 +2040,9 @@ public:
         setAlternativPicturePath(NULL);
     }
     ~pictureBox(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_PicturePath) {free(m_PicturePath);  m_PicturePath = NULL;}
-        if(m_altPicturePath) {free(m_altPicturePath);  m_altPicturePath = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_PicturePath);
+        x_ps_free(&m_altPicturePath);
     }
     void begin(uint16_t x, uint16_t y){
         m_x = x; // x pos
@@ -2082,13 +2077,13 @@ public:
         m_enabled = true;
     }
     void setPicturePath(const char* path){
-        if(m_PicturePath){x_ps_free(m_PicturePath); m_PicturePath = NULL;}
+        if(m_PicturePath){x_ps_free(&m_PicturePath); m_PicturePath = NULL;}
         if(path) m_PicturePath = x_ps_strdup(path);
         else m_PicturePath = x_ps_strdup("picturePath is not set");
         if(path){GetImageSize(path);}
     }
     void setAlternativPicturePath(const char* path){
-        if(m_altPicturePath){free(m_altPicturePath); m_altPicturePath = NULL;}
+        x_ps_free(&m_altPicturePath);
         if(path) m_altPicturePath = x_ps_strdup(path);
         else m_altPicturePath = x_ps_strdup("alternativePicturePath is not set");
     }
@@ -2193,8 +2188,8 @@ public:
         m_pathBuff = x_ps_malloc(50);
     }
     ~imgClock(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_pathBuff);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -2377,9 +2372,8 @@ public:
         strcpy(m_pathBuff, m_p1);
     }
     ~alarmClock(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_pathBuff){free(m_pathBuff); m_pathBuff = NULL;}
-
+        x_ps_free(&m_name);
+        x_ps_free(&m_pathBuff);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -2655,9 +2649,9 @@ public:
         m_bgColor = TFT_BLACK;
     }
     ~uniList(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_buff){free(m_buff); m_buff = NULL;}
-        for(int i = 0; i < 10; i++){if(m_txt[i]) free(m_txt[i]); if(m_ext1[i]) free(m_ext1[i]); if(m_ext2[i]) free(m_ext2[i]);}
+        x_ps_free(&m_name);
+        x_ps_free(&m_buff);
+        for(int i = 0; i < 10; i++){x_ps_free(&m_txt[i]); x_ps_free(&m_ext1[i]); x_ps_free(&m_ext2[i]);}
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
@@ -2677,9 +2671,9 @@ public:
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         for(int i = 0; i < 10; i++){
-            free(m_txt[i]);  m_txt[i]  = NULL;
-            free(m_ext1[i]); m_ext1[i] = NULL;
-            free(m_ext2[i]); m_ext2[i] = NULL;
+           x_ps_free(&m_txt[i]);
+           x_ps_free(&m_ext1[i]);
+           x_ps_free(&m_ext2[i]);
             m_nr[i] = -1;
         }
     }
@@ -2689,9 +2683,9 @@ public:
         tft.setFont(m_fontSize);
         if(m_mode == RADIO){
             sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , nr, color, txt);
-            if(txt ){free(m_txt[pos]);  m_txt[pos]  = strdup(txt);}
-            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
-            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
+            if(txt ){x_ps_free(&m_txt[pos]);  m_txt[pos]  = strdup(txt);}
+            if(ext1){x_ps_free(&m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){x_ps_free(&m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
             m_nr[pos] = nr;
         }
         if(m_mode == DLNA){
@@ -2699,15 +2693,15 @@ public:
             if(!ext1)                sprintf(m_buff, "%s%s", color, txt);
             else if(ext1[0] == '\0') sprintf(m_buff, "%s%s", color, txt);
             else                     sprintf(m_buff, "%s%s " ANSI_ESC_CYAN "(%s)" , color, txt, ext1);
-            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = 1;}
-            if(ext1){free(m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
-            if(ext2){free(m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
+            if(txt) {x_ps_free(&m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = 1;}
+            if(ext1){x_ps_free(&m_ext1[pos]); m_ext1[pos] = strdup(ext1);}
+            if(ext2){x_ps_free(&m_ext2[pos]); m_ext2[pos] = strdup(ext2);}
         }
         if(m_mode == PLAYER){
             if(!txt) {log_e("txt is NULL"); return;}
             if(!nr)  sprintf(m_buff, "%s%s", color, txt);
             else     sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li" , color, txt, nr);
-            if(txt) {free(m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
+            if(txt) {x_ps_free(&m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
         }
         tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
@@ -2815,8 +2809,8 @@ public:
         for(uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
     }
     ~dlnaList(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_buff){free(m_buff); m_buff = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_buff);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
@@ -3010,7 +3004,7 @@ private:
                 m_chptr = m_dlnaServer.friendlyName[m_itemListPos - 1];
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
-                if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[(*m_dlnaLevel) + 1].name); m_dlnaHistory[(*m_dlnaLevel) + 1].name = NULL;}
+                x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
                 if(m_dlnaServer.friendlyName[m_itemListPos - 1] == NULL){
                     log_e("invalid pointer in dlna history");
                     m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
@@ -3042,9 +3036,9 @@ private:
             sprintf(m_buff, "%s (%d)",m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
             m_currItemNr[*m_dlnaLevel]= m_itemListPos - 1;
             m_chptr = m_buff;
-            if(m_dlnaHistory[(*m_dlnaLevel) + 1].objId){free(m_dlnaHistory[(*m_dlnaLevel) + 1].objId); m_dlnaHistory[(*m_dlnaLevel) + 1].objId = NULL;}
+            x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].objId);
             m_dlnaHistory[   (*m_dlnaLevel) + 1].objId = strdup(m_srvContent.objectId[m_itemListPos -1]);
-            if(m_dlnaHistory[(*m_dlnaLevel) + 1].name){free(m_dlnaHistory[ (*m_dlnaLevel) + 1].name); m_dlnaHistory[ (*m_dlnaLevel) + 1].name = NULL;}
+            x_ps_free(&m_dlnaHistory[ (*m_dlnaLevel) + 1].name);
             m_dlnaHistory[(   *m_dlnaLevel) + 1].name = strdup(m_srvContent.title[m_itemListPos - 1]);
             m_browseOnRelease = 3;
             goto exit;
@@ -3128,7 +3122,7 @@ public:
             drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true);  // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel) ++;
-            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
             if(m_dlnaServer.friendlyName[m_currItemNr[0]] == NULL){
                 log_e("invalid pointer in dlna history");
                 m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
@@ -3165,9 +3159,9 @@ public:
             vTaskDelay(300);
             (*m_dlnaLevel) ++;
             m_currItemNr[*m_dlnaLevel] = 0;
-            if(m_dlnaHistory[*m_dlnaLevel].objId){free(m_dlnaHistory[*m_dlnaLevel].objId); m_dlnaHistory[*m_dlnaLevel].objId = NULL;}
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].objId);
             m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
-            if(m_dlnaHistory[*m_dlnaLevel].name){free(m_dlnaHistory[*m_dlnaLevel].name); m_dlnaHistory[*m_dlnaLevel].name = NULL;}
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
             m_viewPoint = 0;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0 , 9);
@@ -3262,11 +3256,11 @@ public:
         m_ra.val2 = 0;
     }
     ~fileList(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_fileItemsPos)  {free(m_fileItemsPos);   m_fileItemsPos   = NULL;}
-        if(m_curAudioFolder){free(m_curAudioFolder); m_curAudioFolder = NULL;}   //   /audiofiles/folder1
-        if(m_curAudioName  ){free(m_curAudioName);   m_curAudioName   = NULL;}   //   song.mp3
-        if(m_curAudioPath  ){free(m_curAudioPath);   m_curAudioPath   = NULL;}   //   /audiofiles/folder1/song.mp3
+        x_ps_free(&m_name);
+        x_ps_free(&m_fileItemsPos);
+        x_ps_free(&m_curAudioFolder);   //   /audiofiles/folder1
+        x_ps_free(&m_curAudioName);     //   song.mp3
+        x_ps_free(&m_curAudioPath);     //   /audiofiles/folder1/song.mp3
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
         m_x = x; // x pos
@@ -3377,7 +3371,7 @@ public:
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-        if(fileName){free(fileName); fileName = NULL;}
+        x_ps_free(&fileName);
         m_ra.val1 = 0;
         m_ra.arg1 = NULL;
         return true;
@@ -3631,8 +3625,8 @@ public:
         m_ra.val2 = 0;
     }
     ~stationsList(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_buff){free(m_buff); m_buff = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_buff);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, uint16_t* curStationNr){
         m_x = x; // x pos
@@ -3690,7 +3684,7 @@ public:
         m_browseOnRelease = 0;
         m_oldX = 0; m_oldY = 0;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-        if(m_buff){free(m_buff); m_buff = NULL;}
+        x_ps_free(&m_buff);
         m_ra.val1 = 0;
         m_ra.arg1 = NULL;
         return true;
@@ -3823,7 +3817,7 @@ public:
         m_bgColor = TFT_BLACK;
     }
     ~vuMeter(){
-        if(m_name){free(m_name); m_name = NULL;}
+        x_ps_free(&m_name);
     }
     void begin(uint16_t x, uint16_t y, uint16_t real_w, uint16_t real_h){
         m_x = x; // x pos
@@ -3977,8 +3971,8 @@ public:
         m_fontSize = fontSize;
     }
     ~displayHeader(){
-        if(m_name){free(m_name); m_name = NULL;}
-        if(m_item){free(m_item); m_item = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_item);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -4022,9 +4016,9 @@ public:
         tft.setTextColor(m_itemColor);
         tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
         tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
-        if(m_item){free(m_item); m_item = NULL;}
+        x_ps_free(&m_item);
         m_item = strdup(tmp);
-        if(tmp){free(tmp); tmp = NULL;}
+        x_ps_free(&tmp);
         xSemaphoreGive(mutex_display);
     }
     void setItemColor(uint16_t itemColor){
@@ -4148,8 +4142,8 @@ public:
         m_fontSize = fontSize;
     }
     ~displayFooter(){
-        if(m_name)  {free(m_name);   m_name = NULL;}
-        if(m_ipAddr){free(m_ipAddr); m_ipAddr = NULL;}
+        x_ps_free(&m_name);
+        x_ps_free(&m_ipAddr);
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -4291,7 +4285,7 @@ public:
     }
     void setIpAddr(const char* ipAddr){
         if(!ipAddr)return;
-        if(m_ipAddr){free(m_ipAddr); ipAddr = NULL;}
+        x_ps_free(&m_ipAddr);
         m_ipAddr = strdup(ipAddr);
     }
     void writeIpAddr(const char* ipAddr){
@@ -4940,7 +4934,7 @@ inline const char* aes_encrypt(const char* input) {
     static char* output = NULL;
     uint16_t len = strlen(input) / 16;
     len++;
-    if(output){free (output); output = NULL;}
+    x_ps_free(&output);
     output = (char*) x_ps_calloc((len * 16) + 1, 1);
     mbedtls_aes_context aes;
     mbedtls_aes_init(&aes);
@@ -4953,7 +4947,7 @@ inline const char* aes_encrypt(const char* input) {
 inline const char* aes_decrypt(const char* input) {
     static char* output = NULL;
     uint16_t len = strlen(input) + 1;
-    if(output){free (output); output = NULL;}
+    x_ps_free(&output);
     output = (char*) x_ps_calloc(len, 1);
     mbedtls_aes_context aes;
     mbedtls_aes_init(&aes);
@@ -4963,7 +4957,7 @@ inline const char* aes_decrypt(const char* input) {
     return output;
 }
 
-inline void encode_base64(const unsigned char* input, size_t input_len) {
+inline void encode_base64(unsigned char* input, size_t input_len) {
     // Buffer-Größe berechnen für Base64-Kodierung
     size_t buffer_size = ((input_len + 2) / 3) * 4 + 1;
     unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
@@ -4980,14 +4974,14 @@ inline void encode_base64(const unsigned char* input, size_t input_len) {
     free(output);  // Buffer freigeben
 }
 
-inline void decode_base64(const char* input, size_t input_len) {
+inline void decode_base64(unsigned char* input, size_t input_len) {
     size_t output_len;
     // Buffer-Größe berechnen für Base64-Dekodierung
     size_t buffer_size = (input_len  / 4) * 3 + 1;
     unsigned char* output = (unsigned char*)malloc(buffer_size);  // Dynamischer Buffer
 
     // Dekodierung
-    int ret = mbedtls_base64_decode(output, sizeof(output), &output_len, (const unsigned char*)input, input_len);
+    int ret = mbedtls_base64_decode((uint8_t*)output, sizeof(output), &output_len, (const unsigned char*)input, input_len);
 
     if (ret == 0) {
         printf("Dekodierter Text: %s\n", output);
