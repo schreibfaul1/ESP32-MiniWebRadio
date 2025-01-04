@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1d  - Jan 02/2025                                                                                                                       ";
+    Version 3.6.1e  - Jan 04/2025                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -838,7 +838,7 @@ void showPlsFileNumber() {
     tft.setFont(_fonts[3]);
     char buf[15];
     sprintf(buf, "%03u/%03u", _plsCurPos, _PLS_content.size());
-    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
+    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_LIGHTGREEN, 10, 0, _winFileNr.w, _winFileNr.h);
 }
 
 void showAudioFileNumber() {
@@ -1056,72 +1056,73 @@ void sortPlayListRandom() {
 //____________________________________________________________________________________________________________________________________________________
 
 void processPlaylist(boolean first) {
-    if(_PLS_content.size() == 0) {
-        log_e("playlist is empty");
-        return;
-    } // guard
-    int16_t idx = 0;
-    boolean f_has_EXTINF = false;
-    if(first) {
-        _plsCurPos = 0;
-        _f_playlistEnabled = true;
-    }
 
-    if(_plsCurPos == _PLS_content.size()) goto exit;
+    char *playFile = NULL, *duration = NULL, *title = NULL, *plsContent = NULL, *plsExtension = NULL;
+    bool f_hasTitle= false, f_isURL = false, f_isRoot = false, f_isConnected = false;
 
-    _playerSubMenue = 1;
-    if(_state != PLAYER) changeState(PLAYER);
+    if(_PLS_content.size() == 0) {log_e("playlist is empty"); return;}      // guard
+    if(_plsCurPos == _PLS_content.size()) goto exit;                        // end of playlist
+    if(first) {_plsCurPos = 0; _f_playlistEnabled = true;}                  // reset before start
 
+    if(indexOf(_PLS_content[_plsCurPos], "\n", 0) > 0) f_hasTitle = true;   // has additional infos: duration, title
     // now read from vector _PLS_content
+    if(startsWith(_PLS_content[_plsCurPos], "http")) f_isURL = true;        // is web file
+    if(startsWith(_PLS_content[_plsCurPos], "file://")) f_isRoot = true;    // SD file from root
+    if(f_hasTitle){
+        int idx = indexOf(_PLS_content[_plsCurPos], "\n", 0);
+        plsContent = x_ps_strndup(_PLS_content[_plsCurPos], idx);
+        plsExtension = x_ps_strdup(_PLS_content[_plsCurPos] + idx + 1);
+    }
+    else{
+        plsContent = x_ps_strdup(_PLS_content[_plsCurPos]);
+    }
 
-    idx = indexOf(_PLS_content[_plsCurPos], "\n", 0);
-    if(idx > 0) { // has additional infos: duration, title
-        f_has_EXTINF = true;
-        int16_t idx1 = indexOf(_PLS_content[_plsCurPos], ",", idx);
-        SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", _PLS_content[_plsCurPos] + idx1 + 1);
-        clearLogo();
-        showFileName(_PLS_content[_plsCurPos] + idx1 + 1);
-        int8_t len = idx1 - (idx + 1);
-        if(len > 0 && len < 6) { // song playtime
-            char tmp[7] = {0};
-            memcpy(tmp, _PLS_content[_plsCurPos] + idx + 1, len);
-            tmp[len] = '\0';
-            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "playtime: %is", atoi(tmp));
-        }
-        _PLS_content[_plsCurPos][idx] = '\0';
+    _cur_Codec = 0;
+    if(f_isURL){ // is web file
+        playFile = x_ps_strdup(plsContent);
+        connecttohost(playFile);
+        f_isConnected = _f_isWebConnected;
     }
-    if(startsWith(_PLS_content[_plsCurPos], "http")) {
-        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, _PLS_content[_plsCurPos]);
-        if(!f_has_EXTINF) clearLogoAndStationname();
-        webSrv.send("SD_playFile=", _PLS_content[_plsCurPos]);
-        _cur_Codec = 0;
-        connecttohost(_PLS_content[_plsCurPos]);
-    }
-    else if(startsWith(_PLS_content[_plsCurPos], "file://")) { // root
-        urldecode(_PLS_content[_plsCurPos]);
-        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", _PLS_content[_plsCurPos] + 7);
-        webSrv.send("SD_playFile=", _PLS_content[_plsCurPos] + 7);
-        SD_playFile(_PLS_content[_plsCurPos] + 7, 0, false);
-    }
-    else {
-        urldecode(_PLS_content[_plsCurPos]);
-        char* playFile = NULL;
-        if(_playlistPath) { // path of m3u file
-            playFile = x_ps_malloc(strlen(_playlistPath) + strlen(_PLS_content[_plsCurPos]) + 5);
-            strcpy(playFile, _playlistPath);
-            if(_PLS_content[_plsCurPos][0] != '/') strcat(playFile, "/");
-            strcat(playFile, _PLS_content[_plsCurPos]);
+    else{ // is local file
+        if(f_isRoot){
+            playFile = x_ps_strdup(plsContent + 7); // skip "file://"
+            urldecode(playFile);
+            f_isConnected =_f_isFSConnected;
         }
-        else { // have no playlistpath
-            playFile = x_ps_malloc(strlen(_PLS_content[_plsCurPos]) + 5);
-            strcpy(playFile, _PLS_content[_plsCurPos]);
+        else{ // local file, not root
+            urldecode(plsContent);
+            if(_playlistPath) { // path of m3u file
+                playFile = x_ps_malloc(strlen(_playlistPath) + strlen(plsContent) + 5);
+                strcpy(playFile, _playlistPath);
+                if(plsContent[0] != '/') strcat(playFile, "/");
+                strcat(playFile, plsContent);
+            }
+            else { // have no playlistpath
+                playFile = x_ps_malloc(strlen(plsContent) + 5);
+                strcpy(playFile, plsContent);
+            }
         }
-        SerialPrintfln("Playlist:    " ANSI_ESC_YELLOW "%s", playFile);
+        connecttoFS("SD_MMC", playFile);
+        f_isConnected =_f_isFSConnected;
+    }
+    if(f_isConnected){
+        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, playFile);
         webSrv.send("SD_playFile=", playFile);
-        if(f_has_EXTINF) SD_playFile(playFile, 0, false);
-        else SD_playFile(playFile, 0, true);
-        x_ps_free(&playFile);
+        _playerSubMenue = 1;
+        changeState(PLAYER);
+        if(f_hasTitle){
+            int16_t idx1 = indexOf(plsExtension, ",", 0); // "18,logo-1.mp3"
+            duration = x_ps_strndup(plsExtension, idx1);
+            title = x_ps_strdup(plsExtension + idx1 +1);
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", title);
+            showFileName(title);
+        }
     }
+    x_ps_free(&playFile);
+    x_ps_free(&duration);
+    x_ps_free(&title);
+    x_ps_free(&plsContent);
+    x_ps_free(&plsExtension);
     _plsCurPos++;
     showPlsFileNumber();
     return;
@@ -1133,6 +1134,11 @@ exit:
     _playerSubMenue = 0;
     changeState(PLAYER);
     _plsCurPos = 0;
+    x_ps_free(&playFile);
+    x_ps_free(&duration);
+    x_ps_free(&title);
+    x_ps_free(&plsContent);
+    x_ps_free(&plsExtension);
     x_ps_free(&_playlistPath);
     return;
 }
@@ -3014,6 +3020,7 @@ void audio_info(const char* info) {
     if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
     if(startsWith(info, "StreamTitle="))           {return;}
     if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
+    if(startsWith(info, "ERROR:"))                 {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
 //    if(startsWith(info, "connect to"))             {IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {{SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);} return;} // all other
 }
@@ -3961,12 +3968,12 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     else if(!strcmp(param.c_str(), "IR_SETTINGS") && _state != IR_SETTINGS) {changeState(IR_SETTINGS); return;}
                                     else return;}
 
-    if(cmd == "stopfile"){          if(!_f_isFSConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
+    if(cmd == "stopfile"){          if(!_f_isFSConnected && !_f_isWebConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
                                     _playerSubMenue = 0; stopSong(); changeState(PLAYER); webSrv.send("stopfile=", "audiofile stopped");
                                     return;}
 
-    if(cmd == "pause_resume"){      _f_pauseResume = audio.pauseResume();
-                                    if(!_f_isFSConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
+    if(cmd == "pause_resume"){      if(!_f_isFSConnected && !_f_isWebConnected) {webSrv.send("resumefile=", "There is no audio file active"); return;}
+                                    _f_pauseResume = audio.pauseResume();
                                     if(audio.isRunning()){
                                         webSrv.send("resumefile=", "audiofile resumed");
                                         btn_PL_pause.setOff(); btn_PL_pause.show();
