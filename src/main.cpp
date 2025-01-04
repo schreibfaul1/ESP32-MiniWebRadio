@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1e  - Jan 04/2025                                                                                                                       ";
+    Version 3.6.1f  - Jan 04/2025                                                                                                                       ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -3028,7 +3028,7 @@ void audio_info(const char* info) {
 void audio_showstation(const char* info) {
     if(!info) return;
     x_ps_free(&_stationName_air);
-    _stationName_air = x_ps_strdup(info);
+    _stationName_air = x_ps_strndup(info, 200); // set max length
     SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
     _f_newStationName = true;
 }
