@@ -727,6 +727,7 @@ void WebSrv::parseWsMessage(uint32_t len){
     }
 
     if(opcode == 0x08) {  // denotes a connection close
+        if(WEBSRV_onInfo) WEBSRV_onInfo("websocket connection closed");
         hasclient_WS = false;
         webSocketClient.stop();
         goto exit;

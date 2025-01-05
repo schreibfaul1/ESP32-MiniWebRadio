@@ -493,11 +493,16 @@ function connect() {
 
     socket.onclose = function (e) {
         console.log(e)
-        console.log('Socket is closed. Reconnect will be attempted in 1 second.', e)
-        socket = null
-        setTimeout(function () {
-            connect()
-        }, 1000)
+        // console.log('Socket is closed. Reconnect will be attempted in 1 second.', e)
+        // socket = null
+        // setTimeout(function () {
+        //     connect()
+        // }, 1000)
+    }
+
+    function disconnect() {
+        console.log('WebSocket wird sauber beendet.');
+        // Hier WebSocket-Verbindung schließen oder andere Ressourcen freigeben
     }
 
     socket.onerror = function (err) {
@@ -686,6 +691,16 @@ document.addEventListener('readystatechange', event => {
         connect();  // establish websocket connection
         audioPlayer_buildFileSystemTree("/")
         dlnaPlayer_buildFileSystemTree("/")
+        // Ereignis vor dem Schließen der Webseite hinzufügen
+        window.addEventListener('beforeunload', (e) => {
+            console.log('Seite wird geschlossen. Ressourcen aufräumen...');
+            if (typeof disconnect === 'function') {
+                disconnect(); // Optional: WebSocket-Verbindung sauber schließen
+            }
+            // Optional: Warnmeldung anzeigen
+            e.preventDefault(); // Standardverhalten blockieren (für ältere Browser)
+            e.returnValue = ''; // Einige Browser benötigen dies
+        });
     }
 })
 
@@ -2099,7 +2114,7 @@ function IRclick(btn){
 }
 
 function chIRcmd(btn){  // IR command, value changed
-    var arrLen = 30
+    var arrLen = 33
     var irArr = []
     var val1
     var ret = true
@@ -2976,10 +2991,10 @@ function clear_BT_memItems(){
             <th style="width:180px; text-align: left;"> IR command </th>
             <th></th>
             <th></th>
-            <th style="width:180px; text-align: left;"> short pressed </th>
+            <th style="width:180px; text-align: left;"></th>
             <th></th>
             <th></th>
-            <th style="width:180px; text-align: left;"> long pressed </th>
+            <th style="width:180px; text-align: left;"></th>
             <th></th>
             </tr>
 
@@ -2995,7 +3010,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> ON/OFF </td>
             <td> 30 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_30" onclick="IRclick(30)" onkeyup="chIRcmd(30)" onchange="IRupdateJSON(30)"></td>
-            <td class="table_cell2"> SLEEP </td>
+            <td class="table_cell2"> CH+ </td>
             </tr>
 
             <tr>
@@ -3010,7 +3025,7 @@ function clear_BT_memItems(){
             <td class="table_cell2"> RADIO </td>
             <td> 31 </td>
             <td> <input type="text" class="boxstyle_s" id="ir_command_31" onclick="IRclick(31)" onkeyup="chIRcmd(31)" onchange="IRupdateJSON(31)"></td>
-            <td class="table_cell2"> CANCEL </td>
+            <td class="table_cell2"> CH- </td>
             </tr>
 
             <tr>

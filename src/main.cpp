@@ -429,16 +429,18 @@ button1state  btn_IR_radio("btn_IR_radio");
 // clang-format off
 boolean defaultsettings(){
 
-    if(!SD_MMC.exists("/ir_buttons.json")){  // if not found create one
+    if(!SD_MMC.exists("/ir_buttons.json")){  // if not found ir_buttons.json create a default file
         File file = SD_MMC.open("/ir_buttons.json", "w", true);
         file.write((uint8_t*)ir_buttons_json, sizeof(ir_buttons_json));
         file.close();
     }
     irb.loadButtonsFromJSON("/ir_buttons.json");
     for(uint i = 0; i < _settings.numOfIrButtons; i++) {
+        log_w("0x%04X,  %s", _settings.irbuttons[i].val, _settings.irbuttons[i].label);
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
-    ir.set_irAddress(_settings.irbuttons[42].val);
+        ir.set_irAddress(_settings.irbuttons[42].val);
+        log_w("0x%04X,  %s", _settings.irbuttons[42].val, _settings.irbuttons[42].label);
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
@@ -3332,7 +3334,7 @@ void ir_short_key(uint8_t key) {
         case 12:    // ARROW LEFT
                     if(_state == RADIO) {
                         if(_radioSubMenue < 4){
-                             prevFavStation(); return;               // PREV STATION
+                            prevFavStation(); return;               // PREV STATION
                         }
                         if(_radioSubMenue == 4){ // scroll backward
                             if(btnNr > 7) btnNr = 0; // guard
@@ -3689,16 +3691,14 @@ void ir_short_key(uint8_t key) {
                     downvolume(); break;
         case 28:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(-30);}       break;
         case 29:    if(_state == PLAYER) {if(audio.isRunning()) audio.setTimeOffset(+30);}       break;
+        case 30:    nextStation(); break;
+        case 31:    prevStation(); break;
         default:    break;
     }
 }
 void ir_long_key(int8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "long pressed key nr: " ANSI_ESC_BLUE "%02i", key);
-    if(key == 30) fall_asleep(); // long mute
-    if(key == 31){ // cancel
-        if(_state == STATIONSLIST) {_radioSubMenue = 0; changeState(RADIO);}
-        if(_state == SLEEPTIMER)   {_radioSubMenue = 0; changeState(RADIO);}
-    }
+    if(key == 16) fall_asleep(); // long OK
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Event from TouchPad
@@ -4028,7 +4028,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "File not found " ANSI_ESC_RED "\"%s\"", str.c_str());
-                                        webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
+                                        webSrv.sendStatus(404);} // not found
+                                    //    webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
 
     if(cmd == "SD_Download"){       webSrv.streamfile(SD_MMC, param.c_str());                                                                         // via XMLHttpRequest
@@ -4071,11 +4072,13 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     SerialPrintfln("set_IR_cmd:  " ANSI_ESC_YELLOW "IR command " ANSI_ESC_BLUE "0x%02lx, "
                                     ANSI_ESC_YELLOW "IR Button Number " ANSI_ESC_BLUE "%02li", (long signed)command, (long signed)btnNr);
                                     ir.set_irButtons(btnNr,  command);
+                                    _settings.irbuttons[btnNr].val = command;
                                     return;}
     if(cmd == "setIRadr"){          SerialPrintfln("set_IR_adr:  " ANSI_ESC_YELLOW "IR address " ANSI_ESC_BLUE "%s",
                                     param.c_str());
                                     int32_t address = (int32_t)strtol(param.c_str(), NULL, 16);
                                     ir.set_irAddress(address);
+                                    _settings.irbuttons[42].val = address;
                                     return;}
 
     if(cmd == "getTimeFormat"){     webSrv.send("timeFormat=", String(_timeFormat, 10));
