@@ -3,8 +3,8 @@
 /*****************************************************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32
 
-    first release on 03/2017                                                                                                      */String Version ="\
-    Version 3.6.1g  - Jan 08/2025                                                                                                                       ";
+    first release on 03/2017                                                                                                      */char Version[] ="\
+    Version 3.6.1g  - Jan 08/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1373,8 +1373,7 @@ void setup() {
     uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
     uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
     Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
-    Version = Version.substring(0, 30);
-    Serial.printf("MiniWebRadio %s\n", Version.c_str());
+    trim(Version); Serial.printf("MiniWebRadio %s\n", Version);
     Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
     Serial.printf("FLASH size %lu bytes, speed %lu MHz\n", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
     Serial.printf("CPU speed %lu MHz\n", (long unsigned)ESP.getCpuFreqMHz());
