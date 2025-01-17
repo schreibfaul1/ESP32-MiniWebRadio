@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.6.1h  - Jan 12/2025                                                                                                                   ";
+    Version 3.6.1i  - Jan 17/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -205,7 +205,7 @@ RTIME               rtc;
 Ticker              ticker100ms;
 IR_buttons          irb(&_settings);
 IR                  ir(IR_PIN); // do not change the objectname, it must be "ir"
-TP                  tp(TP_CS, TP_IRQ);
+
 File                audioFile;
 FtpServer           ftpSrv;
 DLNA_Client         dlna;
@@ -213,6 +213,12 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+#if TFT_CONTROLLER <= 7
+TP                  tp(TP_CS, TP_IRQ);
+#else
+TP                  tp(&i2cBusTwo);
+#endif
+
 stationManagement   staMgnt(&_cur_station);
 
 #if DECODER == 2 // ac101
@@ -1455,8 +1461,12 @@ void setup() {
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#if TFT_CONTROLLER <= 7
     tp.TP_Send(0xD0);
     tp.TP_Send(0x90); // Remove any blockage
+#else
+    tp.begin(I2C_SDA, I2C_SCL, TP_ADDR, 400000, -1, -1);
+#endif
 
     SerialPrintfln("setup: ....  Init SD card");
     if(IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
@@ -3804,12 +3814,12 @@ void tp_released(uint16_t x, uint16_t y){
     // SerialPrintfln("tp_released, state is: %i", _state);
 }
 
-void tp_long_released(){
+void tp_long_released(uint16_t x, uint16_t y){
 //    log_w("long released)");
 //    if(_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void tp_positionXY(uint16_t x, uint16_t y){
+void tp_moved(uint16_t x, uint16_t y){
     if(_state == RADIO){
         if(sdr_RA_volume.positionXY(x, y)) return;
     }

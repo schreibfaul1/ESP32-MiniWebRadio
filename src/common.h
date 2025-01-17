@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 02.Jan 2025
+// updated: 17.Jan 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -7,11 +7,11 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)RGB_HMI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (3)ST7796RPI
+#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
 #define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
@@ -124,8 +124,8 @@
         #define BT_EMITTER_MODE    20  // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48  // high impulse -> awake after POWER_OFF (-1 if not available)
 
-        #define I2C_SDA            41  // I2C, dala line for additional HW
-        #define I2C_SCL            42  // I2C, clock line for additional HW
+        #define I2C_SDA            41  // I2C, dala line for capacitive touchpad
+        #define I2C_SCL            42  // I2C, clock line for capacitive touchpad
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
