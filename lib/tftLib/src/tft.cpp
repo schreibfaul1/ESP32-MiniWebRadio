@@ -1,11 +1,13 @@
 // first release on 09/2019
-// updated on Jan 17 2025
+// updated on Jan 20 2025
 
 #include "tft.h"
 #include "Arduino.h"
 #include "pins_arduino.h"
 
-JPEGDecoder JpegDec;
+#define LCD_SPI
+// define RGB_HMI
+
 SPIClass*   SPItransfer;
 
 #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
@@ -124,279 +126,145 @@ void TFT::init() {
     if(_TFTcontroller == ILI9341) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9341");
         writeCommand(0xCB); // POWERA
-        spi_TFT->write(0x39);
-        spi_TFT->write(0x2C);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x34);
+        spi_TFT->write(0x39); spi_TFT->write(0x2C); spi_TFT->write(0x00); spi_TFT->write(0x34);
         spi_TFT->write(0x02);
-
         writeCommand(0xCF); // POWERB
-        spi_TFT->write(0x00);
-        spi_TFT->write(0xC1);
-        spi_TFT->write(0x30);
-
+        spi_TFT->write(0x00); spi_TFT->write(0xC1); spi_TFT->write(0x30);
         writeCommand(0xE8); // DTCA
-        spi_TFT->write(0x85);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x78);
-
+        spi_TFT->write(0x85); spi_TFT->write(0x00); spi_TFT->write(0x78);
         writeCommand(0xEA); // DTCB
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x00);
-
+        spi_TFT->write(0x00); spi_TFT->write(0x00);
         writeCommand(0xED); // POWER_SEQ
-        spi_TFT->write(0x64);
-        spi_TFT->write(0x03);
-        spi_TFT->write(0X12);
-        spi_TFT->write(0X81);
-
+        spi_TFT->write(0x64); spi_TFT->write(0x03); spi_TFT->write(0X12); spi_TFT->write(0X81);
         writeCommand(0xF7); // PRC
         spi_TFT->write(0x20);
-
         writeCommand(0xC0);   // Power control
         spi_TFT->write(0x23); // VRH[5:0]
-
         writeCommand(0xC1);   // Power control
         spi_TFT->write(0x10); // SAP[2:0];BT[3:0]
-
         writeCommand(0xC5); // VCM control
-        spi_TFT->write(0x3e);
-        spi_TFT->write(0x28);
-
+        spi_TFT->write(0x3e); spi_TFT->write(0x28);
         writeCommand(0xC7); // VCM control2
         spi_TFT->write(0x86);
-
         writeCommand(0x36);   // Memory Access Control
         spi_TFT->write(0x48); // 88
-
         writeCommand(0x3A); // PIXEL_FORMAT
         spi_TFT->write(0x55);
-
         writeCommand(0xB1); // FRC
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x18);
-
+        spi_TFT->write(0x00); spi_TFT->write(0x18);
         writeCommand(0xB6); // Display Function Control
-        spi_TFT->write(0x08);
-        spi_TFT->write(0x82);
-        spi_TFT->write(0x27);
-
+        spi_TFT->write(0x08); spi_TFT->write(0x82); spi_TFT->write(0x27);
         writeCommand(0xF2); // 3Gamma Function Disable
         spi_TFT->write(0x00);
-
         writeCommand(0x2A); // COLUMN_ADDR
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0xEF);
-
+        spi_TFT->write(0x00); spi_TFT->write(0x00); spi_TFT->write(0x00); spi_TFT->write(0xEF);
         writeCommand(0x2A); // PAGE_ADDR
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x01);
-        spi_TFT->write(0x3F);
-
+        spi_TFT->write(0x00); spi_TFT->write(0x00); spi_TFT->write(0x01); spi_TFT->write(0x3F);
         writeCommand(0x26); // Gamma curve selected
         spi_TFT->write(0x01);
-
         writeCommand(0xE0); // Set Gamma
-        spi_TFT->write(0x0F);
-        spi_TFT->write(0x31);
-        spi_TFT->write(0x2B);
-        spi_TFT->write(0x0C);
-        spi_TFT->write(0x0E);
-        spi_TFT->write(0x08);
-        spi_TFT->write(0x4E);
-        spi_TFT->write(0xF1);
-        spi_TFT->write(0x37);
-        spi_TFT->write(0x07);
-        spi_TFT->write(0x10);
-        spi_TFT->write(0x03);
-        spi_TFT->write(0x0E);
-        spi_TFT->write(0x09);
-        spi_TFT->write(0x00);
-
+        spi_TFT->write(0x0F); spi_TFT->write(0x31); spi_TFT->write(0x2B); spi_TFT->write(0x0C); spi_TFT->write(0x0E); spi_TFT->write(0x08);
+        spi_TFT->write(0x4E); spi_TFT->write(0xF1); spi_TFT->write(0x37); spi_TFT->write(0x07); spi_TFT->write(0x10); spi_TFT->write(0x03);
+        spi_TFT->write(0x0E); spi_TFT->write(0x09); spi_TFT->write(0x00);
         writeCommand(0xE1); // Set Gamma
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x0E);
-        spi_TFT->write(0x14);
-        spi_TFT->write(0x03);
-        spi_TFT->write(0x11);
-        spi_TFT->write(0x07);
-        spi_TFT->write(0x31);
-        spi_TFT->write(0xC1);
-        spi_TFT->write(0x48);
-        spi_TFT->write(0x08);
-        spi_TFT->write(0x0F);
-        spi_TFT->write(0x0C);
-        spi_TFT->write(0x31);
-        spi_TFT->write(0x36);
-        spi_TFT->write(0x0F);
-
+        spi_TFT->write(0x00); spi_TFT->write(0x0E); spi_TFT->write(0x14); spi_TFT->write(0x03); spi_TFT->write(0x11); spi_TFT->write(0x07);
+        spi_TFT->write(0x31); spi_TFT->write(0xC1); spi_TFT->write(0x48); spi_TFT->write(0x08); spi_TFT->write(0x0F); spi_TFT->write(0x0C);
+        spi_TFT->write(0x31); spi_TFT->write(0x36); spi_TFT->write(0x0F);
         if(_displayInversion == 0) {
             writeCommand(ILI9341_INVOFF); // Display Inversion OFF, normal mode
         }
         else {
             writeCommand(ILI9341_INVON); // Display Inversion ON
         }
-
         writeCommand(0x11); // Sleep out
         delay(120);
         writeCommand(0x2c);
-
         writeCommand(0x29); // Display on
         writeCommand(0x2c);
     }
     if(_TFTcontroller == HX8347D) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "HX8347D");
         // Driving ability Setting
-        writeCommand(0xEA);
-        spi_TFT->write(0x00); // PTBA[15:8]
-        writeCommand(0xEB);
-        spi_TFT->write(0x20); // PTBA[7:0]
-        writeCommand(0xEC);
-        spi_TFT->write(0x0C); // STBA[15:8]
-        writeCommand(0xED);
-        spi_TFT->write(0xC4); // STBA[7:0]
-        writeCommand(0xE8);
-        spi_TFT->write(0x40); // OPON[7:0]
-        writeCommand(0xE9);
-        spi_TFT->write(0x38); // OPON1[7:0]
-        writeCommand(0xF1);
-        spi_TFT->write(0x01); // OTPS1B
-        writeCommand(0xF2);
-        spi_TFT->write(0x10); // GEN
-        writeCommand(0x27);
-        spi_TFT->write(0xA3); // Display control 2 register
+        writeCommand(0xEA); spi_TFT->write(0x00); // PTBA[15:8]
+        writeCommand(0xEB); spi_TFT->write(0x20); // PTBA[7:0]
+        writeCommand(0xEC); spi_TFT->write(0x0C); // STBA[15:8]
+        writeCommand(0xED); spi_TFT->write(0xC4); // STBA[7:0]
+        writeCommand(0xE8); spi_TFT->write(0x40); // OPON[7:0]
+        writeCommand(0xE9); spi_TFT->write(0x38); // OPON1[7:0]
+        writeCommand(0xF1); spi_TFT->write(0x01); // OTPS1B
+        writeCommand(0xF2); spi_TFT->write(0x10); // GEN
+        writeCommand(0x27); spi_TFT->write(0xA3); // Display control 2 register
 
         // Gamma 2.2 Setting
-        writeCommand(0x40);
-        spi_TFT->write(0x01); // Gamma control 1 register
-        writeCommand(0x41);
-        spi_TFT->write(0x00); // Gamma control 2 register
-        writeCommand(0x42);
-        spi_TFT->write(0x00); // Gamma control 3 register
-        writeCommand(0x43);
-        spi_TFT->write(0x10); // Gamma control 4 register
-        writeCommand(0x44);
-        spi_TFT->write(0x0E); // Gamma control 5 register
-        writeCommand(0x45);
-        spi_TFT->write(0x24); // Gamma control 6 register
-        writeCommand(0x46);
-        spi_TFT->write(0x04); // Gamma control 7 register
-        writeCommand(0x47);
-        spi_TFT->write(0x50); // Gamma control 8 register
-        writeCommand(0x48);
-        spi_TFT->write(0x02); // Gamma control 9 register
-        writeCommand(0x49);
-        spi_TFT->write(0x13); // Gamma control 10 register
-        writeCommand(0x4A);
-        spi_TFT->write(0x19); // Gamma control 11 register
-        writeCommand(0x4B);
-        spi_TFT->write(0x19); // Gamma control 12 register
-        writeCommand(0x4C);
-        spi_TFT->write(0x16); // Gamma control 13 register
-        writeCommand(0x50);
-        spi_TFT->write(0x1B); // Gamma control 14 register
-        writeCommand(0x51);
-        spi_TFT->write(0x31); // Gamma control 15 register
-        writeCommand(0x52);
-        spi_TFT->write(0x2F); // Gamma control 16 register
-        writeCommand(0x53);
-        spi_TFT->write(0x3F); // Gamma control 17 register
-        writeCommand(0x54);
-        spi_TFT->write(0x3F); // Gamma control 18 register
-        writeCommand(0x55);
-        spi_TFT->write(0x3E); // Gamma control 19 register
-        writeCommand(0x56);
-        spi_TFT->write(0x2F); // Gamma control 20 register
-        writeCommand(0x57);
-        spi_TFT->write(0x7B); // Gamma control 21 register
-        writeCommand(0x58);
-        spi_TFT->write(0x09); // Gamma control 22 register
-        writeCommand(0x59);
-        spi_TFT->write(0x06); // Gamma control 23 register
-        writeCommand(0x5A);
-        spi_TFT->write(0x06); // Gamma control 24 register
-        writeCommand(0x5B);
-        spi_TFT->write(0x0C); // Gamma control 25 register
-        writeCommand(0x5C);
-        spi_TFT->write(0x1D); // Gamma control 26 register
-        writeCommand(0x5D);
-        spi_TFT->write(0xCC); // Gamma control 27 register
+        writeCommand(0x40); spi_TFT->write(0x01); // Gamma control 1 register
+        writeCommand(0x41); spi_TFT->write(0x00); // Gamma control 2 register
+        writeCommand(0x42); spi_TFT->write(0x00); // Gamma control 3 register
+        writeCommand(0x43); spi_TFT->write(0x10); // Gamma control 4 register
+        writeCommand(0x44); spi_TFT->write(0x0E); // Gamma control 5 register
+        writeCommand(0x45); spi_TFT->write(0x24); // Gamma control 6 register
+        writeCommand(0x46); spi_TFT->write(0x04); // Gamma control 7 register
+        writeCommand(0x47); spi_TFT->write(0x50); // Gamma control 8 register
+        writeCommand(0x48); spi_TFT->write(0x02); // Gamma control 9 register
+        writeCommand(0x49); spi_TFT->write(0x13); // Gamma control 10 register
+        writeCommand(0x4A); spi_TFT->write(0x19); // Gamma control 11 register
+        writeCommand(0x4B); spi_TFT->write(0x19); // Gamma control 12 register
+        writeCommand(0x4C); spi_TFT->write(0x16); // Gamma control 13 register
+        writeCommand(0x50); spi_TFT->write(0x1B); // Gamma control 14 register
+        writeCommand(0x51); spi_TFT->write(0x31); // Gamma control 15 register
+        writeCommand(0x52); spi_TFT->write(0x2F); // Gamma control 16 register
+        writeCommand(0x53); spi_TFT->write(0x3F); // Gamma control 17 register
+        writeCommand(0x54); spi_TFT->write(0x3F); // Gamma control 18 register
+        writeCommand(0x55); spi_TFT->write(0x3E); // Gamma control 19 register
+        writeCommand(0x56); spi_TFT->write(0x2F); // Gamma control 20 register
+        writeCommand(0x57); spi_TFT->write(0x7B); // Gamma control 21 register
+        writeCommand(0x58); spi_TFT->write(0x09); // Gamma control 22 register
+        writeCommand(0x59); spi_TFT->write(0x06); // Gamma control 23 register
+        writeCommand(0x5A); spi_TFT->write(0x06); // Gamma control 24 register
+        writeCommand(0x5B); spi_TFT->write(0x0C); // Gamma control 25 register
+        writeCommand(0x5C); spi_TFT->write(0x1D); // Gamma control 26 register
+        writeCommand(0x5D); spi_TFT->write(0xCC); // Gamma control 27 register
 
         // Power Voltage Setting
-        writeCommand(0x1B);
-        spi_TFT->write(0x1B); // VRH=4.65V
-        writeCommand(0x1A);
-        spi_TFT->write(0x01); // BT (VGH~15V,VGL~-10V,DDVDH~5V)
-        writeCommand(0x24);
-        spi_TFT->write(0x15); // VMH(VCOM High voltage ~3.2V)
-        writeCommand(0x25);
-        spi_TFT->write(0x50); // VML(VCOM Low voltage -1.2V)
+        writeCommand(0x1B); spi_TFT->write(0x1B); // VRH=4.65V
+        writeCommand(0x1A); spi_TFT->write(0x01); // BT (VGH~15V,VGL~-10V,DDVDH~5V)
+        writeCommand(0x24); spi_TFT->write(0x15); // VMH(VCOM High voltage ~3.2V)
+        writeCommand(0x25); spi_TFT->write(0x50); // VML(VCOM Low voltage -1.2V)
+        writeCommand(0x23); spi_TFT->write(0x88); // for Flicker adjust //can reload from OTP
 
-        writeCommand(0x23);
-        spi_TFT->write(0x88); // for Flicker adjust //can reload from OTP
         // Power on Setting
+        writeCommand(0x18); spi_TFT->write(0x36); // I/P_RADJ,N/P_RADJ, Normal mode 60Hz
+        writeCommand(0x19); spi_TFT->write(0x01); // OSC_EN='1', start Osc
 
-        writeCommand(0x18);
-        spi_TFT->write(0x36); // I/P_RADJ,N/P_RADJ, Normal mode 60Hz
-        writeCommand(0x19);
-        spi_TFT->write(0x01); // OSC_EN='1', start Osc
+        if(_displayInversion == 0) { writeCommand(0x01); spi_TFT->write(0x00);} // DP_STB='0', out deep sleep
+        else {                       writeCommand(0x01); spi_TFT->write(0x02);} // DP_STB='0', out deep sleep, invon = 1
 
-        if(_displayInversion == 0) {
-            writeCommand(0x01);
-            spi_TFT->write(0x00); // DP_STB='0', out deep sleep
-        }
-        else {
-            writeCommand(0x01);
-            spi_TFT->write(0x02); // DP_STB='0', out deep sleep, invon = 1
-        }
-
-        writeCommand(0x1F);
-        spi_TFT->write(0x88); // GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
+        writeCommand(0x1F); spi_TFT->write(0x88); // GAS=1, VOMG=00, PON=0, DK=1, XDK=0, DVDH_TRI=0, STB=0
         delay(5);
-        writeCommand(0x1F);
-        spi_TFT->write(0x80); // GAS=1, VOMG=00, PON=0, DK=0, XDK=0, DVDH_TRI=0, STB=0
+        writeCommand(0x1F); spi_TFT->write(0x80); // GAS=1, VOMG=00, PON=0, DK=0, XDK=0, DVDH_TRI=0, STB=0
         delay(5);
-        writeCommand(0x1F);
-        spi_TFT->write(0x90); // GAS=1, VOMG=00, PON=1, DK=0, XDK=0, DVDH_TRI=0, STB=0
+        writeCommand(0x1F); spi_TFT->write(0x90); // GAS=1, VOMG=00, PON=1, DK=0, XDK=0, DVDH_TRI=0, STB=0
         delay(5);
-        writeCommand(0x1F);
-        spi_TFT->write(0xD0); // GAS=1, VOMG=10, PON=1, DK=0, XDK=0, DDVDH_TRI=0, STB=0
+        writeCommand(0x1F); spi_TFT->write(0xD0); // GAS=1, VOMG=10, PON=1, DK=0, XDK=0, DDVDH_TRI=0, STB=0
         delay(5);
         // 262k/65k color selection
-        writeCommand(0x17);
-        spi_TFT->write(0x05); // default 0x06 262k color // 0x05 65k color
+        writeCommand(0x17); spi_TFT->write(0x05); // default 0x06 262k color // 0x05 65k color
         // SET PANEL
-        writeCommand(0x36);
-        spi_TFT->write(0x00); // SS_P, GS_P,REV_P,BGR_P
+        writeCommand(0x36); spi_TFT->write(0x00); // SS_P, GS_P,REV_P,BGR_P
         // Display ON Setting
-        writeCommand(0x28);
-        spi_TFT->write(0x38); // GON=1, DTE=1, D=1000
+        writeCommand(0x28); spi_TFT->write(0x38); // GON=1, DTE=1, D=1000
         delay(40);
-        writeCommand(0x28);
-        spi_TFT->write(0x3C); // GON=1, DTE=1, D=1100
+        writeCommand(0x28); spi_TFT->write(0x3C); // GON=1, DTE=1, D=1100
 
-        writeCommand(0x16);
-        spi_TFT->write(0x08); // MY=0, MX=0, MV=0, BGR=1
+        writeCommand(0x16); spi_TFT->write(0x08); // MY=0, MX=0, MV=0, BGR=1
         // Set GRAM Area
-        writeCommand(0x02);
-        spi_TFT->write(0x00); // Column address start register upper byte
-        writeCommand(0x03);
-        spi_TFT->write(0x00); // Column address start register low byte
-        writeCommand(0x04);
-        spi_TFT->write(0x00);
-        writeCommand(0x05);
-        spi_TFT->write(0xEF); // Column End
-        writeCommand(0x06);
-        spi_TFT->write(0x00);
-        writeCommand(0x07);
-        spi_TFT->write(0x00); // Row Start
-        writeCommand(0x08);
-        spi_TFT->write(0x01);
-        writeCommand(0x09);
-        spi_TFT->write(0x3F); // Row End
+        writeCommand(0x02); spi_TFT->write(0x00); // Column address start register upper byte
+        writeCommand(0x03); spi_TFT->write(0x00); // Column address start register low byte
+        writeCommand(0x04); spi_TFT->write(0x00);
+        writeCommand(0x05); spi_TFT->write(0xEF); // Column End
+        writeCommand(0x06); spi_TFT->write(0x00);
+        writeCommand(0x07); spi_TFT->write(0x00); // Row Start
+        writeCommand(0x08); spi_TFT->write(0x01);
+        writeCommand(0x09); spi_TFT->write(0x3F); // Row End
     }
     if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ILI9486");
@@ -412,45 +280,17 @@ void TFT::init() {
         spi_TFT->write16(0x44);
 
         writeCommand(0xC5); // VCOM Control
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x00);
+        spi_TFT->write16(0x00); spi_TFT->write16(0x00); spi_TFT->write16(0x00); spi_TFT->write16(0x00);
 
         if(_TFTcontroller == ILI9486a) {
             writeCommand(0xE0); // PGAMCTRL(Positive Gamma Control)
-            spi_TFT->write16(0x00);
-            spi_TFT->write16(0x04);
-            spi_TFT->write16(0x0E);
-            spi_TFT->write16(0x08);
-            spi_TFT->write16(0x17);
-            spi_TFT->write16(0x0A);
-            spi_TFT->write16(0x40);
-            spi_TFT->write16(0x79);
-            spi_TFT->write16(0x4D);
-            spi_TFT->write16(0x07);
-            spi_TFT->write16(0x0E);
-            spi_TFT->write16(0x0A);
-            spi_TFT->write16(0x1A);
-            spi_TFT->write16(0x1D);
-            spi_TFT->write16(0x0F);
-
+            spi_TFT->write16(0x00); spi_TFT->write16(0x04); spi_TFT->write16(0x0E); spi_TFT->write16(0x08); spi_TFT->write16(0x17); spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x40); spi_TFT->write16(0x79); spi_TFT->write16(0x4D); spi_TFT->write16(0x07); spi_TFT->write16(0x0E); spi_TFT->write16(0x0A);
+            spi_TFT->write16(0x1A); spi_TFT->write16(0x1D); spi_TFT->write16(0x0F);
             writeCommand(0xE1); // NGAMCTRL (Negative Gamma Correction)
-            spi_TFT->write16(0x00);
-            spi_TFT->write16(0x1B);
-            spi_TFT->write16(0x1F);
-            spi_TFT->write16(0x02);
-            spi_TFT->write16(0x10);
-            spi_TFT->write16(0x05);
-            spi_TFT->write16(0x32);
-            spi_TFT->write16(0x34);
-            spi_TFT->write16(0x43);
-            spi_TFT->write16(0x02);
-            spi_TFT->write16(0x0A);
-            spi_TFT->write16(0x09);
-            spi_TFT->write16(0x33);
-            spi_TFT->write16(0x37);
-            spi_TFT->write16(0x0F);
+            spi_TFT->write16(0x00); spi_TFT->write16(0x1B); spi_TFT->write16(0x1F); spi_TFT->write16(0x02); spi_TFT->write16(0x10); spi_TFT->write16(0x05);
+            spi_TFT->write16(0x32); spi_TFT->write16(0x34); spi_TFT->write16(0x43); spi_TFT->write16(0x02); spi_TFT->write16(0x0A); spi_TFT->write16(0x09);
+            spi_TFT->write16(0x33); spi_TFT->write16(0x37); spi_TFT->write16(0x0F);
         }
 
         if(_TFTcontroller == ILI9486b) {
@@ -546,14 +386,11 @@ void TFT::init() {
         }
 
         writeCommand(ILI9488_PWCTR1); // Power Control 1
-        spi_TFT->write(0x17);
-        spi_TFT->write(0x15);
+        spi_TFT->write(0x17); spi_TFT->write(0x15);
         writeCommand(ILI9488_PWCTR2); // Power Control 2
         spi_TFT->write(0x41);
         writeCommand(ILI9488_VMCTR1); // VCOM Control
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x12);
-        spi_TFT->write(0x80);
+        spi_TFT->write(0x00); spi_TFT->write(0x12); spi_TFT->write(0x80);
         writeCommand(ILI9488_MADCTL); // Memory Access Control
         spi_TFT->write(0x48);
         writeCommand(ILI9488_COLMOD); // Pixel Interface Format
@@ -565,16 +402,11 @@ void TFT::init() {
         writeCommand(ILI9488_INVTR); // Display Inversion Control
         spi_TFT->write(0x02);
         writeCommand(ILI9488_DISCTRL); // Display Function Control
-        spi_TFT->write(0x02);
-        spi_TFT->write(0x02);
-        spi_TFT->write(0x3B);
+        spi_TFT->write(0x02); spi_TFT->write(0x02); spi_TFT->write(0x3B);
         writeCommand(ILI9488_ETMOD); // Entry Mode Set
         spi_TFT->write(0xC6);
         writeCommand(0xF7); // Adjust Control 3
-        spi_TFT->write(0xA9);
-        spi_TFT->write(0x51);
-        spi_TFT->write(0x2C);
-        spi_TFT->write(0x82);
+        spi_TFT->write(0xA9); spi_TFT->write(0x51); spi_TFT->write(0x2C); spi_TFT->write(0x82);
         writeCommand(ILI9488_SLPOUT); // Exit Sleep
         delay(120);
         writeCommand(ILI9488_DISPON); // Display on
@@ -583,56 +415,33 @@ void TFT::init() {
     //==========================================
     if(_TFTcontroller == ST7796) {
         if(tft_info) tft_info("init " ANSI_ESC_CYAN "ST7796");
-
         writeCommand(ST7796_SWRESET);
         delay(120);
-
         writeCommand(ST7796_SLPOUT); // Sleep Out
         delay(120);
-
         writeCommand(ST7796_MADCTL); // Memory Data Access Control
         spi_TFT->write(0x40);
-
         writeCommand(ST7796_CSCON); // Command Set Control
         spi_TFT->write(0xC3);       // Enable extension command 2 partI
-
         writeCommand(ST7796_CSCON); // Command Set Control
         spi_TFT->write(0x96);       // Enable extension command 2 partII
-
         writeCommand(ST7796_DIC); // Display Inversion Control
         spi_TFT->write(0x00);
-
         writeCommand(ST7796_IFMODE); // RAM control
         spi_TFT->write(0x00);
-
         writeCommand(ST7796_BPC); // Blanking Porch Control
-        spi_TFT->write(0x08);
-        spi_TFT->write(0x08);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x64);
-
+        spi_TFT->write(0x08); spi_TFT->write(0x08); spi_TFT->write(0x00); spi_TFT->write(0x64);
         writeCommand(ST7796_PWR1); // Power Control 1
-        spi_TFT->write(0xF0);
-        spi_TFT->write(0x17);
-
+        spi_TFT->write(0xF0); spi_TFT->write(0x17);
         writeCommand(ST7796_PWR2); // Power Control 2
         spi_TFT->write(0x14);      //
-
         writeCommand(ST7796_PWR3); // Power Control 3
         spi_TFT->write(0xA7);
-
         writeCommand(ST7796_VCMPCTL); // VCOM Control
         spi_TFT->write(0x20);
-
         writeCommand(ST7796_DOCA); // Display Output Ctrl Adjust
-        spi_TFT->write(0x40);
-        spi_TFT->write(0x8A);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x00);
-        spi_TFT->write(0x29);
-        spi_TFT->write(0x01);
-        spi_TFT->write(0xBF);
-        spi_TFT->write(0x33);
+        spi_TFT->write(0x40); spi_TFT->write(0x8A); spi_TFT->write(0x00); spi_TFT->write(0x00);
+        spi_TFT->write(0x29); spi_TFT->write(0x01); spi_TFT->write(0xBF); spi_TFT->write(0x33);
 
         //--------------------------------ST7789V gamma setting---------------------------------------//
         writeCommand(ST7796_PGC); // PGAMCTRL(Positive Gamma Control)
@@ -711,84 +520,44 @@ void TFT::init() {
         spi_TFT->write16(0x00);
 
         writeCommand(ST7796_BPC); // Blanking Porch Control
-        spi_TFT->write16(0x08);
-        spi_TFT->write16(0x08);
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x64);
-
+        spi_TFT->write16(0x08); spi_TFT->write16(0x08); spi_TFT->write16(0x00); spi_TFT->write16(0x64);
         writeCommand(ST7796_PWR1); // Power Control 1
-        spi_TFT->write16(0xF0);
-        spi_TFT->write16(0x17);
-
+        spi_TFT->write16(0xF0); spi_TFT->write16(0x17);
         writeCommand(ST7796_PWR2); // Power Control 2
         spi_TFT->write16(0x14);    //
-
         writeCommand(ST7796_PWR3); // Power Control 3
         spi_TFT->write16(0xA7);
-
         writeCommand(ST7796_VCMPCTL); // VCOM Control
         spi_TFT->write16(0x20);
-
         writeCommand(ST7796_DOCA); // Display Output Ctrl Adjust
-        spi_TFT->write16(0x40);
-        spi_TFT->write16(0x8A);
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x00);
-        spi_TFT->write16(0x29);
-        spi_TFT->write16(0x01);
-        spi_TFT->write16(0xBF);
-        spi_TFT->write16(0x33);
+        spi_TFT->write16(0x40); spi_TFT->write16(0x8A); spi_TFT->write16(0x00); spi_TFT->write16(0x00);
+        spi_TFT->write16(0x29); spi_TFT->write16(0x01); spi_TFT->write16(0xBF); spi_TFT->write16(0x33);
 
         //--------------------------------ST7789V gamma setting---------------------------------------//
         writeCommand(ST7796_PGC); // PGAMCTRL(Positive Gamma Control)
-        spi_TFT->write16(0xF0);
-        spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x11);
-        spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x0A);
-        spi_TFT->write16(0x27);
-        spi_TFT->write16(0x3C);
-        spi_TFT->write16(0x55);
-        spi_TFT->write16(0x51);
-        spi_TFT->write16(0x37);
-        spi_TFT->write16(0x15);
-        spi_TFT->write16(0x17);
-        spi_TFT->write16(0x31);
-        spi_TFT->write16(0x35);
+        spi_TFT->write16(0xF0); spi_TFT->write16(0x0B); spi_TFT->write16(0x11); spi_TFT->write16(0x0B);
+        spi_TFT->write16(0x0A); spi_TFT->write16(0x27); spi_TFT->write16(0x3C); spi_TFT->write16(0x55);
+        spi_TFT->write16(0x51); spi_TFT->write16(0x37); spi_TFT->write16(0x15); spi_TFT->write16(0x17);
+        spi_TFT->write16(0x31); spi_TFT->write16(0x35);
 
         writeCommand(ST7796_NGC); // NGAMCTRL (Negative Gamma Correction)
-        spi_TFT->write16(0x4E);
-        spi_TFT->write16(0x15);
-        spi_TFT->write16(0x19);
-        spi_TFT->write16(0x0B);
-        spi_TFT->write16(0x09);
-        spi_TFT->write16(0x27);
-        spi_TFT->write16(0x34);
-        spi_TFT->write16(0x32);
-        spi_TFT->write16(0x46);
-        spi_TFT->write16(0x38);
-        spi_TFT->write16(0x14);
-        spi_TFT->write16(0x16);
-        spi_TFT->write16(0x26);
-        spi_TFT->write16(0x2A);
-
+        spi_TFT->write16(0x4E); spi_TFT->write16(0x15); spi_TFT->write16(0x19); spi_TFT->write16(0x0B);
+        spi_TFT->write16(0x09); spi_TFT->write16(0x27); spi_TFT->write16(0x34); spi_TFT->write16(0x32);
+        spi_TFT->write16(0x46); spi_TFT->write16(0x38); spi_TFT->write16(0x14); spi_TFT->write16(0x16);
+        spi_TFT->write16(0x26); spi_TFT->write16(0x2A);
         writeCommand(ST7796_CSCON); // Command Set Control
         spi_TFT->write16(0x3C);     // Enable extension command 2 partI
-
         writeCommand(ST7796_CSCON); // Command Set Control
         spi_TFT->write16(0x69);     // Enable extension command 2 partII
-
         if(_displayInversion == 0) {
             writeCommand(ST7796_INVOFF); // Display Inversion OFF, normal mode
         }
         else {
             writeCommand(ST7796_INVON); // Display Inversion ON
         }
-
         writeCommand(ST7796_DISPON); // Display on
         delay(25);
     }
-
     endWrite();
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -798,33 +567,33 @@ TFT::TFT(uint8_t TFTcontroller, uint8_t dispInv) {
     _displayInversion = dispInv;    // 0=off default, 1=on
 
     if(_TFTcontroller == ILI9341) {
-        _height = 320;
-        _width = 240;
+        m_h_res = 320;
+        m_v_res = 240;
         _rotation = 0;
     }
     if(_TFTcontroller == HX8347D) {
-        _height = 320;
-        _width = 240;
+        m_h_res = 320;
+        m_v_res = 240;
         _rotation = 0;
     }
     if(_TFTcontroller == ILI9486a) {
-        _height = 480;
-        _width = 320;
+        m_h_res = 480;
+        m_v_res = 320;
         _rotation = 0;
     }
     if(_TFTcontroller == ILI9486b) { // Waveshare
-        _height = 480;
-        _width = 320;
+        m_h_res = 480;
+        m_v_res = 320;
         _rotation = 0;
     }
     if(_TFTcontroller == ILI9488) {
-        _height = 480;
-        _width = 320;
+        m_h_res = 480;
+        m_v_res = 320;
         _rotation = 0;
     }
     if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
-        _height = 480;
-        _width = 320;
+        m_h_res = 480;
+        m_v_res = 320;
         _rotation = 0;
     }
     _freq = 20000000;
@@ -859,8 +628,8 @@ void TFT::writeCommand(uint16_t cmd) {
     TFT_DC_HIGH();
 }
 // Return the size of the display (per current rotation)
-int16_t TFT::width(void) const { return _width; }
-int16_t TFT::height(void) const { return _height; }
+int16_t TFT::width(void) const { return m_h_res; }
+int16_t TFT::height(void) const { return m_v_res; }
 uint8_t TFT::getRotation(void) const { return _rotation; }
 
 uint16_t TFT::readCommand() {
@@ -873,17 +642,13 @@ uint16_t TFT::readCommand() {
     return ret;
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) {
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk) { // LCD_SPI
     spi_TFT = new SPIClass(spi);
     spi_TFT->begin(sclk, miso, mosi, -1);
     spi_TFT->setFrequency(_freq);
     SPItransfer = spi_TFT;
-
     TFT_SPI = SPISettings(_freq, MSBFIRST, SPI_MODE0);
-
     String info = "";
     _TFT_CS = CS;
     _TFT_DC = DC;
@@ -892,11 +657,81 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
     digitalWrite(_TFT_DC, LOW);
     pinMode(_TFT_CS, OUTPUT);
     digitalWrite(_TFT_CS, HIGH);
-
     init(); //
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT::begin(const Pins& newPins, const Timing& newTiming){ // RGB_HMI
+    m_pins = newPins;
+    m_timing = newTiming;
 
+    esp_lcd_rgb_panel_config_t panel_config;
+    panel_config.clk_src = LCD_CLK_SRC_PLL160M;
+
+    panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
+    panel_config.timings.h_res = m_timing.h_res;
+    panel_config.timings.v_res = m_timing.v_res;
+    panel_config.timings.hsync_pulse_width = m_timing.hsync_pulse_width;
+    panel_config.timings.hsync_back_porch = m_timing.hsync_back_porch;
+    panel_config.timings.hsync_front_porch = m_timing.hsync_front_porch;
+    panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
+    panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
+    panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
+    panel_config.timings.flags.hsync_idle_low = false;
+    panel_config.timings.flags.vsync_idle_low = false;
+    panel_config.timings.flags.de_idle_high = false;
+    panel_config.timings.flags.pclk_active_neg = true;
+    panel_config.timings.flags.pclk_idle_high = true;
+
+    panel_config.data_width = 16; // RGB565
+    panel_config.bits_per_pixel = 16;
+    panel_config.num_fbs = 1;
+    panel_config.bounce_buffer_size_px = 0;
+    panel_config.psram_trans_align = 16;
+    panel_config.dma_burst_size = 0;
+    panel_config.hsync_gpio_num = m_pins.hsync;
+    panel_config.vsync_gpio_num = m_pins.vsync;
+    panel_config.de_gpio_num = m_pins.de;
+    panel_config.pclk_gpio_num = m_pins.pclk;
+    panel_config.disp_gpio_num = m_pins.bl;
+
+    int8_t pinArr[16] = {               // Daten-Pins für RGB565
+        m_pins.b0, m_pins.b1, m_pins.b2, m_pins.b3, m_pins.b4,
+        m_pins.g0, m_pins.g1, m_pins.g2, m_pins.g3, m_pins.g4, m_pins.g5,
+        m_pins.r0, m_pins.r1, m_pins.r2, m_pins.r3, m_pins.r4
+    };
+
+    for (int i = 0; i < 16; ++i) {
+        log_i("i %i. pin %i", i, pinArr[i]);
+        panel_config.data_gpio_nums[i] = pinArr[i];
+    }
+    panel_config.flags.disp_active_low = false;
+    panel_config.flags.refresh_on_demand = false;
+    panel_config.flags.fb_in_psram = true;
+    panel_config.flags.double_fb = false;
+    panel_config.flags.no_fb = false;
+    panel_config.flags.bb_invalidate_cache = false;
+
+    ESP_ERROR_CHECK(esp_lcd_new_rgb_panel(&panel_config, &m_panel));
+    ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
+    ESP_ERROR_CHECK(esp_lcd_panel_init(m_panel));
+    log_i("Display initialisiert.");
+    esp_lcd_panel_mirror(m_panel, true, true);
+
+    // Hintergrundbeleuchtung einschalten
+    gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
+    gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
+
+    m_h_res = m_timing.h_res;
+    m_v_res = m_timing.v_res;
+
+    void *fb0;
+    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 1, &fb0);
+    m_framebuffer = (uint16_t*)fb0;
+
+    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer %i", m_h_res, m_v_res, m_framebuffer);
+    memset(m_framebuffer, 0x00, m_h_res * m_v_res * 2);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 typedef struct {
     uint8_t  madctl;
     uint8_t  bmpctl;
@@ -909,8 +744,7 @@ const rotation_data_t ili9341_rotations[4] = {
     {(ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_MV | ILI9341_MADCTL_MX | ILI9341_MADCTL_BGR), ILI9341_HEIGHT, ILI9341_WIDTH},
     {(ILI9341_MADCTL_MY | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_BGR), ILI9341_WIDTH, ILI9341_HEIGHT},
     {(ILI9341_MADCTL_MX | ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), ILI9341_HEIGHT, ILI9341_WIDTH}};
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::setRotation(uint8_t m) {
     _rotation = m % 4; // can't be higher than 3
 
@@ -927,8 +761,8 @@ void TFT::setRotation(uint8_t m) {
             spi_TFT->write(0x01);
             writeCommand(0x09);
             spi_TFT->write(0x3F);
-            _width = HX8347D_WIDTH;
-            _height = HX8347D_HEIGHT;
+            m_h_res = HX8347D_WIDTH;
+            m_v_res = HX8347D_HEIGHT;
         }
         if(_rotation == 1) {
             writeCommand(0x16);
@@ -941,43 +775,33 @@ void TFT::setRotation(uint8_t m) {
             spi_TFT->write(0x00);
             writeCommand(0x09);
             spi_TFT->write(0xEF);
-            _width = HX8347D_HEIGHT;
-            _height = HX8347D_WIDTH;
+            m_v_res = HX8347D_WIDTH;
+            m_h_res = HX8347D_HEIGHT;
         }
         if(_rotation == 2) {
-            writeCommand(0x16);
-            spi_TFT->write(0xC8); // 180
-            writeCommand(0x04);
-            spi_TFT->write(0x00);
-            writeCommand(0x05);
-            spi_TFT->write(0xEF);
-            writeCommand(0x08);
-            spi_TFT->write(0x01);
-            writeCommand(0x09);
-            spi_TFT->write(0x3F);
-            _width = HX8347D_WIDTH;
-            _height = HX8347D_HEIGHT;
+            writeCommand(0x16); spi_TFT->write(0xC8); // 180
+            writeCommand(0x04); spi_TFT->write(0x00);
+            writeCommand(0x05); spi_TFT->write(0xEF);
+            writeCommand(0x08); spi_TFT->write(0x01);
+            writeCommand(0x09); spi_TFT->write(0x3F);
+            m_h_res = HX8347D_WIDTH;
+            m_v_res = HX8347D_HEIGHT;
         }
         if(_rotation == 3) {
-            writeCommand(0x16);
-            spi_TFT->write(0xA8); // 270
-            writeCommand(0x04);
-            spi_TFT->write(0x01);
-            writeCommand(0x05);
-            spi_TFT->write(0x3F);
-            writeCommand(0x08);
-            spi_TFT->write(0x00);
-            writeCommand(0x09);
-            spi_TFT->write(0xEF);
-            _width = HX8347D_HEIGHT;
-            _height = HX8347D_WIDTH;
+            writeCommand(0x16); spi_TFT->write(0xA8); // 270
+            writeCommand(0x04); spi_TFT->write(0x01);
+            writeCommand(0x05); spi_TFT->write(0x3F);
+            writeCommand(0x08); spi_TFT->write(0x00);
+            writeCommand(0x09); spi_TFT->write(0xEF);
+            m_v_res = HX8347D_WIDTH;
+            m_h_res = HX8347D_HEIGHT;
         }
         endWrite();
     }
     if(_TFTcontroller == ILI9341) { // ILI9341
         m = ili9341_rotations[_rotation].madctl;
-        _width = ili9341_rotations[_rotation].width;
-        _height = ili9341_rotations[_rotation].height;
+        m_v_res = ili9341_rotations[_rotation].width;
+        m_h_res = ili9341_rotations[_rotation].height;
         startWrite();
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(m);
@@ -990,23 +814,23 @@ void TFT::setRotation(uint8_t m) {
         switch(_rotation) {
             case 0:
                 spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR);
-                _width = ILI9486_WIDTH;
-                _height = ILI9486_HEIGHT;
+                m_h_res = ILI9486_WIDTH;
+                m_v_res = ILI9486_HEIGHT;
                 break;
             case 1:
                 spi_TFT->write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                _width = ILI9486_HEIGHT;
-                _height = ILI9486_WIDTH;
+                m_v_res = ILI9486_WIDTH;
+                m_h_res = ILI9486_HEIGHT;
                 break;
             case 2:
                 spi_TFT->write16(ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR);
-                _width = ILI9486_WIDTH;
-                _height = ILI9486_HEIGHT;
+                m_h_res = ILI9486_WIDTH;
+                m_v_res = ILI9486_HEIGHT;
                 break;
             case 3:
                 spi_TFT->write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_MV | ILI9486_MADCTL_BGR);
-                _width = ILI9486_HEIGHT;
-                _height = ILI9486_WIDTH;
+                m_v_res = ILI9486_WIDTH;
+                m_h_res = ILI9486_HEIGHT;
                 break;
         }
         endWrite();
@@ -1018,23 +842,23 @@ void TFT::setRotation(uint8_t m) {
         switch(_rotation) {
             case 0:
                 spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR);
-                _width = ILI9488_WIDTH;
-                _height = ILI9488_HEIGHT;
+                m_h_res = ILI9488_WIDTH;
+                m_v_res = ILI9488_HEIGHT;
                 break;
             case 1:
                 spi_TFT->write(ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                _width = ILI9488_HEIGHT;
-                _height = ILI9488_WIDTH;
+                m_v_res = ILI9488_WIDTH;
+                m_h_res = ILI9488_HEIGHT;
                 break;
             case 2:
                 spi_TFT->write(ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR);
-                _width = ILI9488_WIDTH;
-                _height = ILI9488_HEIGHT;
+                m_h_res = ILI9488_WIDTH;
+                m_v_res = ILI9488_HEIGHT;
                 break;
             case 3:
                 spi_TFT->write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_MV | ILI9488_MADCTL_BGR);
-                _width = ILI9488_HEIGHT;
-                _height = ILI9488_WIDTH;
+                m_v_res = ILI9488_WIDTH;
+                m_h_res = ILI9488_HEIGHT;
                 break;
         }
         endWrite();
@@ -1046,23 +870,23 @@ void TFT::setRotation(uint8_t m) {
         switch(_rotation) {
             case 0:
                 spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
-                _width = ST7796_WIDTH;
-                _height = ST7796_HEIGHT;
+                m_h_res = ST7796_WIDTH;
+                m_v_res = ST7796_HEIGHT;
                 break;
             case 1:
                 spi_TFT->write(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                _width = ST7796_HEIGHT;
-                _height = ST7796_WIDTH;
+                m_v_res = ST7796_WIDTH;
+                m_h_res = ST7796_HEIGHT;
                 break;
             case 2:
                 spi_TFT->write(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
-                _width = ST7796_WIDTH;
-                _height = ST7796_HEIGHT;
+                m_h_res = ST7796_WIDTH;
+                m_v_res = ST7796_HEIGHT;
                 break;
             case 3:
                 spi_TFT->write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                _width = ST7796_HEIGHT;
-                _height = ST7796_WIDTH;
+                m_v_res = ST7796_WIDTH;
+                m_h_res = ST7796_HEIGHT;
                 break;
         }
         endWrite();
@@ -1074,30 +898,29 @@ void TFT::setRotation(uint8_t m) {
         switch(_rotation) {
             case 0:
                 spi_TFT->write16(ST7796_MADCTL_MX | ST7796_MADCTL_BGR);
-                _width = ST7796_WIDTH;
-                _height = ST7796_HEIGHT;
+                m_h_res = ST7796_WIDTH;
+                m_v_res = ST7796_HEIGHT;
                 break;
             case 1:
                 spi_TFT->write16(ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                _width = ST7796_HEIGHT;
-                _height = ST7796_WIDTH;
+                m_v_res = ST7796_WIDTH;
+                m_h_res = ST7796_HEIGHT;
                 break;
             case 2:
                 spi_TFT->write16(ST7796_MADCTL_MY | ST7796_MADCTL_BGR);
-                _width = ST7796_WIDTH;
-                _height = ST7796_HEIGHT;
+                m_h_res = ST7796_WIDTH;
+                m_v_res = ST7796_HEIGHT;
                 break;
             case 3:
                 spi_TFT->write16(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_MV | ST7796_MADCTL_BGR);
-                _width = ST7796_HEIGHT;
-                _height = ST7796_WIDTH;
+                m_v_res = ST7796_WIDTH;
+                m_h_res = ST7796_HEIGHT;
                 break;
         }
         endWrite();
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::invertDisplay(bool i) {
     startWrite();
     if(_TFTcontroller == ILI9341) { writeCommand(i ? ILI9341_INVON : ILI9341_INVOFF); }
@@ -1106,8 +929,7 @@ void TFT::invertDisplay(bool i) {
     if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) { writeCommand(i ? ST7796_INVON : ST7796_INVOFF); }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::scrollTo(uint16_t y) {
     if(_TFTcontroller != ILI9341) return;
     startWrite();
@@ -1115,22 +937,7 @@ void TFT::scrollTo(uint16_t y) {
     spi_TFT->write16(y);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-// void TFT::setBrigthness(uint8_t br){ // not used
-//     startWrite();
-//     writeCommand(ILI9486_CDBVAL);
-//     spi_TFT->write16(0);
-//     writeCommand(ILI9486_WDBVAL);
-//     spi_TFT->write16(128);
-//     endWrite();
-// }
-
-/*
- * Transaction API
- * */
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if(_TFTcontroller == ILI9341) { // ILI9341
         uint32_t xa = ((uint32_t)x << 16) | (x + w - 1);
@@ -1220,9 +1027,7 @@ void TFT::setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(ST7796_RAMWR);
     }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     if(_TFTcontroller == ILI9341) { // ILI9341
         uint32_t xa = ((uint32_t)x << 16) | (x + w - 1);
@@ -1312,8 +1117,7 @@ void TFT::readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(ST7796_RAMRD);
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
 
     startWrite();
@@ -1321,7 +1125,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(ili9341_rotations[_rotation].bmpctl);
     }
-    setAddrWindow(x, _height - y - h, w, h);
+    setAddrWindow(x, m_h_res - y - h, w, h);
     if(_TFTcontroller == HX8347D) { // HX8347D
         if(_rotation == 0) {
             writeCommand(0x16);
@@ -1375,14 +1179,13 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::endBitmap() {
     if(_TFTcontroller == ILI9341) { // ILI9341
         startWrite();
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(ili9341_rotations[_rotation].madctl);
-        // setAddrWindow(x, _height - y - h, w, h);
+        // setAddrWindow(x, m_h_res - y - h, w, h);
         endWrite();
     }
     if(_TFTcontroller == HX8347D) { // HX8347D
@@ -1392,8 +1195,7 @@ void TFT::endBitmap() {
     if(_TFTcontroller == ILI9488) { setRotation(_rotation); }
     if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) { setRotation(_rotation); }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::startJpeg() {
     startWrite();
     if(_TFTcontroller == ILI9341) { // ILI9341
@@ -1432,11 +1234,9 @@ void TFT::startJpeg() {
     }
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::endJpeg() { setRotation(_rotation); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writePixels(uint16_t* colors, uint32_t len) {
     if((_TFTcontroller == ILI9488) || (_TFTcontroller == ST7796)) {
         uint32_t i = 0;
@@ -1448,8 +1248,7 @@ void TFT::writePixels(uint16_t* colors, uint32_t len) {
     }
     else { spi_TFT->writePixels((uint8_t*)colors, len * 2); }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writeColor(uint16_t color, uint32_t len) {
     if((_TFTcontroller == ILI9488) || (_TFTcontroller == ST7796)) {
         uint8_t r = (color & 0xF800) >> 8;
@@ -1465,54 +1264,44 @@ void TFT::writeColor(uint16_t color, uint32_t len) {
         spi_TFT->writePattern(c, 2, len);
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::write24BitColor(uint16_t color) {
     spi_TFT->write((color & 0xF800) >> 8); // r
     spi_TFT->write((color & 0x07E0) >> 3); // g
     spi_TFT->write((color & 0x001F) << 3); // b
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writePixel(int16_t x, int16_t y, uint16_t color) {
-    if((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) return;
+    if((x < 0) || (x >= m_v_res) || (y < 0) || (y >= m_h_res)) return;
     setAddrWindow(x, y, 1, 1);
     switch(_TFTcontroller) {
         case ILI9341: spi_TFT->write16(color); break;
         case HX8347D:
-            writeCommand(0x22);
-            spi_TFT->write16(color);
+            writeCommand(0x22); spi_TFT->write16(color);
             break;
         case ILI9486a:
-            writeCommand(ILI9486_RAMWR);
-            spi_TFT->write16(color);
+            writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);
             break;
         case ILI9486b:
-            writeCommand(ILI9486_RAMWR);
-            spi_TFT->write16(color);
+            writeCommand(ILI9486_RAMWR); spi_TFT->write16(color);
             break;
         case ILI9488:
-            writeCommand(ILI9488_RAMWR);
-            write24BitColor(color);
+            writeCommand(ILI9488_RAMWR); write24BitColor(color);
             break;
         case ST7796:
-            writeCommand(ST7796_RAMWR);
-            write24BitColor(color);
+            writeCommand(ST7796_RAMWR); write24BitColor(color);
             break;
         case ST7796RPI:
-            writeCommand(ST7796_RAMWR);
-            spi_TFT->write16(color);
+            writeCommand(ST7796_RAMWR); spi_TFT->write16(color);
             break;
         default:
             if(tft_info) tft_info("unknown tft controller");
             break;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
-    if((x >= _width) || (y >= _height)) return;
-
+    if((x >= m_h_res) || (y >= m_v_res)) return;
     int16_t x2 = x + w - 1, y2 = y + h - 1;
     if((x2 < 0) || (y2 < 0)) return;
 
@@ -1527,8 +1316,8 @@ void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     }
 
     // Clip right/bottom
-    if(x2 >= _width) w = _width - x;
-    if(y2 >= _height) h = _height - y;
+    if(x2 >= m_h_res) w = m_h_res - x;
+    if(y2 >= m_v_res) h = m_v_res - y;
 
     int32_t len = (int32_t)w * h;
     setAddrWindow(x, y, w, h);
@@ -1538,14 +1327,11 @@ void TFT::writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t col
     if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) writeCommand(ST7796_RAMWR);
     writeColor(color, len);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) { writeFillRect(x, y, 1, h, color); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) { writeFillRect(x, y, w, 1, color); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     uint32_t freq = _freq;
     if(_freq > 24000000) { _freq = 24000000; }
@@ -1558,70 +1344,68 @@ uint8_t TFT::readcommand8(uint8_t c, uint8_t index) {
     _freq = freq;
     return r;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawPixel(int16_t x, int16_t y, uint16_t color) {
     startWrite();
     writePixel(x, y, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT::color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3); }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
     startWrite();
     writeFastVLine(x, y, h, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
     startWrite();
     writeFastHLine(x, y, w, color);
     endWrite();
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-    //  int16_t t;
-    //  int16_t steep = abs(y1 - y0) > abs(x1 - x0);
-    //  if (steep) {
-    //    t=x0; x0=y0; y0=t;  // swap (x0, y0);
-    //  t=x1; x1=y1; y1=t;  //  swap(x1, y1);
-    //  }
-    //  if (x0 > x1) {
-    //  t=x0; x0=x1; x1=t;  // swap(x0, x1);
-    //  t=y0; y0=y1; y1=t;  // swap(y0, y1);
-    //  }
-    //
-    //  int16_t dx, dy;
-    //  dx = x1 - x0;
-    //  dy = abs(y1 - y0);
-    //
-    //  int16_t err = dx / 2;
-    //  int16_t ystep;
-    //
-    //  if (y0 < y1) {
-    //    ystep = 1;
-    //  } else {
-    //    ystep = -1;
-    //  }
-    //  startWrite();
-    //  for (; x0<=x1; x0++) {
-    //    if (steep) {
-    //      writePixel(y0, x0, color);
-    //    } else {
-    //      writePixel(x0, y0, color);
-    //    }
-    //    err -= dy;
-    //    if (err < 0) {
-    //      y0 += ystep;
-    //      err += dx;
-    //    }
-    //  }
-    //  endWrite();
+#ifdef RGB_HMI
+    // Calculate differences
+    int16_t dx = abs(x1 - x0);
+    int16_t dy = abs(y1 - y0);
 
+    // Determine directions
+    int16_t sx = (x0 < x1) ? 1 : -1;
+    int16_t sy = (y0 < y1) ? 1 : -1;
+
+    int16_t err = dx - dy; // Fehlerterm
+
+    while (true) {
+        // Set point in framebuffer if within bounds
+        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) {
+            m_framebuffer[y0 * m_h_res + x0] = color;
+        }
+
+        // Wenn Endpunkt erreicht, beenden
+        if (x0 == x1 && y0 == y1) break;
+
+        // Add error term twice and correct errors
+        int16_t e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
+    }
+
+    // Update on the display (only the drawn area)
+    int16_t update_x0 = std::min(x0, x1);
+    int16_t update_y0 = std::min(y0, y1);
+    int16_t update_x1 = std::max(x0, x1) + 1;
+    int16_t update_y1 = std::max(y0, y1) + 1;
+    esp_lcd_panel_draw_bitmap(m_panel, update_x0, update_y0, update_x1, update_y1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     // Bresenham's algorithm - thx wikipedia - speed enhanced by Bodmer to use
     // an efficient FastH/V Line draw routine for line segments of 2 pixels or more
     int16_t t;
@@ -1680,33 +1464,134 @@ void TFT::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colo
         if(dlen) writeFastHLine(xs, y0, dlen, color);
     }
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillScreen(uint16_t color) {
-    // Update in subclasses if desired!
-    fillRect(0, 0, width(), height(), color);
+    fillRect(0, 0, m_h_res, m_v_res, color);
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+#ifdef RGB_HMI
+    // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
+    int16_t x0 = max((int16_t)0, x);
+    int16_t y0 = max((int16_t)0, y);
+    int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
+    int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
+    // Zeichnen des Rechtecks nur im gültigen Bereich
+    for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
+        for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
+            m_framebuffer[j * m_h_res + i] = color;
+        }
+    }
+    esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     startWrite();
     writeFillRect(x, y, w, h, color);
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+#ifdef RGB_HMI
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer, uint16_t m_h_res) {
+        // Bresenham-Algorithmus für Linien
+        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int16_t err = dx + dy, e2; // Fehlerwert
+
+        while (true) {
+            m_framebuffer[y0 * m_h_res + x0] = color; // Pixel setzen
+            if (x0 == x1 && y0 == y1) break;
+            e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    };
+
+
+    // Zeichne die drei Linien des Dreiecks
+    drawLine(x0, y0, x1, y1, color, m_framebuffer, m_h_res); // Linie von Punkt 0 nach Punkt 1
+    drawLine(x1, y1, x2, y2, color, m_framebuffer, m_h_res); // Linie von Punkt 1 nach Punkt 2
+    drawLine(x2, y2, x0, y0, color, m_framebuffer, m_h_res); // Linie von Punkt 2 nach Punkt 0
+
+    // Aktualisierung des gezeichneten Bereichs
+    int16_t x_min = std::min({x0, x1, x2});
+    int16_t y_min = std::min({y0, y1, y2});
+    int16_t x_max = std::max({x0, x1, x2});
+    int16_t y_max = std::max({y0, y1, y2});
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     drawLine(x0, y0, x1, y1, color);
     drawLine(x1, y1, x2, y2, color);
     drawLine(x2, y2, x0, y0, color);
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+#ifdef RGB_HMI
+ // Helferfunktion zum Zeichnen einer horizontalen Linie
+    auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
+        if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
+            if (x_start > x_end) std::swap(x_start, x_end);
+            x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
+            x_end = std::min((int16_t)(m_h_res - 1), x_end);
+            for (int16_t x = x_start; x <= x_end; ++x) {
+                m_framebuffer[y * m_h_res + x] = color;
+            }
+        }
+    };
 
+    // Punkte nach ihrer y-Koordinate sortieren
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+
+    // Variablen zur Begrenzung des aktualisierten Bereichs
+    int16_t x_min = std::min({x0, x1, x2});
+    int16_t x_max = std::max({x0, x1, x2});
+    int16_t y_min = std::min({y0, y1, y2});
+    int16_t y_max = std::max({y0, y1, y2});
+
+    // Clipping auf Framebuffer-Grenzen
+    x_min = std::max((int16_t)0, x_min);
+    x_max = std::min((int16_t)(m_h_res - 1), x_max);
+    y_min = std::max((int16_t)0, y_min);
+    y_max = std::min((int16_t)(m_v_res - 1), y_max);
+
+    // Dreieck in zwei Teile zerlegen (oben und unten)
+    if (y1 == y2) { // Sonderfall: flaches unteres Dreieck
+        for (int16_t y = y0; y <= y1; ++y) {
+            int16_t x_start = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, y);
+        }
+    } else if (y0 == y1) { // Sonderfall: flaches oberes Dreieck
+        for (int16_t y = y0; y <= y2; ++y) {
+            int16_t x_start = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            int16_t x_end = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            drawHorizontalLine(x_start, x_end, y);
+        }
+    } else { // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
+        for (int16_t y = y0; y <= y1; ++y) { // Unterer Teil
+            int16_t x_start = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
+            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, y);
+        }
+        for (int16_t y = y1; y <= y2; ++y) { // Oberer Teil
+            int16_t x_start = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
+            int16_t x_end = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, y);
+        }
+    }
+
+    // Aktualisierung nur des geänderten Bereichs
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     int16_t a, b, y, last;
-
     // Sort coordinates by Y order (y2 >= y1 >= y0)
     if(y0 > y1) {
         _swap_int16_t(y0, y1);
@@ -1773,10 +1658,41 @@ void TFT::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x
         writeFastHLine(a, y, b - a + 1, color);
     }
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
+#ifdef RGB_HMI
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer, uint16_t m_h_res) {
+        // Bresenham-Algorithmus für Linien
+        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int16_t err = dx + dy, e2; // Fehlerwert
+
+        while (true) {
+            m_framebuffer[y0 * m_h_res + x0] = color; // Pixel setzen
+            if (x0 == x1 && y0 == y1) break;
+            e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    };
+
+    // Zeichne die vier Linien des Rechtecks
+    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer, m_h_res); // Oben
+    drawLine(Xpos + Width, Ypos, Xpos + Width, Ypos + Height, Color, m_framebuffer, m_h_res); // Rechts
+    drawLine(Xpos + Width, Ypos + Height, Xpos, Ypos + Height, Color,  m_framebuffer, m_h_res); // Unten
+    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color,  m_framebuffer, m_h_res); // Links
+
+    // Aktualisierung des gezeichneten Bereichs
+    int16_t x_min = std::min((int)Xpos, Xpos + Width);
+    int16_t y_min = std::min((int)Ypos, Ypos + Height);
+    int16_t x_max = std::max((int)Xpos, Xpos + Width);
+    int16_t y_max = std::max((int)Ypos, Ypos + Height);
+
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     if(Width < 1 || Height < 1) return;
     startWrite();
     writeFastHLine(Xpos, Ypos, Width, Color);
@@ -1784,10 +1700,61 @@ void TFT::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, 
     writeFastVLine(Xpos, Ypos, Height, Color);
     writeFastVLine(Xpos + Width - 1, Ypos, Height, Color);
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
+#ifdef RGB_HMI
+    // Helferfunktion: Kreislinie für die Ecken berechnen
+    auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
+        int16_t f = 1 - r;
+        int16_t ddF_x = 1;
+        int16_t ddF_y = -2 * r;
+        int16_t x = 0;
+        int16_t y = r;
+
+        while (x <= y) {
+            if (quadrant & 0x1) m_framebuffer[(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
+            if (quadrant & 0x2) m_framebuffer[(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
+            if (quadrant & 0x4) m_framebuffer[(cy + y) * m_h_res + (cx - x)] = color; // unten links
+            if (quadrant & 0x8) m_framebuffer[(cy - y) * m_h_res + (cx - x)] = color; // oben links
+
+            if (quadrant & 0x10) m_framebuffer[(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
+            if (quadrant & 0x20) m_framebuffer[(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
+            if (quadrant & 0x40) m_framebuffer[(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
+            if (quadrant & 0x80) m_framebuffer[(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
+
+            if (f >= 0) {
+                y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            x++;
+            ddF_x += 2;
+            f += ddF_x;
+        }
+    };
+
+    // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
+    for (int16_t i = x + r; i < x + w - r; i++) { // Obere und untere horizontale Linien
+        m_framebuffer[y * m_h_res + i] = color; // Oben
+        m_framebuffer[(y + h - 1) * m_h_res + i] = color; // Unten
+    }
+    for (int16_t i = y + r; i < y + h - r; i++) { // Linke und rechte vertikale Linien
+        m_framebuffer[i * m_h_res + x] = color; // Links
+        m_framebuffer[i * m_h_res + (x + w - 1)] = color; // Rechts
+    }
+
+    // Abgerundete Ecken zeichnen
+    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
+    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
+    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+
+    // Aktualisierung des gezeichneten Bereichs
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     // smarter version
     startWrite();
     writeFastHLine(x + r, y, w - 2 * r, color);         // Top
@@ -1800,10 +1767,73 @@ void TFT::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     drawCircleHelper(x + w - r - 1, y + h - r - 1, r, 4, color);
     drawCircleHelper(x + r, y + h - r - 1, r, 8, color);
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
+#ifdef RGB_HMI
+    // Helferfunktion: Kreisfüllung für die Ecken berechnen
+    auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
+        int16_t f = 1 - r;
+        int16_t ddF_x = 1;
+        int16_t ddF_y = -2 * r;
+        int16_t x = 0;
+        int16_t y = r;
+
+        while (x <= y) {
+            for (int16_t i = 0; i <= x; i++) {
+                if (quadrant & 0x1) m_framebuffer[(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
+                if (quadrant & 0x2) m_framebuffer[(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
+                if (quadrant & 0x4) m_framebuffer[(cy + y) * m_h_res + (cx - i)] = color; // unten links
+                if (quadrant & 0x8) m_framebuffer[(cy - y) * m_h_res + (cx - i)] = color; // oben links
+            }
+            for (int16_t i = 0; i <= y; i++) {
+                if (quadrant & 0x10) m_framebuffer[(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
+                if (quadrant & 0x20) m_framebuffer[(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
+                if (quadrant & 0x40) m_framebuffer[(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
+                if (quadrant & 0x80) m_framebuffer[(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
+            }
+
+            if (f >= 0) {
+                y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            x++;
+            ddF_x += 2;
+            f += ddF_x;
+        }
+    };
+
+    // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
+    for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
+        for (int16_t j = x + r; j < x + w - r; j++) {
+            m_framebuffer[i * m_h_res + j] = color;
+        }
+    }
+    for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
+        for (int16_t j = x + r; j < x + w - r; j++) {
+            m_framebuffer[i * m_h_res + j] = color;
+        }
+    }
+
+    // Vertikaler Bereich zwischen den Viertelkreisen füllen
+    for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
+        for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
+            m_framebuffer[i * m_h_res + j] = color;
+        }
+    }
+
+    // Viertelkreise in den Ecken füllen
+    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
+    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
+    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+
+    // Aktualisierung des gezeichneten Bereichs
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     // smarter version
     startWrite();
     writeFillRect(x + r, y, w - 2 * r, h, color);
@@ -1812,10 +1842,49 @@ void TFT::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, u
     fillCircleHelper(x + w - r - 1, y + r, r, 1, h - 2 * r - 1, color);
     fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1, color);
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+#ifdef RGB_HMI
+    // Bresenham-Algorithmus für Kreise
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t x = 0;
+    int16_t y = r;
+
+    // Setze die Anfangspunkte (Symmetrieachsen)
+    m_framebuffer[(cy + r) * m_h_res + cx] = color; // Oben
+    m_framebuffer[(cy - r) * m_h_res + cx] = color; // Unten
+    m_framebuffer[cy * m_h_res + (cx + r)] = color; // Rechts
+    m_framebuffer[cy * m_h_res + (cx - r)] = color; // Links
+
+    while (x < y) {
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+
+        // Punkte in den acht Symmetrieachsen zeichnen
+        m_framebuffer[(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
+        m_framebuffer[(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
+        m_framebuffer[(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
+        m_framebuffer[(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
+        m_framebuffer[(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
+        m_framebuffer[(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
+        m_framebuffer[(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
+        m_framebuffer[(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
+    }
+
+    // Aktualisierung des gezeichneten Bereichs
+    esp_lcd_panel_draw_bitmap(m_panel, cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
@@ -1848,14 +1917,53 @@ void TFT::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
         writePixel(x0 - y, y0 - x, color);
     }
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillCircle(int16_t  Xm,    // specify x position.
                      int16_t  Ym,    // specify y position.
                      uint16_t r,     // specify the radius of the circle.
                      uint16_t color) // specify the color of the circle.
 {
+#ifdef RGB_HMI
+//void TFT::drawFilledCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
+    // Bresenham-Algorithmus für Kreise
+    int16_t f = 1 - r;
+    int16_t ddF_x = 1;
+    int16_t ddF_y = -2 * r;
+    int16_t x = 0;
+    int16_t y = r;
+
+    // Fülle die erste vertikale Linie durch den Mittelpunkt
+    for (int16_t i = Ym - r; i <= Ym + r; i++) {
+        m_framebuffer[i * m_h_res + Xm] = color;
+    }
+
+    while (x <= y) {
+        // Fülle horizontale Linien für alle acht Symmetrieachsen
+        for (int16_t i = Xm - x; i <= Xm + x; i++) {
+            m_framebuffer[(Ym + y) * m_h_res + i] = color; // Unten +y
+            m_framebuffer[(Ym - y) * m_h_res + i] = color; // Oben -y
+        }
+        for (int16_t i = Xm - y; i <= Xm + y; i++) {
+            m_framebuffer[(Ym + x) * m_h_res + i] = color; // Rechts +x
+            m_framebuffer[(Ym - x) * m_h_res + i] = color; // Links -x
+        }
+
+        if (f >= 0) {
+            y--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        x++;
+        ddF_x += 2;
+        f += ddF_x;
+    }
+
+    // Aktualisierung des gezeichneten Bereichs
+    esp_lcd_panel_draw_bitmap(m_panel, Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer);
+#endif
+#ifdef LCD_SPI
     int32_t f = 1 - r, ddF_x = 1, ddF_y = 0 - (2 * r), x = 0, y = r;
     startWrite();
     writeFastVLine(Xm, Ym - r, 2 * r, color);
@@ -1877,9 +1985,9 @@ void TFT::fillCircle(int16_t  Xm,    // specify x position.
         writeFastVLine(Xm - y, Ym - x, 2 * x, color);
     }
     endWrite();
+#endif
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
@@ -1914,8 +2022,7 @@ void TFT::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) {
 
     int16_t f = 1 - r;
@@ -1944,8 +2051,7 @@ void TFT::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername
         }
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
 
     uint16_t color = 0;
@@ -1980,9 +2086,7 @@ void TFT::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
     }
     endWrite();
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::setFont(uint16_t font) {
 
 #ifdef TFT_TIMES_NEW_ROMAN
@@ -2733,7 +2837,7 @@ void TFT::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, ui
     endWrite();
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
 // For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
 // If an ANSI sequence is found, the color found is written into ansiArr at the position of the current character. The return value is the number of printable character.
@@ -2819,7 +2923,7 @@ uint16_t TFT::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiA
     }
     return chLen;
 }
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
     // cpArr contains the CodePoints of all printable characters in the string. chLength is the length of cpArr. From a starting position, the characters that fit into a width of win_W are determined.
     // The ending of a word is defined by a space or an \n. The number of characters that can be written is returned. For later alignment of the characters, the length is passed in usedPxLength.
@@ -2854,7 +2958,7 @@ uint16_t TFT::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int1
     }
     return drawableChars;
 }
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap){
     // First, the largest character set is used to check whether a given string str fits into a window of size win_W - winH.
     // If this is not the case, the next smaller character set is selected and checked again.
@@ -2894,7 +2998,7 @@ exit:
 //  log_w("nrOfLines  %i", nrOfLines);
     return nrOfLines;
 }
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align, uint8_t v_align, bool narrow, bool noWrap, bool autoSize) {
     // autoSize choose the biggest possible font
     uint16_t idx = 0;
@@ -2924,9 +3028,10 @@ size_t TFT::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t w
     if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
     //----------------------------------------------------------------------
-    if((win_X + win_W) > width()) { win_W = width() - win_X; }   // Limit, right edge of the display
-    if((win_Y + win_H) > height()) { win_H = height() - win_Y; } // Limit, bottom of the display
-
+    if((win_X + win_W) > m_h_res) { win_W = m_h_res - win_X; }   // Limit, right edge of the display
+    if((win_Y + win_H) > m_v_res) { win_H = m_v_res - win_Y; }   // Limit, bottom of the display
+    if(win_W < 0) { win_X = 0; }                                 // Limit, left edge of the display
+    if(win_H < 0) { win_Y = 0; }                                 // Limit, top of the display
     idx = 0;
     uint16_t pX = win_X;
     uint16_t pY = win_Y;
@@ -3031,14 +3136,12 @@ exit:
 #define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
 #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
 #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::bmpSkipPixels(fs::File& file, uint8_t bitsPerPixel, size_t len) {
     size_t bytesToSkip = (len * bitsPerPixel) / 8;
     file.seek(bytesToSkip, SeekCur);
 }
-//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::bmpAddPixels(fs::File& file, uint8_t bitsPerPixel, size_t len) {
     size_t   bytesPerTransaction = bitsPerPixel * 4;
     uint8_t  transBuf[bytesPerTransaction];
@@ -3083,16 +3186,15 @@ void TFT::bmpAddPixels(fs::File& file, uint8_t bitsPerPixel, size_t len) {
         wIndex += pixNow;
     }
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, uint16_t offX, uint16_t offY) {
-    if((x + maxWidth) > width() || (y + maxHeight) > height()) {
+    if((x + maxWidth) > m_h_res || (y + maxHeight) > m_v_res) {
         log_e("Bad dimensions given");
         return false;
     }
 
-    if(!maxWidth) { maxWidth = width() - x; }
-    if(!maxHeight) { maxHeight = height() - y; }
+    if(!maxWidth) { maxWidth = m_h_res- x; }
+    if(!maxHeight) { maxHeight = m_v_res - y; }
     // log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
     if(!fs.exists(path)) {
         log_e("file %s not exists", path);
@@ -3159,10 +3261,9 @@ bool TFT::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
     bmp_file.close();
     return true;
 }
-
-/***********************************************************************************************************************
-                                                G I F
-***********************************************************************************************************************/
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   G I F   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat) {
     // debug=true;
     int32_t iterations = repeat;
@@ -3218,7 +3319,7 @@ bool TFT::drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
     // log_i("freeHeap= %i", ESP.getFreeHeap());
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readHeader() {
 
     //      7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3251,9 +3352,7 @@ void TFT::GIF_readHeader() {
     gif_GifHeader = gif_buffer;
     if(debug) { log_i("GifHeader: %s", gif_GifHeader.c_str()); }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readLogicalScreenDescriptor() {
 
     //    Logical Screen Descriptor
@@ -3299,9 +3398,7 @@ void TFT::GIF_readLogicalScreenDescriptor() {
         log_i("PixelAspectRatio=%i", gif_PixelAspectRatio);
     }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readImageDescriptor() {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3357,9 +3454,7 @@ void TFT::GIF_readImageDescriptor() {
         log_i("SizeOfLocalColorTable=%i", gif_SizeOfLocalColorTable);
     }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readLocalColorTable() {
     // The size of the local color table can be calculated by the value given in the image descriptor.
     // Just like with the global color table, if the image descriptor specifies a size of N,
@@ -3380,9 +3475,7 @@ void TFT::GIF_readLocalColorTable() {
         // for(i=0;i<SizeOfLocalColorTable; i++) log_i("LocalColorTable %i= %i", i, LocalColorTable[i]);
     }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readGlobalColorTable() {
     // Each GIF has its own color palette. That is, it has a list of all the colors that can be in the image
     // and cannot contain colors that are not in that list.
@@ -3415,9 +3508,7 @@ void TFT::GIF_readGlobalColorTable() {
         //    log_i("Read GlobalColorTable Size=%i", gif_SizeOfGlobalColorTable);
     }
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_readGraphicControlExtension() {
 
     //      +---------------+
@@ -3459,9 +3550,7 @@ void TFT::GIF_readGraphicControlExtension() {
     }
     gif_file.readBytes(gif_buffer, 1); // marks the end of the Graphic Control Extension
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::GIF_readPlainTextExtension(char* buf) {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3535,9 +3624,7 @@ uint8_t TFT::GIF_readPlainTextExtension(char* buf) {
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::GIF_readApplicationExtension(char* buf) {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3586,9 +3673,7 @@ uint8_t TFT::GIF_readApplicationExtension(char* buf) {
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::GIF_readCommentExtension(char* buf) {
 
     //    7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3609,9 +3694,7 @@ uint8_t TFT::GIF_readCommentExtension(char* buf) {
     gif_file.readBytes(gif_buffer, 1); // BlockTerminator, marks the end of the Graphic Control Extension
     return numBytes;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint8_t TFT::GIF_readDataSubBlock(char* buf) {
 
     //     7 6 5 4 3 2 1 0        Field Name                    Type
@@ -3646,9 +3729,7 @@ uint8_t TFT::GIF_readDataSubBlock(char* buf) {
     if(debug) { log_i("Blocksize = %i", BlockSize); }
     return BlockSize;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT::GIF_readExtension(char Label) {
     char buf[256];
     switch(Label) {
@@ -3672,9 +3753,7 @@ bool TFT::GIF_readExtension(char Label) {
     }
     return true;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
     //    Assuming a character array of 8 bits per character and using 5 bit codes to be
     //    packed, an example layout would be similar to:
@@ -3739,9 +3818,7 @@ int32_t TFT::GIF_GetCode(int32_t code_size, int32_t flag) {
 
     return ret;
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int32_t TFT::GIF_LZWReadByte(bool init) {
     static int32_t fresh = false;
     int32_t        code, incode;
@@ -3863,8 +3940,7 @@ int32_t TFT::GIF_LZWReadByte(bool init) {
     }
     return code;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT::GIF_ReadImage(uint16_t x, uint16_t y) {
     int32_t  j, color;
     int32_t  xpos = x + gif_ImageLeftPosition;
@@ -3945,16 +4021,14 @@ write24:
     }
     return true;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int32_t TFT::GIF_readGifItems() {
     GIF_readHeader();
     GIF_readLogicalScreenDescriptor();
     gif_decodeSdFile_firstread = true;
     return 0;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     char           c = 0;
     static int32_t test = 1;
@@ -3982,9 +4056,7 @@ bool TFT::GIF_decodeGif(uint16_t x, uint16_t y) {
     // if(tft_info) tft_info("GIF: found Trailer");
     return false; // no more images to decode
 }
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::GIF_freeMemory() {
     gif_next.clear();
     gif_next.shrink_to_fit();
@@ -3997,1818 +4069,1178 @@ void TFT::GIF_freeMemory() {
     gif_LocalColorTable.clear();
     gif_LocalColorTable.shrink_to_fit();
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ J P E G ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
+#ifdef RGB_HMI  // RGB HMI display
+    if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
+    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_h_res;
+    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_v_res;
 
-/***********************************************************************************************************************
-                                                J P E G
-***********************************************************************************************************************/
+    m_jpgFile = fs.open(path, FILE_READ);
+    if(!m_jpgFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
+    JPEG_getJpgSize(&m_jpgWidth, &m_jpgHeight);
+    int r = JPEG_drawJpg(x, y);
+    if(r) {log_e("JPEG_drawJpg failed with error %i", r); return false;}
+    m_jpgFile.close();
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer);
+    return true;
+#endif
+#ifdef LCD_SPI // SPI LCD display
+    if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
+    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_v_res;
+    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_h_res;
 
-bool TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, uint16_t offX, uint16_t offY) {
-    if((x + maxWidth) > width() || (y + maxHeight) > height()) {
-        log_e("Bad dimensions given");
+    m_jpgFile = fs.open(path, FILE_READ);
+    if(!m_jpgFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
+    JPEG_getJpgSize(&m_jpgWidth, &m_jpgHeight);
+    int r = JPEG_drawJpg(x, y);
+    if(r) {log_e("JPEG_drawJpg failed with error %i", r); return false;}
+    m_jpgFile.close();
+    return true;
+#endif
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT::JPEG_setJpgScale(uint8_t scaleFactor) {
+    switch (scaleFactor) {
+        case 1:  m_jpgScale = 0; break;
+        case 2:  m_jpgScale = 1; break;
+        case 4:  m_jpgScale = 2; break;
+        case 8:  m_jpgScale = 3; break;
+        default: m_jpgScale = 0;
+    }
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT::JPEG_setSwapBytes(bool swapBytes){
+  m_swap = swapBytes;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+unsigned int TFT::JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len){
+    uint32_t bytesLeft = 0;
+
+    if (m_jpg_source == TJPG_ARRAY) {  // Handle an array input
+        if (m_array_index + len > m_array_size) { len = m_array_size - m_array_index; } // Avoid running off end of array
+        if (buf) memcpy_P(buf, (const uint8_t*)(m_array_data + m_array_index), len); // If buf is valid then copy len bytes to buffer
+        m_array_index += len;  // Move pointer
+    }
+    else if (m_jpg_source == TJPG_SD_FILE) {  // Handle SD library input
+        bytesLeft = m_jpgFile.available();  // Check how many bytes are available
+        if (bytesLeft < len) len = bytesLeft;
+        if (buf) {
+            m_jpgFile.read(buf, len); // Read into buffer, pointer moved as well
+        } else {
+            m_jpgFile.seek(m_jpgFile.position() + len); // Buffer is null, so skip data by moving pointer
+        }
+    }
+    return len;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// Pass image block back to the sketch for rendering, may be a complete or partial MCU
+int TFT::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
+    jdec = jdec; // Supress warning as ID is not used
+
+    int16_t  x = jrect->left + m_jpeg_x;  // Retrieve rendering parameters and add any offset
+    int16_t  y = jrect->top + m_jpeg_y;
+    uint16_t w = jrect->right + 1 - jrect->left;
+    uint16_t h = jrect->bottom + 1 - jrect->top;
+    if(w > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
+    if(h > m_jpgHeightMax) return true;
+    bool r = JPEG_tft_output(x, y, w, h, (uint16_t*)bitmap);
+    return r;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
+#ifdef RGB_HMI  // RGB HMI display
+    if (!bitmap || w <= 0 || h <= 0) {  // Check for valid parameters
+        log_e("Invalid parameters: bitmap is null or width/height is zero.");
         return false;
     }
-    // log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
-    if(!fs.exists(path)) {
-        log_e("file %s not exists", path);
+    // Clip the rectangle to ensure it doesn't exceed framebuffer boundaries
+    int16_t x_end = std::min((int16_t)(x + w), (int16_t)m_h_res); // End of rectangle in x-direction
+    int16_t y_end = std::min((int16_t)(y + h), (int16_t)(m_v_res)); // End of rectangle in y-direction
+
+    if (x >= m_h_res || y >= m_v_res || x_end <= 0 || y_end <= 0) {
+        log_e("Rectangle is completely outside the framebuffer boundaries.");
         return false;
     }
 
-    File file = fs.open(path);
-    if(!file) {
-        log_e("Failed to open file for reading");
-        return false;
+    // Adjust start coordinates if they are out of bounds
+    int16_t start_x = max((int16_t)0, x);        // Sichtbarer Startpunkt in x-Richtung
+    int16_t start_y = max((int16_t)0, y);        // Sichtbarer Startpunkt in y-Richtung
+    int16_t clip_x_offset = start_x - x;         // Offset im Bitmap in x-Richtung
+    int16_t clip_y_offset = start_y - y;         // Offset im Bitmap in y-Richtung
+
+    // Berechnung der sichtbaren Breite und Höhe
+    int16_t visible_w = x_end - start_x;         // Sichtbare Breite
+    int16_t visible_h = y_end - start_y;         // Sichtbare Höhe
+
+    // Zeilenweises Kopieren mit Clipping
+    for (int16_t j = 0; j < visible_h ; ++j) {
+        // Quelle im Bitmap: Berechne die richtige Zeilenposition
+        uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
+
+        // Ziel im Framebuffer: Berechne die richtige Zeilenposition
+        uint16_t* dest_ptr = m_framebuffer + (start_y + j) * m_h_res + start_x;
+
+        // Kopiere nur die sichtbare Breite
+        memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
     }
-    JpegDec.decodeSdFile(file);
-
-    //    log_i("Width: %i, Height: %i,", JpegDec.width, JpegDec.height);
-    //    log_i("Components: %i, Scan type %i", JpegDec.comps, JpegDec.scanType);
-    //    log_i("MCU / row: %i, MCU / col: %i", JpegDec.MCUSPerRow, JpegDec.MCUSPerCol);
-    //    log_i("MCU width: %i, MCU height: %i", JpegDec.MCUWidth, JpegDec.MCUHeight);
-
-    renderJPEG(x, y, maxWidth, maxHeight);
+ //   log_i("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
+    return true;
+#endif
+#ifdef LCD_SPI
+    int mcu_pixels = w * h; // Number of pixels in MCU block
+    startWrite();
+    setAddrWindow(x, y, w, h);
+    if (_TFTcontroller == ILI9341) {
+        writeCommand(ILI9341_RAMWR);                      // ILI9341
+        while (mcu_pixels--) spi_TFT->write16(*bitmap++); // Send to TFT 16 bits at a time
+    } else if (_TFTcontroller == HX8347D) {
+        writeCommand(0x22);
+        while (mcu_pixels--) spi_TFT->write16(*bitmap++); // Send to TFT 16 bits at a time
+    } else if (_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+        writeCommand(ILI9486_RAMWR);
+        while (mcu_pixels--) spi_TFT->write16(*bitmap++); // Send to TFT 16 bits at a time
+    } else if (_TFTcontroller == ILI9488) {
+        writeCommand(ILI9488_RAMWR);
+        while (mcu_pixels--) write24BitColor(*bitmap++); // Send to TFT 16 bits at a time
+    } else if (_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
+        writeCommand(ST7796_RAMWR);
+        while (mcu_pixels--) write24BitColor(*bitmap++); // Send to TFT 16 bits at a time
+    }
+    endWrite();
 
     return true;
+#endif
 }
-
-void TFT::renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight) {
-    // retrieve information about the image
-    uint16_t* pImg;
-    uint16_t  mcu_w = JpegDec.MCUWidth;
-    uint16_t  mcu_h = JpegDec.MCUHeight;
-    uint32_t  max_x = JpegDec.width;
-    uint32_t  max_y = JpegDec.height;
-
-    maxWidth = (uint)(maxWidth / 8) * 8; // must be a multiple of 16 (MCU blocksize)
-    // log_i("maxWidth %d", maxWidth );
-    maxHeight = (uint)(maxHeight / 8) * 8; // must be a multiple of 8
-
-    // Important jpg files hat to export as 4:4:4 (subsampling high quality)
-    // MCU Blocksizes are:
-    // chroma subsampling:  4:4:4 -> 8x8px
-    //                      4:2:2 -> 16x8px
-    //                      4:2:0 -> 16x16px
-
-    if(maxWidth > 0 && maxWidth < max_x) max_x = maxWidth;    // overwrite
-    if(maxHeight > 0 && maxHeight < max_y) max_y = maxHeight; // overwrite
-
-    // Jpeg images are draw as a set of image block (tiles) called Minimum Coding Units (MCUs)
-    // Typically these MCUs are 16x16 pixel blocks
-    // Determine the width and height of the right and bottom edge image blocks
-    uint32_t min_w = minimum(mcu_w, max_x % mcu_w);
-    uint32_t min_h = minimum(mcu_h, max_y % mcu_h);
-
-    // save the current image block size
-    uint32_t win_w = mcu_w;
-    uint32_t win_h = mcu_h;
-
-    // record the current time so we can measure how long it takes to draw an image
-    uint32_t drawTime = millis();
-
-    // save the coordinate of the right and bottom edges to assist image cropping to the screen size
-    max_x += xpos;
-    max_y += ypos;
-
-    // read each MCU block until there are no more
-    startJpeg();
-
-    while(JpegDec.read()) {
-        // save a pointer to the image block
-        pImg = JpegDec.pImage;
-
-        // calculate where the image block should be drawn on the screen
-        int16_t mcu_x = JpegDec.MCUx * mcu_w + xpos;
-        int16_t mcu_y = JpegDec.MCUy * mcu_h + ypos;
-
-        // check if the image block size needs to be changed for the right and bottom edges
-        if(mcu_x + mcu_w <= max_x) win_w = mcu_w;
-        else win_w = min_w;
-        if(mcu_y + mcu_h <= max_y) win_h = mcu_h;
-        else win_h = min_h;
-
-        // log_i("mcu_x=%i, mcu_y=%i", mcu_x, mcu_y);
-
-        // calculate how many pixels must be drawn
-        uint32_t mcu_pixels = win_w * win_h;
-
-        // draw image block if it will fit on the screen
-        if((mcu_x + win_w) <= width() && (mcu_y + win_h) <= height()) {
-            // open a window onto the screen to paint the pixels into
-            startWrite();
-            setAddrWindow(mcu_x, mcu_y, win_w, win_h);
-            if(_TFTcontroller == ILI9341) {
-                writeCommand(ILI9341_RAMWR);                   // ILI9341
-                while(mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
-            }
-            else if(_TFTcontroller == HX8347D) {
-                writeCommand(0x22);
-                while(mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
-            }
-            else if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
-                writeCommand(ILI9486_RAMWR);
-                while(mcu_pixels--) spi_TFT->write16(*pImg++); // Send to TFT 16 bits at a time
-            }
-            else if(_TFTcontroller == ILI9488) {
-                writeCommand(ILI9488_RAMWR);
-                while(mcu_pixels--) write24BitColor(*pImg++); // Send to TFT 16 bits at a time
-            }
-            else if(_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
-                writeCommand(ST7796_RAMWR);
-                while(mcu_pixels--) write24BitColor(*pImg++); // Send to TFT 16 bits at a time
-            }
-            endWrite();
-        }
-
-        // stop drawing blocks if the bottom of the screen has been reached
-        // the abort function will close the file
-        else if((mcu_y + win_h) >= height()) JpegDec.abort();
-    }
-
-    // calculate how long it took to draw the image
-    drawTime = millis() - drawTime; // Calculate the time it took
-
-    // print the results
-    // log_i("Total render time was: %ims",drawTime);;
-    endJpeg();
-}
-
-/***********************************************************************************************************************
-                                            J P E G D E C O D E R
-***********************************************************************************************************************/
-
-// JPEGDecoder thx to Bodmer https://github.com/Bodmer/JPEGDecoder
-JPEGDecoder::JPEGDecoder() { // @suppress("Class members should be properly initialized")
-    mcu_x = 0;
-    mcu_y = 0;
-    is_available = 0;
-    thisPtr = this;
-    scanType = PJPG_GRAYSCALE;
-    gScanType = PJPG_GRAYSCALE;
-    g_pNeedBytesCallback = 0;
-    g_pCallback_data = 0;
-}
-
-JPEGDecoder::~JPEGDecoder() {
-    if(pImage) delete pImage;
-    pImage = NULL;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void* pCallback_data) {
-    JPEGDecoder* thisPtr = JpegDec.thisPtr;
-    thisPtr->pjpeg_need_bytes_callback(pBuf, buf_size, pBytes_actually_read, pCallback_data);
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void* pCallback_data) {
-    uint n;
-    n = jpg_min(g_nInFileSize - g_nInFileOfs, buf_size);
-    if(jpg_source == JPEG_ARRAY) { // We are handling an array
-        for(int32_t i = 0; i < n; i++) {
-            pBuf[i] = pgm_read_byte(jpg_data++);
-            // Serial.println(pBuf[i],HEX);
-        }
-    }
-    if(jpg_source == JPEG_SD_FILE) g_pInFileSd.read(pBuf, n); // else we are handling a file
-    *pBytes_actually_read = (uint8_t)(n);
-    g_nInFileOfs += n;
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::decode_mcu(void) {
-    status = JpegDec.pjpeg_decode_mcu();
-    if(status) {
-        is_available = 0;
-        if(status != JpegDec.PJPG_NO_MORE_BLOCKS) {
-            log_e("pjpeg_decode_mcu() failed with status %i", status);
-            return -1;
-        }
-    }
-    return 1;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::read(void) {
-    int32_t   y, x;
-    uint16_t* pDst_row;
-    if(is_available == 0 || mcu_y >= image_info.m_MCUSPerCol) {
-        abort();
-        return 0;
-    }
-    // Copy MCU's pixel blocks into the destination bitmap.
-    pDst_row = pImage;
-    for(y = 0; y < image_info.m_MCUHeight; y += 8) {
-        const int32_t by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
-        for(x = 0; x < image_info.m_MCUWidth; x += 8) {
-            uint16_t* pDst_block = pDst_row + x;
-            // Compute source byte offset of the block in the decoder's MCU buffer.
-            uint           src_ofs = (x * 8U) + (y * 16U);
-            const uint8_t* pSrcR = image_info.m_pMCUBufR + src_ofs;
-            const uint8_t* pSrcG = image_info.m_pMCUBufG + src_ofs;
-            const uint8_t* pSrcB = image_info.m_pMCUBufB + src_ofs;
-            const int32_t  bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
-            if(image_info.m_scanType == PJPG_GRAYSCALE) {
-                int32_t bx, by;
-                for(by = 0; by < by_limit; by++) {
-                    uint16_t* pDst = pDst_block;
-                    for(bx = 0; bx < bx_limit; bx++) {
-                        *pDst++ = (*pSrcR & 0xF8) << 8 | (*pSrcR & 0xFC) << 3 | *pSrcR >> 3;
-                        pSrcR++;
-                    }
-                    pSrcR += (8 - bx_limit);
-                    pDst_block += row_pitch;
-                }
-            }
-            else {
-                int32_t bx, by;
-                for(by = 0; by < by_limit; by++) {
-                    uint16_t* pDst = pDst_block;
-
-                    for(bx = 0; bx < bx_limit; bx++) {
-                        *pDst++ = (*pSrcR & 0xF8) << 8 | (*pSrcG & 0xFC) << 3 | *pSrcB >> 3;
-                        pSrcR++;
-                        pSrcG++;
-                        pSrcB++;
-                    }
-                    pSrcR += (8 - bx_limit);
-                    pSrcG += (8 - bx_limit);
-                    pSrcB += (8 - bx_limit);
-
-                    pDst_block += row_pitch;
-                }
-            }
-        }
-        pDst_row += (row_pitch * 8);
-    }
-    MCUx = mcu_x;
-    MCUy = mcu_y;
-
-    mcu_x++;
-    if(mcu_x == image_info.m_MCUSPerRow) {
-        mcu_x = 0;
-        mcu_y++;
-    }
-    if(decode_mcu() == -1) is_available = 0;
-    return 1;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::readSwappedBytes(void) {
-    int32_t   y, x;
-    uint16_t* pDst_row;
-
-    if(is_available == 0 || mcu_y >= image_info.m_MCUSPerCol) {
-        abort();
-        return 0;
-    }
-    // Copy MCU's pixel blocks into the destination bitmap.
-    pDst_row = pImage;
-    for(y = 0; y < image_info.m_MCUHeight; y += 8) {
-        const int32_t by_limit = jpg_min(8, image_info.m_height - (mcu_y * image_info.m_MCUHeight + y));
-
-        for(x = 0; x < image_info.m_MCUWidth; x += 8) {
-            uint16_t* pDst_block = pDst_row + x;
-            // Compute source byte offset of the block in the decoder's MCU buffer.
-            uint           src_ofs = (x * 8U) + (y * 16U);
-            const uint8_t* pSrcR = image_info.m_pMCUBufR + src_ofs;
-            const uint8_t* pSrcG = image_info.m_pMCUBufG + src_ofs;
-            const uint8_t* pSrcB = image_info.m_pMCUBufB + src_ofs;
-            const int32_t  bx_limit = jpg_min(8, image_info.m_width - (mcu_x * image_info.m_MCUWidth + x));
-
-            if(image_info.m_scanType == PJPG_GRAYSCALE) {
-                int32_t bx, by;
-                for(by = 0; by < by_limit; by++) {
-                    uint16_t* pDst = pDst_block;
-                    for(bx = 0; bx < bx_limit; bx++) {
-                        *pDst++ = (*pSrcR & 0xF8) | (*pSrcR & 0xE0) >> 5 | (*pSrcR & 0xF8) << 5 | (*pSrcR & 0x1C) << 11;
-                        pSrcR++;
-                    }
-                }
-            }
-            else {
-                int32_t bx, by;
-                for(by = 0; by < by_limit; by++) {
-                    uint16_t* pDst = pDst_block;
-
-                    for(bx = 0; bx < bx_limit; bx++) {
-                        *pDst++ = (*pSrcR & 0xF8) | (*pSrcG & 0xE0) >> 5 | (*pSrcB & 0xF8) << 5 | (*pSrcG & 0x1C) << 11;
-                        pSrcR++;
-                        pSrcG++;
-                        pSrcB++;
-                    }
-                    pSrcR += (8 - bx_limit);
-                    pSrcG += (8 - bx_limit);
-                    pSrcB += (8 - bx_limit);
-                    pDst_block += row_pitch;
-                }
-            }
-        }
-        pDst_row += (row_pitch * 8);
-    }
-    MCUx = mcu_x;
-    MCUy = mcu_y;
-
-    mcu_x++;
-    if(mcu_x == image_info.m_MCUSPerRow) {
-        mcu_x = 0;
-        mcu_y++;
-    }
-    if(decode_mcu() == -1) is_available = 0;
-    return 1;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::decodeSdFile(File jpgFile) { // This is for the SD library
-    g_pInFileSd = jpgFile;
-    jpg_source = JPEG_SD_FILE; // Flag to indicate a SD file
-
-    if(!g_pInFileSd) { return -1; }
-    g_nInFileOfs = 0;
-    g_nInFileSize = g_pInFileSd.size();
-
-    return decodeCommon();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::decodeArray(const uint8_t array[], uint32_t array_size) {
-    jpg_source = JPEG_ARRAY; // We are not processing a file, use arrays
-    g_nInFileOfs = 0;
-    jpg_data = (uint8_t*)array;
-    g_nInFileSize = array_size;
-    return decodeCommon();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-int32_t JPEGDecoder::decodeCommon(void) {
-    status = JpegDec.pjpeg_decode_init(&image_info, pjpeg_callback, NULL, 0);
-    if(status) {
-        log_e("pjpeg_decode_init() failed with status %i", status);
-        if(status == JpegDec.PJPG_UNSUPPORTED_MODE) { log_e("Progressive JPEG files are not supported."); }
-        return -1;
-    }
-    decoded_width = image_info.m_width;
-    decoded_height = image_info.m_height;
-    row_pitch = image_info.m_MCUWidth;
-    pImage = new uint16_t[image_info.m_MCUWidth * image_info.m_MCUHeight];
-    if(!pImage) {
-        log_e("Memory Allocation Failure");
-        return -1;
-    }
-    //  memset(pImage , 0 , sizeof(*pImage));
-
-    row_blocks_per_mcu = image_info.m_MCUWidth >> 3;
-    col_blocks_per_mcu = image_info.m_MCUHeight >> 3;
-    is_available = 1;
-    width = decoded_width;
-    height = decoded_height;
-    comps = 1;
-    MCUSPerRow = image_info.m_MCUSPerRow;
-    MCUSPerCol = image_info.m_MCUSPerCol;
-    scanType = image_info.m_scanType;
-    MCUWidth = image_info.m_MCUWidth;
-    MCUHeight = image_info.m_MCUHeight;
-    return decode_mcu();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::abort(void) {
-    mcu_x = 0;
-    mcu_y = 0;
-    is_available = 0;
-    if(pImage) delete pImage;
-    pImage = NULL;
-    if(jpg_source == JPEG_SD_FILE)
-        if(g_pInFileSd) g_pInFileSd.close();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// JPEGDecoder picojpeg
-int16_t JPEGDecoder::replicateSignBit16(int8_t n) {
-    switch(n) {
-        case 0: return 0x0000;
-        case 1: return 0x8000;
-        case 2: return 0xC000;
-        case 3: return 0xE000;
-        case 4: return 0xF000;
-        case 5: return 0xF800;
-        case 6: return 0xFC00;
-        case 7: return 0xFE00;
-        case 8: return 0xFF00;
-        case 9: return 0xFF80;
-        case 10: return 0xFFC0;
-        case 11: return 0xFFE0;
-        case 12: return 0xFFF0;
-        case 13: return 0xFFF8;
-        case 14: return 0xFFFC;
-        case 15: return 0xFFFE;
-        default: return 0xFFFF;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void JPEGDecoder::fillInBuf(void) {
-    uint8_t status;
-    // Reserve a few bytes at the beginning of the buffer for putting back ("stuffing") chars.
-    gInBufOfs = 4;
-    gInBufLeft = 0;
-    status = (*g_pNeedBytesCallback)(gInBuf + gInBufOfs, PJPG_MAX_IN_BUF_SIZE - gInBufOfs, &gInBufLeft, g_pCallback_data);
-    if(status) {
-        // The user provided need bytes callback has indicated an error, so record the error and continue trying to
-        // decode. The highest level pjpeg entrypoints will catch the error and return the non-zero status.
-        gCallbackStatus = status;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint16_t JPEGDecoder::getBits(uint8_t numBits, uint8_t FFCheck) {
-    uint8_t  origBits = numBits;
-    uint16_t ret = gBitBuf;
-    if(numBits > 8) {
-        numBits -= 8;
-        gBitBuf <<= gBitsLeft;
-        gBitBuf |= getOctet(FFCheck);
-        gBitBuf <<= (8 - gBitsLeft);
-        ret = (ret & 0xFF00) | (gBitBuf >> 8);
-    }
-    if(gBitsLeft < numBits) {
-        gBitBuf <<= gBitsLeft;
-        gBitBuf |= getOctet(FFCheck);
-        gBitBuf <<= (numBits - gBitsLeft);
-        gBitsLeft = 8 - (numBits - gBitsLeft);
-    }
-    else {
-        gBitsLeft = (uint8_t)(gBitsLeft - numBits);
-        gBitBuf <<= numBits;
-    }
-    return ret >> (16 - origBits);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint16_t JPEGDecoder::getExtendTest(uint8_t i) {
-    switch(i) {
-        case 0: return 0;
-        case 1: return 0x0001;
-        case 2: return 0x0002;
-        case 3: return 0x0004;
-        case 4: return 0x0008;
-        case 5: return 0x0010;
-        case 6: return 0x0020;
-        case 7: return 0x0040;
-        case 8: return 0x0080;
-        case 9: return 0x0100;
-        case 10: return 0x0200;
-        case 11: return 0x0400;
-        case 12: return 0x0800;
-        case 13: return 0x1000;
-        case 14: return 0x2000;
-        case 15: return 0x4000;
-        default: return 0;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-int16_t JPEGDecoder::getExtendOffset(uint8_t i) {
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wshift-negative-value"
-
-    switch(i) {
-        case 0: return 0;
-        case 1: return ((-1) << 1) + 1;
-        case 2: return ((-1) << 2) + 1;
-        case 3: return ((-1) << 3) + 1;
-        case 4: return ((-1) << 4) + 1;
-        case 5: return ((-1) << 5) + 1;
-        case 6: return ((-1) << 6) + 1;
-        case 7: return ((-1) << 7) + 1;
-        case 8: return ((-1) << 8) + 1;
-        case 9: return ((-1) << 9) + 1;
-        case 10: return ((-1) << 10) + 1;
-        case 11: return ((-1) << 11) + 1;
-        case 12: return ((-1) << 12) + 1;
-        case 13: return ((-1) << 13) + 1;
-        case 14: return ((-1) << 14) + 1;
-        case 15: return ((-1) << 15) + 1;
-        default: return 0;
-    }
-
-#pragma GCC diagnostic pop
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::huffCreate(const uint8_t* pBits, HuffTable* pHuffTable) {
-    uint8_t  i = 0, j = 0;
-    uint16_t code = 0;
-
-    for(;;) {
-        uint8_t num = pBits[i];
-        if(!num) {
-            pHuffTable->mMinCode[i] = 0x0000;
-            pHuffTable->mMaxCode[i] = 0xFFFF;
-            pHuffTable->mValPtr[i] = 0;
-        }
-        else {
-            pHuffTable->mMinCode[i] = code;
-            pHuffTable->mMaxCode[i] = code + num - 1;
-            pHuffTable->mValPtr[i] = j;
-            j = (uint8_t)(j + num);
-            code = (uint16_t)(code + num);
-        }
-        code <<= 1;
-        i++;
-        if(i > 15) break;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-JPEGDecoder::HuffTable* JPEGDecoder::getHuffTable(uint8_t index) {
-    // 0-1 = DC
-    // 2-3 = AC
-    switch(index) {
-        case 0: return &gHuffTab0;
-        case 1: return &gHuffTab1;
-        case 2: return &gHuffTab2;
-        case 3: return &gHuffTab3;
-        default: return 0;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t* JPEGDecoder::getHuffVal(uint8_t index) {
-    // 0-1 = DC
-    // 2-3 = AC
-    switch(index) {
-        case 0: return gHuffVal0;
-        case 1: return gHuffVal1;
-        case 2: return gHuffVal2;
-        case 3: return gHuffVal3;
-        default: return 0;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t JPEGDecoder::readDHTMarker(void) {
-    uint8_t  bits[16];
-    uint16_t left = getBits1(16);
-    if(left < 2) return PJPG_BAD_DHT_MARKER;
-    left -= 2;
-    while(left) {
-        uint8_t    i, tableIndex, index;
-        uint8_t*   pHuffVal;
-        HuffTable* pHuffTable;
-        uint16_t   count, totalRead;
-        index = (uint8_t)getBits1(8);
-
-        if(((index & 0xF) > 1) || ((index & 0xF0) > 0x10)) return PJPG_BAD_DHT_INDEX;
-
-        tableIndex = ((index >> 3) & 2) + (index & 1);
-        pHuffTable = getHuffTable(tableIndex);
-        pHuffVal = getHuffVal(tableIndex);
-        gValidHuffTables |= (1 << tableIndex);
-        count = 0;
-        for(i = 0; i <= 15; i++) {
-            uint8_t n = (uint8_t)getBits1(8);
-            bits[i] = n;
-            count = (uint16_t)(count + n);
-        }
-        if(count > getMaxHuffCodes(tableIndex)) return PJPG_BAD_DHT_COUNTS;
-        for(i = 0; i < count; i++) pHuffVal[i] = (uint8_t)getBits1(8);
-        totalRead = 1 + 16 + count;
-        if(left < totalRead) return PJPG_BAD_DHT_MARKER;
-        left = (uint16_t)(left - totalRead);
-        huffCreate(bits, pHuffTable);
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// void JPEGDecoder::createWinogradQuant(int16_t* pQuant);
-uint8_t JPEGDecoder::readDQTMarker(void) {
-    uint16_t left = getBits1(16);
-    if(left < 2) return PJPG_BAD_DQT_MARKER;
-    left -= 2;
-    while(left) {
-        uint8_t  i;
-        uint8_t  n = (uint8_t)getBits1(8);
-        uint8_t  prec = n >> 4;
-        uint16_t totalRead;
-
-        n &= 0x0F;
-        if(n > 1) return PJPG_BAD_DQT_TABLE;
-        gValidQuantTables |= (n ? 2 : 1);
-        // read quantization entries, in zag order
-        for(i = 0; i < 64; i++) {
-            uint16_t temp = getBits1(8);
-            if(prec) temp = (temp << 8) + getBits1(8);
-            if(n) gQuant1[i] = (int16_t)temp;
-            else gQuant0[i] = (int16_t)temp;
-        }
-        createWinogradQuant(n ? gQuant1 : gQuant0);
-        totalRead = 64 + 1;
-        if(prec) totalRead += 64;
-        if(left < totalRead) return PJPG_BAD_DQT_LENGTH;
-        left = (uint16_t)(left - totalRead);
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t JPEGDecoder::readSOFMarker(void) {
-    uint8_t  i;
-    uint16_t left = getBits1(16);
-
-    if(getBits1(8) != 8) return PJPG_BAD_PRECISION;
-    gImageYSize = getBits1(16);
-    if((!gImageYSize) || (gImageYSize > PJPG_MAX_HEIGHT)) return PJPG_BAD_HEIGHT;
-    gImageXSize = getBits1(16);
-    if((!gImageXSize) || (gImageXSize > PJPG_MAX_WIDTH)) return PJPG_BAD_WIDTH;
-    gCompsInFrame = (uint8_t)getBits1(8);
-    if(gCompsInFrame > 3) return PJPG_TOO_MANY_COMPONENTS;
-    if(left != (gCompsInFrame + gCompsInFrame + gCompsInFrame + 8)) return PJPG_BAD_SOF_LENGTH;
-    for(i = 0; i < gCompsInFrame; i++) {
-        gCompIdent[i] = (uint8_t)getBits1(8);
-        gCompHSamp[i] = (uint8_t)getBits1(4);
-        gCompVSamp[i] = (uint8_t)getBits1(4);
-        gCompQuant[i] = (uint8_t)getBits1(8);
-        if(gCompQuant[i] > 1) return PJPG_UNSUPPORTED_QUANT_TABLE;
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Used to skip unrecognized markers.
-uint8_t JPEGDecoder::skipVariableMarker(void) {
-    uint16_t left = getBits1(16);
-    if(left < 2) return PJPG_BAD_VARIABLE_MARKER;
-    left -= 2;
-    while(left) {
-        getBits1(8);
-        left--;
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Read a define restart interval (DRI) marker.
-uint8_t JPEGDecoder::readDRIMarker(void) {
-    if(getBits1(16) != 4) return PJPG_BAD_DRI_LENGTH;
-    gRestartInterval = getBits1(16);
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Read a start of scan (SOS) marker.
-uint8_t JPEGDecoder::readSOSMarker(void) {
-    uint8_t  i;
-    uint16_t left = getBits1(16);
-    uint8_t  successive_high __attribute__((unused));
-    uint8_t  successive_low __attribute__((unused));
-    uint8_t  spectral_end __attribute__((unused));
-    uint8_t  spectral_start __attribute__((unused));
-
-    gCompsInScan = (uint8_t)getBits1(8);
-    left -= 3;
-    if((left != (gCompsInScan + gCompsInScan + 3)) || (gCompsInScan < 1) || (gCompsInScan > PJPG_MAXCOMPSINSCAN)) return PJPG_BAD_SOS_LENGTH;
-    for(i = 0; i < gCompsInScan; i++) {
-        uint8_t cc = (uint8_t)getBits1(8);
-        uint8_t c = (uint8_t)getBits1(8);
-        uint8_t ci;
-        left -= 2;
-        for(ci = 0; ci < gCompsInFrame; ci++)
-            if(cc == gCompIdent[ci]) break;
-        if(ci >= gCompsInFrame) return PJPG_BAD_SOS_COMP_ID;
-        gCompList[i] = ci;
-        gCompDCTab[ci] = (c >> 4) & 15;
-        gCompACTab[ci] = (c & 15);
-    }
-    spectral_start = (uint8_t)getBits1(8);
-    spectral_end = (uint8_t)getBits1(8);
-    successive_high = (uint8_t)getBits1(4);
-    successive_low = (uint8_t)getBits1(4);
-    left -= 3;
-    while(left) {
-        getBits1(8);
-        left--;
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::nextMarker(void) {
-    uint8_t c;
-    uint8_t bytes = 0;
-
-    do {
-        do {
-            bytes++;
-            c = (uint8_t)getBits1(8);
-        } while(c != 0xFF);
-        do { c = (uint8_t)getBits1(8); } while(c == 0xFF);
-    } while(c == 0);
-
-    // If bytes > 0 here, there where extra bytes before the marker (not good).
-    return c;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Process markers. Returns when an SOFx, SOI, EOI, or SOS marker is
-// encountered.
-uint8_t JPEGDecoder::processMarkers(uint8_t* pMarker) {
-    for(;;) {
-        uint8_t c = nextMarker();
-
-        switch(c) {
-            case M_SOF0:
-            case M_SOF1:
-            case M_SOF2:
-            case M_SOF3:
-            case M_SOF5:
-            case M_SOF6:
-            case M_SOF7:
-            // case M_JPG:
-            case M_SOF9:
-            case M_SOF10:
-            case M_SOF11:
-            case M_SOF13:
-            case M_SOF14:
-            case M_SOF15:
-            case M_SOI:
-            case M_EOI:
-            case M_SOS: {
-                *pMarker = c;
-                return 0;
-            }
-            case M_DHT: {
-                readDHTMarker();
-                break;
-            }
-            // Sorry, no arithmetic support at this time. Dumb patents!
-            case M_DAC: {
-                return PJPG_NO_ARITHMITIC_SUPPORT;
-            }
-            case M_DQT: {
-                readDQTMarker();
-                break;
-            }
-            case M_DRI: {
-                readDRIMarker();
-                break;
-            }
-            // case M_APP0:  /* no need to read the JFIF marker */
-            case M_JPG:
-            case M_RST0: /* no parameters */
-            case M_RST1:
-            case M_RST2:
-            case M_RST3:
-            case M_RST4:
-            case M_RST5:
-            case M_RST6:
-            case M_RST7:
-            case M_TEM: {
-                return PJPG_UNEXPECTED_MARKER;
-            }
-            default: /* must be DNL, DHP, EXP, APPn, JPGn, COM, or RESn or APP0 */
-            {
-                skipVariableMarker();
-                break;
-            }
-        }
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Finds the start of image (SOI) marker.
-uint8_t JPEGDecoder::locateSOIMarker(void) {
-    uint16_t bytesleft;
-    uint8_t  lastchar = (uint8_t)getBits1(8);
-    uint8_t  thischar = (uint8_t)getBits1(8);
-    /* ok if it's a normal JPEG file without a special header */
-    if((lastchar == 0xFF) && (thischar == M_SOI)) return 0;
-    bytesleft = 4096; // 512;
-    for(;;) {
-        if(--bytesleft == 0) return PJPG_NOT_JPEG;
-        lastchar = thischar;
-        thischar = (uint8_t)getBits1(8);
-        if(lastchar == 0xFF) {
-            if(thischar == M_SOI) break;
-            else if(thischar == M_EOI) return PJPG_NOT_JPEG; // getBits1 will keep returning M_EOI if we read past the end
-        }
-    }
-    /* Check the next character after marker: if it's not 0xFF, it can't
-    be the start of the next marker, so the file is bad */
-    thischar = (uint8_t)((gBitBuf >> 8) & 0xFF);
-    if(thischar != 0xFF) return PJPG_NOT_JPEG;
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Find a start of frame (SOF) marker.
-uint8_t JPEGDecoder::locateSOFMarker(void) {
-    uint8_t c;
-    uint8_t status = locateSOIMarker();
-    if(status) return status;
-    status = processMarkers(&c);
-    if(status) return status;
-    switch(c) {
-        case M_SOF2: {
-            // Progressive JPEG - not supported by JPEGDecoder (would require too
-            // much memory, or too many IDCT's for embedded systems).
-            return PJPG_UNSUPPORTED_MODE;
-        }
-        case M_SOF0: { /* baseline DCT */
-            status = readSOFMarker();
-            if(status) return status;
-            break;
-        }
-        case M_SOF9: {
-            return PJPG_NO_ARITHMITIC_SUPPORT;
-        }
-        case M_SOF1: /* extended sequential DCT */
-        default: {
-            return PJPG_UNSUPPORTED_MARKER;
-        }
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Find a start of scan (SOS) marker.
-uint8_t JPEGDecoder::locateSOSMarker(uint8_t* pFoundEOI) {
-    uint8_t c;
-    uint8_t status;
-
-    *pFoundEOI = 0;
-    status = processMarkers(&c);
-    if(status) return status;
-    if(c == M_EOI) {
-        *pFoundEOI = 1;
-        return 0;
-    }
-    else if(c != M_SOS) return PJPG_UNEXPECTED_MARKER;
-    return readSOSMarker();
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::init(void) {
-    gImageXSize = 0;
-    gImageYSize = 0;
-    gCompsInFrame = 0;
-    gRestartInterval = 0;
-    gCompsInScan = 0;
-    gValidHuffTables = 0;
-    gValidQuantTables = 0;
-    gTemFlag = 0;
-    gInBufOfs = 0;
-    gInBufLeft = 0;
-    gBitBuf = 0;
-    gBitsLeft = 8;
-
-    getBits1(8);
-    getBits1(8);
-
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// This method throws back into the stream any bytes that where read
-// into the bit buffer during initial marker scanning.
-void JPEGDecoder::fixInBuffer(void) {
-    /* In case any 0xFF's where pulled into the buffer during marker scanning */
-    if(gBitsLeft > 0) stuffChar((uint8_t)gBitBuf);
-    stuffChar((uint8_t)(gBitBuf >> 8));
-    gBitsLeft = 8;
-    getBits2(8);
-    getBits2(8);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Restart interval processing.
-uint8_t JPEGDecoder::processRestart(void) {
-    // Let's scan a little bit to find the marker, but not _too_ far.
-    // 1536 is a "fudge factor" that determines how much to scan.
-    uint16_t i;
-    uint8_t  c = 0;
-    for(i = 1536; i > 0; i--)
-        if(getChar() == 0xFF) break;
-    if(i == 0) return PJPG_BAD_RESTART_MARKER;
-    for(; i > 0; i--)
-        if((c = getChar()) != 0xFF) break;
-    if(i == 0) return PJPG_BAD_RESTART_MARKER;
-    // Is it the expected marker? If not, something bad happened.
-    if(c != (gNextRestartNum + M_RST0)) return PJPG_BAD_RESTART_MARKER;
-    // Reset each component's DC prediction values.
-    gLastDC[0] = 0;
-    gLastDC[1] = 0;
-    gLastDC[2] = 0;
-    gRestartsLeft = gRestartInterval;
-    gNextRestartNum = (gNextRestartNum + 1) & 7;
-    // Get the bit buffer going again
-    gBitsLeft = 8;
-    getBits2(8);
-    getBits2(8);
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// FIXME: findEOI() is not actually called at the end of the image
-// (it's optional, and probably not needed on embedded devices)
-uint8_t JPEGDecoder::findEOI(void) {
-    uint8_t c;
-    uint8_t status;
-    // Prime the bit buffer
-    gBitsLeft = 8;
-    getBits1(8);
-    getBits1(8);
-
-    // The next marker _should_ be EOI
-    status = processMarkers(&c);
-    if(status) return status;
-    else if(gCallbackStatus) return gCallbackStatus;
-    // gTotalBytesRead -= in_buf_left;
-    if(c != M_EOI) return PJPG_UNEXPECTED_MARKER;
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::checkHuffTables(void) {
-    uint8_t i;
-    for(i = 0; i < gCompsInScan; i++) {
-        uint8_t compDCTab = gCompDCTab[gCompList[i]];
-        uint8_t compACTab = gCompACTab[gCompList[i]] + 2;
-        if(((gValidHuffTables & (1 << compDCTab)) == 0) || ((gValidHuffTables & (1 << compACTab)) == 0)) return PJPG_UNDEFINED_HUFF_TABLE;
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::checkQuantTables(void) {
-    uint8_t i;
-    for(i = 0; i < gCompsInScan; i++) {
-        uint8_t compQuantMask = gCompQuant[gCompList[i]] ? 2 : 1;
-        if((gValidQuantTables & compQuantMask) == 0) return PJPG_UNDEFINED_QUANT_TABLE;
-    }
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::initScan(void) {
-    uint8_t foundEOI;
-    uint8_t status = locateSOSMarker(&foundEOI);
-    if(status) return status;
-    if(foundEOI) return PJPG_UNEXPECTED_MARKER;
-    status = checkHuffTables();
-    if(status) return status;
-    status = checkQuantTables();
-    if(status) return status;
-    gLastDC[0] = 0;
-    gLastDC[1] = 0;
-    gLastDC[2] = 0;
-    if(gRestartInterval) {
-        gRestartsLeft = gRestartInterval;
-        gNextRestartNum = 0;
-    }
-    fixInBuffer();
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::initFrame(void) {
-    if(gCompsInFrame == 1) {
-        if((gCompHSamp[0] != 1) || (gCompVSamp[0] != 1)) return PJPG_UNSUPPORTED_SAMP_FACTORS;
-        gScanType = PJPG_GRAYSCALE;
-        gMaxBlocksPerMCU = 1;
-        gMCUOrg[0] = 0;
-        gMaxMCUXSize = 8;
-        gMaxMCUYSize = 8;
-    }
-    else if(gCompsInFrame == 3) {
-        if(((gCompHSamp[1] != 1) || (gCompVSamp[1] != 1)) || ((gCompHSamp[2] != 1) || (gCompVSamp[2] != 1))) return PJPG_UNSUPPORTED_SAMP_FACTORS;
-        if((gCompHSamp[0] == 1) && (gCompVSamp[0] == 1)) {
-            gScanType = PJPG_YH1V1;
-            gMaxBlocksPerMCU = 3;
-            gMCUOrg[0] = 0;
-            gMCUOrg[1] = 1;
-            gMCUOrg[2] = 2;
-            gMaxMCUXSize = 8;
-            gMaxMCUYSize = 8;
-        }
-        else if((gCompHSamp[0] == 1) && (gCompVSamp[0] == 2)) {
-            gScanType = PJPG_YH1V2;
-            gMaxBlocksPerMCU = 4;
-            gMCUOrg[0] = 0;
-            gMCUOrg[1] = 0;
-            gMCUOrg[2] = 1;
-            gMCUOrg[3] = 2;
-            gMaxMCUXSize = 8;
-            gMaxMCUYSize = 16;
-        }
-        else if((gCompHSamp[0] == 2) && (gCompVSamp[0] == 1)) {
-            gScanType = PJPG_YH2V1;
-            gMaxBlocksPerMCU = 4;
-            gMCUOrg[0] = 0;
-            gMCUOrg[1] = 0;
-            gMCUOrg[2] = 1;
-            gMCUOrg[3] = 2;
-            gMaxMCUXSize = 16;
-            gMaxMCUYSize = 8;
-        }
-        else if((gCompHSamp[0] == 2) && (gCompVSamp[0] == 2)) {
-            gScanType = PJPG_YH2V2;
-            gMaxBlocksPerMCU = 6;
-            gMCUOrg[0] = 0;
-            gMCUOrg[1] = 0;
-            gMCUOrg[2] = 0;
-            gMCUOrg[3] = 0;
-            gMCUOrg[4] = 1;
-            gMCUOrg[5] = 2;
-            gMaxMCUXSize = 16;
-            gMaxMCUYSize = 16;
-        }
-        else return PJPG_UNSUPPORTED_SAMP_FACTORS;
-    }
-    else return PJPG_UNSUPPORTED_COLORSPACE;
-    gMaxMCUSPerRow = (gImageXSize + (gMaxMCUXSize - 1)) >> ((gMaxMCUXSize == 8) ? 3 : 4);
-    gMaxMCUSPerCol = (gImageYSize + (gMaxMCUYSize - 1)) >> ((gMaxMCUYSize == 8) ? 3 : 4);
-    gNumMCUSRemaining = gMaxMCUSPerRow * gMaxMCUSPerCol;
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-// Winograd IDCT: 5 multiplies per row/col, up to 80 muls for the 2D IDCT
-#define PJPG_DCT_SCALE (1U << PJPG_DCT_SCALE_BITS)
-// #define PJPG_DESCALE(x) PJPG_ARITH_SHIFT_RIGHT_N_16(((x) + (1U << (PJPG_DCT_SCALE_BITS - 1))), PJPG_DCT_SCALE_BITS)
-#define PJPG_WFIX(x) ((x) * PJPG_DCT_SCALE + 0.5f)
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-// Multiply quantization matrix by the Winograd IDCT scale factors
-void JPEGDecoder::createWinogradQuant(int16_t* pQuant) {
-    uint8_t i;
-    for(i = 0; i < 64; i++) {
-        long x = pQuant[i];
-        x *= gWinogradQuant[i];
-        pQuant[i] = (int16_t)((x + (1 << (PJPG_WINOGRAD_QUANT_SCALE_BITS - PJPG_DCT_SCALE_BITS - 1))) >> (PJPG_WINOGRAD_QUANT_SCALE_BITS - PJPG_DCT_SCALE_BITS));
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::idctRows(void) {
-    uint8_t  i;
-    int16_t* pSrc = gCoeffBuf;
-    for(i = 0; i < 8; i++) {
-        if((pSrc[1] | pSrc[2] | pSrc[3] | pSrc[4] | pSrc[5] | pSrc[6] | pSrc[7]) == 0) {
-            // Short circuit the 1D IDCT if only the DC component is non-zero
-            int16_t src0 = *pSrc;
-            *(pSrc + 1) = src0;
-            *(pSrc + 2) = src0;
-            *(pSrc + 3) = src0;
-            *(pSrc + 4) = src0;
-            *(pSrc + 5) = src0;
-            *(pSrc + 6) = src0;
-            *(pSrc + 7) = src0;
-        }
-        else {
-            int16_t src4 = *(pSrc + 5);
-            int16_t src7 = *(pSrc + 3);
-            int16_t x4 = src4 - src7;
-            int16_t x7 = src4 + src7;
-            int16_t src5 = *(pSrc + 1);
-            int16_t src6 = *(pSrc + 7);
-            int16_t x5 = src5 + src6;
-            int16_t x6 = src5 - src6;
-            int16_t tmp1 = imul_b5(x4 - x6);
-            int16_t stg26 = imul_b4(x6) - tmp1;
-            int16_t x24 = tmp1 - imul_b2(x4);
-            int16_t x15 = x5 - x7;
-            int16_t x17 = x5 + x7;
-            int16_t tmp2 = stg26 - x17;
-            int16_t tmp3 = imul_b1_b3(x15) - tmp2;
-            int16_t x44 = tmp3 + x24;
-            int16_t src0 = *(pSrc + 0);
-            int16_t src1 = *(pSrc + 4);
-            int16_t x30 = src0 + src1;
-            int16_t x31 = src0 - src1;
-            int16_t src2 = *(pSrc + 2);
-            int16_t src3 = *(pSrc + 6);
-            int16_t x12 = src2 - src3;
-            int16_t x13 = src2 + src3;
-            int16_t x32 = imul_b1_b3(x12) - x13;
-            int16_t x40 = x30 + x13;
-            int16_t x43 = x30 - x13;
-            int16_t x41 = x31 + x32;
-            int16_t x42 = x31 - x32;
-
-            *(pSrc + 0) = x40 + x17;
-            *(pSrc + 1) = x41 + tmp2;
-            *(pSrc + 2) = x42 + tmp3;
-            *(pSrc + 3) = x43 - x44;
-            *(pSrc + 4) = x43 + x44;
-            *(pSrc + 5) = x42 - tmp3;
-            *(pSrc + 6) = x41 - tmp2;
-            *(pSrc + 7) = x40 - x17;
-        }
-        pSrc += 8;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::idctCols(void) {
-    uint8_t  i;
-    int16_t* pSrc = gCoeffBuf;
-    for(i = 0; i < 8; i++) {
-        if((pSrc[1 * 8] | pSrc[2 * 8] | pSrc[3 * 8] | pSrc[4 * 8] | pSrc[5 * 8] | pSrc[6 * 8] | pSrc[7 * 8]) == 0) {
-            // Short circuit the 1D IDCT if only the DC component is non-zero
-            uint8_t c = clamp(PJPG_DESCALE(*pSrc) + 128);
-            *(pSrc + 0 * 8) = c;
-            *(pSrc + 1 * 8) = c;
-            *(pSrc + 2 * 8) = c;
-            *(pSrc + 3 * 8) = c;
-            *(pSrc + 4 * 8) = c;
-            *(pSrc + 5 * 8) = c;
-            *(pSrc + 6 * 8) = c;
-            *(pSrc + 7 * 8) = c;
-        }
-        else {
-            int16_t src4 = *(pSrc + 5 * 8);
-            int16_t src7 = *(pSrc + 3 * 8);
-            int16_t x4 = src4 - src7;
-            int16_t x7 = src4 + src7;
-            int16_t src5 = *(pSrc + 1 * 8);
-            int16_t src6 = *(pSrc + 7 * 8);
-            int16_t x5 = src5 + src6;
-            int16_t x6 = src5 - src6;
-            int16_t tmp1 = imul_b5(x4 - x6);
-            int16_t stg26 = imul_b4(x6) - tmp1;
-            int16_t x24 = tmp1 - imul_b2(x4);
-            int16_t x15 = x5 - x7;
-            int16_t x17 = x5 + x7;
-            int16_t tmp2 = stg26 - x17;
-            int16_t tmp3 = imul_b1_b3(x15) - tmp2;
-            int16_t x44 = tmp3 + x24;
-            int16_t src0 = *(pSrc + 0 * 8);
-            int16_t src1 = *(pSrc + 4 * 8);
-            int16_t x30 = src0 + src1;
-            int16_t x31 = src0 - src1;
-            int16_t src2 = *(pSrc + 2 * 8);
-            int16_t src3 = *(pSrc + 6 * 8);
-            int16_t x12 = src2 - src3;
-            int16_t x13 = src2 + src3;
-            int16_t x32 = imul_b1_b3(x12) - x13;
-            int16_t x40 = x30 + x13;
-            int16_t x43 = x30 - x13;
-            int16_t x41 = x31 + x32;
-            int16_t x42 = x31 - x32;
-            // descale, convert to unsigned and clamp to 8-bit
-            *(pSrc + 0 * 8) = clamp(PJPG_DESCALE(x40 + x17) + 128);
-            *(pSrc + 1 * 8) = clamp(PJPG_DESCALE(x41 + tmp2) + 128);
-            *(pSrc + 2 * 8) = clamp(PJPG_DESCALE(x42 + tmp3) + 128);
-            *(pSrc + 3 * 8) = clamp(PJPG_DESCALE(x43 - x44) + 128);
-            *(pSrc + 4 * 8) = clamp(PJPG_DESCALE(x43 + x44) + 128);
-            *(pSrc + 5 * 8) = clamp(PJPG_DESCALE(x42 - tmp3) + 128);
-            *(pSrc + 6 * 8) = clamp(PJPG_DESCALE(x41 - tmp2) + 128);
-            *(pSrc + 7 * 8) = clamp(PJPG_DESCALE(x40 - x17) + 128);
-        }
-        pSrc++;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCb(uint8_t srcOfs, uint8_t dstOfs) { // Cb upsample and accumulate, 4x4 to 8x8
-    // Cb - affects G and B
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    uint8_t* pDstB = gMCUBufB + dstOfs;
-    for(y = 0; y < 4; y++) {
-        for(x = 0; x < 4; x++) {
-            uint8_t cb = (uint8_t)*pSrc++;
-            int16_t cbG, cbB;
-            cbG = ((cb * 88U) >> 8U) - 44U;
-            pDstG[0] = subAndClamp(pDstG[0], cbG);
-            pDstG[1] = subAndClamp(pDstG[1], cbG);
-            pDstG[8] = subAndClamp(pDstG[8], cbG);
-            pDstG[9] = subAndClamp(pDstG[9], cbG);
-            cbB = (cb + ((cb * 198U) >> 8U)) - 227U;
-            pDstB[0] = addAndClamp(pDstB[0], cbB);
-            pDstB[1] = addAndClamp(pDstB[1], cbB);
-            pDstB[8] = addAndClamp(pDstB[8], cbB);
-            pDstB[9] = addAndClamp(pDstB[9], cbB);
-            pDstG += 2;
-            pDstB += 2;
-        }
-        pSrc = pSrc - 4 + 8;
-        pDstG = pDstG - 8 + 16;
-        pDstB = pDstB - 8 + 16;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCbH(uint8_t srcOfs, uint8_t dstOfs) { // Cb upsample and accumulate, 4x8 to 8x8
-    // Cb - affects G and B
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    uint8_t* pDstB = gMCUBufB + dstOfs;
-    for(y = 0; y < 8; y++) {
-        for(x = 0; x < 4; x++) {
-            uint8_t cb = (uint8_t)*pSrc++;
-            int16_t cbG, cbB;
-            cbG = ((cb * 88U) >> 8U) - 44U;
-            pDstG[0] = subAndClamp(pDstG[0], cbG);
-            pDstG[1] = subAndClamp(pDstG[1], cbG);
-            cbB = (cb + ((cb * 198U) >> 8U)) - 227U;
-            pDstB[0] = addAndClamp(pDstB[0], cbB);
-            pDstB[1] = addAndClamp(pDstB[1], cbB);
-            pDstG += 2;
-            pDstB += 2;
-        }
-        pSrc = pSrc - 4 + 8;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCbV(uint8_t srcOfs, uint8_t dstOfs) { // Cb upsample and accumulate, 8x4 to 8x8
-    // Cb - affects G and B
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    uint8_t* pDstB = gMCUBufB + dstOfs;
-    for(y = 0; y < 4; y++) {
-        for(x = 0; x < 8; x++) {
-            uint8_t cb = (uint8_t)*pSrc++;
-            int16_t cbG, cbB;
-            cbG = ((cb * 88U) >> 8U) - 44U;
-            pDstG[0] = subAndClamp(pDstG[0], cbG);
-            pDstG[8] = subAndClamp(pDstG[8], cbG);
-            cbB = (cb + ((cb * 198U) >> 8U)) - 227U;
-            pDstB[0] = addAndClamp(pDstB[0], cbB);
-            pDstB[8] = addAndClamp(pDstB[8], cbB);
-            ++pDstG;
-            ++pDstB;
-        }
-        pDstG = pDstG - 8 + 16;
-        pDstB = pDstB - 8 + 16;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCr(uint8_t srcOfs, uint8_t dstOfs) { // Cr upsample and accumulate, 4x4 to 8x8
-    // Cr - affects R and G
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstR = gMCUBufR + dstOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    for(y = 0; y < 4; y++) {
-        for(x = 0; x < 4; x++) {
-            uint8_t cr = (uint8_t)*pSrc++;
-            int16_t crR, crG;
-            crR = (cr + ((cr * 103U) >> 8U)) - 179;
-            pDstR[0] = addAndClamp(pDstR[0], crR);
-            pDstR[1] = addAndClamp(pDstR[1], crR);
-            pDstR[8] = addAndClamp(pDstR[8], crR);
-            pDstR[9] = addAndClamp(pDstR[9], crR);
-            crG = ((cr * 183U) >> 8U) - 91;
-            pDstG[0] = subAndClamp(pDstG[0], crG);
-            pDstG[1] = subAndClamp(pDstG[1], crG);
-            pDstG[8] = subAndClamp(pDstG[8], crG);
-            pDstG[9] = subAndClamp(pDstG[9], crG);
-            pDstR += 2;
-            pDstG += 2;
-        }
-        pSrc = pSrc - 4 + 8;
-        pDstR = pDstR - 8 + 16;
-        pDstG = pDstG - 8 + 16;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCrH(uint8_t srcOfs, uint8_t dstOfs) { // Cr upsample and accumulate, 4x8 to 8x8
-    // Cr - affects R and G
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstR = gMCUBufR + dstOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    for(y = 0; y < 8; y++) {
-        for(x = 0; x < 4; x++) {
-            uint8_t cr = (uint8_t)*pSrc++;
-            int16_t crR, crG;
-            crR = (cr + ((cr * 103U) >> 8U)) - 179;
-            pDstR[0] = addAndClamp(pDstR[0], crR);
-            pDstR[1] = addAndClamp(pDstR[1], crR);
-            crG = ((cr * 183U) >> 8U) - 91;
-            pDstG[0] = subAndClamp(pDstG[0], crG);
-            pDstG[1] = subAndClamp(pDstG[1], crG);
-            pDstR += 2;
-            pDstG += 2;
-        }
-        pSrc = pSrc - 4 + 8;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::upsampleCrV(uint8_t srcOfs, uint8_t dstOfs) { // Cr upsample and accumulate, 8x4 to 8x8
-    // Cr - affects R and G
-    uint8_t  x, y;
-    int16_t* pSrc = gCoeffBuf + srcOfs;
-    uint8_t* pDstR = gMCUBufR + dstOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    for(y = 0; y < 4; y++) {
-        for(x = 0; x < 8; x++) {
-            uint8_t cr = (uint8_t)*pSrc++;
-            int16_t crR, crG;
-            crR = (cr + ((cr * 103U) >> 8U)) - 179;
-            pDstR[0] = addAndClamp(pDstR[0], crR);
-            pDstR[8] = addAndClamp(pDstR[8], crR);
-            crG = ((cr * 183U) >> 8U) - 91;
-            pDstG[0] = subAndClamp(pDstG[0], crG);
-            pDstG[8] = subAndClamp(pDstG[8], crG);
-            ++pDstR;
-            ++pDstG;
-        }
-        pDstR = pDstR - 8 + 16;
-        pDstG = pDstG - 8 + 16;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::copyY(uint8_t dstOfs) { // Convert Y to RGB
-    uint8_t  i;
-    uint8_t* pRDst = gMCUBufR + dstOfs;
-    uint8_t* pGDst = gMCUBufG + dstOfs;
-    uint8_t* pBDst = gMCUBufB + dstOfs;
-    int16_t* pSrc = gCoeffBuf;
-    for(i = 64; i > 0; i--) {
-        uint8_t c = (uint8_t)*pSrc++;
-        *pRDst++ = c;
-        *pGDst++ = c;
-        *pBDst++ = c;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::convertCb(uint8_t dstOfs) { // Cb convert to RGB and accumulate
-    uint8_t  i;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    uint8_t* pDstB = gMCUBufB + dstOfs;
-    int16_t* pSrc = gCoeffBuf;
-    for(i = 64; i > 0; i--) {
-        uint8_t cb = (uint8_t)*pSrc++;
-        int16_t cbG, cbB;
-        cbG = ((cb * 88U) >> 8U) - 44U;
-        pDstG[0] = subAndClamp(pDstG[0], cbG);
-        cbB = (cb + ((cb * 198U) >> 8U)) - 227U;
-        pDstB[0] = addAndClamp(pDstB[0], cbB);
-        ++pDstG;
-        ++pDstB;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::convertCr(uint8_t dstOfs) { // Cr convert to RGB and accumulate
-    uint8_t  i;
-    uint8_t* pDstR = gMCUBufR + dstOfs;
-    uint8_t* pDstG = gMCUBufG + dstOfs;
-    int16_t* pSrc = gCoeffBuf;
-    for(i = 64; i > 0; i--) {
-        uint8_t cr = (uint8_t)*pSrc++;
-        int16_t crR, crG;
-        crR = (cr + ((cr * 103U) >> 8U)) - 179;
-        pDstR[0] = addAndClamp(pDstR[0], crR);
-        crG = ((cr * 183U) >> 8U) - 91;
-        pDstG[0] = subAndClamp(pDstG[0], crG);
-        ++pDstR;
-        ++pDstG;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void JPEGDecoder::transformBlock(uint8_t mcuBlock) {
-    idctRows();
-    idctCols();
-    switch(gScanType) {
-        case PJPG_GRAYSCALE: {
-            copyY(0);
-            break;
-        }                  // MCU size: 1, 1 block per MCU
-        case PJPG_YH1V1: { // MCU size: 8x8, 3 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    copyY(0);
-                    break;
-                }
-                case 1: {
-                    convertCb(0);
-                    break;
-                }
-                case 2: {
-                    convertCr(0);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH1V2: { // MCU size: 8x16, 4 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    copyY(0);
-                    break;
-                }
-                case 1: {
-                    copyY(128);
-                    break;
-                }
-                case 2: {
-                    upsampleCbV(0, 0);
-                    upsampleCbV(4 * 8, 128);
-                    break;
-                }
-                case 3: {
-                    upsampleCrV(0, 0);
-                    upsampleCrV(4 * 8, 128);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH2V1: { // MCU size: 16x8, 4 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    copyY(0);
-                    break;
-                }
-                case 1: {
-                    copyY(64);
-                    break;
-                }
-                case 2: {
-                    upsampleCbH(0, 0);
-                    upsampleCbH(4, 64);
-                    break;
-                }
-                case 3: {
-                    upsampleCrH(0, 0);
-                    upsampleCrH(4, 64);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH2V2: { // MCU size: 16x16, 6 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    copyY(0);
-                    break;
-                }
-                case 1: {
-                    copyY(64);
-                    break;
-                }
-                case 2: {
-                    copyY(128);
-                    break;
-                }
-                case 3: {
-                    copyY(192);
-                    break;
-                }
-                case 4: {
-                    upsampleCb(0, 0);
-                    upsampleCb(4, 64);
-                    upsampleCb(4 * 8, 128);
-                    upsampleCb(4 + 4 * 8, 192);
-                    break;
-                }
-                case 5: {
-                    upsampleCr(0, 0);
-                    upsampleCr(4, 64);
-                    upsampleCr(4 * 8, 128);
-                    upsampleCr(4 + 4 * 8, 192);
-                    break;
-                }
-            }
-            break;
-        }
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-void JPEGDecoder::transformBlockReduce(uint8_t mcuBlock) {
-    uint8_t c = clamp(PJPG_DESCALE(gCoeffBuf[0]) + 128);
-    int16_t cbG, cbB, crR, crG;
-    switch(gScanType) {
-        case PJPG_GRAYSCALE: {
-            gMCUBufR[0] = c;
-            break;
-        }                  // MCU size: 1, 1 block per MCU
-        case PJPG_YH1V1: { // MCU size: 8x8, 3 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    gMCUBufR[0] = c;
-                    gMCUBufG[0] = c;
-                    gMCUBufB[0] = c;
-                    break;
-                }
-                case 1: {
-                    cbG = ((c * 88U) >> 8U) - 44U;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], cbG);
-                    cbB = (c + ((c * 198U) >> 8U)) - 227U;
-                    gMCUBufB[0] = addAndClamp(gMCUBufB[0], cbB);
-                    break;
-                }
-                case 2: {
-                    crR = (c + ((c * 103U) >> 8U)) - 179;
-                    gMCUBufR[0] = addAndClamp(gMCUBufR[0], crR);
-                    crG = ((c * 183U) >> 8U) - 91;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], crG);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH1V2: { // MCU size: 8x16, 4 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    gMCUBufR[0] = c;
-                    gMCUBufG[0] = c;
-                    gMCUBufB[0] = c;
-                    break;
-                }
-                case 1: {
-                    gMCUBufR[128] = c;
-                    gMCUBufG[128] = c;
-                    gMCUBufB[128] = c;
-                    break;
-                }
-                case 2: {
-                    cbG = ((c * 88U) >> 8U) - 44U;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], cbG);
-                    gMCUBufG[128] = subAndClamp(gMCUBufG[128], cbG);
-                    cbB = (c + ((c * 198U) >> 8U)) - 227U;
-                    gMCUBufB[0] = addAndClamp(gMCUBufB[0], cbB);
-                    gMCUBufB[128] = addAndClamp(gMCUBufB[128], cbB);
-                    break;
-                }
-                case 3: {
-                    crR = (c + ((c * 103U) >> 8U)) - 179;
-                    gMCUBufR[0] = addAndClamp(gMCUBufR[0], crR);
-                    gMCUBufR[128] = addAndClamp(gMCUBufR[128], crR);
-                    crG = ((c * 183U) >> 8U) - 91;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], crG);
-                    gMCUBufG[128] = subAndClamp(gMCUBufG[128], crG);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH2V1: { // MCU size: 16x8, 4 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    gMCUBufR[0] = c;
-                    gMCUBufG[0] = c;
-                    gMCUBufB[0] = c;
-                    break;
-                }
-                case 1: {
-                    gMCUBufR[64] = c;
-                    gMCUBufG[64] = c;
-                    gMCUBufB[64] = c;
-                    break;
-                }
-                case 2: {
-                    cbG = ((c * 88U) >> 8U) - 44U;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], cbG);
-                    gMCUBufG[64] = subAndClamp(gMCUBufG[64], cbG);
-                    cbB = (c + ((c * 198U) >> 8U)) - 227U;
-                    gMCUBufB[0] = addAndClamp(gMCUBufB[0], cbB);
-                    gMCUBufB[64] = addAndClamp(gMCUBufB[64], cbB);
-                    break;
-                }
-                case 3: {
-                    crR = (c + ((c * 103U) >> 8U)) - 179;
-                    gMCUBufR[0] = addAndClamp(gMCUBufR[0], crR);
-                    gMCUBufR[64] = addAndClamp(gMCUBufR[64], crR);
-                    crG = ((c * 183U) >> 8U) - 91;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], crG);
-                    gMCUBufG[64] = subAndClamp(gMCUBufG[64], crG);
-                    break;
-                }
-            }
-            break;
-        }
-        case PJPG_YH2V2: { // MCU size: 16x16, 6 blocks per MCU
-            switch(mcuBlock) {
-                case 0: {
-                    gMCUBufR[0] = c;
-                    gMCUBufG[0] = c;
-                    gMCUBufB[0] = c;
-                    break;
-                }
-                case 1: {
-                    gMCUBufR[64] = c;
-                    gMCUBufG[64] = c;
-                    gMCUBufB[64] = c;
-                    break;
-                }
-                case 2: {
-                    gMCUBufR[128] = c;
-                    gMCUBufG[128] = c;
-                    gMCUBufB[128] = c;
-                    break;
-                }
-                case 3: {
-                    gMCUBufR[192] = c;
-                    gMCUBufG[192] = c;
-                    gMCUBufB[192] = c;
-                    break;
-                }
-                case 4: {
-                    cbG = ((c * 88U) >> 8U) - 44U;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], cbG);
-                    gMCUBufG[64] = subAndClamp(gMCUBufG[64], cbG);
-                    gMCUBufG[128] = subAndClamp(gMCUBufG[128], cbG);
-                    gMCUBufG[192] = subAndClamp(gMCUBufG[192], cbG);
-                    cbB = (c + ((c * 198U) >> 8U)) - 227U;
-                    gMCUBufB[0] = addAndClamp(gMCUBufB[0], cbB);
-                    gMCUBufB[64] = addAndClamp(gMCUBufB[64], cbB);
-                    gMCUBufB[128] = addAndClamp(gMCUBufB[128], cbB);
-                    gMCUBufB[192] = addAndClamp(gMCUBufB[192], cbB);
-                    break;
-                }
-                case 5: {
-                    crR = (c + ((c * 103U) >> 8U)) - 179;
-                    gMCUBufR[0] = addAndClamp(gMCUBufR[0], crR);
-                    gMCUBufR[64] = addAndClamp(gMCUBufR[64], crR);
-                    gMCUBufR[128] = addAndClamp(gMCUBufR[128], crR);
-                    gMCUBufR[192] = addAndClamp(gMCUBufR[192], crR);
-                    crG = ((c * 183U) >> 8U) - 91;
-                    gMCUBufG[0] = subAndClamp(gMCUBufG[0], crG);
-                    gMCUBufG[64] = subAndClamp(gMCUBufG[64], crG);
-                    gMCUBufG[128] = subAndClamp(gMCUBufG[128], crG);
-                    gMCUBufG[192] = subAndClamp(gMCUBufG[192], crG);
-                    break;
-                }
-            }
-            break;
-        }
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t JPEGDecoder::huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuffVal) {
-    uint8_t  i = 0;
-    uint8_t  j;
-    uint16_t code = getBit();
-
-    // This func only reads a bit at a time, which on modern CPU's is not terribly efficient.
-    // But on microcontrollers without strong integer shifting support this seems like a
-    // more reasonable approach.
-    for(;;) {
-        uint16_t maxCode;
-        if(i == 16) return 0;
-
-        maxCode = pHuffTable->mMaxCode[i];
-        if((code <= maxCode) && (maxCode != 0xFFFF)) break;
-
-        i++;
-        code <<= 1;
-        code |= getBit();
-    }
-
-    j = pHuffTable->mValPtr[i];
-    j = (uint8_t)(j + (code - pHuffTable->mMinCode[i]));
-    return pHuffVal[j];
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t JPEGDecoder::decodeNextMCU(void) {
-    uint8_t status;
-    uint8_t mcuBlock;
-    if(gRestartInterval) {
-        if(gRestartsLeft == 0) {
-            status = processRestart();
-            if(status) return status;
-        }
-        gRestartsLeft--;
-    }
-    for(mcuBlock = 0; mcuBlock < gMaxBlocksPerMCU; mcuBlock++) {
-        uint8_t        componentID = gMCUOrg[mcuBlock];
-        uint8_t        compQuant = gCompQuant[componentID];
-        uint8_t        compDCTab = gCompDCTab[componentID];
-        uint8_t        numExtraBits, compACTab, k;
-        const int16_t* pQ = compQuant ? gQuant1 : gQuant0;
-        uint16_t       r, dc;
-        uint8_t        s = huffDecode(compDCTab ? &gHuffTab1 : &gHuffTab0, compDCTab ? gHuffVal1 : gHuffVal0);
-        r = 0;
-        numExtraBits = s & 0xF;
-        if(numExtraBits) r = getBits2(numExtraBits);
-        dc = huffExtend(r, s);
-        dc = dc + gLastDC[componentID];
-        gLastDC[componentID] = dc;
-        gCoeffBuf[0] = dc * pQ[0];
-        compACTab = gCompACTab[componentID];
-        if(gReduce) { // Decode, but throw out the AC coefficients in reduce mode.
-            for(k = 1; k < 64; k++) {
-                s = huffDecode(compACTab ? &gHuffTab3 : &gHuffTab2, compACTab ? gHuffVal3 : gHuffVal2);
-                numExtraBits = s & 0xF;
-                if(numExtraBits) getBits2(numExtraBits);
-                r = s >> 4;
-                s &= 15;
-                if(s) {
-                    if(r) {
-                        if((k + r) > 63) return PJPG_DECODE_ERROR;
-                        k = (uint8_t)(k + r);
-                    }
-                }
-                else {
-                    if(r == 15) {
-                        if((k + 16) > 64) return PJPG_DECODE_ERROR;
-                        k += (16 - 1); // - 1 because the loop counter is k
-                    }
-                    else break;
-                }
-            }
-            transformBlockReduce(mcuBlock);
-        }
-        else { // Decode and dequantize AC coefficients
-            for(k = 1; k < 64; k++) {
-                uint16_t extraBits;
-                s = huffDecode(compACTab ? &gHuffTab3 : &gHuffTab2, compACTab ? gHuffVal3 : gHuffVal2);
-                extraBits = 0;
-                numExtraBits = s & 0xF;
-                if(numExtraBits) extraBits = getBits2(numExtraBits);
-                r = s >> 4;
-                s &= 15;
-                if(s) {
-                    int16_t ac;
-                    if(r) {
-                        if((k + r) > 63) return PJPG_DECODE_ERROR;
-                        while(r) {
-                            gCoeffBuf[ZAG[k++]] = 0;
-                            r--;
-                        }
-                    }
-                    ac = huffExtend(extraBits, s);
-                    gCoeffBuf[ZAG[k]] = ac * pQ[k];
-                }
-                else {
-                    if(r == 15) {
-                        if((k + 16) > 64) return PJPG_DECODE_ERROR;
-                        for(r = 16; r > 0; r--) gCoeffBuf[ZAG[k++]] = 0;
-                        k--; // - 1 because the loop counter is k
-                    }
-                    else break;
-                }
-            }
-            while(k < 64) gCoeffBuf[ZAG[k++]] = 0;
-            transformBlock(mcuBlock);
-        }
-    }
-    return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t JPEGDecoder::pjpeg_decode_mcu() {
-    uint8_t status;
-    if(gCallbackStatus) return gCallbackStatus;
-    if(!gNumMCUSRemaining) return PJPG_NO_MORE_BLOCKS;
-    status = decodeNextMCU();
-    if((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    gNumMCUSRemaining--;
-    return 0;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-
-uint8_t JPEGDecoder::pjpeg_decode_init(pjpeg_image_info_t* pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback, void* pCallback_data, uint8_t reduce) {
-    uint8_t status;
-    pInfo->m_width = 0;
-    pInfo->m_height = 0;
-    pInfo->m_comps = 0;
-    pInfo->m_MCUSPerRow = 0;
-    pInfo->m_MCUSPerCol = 0;
-    pInfo->m_scanType = PJPG_GRAYSCALE;
-    pInfo->m_MCUWidth = 0;
-    pInfo->m_MCUHeight = 0;
-    pInfo->m_pMCUBufR = (unsigned char*)0;
-    pInfo->m_pMCUBufG = (unsigned char*)0;
-    pInfo->m_pMCUBufB = (unsigned char*)0;
-    g_pNeedBytesCallback = pNeed_bytes_callback;
-    g_pCallback_data = pCallback_data;
-    gCallbackStatus = 0;
-    gReduce = reduce;
-    status = init();
-    if((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    status = locateSOFMarker();
-    if((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    status = initFrame();
-    if((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    status = initScan();
-    if((status) || (gCallbackStatus)) return gCallbackStatus ? gCallbackStatus : status;
-    pInfo->m_width = gImageXSize;
-    pInfo->m_height = gImageYSize;
-    pInfo->m_comps = gCompsInFrame;
-    pInfo->m_scanType = gScanType;
-    pInfo->m_MCUSPerRow = gMaxMCUSPerRow;
-    pInfo->m_MCUSPerCol = gMaxMCUSPerCol;
-    pInfo->m_MCUWidth = gMaxMCUXSize;
-    pInfo->m_MCUHeight = gMaxMCUYSize;
-    pInfo->m_pMCUBufR = gMCUBufR;
-    pInfo->m_pMCUBufG = gMCUBufG;
-    pInfo->m_pMCUBufB = gMCUBufB;
-    return 0;
-}
-
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//        T O U C H P A N E L
+uint8_t TFT::JPEG_drawJpg(int32_t x, int32_t y) {
+    JDEC    jdec;
+    uint8_t r = JDR_OK;
+
+    m_jpg_source = TJPG_SD_FILE;
+    m_jpeg_x = x;
+    m_jpeg_y = y;
+    jdec.swap = m_swap;
+    r = JPEG_jd_prepare(&jdec, m_workspace, TJPGD_WORKSPACE_SIZE, 0);
+    if (r == JDR_OK) { r = JPEG_jd_decomp(&jdec, m_jpgScale); } // Extract image and render
+    return r;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_getJpgSize(uint16_t* w, uint16_t* h) {
+    JDEC    jdec;
+    uint8_t r = JDR_OK;
+    *w = 0;
+    *h = 0;
+
+    m_jpg_source = TJPG_SD_FILE;
+    r = JPEG_jd_prepare(&jdec, m_workspace, TJPGD_WORKSPACE_SIZE, 0);
+    if (r == JDR_OK) {
+        *w = jdec.width;
+        *h = jdec.height;
+    }
+    m_jpgFile.seek(0);
+    return r;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if JD_FASTDECODE == 2
+	#define HUFF_BIT  10 /* Bit length to apply fast huffman decode */
+	#define HUFF_LEN  (1 << HUFF_BIT)
+	#define HUFF_MASK (HUFF_LEN - 1)
+#endif
+
+const uint8_t Zig[64] = {/* Zigzag-order to raster-order conversion table */
+								0,  1,  8,  16, 9,  2,  3,  10, 17, 24, 32, 25, 18, 11, 4,  5,  12, 19, 26, 33, 40, 48,
+								41, 34, 27, 20, 13, 6,  7,  14, 21, 28, 35, 42, 49, 56, 57, 50, 43, 36, 29, 22, 15, 23,
+								30, 37, 44, 51, 58, 59, 52, 45, 38, 31, 39, 46, 53, 60, 61, 54, 47, 55, 62, 63};
+
+const uint16_t Ipsf[64] = {/* See also aa_idct.png */
+	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
+	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
+	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.92388 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.63099 * 8192),
+	 (uint16_t)(1.38704 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.38268 * 8192),
+	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.81226 * 8192), (uint16_t)(1.70711 * 8192), (uint16_t)(1.53636 * 8192),
+	 (uint16_t)(1.30656 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.36048 * 8192),
+	 (uint16_t)(1.17588 * 8192), (uint16_t)(1.63099 * 8192), (uint16_t)(1.53636 * 8192), (uint16_t)(1.38268 * 8192),
+	 (uint16_t)(1.17588 * 8192), (uint16_t)(0.92388 * 8192), (uint16_t)(0.63638 * 8192), (uint16_t)(0.32442 * 8192),
+	 (uint16_t)(1.00000 * 8192), (uint16_t)(1.38704 * 8192), (uint16_t)(1.30656 * 8192), (uint16_t)(1.17588 * 8192),
+	 (uint16_t)(1.00000 * 8192), (uint16_t)(0.78570 * 8192), (uint16_t)(0.54120 * 8192), (uint16_t)(0.27590 * 8192),
+	 (uint16_t)(0.78570 * 8192), (uint16_t)(1.08979 * 8192), (uint16_t)(1.02656 * 8192), (uint16_t)(0.92388 * 8192),
+	 (uint16_t)(0.78570 * 8192), (uint16_t)(0.61732 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.21677 * 8192),
+	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.75066 * 8192), (uint16_t)(0.70711 * 8192), (uint16_t)(0.63638 * 8192),
+	 (uint16_t)(0.54120 * 8192), (uint16_t)(0.42522 * 8192), (uint16_t)(0.29290 * 8192), (uint16_t)(0.14932 * 8192),
+	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.38268 * 8192), (uint16_t)(0.36048 * 8192), (uint16_t)(0.32442 * 8192),
+	 (uint16_t)(0.27590 * 8192), (uint16_t)(0.21678 * 8192), (uint16_t)(0.14932 * 8192), (uint16_t)(0.07612 * 8192)};
+
+#if JD_TBLCLIP
+	#define BYTECLIP(v) Clip8[(unsigned int)(v) & 0x3FF]
+const uint8_t Clip8[1024] = {	/* 0..255 */
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+	31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59,
+	60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+	89, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113,
+	114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136,
+	137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 156, 157, 158, 159,
+	160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179, 180, 181, 182,
+	183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205,
+	206, 207, 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224, 225, 226, 227, 228,
+	229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251,
+	252, 253, 254, 255,
+	/* 256..511 */
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255,
+	255, 255, 255,
+	/* -512..-257 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	/* -256..-1 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+#endif
+
+#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+uint8_t TFT::JPEG_BYTECLIP(int val) {
+    if(val < 0) return 0;
+    else if(val > 255) return 255;
+    return (uint8_t)val;
+}
+#endif
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void* TFT::JPEG_alloc_pool(JDEC  *jd,size_t ndata) {
+	char *rp = 0;
+
+	ndata = (ndata + 3) & ~3; /* Align block size to the word boundary */
+
+	if(jd->sz_pool >= ndata) {
+		jd->sz_pool -= ndata;
+		rp = (char *)jd->pool;           /* Get start of available memory pool */
+		jd->pool = (void *)(rp + ndata); /* Allocate requierd bytes */
+	}
+
+	return (void *)rp; /* Return allocated memory block (NULL:no memory to allocate) */
+}//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
+    unsigned int i, zi;
+    uint8_t      d;
+    int32_t*     pb;
+
+    while (ndata) {                      /* Process all tables in the segment */
+        if (ndata < 65) return JDR_FMT1; /* Err: table size is unaligned */
+        ndata -= 65;
+        d = *data++;                                              /* Get table property */
+        if (d & 0xF0) return JDR_FMT1;                            /* Err: not 8-bit resolution */
+        i = d & 3;                                                /* Get table ID */
+        pb = (int32_t*)JPEG_alloc_pool(jd, 64 * sizeof(int32_t)); /* Allocate a memory block for the table */
+        if (!pb) return JDR_MEM1;                                 /* Err: not enough memory */
+        jd->qttbl[i] = pb;                                        /* Register the table */
+        for (i = 0; i < 64; i++) {                                /* Load the table */
+            zi = Zig[i];                                          /* Zigzag-order to raster-order conversion */
+            pb[zi] = (int32_t)((uint32_t)*data++ * Ipsf[zi]);     /* Apply scale factor of Arai algorithm to the de-quantizers */
+        }
+    }
+
+    return JDR_OK;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata) {
+    unsigned int i, j, b, cls, num;
+    size_t       np;
+    uint8_t      d, *pb, *pd;
+    uint16_t     hc, *ph;
+
+    while (ndata) {                      /* Process all tables in the segment */
+        if (ndata < 17) return JDR_FMT1; /* Err: wrong data size */
+        ndata -= 17;
+        d = *data++;                   /* Get table number and class */
+        if (d & 0xEE) return JDR_FMT1; /* Err: invalid class/number */
+        cls = d >> 4;
+        num = d & 0x0F;                         /* class = dc(0)/ac(1), table number = 0/1 */
+        pb = (uint8_t*)JPEG_alloc_pool(jd, 16); /* Allocate a memory block for the bit distribution table */
+        if (!pb) return JDR_MEM1;               /* Err: not enough memory */
+        jd->huffbits[num][cls] = pb;
+        for (np = i = 0; i < 16; i++) { /* Load number of patterns for 1 to 16-bit code */
+            np += (pb[i] = *data++);    /* Get sum of code words for each code */
+        }
+        ph = (uint16_t*)JPEG_alloc_pool(jd, np * sizeof(uint16_t)); /* Allocate a memory block for the code word table */
+        if (!ph) return JDR_MEM1;                                   /* Err: not enough memory */
+        jd->huffcode[num][cls] = ph;
+        hc = 0;
+        for (j = i = 0; i < 16; i++) { /* Re-build huffman code word table */
+            b = pb[i];
+            while (b--) ph[j++] = hc++;
+            hc <<= 1;
+        }
+
+        if (ndata < np) return JDR_FMT1; /* Err: wrong data size */
+        ndata -= np;
+        pd = (uint8_t*)JPEG_alloc_pool(jd, np); /* Allocate a memory block for the decoded data */
+        if (!pd) return JDR_MEM1;               /* Err: not enough memory */
+        jd->huffdata[num][cls] = pd;
+        for (i = 0; i < np; i++) { /* Load decoded data corresponds to each code word */
+            d = *data++;
+            if (!cls && d > 11) return JDR_FMT1;
+            pd[i] = d;
+        }
+#if JD_FASTDECODE == 2
+        { /* Create fast huffman decode table */
+            unsigned int span, td, ti;
+            uint16_t*    tbl_ac = 0;
+            uint8_t*     tbl_dc = 0;
+
+            if (cls) {
+                tbl_ac = alloc_pool(jd, HUFF_LEN * sizeof(uint16_t)); /* LUT for AC elements */
+                if (!tbl_ac) return JDR_MEM1;                         /* Err: not enough memory */
+                jd->hufflut_ac[num] = tbl_ac;
+                memset(tbl_ac, 0xFF, HUFF_LEN * sizeof(uint16_t)); /* Default value (0xFFFF: may be long code) */
+            } else {
+                tbl_dc = alloc_pool(jd, HUFF_LEN * sizeof(uint8_t)); /* LUT for AC elements */
+                if (!tbl_dc) return JDR_MEM1;                        /* Err: not enough memory */
+                jd->hufflut_dc[num] = tbl_dc;
+                memset(tbl_dc, 0xFF, HUFF_LEN * sizeof(uint8_t)); /* Default value (0xFF: may be long code) */
+            }
+            for (i = b = 0; b < HUFF_BIT; b++) { /* Create LUT */
+                for (j = pb[b]; j; j--) {
+                    ti = ph[i] << (HUFF_BIT - 1 - b) & HUFF_MASK; /* Index of input pattern for the code */
+                    if (cls) {
+                        td = pd[i++] | ((b + 1) << 8); /* b15..b8: code length, b7..b0: zero run and data length */
+                        for (span = 1 << (HUFF_BIT - 1 - b); span; span--, tbl_ac[ti++] = (uint16_t)td);
+                    } else {
+                        td = pd[i++] | ((b + 1) << 4); /* b7..b4: code length, b3..b0: data length */
+                        for (span = 1 << (HUFF_BIT - 1 - b); span; span--, tbl_dc[ti++] = (uint8_t)td);
+                    }
+                }
+            }
+            jd->longofs[num][cls] = i; /* Code table offset for long code */
+        }
+#endif
+    }
+
+    return JDR_OK;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT::JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls) {
+    size_t       dc = jd->dctr;
+    uint8_t*     dp = jd->dptr;
+    unsigned int d, flg = 0;
+
+#if JD_FASTDECODE == 0
+    uint8_t         bm, nd, bl;
+    const uint8_t*  hb = jd->huffbits[id][cls]; /* Bit distribution table */
+    const uint16_t* hc = jd->huffcode[id][cls]; /* Code word table */
+    const uint8_t*  hd = jd->huffdata[id][cls]; /* Data table */
+
+    bm = jd->dbit; /* Bit mask to extract */
+    d = 0;
+    bl = 16; /* Max code length */
+    do {
+        if (!bm) {              /* Next byte? */
+            if (!dc) {          /* No input data is available, re-fill input buffer */
+                dp = jd->inbuf; /* Top of input buffer */
+                dc = jd->infunc(jd, dp, JD_SZBUF);
+                if (!dc) return 0 - (int)JDR_INP; /* Err: read error or wrong stream termination */
+            } else {
+                dp++; /* Next data ptr */
+            }
+            dc--;                                       /* Decrement number of available bytes */
+            if (flg) {                                  /* In flag sequence? */
+                flg = 0;                                /* Exit flag sequence */
+                if (*dp != 0) return 0 - (int)JDR_FMT1; /* Err: unexpected flag is detected (may be collapted data) */
+                *dp = 0xFF;                             /* The flag is a data 0xFF */
+            } else {
+                if (*dp == 0xFF) { /* Is start of flag sequence? */
+                    flg = 1;
+                    continue; /* Enter flag sequence, get trailing byte */
+                }
+            }
+            bm = 0x80; /* Read from MSB */
+        }
+        d <<= 1; /* Get a bit */
+        if (*dp & bm) d++;
+        bm >>= 1;
+
+        for (nd = *hb++; nd; nd--) { /* Search the code word in this bit length */
+            if (d == *hc++) {        /* Matched? */
+                jd->dbit = bm;
+                jd->dctr = dc;
+                jd->dptr = dp;
+                return *hd; /* Return the decoded data */
+            }
+            hd++;
+        }
+        bl--;
+    } while (bl);
+
+#else
+    const uint8_t * hb, *hd;
+    const uint16_t* hc;
+    unsigned int    nc, bl, wbit = jd->dbit % 32;
+    uint32_t        w = jd->wreg & ((1UL << wbit) - 1);
+
+    while (wbit < 16) { /* Prepare 16 bits into the working register */
+        if (jd->marker) {
+            d = 0xFF; /* Input stream has stalled for a marker. Generate stuff bits */
+        } else {
+            if (!dc) {          /* Buffer empty, re-fill input buffer */
+                dp = jd->inbuf; /* Top of input buffer */
+                dc = JPEG_jd_input(jd, dp, JD_SZBUF);
+                if (!dc) return 0 - (int)JDR_INP; /* Err: read error or wrong stream termination */
+            }
+            d = *dp++;
+            dc--;
+            if (flg) {                      /* In flag sequence? */
+                flg = 0;                    /* Exit flag sequence */
+                if (d != 0) jd->marker = d; /* Not an escape of 0xFF but a marker */
+                d = 0xFF;
+            } else {
+                if (d == 0xFF) { /* Is start of flag sequence? */
+                    flg = 1;
+                    continue; /* Enter flag sequence, get trailing byte */
+                }
+            }
+        }
+        w = w << 8 | d; /* Shift 8 bits in the working register */
+        wbit += 8;
+    }
+    jd->dctr = dc;
+    jd->dptr = dp;
+    jd->wreg = w;
+
+    #if JD_FASTDECODE == 2
+    /* Table serch for the short codes */
+    d = (unsigned int)(w >> (wbit - HUFF_BIT)); /* Short code as table index */
+    if (cls) {                                  /* AC element */
+        d = jd->hufflut_ac[id][d];              /* Table decode */
+        if (d != 0xFFFF) {                      /* It is done if hit in short code */
+            jd->dbit = wbit - (d >> 8);         /* Snip the code length */
+            return d & 0xFF;                    /* b7..0: zero run and following data bits */
+        }
+    } else {                            /* DC element */
+        d = jd->hufflut_dc[id][d];      /* Table decode */
+        if (d != 0xFF) {                /* It is done if hit in short code */
+            jd->dbit = wbit - (d >> 4); /* Snip the code length  */
+            return d & 0xF;             /* b3..0: following data bits */
+        }
+    }
+
+    /* Incremental serch for the codes longer than HUFF_BIT */
+    hb = jd->huffbits[id][cls] + HUFF_BIT;             /* Bit distribution table */
+    hc = jd->huffcode[id][cls] + jd->longofs[id][cls]; /* Code word table */
+    hd = jd->huffdata[id][cls] + jd->longofs[id][cls]; /* Data table */
+    bl = HUFF_BIT + 1;
+    #else
+    /* Incremental serch for all codes */
+    hb = jd->huffbits[id][cls]; /* Bit distribution table */
+    hc = jd->huffcode[id][cls]; /* Code word table */
+    hd = jd->huffdata[id][cls]; /* Data table */
+    bl = 1;
+    #endif
+    for (; bl <= 16; bl++) { /* Incremental search */
+        nc = *hb++;
+        if (nc) {
+            d = w >> (wbit - bl);
+            do {                          /* Search the code word in this bit length */
+                if (d == *hc++) {         /* Matched? */
+                    jd->dbit = wbit - bl; /* Snip the huffman code */
+                    return *hd;           /* Return the decoded data */
+                }
+                hd++;
+            } while (--nc);
+        }
+    }
+#endif
+    return 0 - (int)JDR_FMT1; /* Err: code not found (may be collapted data) */
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int TFT::JPEG_bitext(JDEC* jd, unsigned int nbit) {
+    size_t       dc = jd->dctr;
+    uint8_t*     dp = jd->dptr;
+    unsigned int d, flg = 0;
+
+#if JD_FASTDECODE == 0
+    uint8_t mbit = jd->dbit;
+    d = 0;
+    do {
+        if (!mbit) {            /* Next byte? */
+            if (!dc) {          /* No input data is available, re-fill input buffer */
+                dp = jd->inbuf; /* Top of input buffer */
+                dc = jd->infunc(jd, dp, JD_SZBUF);
+                if (!dc) return 0 - (int)JDR_INP; /* Err: read error or wrong stream termination */
+            } else {
+                dp++; /* Next data ptr */
+            }
+            dc--;                                       /* Decrement number of available bytes */
+            if (flg) {                                  /* In flag sequence? */
+                flg = 0;                                /* Exit flag sequence */
+                if (*dp != 0) return 0 - (int)JDR_FMT1; /* Err: unexpected flag is detected (may be collapted data) */
+                *dp = 0xFF;                             /* The flag is a data 0xFF */
+            } else {
+                if (*dp == 0xFF) { /* Is start of flag sequence? */
+                    flg = 1;
+                    continue; /* Enter flag sequence */
+                }
+            }
+            mbit = 0x80; /* Read from MSB */
+        }
+        d <<= 1; /* Get a bit */
+        if (*dp & mbit) d |= 1;
+        mbit >>= 1;
+        nbit--;
+    } while (nbit);
+
+    jd->dbit = mbit;
+    jd->dctr = dc;
+    jd->dptr = dp;
+    return (int)d;
+
+#else
+    unsigned int wbit = jd->dbit % 32;
+    uint32_t     w = jd->wreg & ((1UL << wbit) - 1);
+
+    while (wbit < nbit) { /* Prepare nbit bits into the working register */
+        if (jd->marker) {
+            d = 0xFF; /* Input stream stalled, generate stuff bits */
+        } else {
+            if (!dc) {          /* Buffer empty, re-fill input buffer */
+                dp = jd->inbuf; /* Top of input buffer */
+                dc = JPEG_jd_input(jd, dp, JD_SZBUF);
+                if (!dc) return 0 - (int)JDR_INP; /* Err: read error or wrong stream termination */
+            }
+            d = *dp++;
+            dc--;
+            if (flg) {                      /* In flag sequence? */
+                flg = 0;                    /* Exit flag sequence */
+                if (d != 0) jd->marker = d; /* Not an escape of 0xFF but a marker */
+                d = 0xFF;
+            } else {
+                if (d == 0xFF) { /* Is start of flag sequence? */
+                    flg = 1;
+                    continue; /* Enter flag sequence, get trailing byte */
+                }
+            }
+        }
+        w = w << 8 | d; /* Get 8 bits into the working register */
+        wbit += 8;
+    }
+    jd->wreg = w;
+    jd->dbit = wbit - nbit;
+    jd->dctr = dc;
+    jd->dptr = dp;
+
+    return (int)(w >> ((wbit - nbit) % 32));
+#endif
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_restart(JDEC* jd, uint16_t rstn) {
+    unsigned int i;
+    uint8_t*     dp = jd->dptr;
+    size_t       dc = jd->dctr;
+
+#if JD_FASTDECODE == 0
+    uint16_t d = 0;
+
+    /* Get two bytes from the input stream */
+    for (i = 0; i < 2; i++) {
+        if (!dc) { /* No input data is available, re-fill input buffer */
+            dp = jd->inbuf;
+            dc = jd->infunc(jd, dp, JD_SZBUF);
+            if (!dc) return JDR_INP;
+        } else {
+            dp++;
+        }
+        dc--;
+        d = d << 8 | *dp; /* Get a byte */
+    }
+    jd->dptr = dp;
+    jd->dctr = dc;
+    jd->dbit = 0;
+
+    /* Check the marker */
+    if ((d & 0xFFD8) != 0xFFD0 || (d & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker is not detected (may be collapted data) */ }
+
+#else
+    uint16_t marker;
+
+    if (jd->marker) { /* Generate a maker if it has been detected */
+        marker = 0xFF00 | jd->marker;
+        jd->marker = 0;
+    } else {
+        marker = 0;
+        for (i = 0; i < 2; i++) { /* Get a restart marker */
+            if (!dc) {            /* No input data is available, re-fill input buffer */
+                dp = jd->inbuf;
+                dc = JPEG_jd_input(jd, dp, JD_SZBUF);
+                if (!dc) return JDR_INP;
+            }
+            marker = (marker << 8) | *dp++; /* Get a byte */
+            dc--;
+        }
+        jd->dptr = dp;
+        jd->dctr = dc;
+    }
+
+    /* Check the marker */
+    if ((marker & 0xFFD8) != 0xFFD0 || (marker & 7) != (rstn & 7)) { return JDR_FMT1; /* Err: expected RSTn marker was not detected (may be collapted data) */ }
+
+    jd->dbit = 0; /* Discard stuff bits */
+#endif
+
+    jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Reset DC offset */
+    return JDR_OK;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT::JPEG_block_idct(int32_t* src, jd_yuv_t* dst) {
+    const int32_t M13 = (int32_t)(1.41421 * 4096), M2 = (int32_t)(1.08239 * 4096), M4 = (int32_t)(2.61313 * 4096), M5 = (int32_t)(1.84776 * 4096);
+    int32_t       v0, v1, v2, v3, v4, v5, v6, v7;
+    int32_t       t10, t11, t12, t13;
+    int           i;
+
+    /* Process columns */
+    for (i = 0; i < 8; i++) {
+        v0 = src[8 * 0]; /* Get even elements */
+        v1 = src[8 * 2];
+        v2 = src[8 * 4];
+        v3 = src[8 * 6];
+
+        t10 = v0 + v2; /* Process the even elements */
+        t12 = v0 - v2;
+        t11 = (v1 - v3) * M13 >> 12;
+        v3 += v1;
+        t11 -= v3;
+        v0 = t10 + v3;
+        v3 = t10 - v3;
+        v1 = t11 + t12;
+        v2 = t12 - t11;
+
+        v4 = src[8 * 7]; /* Get odd elements */
+        v5 = src[8 * 1];
+        v6 = src[8 * 5];
+        v7 = src[8 * 3];
+
+        t10 = v5 - v4; /* Process the odd elements */
+        t11 = v5 + v4;
+        t12 = v6 - v7;
+        v7 += v6;
+        v5 = (t11 - v7) * M13 >> 12;
+        v7 += t11;
+        t13 = (t10 + t12) * M5 >> 12;
+        v4 = t13 - (t10 * M2 >> 12);
+        v6 = t13 - (t12 * M4 >> 12) - v7;
+        v5 -= v6;
+        v4 -= v5;
+
+        src[8 * 0] = v0 + v7; /* Write-back transformed values */
+        src[8 * 7] = v0 - v7;
+        src[8 * 1] = v1 + v6;
+        src[8 * 6] = v1 - v6;
+        src[8 * 2] = v2 + v5;
+        src[8 * 5] = v2 - v5;
+        src[8 * 3] = v3 + v4;
+        src[8 * 4] = v3 - v4;
+
+        src++; /* Next column */
+    }
+
+    /* Process rows */
+    src -= 8;
+    for (i = 0; i < 8; i++) {
+        v0 = src[0] + (128L << 8); /* Get even elements (remove DC offset (-128) here) */
+        v1 = src[2];
+        v2 = src[4];
+        v3 = src[6];
+
+        t10 = v0 + v2; /* Process the even elements */
+        t12 = v0 - v2;
+        t11 = (v1 - v3) * M13 >> 12;
+        v3 += v1;
+        t11 -= v3;
+        v0 = t10 + v3;
+        v3 = t10 - v3;
+        v1 = t11 + t12;
+        v2 = t12 - t11;
+
+        v4 = src[7]; /* Get odd elements */
+        v5 = src[1];
+        v6 = src[5];
+        v7 = src[3];
+
+        t10 = v5 - v4; /* Process the odd elements */
+        t11 = v5 + v4;
+        t12 = v6 - v7;
+        v7 += v6;
+        v5 = (t11 - v7) * M13 >> 12;
+        v7 += t11;
+        t13 = (t10 + t12) * M5 >> 12;
+        v4 = t13 - (t10 * M2 >> 12);
+        v6 = t13 - (t12 * M4 >> 12) - v7;
+        v5 -= v6;
+        v4 -= v5;
+
+        /* Descale the transformed values 8 bits and output a row */
+#if JD_FASTDECODE >= 1
+        dst[0] = (int16_t)((v0 + v7) >> 8);
+        dst[7] = (int16_t)((v0 - v7) >> 8);
+        dst[1] = (int16_t)((v1 + v6) >> 8);
+        dst[6] = (int16_t)((v1 - v6) >> 8);
+        dst[2] = (int16_t)((v2 + v5) >> 8);
+        dst[5] = (int16_t)((v2 - v5) >> 8);
+        dst[3] = (int16_t)((v3 + v4) >> 8);
+        dst[4] = (int16_t)((v3 - v4) >> 8);
+#else
+        dst[0] = BYTECLIP((v0 + v7) >> 8);
+        dst[7] = BYTECLIP((v0 - v7) >> 8);
+        dst[1] = BYTECLIP((v1 + v6) >> 8);
+        dst[6] = BYTECLIP((v1 - v6) >> 8);
+        dst[2] = BYTECLIP((v2 + v5) >> 8);
+        dst[5] = BYTECLIP((v2 - v5) >> 8);
+        dst[3] = BYTECLIP((v3 + v4) >> 8);
+        dst[4] = BYTECLIP((v3 - v4) >> 8);
+#endif
+
+        dst += 8;
+        src += 8; /* Next row */
+    }
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_mcu_load(JDEC* jd) {
+    int32_t*       tmp = (int32_t*)jd->workbuf; /* Block working buffer for de-quantize and IDCT */
+    int            d, e;
+    unsigned int   blk, nby, i, bc, z, id, cmp;
+    jd_yuv_t*      bp;
+    const int32_t* dqf;
+
+    nby = jd->msx * jd->msy; /* Number of Y blocks (1, 2 or 4) */
+    bp = jd->mcubuf;         /* Pointer to the first block of MCU */
+
+    for (blk = 0; blk < nby + 2; blk++) {      /* Get nby Y blocks and two C blocks */
+        cmp = (blk < nby) ? 0 : blk - nby + 1; /* Component number 0:Y, 1:Cb, 2:Cr */
+
+        if (cmp && jd->ncomp != 3) { /* Clear C blocks if not exist (monochrome image) */
+            for (i = 0; i < 64; bp[i++] = 128);
+        } else {              /* Load Y/C blocks from input stream */
+            id = cmp ? 1 : 0; /* Huffman table ID of this component */
+
+            /* Extract a DC element from input stream */
+            d = JPEG_huffext(jd, id, 0);        /* Extract a huffman coded data (bit length) */
+            if (d < 0) return (uint8_t)(0 - d); /* Err: invalid code or input */
+            bc = (unsigned int)d;
+            d = jd->dcv[cmp];                       /* DC value of previous block */
+            if (bc) {                               /* If there is any difference from previous block */
+                e = JPEG_bitext(jd, bc);            /* Extract data bits */
+                if (e < 0) return (uint8_t)(0 - e); /* Err: input */
+                bc = 1 << (bc - 1);                 /* MSB position */
+                if (!(e & bc)) e -= (bc << 1) - 1;  /* Restore negative value if needed */
+                d += e;                             /* Get current value */
+                jd->dcv[cmp] = (int16_t)d;          /* Save current DC value for next block */
+            }
+            dqf = jd->qttbl[jd->qtid[cmp]]; /* De-quantizer table ID for this component */
+            tmp[0] = d * dqf[0] >> 8;       /* De-quantize, apply scale factor of Arai algorithm and descale 8 bits */
+
+            /* Extract following 63 AC elements from input stream */
+            memset(&tmp[1], 0, 63 * sizeof(int32_t)); /* Initialize all AC elements */
+            z = 1;                                    /* Top of the AC elements (in zigzag-order) */
+            do {
+                d = JPEG_huffext(jd, id, 1);        /* Extract a huffman coded value (zero runs and bit length) */
+                if (d == 0) break;                  /* EOB? */
+                if (d < 0) return (uint8_t)(0 - d); /* Err: invalid code or input error */
+                bc = (unsigned int)d;
+                z += bc >> 4;                           /* Skip leading zero run */
+                if (z >= 64) return JDR_FMT1;           /* Too long zero run */
+                if (bc &= 0x0F) {                       /* Bit length? */
+                    d = JPEG_bitext(jd, bc);            /* Extract data bits */
+                    if (d < 0) return (uint8_t)(0 - d); /* Err: input device */
+                    bc = 1 << (bc - 1);                 /* MSB position */
+                    if (!(d & bc)) d -= (bc << 1) - 1;  /* Restore negative value if needed */
+                    i = Zig[z];                         /* Get raster-order index */
+                    tmp[i] = d * dqf[i] >> 8;           /* De-quantize, apply scale factor of Arai algorithm and descale 8 bits */
+                }
+            } while (++z < 64); /* Next AC element */
+
+            if (JD_FORMAT != 2 || !cmp) {                         /* C components may not be processed if in grayscale output */
+                if (z == 1 || (JD_USE_SCALE && jd->scale == 3)) { /* If no AC element or scale ratio is 1/8, IDCT can be
+                                                                                                                         ommited and the block is filled with DC value */
+                    d = (jd_yuv_t)((*tmp / 256) + 128);
+                    if (JD_FASTDECODE >= 1) {
+                        for (i = 0; i < 64; bp[i++] = d);
+                    } else {
+                        memset(bp, d, 64);
+                    }
+                } else {
+                    JPEG_block_idct(tmp, bp); /* Apply IDCT and store the block to the MCU buffer */
+                }
+            }
+        }
+
+        bp += 64; /* Next block */
+    }
+
+    return JDR_OK; /* All blocks have been loaded successfully */
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y) {
+    const int    CVACC = (sizeof(int) > 2) ? 1024 : 128; /* Adaptive accuracy for both 16-/32-bit systems */
+    unsigned int ix, iy, mx, my, rx, ry;
+    int          yy, cb, cr;
+    jd_yuv_t *   py, *pc;
+    uint8_t*     pix;
+    JRECT        rect;
+
+    mx = jd->msx * 8;
+    my = jd->msy * 8;                                /* MCU size (pixel) */
+    rx = (x + mx <= jd->width) ? mx : jd->width - x; /* Output rectangular size (it may be clipped at right/bottom end of image) */
+    ry = (y + my <= jd->height) ? my : jd->height - y;
+    if (JD_USE_SCALE) {
+        rx >>= jd->scale;
+        ry >>= jd->scale;
+        if (!rx || !ry) return JDR_OK; /* Skip this MCU if all pixel is to be rounded off */
+        x >>= jd->scale;
+        y >>= jd->scale;
+    }
+    rect.left = x;
+    rect.right = x + rx - 1; /* Rectangular area in the frame buffer */
+    rect.top = y;
+    rect.bottom = y + ry - 1;
+
+    if (!JD_USE_SCALE || jd->scale != 3) { /* Not for 1/8 scaling */
+        pix = (uint8_t*)jd->workbuf;
+
+        if (JD_FORMAT != 2) { /* RGB output (build an RGB MCU from Y/C component) */
+            for (iy = 0; iy < my; iy++) {
+                pc = py = jd->mcubuf;
+                if (my == 16) { /* Double block height? */
+                    pc += 64 * 4 + (iy >> 1) * 8;
+                    if (iy >= 8) py += 64;
+                } else { /* Single block height */
+                    pc += mx * 8 + iy * 8;
+                }
+                py += iy * 8;
+                for (ix = 0; ix < mx; ix++) {
+                    cb = pc[0] - 128; /* Get Cb/Cr component and remove offset */
+                    cr = pc[64] - 128;
+                    if (mx == 16) {                /* Double block width? */
+                        if (ix == 8) py += 64 - 8; /* Jump to next block if double block heigt */
+                        pc += ix & 1;              /* Step forward chroma pointer every two pixels */
+                    } else {                       /* Single block width */
+                        pc++;                      /* Step forward chroma pointer every pixel */
+                    }
+                    yy = *py++; /* Get Y component */
+                    *pix++ = /*R*/ JPEG_BYTECLIP(yy + ((int)(1.402 * CVACC) * cr) / CVACC);
+                    *pix++ = /*G*/ JPEG_BYTECLIP(yy - ((int)(0.344 * CVACC) * cb + (int)(0.714 * CVACC) * cr) / CVACC);
+                    *pix++ = /*B*/ JPEG_BYTECLIP(yy + ((int)(1.772 * CVACC) * cb) / CVACC);
+                }
+            }
+        } else { /* Monochrome output (build a grayscale MCU from Y comopnent) */
+            for (iy = 0; iy < my; iy++) {
+                py = jd->mcubuf + iy * 8;
+                if (my == 16) { /* Double block height? */
+                    if (iy >= 8) py += 64;
+                }
+                for (ix = 0; ix < mx; ix++) {
+                    if (mx == 16) {                /* Double block width? */
+                        if (ix == 8) py += 64 - 8; /* Jump to next block if double block height */
+                    }
+                    if (JD_FASTDECODE >= 1) {
+                        *pix++ = JPEG_BYTECLIP(*py++); /* Get and store a Y value as grayscale */
+                    } else {
+                        *pix++ = *py++; /* Get and store a Y value as grayscale */
+                    }
+                }
+            }
+        }
+
+        /* Descale the MCU rectangular if needed */
+        if (JD_USE_SCALE && jd->scale) {
+            unsigned int x, y, r, g, b, s, w, a;
+            uint8_t*     op;
+
+            /* Get averaged RGB value of each square correcponds to a pixel */
+            s = jd->scale * 2;                       /* Number of shifts for averaging */
+            w = 1 << jd->scale;                      /* Width of square */
+            a = (mx - w) * (JD_FORMAT != 2 ? 3 : 1); /* Bytes to skip for next line in the square */
+            op = (uint8_t*)jd->workbuf;
+            for (iy = 0; iy < my; iy += w) {
+                for (ix = 0; ix < mx; ix += w) {
+                    pix = (uint8_t*)jd->workbuf + (iy * mx + ix) * (JD_FORMAT != 2 ? 3 : 1);
+                    r = g = b = 0;
+                    for (y = 0; y < w; y++) { /* Accumulate RGB value in the square */
+                        for (x = 0; x < w; x++) {
+                            r += *pix++;          /* Accumulate R or Y (monochrome output) */
+                            if (JD_FORMAT != 2) { /* RGB output? */
+                                g += *pix++;      /* Accumulate G */
+                                b += *pix++;      /* Accumulate B */
+                            }
+                        }
+                        pix += a;
+                    } /* Put the averaged pixel value */
+                    *op++ = (uint8_t)(r >> s);     /* Put R or Y (monochrome output) */
+                    if (JD_FORMAT != 2) {          /* RGB output? */
+                        *op++ = (uint8_t)(g >> s); /* Put G */
+                        *op++ = (uint8_t)(b >> s); /* Put B */
+                    }
+                }
+            }
+        }
+    } else { /* For only 1/8 scaling (left-top pixel in each block are the DC value of the block) */
+
+        /* Build a 1/8 descaled RGB MCU from discrete comopnents */
+        pix = (uint8_t*)jd->workbuf;
+        pc = jd->mcubuf + mx * my;
+        cb = pc[0] - 128; /* Get Cb/Cr component and restore right level */
+        cr = pc[64] - 128;
+        for (iy = 0; iy < my; iy += 8) {
+            py = jd->mcubuf;
+            if (iy == 8) py += 64 * 2;
+            for (ix = 0; ix < mx; ix += 8) {
+                yy = *py; /* Get Y component */
+                py += 64;
+                if (JD_FORMAT != 2) {
+                    *pix++ = /*R*/ JPEG_BYTECLIP(yy + ((int)(1.402 * CVACC) * cr / CVACC));
+                    *pix++ = /*G*/ JPEG_BYTECLIP(yy - ((int)(0.344 * CVACC) * cb + (int)(0.714 * CVACC) * cr) / CVACC);
+                    *pix++ = /*B*/ JPEG_BYTECLIP(yy + ((int)(1.772 * CVACC) * cb / CVACC));
+                } else {
+                    *pix++ = yy;
+                }
+            }
+        }
+    }
+
+    /* Squeeze up pixel table if a part of MCU is to be truncated */
+    mx >>= jd->scale;
+    if (rx < mx) { /* Is the MCU spans rigit edge? */
+        uint8_t *    s, *d;
+        unsigned int x, y;
+
+        s = d = (uint8_t*)jd->workbuf;
+        for (y = 0; y < ry; y++) {
+            for (x = 0; x < rx; x++) { /* Copy effective pixels */
+                *d++ = *s++;
+                if (JD_FORMAT != 2) {
+                    *d++ = *s++;
+                    *d++ = *s++;
+                }
+            }
+            s += (mx - rx) * (JD_FORMAT != 2 ? 3 : 1); /* Skip truncated pixels */
+        }
+    }
+
+    /* Convert RGB888 to RGB565 if needed */
+    if (JD_FORMAT == 1) {
+        uint8_t*     s = (uint8_t*)jd->workbuf;
+        uint16_t     w, *d = (uint16_t*)s;
+        unsigned int n = rx * ry;
+
+        if (jd->swap) {
+            do {
+                w = (*s++ & 0xF8) << 8;     // RRRRR-----------
+                w |= (*s++ & 0xFC) << 3;    // -----GGGGGG-----
+                w |= *s++ >> 3;             // -----------BBBBB
+                *d++ = (w << 8) | (w >> 8); // Swap bytes
+            } while (--n);
+        } else {
+            do {
+                w = (*s++ & 0xF8) << 8;  // RRRRR-----------
+                w |= (*s++ & 0xFC) << 3; // -----GGGGGG-----
+                w |= *s++ >> 3;          // -----------BBBBB
+                *d++ = w;
+            } while (--n);
+        }
+    }
+
+    /* Output the rectangular */
+    bool r = JPEG_jd_output(jd, jd->workbuf, &rect);
+    return r ? JDR_OK : JDR_INTR;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev) {
+    uint8_t *    seg, b;
+    uint16_t     marker;
+    unsigned int n, i, ofs;
+    size_t       len;
+    uint8_t      rc;
+    uint8_t      tmp = jd->swap; // Copy the swap flag
+
+    memset(jd, 0, sizeof(JDEC)); /* Clear decompression object (this might be a problem if machine's null pointer is not all bits zero) */
+    jd->pool = pool;             /* Work memory */
+    jd->sz_pool = sz_pool;       /* Size of given work memory */
+    // jd->infunc = infunc;         /* Stream input function */
+    jd->device = dev; /* I/O device identifier */
+    jd->swap = tmp;   // Restore the swap flag
+
+    jd->inbuf = seg = (uint8_t*)JPEG_alloc_pool(jd, JD_SZBUF); /* Allocate stream input buffer */
+    if (!seg) return JDR_MEM1;
+
+    ofs = marker = 0; /* Find SOI marker */
+    do {
+        if (JPEG_jd_input(jd, seg, 1) != 1) return JDR_INP; /* Err: SOI was not detected */
+        ofs++;
+        marker = marker << 8 | seg[0];
+    } while (marker != 0xFFD8);
+
+    for (;;) { /* Parse JPEG segments */
+        /* Get a JPEG marker */
+        if (JPEG_jd_input(jd, seg, 4) != 4) return JDR_INP;
+        marker = LDB_WORD(seg);  /* Marker */
+        len = LDB_WORD(seg + 2); /* Length field */
+        if (len <= 2 || (marker >> 8) != 0xFF) return JDR_FMT1;
+        len -= 2;       /* Segent content size */
+        ofs += 4 + len; /* Number of bytes loaded */
+
+        switch (marker & 0xFF) {
+            case 0xC0: /* SOF0 (baseline JPEG) */
+                if (len > JD_SZBUF) return JDR_MEM2;
+                if (JPEG_jd_input(jd, seg, len) != len) return JDR_INP; /* Load segment data */
+
+                jd->width = LDB_WORD(&seg[3]);                         /* Image width in unit of pixel */
+                jd->height = LDB_WORD(&seg[1]);                        /* Image height in unit of pixel */
+                jd->ncomp = seg[5];                                    /* Number of color components */
+                if (jd->ncomp != 3 && jd->ncomp != 1) return JDR_FMT3; /* Err: Supports only Grayscale and Y/Cb/Cr */
+
+                /* Check each image component */
+                for (i = 0; i < jd->ncomp; i++) {
+                    b = seg[7 + 3 * i];                            /* Get sampling factor */
+                    if (i == 0) {                                  /* Y component */
+                        if (b != 0x11 && b != 0x22 && b != 0x21) { /* Check sampling factor */
+                            return JDR_FMT3;                       /* Err: Supports only 4:4:4, 4:2:0 or 4:2:2 */
+                        }
+                        jd->msx = b >> 4;
+                        jd->msy = b & 15;               /* Size of MCU [blocks] */
+                    } else {                            /* Cb/Cr component */
+                        if (b != 0x11) return JDR_FMT3; /* Err: Sampling factor of Cb/Cr must be 1 */
+                    }
+                    jd->qtid[i] = seg[8 + 3 * i];         /* Get dequantizer table ID for this component */
+                    if (jd->qtid[i] > 3) return JDR_FMT3; /* Err: Invalid ID */
+                }
+                break;
+
+            case 0xDD: /* DRI - Define Restart Interval */
+                if (len > JD_SZBUF) return JDR_MEM2;
+                if (JPEG_jd_input(jd, seg, len) != len) return JDR_INP; /* Load segment data */
+
+                jd->nrst = LDB_WORD(seg); /* Get restart interval (MCUs) */
+                break;
+
+            case 0xC4: /* DHT - Define Huffman Tables */
+                if (len > JD_SZBUF) return JDR_MEM2;
+                if (JPEG_jd_input(jd, seg, len) != len) return JDR_INP; /* Load segment data */
+
+                rc = JPEG_create_huffman_tbl(jd, seg, len); /* Create huffman tables */
+                if (rc) return rc;
+                break;
+
+            case 0xDB: /* DQT - Define Quaitizer Tables */
+                if (len > JD_SZBUF) return JDR_MEM2;
+                if (JPEG_jd_input(jd, seg, len) != len) return JDR_INP; /* Load segment data */
+
+                rc = JPEG_create_qt_tbl(jd, seg, len); /* Create de-quantizer tables */
+                if (rc) return rc;
+                break;
+
+            case 0xDA: /* SOS - Start of Scan */
+                if (len > JD_SZBUF) return JDR_MEM2;
+                if (JPEG_jd_input(jd, seg, len) != len) return JDR_INP; /* Load segment data */
+
+                if (!jd->width || !jd->height) return JDR_FMT1; /* Err: Invalid image size */
+                if (seg[0] != jd->ncomp) return JDR_FMT3;       /* Err: Wrong color components */
+
+                /* Check if all tables corresponding to each components have been loaded */
+                for (i = 0; i < jd->ncomp; i++) {
+                    b = seg[2 + 2 * i];                               /* Get huffman table ID */
+                    if (b != 0x00 && b != 0x11) return JDR_FMT3;      /* Err: Different table number for DC/AC element */
+                    n = i ? 1 : 0;                                    /* Component class */
+                    if (!jd->huffbits[n][0] || !jd->huffbits[n][1]) { /* Check huffman table for this component */
+                        return JDR_FMT1;                              /* Err: Nnot loaded */
+                    }
+                    if (!jd->qttbl[jd->qtid[i]]) { /* Check dequantizer table for this component */
+                        return JDR_FMT1;           /* Err: Not loaded */
+                    }
+                }
+
+                /* Allocate working buffer for MCU and pixel output */
+                n = jd->msy * jd->msx;                                                        /* Number of Y blocks in the MCU */
+                if (!n) return JDR_FMT1;                                                      /* Err: SOF0 has not been loaded */
+                len = n * 64 * 2 + 64;                                                        /* Allocate buffer for IDCT and RGB output */
+                if (len < 256) len = 256;                                                     /* but at least 256 byte is required for IDCT */
+                jd->workbuf = JPEG_alloc_pool(jd, len);                                       /* and it may occupy a part of following MCU working buffer for RGB output */
+                if (!jd->workbuf) return JDR_MEM1;                                            /* Err: not enough memory */
+                jd->mcubuf = (jd_yuv_t*)JPEG_alloc_pool(jd, (n + 2) * 64 * sizeof(jd_yuv_t)); /* Allocate MCU working buffer */
+                if (!jd->mcubuf) return JDR_MEM1;                                             /* Err: not enough memory */
+
+                /* Align stream read offset to JD_SZBUF */
+                if (ofs %= JD_SZBUF) { jd->dctr = JPEG_jd_input(jd, seg + ofs, (size_t)(JD_SZBUF - ofs)); }
+                jd->dptr = seg + ofs - (JD_FASTDECODE ? 0 : 1);
+
+                return JDR_OK; /* Initialization succeeded. Ready to decompress the JPEG image. */
+
+            case 0xC1:                            /* SOF1 */
+            case 0xC2:                            /* SOF2 */
+            case 0xC3:                            /* SOF3 */
+            case 0xC5:                            /* SOF5 */
+            case 0xC6:                            /* SOF6 */
+            case 0xC7:                            /* SOF7 */
+            case 0xC9:                            /* SOF9 */
+            case 0xCA:                            /* SOF10 */
+            case 0xCB:                            /* SOF11 */
+            case 0xCD:                            /* SOF13 */
+            case 0xCE:                            /* SOF14 */
+            case 0xCF:                            /* SOF15 */
+            case 0xD9: /* EOI */ return JDR_FMT3; /* Unsuppoted JPEG standard (may be progressive JPEG) */
+
+            default: /* Unknown segment (comment, exif or etc..) */
+                /* Skip segment data (null pointer specifies to remove data from the stream) */
+                if (JPEG_jd_input(jd, 0, len) != len) return JDR_INP;
+        }
+    }
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint8_t TFT::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
+    unsigned int x, y, mx, my;
+    uint16_t     rst, rsc;
+    uint8_t      rc;
+
+    if (scale > (JD_USE_SCALE ? 3 : 0)) return JDR_PAR;
+    jd->scale = scale;
+    mx = jd->msx * 8;
+    my = jd->msy * 8; /* Size of the MCU (pixel) */
+    jd->dcv[2] = jd->dcv[1] = jd->dcv[0] = 0; /* Initialize DC values */
+    rst = rsc = 0;
+    rc = JDR_OK;
+    for (y = 0; y < jd->height; y += my) {       /* Vertical loop of MCUs */
+        for (x = 0; x < jd->width; x += mx) {    /* Horizontal loop of MCUs */
+            if (jd->nrst && rst++ == jd->nrst) { /* Process restart interval if enabled */
+                rc = JPEG_restart(jd, rsc++);
+                if (rc != JDR_OK) return rc;
+                rst = 1;
+            }
+            rc = JPEG_mcu_load(jd); /* Load an MCU (decompress huffman coded stream, dequantize and apply IDCT) */
+            if (rc != JDR_OK) return rc;
+            rc = JPEG_mcu_output(jd, x, y); /* Output the MCU (YCbCr to RGB, scaling and output) */
+            if (rc != JDR_OK) return rc;
+        }
+    }
+    return rc;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   T O U C H   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //        XPT2046
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

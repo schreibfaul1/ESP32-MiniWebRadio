@@ -1,14 +1,18 @@
 // first release on 09/2019
-// updated on Dec 17 2025
+// updated on Dec 20 2025
 
 
 #pragma once
 
 #include "Arduino.h"
-#include "FS.h"
 #include "SPI.h"
-#include "SD.h"
+#include "FS.h"
 #include "vector"
+#include "esp_lcd_panel_io.h"
+#include "esp_lcd_panel_rgb.h"
+#include "esp_lcd_panel_ops.h"
+#include "esp_log.h"
+#include "esp_lcd_panel_interface.h"
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
 #include "fonts/TimesNewRoman.h"
@@ -152,17 +156,29 @@ extern __attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y);
 #define TFT_ALIGN_DOWN           (5)
 
 class TFT{
+    struct Pins{
+        int8_t b0;    int8_t b1;    int8_t b2;    int8_t b3;     int8_t b4;
+        int8_t g0;    int8_t g1;    int8_t g2;    int8_t g3;     int8_t g4; int8_t g5;
+        int8_t r0;    int8_t r1;    int8_t r2;    int8_t r3;     int8_t r4;
+        int8_t hsync; int8_t vsync; int8_t de;    int8_t pclk;   int8_t bl;
+    };
+    struct Timing{
+        uint16_t h_res; uint16_t v_res; uint32_t pixel_clock_hz;
+        uint8_t hsync_pulse_width; uint8_t hsync_back_porch; uint8_t hsync_front_porch;
+        uint8_t vsync_pulse_width; uint8_t vsync_back_porch; uint8_t vsync_front_porch;
+    };
+
     protected:
     File gif_file;
     public:
         TFT(uint8_t TFT_id = 0, uint8_t dispInv = 0);
         virtual ~TFT(){}
-        void      begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk);
+        void      begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso, uint8_t sclk); // LCD_SPI
+        void      begin(const Pins& newPins, const Timing& newTiming); // RGB_HMI
         void      setFrequency(uint32_t f);
         void      setRotation(uint8_t r);
         void      invertDisplay(bool i);
         void      scrollTo(uint16_t y);
-
 
         // Recommended Non-Transaction
         void      drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
@@ -180,7 +196,7 @@ class TFT{
         void      fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
         bool      drawBmpFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
         bool      drawGifFile(fs::FS &fs, const char * path, uint16_t x, uint16_t y, uint8_t repeat);
-        bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0, uint16_t offX=0, uint16_t offY=0);
+        bool      drawJpgFile(fs::FS &fs, const char * path, uint16_t x=0, uint16_t y=0, uint16_t maxWidth=0, uint16_t maxHeight=0);
         void      writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
         uint16_t  validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
         uint16_t  fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
@@ -198,32 +214,35 @@ class TFT{
         uint8_t getRotation(void) const;
 
     private:
+      enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
+      uint8_t                _TFTcontroller = ILI9341;
+      SPISettings            TFT_SPI;        // SPI settings for this slave
+      SPIClass*              spi_TFT = NULL; // use in class TP
+      Pins                   m_pins;
+      Timing                 m_timing;
+      esp_lcd_panel_handle_t m_panel;
+      uint16_t               m_h_res = 0;
+      uint16_t               m_v_res = 0;
+      uint16_t*              m_framebuffer;
 
-        enum Ctrl {ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6};
-        uint8_t _TFTcontroller = ILI9341;
-        SPISettings     TFT_SPI;                     // SPI settings for this slave
-        SPIClass*       spi_TFT = NULL;             // use in class TP
+      uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
 
-        uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
-
-        typedef struct{
-        	const uint8_t* glyph_bitmap;
-        	const lv_font_fmt_txt_glyph_dsc_t* glyph_dsc;
-        	const lv_font_fmt_txt_cmap_t* cmaps;
-        	      uint32_t  range_start;
-        	      uint16_t  range_length;
-        		  uint16_t  line_height;
-        		  uint16_t  font_height;
-        		  uint16_t  base_line;
-                  uint16_t* lookup_table;
+      typedef struct {
+          const uint8_t*                     glyph_bitmap;
+          const lv_font_fmt_txt_glyph_dsc_t* glyph_dsc;
+          const lv_font_fmt_txt_cmap_t*      cmaps;
+          uint32_t                           range_start;
+          uint16_t                           range_length;
+          uint16_t                           line_height;
+          uint16_t                           font_height;
+          uint16_t                           base_line;
+          uint16_t*                          lookup_table;
         } fonts_t;
         fonts_t   _current_font;
         uint8_t   _font;
 
 
         uint32_t  _freq;
-        uint16_t  _height;
-        uint16_t  _width;
         uint8_t   _rotation;
         uint8_t   _displayInversion;
         uint16_t  _backGroundColor = TFT_WHITE;
@@ -359,317 +378,136 @@ class TFT{
         void      renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight);
 
         uint8_t   readcommand8(uint8_t reg, uint8_t index = 0);
-};
 
-//-----------------------------------------------------------------------------------------------------------------------
-class JPEGDecoder {
-
-private:
-
-    typedef enum {  // Scan types
-        PJPG_GRAYSCALE,
-        PJPG_YH1V1,
-        PJPG_YH2V1,
-        PJPG_YH1V2,
-        PJPG_YH2V2
-    } pjpeg_scan_type_t;
-
-    typedef enum
-    {
-       M_SOF0  = 0xC0, M_SOF1  = 0xC1, M_SOF2  = 0xC2, M_SOF3  = 0xC3, M_SOF5  = 0xC5,
-       M_SOF6  = 0xC6, M_SOF7  = 0xC7, M_JPG   = 0xC8, M_SOF9  = 0xC9, M_SOF10 = 0xCA,
-       M_SOF11 = 0xCB, M_SOF13 = 0xCD, M_SOF14 = 0xCE, M_SOF15 = 0xCF, M_DHT   = 0xC4,
-       M_RST0  = 0xD0, M_RST1  = 0xD1, M_RST2  = 0xD2, M_RST3  = 0xD3, M_RST4  = 0xD4,
-       M_RST5  = 0xD5, M_RST6  = 0xD6, M_RST7  = 0xD7, M_SOI   = 0xD8, M_EOI   = 0xD9,
-       M_SOS   = 0xDA, M_DQT   = 0xDB, M_DNL   = 0xDC, M_DRI   = 0xDD, M_DHP   = 0xDE,
-       M_EXP   = 0xDF, M_APP0  = 0xE0, M_APP15 = 0xEF, M_JPG0  = 0xF0, M_JPG13 = 0xFD,
-       M_COM   = 0xFE, M_TEM   = 0x01, M_ERROR = 0x100,RST0    = 0xD0, M_DAC   = 0xCC
-    } JPEG_MARKER;
-
-    typedef struct{
-        int32_t     m_width;        // Image resolution
-        int32_t     m_height;
-        int32_t     m_comps;        // Number of components (1 or 3)
-        int32_t     m_MCUSPerRow;   // Total number of minimum coded units (MCU's) per row/col.
-        int32_t     m_MCUSPerCol;
-        pjpeg_scan_type_t m_scanType; // Scan type
-        int32_t     m_MCUWidth;     // MCU width/height in pixels (each is either 8 or 16 depending on the scan type)
-        int32_t     m_MCUHeight;
-        uint8_t *m_pMCUBufR;
-        uint8_t *m_pMCUBufG;
-        uint8_t *m_pMCUBufB;
-    } pjpeg_image_info_t;
-
-    typedef struct HufftableT{
-        uint16_t mMinCode[16];
-        uint16_t mMaxCode[16];
-        uint8_t mValPtr[16];
-    }HuffTable;
-
-    typedef uint8_t(*pjpeg_need_bytes_callback_t)
-        (uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void* pCallback_data);
-
-    pjpeg_scan_type_t  scanType, gScanType;
-    pjpeg_image_info_t image_info;
-    pjpeg_need_bytes_callback_t g_pNeedBytesCallback;
-    HuffTable gHuffTab0, gHuffTab1, gHuffTab2, gHuffTab3;
-
-    File g_pInFileSd;
-
-    const uint8_t  JPEG_ARRAY = 0;
-    const uint8_t  JPEG_FS_FILE=1;
-    const uint8_t  JPEG_SD_FILE=2;
-    const uint16_t PJPG_MAX_WIDTH       = 16384;
-    const uint16_t PJPG_MAX_HEIGHT      = 16384;
-    const uint8_t  PJPG_MAXCOMPSINSCAN  = 3;
-    const uint8_t  PJPG_DCT_SCALE_BITS  = 7;
-    const uint8_t  PJPG_WINOGRAD_QUANT_SCALE_BITS = 10;
-
-    static const uint16_t PJPG_MAX_IN_BUF_SIZE    = 256;
-
-    const uint8_t
-    PJPG_NO_MORE_BLOCKS  =  1,  PJPG_TOO_MANY_COMPONENTS      = 11,
-    PJPG_BAD_DHT_COUNTS  =  2,  PJPG_BAD_VARIABLE_MARKER      = 12,
-    PJPG_BAD_DHT_INDEX   =  3,  PJPG_W_EXTRA_BYTES_BEFORE_MARKER = 16,
-    PJPG_BAD_DHT_MARKER  =  4,  PJPG_NO_ARITHMITIC_SUPPORT    = 17,
-    PJPG_BAD_DQT_MARKER  =  5,  PJPG_UNEXPECTED_MARKER        = 18,
-    PJPG_BAD_DQT_TABLE   =  6,  PJPG_UNSUPPORTED_MARKER       = 20,
-    PJPG_BAD_PRECISION   =  7,  PJPG_UNDEFINED_QUANT_TABLE    = 23,
-    PJPG_BAD_HEIGHT      =  8,  PJPG_UNDEFINED_HUFF_TABLE     = 24,
-    PJPG_BAD_WIDTH       =  9,  PJPG_UNSUPPORTED_COLORSPACE   = 26,
-    PJPG_BAD_SOF_LENGTH  = 10,  PJPG_UNSUPPORTED_SAMP_FACTORS = 27,
-    PJPG_BAD_DRI_LENGTH  = 13,  PJPG_BAD_RESTART_MARKER       = 29,
-    PJPG_BAD_SOS_LENGTH  = 14,  PJPG_BAD_SOS_SPECTRAL         = 31,
-    PJPG_BAD_SOS_COMP_ID = 15,  PJPG_BAD_SOS_SUCCESSIVE       = 32,
-    PJPG_NOT_JPEG        = 19,  PJPG_STREAM_READ_ERROR        = 33,
-    PJPG_BAD_DQT_LENGTH  = 21,  PJPG_UNSUPPORTED_COMP_IDENT   = 35,
-    PJPG_TOO_MANY_BLOCKS = 22,  PJPG_UNSUPPORTED_QUANT_TABLE  = 36,
-    PJPG_NOT_SINGLE_SCAN = 25,
-    PJPG_DECODE_ERROR    = 28,
-    PJPG_ASSERTION_ERROR = 30,
-    PJPG_NOTENOUGHMEM    = 34,
-    PJPG_UNSUPPORTED_MODE= 37;  // picojpeg doesn't support progressive JPEG's
-
-    const uint8_t ZAG[64] = {
-         0,   1,   8,  16,   9,   2,   3,  10,  17,  24,  32,  25,  18,  11,   4,   5,
-        12,  19,  26,  33,  40,  48,  41,  34,  27,  20,  13,   6,   7,  14,  21,  28,
-        35,  42,  49,  56,  57,  50,  43,  36,  29,  22,  15,  23,  30,  37,  44,  51,
-        58,  59,  52,  45,  38,  31,  39,  46,  53,  60,  61,  54,  47,  55, 62,  63};
-
-    const uint8_t gWinogradQuant[64] = {
-       128, 178, 178, 167, 246, 167, 151, 232, 232, 151, 128, 209, 219, 209, 128, 101,
-       178, 197, 197, 178, 101,  69, 139, 167, 177, 167, 139,  69,  35,  96, 131, 151,
-       151, 131,  96,  35,  49,  91, 118, 128, 118,  91,  49,  46,  81, 101, 101,  81,
-        46,  42,  69,  79,  69,  42,  35,  54,  54,  35,  28,  37,  28,  19,  19,  10};
-
-    uint8_t   status=0;
-    uint8_t   jpg_source=0;
-    uint8_t   gHuffVal0[16],  gHuffVal1[16];
-    uint8_t   gHuffVal2[256], gHuffVal3[256];
-    uint8_t   gCompsInScan=0;
-    uint8_t   gValidHuffTables=0;
-    uint8_t   gValidQuantTables=0;
-    uint8_t   gTemFlag=0;
-    uint8_t   gInBuf[PJPG_MAX_IN_BUF_SIZE];
-    uint8_t   gInBufOfs=0;
-    uint8_t   gInBufLeft=0;
-    uint8_t   gBitsLeft=0;
-    uint8_t   gCompsInFrame=0;
-    uint8_t   gMaxBlocksPerMCU=0;
-    uint8_t   gMaxMCUXSize=0;
-    uint8_t   gMaxMCUYSize=0;
-    uint8_t   gCompList [3];
-    uint8_t   gCompDCTab[3]; // 0,1
-    uint8_t   gCompACTab[3]; // 0,1
-    uint8_t   gCompIdent[3];
-    uint8_t   gCompHSamp[3];
-    uint8_t   gCompVSamp[3];
-    uint8_t   gCompQuant[3];
-    uint8_t   gCallbackStatus=0;
-    uint8_t   gReduce=0;
-    uint8_t   gMCUOrg[6];
-    uint8_t   gMCUBufR[256];
-    uint8_t   gMCUBufG[256];
-    uint8_t   gMCUBufB[256];
-    int16_t   is_available=0;
-    int16_t   mcu_x;
-    int16_t   mcu_y;
-    int16_t   gCoeffBuf[8*8];
-    int16_t   gQuant0[8*8];
-    int16_t   gQuant1[8*8];
-    int16_t   gLastDC[3];
-    uint16_t  g_nInFileSize=0;
-    uint16_t  g_nInFileOfs=0;
-    uint16_t  row_pitch=0;
-    uint16_t  decoded_width=0, decoded_height=0;
-    uint16_t  row_blocks_per_mcu=0, col_blocks_per_mcu=0;
-    uint16_t  gBitBuf=0;
-    uint16_t  gImageXSize=0, gImageYSize=0;
-    uint16_t  gRestartInterval=0;
-    uint16_t  gNextRestartNum=0;
-    uint16_t  gRestartsLeft=0;
-    uint8_t*  jpg_data=0;
-    uint16_t  gMaxMCUSPerRow=0;
-    uint16_t  gMaxMCUSPerCol=0;
-    uint16_t  gNumMCUSRemaining=0;
-
-    void *g_pCallback_data;
-
-    JPEGDecoder *thisPtr;
-    int32_t comps=0;
-    int32_t MCUSPerRow=0;
-    int32_t MCUSPerCol=0;
-    char chbuf[256];
-
-public:
-    uint16_t *pImage=0;
-    int32_t width=0;
-    int32_t height=0;
-    int32_t MCUWidth=0;
-    int32_t MCUHeight=0;
-    int32_t MCUx=0;
-    int32_t MCUy=0;
-
-    JPEGDecoder();
-    ~JPEGDecoder();
-    int32_t read(void);
-    int32_t decodeSdFile (File g_pInFile);
-    void abort(void);
-        // Initializes the decompressor. Returns 0 on success, or one of the above error codes on failure. pNeed_bytes_callback will be called
-        // to fill the decompressor's internal input buffer. If reduce is 1, only the first pixel of each block will be decoded. This mode is
-        // much faster because it skips the AC dequantization, IDCT and chroma upsampling of every image pixel.Not thread safe.
-    uint8_t pjpeg_decode_init(pjpeg_image_info_t *pInfo, pjpeg_need_bytes_callback_t pNeed_bytes_callback, void *pCallback_data, uint8_t reduce);
-        // Decompresses the file's next MCU. Returns 0 on success, PJPG_NO_MORE_BLOCKS if no more blocks are available, or an error code.
-        // Must be called a total of m_MCUSPerRow*m_MCUSPerCol times to completely decompress the image. Not thread safe.
-    uint8_t pjpeg_decode_mcu();
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t *)(ptr)) << 8) | (uint16_t)*(uint8_t *)((ptr) + 1))
+#define	JD_SZBUF		512 /* Specifies size of stream input buffer */
+#define JD_FORMAT		1 /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
+#define	JD_USE_SCALE	1 /* Switches output descaling feature. 0: Disable 1: Enable */
+#define JD_TBLCLIP		0/* Use table conversion for saturation arithmetic. A bit faster, but increases 1 KB of code size. 0: Disable 1: Enable */
+#define JD_FASTDECODE	1 /* Optimization level  0: Basic optimization. Suitable for 8/16-bit MCUs. Workspace of 3100 bytes needed. */
+             /*                                1: + 32-bit barrel shifter. Suitable for 32-bit MCUs. Workspace of 3480 bytes needed.*/
+               /*                              2: + Table conversion for huffman decoding (wants 6 << HUFF_BIT bytes of RAM). Workspace of 9644 bytes needed. */
+// Do not change this, it is the minimum size in bytes of the workspace needed by the decoder
+#if JD_FASTDECODE == 0
+     #define TJPGD_WORKSPACE_SIZE 3100
+#endif
+#if JD_FASTDECODE == 1
+    #define TJPGD_WORKSPACE_SIZE 3500
+#endif
+#if JD_FASTDECODE == 2
+    #define TJPGD_WORKSPACE_SIZE (3500 + 6144)
+#endif
 
 private:
-    int32_t available(void);
-    int32_t readSwappedBytes(void);
-    int32_t decodeArray(const uint8_t array[], uint32_t  array_size);
-    int32_t decode_mcu(void);
-    int32_t decodeCommon(void);
-    static uint8_t pjpeg_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t* pBytes_actually_read, void *pCallback_data);
-    uint8_t pjpeg_need_bytes_callback(uint8_t* pBuf, uint8_t buf_size, uint8_t*pBytes_actually_read, void *pCallback_data);
+    enum {TJPG_ARRAY = 0,	TJPG_FS_FILE,	TJPG_SD_FILE};
 
-    int16_t replicateSignBit16(int8_t n);
-    uint16_t getBits(uint8_t numBits, uint8_t FFCheck);
-    uint16_t getExtendTest(uint8_t i);
-    int16_t getExtendOffset(uint8_t i);
-    HuffTable* getHuffTable(uint8_t index);
-    uint8_t* getHuffVal(uint8_t index);
-    uint8_t readDHTMarker(void);
-    uint8_t readDQTMarker(void);
-    uint8_t locateSOIMarker(void);
-    uint8_t locateSOFMarker(void);
-    uint8_t locateSOSMarker(uint8_t* pFoundEOI);
-    uint8_t init(void);
-    uint8_t processRestart(void);
-    uint8_t findEOI(void);
-    uint8_t checkHuffTables(void);
-    uint8_t checkQuantTables(void);
-    uint8_t initScan(void);
-    uint8_t initFrame(void);
-    uint8_t readSOFMarker(void);
-    uint8_t skipVariableMarker(void);
-    uint8_t readDRIMarker(void);
-    uint8_t readSOSMarker(void);
-    uint8_t nextMarker(void);
-    uint8_t processMarkers(uint8_t* pMarker);
-    uint8_t huffDecode(const HuffTable* pHuffTable, const uint8_t* pHuffVal);
-    uint8_t decodeNextMCU(void);
-    void fillInBuf(void);
-    void fixInBuffer(void);
-    void idctRows(void);
-    void idctCols(void);
-    void createWinogradQuant(int16_t* pQuant);
-    void huffCreate(const uint8_t* pBits, HuffTable* pHuffTable);
-    void upsampleCb(uint8_t srcOfs, uint8_t dstOfs);
-    void upsampleCbH(uint8_t srcOfs, uint8_t dstOfs);
-    void upsampleCbV(uint8_t srcOfs, uint8_t dstOfs);
-    void upsampleCr(uint8_t srcOfs, uint8_t dstOfs);
-    void upsampleCrH(uint8_t srcOfs, uint8_t dstOfs);
-    void upsampleCrV(uint8_t srcOfs, uint8_t dstOfs);
-    void copyY(uint8_t dstOfs);
-    void convertCb(uint8_t dstOfs);
-    void convertCr(uint8_t dstOfs);
-    void transformBlock(uint8_t mcuBlock);
-    void transformBlockReduce(uint8_t mcuBlock);
+    enum JDR {    /* Error code */
+    	JDR_OK = 0,	/* 0: Succeeded */
+    	JDR_INTR,	  /* 1: Interrupted by output function */
+    	JDR_INP,	  /* 2: Device error or wrong termination of input stream */
+    	JDR_MEM1,	  /* 3: Insufficient memory pool for the image */
+    	JDR_MEM2,	  /* 4: Insufficient stream input buffer */
+    	JDR_PAR,	  /* 5: Parameter error */
+    	JDR_FMT1,	  /* 6: Data format error (may be broken data) */
+    	JDR_FMT2,	  /* 7: Right format but not supported */
+    	JDR_FMT3	  /* 8: Not supported JPEG standard */
+    };
+#if JD_FASTDECODE >= 1
+    typedef int16_t jd_yuv_t;
+#else
+    typedef uint8_t jd_yuv_t;
+#endif
 
-    inline int32_t jpg_min(int32_t a, int32_t b){
-        if(a < b) return a; else return b;
-    }
-    inline int16_t arithmeticRightShiftN16(int16_t x, int8_t n){
-        int16_t r = (uint16_t)x >> (uint8_t)n;
-        if (x < 0) r |= replicateSignBit16(n);
-        return r;
-    }
-     inline int32_t arithmeticRightShift8L(long x){
-        int32_t r = (uint32_t)x >> 8U;
-        if (x < 0) r |= ~(~(uint32_t)0U >> 8U);
-        return r;
-     }
-     inline uint8_t getOctet(uint8_t FFCheck){
-        uint8_t c = getChar();
-        if ((FFCheck) && (c == 0xFF)){ uint8_t n = getChar();
-           if (n){ stuffChar(n); stuffChar(0xFF);}
-        } return c;
-     }
-     inline uint16_t getBits1(uint8_t numBits){
-         return getBits(numBits, 0);
-     }
-     inline uint16_t getBits2(uint8_t numBits){
-        return getBits(numBits, 1);
-     }
-     inline uint8_t getChar(void){
-        if (!gInBufLeft){ fillInBuf(); if (!gInBufLeft){
-              gTemFlag = ~gTemFlag; return gTemFlag ? 0xFF : 0xD9;}}
-        gInBufLeft--; return gInBuf[gInBufOfs++];
-     }
-     inline void stuffChar(uint8_t i){
-        gInBufOfs--;  gInBuf[gInBufOfs] = i; gInBufLeft++;
-     }
-     inline uint8_t getBit(void){
-        uint8_t ret = 0;
-        if (gBitBuf & 0x8000) ret = 1;
-        if (!gBitsLeft){gBitBuf |= getOctet(1); gBitsLeft += 8;}
-        gBitsLeft--; gBitBuf <<= 1;
-        return ret;
-     }
-     inline int16_t huffExtend(uint16_t x, uint8_t s){
-        return ((x < getExtendTest(s)) ? ((int16_t)x + getExtendOffset(s)) : (int16_t)x);
-     }
-     inline uint16_t getMaxHuffCodes(uint8_t index){
-         return (index < 2) ? 12 : 255;
-     }
-     inline int16_t imul_b1_b3(int16_t w){       // 1/cos(4*pi/16)[362, 256+106]
-        long x = (w * 362L); x += 128L; return (int16_t)(arithmeticRightShift8L(x));
-     }
-     inline int16_t imul_b2(int16_t w){          // 1/cos(6*pi/16)[669, 256+256+157]
-        long x = (w * 669L); x += 128L; return (int16_t)(arithmeticRightShift8L(x));
-     }
-     inline int16_t imul_b4(int16_t w){          // 1/cos(2*pi/16)[277, 256+21]
-        long x = (w * 277L); x += 128L; return (int16_t)(arithmeticRightShift8L(x));
-     }
-     inline int16_t imul_b5(int16_t w){          // 1/(cos(2*pi/16) + cos(6*pi/16))[196, 196]
-        long x = (w * 196L); x += 128L; return (int16_t)(arithmeticRightShift8L(x));
-     }
-     inline uint8_t clamp(int16_t s){
-        if ((uint16_t)s > 255U){ if (s < 0) return 0; else if (s > 255) return 255;}
-        return (uint8_t)s;
-     }
-     inline uint8_t addAndClamp(uint8_t a, int16_t b){
-        b = a + b; if ((uint16_t)b > 255U){if (b < 0)  return 0;else if (b > 255) return 255;}
-        return (uint8_t)b;
-     }
-     inline uint8_t subAndClamp(uint8_t a, int16_t b){
-        b = a - b; if ((uint16_t)b > 255U) {if (b < 0) return 0; else if (b > 255) return 255;}
-        return (uint8_t)b;
-     }
-     inline int16_t PJPG_DESCALE(int16_t x){
-         return arithmeticRightShiftN16(x + (1U << (PJPG_DCT_SCALE_BITS - 1)), PJPG_DCT_SCALE_BITS);
-     }
+    typedef struct {    /* Rectangular region in the output image */
+    	uint16_t left;		/* Left end */
+    	uint16_t right;		/* Right end */
+    	uint16_t top;		  /* Top end */
+    	uint16_t bottom;	/* Bottom end */
+    } JRECT;
+
+    typedef struct _JDEC {          /* Decompressor object structure */
+    	size_t dctr;				/* Number of bytes available in the input buffer */
+    	uint8_t* dptr;				/* Current data read ptr */
+    	uint8_t* inbuf;				/* Bit stream input buffer */
+    	uint8_t dbit;				 /* Number of bits availavble in wreg or reading bit mask */
+    	uint8_t scale;				/* Output scaling ratio */
+    	uint8_t msx, msy;			/* MCU size in unit of block (width, height) */
+    	uint8_t qtid[3];			/* Quantization table ID of each component, Y, Cb, Cr */
+    	uint8_t ncomp;				/* Number of color components 1:grayscale, 3:color */
+    	int16_t dcv[3];				/* Previous DC element of each component */
+    	uint16_t nrst;				/* Restart inverval */
+    	uint16_t width, height;		/* Size of the input image (pixel) */
+    	uint8_t* huffbits[2][2];	/* Huffman bit distribution tables [id][dcac] */
+    	uint16_t* huffcode[2][2];	/* Huffman code word tables [id][dcac] */
+    	uint8_t* huffdata[2][2];	/* Huffman decoded data tables [id][dcac] */
+    	int32_t* qttbl[4];			/* Dequantizer tables [id] */
+    #if JD_FASTDECODE >= 1
+    	uint32_t wreg;				/* Working shift register */
+    	uint8_t marker;				/* Detected marker (0:None) */
+    #if JD_FASTDECODE == 2
+    	uint8_t longofs[2][2];		/* Table offset of long code [id][dcac] */
+    	uint16_t* hufflut_ac[2];	/* Fast huffman decode tables for AC short code [id] */
+    	uint8_t* hufflut_dc[2];		/* Fast huffman decode tables for DC short code [id] */
+    #endif
+    #endif
+    	void* workbuf;				/* Working buffer for IDCT and RGB output */
+    	jd_yuv_t* mcubuf;			/* Working buffer for the MCU */
+    	void* pool;					/* Pointer to available memory pool */
+    	size_t sz_pool;				/* Size of momory pool (bytes available) */
+    	void* device;				/* Pointer to I/O device identifiler for the session */
+    	uint8_t swap;               /* control byte swapping */
+    } JDEC;
+
+      private:
+        File m_jpgFile;
+        bool m_swap = false;
+        const uint8_t* m_array_data  = nullptr;
+        uint32_t m_array_index = 0;
+        uint32_t m_array_size  = 0;
+        uint8_t  m_workspace[TJPGD_WORKSPACE_SIZE] __attribute__((aligned(4)));  // Must align workspace to a 32 bit boundary
+        uint8_t  m_jpg_source = 0;
+        int16_t  m_jpeg_x = 0;
+        int16_t  m_jpeg_y = 0;
+        uint8_t  m_jpgScale = 0;
+        uint16_t m_jpgWidth = 0;
+        uint16_t m_jpgHeight = 0;
+        uint16_t m_jpgWidthMax = 0;
+        uint16_t m_jpgHeightMax = 0;
+      public:
+        void    JPEG_setJpgScale(uint8_t scale);
+        uint8_t JPEG_drawJpg(int32_t x, int32_t y);
+        uint8_t JPEG_getJpgSize(uint16_t* w, uint16_t* h);
+        void    JPEG_setSwapBytes(bool swap);
+
+      private:
+        int          JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect);
+        bool         JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap);
+        unsigned int JPEG_jd_input(JDEC* jdec, uint8_t* buf, unsigned int len);
+        void*        JPEG_alloc_pool(JDEC* jd, size_t ndata);
+        uint8_t      JPEG_create_qt_tbl(JDEC* jd, const uint8_t* data, size_t ndata);
+        uint8_t      JPEG_create_huffman_tbl(JDEC* jd, const uint8_t* data, size_t ndata);
+        int          JPEG_huffext(JDEC* jd, unsigned int id, unsigned int cls);
+        int          JPEG_bitext(JDEC* jd, unsigned int nbit);
+        uint8_t      JPEG_restart(JDEC* jd, uint16_t rstn);
+        void         JPEG_block_idct(int32_t* src, jd_yuv_t* dst);
+        uint8_t      JPEG_mcu_load(JDEC* jd);
+        uint8_t      JPEG_mcu_output(JDEC* jd, unsigned int x, unsigned int y);
+        uint8_t      JPEG_jd_prepare(JDEC* jd, uint8_t* pool, size_t sz_pool, void* dev);
+        uint8_t      JPEG_jd_decomp(JDEC* jd, uint8_t scale);
+
+      private:
+
+#if JD_TBLCLIP == 0 /* JD_TBLCLIP */
+    uint8_t JPEG_BYTECLIP(int val);
+#endif
 };
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   T O U C H   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //        T O U C H P A N E L
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
