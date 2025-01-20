@@ -1125,7 +1125,7 @@ void TFT::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(ili9341_rotations[_rotation].bmpctl);
     }
-    setAddrWindow(x, m_h_res - y - h, w, h);
+    setAddrWindow(x, m_v_res - y - h, w, h);
     if(_TFTcontroller == HX8347D) { // HX8347D
         if(_rotation == 0) {
             writeCommand(0x16);
@@ -4089,8 +4089,8 @@ bool TFT::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint
 #endif
 #ifdef LCD_SPI // SPI LCD display
     if(!fs.exists(path)) {log_e("file %s not exists", path); return false; }
-    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_v_res;
-    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_h_res;
+    if(maxWidth) m_jpgWidthMax = maxWidth; else m_jpgWidthMax = m_h_res;
+    if(maxHeight) m_jpgHeightMax = maxHeight; else m_jpgHeightMax = m_v_res;
 
     m_jpgFile = fs.open(path, FILE_READ);
     if(!m_jpgFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
