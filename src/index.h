@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 21.01.2025
+ *  Updated on: 22.01.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -476,7 +476,6 @@ function connect() {
     socket.onopen = function () {
         console.log("Websocket connected")
         socket.send('get_tftSize')
-        socket.send('to_listen');
         socket.send("getmute")
         socket.send("get_timeAnnouncement")
         socket.send("gettone=")   // Now load the tones (tab Radio)
@@ -486,7 +485,12 @@ function connect() {
         socket.send("getSleepMode")
         setInterval(ping, 20000)
         loadStationsFromSD("/stations.json")
-
+            .then(() => {
+                socket.send('to_listen');
+            })
+            .catch(error => {
+            console.error("Error loading stations:", error);
+        });
         loadFileFromSD("/ir_buttons.json", "application/json")
             .then(data => {ir_buttons = data;});
     };
