@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 02.01.2025
+ *  Updated on: 21.01.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -790,7 +790,7 @@ function showTab3 () {
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
     document.getElementById('tab-content8').style.display = 'none'
-    document.getElementById('tab-content8').style.display = 'none'
+    document.getElementById('tab-content9').style.display = 'none'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
     document.getElementById('btn3').src = 'SD/png/MP3_Yellow.png'
@@ -932,7 +932,7 @@ function showTab9 () {  // KCX BT Emitter
     document.getElementById('tab-content5').style.display = 'none'
     document.getElementById('tab-content6').style.display = 'none'
     document.getElementById('tab-content7').style.display = 'none'
-    document.getElementById('tab-content7').style.display = 'none'
+    document.getElementById('tab-content8').style.display = 'none'
     document.getElementById('tab-content9').style.display = 'block'
     document.getElementById('btn1').src = 'SD/png/Radio_Green.png'
     document.getElementById('btn2').src = 'SD/png/Station_Green.png'
