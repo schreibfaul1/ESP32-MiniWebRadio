@@ -800,8 +800,8 @@ void TFT::setRotation(uint8_t m) {
     }
     if(_TFTcontroller == ILI9341) { // ILI9341
         m = ili9341_rotations[_rotation].madctl;
-        m_v_res = ili9341_rotations[_rotation].width;
-        m_h_res = ili9341_rotations[_rotation].height;
+        m_h_res = ili9341_rotations[_rotation].width;
+        m_v_res = ili9341_rotations[_rotation].height;
         startWrite();
         writeCommand(ILI9341_MADCTL);
         spi_TFT->write(m);

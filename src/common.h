@@ -282,7 +282,7 @@ void           nextStation();
 void           prevStation();
 void           setStationByNumber(uint16_t staNr);
 void           StationsItems();
-void           setStationViaURL(const char* url);
+void           setStationViaURL(const char* url, const char* extension);
 void           savefile(const char* fileName, uint32_t contentLength);
 String         setI2STone();
 void           SD_playFile(const char* pathWoFileName, const char* fileName);

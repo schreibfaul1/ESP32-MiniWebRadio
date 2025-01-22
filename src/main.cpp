@@ -1596,7 +1596,7 @@ void setup() {
         _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
         if(!_f_accessPoint){
             if(_cur_station > 0) setStation(_cur_station);
-            else { setStationViaURL(_settings.lastconnectedhost); }
+            else { setStationViaURL(_settings.lastconnectedhost, ""); }
         }
     }
     else { SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr); }
@@ -1772,12 +1772,22 @@ void StationsItems() {
     x_ps_free(&stationLogo_air);
 }
 
-void setStationViaURL(const char* url) {
+void setStationViaURL(const char* url, const char* extension) {
+    // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
+    // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
     x_ps_free(&_stationName_air);
     _cur_station = 0;
     x_ps_free(&_stationURL);
-    _stationURL = x_ps_strdup(url);
-    connecttohost(url);
+    int len_url = strlen(url) + strlen(extension) + 3;
+    char* origin_url = (char*)calloc(1, len_url);
+    if(strlen(extension) > 0) {
+        strcpy(origin_url, url);
+        strcat(origin_url, "&");
+        strcat(origin_url, extension);
+    }
+    else { strcpy(origin_url, url); }
+    _stationURL = x_ps_strdup(origin_url);
+    connecttohost(origin_url);
     StationsItems();
     if(_state == RADIO) {
         clearStreamTitle();
@@ -3033,7 +3043,6 @@ void audio_info(const char* info) {
     if(startsWith(info, "StreamTitle="))           {return;}
     if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
     if(startsWith(info, "ERROR:"))                 {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
-//    if(startsWith(info, "connect to"))             {IPAddress dns1(8, 8, 8, 8); IPAddress dns2(8, 8, 4, 4); WiFi.setDNS(dns1, dns2);}
     if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {{SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);} return;} // all other
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3953,7 +3962,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "set_station"){       setStationByNumber(param.toInt()); return;}                                                                          // via websocket
 
-    if(cmd == "stationURL"){        setStationViaURL(param.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
+    if(cmd == "stationURL"){        setStationViaURL(param.c_str(), arg.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
 
     if(cmd == "webFileURL"){        audio.connecttohost(param.c_str())? _playerSubMenue = 1 : _playerSubMenue = 0; changeState(PLAYER); return;}          // via websocket
 
