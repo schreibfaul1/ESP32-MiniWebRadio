@@ -15,7 +15,7 @@ WebSrv::WebSrv(String Name, String Version){
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::~WebSrv(){
     if(m_transBuf){free(m_transBuf); m_transBuf = NULL;}
-    if(m_path){free(m_path); m_path = NULL;}
+    if(m_buff){free(m_buff); m_buff = NULL;}
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show_not_found(){
@@ -76,8 +76,8 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len){
 
     cmdclient.print(httpheader) ;             // header sent
 
-    sprintf(buff, "Length of page is %d", pagelen);
-    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    sprintf(m_buff, "Length of page is %d", pagelen);
+    if(WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
     // The content of the HTTP response follows the header:
 
     while(pagelen){                       // Loop through the output page
@@ -106,43 +106,56 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len){
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from SD to webbrowser
-    if(path == NULL){ log_e("path is NULL"); return false;}                                                     // guard1
-    if(strlen(path) > m_pathLength){ log_e("pathLength > %i", m_pathLength); return false;}                     // guard2
-    int i = 0; while(path[i] != 0){ if(path[i] < 32) {log_e("illegal character in path"); return false;}; i++;} // guard3
-    if(!cmdclient.connected()){ /* log_e("cmdclient is not connected"); */  return false;}                              // guard4
+boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from SD to webbrowser
+    if (path == NULL) {
+        log_e("path is NULL");
+        return false;
+    }
+    if (strlen(path) > 512) { // guard
+        strncpy(m_buff, "Path is too long (> 512 characters): ", 1024);
+        strncat(m_buff, path, 512);
+        m_buff[1023] = '\0'; // Ensure null termination
+    }
+    for (int i = 0; path[i] != '\0'; ++i) { // Validate path for illegal characters
+        if (path[i] < 32) {
+            log_e("Illegal character in path");
+            return false;
+        }
+    }
+    if (!cmdclient.connected()) { // guard
+        log_e("client is not connected");
+        return false;
+    }
+    if (!fs.exists(path)) { // guard
+        log_e("file does not exist");
+        show_not_found();
+        return false;
+    }
+
+    char* c_path = (char*)x_ps_malloc(strlen(path) + 1); // mace a copy of path
+    memcpy(c_path, path, strlen(path) + 1);
+    for (int i = 0; path[i] != '\0'; ++i) {if (path[i] == '?') c_path[i] = '\0';}                                   // Remove query string
+
+    File file = fs.open(path, "r");
+    if (!file) {
+        sprintf(m_buff, "Failed to open file for reading: %s", path);
+        if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
+        show_not_found();
+        if(c_path){free(c_path); c_path = NULL;}
+        return false;
+    }
 
     size_t wIndex = 0, res=0, leftover=0;
     String httpheader="";
-    File file;
-    int idx = 0;
 
-    strcpy(m_path, path);
-    idx = indexOf(m_path, '?', 0);
-    if(idx != -1) m_path[idx] = '\0';  // remobe all after '?'
-    if(!fs.exists(m_path)){
-        sprintf(buff, "File %s does not exist", m_path);
-        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-        show_not_found();
-        return false;
-    }
-
-    file = fs.open(m_path, "r");
-    if(!file){
-        sprintf(buff, "Failed to open file for reading %s", m_path);
-        if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
-        show_not_found();
-        return false;
-    }
-
-    sprintf(buff, "Length of file %s is %d", m_path, file.size());
-    if(WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    sprintf(m_buff, "Length of file %s is %d", c_path, file.size());
+    if(WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
 
     // HTTP header
     httpheader += "HTTP/1.1 200 OK\r\n";
     httpheader += "Connection: keep-alive\r\n";
-    httpheader += "Content-type: " + getContentType(String(m_path)) + "\r\n";
-    httpheader += "Content-Length: " + String(file.size(),10) + "\r\n";
+    httpheader += "Content-type: " + getContentType(String(c_path)) + "\r\n";
+    httpheader += "Content-Length: " + String(file.size(), 10) + "\r\n";
     httpheader += "Cache-Control: max-age=86400\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
@@ -152,7 +165,7 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
         res=cmdclient.write(m_transBuf, m_bytesPerTransaction);
         wIndex+=res;
         if(res!=m_bytesPerTransaction){
-            log_i("write error %s", m_path);
+            log_i("write error %s", c_path);
             cmdclient.clearWriteError();
             goto error;
         }
@@ -162,15 +175,18 @@ boolean WebSrv::streamfile(fs::FS &fs,const char* path){ // transfer file from S
     res = cmdclient.write(m_transBuf, leftover);
     wIndex += res;
     if(res!=leftover){
-        log_i("write error %s", m_path);
+        log_i("write error %s", c_path);
         cmdclient.clearWriteError();
         goto error;
     }
-    if(wIndex != file.size()) log_e("file %s not correct sent", m_path);
+    if(wIndex != file.size()) {log_e("file %s was not correct sent", c_path); goto error;}
+    if(c_path){free(c_path); c_path = NULL;}
     file.close();
     return true;
 
 error:
+    if(c_path){free(c_path); c_path = NULL;}
+    file.close();
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -199,18 +215,18 @@ boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sen
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
 
-    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
+    m_buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
     if(msgLen + cmdLen < 126) {
-        buff[1] = (128 * mask) + cmdLen + msgLen ;
+        m_buff[1] = (128 * mask) + cmdLen + msgLen ;
     }
     else {
         headerLen = 4;
-        buff[1] = (128 * mask) + 126;
-        buff[2] = ((cmdLen + msgLen) >> 8) & 0xFF;
-        buff[3] = (cmdLen + msgLen) & 0xFF;
+        m_buff[1] = (128 * mask) + 126;
+        m_buff[2] = ((cmdLen + msgLen) >> 8) & 0xFF;
+        m_buff[3] = (cmdLen + msgLen) & 0xFF;
     }
 
-    webSocketClient.write(buff, headerLen);
+    webSocketClient.write(m_buff, headerLen);
     webSocketClient.write(cmd, cmdLen);
     webSocketClient.write(msg, msgLen);
 
@@ -228,9 +244,9 @@ void WebSrv::sendPing(){  // heartbeat, keep alive via websockets
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
 
-    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Ping_Frame;
-    buff[1] = (128 * mask) + 0;
-    webSocketClient.write(buff,2);
+    m_buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Ping_Frame;
+    m_buff[1] = (128 * mask) + 0;
+    webSocketClient.write(m_buff,2);
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::sendPong(){  // heartbeat, keep alive via websockets
@@ -244,9 +260,9 @@ void WebSrv::sendPong(){  // heartbeat, keep alive via websockets
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
 
-    buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Pong_Frame;
-    buff[1] = (128 * mask) + 0;
-    webSocketClient.write(buff,2);
+    m_buff[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Pong_Frame;
+    m_buff[1] = (128 * mask) + 0;
+    webSocketClient.write(m_buff,2);
 }
 //--------------------------------------------------------------------------------------------------------------
 // e.g.  startBoundary        ------WebKitFormBoundaryi52Pv7aBYloXIuZB\r\n
@@ -266,23 +282,23 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     File file;
     uint32_t t = millis();
     uint8_t* b64buff = (uint8_t*)x_ps_malloc(m_bytesPerTransaction);
-    if(!b64buff){strcpy(buff, "out of memory (b64buff, uploadB64image()"); goto exit;}
+    if(!b64buff){strcpy(m_buff, "out of memory (b64buff, uploadB64image()"); goto exit;}
 
     while(true){ // read startBoundary until ','
         if ((t + 2000) < millis()) {
-            strcpy(buff, "timeout while reading startBoundary (uploadB64image()");
+            strcpy(m_buff, "timeout while reading startBoundary (uploadB64image()");
             goto exit;
         }
         if (cmdclient.available()){
-            buff[idx] = cmdclient.read();
-            if(buff[idx] == ',') {buff[idx + 1] = '\0'; break;}
+            m_buff[idx] = cmdclient.read();
+            if(m_buff[idx] == ',') {m_buff[idx + 1] = '\0'; break;}
             idx++;
-            if(idx == 255){strcpy(buff, "buffer overflow (buff[256], uploadB64image()"); goto exit;}
+            if(idx == 255){strcpy(m_buff, "buffer overflow (buff[256], uploadB64image()"); goto exit;}
         }
     }
 
     startBoundaryLength = idx + 1;
-    idx = indexOf(buff, "\r\n");
+    idx = indexOf(m_buff, "\r\n");
     endBoundaryLength = idx + 2 + 4;  // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
     nrOfBytesToWrite -= (startBoundaryLength + endBoundaryLength);
 
@@ -296,40 +312,39 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
             av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
             bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
             if (bytesInTransBuf != av) {
-                sprintf(buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
+                sprintf(m_buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
                 goto exit;
             }
             nrOfBytesToWrite -= bytesInTransBuf;
 
             size_t bytesInb64buff = 0;
             int ret = mbedtls_base64_decode(b64buff, m_bytesPerTransaction, &bytesInb64buff, (const unsigned char *)m_transBuf, bytesInTransBuf);
-            log_e("ret %i, bytesInTransBuf %li, bytesInb64buff %u, startBoundaryLength %li", ret, bytesInTransBuf, bytesInb64buff, startBoundaryLength);
-
-            if(ret != 0) {strcpy(buff, "error while b64 decoding"); goto exit;}
+        //    log_e("ret %i, bytesInTransBuf %li, bytesInb64buff %u, startBoundaryLength %li", ret, bytesInTransBuf, bytesInb64buff, startBoundaryLength);
+            if(ret != 0) {strcpy(m_buff, "error while b64 decoding"); goto exit;}
 
             bytesWritten = file.write((uint8_t*)b64buff, bytesInb64buff);
             if (bytesWritten != bytesInb64buff) {
-                sprintf(buff, "write error in %s, available %u bytes, written %li bytes\n", path, bytesInb64buff, bytesWritten);
+                sprintf(m_buff, "write error in %s, available %u bytes, written %li bytes\n", path, bytesInb64buff, bytesWritten);
                 goto exit;
             }
 
             if (nrOfBytesToWrite == 0) break;
         }
         if ((t + 2000) < millis()) {
-            sprintf(buff, "timeout in webSrv uploadfile()\n");
+            sprintf(m_buff, "timeout in webSrv uploadfile()\n");
             goto exit;
         }
     }
 
     while (cmdclient.available()) cmdclient.read(); // read endBoundary
     file.close();
-    sprintf(buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
-    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    sprintf(m_buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
     if(b64buff){free(b64buff); b64buff = NULL;}
     return true;
 
 exit:
-    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
     if(b64buff){free(b64buff); b64buff = NULL;}
     return false;
 }
@@ -354,7 +369,7 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
             av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
             bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
             if (bytesInTransBuf != av) {
-                sprintf(buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
+                sprintf(m_buff, "read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
                 goto exit;
             }
 
@@ -377,26 +392,26 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
             bytesWritten = file.write((uint8_t*)m_transBuf + startBoundaryLength, bytesInTransBuf);
             startBoundaryLength = 0;
             if (bytesWritten != bytesInTransBuf) {
-                sprintf(buff, "write error in %s, available %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
+                sprintf(m_buff, "write error in %s, available %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
                 goto exit;
             }
             nrOfBytesToWrite -= bytesWritten;
             if (nrOfBytesToWrite == 0) break;
         }
         if ((t + 2000) < millis()) {
-            sprintf(buff, "timeout in webSrv uploadfile()\n");
+            sprintf(m_buff, "timeout in webSrv uploadfile()\n");
             goto exit;
         }
     }
 
     while (cmdclient.available()) cmdclient.read(); // Reste lesen
     file.close();
-    sprintf(buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
-    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    sprintf(m_buff, "File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
     return true;
 
 exit:
-    if (WEBSRV_onInfo) WEBSRV_onInfo(buff);
+    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -405,8 +420,8 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
     m_bytesPerTransaction = 4096 / 2;
     m_transBuf = x_ps_malloc(m_bytesPerTransaction);
     if(!m_transBuf){log_e("WebServer: not enough memory");}
-    m_pathLength = 255;
-    m_path = x_ps_malloc(m_pathLength);
+    m_buff = (char*)x_ps_malloc(1024);
+    if(!m_buff){log_e("WebServer: not enough memory");}
     cmdserver.stop();
     cmdserver.begin(http_port);
     webSocketServer.stop();
@@ -694,22 +709,22 @@ void WebSrv::parseWsMessage(uint32_t len){
         return;
     }
 
-    webSocketClient.readBytes(buff, 1);
-    uint8_t fin       = ((buff[0] >> 7) & 0x01); (void)fin;
-    uint8_t rsv1      = ((buff[0] >> 6) & 0x01); (void)rsv1;
-    uint8_t rsv2      = ((buff[0] >> 5) & 0x01); (void)rsv2;
-    uint8_t rsv3      = ((buff[0] >> 4) & 0x01); (void)rsv3;
-    uint8_t opcode    = ( buff[0]  & 0x0F);
+    webSocketClient.readBytes(m_buff, 1);
+    uint8_t fin       = ((m_buff[0] >> 7) & 0x01); (void)fin;
+    uint8_t rsv1      = ((m_buff[0] >> 6) & 0x01); (void)rsv1;
+    uint8_t rsv2      = ((m_buff[0] >> 5) & 0x01); (void)rsv2;
+    uint8_t rsv3      = ((m_buff[0] >> 4) & 0x01); (void)rsv3;
+    uint8_t opcode    = ( m_buff[0]  & 0x0F);
 
-    webSocketClient.readBytes(buff, 1);
-    uint8_t mask      = ((buff[0]>>7) & 0x01);
-    paylodLen = (buff[0] & 0x7F);
+    webSocketClient.readBytes(m_buff, 1);
+    uint8_t mask      = ((m_buff[0]>>7) & 0x01);
+    paylodLen = (m_buff[0] & 0x7F);
 
     if(paylodLen == 126){
         headerLen = 4;
-        webSocketClient.readBytes(buff, 2);
-        paylodLen  = buff[0] << 8;
-        paylodLen += buff[1];
+        webSocketClient.readBytes(m_buff, 2);
+        paylodLen  = m_buff[0] << 8;
+        paylodLen += m_buff[1];
 
     }
 

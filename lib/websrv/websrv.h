@@ -42,11 +42,9 @@ private:
     String          _Name;
     String          _Version;
     String          contenttype;
-    char            buff[256];
+    char*           m_buff = NULL;
     char*           msgBuff = NULL;
     char*           m_transBuf = NULL;
-    char*           m_path = NULL;
-    uint8_t         m_pathLength;
     uint8_t         method;
     String          WS_sec_Key;
     String          WS_resp_Key;
