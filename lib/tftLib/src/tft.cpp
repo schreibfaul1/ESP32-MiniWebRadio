@@ -661,6 +661,7 @@ void TFT::begin(uint8_t CS, uint8_t DC, uint8_t spi, uint8_t mosi, uint8_t miso,
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT::begin(const Pins& newPins, const Timing& newTiming){ // RGB_HMI
+#ifdef RGB_HMI
     m_pins = newPins;
     m_timing = newTiming;
 
@@ -730,6 +731,7 @@ void TFT::begin(const Pins& newPins, const Timing& newTiming){ // RGB_HMI
 
     log_e("m_h_res: %d, m_v_res: %d, m_framebuffer %i", m_h_res, m_v_res, m_framebuffer);
     memset(m_framebuffer, 0x00, m_h_res * m_v_res * 2);
+#endif
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 typedef struct {

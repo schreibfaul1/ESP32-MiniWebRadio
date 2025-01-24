@@ -8,11 +8,9 @@
 #include "SPI.h"
 #include "FS.h"
 #include "vector"
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_rgb.h"
-#include "esp_lcd_panel_ops.h"
+
 #include "esp_log.h"
-#include "esp_lcd_panel_interface.h"
+
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
 #include "fonts/TimesNewRoman.h"
@@ -21,6 +19,13 @@
 #include "fonts/BigNumbers.h"
 #include "fonts/Arial.h"
 #include "fonts/Z300.h"
+
+#ifdef CONFIG_IDF_TARGET_ESP32S3
+#include "esp_lcd_panel_io.h"
+#include "esp_lcd_panel_rgb.h"
+#include "esp_lcd_panel_ops.h"
+#include "esp_lcd_panel_interface.h"
+#endif
 
 using namespace std;
 
@@ -218,9 +223,11 @@ class TFT{
       uint8_t                _TFTcontroller = ILI9341;
       SPISettings            TFT_SPI;        // SPI settings for this slave
       SPIClass*              spi_TFT = NULL; // use in class TP
+#ifdef CONFIG_IDF_TARGET_ESP32S3
       Pins                   m_pins;
       Timing                 m_timing;
       esp_lcd_panel_handle_t m_panel;
+#endif
       uint16_t               m_h_res = 0;
       uint16_t               m_v_res = 0;
       uint16_t*              m_framebuffer;
