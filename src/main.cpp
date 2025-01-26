@@ -213,13 +213,16 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
-#if TFT_CONTROLLER <= 7
-TP                  tp(TP_CS, TP_IRQ);
-#else
-TP                  tp(&i2cBusTwo);
-#endif
-
 stationManagement   staMgnt(&_cur_station);
+
+#if CONFIG_IDF_TARGET_ESP32
+    SPIClass SPI1(VSPI);
+#else
+    SPIClass SPI1(FSPI);
+#endif
+TFT                 tft(SPI1, TFT_CS);
+TP                  tp(SPI1, TFT_CS);
+
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -287,9 +290,6 @@ uint16_t _dispHeight  = 240;
 uint8_t  _tftSize     = 0;
 uint8_t  _irNumber_x  = 25;
 uint8_t  _irNumber_y  = 40;
-//
-TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
-//
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
@@ -349,9 +349,6 @@ uint16_t _dispHeight  = 320;
 uint8_t  _tftSize     = 1;
 uint8_t  _irNumber_x  = 100;
 uint8_t  _irNumber_y  = 80;
-//
-TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
-//
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
@@ -1448,25 +1445,22 @@ void setup() {
 
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
-#if CONFIG_IDF_TARGET_ESP32
-    tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32
-#else
-    tft.begin(TFT_CS, TFT_DC, FSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32S3
-#endif
+    SPI1.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
 
+    tft.setTFTcontroller(TFT_CONTROLLER);
+    tft.setDiaplayInversion(DISPLAY_INVERSION);
+    tft.begin(TFT_DC); // Init TFT interface
     setTFTbrightness(100);
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tft.setBackGoundColor(TFT_BLACK);
+
+    tp.begin(TP_IRQ);
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#if TFT_CONTROLLER <= 7
-    tp.TP_Send(0xD0);
-    tp.TP_Send(0x90); // Remove any blockage
-#else
-    tp.begin(I2C_SDA, I2C_SCL, TP_ADDR, 400000, -1, -1);
-#endif
+
+
 
     SerialPrintfln("setup: ....  Init SD card");
     if(IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
