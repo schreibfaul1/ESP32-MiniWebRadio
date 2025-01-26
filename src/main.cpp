@@ -442,7 +442,7 @@ boolean defaultsettings(){
     }
     irb.loadButtonsFromJSON("/ir_buttons.json");
     for(uint i = 0; i < _settings.numOfIrButtons; i++) {
-        log_w("0x%04X,  %s", _settings.irbuttons[i].val, _settings.irbuttons[i].label);
+    //    log_w("0x%04X,  %s", _settings.irbuttons[i].val, _settings.irbuttons[i].label);
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
         ir.set_irAddress(_settings.irbuttons[42].val);
