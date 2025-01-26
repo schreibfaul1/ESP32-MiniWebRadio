@@ -46,6 +46,8 @@
 #include "IR.h"
 #include "tft_spi.h"
 #include "tp_xpt2046.h"
+#include "tft_rgb.h"
+#include "tp_gt911.h"
 #include "SPIFFS.h"
 #include "ESP32FtpServer.h"
 #include "Audio.h"
@@ -543,7 +545,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern TFT tft;
+extern TFT_SPI tft;
 inline void hardcopy(){
     const uint8_t bmp320x240[70] = {
         0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,

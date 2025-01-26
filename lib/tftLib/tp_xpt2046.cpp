@@ -7,12 +7,12 @@
 
 
 // Code für Touchpad mit XPT2046
-TP::TP(SPIClass &spi, int csPin) : spi_TP(spi){
+TP_XPT2046::TP_XPT2046(SPIClass &spi, int csPin) : spi_TP(spi){
     _TP_CS = csPin;
     _rotation = 0;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP::begin(uint8_t IRQ){
+void TP_XPT2046::begin(uint8_t IRQ){
     _TP_IRQ = IRQ;
     pinMode(_TP_CS, OUTPUT);
     digitalWrite(_TP_CS, HIGH);
@@ -23,7 +23,7 @@ void TP::begin(uint8_t IRQ){
     TP_Send(0x90); // Remove any blockage
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-uint16_t TP::TP_Send(uint8_t set_val) {
+uint16_t TP_XPT2046::TP_Send(uint8_t set_val) {
     uint16_t get_val;
     spi_TP.beginTransaction(TP_SPI); // Prevent other SPI users
     digitalWrite(_TP_CS, 0);
@@ -34,7 +34,7 @@ uint16_t TP::TP_Send(uint8_t set_val) {
     return get_val >> 4;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP::loop() {
+void TP_XPT2046::loop() {
     static uint16_t x1 = 0, y1 = 0;
     static uint16_t x2 = 0, y2 = 0;
     if (!digitalRead(_TP_IRQ)) {
@@ -83,14 +83,14 @@ void TP::loop() {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP::setRotation(uint8_t m) { _rotation = m; }
+void TP_XPT2046::setRotation(uint8_t m) { _rotation = m; }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP::setMirror(bool h, bool v) {
+void TP_XPT2046::setMirror(bool h, bool v) {
     m_mirror_h = h;
     m_mirror_v = v;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TP::setVersion(uint8_t v) {
+void TP_XPT2046::setVersion(uint8_t v) {
 
     switch(v) {
         case 0: TP_vers = TP_ILI9341_0; break;
@@ -152,20 +152,20 @@ void TP::setVersion(uint8_t v) {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TP::read_TP(uint16_t& x, uint16_t& y) {
+bool TP_XPT2046::read_TP(uint16_t& x, uint16_t& y) {
     uint32_t _y = 0;
     uint32_t _x = 0;
     uint16_t tmpxy;
     uint8_t  i = 0;
 
-    if(digitalRead(_TP_IRQ)) return false; // TP pressed?
+    if(digitalRead(_TP_IRQ)) return false; // TP_XPT2046 pressed?
 
     for(i = 0; i < 100; i++) {
         _x += TP_Send(0xD0); // x
         _y += TP_Send(0x90); // y
     }
 
-    if(digitalRead(_TP_IRQ)) return false; // TP must remain pressed as long as the measurement is running
+    if(digitalRead(_TP_IRQ)) return false; // TP_XPT2046 must remain pressed as long as the measurement is running
 
     _x /= 100;
     _y /= 100;

@@ -220,9 +220,10 @@ stationManagement   staMgnt(&_cur_station);
 #else
     SPIClass SPI1(FSPI);
 #endif
-TFT                 tft(SPI1, TFT_CS);
-TP                  tp(SPI1, TFT_CS);
-
+TFT_SPI             tft(SPI1, TFT_CS);
+TP_XPT2046          tp(SPI1, TFT_CS);
+//TFT_RGB
+//TP_GT911
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);

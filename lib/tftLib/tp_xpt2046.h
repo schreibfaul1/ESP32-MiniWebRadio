@@ -23,7 +23,7 @@ extern __attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y);
 
 
 
-class TP{
+class TP_XPT2046{
   private:
     const uint16_t ILI9341_WIDTH  = 240;
     const uint16_t ILI9341_HEIGHT = 320;
@@ -36,9 +36,9 @@ class TP{
     const uint16_t ST7796_WIDTH   = 320;
     const uint16_t ST7796_HEIGHT  = 480;
 
-    SPIClass    &spi_TP; // use in class TP
+    SPIClass    &spi_TP; // use in class TP_XPT2046
   public:
-    TP(SPIClass &spi, int csPin);
+    TP_XPT2046(SPIClass &spi, int csPin);
     void     begin(uint8_t IRQ);
     void     loop();
     void     setVersion(uint8_t v);

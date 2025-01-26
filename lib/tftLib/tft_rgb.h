@@ -1,16 +1,22 @@
 // first release on 09/2019
-// updated on Dec 20 2025
+// updated on Jan 17 2024
 
 
 #pragma once
 
 #include "Arduino.h"
-#include "SPI.h"
 #include "FS.h"
+#include "SPI.h"
+#include "SD.h"
+#include "SD_MMC.h"
+#include "Wire.h"
 #include "vector"
-
+#include "esp_lcd_panel_io.h"
+#include "esp_lcd_panel_rgb.h"
+#include "esp_lcd_panel_vendor.h"
+#include "esp_lcd_panel_ops.h"
 #include "esp_log.h"
-
+#include "esp_lcd_panel_interface.h"
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"
 #include "fonts/TimesNewRoman.h"
@@ -20,12 +26,8 @@
 #include "fonts/Arial.h"
 #include "fonts/Z300.h"
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
-#include "esp_lcd_panel_io.h"
-#include "esp_lcd_panel_rgb.h"
-#include "esp_lcd_panel_ops.h"
-#include "esp_lcd_panel_interface.h"
-#endif
+
+
 
 using namespace std;
 
@@ -71,6 +73,17 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define ANSI_ESC_AQUAMARINE     "\033[38;5;51m"
 #define ANSI_ESC_LAVENDER       "\033[38;5;189m"
 
+
+#define ILI9341_WIDTH  240
+#define ILI9341_HEIGHT 320
+#define HX8347D_WIDTH  240
+#define HX8347D_HEIGHT 320
+#define ILI9486_WIDTH  320
+#define ILI9486_HEIGHT 480
+#define ILI9488_WIDTH  320
+#define ILI9488_HEIGHT 480
+#define ST7796_WIDTH   320
+#define ST7796_HEIGHT  480
 
 // RGB565 Color definitions            R    G    B
 #define TFT_RED             0xF800 // 255,   0,   0
@@ -124,113 +137,8 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_TURQUOISE       0x471A //  64, 224, 208
 #define TFT_VIOLET          0x801F // 128,   0, 255
 
-#define ILI9341_MADCTL_MY  0x80
-#define ILI9341_MADCTL_MX  0x40
-#define ILI9341_MADCTL_MV  0x20
-#define ILI9341_MADCTL_ML  0x10
-#define ILI9341_MADCTL_BGR 0x08
-#define ILI9341_MADCTL_MH  0x04
-#define ILI9341_SLPOUT     0x11 // Sleep Out
-#define ILI9341_INVOFF     0x20 // Display Invert Off
-#define ILI9341_INVON      0x21 // Display Invert On
-#define ILI9341_DISPON     0x29 // Display On
-#define ILI9341_CASET      0x2A // Column Address Set
-#define ILI9341_RASET      0x2B // Row Address Set
-#define ILI9341_RAMWR      0x2C // Memory Write
-#define ILI9341_RAMRD      0x2E // Memory Read
-#define ILI9341_MADCTL     0x36 // Memory Data Access Control
-#define ILI9341_VSCRSADD   0x37 // Vertical Scrolling Start Address
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-#define ILI9486_INVOFF     0x20 // Display Inversion OFF
-#define ILI9486_INVON      0x21 // Display Inversion ON
-#define ILI9486_CASET      0x2A // Display On
-#define ILI9486_PASET      0x2B // Page Address Set
-#define ILI9486_RAMWR      0x2C // Memory Write
-#define ILI9486_RAMRD      0x2E // Memory Read
-#define ILI9486_MADCTL     0x36 // Memory Data Access Control
-#define ILI9486_MADCTL_MY  0x80 // Bit 7 Parameter MADCTL
-#define ILI9486_MADCTL_MX  0x40 // Bit 5 Parameter MADCTL
-#define ILI9486_MADCTL_MV  0x20 // Bit 5 Parameter MADCTL
-#define ILI9486_MADCTL_ML  0x10 // Bit 4 Parameter MADCTL
-#define ILI9486_MADCTL_BGR 0x08 // Bit 3 Parameter MADCTL
-#define ILI9486_MADCTL_MH  0x04 // Bit 2 Parameter MADCTL
-#define ILI9486_WDBVAL     0x51 // Write Display Brightness Value
-#define ILI9486_CDBVAL     0x53 // Write Control Display Value
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-#define ILI9488_SLPOUT     0x11 // Sleep OUT
-#define ILI9488_INVOFF     0x20 // Display Inversion OFF
-#define ILI9488_INVON      0x21 // Display Inversion ON
-#define ILI9488_DISPOFF    0x28 // Display OFF
-#define ILI9488_DISPON     0x29 // Display ON
-#define ILI9488_CASET      0x2A // Column Address Set
-#define ILI9488_PASET      0x2B // Page Address Set
-#define ILI9488_MADCTL     0x36 // Memory Access Control
-#define ILI9488_COLMOD     0x3A // Interface Pixel Format
-#define ILI9488_IFMODE     0xB0 // Interface Mode Control
-#define ILI9488_FRMCTR1    0xB1 // Frame Rate Control
-#define ILI9488_FRMCTR2    0xB2 // Frame Rate Control
-#define ILI9488_INVTR      0xB4 // Display Inversion Control
-#define ILI9488_DISCTRL    0xB6 // Display Function Control
-#define ILI9488_ETMOD      0xB7 // Entry Mode Set
-#define ILI9488_RAMWR      0x2C // Write_memory_start
-#define ILI9488_RAMRD      0x2E // Read_memory_start
-#define ILI9488_PWCTR1     0xC0 // Panel Driving Setting
-#define ILI9488_PWCTR2     0xC1 // Display_Timing_Setting for Normal Mode
-#define ILI9488_VMCTR1     0xC5 // Frame Rate and Inversion Control
-#define ILI9488_PGAMCTRL   0xE0 // NV Memory Write
-#define ILI9488_NGAMCTRL   0xE1 // NV Memory Control
-#define ILI9488_MADCTL_MY  0x80
-#define ILI9488_MADCTL_MX  0x40
-#define ILI9488_MADCTL_MV  0x20
-#define ILI9488_MADCTL_ML  0x10
-#define ILI9488_MADCTL_RGB 0x00
-#define ILI9488_MADCTL_BGR 0x08
-#define ILI9488_MADCTL_MH  0x04
-#define ILI9488_MADCTL_SS  0x02
-#define ILI9488_MADCTL_GS  0x01
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-#define ST7796_NOP        0x00 // No operation
-#define ST7796_SWRESET    0x01 // Software reset
-#define ST7796_SLPIN      0x10 // Sleep in
-#define ST7796_SLPOUT     0x11 // Sleep Out
-#define ST7796_NORON      0x13 // Normal Display Mode On
-#define ST7796_INVOFF     0x20 // Display Inversion OFF
-#define ST7796_INVON      0x21 // Display Inversion ON
-#define ST7796_GAMSET     0x26 // Gamma set
-#define ST7796_DISPOFF    0x28 // Display Off
-#define ST7796_DISPON     0x29 // Display On
-#define ST7796_CASET      0x2A // Column Address Set
-#define ST7796_RASET      0x2B // Row Address Set
-#define ST7796_RAMWR      0x2C // Memory Write
-#define ST7796_RAMRD      0x2E // Memory Read
-#define ST7796_MADCTL     0x36 // Memory Data Access Control
-#define ST7796_COLMOD     0x3A // Interface Pixel Format
-#define ST7796_IFMODE     0xB0 // RAM control
-#define ST7796_FRMCTR1    0xB1 // RGB Interface Control
-#define ST7796_FRMCTR2    0xB2 // Porch control
-#define ST7796_FRMCTR3    0xB3 // Frame Rate Control 1 (In partial mode/ idle colors)
-#define ST7796_DIC        0xB4 // Display Inversion Control
-#define ST7796_BPC        0xB5 // Blanking Porch Control
-#define ST7796_DFC        0xB6 // Display Function Control
-#define ST7796_EM         0xB7 // Entry Mode Set
-#define ST7796_VCOMS      0xBB // VCOMS setting
-#define ST7796_PWR1       0xC0 // Power Control 1
-#define ST7796_PWR2       0xC1 // Power Control 2
-#define ST7796_PWR3       0xC2 // Power Control 3
-#define ST7796_VCMPCTL    0xC5 // VCOM Control
-#define ST7796_VCM        0xC6 // Vcom Offset Register
-#define ST7796_NVMADW     0xD0 // NVM Address/Data Write
-#define ST7796_PGC        0xE0 // Positive Gamma Control
-#define ST7796_NGC        0xE1 // Negative Gamma Control
-#define ST7796_DOCA       0xE8 // Display Output Ctrl Adjust
-#define ST7796_CSCON      0xF0 // Command Set Control
-#define ST7796_MADCTL_MY  0x80 // Bit 7 Parameter MADCTL
-#define ST7796_MADCTL_MX  0x40 // Bit 6 Parameter MADCTL
-#define ST7796_MADCTL_MV  0x20 // Bit 5 Parameter MADCTL
-#define ST7796_MADCTL_ML  0x10 // Bit 4 Parameter MADCTL
-#define ST7796_MADCTL_RGB 0x00 // Bit 3 Parameter MADCTL
-#define ST7796_MADCTL_BGR 0x08 // Bit 3 Parameter MADCTL
-#define ST7796_MADCTL_MH  0x04 // Bit 2 Parameter MADCTL
+
+
 
 #if TFT_FONT == 1
 #define TFT_TIMES_NEW_ROMAN
@@ -250,64 +158,88 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_ALIGN_TOP            (4)
 #define TFT_ALIGN_DOWN           (5)
 
-class TFT_SPI {
-  protected:
+class TFT_RGB {
+  public:
+    enum Rotate { _0, _90, _180, _270 };
+    struct Pins {
+        int8_t b0;
+        int8_t b1;
+        int8_t b2;
+        int8_t b3;
+        int8_t b4;
+        int8_t g0;
+        int8_t g1;
+        int8_t g2;
+        int8_t g3;
+        int8_t g4;
+        int8_t g5;
+        int8_t r0;
+        int8_t r1;
+        int8_t r2;
+        int8_t r3;
+        int8_t r4;
+        int8_t hsync;
+        int8_t vsync;
+        int8_t de;
+        int8_t pclk;
+        int8_t bl;
+    };
+    struct Timing {
+        uint16_t h_res;
+        uint16_t v_res;
+        uint32_t pixel_clock_hz;
+        uint8_t  hsync_pulse_width;
+        uint8_t  hsync_back_porch;
+        uint8_t  hsync_front_porch;
+        uint8_t  vsync_pulse_width;
+        uint8_t  vsync_back_porch;
+        uint8_t  vsync_front_porch;
+    };
+
+    TFT_RGB();
+    ~TFT_RGB() { ; }
+    void begin(const Pins& newPins, const Timing& newTiming);
+    void setDisplayInversion(bool i);
+    // Recommended Non-Transaction
+    void            drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
+    void            drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
+    void            readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
+    void            fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
+    void            drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+    void            fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
+    void            fillScreen(uint16_t color);
+    void            drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    void            fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+    void            drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+    void            fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
+    bool            drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, float scale = 1.0);
+    bool            drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
+    bool            drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
+    inline void     setBackGoundColor(uint16_t BGcolor) { m_backGroundColor = BGcolor; }
+    inline uint16_t getBackGroundColor() { return m_backGroundColor; }
+    inline void     setTextColor(uint16_t FGcolor) { m_textColor = FGcolor; }
+    inline uint16_t getTextColor() { return m_textColor; }
+    void            setFont(uint16_t font);
+    inline void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; } // 0 h other v
+    size_t          writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
+                       bool noWrap = false, bool autoSize = false);
+  private:
+    Pins                   m_pins;
+    Timing                 m_timing;
+    esp_lcd_panel_handle_t m_panel;
+    uint16_t               m_h_res = 0;
+    uint16_t               m_v_res = 0;
+    uint16_t*              m_framebuffer;
+
+  private:
     File gif_file;
 
-  public:
-    TFT_SPI(SPIClass& spi, int csPin);
-    virtual ~TFT_SPI() {}
-    void setTFTcontroller(uint8_t TFTcontroller);
-    void setDiaplayInversion(uint8_t dispInv);
-    void begin(uint8_t DC);
-    void setFrequency(uint32_t f);
-    void setRotation(uint8_t r);
-    void invertDisplay(bool i);
-    void scrollTo(uint16_t y);
-
-    // Recommended Non-Transaction
-    void     drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
-    void     drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    void     drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-    void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
-    void     readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
-    void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
-    void     fillScreen(uint16_t color);
-    void     drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void     fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
-    void     drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
-    void     fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
-    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, uint16_t offX = 0, uint16_t offY = 0);
-    bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
-    bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
-    void     writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
+    void     writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
     uint16_t validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
-    size_t   writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
-                       bool noWrap = false, bool autoSize = false);
-
-    inline void     setBackGoundColor(uint16_t BGcolor) { _backGroundColor = BGcolor; }
-    inline uint16_t getBackGroundColor() { return _backGroundColor; }
-    inline void     setTextColor(uint16_t FGcolor) { _textColor = FGcolor; }
-    inline uint16_t getTextColor() { return _textColor; }
-    void            setFont(uint16_t font);
-    inline void     setTextOrientation(uint16_t orientation = 0) { _textorientation = orientation; } // 0 h other v
-    int16_t         height(void) const;
-    int16_t         width(void) const;
-    uint8_t         getRotation(void) const;
 
   private:
-    enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
-    uint8_t     _TFTcontroller = ILI9341;
-    SPISettings SPIset; // SPI settings for this slave
-    SPIClass&   spi_TFT; // use in class TP
-    uint16_t    m_h_res = 0;
-    uint16_t    m_v_res = 0;
-    uint16_t*   m_framebuffer;
-
     uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
 
     typedef struct {
@@ -324,42 +256,14 @@ class TFT_SPI {
     fonts_t _current_font;
     uint8_t _font;
 
-    const uint16_t ILI9341_WIDTH = 240;
-    const uint16_t ILI9341_HEIGHT = 320;
-    const uint16_t HX8347D_WIDTH = 240;
-    const uint16_t HX8347D_HEIGHT = 320;
-    const uint16_t ILI9486_WIDTH = 320;
-    const uint16_t ILI9486_HEIGHT = 480;
-    const uint16_t ILI9488_WIDTH = 320;
-    const uint16_t ILI9488_HEIGHT = 480;
-    const uint16_t ST7796_WIDTH = 320;
-    const uint16_t ST7796_HEIGHT = 480;
 
-    typedef struct {
-        uint8_t  madctl;
-        uint8_t  bmpctl;
-        uint16_t width;
-        uint16_t height;
-    } rotation_data_t;
+    uint16_t m_backGroundColor = TFT_WHITE;
+    uint16_t m_textColor = TFT_BLACK;
+    uint8_t  m_textorientation = 0;
 
-    const rotation_data_t ili9341_rotations[4] = {
-        {(ILI9341_MADCTL_MX | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_MX | ILI9341_MADCTL_MY | ILI9341_MADCTL_BGR), ILI9341_WIDTH, ILI9341_HEIGHT},
-        {(ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_MV | ILI9341_MADCTL_MX | ILI9341_MADCTL_BGR), ILI9341_HEIGHT, ILI9341_WIDTH},
-        {(ILI9341_MADCTL_MY | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_BGR), ILI9341_WIDTH, ILI9341_HEIGHT},
-        {(ILI9341_MADCTL_MX | ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), (ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR), ILI9341_HEIGHT, ILI9341_WIDTH}};
-
-    uint32_t _freq;
-    uint8_t  _rotation;
-    uint8_t  _displayInversion;
-    uint16_t _backGroundColor = TFT_WHITE;
-    uint16_t _textColor = TFT_BLACK;
-    uint8_t  _textorientation = 0;
-    uint8_t  _TFT_DC = 21; /* Data or Command */
-    uint8_t  _TFT_CS = 22; /* SPI Chip select */
-    uint8_t  buf[1024];
-    char     chbuf[256 * 2];
-
-    //    ------------GIF-------------------
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
     bool debug = false;
 
@@ -438,8 +342,6 @@ class TFT_SPI {
     int32_t GIF_LZWReadByte(bool init);
     bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
-    //------------TFT_SPI-------------------
-
     inline int32_t minimum(int32_t a, int32_t b) {
         if (a < b)
             return a;
@@ -447,56 +349,9 @@ class TFT_SPI {
             return b;
     }
 
-    inline void TFT_DC_HIGH() { gpio_set_level((gpio_num_t)_TFT_DC, 1); }
-    inline void TFT_DC_LOW() { gpio_set_level((gpio_num_t)_TFT_DC, 0); }
-    inline void TFT_CS_HIGH() { gpio_set_level((gpio_num_t)_TFT_CS, 1); }
-    inline void TFT_CS_LOW() { gpio_set_level((gpio_num_t)_TFT_CS, 0); }
-
-    inline void _swap_int16_t(int16_t& a, int16_t& b) {
-        int16_t t = a;
-        a = b;
-        b = t;
-    }
-    void     init();
-    void     writeCommand(uint16_t cmd);
-    uint16_t readCommand();
-
-    // Transaction API not used by GFX
-    void     setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void     readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void     write24BitColor(uint16_t color);
-    void     writePixels(uint16_t* colors, uint32_t len);
-    void     writeColor(uint16_t color, uint32_t len);
-    uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
-
-    // Required Non-Transaction
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
-
-    // Transaction API
-    void startWrite(void);
-    void endWrite(void);
-    void writePixel(int16_t x, int16_t y, uint16_t color);
-    void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-
-    void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
-    void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
-    void startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void endBitmap();
-    void startJpeg();
-    void endJpeg();
-
-    void bmpSkipPixels(fs::File& file, uint8_t bitsPerPixel, size_t len);
-    void bmpAddPixels(fs::File& file, uint8_t bitsPerPixel, size_t len);
-    void drawBitmap(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t* pcolors);
-    void renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight);
-
-    uint8_t readcommand8(uint8_t reg, uint8_t index = 0);
-
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #define LDB_WORD(ptr) (uint16_t)(((uint16_t)*((uint8_t*)(ptr)) << 8) | (uint16_t)*(uint8_t*)((ptr) + 1))
 #define JD_SZBUF      512 /* Specifies size of stream input buffer */
 #define JD_FORMAT     1   /* Specifies output pixel format. 0: RGB888 (24-bit/pix) 1: RGB565 (16-bit/pix) 2: Grayscale (8-bit/pix) */
@@ -577,7 +432,7 @@ class TFT_SPI {
     } JDEC;
 
   private:
-    File           m_jpgFile;
+    File           m_jpgSdFile;
     bool           m_swap = false;
     const uint8_t* m_array_data = nullptr;
     uint32_t       m_array_index = 0;
@@ -594,8 +449,8 @@ class TFT_SPI {
 
   public:
     void    JPEG_setJpgScale(uint8_t scale);
-    uint8_t JPEG_drawJpg(int32_t x, int32_t y);
-    uint8_t JPEG_getJpgSize(uint16_t* w, uint16_t* h);
+    uint8_t JPEG_drawSdJpg(int32_t x, int32_t y);
+    uint8_t JPEG_getSdJpgSize(uint16_t* w, uint16_t* h);
     void    JPEG_setSwapBytes(bool swap);
 
   private:
@@ -619,4 +474,3 @@ class TFT_SPI {
     uint8_t JPEG_BYTECLIP(int val);
 #endif
 };
-
