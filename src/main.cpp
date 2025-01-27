@@ -220,10 +220,14 @@ stationManagement   staMgnt(&_cur_station);
 #else
     SPIClass SPI1(FSPI);
 #endif
-TFT_SPI             tft(SPI1, TFT_CS);
-TP_XPT2046          tp(SPI1, TFT_CS);
-//TFT_RGB
-//TP_GT911
+
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+TFT_SPI     tft(SPI1, TFT_CS);
+TP_XPT2046  tp(SPI1, TFT_CS);
+#else
+TFT_RGB     tft;
+TP_GT911    tp(&i2cBusOne);
+#endif
 
 #if DECODER == 2 // ac101
 AC101 dac(&i2cBusTwo);
@@ -294,7 +298,7 @@ uint8_t  _irNumber_y  = 40;
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6 // ⏹⏹⏹⏹⏫
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6 || TFT_CONTROLLER == 7 // ⏹⏹⏹⏹⏫
 // clang-format off
 //
 //  Display 480x320
@@ -643,14 +647,15 @@ const char* SD_stringifyDirContent(String path) {
  *                                                    T F T   B R I G H T N E S S                                                                    *
  *****************************************************************************************************************************************************/
 void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
-    if(TFT_BL == -1) return;
-    uint8_t d = round((double)duty * 2.55); // #186
-    ledcWrite(TFT_BL, d);
+    // if(TFT_BL == -1) return;
+    // uint8_t d = round((double)duty * 2.55); // #186
+    // ledcWrite(TFT_BL, d);
 }
 
 int16_t getTFTbrightness() { // duty 0...100 (min...max)
-    if(TFT_BL == -1) return -1;
-    return ledcRead(TFT_BL);
+    // if(TFT_BL == -1) return -1;
+    // return ledcRead(TFT_BL);
+    return 0;
 }
 
 /*****************************************************************************************************************************************************
@@ -1446,8 +1451,8 @@ void setup() {
 
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
+#if TFT_CONTROLLER < 7
     SPI1.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
-
     tft.setTFTcontroller(TFT_CONTROLLER);
     tft.setDiaplayInversion(DISPLAY_INVERSION);
     tft.begin(TFT_DC); // Init TFT interface
@@ -1460,7 +1465,14 @@ void setup() {
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-
+#else
+    tp.begin(TP_SDA, TP_SCL, GT911_I2C_ADDRESS, I2C_MASTER_FREQ_HZ, TP_IRQ, -1);
+    tp.getProductID();
+    tp.setVersion(TP_GT911::GT911);
+    tp.setRotation(TP_GT911::Rotate::_0);
+    tft.begin(RGB_PINS, RGB_TIMING);
+    tft.setDisplayInversion(false);
+#endif
 
 
     SerialPrintfln("setup: ....  Init SD card");
@@ -1490,7 +1502,7 @@ void setup() {
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
 #endif
 
-    if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 7) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     updateSettings();

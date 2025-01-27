@@ -26,17 +26,17 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
     panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
     panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
-    panel_config.timings.flags.hsync_idle_low = false;
-    panel_config.timings.flags.vsync_idle_low = false;
+    panel_config.timings.flags.hsync_idle_low = true;
+    panel_config.timings.flags.vsync_idle_low = true;
     panel_config.timings.flags.de_idle_high = false;
     panel_config.timings.flags.pclk_active_neg = true;
     panel_config.timings.flags.pclk_idle_high = true;
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
-    panel_config.num_fbs = 1;
+    panel_config.num_fbs = 2;
     panel_config.bounce_buffer_size_px = 0;
-  //  panel_config.psram_trans_align = 16;
+    // panel_config.psram_trans_align = 16;
     panel_config.dma_burst_size = 0;
     panel_config.hsync_gpio_num = m_pins.hsync;
     panel_config.vsync_gpio_num = m_pins.vsync;
@@ -57,7 +57,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.flags.disp_active_low = false;
     panel_config.flags.refresh_on_demand = false;
     panel_config.flags.fb_in_psram = true;
-    panel_config.flags.double_fb = false;
+    panel_config.flags.double_fb = true;
     panel_config.flags.no_fb = false;
     panel_config.flags.bb_invalidate_cache = false;
 
@@ -73,12 +73,15 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
-    void *fb0;
-    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 1, &fb0);
-    m_framebuffer = (uint16_t*)fb0;
+    void *fb0, *fb1;
+    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 2, &fb0, &fb1);
+    m_framebuffer[0] = (uint16_t*)fb0;
+    m_framebuffer[1] = (uint16_t*)fb1;
 
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer %i", m_h_res, m_v_res, m_framebuffer);
-    memset(m_framebuffer, 0x00, m_h_res * m_v_res * 2);
+    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
+    memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
+    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
+    memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setDisplayInversion(bool invert) {
@@ -100,7 +103,7 @@ void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
     while (true) {
         // Set point in framebuffer if within bounds
         if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) {
-            m_framebuffer[y0 * m_h_res + x0] = color;
+            m_framebuffer[0][y0 * m_h_res + x0] = color;
         }
 
         // Wenn Endpunkt erreicht, beenden
@@ -123,7 +126,7 @@ void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
     int16_t update_y0 = std::min(y0, y1);
     int16_t update_x1 = std::max(x0, x1) + 1;
     int16_t update_y1 = std::max(y0, y1) + 1;
-    esp_lcd_panel_draw_bitmap(m_panel, update_x0, update_y0, update_x1, update_y1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, update_x0, update_y0, update_x1, update_y1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -135,10 +138,10 @@ void TFT_RGB::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
     // Zeichnen des Rechtecks nur im gültigen Bereich
     for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
         for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
-            m_framebuffer[j * m_h_res + i] = color;
+            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
-    esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillScreen(uint16_t color) {
@@ -147,14 +150,14 @@ void TFT_RGB::fillScreen(uint16_t color) {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer, uint16_t m_h_res) {
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
         int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int16_t err = dx + dy, e2; // Fehlerwert
 
         while (true) {
-            m_framebuffer[y0 * m_h_res + x0] = color; // Pixel setzen
+            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
             if (x0 == x1 && y0 == y1) break;
             e2 = 2 * err;
             if (e2 >= dy) { err += dy; x0 += sx; }
@@ -164,16 +167,16 @@ void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
 
 
     // Zeichne die drei Linien des Dreiecks
-    drawLine(x0, y0, x1, y1, color, m_framebuffer, m_h_res); // Linie von Punkt 0 nach Punkt 1
-    drawLine(x1, y1, x2, y2, color, m_framebuffer, m_h_res); // Linie von Punkt 1 nach Punkt 2
-    drawLine(x2, y2, x0, y0, color, m_framebuffer, m_h_res); // Linie von Punkt 2 nach Punkt 0
+    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
+    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
+    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
 
     // Aktualisierung des gezeichneten Bereichs
     int16_t x_min = std::min({x0, x1, x2});
     int16_t y_min = std::min({y0, y1, y2});
     int16_t x_max = std::max({x0, x1, x2});
     int16_t y_max = std::max({y0, y1, y2});
-    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -184,7 +187,7 @@ void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
             x_end = std::min((int16_t)(m_h_res - 1), x_end);
             for (int16_t x = x_start; x <= x_end; ++x) {
-                m_framebuffer[y * m_h_res + x] = color;
+                m_framebuffer[0][y * m_h_res + x] = color;
             }
         }
     };
@@ -233,19 +236,19 @@ void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     }
 
     // Aktualisierung nur des geänderten Bereichs
-    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer, uint16_t m_h_res) {
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
         int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int16_t err = dx + dy, e2; // Fehlerwert
 
         while (true) {
-            m_framebuffer[y0 * m_h_res + x0] = color; // Pixel setzen
+            fb[y0 * m_h_res + x0] = color; // Pixel setzen
             if (x0 == x1 && y0 == y1) break;
             e2 = 2 * err;
             if (e2 >= dy) { err += dy; x0 += sx; }
@@ -254,10 +257,10 @@ void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
     };
 
     // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer, m_h_res); // Oben
-    drawLine(Xpos + Width, Ypos, Xpos + Width, Ypos + Height, Color, m_framebuffer, m_h_res); // Rechts
-    drawLine(Xpos + Width, Ypos + Height, Xpos, Ypos + Height, Color,  m_framebuffer, m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color,  m_framebuffer, m_h_res); // Links
+    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[1], m_h_res); // Oben
+    drawLine(Xpos + Width, Ypos, Xpos + Width, Ypos + Height, Color, m_framebuffer[1], m_h_res); // Rechts
+    drawLine(Xpos + Width, Ypos + Height, Xpos, Ypos + Height, Color, m_framebuffer[1], m_h_res); // Unten
+    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[1], m_h_res); // Links
 
     // Aktualisierung des gezeichneten Bereichs
     int16_t x_min = std::min((int)Xpos, Xpos + Width);
@@ -265,7 +268,7 @@ void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
     int16_t x_max = std::max((int)Xpos, Xpos + Width);
     int16_t y_max = std::max((int)Ypos, Ypos + Height);
 
-    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[1]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -278,15 +281,15 @@ void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         int16_t y = r;
 
         while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
-            if (quadrant & 0x2) m_framebuffer[(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
-            if (quadrant & 0x4) m_framebuffer[(cy + y) * m_h_res + (cx - x)] = color; // unten links
-            if (quadrant & 0x8) m_framebuffer[(cy - y) * m_h_res + (cx - x)] = color; // oben links
+            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
+            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
+            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // unten links
+            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // oben links
 
-            if (quadrant & 0x10) m_framebuffer[(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
-            if (quadrant & 0x20) m_framebuffer[(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
-            if (quadrant & 0x40) m_framebuffer[(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
-            if (quadrant & 0x80) m_framebuffer[(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
+            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
+            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
+            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
+            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
 
             if (f >= 0) {
                 y--;
@@ -301,12 +304,12 @@ void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 
     // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
     for (int16_t i = x + r; i < x + w - r; i++) { // Obere und untere horizontale Linien
-        m_framebuffer[y * m_h_res + i] = color; // Oben
-        m_framebuffer[(y + h - 1) * m_h_res + i] = color; // Unten
+        m_framebuffer[0][y * m_h_res + i] = color; // Oben
+        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // Unten
     }
     for (int16_t i = y + r; i < y + h - r; i++) { // Linke und rechte vertikale Linien
-        m_framebuffer[i * m_h_res + x] = color; // Links
-        m_framebuffer[i * m_h_res + (x + w - 1)] = color; // Rechts
+        m_framebuffer[0][i * m_h_res + x] = color; // Links
+        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // Rechts
     }
 
     // Abgerundete Ecken zeichnen
@@ -316,7 +319,7 @@ void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
-    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -330,16 +333,16 @@ void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 
         while (x <= y) {
             for (int16_t i = 0; i <= x; i++) {
-                if (quadrant & 0x1) m_framebuffer[(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
-                if (quadrant & 0x2) m_framebuffer[(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
-                if (quadrant & 0x4) m_framebuffer[(cy + y) * m_h_res + (cx - i)] = color; // unten links
-                if (quadrant & 0x8) m_framebuffer[(cy - y) * m_h_res + (cx - i)] = color; // oben links
+                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
+                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
+                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
+                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
             }
             for (int16_t i = 0; i <= y; i++) {
-                if (quadrant & 0x10) m_framebuffer[(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
-                if (quadrant & 0x20) m_framebuffer[(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
-                if (quadrant & 0x40) m_framebuffer[(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
-                if (quadrant & 0x80) m_framebuffer[(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
+                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
+                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
+                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
+                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
             }
 
             if (f >= 0) {
@@ -356,19 +359,19 @@ void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
     for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
         for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
     for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
         for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
 
     // Vertikaler Bereich zwischen den Viertelkreisen füllen
     for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
         for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
-            m_framebuffer[i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
 
@@ -379,7 +382,7 @@ void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
-    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
@@ -391,10 +394,10 @@ void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     int16_t y = r;
 
     // Setze die Anfangspunkte (Symmetrieachsen)
-    m_framebuffer[(cy + r) * m_h_res + cx] = color; // Oben
-    m_framebuffer[(cy - r) * m_h_res + cx] = color; // Unten
-    m_framebuffer[cy * m_h_res + (cx + r)] = color; // Rechts
-    m_framebuffer[cy * m_h_res + (cx - r)] = color; // Links
+    m_framebuffer[0][(cy + r) * m_h_res + cx] = color; // Oben
+    m_framebuffer[0][(cy - r) * m_h_res + cx] = color; // Unten
+    m_framebuffer[0][cy * m_h_res + (cx + r)] = color; // Rechts
+    m_framebuffer[0][cy * m_h_res + (cx - r)] = color; // Links
 
     while (x < y) {
         if (f >= 0) {
@@ -407,18 +410,18 @@ void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         f += ddF_x;
 
         // Punkte in den acht Symmetrieachsen zeichnen
-        m_framebuffer[(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
-        m_framebuffer[(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
-        m_framebuffer[(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
-        m_framebuffer[(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
-        m_framebuffer[(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
-        m_framebuffer[(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
-        m_framebuffer[(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
-        m_framebuffer[(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
+        m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
+        m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
+        m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
+        m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
+        m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
+        m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
+        m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
+        m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
     }
 
     // Aktualisierung des gezeichneten Bereichs
-    esp_lcd_panel_draw_bitmap(m_panel, cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
@@ -432,18 +435,18 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
 
     // Fülle die erste vertikale Linie durch den Mittelpunkt
     for (int16_t i = Ym - r; i <= Ym + r; i++) {
-        m_framebuffer[i * m_h_res + Xm] = color;
+        m_framebuffer[0][i * m_h_res + Xm] = color;
     }
 
     while (x <= y) {
         // Fülle horizontale Linien für alle acht Symmetrieachsen
         for (int16_t i = Xm - x; i <= Xm + x; i++) {
-            m_framebuffer[(Ym + y) * m_h_res + i] = color; // Unten +y
-            m_framebuffer[(Ym - y) * m_h_res + i] = color; // Oben -y
+            m_framebuffer[0][(Ym + y) * m_h_res + i] = color; // Unten +y
+            m_framebuffer[0][(Ym - y) * m_h_res + i] = color; // Oben -y
         }
         for (int16_t i = Xm - y; i <= Xm + y; i++) {
-            m_framebuffer[(Ym + x) * m_h_res + i] = color; // Rechts +x
-            m_framebuffer[(Ym - x) * m_h_res + i] = color; // Links -x
+            m_framebuffer[0][(Ym + x) * m_h_res + i] = color; // Rechts +x
+            m_framebuffer[0][(Ym - x) * m_h_res + i] = color; // Links -x
         }
 
         if (f >= 0) {
@@ -457,7 +460,7 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
     }
 
     // Aktualisierung des gezeichneten Bereichs
-    esp_lcd_panel_draw_bitmap(m_panel, Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
@@ -1227,7 +1230,7 @@ void TFT_RGB::writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t pos
             if (fbX >= m_h_res || fbY >= m_v_res) continue;
 
             // Schreibe den berechneten Farbwert in den Framebuffer
-            m_framebuffer[fbY * m_h_res + fbX] = bitreader(nullptr);
+            m_framebuffer[0][fbY * m_h_res + fbX] = bitreader(nullptr);
         }
     }
 }
@@ -1512,7 +1515,7 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         pW = win_W;
     } // outer while
 exit:
-    esp_lcd_panel_draw_bitmap(m_panel, win_X, win_Y, win_X + win_W, win_Y + win_H, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, win_X, win_Y, win_X + win_W, win_Y + win_H, m_framebuffer[0]);
     return charsDrawn;
 }
 
@@ -1632,7 +1635,7 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
             const size_t yPos = y + i_y;
 
             if (xPos < m_h_res && yPos < m_v_res) {
-                m_framebuffer[yPos * m_h_res + xPos] = color;
+                m_framebuffer[0][yPos * m_h_res + xPos] = color;
             }
         }
     }
@@ -1641,7 +1644,7 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     bmp_file.close();
 
     // Nur den betroffenen Bereich auf dem Display aktualisieren
-    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + displayWidth, y + displayHeight, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
 
     return true;
 }
@@ -2394,11 +2397,11 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
 
             // Stelle sicher, dass die Koordinaten innerhalb der Grenzen liegen
             if (fb_x < m_h_res && fb_y < m_v_res) {
-                m_framebuffer[fb_y * m_h_res + fb_x] = buf[row * gif_ImageWidth + col];
+                m_framebuffer[0][fb_y * m_h_res + fb_x] = buf[row * gif_ImageWidth + col];
             }
         }
     }
-    esp_lcd_panel_draw_bitmap(m_panel, xpos, ypos, xpos + gif_ImageWidth, ypos + gif_ImageHeight, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, xpos, ypos, xpos + gif_ImageWidth, ypos + gif_ImageHeight, m_framebuffer[0]);
     // Speicher freigeben
     if (buf) {
         free(buf);
@@ -2469,9 +2472,10 @@ bool TFT_RGB::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     m_jpgSdFile = fs.open(path, FILE_READ);
     if(!m_jpgSdFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
-    JPEG_drawSdJpg(x, y);
+    int res = JPEG_drawSdJpg(x, y);
+log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
-    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer);
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
     return true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2517,8 +2521,8 @@ int TFT_RGB::JPEG_jd_output(JDEC* jdec, void* bitmap, JRECT* jrect) {
     int16_t  y = jrect->top + m_jpeg_y;
     uint16_t w = jrect->right + 1 - jrect->left;
     uint16_t h = jrect->bottom + 1 - jrect->top;
-    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
-    if(y > m_jpgHeightMax) return true;
+//    if(x > m_jpgWidthMax) return true;  // Clip width and height to the maximum allowed dimensions
+//    if(y > m_jpgHeightMax) return true;
     bool r = JPEG_tft_output(x, y, w, h, (uint16_t*)bitmap);
     return r;
 }
@@ -2553,12 +2557,12 @@ bool TFT_RGB::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
         uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
 
         // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-        uint16_t* dest_ptr = m_framebuffer + (start_y + j) * m_h_res + start_x;
+        uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
 
         // Kopiere nur die sichtbare Breite
         memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
     }
- //   log_i("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
+    // log_w("Bitmap erfolgreich mit Clipping gezeichnet bei x: %d, y: %d, sichtbare Breite: %d, sichtbare Höhe: %d", start_x, start_y, visible_w, visible_h);
     return true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

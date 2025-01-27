@@ -7,7 +7,7 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          7                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7) RGB_HMI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
@@ -96,6 +96,7 @@
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
+#if TFT_CONTROLLER < 7
     // Digital I/O used
         #define TFT_CS              8
         #define TFT_DC             12
@@ -129,6 +130,78 @@
 
         #define I2C_SDA            41  // I2C, dala line for capacitive touchpad
         #define I2C_SCL            42  // I2C, clock line for capacitive touchpad
+#else
+    const TFT_RGB::Pins RGB_PINS = {
+        .b0 = 15,
+        .b1 = 7,
+        .b2 = 6,
+        .b3 = 6,
+        .b4 = 4,
+        .g0 = 9,
+        .g1 = 46,
+        .g2 = 3,
+        .g3 = 8,
+        .g4 = 16,
+        .g5 = 1,
+        .r0 = 14,
+        .r1 = 21,
+        .r2 = 47,
+        .r3 = 48,
+        .r4 = 45,
+        .hsync = 39,
+        .vsync = 40,
+        .de = 41,
+        .pclk = 42,
+        .bl = 2
+    };
+
+    const TFT_RGB::Timing RGB_TIMING = {
+        .h_res = 800,
+        .v_res = 480,
+        .pixel_clock_hz = 8000000,
+        .hsync_pulse_width = 4,
+        .hsync_back_porch = 4,
+        .hsync_front_porch = 60,
+        .vsync_pulse_width = 4,
+        .vsync_back_porch = 4,
+        .vsync_front_porch = 12
+    };
+
+    #define TP_SDA 19
+    #define TP_SCL 20
+    #define TP_IRQ -1
+
+    #define SD_MMC_CMD     11
+    #define SD_MMC_CLK     12
+    #define SD_MMC_D0      13
+
+    #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-Frequenz
+    #define GT911_I2C_ADDRESS 0x5D   // Standard-I2C-Adresse des GT911
+
+    #define I2S_DOUT            17
+    #define I2S_BCLK            0
+    #define I2S_LRC             18
+    #define I2S_MCLK            0
+
+
+    #define IR_PIN             -1  // IR Receiver (if available)
+    #define BT_EMITTER_RX      -1  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_TX      -1  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_LINK    -1  // high if connected                     (-1 if not available)
+    #define BT_EMITTER_MODE    -1  // high transmit - low receive           (-1 if not available)
+    #define BT_EMITTER_CONNECT -1  // -1 if not used
+
+    #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
+    #define I2C_DAC_SCL        -1
+    #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
+    #define HP_DETECT          -1
+    #define AMP_ENABLED        -1
+    #define TFT_BL             -1
+
+    #define I2C_SDA            -1  // I2C, dala line for capacitive touchpad
+    #define I2C_SCL            -1  // I2C, clock line for capacitive touchpad
+    
+#endif
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -545,7 +618,12 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern TFT_SPI tft;
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+extern TFT_SPI     tft(SPI1, TFT_CS);
+#else
+extern TFT_RGB     tft;
+#endif
+
 inline void hardcopy(){
     const uint8_t bmp320x240[70] = {
         0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
@@ -4017,6 +4095,7 @@ public:
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_itemColor);
+        tft.setBackGoundColor(m_bgColor);
         tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
         tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
         x_ps_free(&m_item);
@@ -4192,6 +4271,7 @@ public:
         tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_stationColor);
+        tft.setBackGoundColor(m_bgColor);
         char buff[10];
         sprintf(buff, "%03d", staNr);
         tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h);

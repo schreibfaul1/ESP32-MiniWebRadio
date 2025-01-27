@@ -198,6 +198,7 @@ class TFT_RGB {
 
     TFT_RGB();
     ~TFT_RGB() { ; }
+    void refresh();
     void begin(const Pins& newPins, const Timing& newTiming);
     void setDisplayInversion(bool i);
     // Recommended Non-Transaction
@@ -229,7 +230,8 @@ class TFT_RGB {
     esp_lcd_panel_handle_t m_panel;
     uint16_t               m_h_res = 0;
     uint16_t               m_v_res = 0;
-    uint16_t*              m_framebuffer;
+    uint16_t*              m_framebuffer[2];
+    bool                   m_framebuffer_index = 0;
 
   private:
     File gif_file;
