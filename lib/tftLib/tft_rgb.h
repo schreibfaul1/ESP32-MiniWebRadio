@@ -190,7 +190,7 @@ class TFT_RGB {
         uint32_t pixel_clock_hz;
         uint8_t  hsync_pulse_width;
         uint8_t  hsync_back_porch;
-        uint8_t  hsync_front_porch;
+        uint16_t  hsync_front_porch;
         uint8_t  vsync_pulse_width;
         uint8_t  vsync_back_porch;
         uint8_t  vsync_front_porch;

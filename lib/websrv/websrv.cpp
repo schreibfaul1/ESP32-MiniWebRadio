@@ -918,7 +918,7 @@ void WebSrv::url_decode_in_place(char* url) {
     int write_pos = 0;  // Die Position, an die das dekodierte Zeichen geschrieben wird
 
     auto from_hex = [](char ch) {
-       return std::isdigit(ch) ? ch - '0' : std::tolower(ch) - 'a' + 10;
+       return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
     };
 
     for (int i = 0; i < length; ++i) {

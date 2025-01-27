@@ -29,8 +29,8 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.flags.hsync_idle_low = true;
     panel_config.timings.flags.vsync_idle_low = true;
     panel_config.timings.flags.de_idle_high = false;
-    panel_config.timings.flags.pclk_active_neg = true;
-    panel_config.timings.flags.pclk_idle_high = true;
+    panel_config.timings.flags.pclk_active_neg = false;
+    panel_config.timings.flags.pclk_idle_high = false;
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
