@@ -829,6 +829,20 @@ private:
         int32_t  fileSize;
         char*    fileName;
         char*    filePath;
+
+        FileInfo(int32_t fs, const char* fn, const char* fp) : fileSize(fs), fileName(x_ps_strdup(fn)), filePath(x_ps_strdup(fp)) {}                 // constructor
+        ~FileInfo() { x_ps_free(&fileName); x_ps_free(&filePath); }                                                                                  // destructor
+        FileInfo(const FileInfo& other) : fileSize(other.fileSize), fileName(x_ps_strdup(other.fileName)), filePath(x_ps_strdup(other.filePath)) {}  // copy constructor
+        FileInfo& operator=(const FileInfo& other) {   // copy assignment
+            if (this != &other) {
+                fileSize = other.fileSize;
+                x_ps_free(&fileName);
+                x_ps_free(&filePath);
+                fileName = x_ps_strdup(other.fileName);
+                filePath = x_ps_strdup(other.filePath);
+            }
+            return *this;
+        }
     };
     std::vector<FileInfo> m_files;
 
@@ -867,18 +881,19 @@ public:
             if(m_slaveFile.isDirectory()) {
                 if(!withoutDirs) { // folder size is -1
                     char* path = x_ps_malloc(strlen(m_slaveFile.path()) + 3); strcpy(path, (const char*)m_slaveFile.path()); strcat(path, "/"); // add '/'
-                    m_files.emplace_back((int) -1, x_ps_strdup(m_slaveFile.name()), path);
+                    m_files.emplace_back((int) -1, m_slaveFile.name(), path);
+                    x_ps_free(&path);
                 }
             }
             else {
                 if(audioFilesOnly) {
                     if(endsWith(m_slaveFile.name(), ".mp3") || endsWith(m_slaveFile.name(), ".aac") || endsWith(m_slaveFile.name(), ".m4a") || endsWith(m_slaveFile.name(), ".wav") || endsWith(m_slaveFile.name(), ".flac") ||
                        endsWith(m_slaveFile.name(), ".m3u") || endsWith(m_slaveFile.name(), ".opus") || endsWith(m_slaveFile.name(), ".ogg")) {
-                        m_files.emplace_back(m_slaveFile.size(), x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
+                        m_files.emplace_back(m_slaveFile.size(), m_slaveFile.name(), m_slaveFile.path());
                     }
                 }
                 else {
-                    m_files.emplace_back(m_slaveFile.size(), x_ps_strdup(m_slaveFile.name()), x_ps_strdup(m_slaveFile.path()));
+                    m_files.emplace_back(m_slaveFile.size(), m_slaveFile.name(), m_slaveFile.path());
                 }
             }
         }
@@ -1067,12 +1082,7 @@ public:
 
 private:
     void freeFilesVector() {
-        for (auto& file : m_files) {
-            x_ps_free(&file.fileName);  // free PSRAM
-            x_ps_free(&file.filePath);  // free PSRAM
-        }
         m_files.clear();
-        m_files.shrink_to_fit();
     }
 
     void sort(){
