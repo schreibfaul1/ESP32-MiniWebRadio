@@ -132,55 +132,55 @@
         #define I2C_SCL            42  // I2C, clock line for capacitive touchpad
 #else
     const TFT_RGB::Pins RGB_PINS = {
-        .b0 = 8,
-        .b1 = 3,
-        .b2 = 46,
-        .b3 = 9,
-        .b4 = 1,
-        .g0 = 5,
-        .g1 = 6,
-        .g2 = 7,
-        .g3 = 15,
+        .b0 = 15,
+        .b1 = 7,
+        .b2 = 6,
+        .b3 = 6,
+        .b4 = 4,
+        .g0 = 9,
+        .g1 = 46,
+        .g2 = 3,
+        .g3 = 8,
         .g4 = 16,
-        .g5 = 4,
-        .r0 = 45,
-        .r1 = 48,
+        .g5 = 1,
+        .r0 = 14,
+        .r1 = 21,
         .r2 = 47,
-        .r3 = 21,
-        .r4 = 14,
+        .r3 = 48,
+        .r4 = 45,
         .hsync = 39,
-        .vsync = 41,
-        .de = 40,
-        .pclk = 0,
+        .vsync = 40,
+        .de = 41,
+        .pclk = 42,
         .bl = 2
     };
 
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 10000000,
-        .hsync_pulse_width = 40,
-        .hsync_back_porch = 80,
-        .hsync_front_porch = 400,
-        .vsync_pulse_width = 8,
-        .vsync_back_porch = 4,
-        .vsync_front_porch = 8
+        .pixel_clock_hz = 8000000,
+        .hsync_pulse_width = 4,
+        .hsync_back_porch = 16,
+        .hsync_front_porch = 280,
+        .vsync_pulse_width = 13,
+        .vsync_back_porch = 10,
+        .vsync_front_porch = 12
     };
 
-    #define TP_SDA             19
-    #define TP_SCL             20
-    #define TP_IRQ             -1
+    #define TP_SDA 19
+    #define TP_SCL 20
+    #define TP_IRQ -1
 
-    #define SD_MMC_CMD         11
-    #define SD_MMC_CLK         12
-    #define SD_MMC_D0          13
+    #define SD_MMC_CMD 11
+    #define SD_MMC_CLK 12
+    #define SD_MMC_D0 13
 
     #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-Frequenz
-    #define GT911_I2C_ADDRESS  0x5D   // Standard-I2C-Adresse des GT911
+    #define GT911_I2C_ADDRESS 0x5D   // Standard-I2C-Adresse des GT911
 
-    #define I2S_DOUT           17
-    #define I2S_BCLK           42
-    #define I2S_LRC            18
+    #define I2S_DOUT            17
+    #define I2S_BCLK            0
+    #define I2S_LRC             18
     #define I2S_MCLK            0
 
     #define IR_PIN             -1  // IR Receiver (if available)
@@ -199,8 +199,6 @@
 
     #define I2C_SDA            -1  // I2C, dala line for capacitive touchpad
     #define I2C_SCL            -1  // I2C, clock line for capacitive touchpad
-
-
 #endif
 #endif
 
@@ -619,7 +617,7 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
-extern TFT_SPI     tft(SPI1, TFT_CS);
+extern TFT_SPI     tft;
 #else
 extern TFT_RGB     tft;
 #endif
@@ -983,7 +981,7 @@ public:
         if(m_files.size() == 0)      {log_w("m_files.size() is 0"); return "";}
         if(m_files.size() < idx + 1) {log_w("idx %i is oor, max = %i", idx, m_files.size()); return "";}
         if(isDir(idx)) return m_files[idx].fileName;
-        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li" , m_files[idx].fileName, m_files[idx].fileSize);
+        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %i" , m_files[idx].fileName, m_files[idx].fileSize);
         return m_buff;
     }
     const char* getFileNameByIndex(uint16_t idx){
