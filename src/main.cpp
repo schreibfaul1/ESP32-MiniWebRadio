@@ -213,6 +213,7 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+TFT_SPI             tft(HSPI, TFT_CS);
 #if TFT_CONTROLLER <= 7
 TP                  tp(TP_CS, TP_IRQ);
 #else
@@ -349,8 +350,6 @@ uint16_t _dispHeight  = 320;
 uint8_t  _tftSize     = 1;
 uint8_t  _irNumber_x  = 100;
 uint8_t  _irNumber_y  = 80;
-//
-TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 //
 // clang-format on
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6

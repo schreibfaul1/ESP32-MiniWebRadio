@@ -44,7 +44,7 @@
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
-#include "tft.h"
+#include "tft_spi.h"
 #include "SPIFFS.h"
 #include "ESP32FtpServer.h"
 #include "Audio.h"
