@@ -213,11 +213,19 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
-TFT_SPI             tft(HSPI, TFT_CS);
-#if TFT_CONTROLLER <= 7
-TP                  tp(TP_CS, TP_IRQ);
+
+#if CONFIG_IDF_TARGET_ESP32
+    SPIClass SPI1(VSPI);
 #else
-TP                  tp(&i2cBusTwo);
+    SPIClass SPI1(FSPI);
+#endif
+
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+TFT_SPI     tft(SPI1, TFT_CS);
+TP_XPT2046  tp(SPI1, TFT_CS);
+#else
+TFT_RGB     tft;
+TP_GT911    tp(&i2cBusOne);
 #endif
 
 stationManagement   staMgnt(&_cur_station);
