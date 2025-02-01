@@ -216,7 +216,7 @@ hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
 
 #if CONFIG_IDF_TARGET_ESP32
     SPIClass SPI1(VSPI);
-#else
+#else  // TARGET ESP32-S3
     SPIClass SPI1(FSPI);
 #endif
 
@@ -296,8 +296,6 @@ uint16_t _dispHeight  = 240;
 uint8_t  _tftSize     = 0;
 uint8_t  _irNumber_x  = 25;
 uint8_t  _irNumber_y  = 40;
-//
-TFT tft(TFT_CONTROLLER, DISPLAY_INVERSION);
 //
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
@@ -453,7 +451,7 @@ boolean defaultsettings(){
         ir.set_irButtons(i, _settings.irbuttons[i].val);
     }
         ir.set_irAddress(_settings.irbuttons[42].val);
-        log_w("0x%04X,  %s", _settings.irbuttons[42].val, _settings.irbuttons[42].label);
+    //    log_w("0x%04X,  %s", _settings.irbuttons[42].val, _settings.irbuttons[42].label);
 
     if(!SD_MMC.exists("/settings.json")){  // if not found create one
         updateSettings();
@@ -783,6 +781,7 @@ void showLogoAndStationName(bool force) {
     //    log_w("showLogoAndStationName: %s", staMgnt.getStationName(_cur_station));
         SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(_cur_station)) + 12, 1);
         memcpy(SN_utf8, staMgnt.getStationName(_cur_station), strlen(staMgnt.getStationName(_cur_station)) + 1);
+        SerialPrintfln("Country: ... " ANSI_ESC_GREEN "%s", staMgnt.getStationCountry(_cur_station));
     }
     else {
         if(!_stationName_air) _stationName_air = strdup("");
@@ -1458,21 +1457,30 @@ void setup() {
 #if CONFIG_IDF_TARGET_ESP32
     tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32
 #else
-    tft.begin(TFT_CS, TFT_DC, FSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32S3
+    tft.begin(TFT_DC); // Init TFT interface ESP32S3
 #endif
 
+#if TFT_CONTROLLER < 7
+    SPI1.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
+    tft.setTFTcontroller(TFT_CONTROLLER);
+    tft.setDiaplayInversion(DISPLAY_INVERSION);
+    tft.begin(TFT_DC); // Init TFT interface
     setTFTbrightness(100);
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tft.setBackGoundColor(TFT_BLACK);
+
+    tp.begin(TP_IRQ);
     tp.setVersion(TP_VERSION);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#if TFT_CONTROLLER <= 7
-    tp.TP_Send(0xD0);
-    tp.TP_Send(0x90); // Remove any blockage
 #else
-    tp.begin(I2C_SDA, I2C_SCL, TP_ADDR, 400000, -1, -1);
+    tp.begin(TP_SDA, TP_SCL, GT911_I2C_ADDRESS, I2C_MASTER_FREQ_HZ, TP_IRQ, -1);
+    tp.getProductID();
+    tp.setVersion(TP_GT911::GT911);
+    tp.setRotation(TP_GT911::Rotate::_0);
+    tft.begin(RGB_PINS, RGB_TIMING);
+    tft.setDisplayInversion(false);
 #endif
 
     SerialPrintfln("setup: ....  Init SD card");
@@ -1626,9 +1634,10 @@ void setup() {
  *****************************************************************************************************************************************************/
 
 const char* scaleImage(const char* path) {
-    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif"))) { // not a image
+    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") &&(!endsWith(path, "png8")))) { // not a image
         return path;
     }
+    if(startsWith(path, "/png")) return path; // nothing to do
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
     int idx = indexOf(path, "/", 1);
@@ -1739,7 +1748,20 @@ void setStation(uint16_t sta) {
     }
     old_cur_station = sta;
     StationsItems();
-    if(_state == RADIO) showLogoAndStationName(true);
+    if(_state == RADIO) {
+        showLogoAndStationName(true);
+        if(_cur_station == 0){
+            dispHeader.setFlag(NULL);
+        }
+        else{
+            char path[25] ="/flags/";
+            strcat(path, staMgnt.getStationCountry(_cur_station));
+            for(int i = 0; i< strlen(path); i++) path[i] = tolower(path[i]);
+            strcat(path, ".jpg");
+            const char* scaledpath = scaleImage(path);
+            dispHeader.setFlag(scaledpath);
+        }
+    }
     dispFooter.updateStation(_cur_station);
 }
 void nextStation() {

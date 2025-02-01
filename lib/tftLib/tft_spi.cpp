@@ -445,7 +445,7 @@ uint16_t TFT_SPI::readCommand() {
 void TFT_SPI::begin(uint8_t DC) {
     SPIset = SPISettings(_freq, MSBFIRST, SPI_MODE0);
     String info = "";
-    
+
     _TFT_DC = DC;
 
     pinMode(_TFT_DC, OUTPUT);
@@ -454,7 +454,6 @@ void TFT_SPI::begin(uint8_t DC) {
     digitalWrite(_TFT_CS, HIGH);
     init(); //
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setRotation(uint8_t m) {
     _rotation = m % 4; // can't be higher than 3
@@ -4508,281 +4507,1059 @@ uint8_t TFT_SPI::JPEG_jd_decomp(JDEC* jd, uint8_t scale) {
     }
     return rc;
 }
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//  ⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   T O U C H   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   P N G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//        GT911
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if TP_VERSION == 8
-// Interrupt handling
-volatile bool gt911IRQ = false;
+bool TFT_SPI::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight) {
 
-void IRAM_ATTR gt911_irq_handler() {
-    noInterrupts();
-    gt911IRQ = true;
-    interrupts();
-}
+    png_state = PNG_NEW;
+    png_error = PNG_EOK;
+    png_color_type = PNG_RGBA;
+    png_color_depth = 8;
+    png_format = PNG_RGBA8;
+    png_size = 0;
+    png_pos_x = x;
+    png_pos_y = y;
+    png_max_width = maxWidth;
+    png_max_height = maxHeight;
 
-// Code for GT911
-TP::TP(TwoWire *twi){
-    m_wire = twi; // I2C TwoWire Instance
-}
-
-bool TP::begin(int8_t sda, int8_t scl, uint8_t addr, uint32_t clk, int8_t intPin, int8_t rstPin) {
-    m_sda = sda;
-    m_scl = scl;
-    m_addr = addr;
-    m_clk = clk;
-    m_intPin = intPin;
-    m_rstPin = rstPin;
-
-    if (m_rstPin > 0) {
-        delay(300);
-        reset();
-        delay(200);
+    if(!fs.exists(path)) {
+        log_e("File not found: %s", path);
+        return NULL;
     }
-
-    if (m_intPin > 0) {
-        pinMode(m_intPin, INPUT);
-        attachInterrupt(m_intPin, gt911_irq_handler, FALLING);
+    png_file = fs.open(path, "r");
+    if(!png_file) {
+        log_e("Failed to open file for reading");
+        return NULL;
     }
-    m_wire->begin(m_sda, m_scl, m_clk);
-    m_wire->beginTransmission(m_addr);
-    if(m_wire->endTransmission() == 0) {
-        log_e("TouchPad found at 0x%02X", m_addr);
-        readInfo(); // Need to get resolution to use rotation
-        return true;
+    int file_size = png_file.size(); /* get filesize */
+    png_buffer = (char*)ps_malloc(file_size);
+    png_size = file_size;
+    if(!png_buffer) {
+        log_e("Failed to allocate memory for file");
+        png_file.close();
+        return NULL;
     }
-    log_e("TouchPad not Initialized");
-    return false;
+    png_file.readBytes(png_buffer, (size_t)file_size);
+    png_file.close();
+    int err  = png_decode();
+    // log_w("png_decode err=%i",err);
+    return err == PNG_EOK;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP::setRotation(uint8_t m) {
-    if(m == 2) m_rotation = Rotate::_0;
-    else if(m == 3) m_rotation = Rotate::_90;
-    else if(m == 0) m_rotation = Rotate::_180;
-    else if(m == 1) m_rotation = Rotate::_270;
-
-    if(m_version == TP_GT911){
-        switch(m_rotation) {
-            case Rotate::_0:   m_info.xResolution = 800; m_info.yResolution = 480; break;
-            case Rotate::_90:  m_info.xResolution = 480; m_info.yResolution = 800; break;
-            case Rotate::_180: m_info.xResolution = 800; m_info.yResolution = 480; break;
-            case Rotate::_270: m_info.xResolution = 480; m_info.yResolution = 800; break;
-        }
-    }
- }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP::setMirror(bool h, bool v) {
-    m_mirror_h = h;
-    m_mirror_v = v;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP::setVersion(uint8_t v) {
-    switch(v) {
-        case 3: m_version = TP_GT911; break;  // GT927, GT928, GT967, GT5688
-        // case 4: m_version = TP_ILI2510; break; // ILI9488
-        // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
-    }
-    log_i("Resulution: %dx%d", m_info.xResolution, m_info.yResolution);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP::loop() {
-    static GTPoint p, p1;
-    static uint32_t ts = 0;
-    uint8_t t = touched(TP::GT911_MODE_POLLING); // number of touch points
-    if(t == 1 && !m_f_isTouch) {
-        p = getPoint(0);
-        log_w("X: %d, Y: %d", p.x, p.y);
-        if(tp_pressed) tp_pressed(p.x, p.y);
-        ts = millis();
-        m_f_isTouch = true;
-        return;
-    }
-    if(t == 1 && m_f_isTouch) {
-        p1 = getPoint(0);
-        if(p1.x != p.x || p1.y != p.y) {
-            p = p1;
-            if(tp_moved) tp_moved(p.x, p.y);
-            return;
-        }
-        // fall through
-    }
-
-    if(t == 1 && m_f_isTouch && (millis() > ts + 2000) && !m_f_isLongPressed) {
-        m_f_isLongPressed = true;
-        if(tp_long_pressed) tp_long_pressed(p.x, p.y);
-        ts = millis() + 10000;
-        return;
-    }
-    if(t == 0 && m_f_isTouch && !m_f_isLongPressed) {
-        if(tp_released) tp_released(p.x, p.y);
-        m_f_isTouch = false;
-        return;
-    }
-    if(t == 0 && m_f_isLongPressed) {
-        m_f_isLongPressed = false;
-        if(tp_long_released) tp_long_released(p.x, p.y);
-        m_f_isTouch = false;
-        return;
-    }
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP::getProductID() {
-    uint8_t buf[4];
-    memset(buf, 0, 4);
-    readBytes(GT911_REG_ID, buf, 4);
-    log_w("Product ID: %c%c%c%c", buf[0], buf[1], buf[2], buf[3]);
-    return true;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-void TP::reset() {
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    pinMode(m_intPin, OUTPUT); digitalWrite(m_intPin, LOW);
-    pinMode(m_rstPin, OUTPUT); digitalWrite(m_rstPin, LOW);
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    digitalWrite(m_intPin, m_addr);
-    pinMode(m_rstPin, INPUT);
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-    digitalWrite(m_intPin, LOW);
-    vTaskDelay(10 / portTICK_PERIOD_MS);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP::write(uint16_t reg, uint8_t data) {
-    m_wire->beginTransmission(m_addr);
-    m_wire->write(reg >> 8);
-    m_wire->write(reg & 0xFF);
-    m_wire->write(data);
-  return m_wire->endTransmission(true) == 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TP::read(uint16_t reg) {
-    m_wire->beginTransmission(m_addr);
-    m_wire->write(reg >> 8);
-    m_wire->write(reg & 0xFF);
-    m_wire->endTransmission(false);
-    m_wire->requestFrom(m_addr, (uint8_t)1);
-    while (m_wire->available()) {
-        return m_wire->read();
-    }
-    m_wire->endTransmission(true);
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP::writeBytes(uint16_t reg, uint8_t *data, uint16_t size) {
-    m_wire->beginTransmission(m_addr);
-    m_wire->write(reg >> 8);
-    m_wire->write(reg & 0xFF);
-    for (uint16_t i = 0; i < size; i++) {
-        m_wire->write(data[i]);
-    }
-    return m_wire->endTransmission(true) == 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP::readBytes(uint16_t reg, uint8_t *data, uint16_t size) {
-    m_wire->beginTransmission(m_addr);
-    m_wire->write(reg >> 8);
-    m_wire->write(reg & 0xFF);
-    m_wire->endTransmission(false);
-
-    uint16_t index = 0;
-    while (index < size) {
-        uint8_t req = _min(size - index, I2C_BUFFER_LENGTH);
-        m_wire->requestFrom(m_addr, req);
-        while (m_wire->available()) {
-            data[index++] = m_wire->read();
-        }
-        index++;
-    }
-    m_wire->endTransmission(true);
-    return size == index - 1;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TP::calcChecksum(uint8_t* buf, uint8_t len) {
-    uint8_t ccsum = 0;
-    for (uint8_t i = 0; i < len; i++) { ccsum += buf[i]; }
-
-    return (~ccsum + 1) &0xFF; // complement of checksum
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TP::readChecksum() {
-    return read(GT911_REG_CHECKSUM);
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-int8_t TP::readTouches() {
-    uint32_t timeout = millis() + 20;
-    do {
-        uint8_t flag = read(GT911_REG_COORD_ADDR);
-        if ((flag & 0x80) && ((flag & 0x0F) < GT911_MAX_CONTACTS)) {
-            write(GT911_REG_COORD_ADDR, 0);
-            return flag & 0x0F;
-        }
-        delay(1);
-    } while (millis() < timeout);
-
-    return 0;
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-bool TP::readTouchPoints() {
-    bool result = readBytes(GT911_REG_COORD_ADDR + 1, (uint8_t*)m_points, sizeof(GTPoint) * GT911_MAX_CONTACTS);
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+char TFT_SPI::read_bit(uint32_t *bitpointer, const char* bitstream) {
+    char result = (char)((bitstream[(*bitpointer) >> 3] >> ((*bitpointer) & 0x7)) & 1);
+    (*bitpointer)++;
     return result;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-TP::GTInfo* TP::readInfo() {
-    readBytes(GT911_REG_DATA, (uint8_t*)&m_info, sizeof(m_info));
-    return &m_info;
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::read_bits(uint32_t* bitpointer, const char* bitstream, uint32_t nbits) {
+    unsigned result = 0, i;
+    for(i = 0; i < nbits; i++) result |= ((uint16_t)read_bit(bitpointer, bitstream)) << i;
+    return result;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-uint8_t TP::touched(uint8_t mode) {
-    bool irq = false;
-    if (mode == GT911_MODE_INTERRUPT) {
-        noInterrupts();
-        irq = gt911IRQ;
-        gt911IRQ = false;
-        interrupts();
-    } else if (mode == GT911_MODE_POLLING) {
-        irq = true;
-    }
-    uint8_t contacts = 0;
-    if (irq) {
-        contacts = readTouches();
-        if (contacts > 0) { readTouchPoints(); }
-    }
-    return contacts;
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/* the buffer must be numcodes*2 in size! */
+void TFT_SPI::huffman_tree_init(huffman_tree* tree, uint16_t* buffer, uint16_t numcodes, uint16_t maxbitlen) {
+    tree->tree2d = buffer;
+    tree->numcodes = numcodes;
+    tree->maxbitlen = maxbitlen;
 }
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-TP::GTPoint TP::getPoint(uint8_t num) {
-    int x_new = 0, y_new = 0;
-    if(m_mirror_h) m_points[num].x = m_info.xResolution - m_points[num].x;
-    if(m_mirror_v) m_points[num].y = m_info.yResolution - m_points[num].y;
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*given the code lengths (as stored in the PNG file), generate the tree as defined by Deflate. maxbitlen is the maximum
+ * bits that a code in the tree can have. return value is error.*/
+void TFT_SPI::huffman_tree_create_lengths(huffman_tree* tree, const uint16_t* bitlen) {
+    uint16_t tree1d[MAX_SYMBOLS];
+    uint16_t blcount[MAX_BIT_LENGTH];
+    uint16_t nextcode[MAX_BIT_LENGTH + 1];
+    uint16_t bits, n, i;
+    uint16_t nodefilled = 0; /*up to which node it is filled */
+    uint16_t treepos = 0;    /*position in the tree (1 of the numcodes columns) */
 
-    switch(m_rotation) {
-        case Rotate::_0:   return m_points[num]; // No change
-        case Rotate::_90:  y_new = m_info.yResolution - m_points[num].x; x_new = m_points[num].y; break;
-        case Rotate::_180: x_new = m_info.xResolution - m_points[num].x; y_new = m_info.yResolution - m_points[num].y; break;
-        case Rotate::_270: x_new = m_info.xResolution - m_points[num].y; y_new = m_points[num].x; break;
+    /* initialize local vectors */
+    memset(blcount, 0, sizeof(blcount));
+    memset(nextcode, 0, sizeof(nextcode));
+
+    /*step 1: count number of instances of each code length */
+    for(bits = 0; bits < tree->numcodes; bits++) { blcount[bitlen[bits]]++; }
+
+    /*step 2: generate the nextcode values */
+    for(bits = 1; bits <= tree->maxbitlen; bits++) { nextcode[bits] = (nextcode[bits - 1] + blcount[bits - 1]) << 1; }
+
+    /*step 3: generate all the codes */
+    for(n = 0; n < tree->numcodes; n++) {
+        if(bitlen[n] != 0) { tree1d[n] = nextcode[bitlen[n]]++; }
     }
-    m_points[num].x = x_new;
-    m_points[num].y = y_new;
-    return m_points[num];
-}
-//----------------------------------------------------------------------------------------------------------------------------------------------------
-TP::GTPoint* TP::getPoints() {
-    int x_new = 0, y_new = 0;
-    for (uint8_t i = 0; i < GT911_MAX_CONTACTS; i++) {
-        if(m_mirror_h) m_points[i].x = m_info.xResolution - m_points[i].x;
-        if(m_mirror_v) m_points[i].y = m_info.yResolution - m_points[i].y;
-        switch(m_rotation) {
-            case Rotate::_0:   break; // No change
-            case Rotate::_90:  x_new = m_info.xResolution - m_points[i].x; y_new = m_points[i].y; break;
-            case Rotate::_180: x_new = m_info.xResolution - m_points[i].x; y_new = m_info.yResolution - m_points[i].y; break;
-            case Rotate::_270: x_new = m_info.yResolution - m_points[i].y; y_new = m_points[i].x; break;
+
+    /*convert tree1d[] to tree2d[][]. In the 2D array, a value of 32767 means uninited, a value >= numcodes is an address to another bit, a value < numcodes is a code. The 2 rows are the 2 possible
+     bit values (0 or 1), there are as many columns as codes - 1 a good huffmann tree has N * 2 - 1 nodes, of which N - 1 are internal nodes. Here, the internal nodes are stored (what their 0 and 1
+     option point to). There is only memory for such good tree currently, if there are more nodes (due to too long length codes), error 55 will happen */
+    for(n = 0; n < tree->numcodes * 2; n++) {
+        tree->tree2d[n] = 32767; /*32767 here means the tree2d isn't filled there yet */
+    }
+
+    for(n = 0; n < tree->numcodes; n++) { /*the codes */
+        for(i = 0; i < bitlen[n]; i++) {  /*the bits for this code */
+            unsigned char bit = (unsigned char)((tree1d[n] >> (bitlen[n] - i - 1)) & 1);
+            /* check if oversubscribed */
+            if(treepos > tree->numcodes - 2) {
+                log_e("oversubscribed");
+                png_error = PNG_EMALFORMED;
+                return;
+            }
+
+            if(tree->tree2d[2 * treepos + bit] == 32767) { /*not yet filled in */
+                if(i + 1 == bitlen[n]) {                   /*last bit */
+                    tree->tree2d[2 * treepos + bit] = n;   /*put the current code in it */
+                    treepos = 0;
+                }
+                else { /*put address of the next step in here, first that address has to be found of course (it's just
+                          nodefilled + 1)... */
+                    nodefilled++;
+                    tree->tree2d[2 * treepos + bit] =
+                        nodefilled + tree->numcodes; /*addresses encoded with numcodes added to it */
+                    treepos = nodefilled;
+                }
+            }
+            else { treepos = tree->tree2d[2 * treepos + bit] - tree->numcodes; }
         }
-        m_points[i].x = x_new;
-        m_points[i].y = y_new;
     }
-    return m_points;
+
+    for(n = 0; n < tree->numcodes * 2; n++) {
+        if(tree->tree2d[n] == 32767) { tree->tree2d[n] = 0; /*remove possible remaining 32767's */ }
+    }
 }
-#endif
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::huffman_decode_symbol(const char* in, uint32_t  * bp, const huffman_tree* codetree, uint32_t inlength) {
+    int16_t      treepos = 0, ct;
+    char bit;
+    for(;;) {
+        /* error: end of input memory reached without endcode */
+        if(((*bp) & 0x07) == 0 && ((*bp) >> 3) > inlength) {
+            log_e("end of input memory reached without endcode");
+            png_error =  PNG_EMALFORMED;
+            return 0;
+        }
+
+        bit = read_bit(bp, in);
+
+        ct = codetree->tree2d[(treepos << 1) | bit];
+        if(ct < codetree->numcodes) { return ct; }
+
+        treepos = ct - codetree->numcodes;
+        if(treepos >= codetree->numcodes) {
+            log_e("error, treepos is larger than numcodes");
+            png_error =  PNG_EMALFORMED;
+            return 0;
+        }
+    }
+    return 0;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/* get the tree of a deflated block with dynamic tree, the tree itself is also Huffman compressed with a known tree*/
+void TFT_SPI::get_tree_inflate_dynamic(huffman_tree* codetree, huffman_tree* codetreeD, huffman_tree* codelengthcodetree, const char* in, uint32_t *bp, uint32_t inlength) {
+    uint16_t codelengthcode[NUM_CODE_LENGTH_CODES];
+    uint16_t bitlen[NUM_DEFLATE_CODE_SYMBOLS];
+    uint16_t bitlenD[NUM_DISTANCE_SYMBOLS];
+    uint16_t n, hlit, hdist, hclen, i;
+
+    /*make sure that length values that aren't filled in will be 0, or a wrong tree will be generated */
+    /*C-code note: use no "return" between ctor and dtor of an uivector! */
+    if((*bp) >> 3 >= inlength - 2) {
+        log_e("error, bit pointer will jump past memory");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    /* clear bitlen arrays */
+    memset(bitlen, 0, sizeof(bitlen));
+    memset(bitlenD, 0, sizeof(bitlenD));
+
+    /*the bit pointer is or will go past the memory */
+    hlit = read_bits(bp, in, 5) +
+           257; /*number of literal/length codes + 257. Unlike the spec, the value 257 is added to it here already */
+    hdist = read_bits(bp, in, 5) +
+            1; /*number of distance codes. Unlike the spec, the value 1 is added to it here already */
+    hclen = read_bits(bp, in, 4) +
+            4; /*number of code length codes. Unlike the spec, the value 4 is added to it here already */
+
+    for(i = 0; i < NUM_CODE_LENGTH_CODES; i++) {
+        if(i < hclen) { codelengthcode[CLCL[i]] = read_bits(bp, in, 3); }
+        else { codelengthcode[CLCL[i]] = 0; /*if not, it must stay 0 */ }
+    }
+
+    huffman_tree_create_lengths(codelengthcodetree, codelengthcode);
+
+    /* bail now if we encountered an error earlier */
+    if(png_error != PNG_EOK) { return; }
+
+    /*now we can use this tree to read the lengths for the tree that this function will return */
+    i = 0;
+    while(i < hlit + hdist) { /*i is the current symbol we're reading in the part that contains the code lengths of
+                                 lit/len codes and dist codes */
+        unsigned code = huffman_decode_symbol(in, bp, codelengthcodetree, inlength);
+        if(png_error != PNG_EOK) { break; }
+
+        if(code <= 15) { /*a length code */
+            if(i < hlit) { bitlen[i] = code; }
+            else { bitlenD[i - hlit] = code; }
+            i++;
+        }
+        else if(code == 16) {       /*repeat previous */
+            unsigned replength = 3; /*read in the 2 bits that indicate repeat length (3-6) */
+            unsigned value;         /*set value to the previous code */
+
+            if((*bp) >> 3 >= inlength) {
+                log_e("error, bit pointer jumps past memory");
+                png_error = PNG_EMALFORMED;
+                break;
+            }
+            /*error, bit pointer jumps past memory */
+            replength += read_bits(bp, in, 2);
+
+            if((i - 1) < hlit) { value = bitlen[i - 1]; }
+            else { value = bitlenD[i - hlit - 1]; }
+
+            /*repeat this value in the next lengths */
+            for(n = 0; n < replength; n++) {
+                /* i is larger than the amount of codes */
+                if(i >= hlit + hdist) {
+                    log_e("error: i is larger than the amount of codes");
+                    png_error = PNG_EMALFORMED;
+                    break;
+                }
+
+                if(i < hlit) { bitlen[i] = value; }
+                else { bitlenD[i - hlit] = value; }
+                i++;
+            }
+        }
+        else if(code == 17) {       /*repeat "0" 3-10 times */
+            unsigned replength = 3; /*read in the bits that indicate repeat length */
+            if((*bp) >> 3 >= inlength) {
+                log_e("error, bit pointer jumps past memory");
+                png_error = PNG_EMALFORMED;
+                break;
+            }
+
+            /*error, bit pointer jumps past memory */
+            replength += read_bits(bp, in, 3);
+
+            /*repeat this value in the next lengths */
+            for(n = 0; n < replength; n++) {
+                /* error: i is larger than the amount of codes */
+                if(i >= hlit + hdist) {
+                    log_e("error: i is larger than the amount of codes");
+                    png_error = PNG_EMALFORMED;
+                    break;
+                }
+
+                if(i < hlit) { bitlen[i] = 0; }
+                else { bitlenD[i - hlit] = 0; }
+                i++;
+            }
+        }
+        else if(code == 18) {        /*repeat "0" 11-138 times */
+            unsigned replength = 11; /*read in the bits that indicate repeat length */
+            /* error, bit pointer jumps past memory */
+            if((*bp) >> 3 >= inlength) {
+                log_e("error, bit pointer jumps past memory");
+                png_error = PNG_EMALFORMED;
+                break;
+            }
+
+            replength += read_bits(bp, in, 7);
+
+            /*repeat this value in the next lengths */
+            for(n = 0; n < replength; n++) {
+                /* i is larger than the amount of codes */
+                if(i >= hlit + hdist) {
+                    log_e("error: i is larger than the amount of codes");
+                    png_error = PNG_EMALFORMED;
+                    break;
+                }
+                if(i < hlit) bitlen[i] = 0;
+                else
+                    bitlenD[i - hlit] = 0;
+                i++;
+            }
+        }
+        else {
+            /* somehow an unexisting code appeared. This can never happen. */
+            log_e("error: unexisting code");
+            png_error = PNG_EMALFORMED;
+            break;
+        }
+    }
+
+    if(png_error == PNG_EOK && bitlen[256] == 0) { log_e("image data is not a valid PNG image"); png_error = PNG_EMALFORMED;}
+
+    /*the length of the end code 256 must be larger than 0 */
+    /*now we've finally got hlit and hdist, so generate the code trees, and the function is done */
+    if(png_error == PNG_EOK) { huffman_tree_create_lengths(codetree, bitlen); }
+    if(png_error == PNG_EOK) { huffman_tree_create_lengths(codetreeD, bitlenD); }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*inflate a block with dynamic of fixed Huffman tree*/
+void TFT_SPI::inflate_huffman(char* out, uint32_t   outsize, const char* in, uint32_t *bp, uint32_t *pos, uint32_t inlength, uint16_t btype) {
+    uint16_t codetree_buffer[DEFLATE_CODE_BUFFER_SIZE];
+    uint16_t codetreeD_buffer[DISTANCE_BUFFER_SIZE];
+    uint16_t done = 0;
+
+    huffman_tree codetree;
+    huffman_tree codetreeD;
+
+    if(btype == 1) {
+        /* fixed trees */
+        huffman_tree_init(&codetree, (uint16_t*)FIXED_DEFLATE_CODE_TREE, NUM_DEFLATE_CODE_SYMBOLS, DEFLATE_CODE_BITLEN);
+        huffman_tree_init(&codetreeD, (uint16_t*)FIXED_DISTANCE_TREE, NUM_DISTANCE_SYMBOLS, DISTANCE_BITLEN);
+    }
+    else if(btype == 2) {
+        /* dynamic trees */
+        uint16_t     codelengthcodetree_buffer[CODE_LENGTH_BUFFER_SIZE];
+        huffman_tree codelengthcodetree;
+
+        huffman_tree_init(&codetree, codetree_buffer, NUM_DEFLATE_CODE_SYMBOLS, DEFLATE_CODE_BITLEN);
+        huffman_tree_init(&codetreeD, codetreeD_buffer, NUM_DISTANCE_SYMBOLS, DISTANCE_BITLEN);
+        huffman_tree_init(&codelengthcodetree, codelengthcodetree_buffer, NUM_CODE_LENGTH_CODES, CODE_LENGTH_BITLEN);
+        get_tree_inflate_dynamic(&codetree, &codetreeD, &codelengthcodetree, in, bp, inlength);
+    }
+
+    while(done == 0) {
+        unsigned code = huffman_decode_symbol(in, bp, &codetree, inlength);
+        if(png_error != PNG_EOK) { return; }
+
+        if(code == 256) {
+            /* end code */
+            done = 1;
+        }
+        else if(code <= 255) {
+            /* literal symbol */
+            if((*pos) >= outsize) {
+                log_e("output buffer is too small");
+                png_error = PNG_EMALFORMED;
+                return;
+            }
+
+            /* store output */
+            out[(*pos)++] = (unsigned char)(code);
+        }
+        else if(code >= FIRST_LENGTH_CODE_INDEX && code <= LAST_LENGTH_CODE_INDEX) { /*length code */
+            /* part 1: get length base */
+            uint32_t   length = LENGTH_BASE[code - FIRST_LENGTH_CODE_INDEX];
+            unsigned      codeD, distance, numextrabitsD;
+            uint32_t   start, forward, backward, numextrabits;
+
+            /* part 2: get extra bits and add the value of that to length */
+            numextrabits = LENGTH_EXTRA[code - FIRST_LENGTH_CODE_INDEX];
+
+            /* error, bit pointer will jump past memory */
+            if(((*bp) >> 3) >= inlength) {
+                log_e("bit pointer will jump past memory");
+                png_error = PNG_EMALFORMED;
+                return;
+            }
+            length += read_bits(bp, in, numextrabits);
+
+            /*part 3: get distance code */
+            codeD = huffman_decode_symbol(in, bp, &codetreeD, inlength);
+            if(png_error != PNG_EOK) { return; }
+
+            /* invalid distance code (30-31 are never used) */
+            if(codeD > 29) {
+                log_e("invalid distance code");
+                png_error = PNG_EMALFORMED;
+                return;
+            }
+
+            distance = DISTANCE_BASE[codeD];
+
+            /*part 4: get extra bits from distance */
+            numextrabitsD = DISTANCE_EXTRA[codeD];
+
+            /* error, bit pointer will jump past memory */
+            if(((*bp) >> 3) >= inlength) {
+                log_e("bit pointer will jump past memory");
+                png_error =  PNG_EMALFORMED;
+                return;
+            }
+
+            distance += read_bits(bp, in, numextrabitsD);
+
+            /*part 5: fill in all the out[n] values based on the length and dist */
+            start = (*pos);
+            backward = start - distance;
+
+            if((*pos) + length >= outsize) {
+                log_e("output buffer is too small");
+                png_error = PNG_EMALFORMED;
+                return;
+            }
+
+            for(forward = 0; forward < length; forward++) {
+                out[(*pos)++] = out[backward];
+                backward++;
+
+                if(backward >= start) { backward = start - distance; }
+            }
+        }
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::inflate_uncompressed(char* out, uint32_t outsize, const char* in, uint32_t *bp, uint32_t *pos, uint32_t inlength) {
+    uint32_t   p;
+    unsigned      len, nlen, n;
+
+    /* go to first boundary of byte */
+    while(((*bp) & 0x7) != 0) { (*bp)++; }
+    p = (*bp) / 8; /*byte position */
+
+    /* read len (2 bytes) and nlen (2 bytes) */
+    if(p >= inlength - 4) {
+        log_e("p >= inlength - 4");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    len = in[p] + 256 * in[p + 1];
+    p += 2;
+    nlen = in[p] + 256 * in[p + 1];
+    p += 2;
+
+    /* check if 16-bit nlen is really the one's complement of len */
+    if(len + nlen != 65535) {
+        log_e("nlen is not one's complement of len");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    if((*pos) + len >= outsize) {
+        log_e("output buffer is too small");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    /* read the literal data: len bytes are now stored in the out buffer */
+    if(p + len > inlength) {
+        log_e("p + len > inlength");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    for(n = 0; n < len; n++) { out[(*pos)++] = in[p++]; }
+
+    (*bp) = p * 8;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*inflate the deflated data (cfr. deflate spec); return value is the error*/
+int8_t TFT_SPI::uz_inflate_data(char* out, uint32_t outsize, const char* in, uint32_t insize, uint32_t inpos) {
+    uint32_t   bp = 0;  /*bit pointer in the "in" data, current byte is bp >> 3, current bit is bp & 0x7 (from lsb to msb of the byte) */
+    uint32_t   pos = 0; /*byte position in the out buffer */
+    uint16_t done = 0;
+
+    while(done == 0) {
+        uint16_t btype;
+
+        /* ensure next bit doesn't point past the end of the buffer */
+        if((bp >> 3) >= insize) {
+            log_e("bp >> 3 >= insize");
+            return PNG_EMALFORMED;
+        }
+
+        /* read block control bits */
+        done = read_bit(&bp, &in[inpos]);
+        btype = read_bit(&bp, &in[inpos]) | (read_bit(&bp, &in[inpos]) << 1);
+
+        /* process control type appropriateyly */
+        if(btype == 3) {
+            log_e("btype == 3");
+            png_error = PNG_EMALFORMED;
+            return png_error;
+        }
+        else if(btype == 0) {
+            inflate_uncompressed(out, outsize, &in[inpos], &bp, &pos, insize); /*no compression */
+        }
+        else {
+            inflate_huffman(out, outsize, &in[inpos], &bp, &pos, insize, btype); /*compression, btype 01 or 10 */
+        }
+
+        /* stop if an error has occured */
+        if(png_error != PNG_EOK) { return png_error; }
+    }
+
+    return png_error;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int8_t TFT_SPI::uz_inflate(char* out, uint32_t outsize, const char* in, uint32_t insize) {
+    /* we require two bytes for the zlib data header */
+    if(insize < 2) {
+        log_e("insize < 2");
+        return PNG_EMALFORMED;
+    }
+
+    /* 256 * in[0] + in[1] must be a multiple of 31, the FCHECK value is supposed to be made that way */
+    if((in[0] * 256 + in[1]) % 31 != 0) {
+        log_e("FCHECK value is supposed to be made that way");
+        return PNG_EMALFORMED;
+    }
+
+    /*error: only compression method 8: inflate with sliding window of 32k is supported by the PNG spec */
+    if((in[0] & 15) != 8 || ((in[0] >> 4) & 15) > 7) {
+        log_e("only compression method 8: inflate with sliding window of 32k is supported by the PNG spec");
+        return PNG_EMALFORMED;
+    }
+
+    /* the specification of PNG says about the zlib stream: "The additional flags shall not specify a preset
+     * dictionary." */
+    if(((in[1] >> 5) & 1) != 0) {
+        log_e("The additional flags shall not specify a preset dictionary.");
+        return PNG_EMALFORMED;
+    }
+
+    /* create output buffer */
+    uz_inflate_data(out, outsize, in, insize, 2);
+
+    return png_error;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*Paeth predicter, used by PNG filter type 4*/
+int TFT_SPI::paeth_predictor(int a, int b, int c) {
+    int p = a + b - c;
+    int pa = p > a ? p - a : a - p;
+    int pb = p > b ? p - b : b - p;
+    int pc = p > c ? p - c : c - p;
+
+    if(pa <= pb && pa <= pc) return a;
+    else if(pb <= pc)
+        return b;
+    else
+        return c;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::unfilter_scanline(char* recon, const char* scanline, const char* precon, uint32_t bytewidth, unsigned char filterType, uint32_t length) {
+    /*
+       For PNG filter method 0
+       unfilter a PNG image scanline by scanline. when the pixels are smaller than 1 byte, the filter works byte per byte (bytewidth = 1) precon is the previous unfiltered scanline, recon the result,
+       scanline the current one the incoming scanlines do NOT include the filtertype byte, that one is given in the parameter filterType instead recon and scanline MAY be the same memory address!
+       precon must be disjoint.
+     */
+
+    uint32_t   i;
+    switch(filterType) {
+        case 0:
+            for(i = 0; i < length; i++) recon[i] = scanline[i];
+            break;
+        case 1:
+            for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+            for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth];
+            break;
+        case 2:
+            if(precon)
+                for(i = 0; i < length; i++) recon[i] = scanline[i] + precon[i];
+            else
+                for(i = 0; i < length; i++) recon[i] = scanline[i];
+            break;
+        case 3:
+            if(precon) {
+                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i] + precon[i] / 2;
+                for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + ((recon[i - bytewidth] + precon[i]) / 2);
+            }
+            else {
+                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+                for(i = bytewidth; i < length; i++) recon[i] = scanline[i] + recon[i - bytewidth] / 2;
+            }
+            break;
+        case 4:
+            if(precon) {
+                for(i = 0; i < bytewidth; i++)
+                    recon[i] = (unsigned char)(scanline[i] + paeth_predictor(0, precon[i], 0));
+                for(i = bytewidth; i < length; i++)
+                    recon[i] = (unsigned char)(scanline[i] +
+                                               paeth_predictor(recon[i - bytewidth], precon[i], precon[i - bytewidth]));
+            }
+            else {
+                for(i = 0; i < bytewidth; i++) recon[i] = scanline[i];
+                for(i = bytewidth; i < length; i++)
+                    recon[i] = (unsigned char)(scanline[i] + paeth_predictor(recon[i - bytewidth], 0, 0));
+            }
+            break;
+        default:
+        log_e("recon: %s, scanline: %s, precon: %s, bytewidth: %d, length: %d, filterType: %d", recon, scanline, precon, bytewidth, length, filterType);
+            png_error = PNG_EMALFORMED;
+            break;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::unfilter(char* out, const char* in, unsigned w, unsigned h, unsigned bpp) {
+    /*
+       For PNG filter method 0
+       this function unfilters a single image (e.g. without interlacing this is called once, with Adam7 it's called 7 times) out must have enough bytes allocated already, in must have the
+       scanlines + 1 filtertype byte per scanline w and h are image dimensions or dimensions of reduced image, bpp is bpp per pixel in and out are allowed to be the same memory address!
+     */
+
+    unsigned y;
+    char*    prevline = 0;
+
+    uint32_t   bytewidth =
+        (bpp + 7) / 8; /*bytewidth is used for filtering, is 1 when bpp < 8, number of bytes per pixel otherwise */
+    uint32_t   linebytes = (w * bpp + 7) / 8;
+
+    for(y = 0; y < h; y++) {
+        uint32_t   outindex = linebytes * y;
+        uint32_t   inindex = (1 + linebytes) * y; /*the extra filterbyte added to each row */
+        unsigned char filterType = in[inindex];
+
+        unfilter_scanline(&out[outindex], &in[inindex + 1], prevline, bytewidth, filterType, linebytes);
+        if(png_error != PNG_EOK) { return; }
+
+        prevline = &out[outindex];
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::remove_padding_bits(char* out, const char* in, uint32_t olinebits, uint32_t ilinebits, unsigned h) {
+    /*
+       After filtering there are still padding bpp if scanlines have non multiple of 8 bit amounts. They need to be removed (except at last scanline of (Adam7-reduced) image) before working with pure
+       image buffers for the Adam7 code, the color convert code and the output to the user. in and out are allowed to be the same buffer, in may also be higher but still overlapping;
+       in must have >= ilinebits*h bpp, out must have >= olinebits*h bpp, olinebits must be <= ilinebits also used to move bpp after earlier such operations happened, e.g. in a sequence of reduced
+       images from Adam7 only useful if (ilinebits - olinebits) is a value in the range 1..7
+     */
+    unsigned      y;
+    uint32_t   diff = ilinebits - olinebits;
+    uint32_t   obp = 0, ibp = 0; /*bit pointers */
+    for(y = 0; y < h; y++) {
+        uint32_t   x;
+        for(x = 0; x < olinebits; x++) {
+            unsigned char bit = (unsigned char)((in[(ibp) >> 3] >> (7 - ((ibp) & 0x7))) & 1);
+            ibp++;
+
+            if(bit == 0) out[(obp) >> 3] &= (unsigned char)(~(1 << (7 - ((obp) & 0x7))));
+            else
+                out[(obp) >> 3] |= (1 << (7 - ((obp) & 0x7)));
+            ++obp;
+        }
+        ibp += diff;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*out must be buffer big enough to contain full image, and in must contain the full decompressed data from the IDAT chunks*/
+void TFT_SPI::post_process_scanlines(char* out, char* in) {
+    unsigned bpp = png_get_bpp();
+    unsigned w = png_width;
+    unsigned h = png_height;
+
+    if(bpp == 0) {
+        log_e("bpp == 0");
+        png_error = PNG_EMALFORMED;
+        return;
+    }
+
+    if(bpp < 8 && w * bpp != ((w * bpp + 7) / 8) * 8) {
+        unfilter(in, in, w, h, bpp);
+        if(png_error != PNG_EOK) { return; }
+        remove_padding_bits(out, in, w * bpp, ((w * bpp + 7) / 8) * 8, h);
+    }
+    else {
+        unfilter(out, in, w, h, bpp); /*we can immediatly filter into the out buffer, no other steps needed */
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*read a PNG, the result will be in the same color type as the PNG (hence "generic")*/
+int8_t TFT_SPI::png_decode() {
+    const char*    chunk;
+    char*          compressed;
+    char*          inflated;
+    uint32_t       compressed_size = 0, compressed_index = 0;
+    uint32_t       inflated_size;
+    int8_t         error = 0;
+
+    Serial.printf("\n decode");
+    /* if we have an error state, bail now */
+    if(error != PNG_EOK) { return error; }
+
+    /* parse the main header, if necessary */
+    png_read_header();
+    if(error != PNG_EOK) { return error; }
+
+    /* if the state is not HEADER (meaning we are ready to decode the image), stop now */
+    if(png_state != PNG_HEADER) { return error; }
+    chunk = png_buffer + 33;
+
+    /* scan through the chunks, finding the size of all IDAT chunks, and also verify general well-formed-ness */
+    while(chunk < png_buffer + png_size) {
+        uint32_t length;
+        const char*   data; /*the data in the chunk */ (void)data;
+
+        /* make sure chunk header is not larger than the total compressed */
+        if((uint32_t  )(chunk - png_buffer + 12) > png_size) {
+            log_e("png_decode: chunk header is not larger than the total compressed");
+            error = PNG_EMALFORMED;
+            return error;
+        }
+
+        /* get length; sanity check it */
+        length = upng_chunk_length(chunk);
+        if(length > INT_MAX) {
+            log_e("png_decode: chunk length is too large");
+            error = PNG_EMALFORMED;
+            return error;
+        }
+
+        /* make sure chunk header+paylaod is not larger than the total compressed */
+        if((uint32_t  )(chunk - png_buffer + length + 12) > png_size) {
+            log_e("png_decode: chunk header+paylaod is not larger than the total compressed");
+            error = PNG_EMALFORMED;
+            return error;
+        }
+
+        /* get pointer to payload */
+        data = chunk + 8;
+
+        /* parse chunks */
+        if(upng_chunk_type(chunk) == CHUNK_IDAT) { compressed_size += length; }
+        else if(upng_chunk_type(chunk) == CHUNK_IEND) { break; }
+        else if(upng_chunk_critical(chunk)) {
+            log_e("png_decode: unsupported critical chunk type");
+            error = PNG_EUNSUPPORTED;
+            return error;
+        }
+
+        chunk += upng_chunk_length(chunk) + 12;
+    }
+
+    /* allocate enough space for the (compressed and filtered) image data */
+    compressed = (char*)ps_malloc(compressed_size);
+    if(compressed == NULL) {
+        log_e("png_decode: out of memory");
+        error = PNG_ENOMEM;
+        return error;
+    }
+
+    /* scan through the chunks again, this time copying the values into
+     * our compressed buffer.  there's no reason to validate anything a second time. */
+    chunk = png_buffer + 33;
+    while(chunk < png_buffer + png_size) {
+        uint32_t   length;
+        const char*   data; /*the data in the chunk */
+
+        length = upng_chunk_length(chunk);
+        data = chunk + 8;
+
+        /* parse chunks */
+        if(upng_chunk_type(chunk) == CHUNK_IDAT) {
+            memcpy(compressed + compressed_index, data, length);
+            compressed_index += length;
+        }
+        else if(upng_chunk_type(chunk) == CHUNK_IEND) { break; }
+
+        chunk += upng_chunk_length(chunk) + 12;
+    }
+    /* allocate space to store inflated (but still filtered) data */
+    inflated_size = ((png_width * (png_height * png_get_bpp() + 7)) / 8) + png_height;
+    inflated = (char*)ps_malloc(inflated_size);
+    // log_w("inflated_size=%i", inflated_size);
+
+    if(inflated == NULL) {
+        free(compressed);
+        log_e("png_decode: out of memory");
+        error = PNG_ENOMEM;
+        return error;
+    }
+
+    /* decompress image data */
+    error = uz_inflate(inflated, inflated_size, compressed, compressed_size);
+    if(error != PNG_EOK) {
+        free(compressed);
+        free(inflated);
+        return error;
+    }
+
+	/* free the compressed compressed data */
+	free(compressed);
+
+	/* allocate final image buffer */
+	png_outbuff_size = (png_height * png_width * png_get_bpp() + 7) / 8;
+	png_outbuffer = (char*)ps_malloc(png_outbuff_size);
+	if (png_outbuffer == NULL) {
+		free(inflated);
+		png_size = 0;
+        log_e("png_decode: out of memory");
+		error = PNG_ENOMEM;
+		return error;
+	}
+
+    /* unfilter scanlines */
+    post_process_scanlines(png_outbuffer, inflated);
+
+    /* we are done with the inflated data */
+    free(inflated);
+
+    if(png_error != PNG_EOK) {
+        if(png_outbuffer) { free(png_outbuffer); png_outbuffer = NULL;}
+        png_size = 0;
+    }
+    else { png_state = PNG_DECODED; }
+
+    /* we are done with our input buffer; free it */
+    if(png_buffer) {
+        free(png_buffer);
+        png_buffer = NULL;
+    }
+    png_size = 0;
+
+    png_draw_into_AddrWindow(png_pos_x, png_pos_y, png_width, png_height, png_outbuffer, png_outbuff_size, png_format);
+
+    if(png_outbuffer) {
+        free(png_outbuffer);
+        png_outbuffer = NULL;
+    }
+    return png_error;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+TFT_SPI::png_format_t TFT_SPI::png_determine_format() {
+    switch(png_color_type) {
+        case PNG_LUM:
+            switch(png_color_depth) {
+                case 1:     return PNG_LUMINANCE1;
+                case 2:     return PNG_LUMINANCE2;
+                case 4:     return PNG_LUMINANCE4;
+                case 8:     return PNG_LUMINANCE8;
+                default:    return PNG_BADFORMAT;
+            }
+            break;
+        case PNG_RGB:
+            switch(png_color_depth) {
+                case 8:     return PNG_RGB8;
+                case 16:    return PNG_RGB16;
+                default:    return PNG_BADFORMAT;
+            }
+            break;
+        case PNG_PAL:
+            switch(png_color_depth) {
+                case 1:     return PNG_PALLETTE1;
+                case 2:     return PNG_PALLETTE2;
+                case 4:     return PNG_PALLETTE4;
+                case 8:     return PNG_PALLETTE8;
+                default:    return PNG_BADFORMAT;
+            }
+            break;
+        case PNG_LUMA:
+            switch(png_color_depth) {
+                case 1:     return PNG_LUMINANCE_ALPHA1;
+                case 2:     return PNG_LUMINANCE_ALPHA2;
+                case 4:     return PNG_LUMINANCE_ALPHA4;
+                case 8:     return PNG_LUMINANCE_ALPHA8;
+                default:    return PNG_BADFORMAT;
+            }
+            break;
+        case PNG_RGBA:
+            switch(png_color_depth) {
+                case 8:     return PNG_RGBA8;
+                case 16:    return PNG_RGBA16;
+                default:    return PNG_BADFORMAT;
+            }
+            break;
+        default:            return PNG_BADFORMAT;
+            break;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*read the information from the header and store it in the upng_Info. return value is error*/
+bool TFT_SPI::png_read_header() {
+    png_state = PNG_HEADER;
+    if(png_size < 29) {
+        png_error = PNG_ENOTPNG;
+        log_e("png_size < 29");
+        return false;
+    }
+
+    if(png_buffer[0] != 137 || png_buffer[1] != 80 || png_buffer[2] != 78 ||
+        png_buffer[3] != 71 || /* check that PNG header matches expected value */
+        png_buffer[4] != 13 || png_buffer[5] != 10 || png_buffer[6] != 26 || png_buffer[7] != 10) {
+        png_error = PNG_ENOTPNG;
+        log_e("image data does not have a PNG header");
+        return false;
+    }
+
+    /* check that the first chunk is the IHDR chunk */
+    if(MAKE_DWORD_PTR(png_buffer + 12) != CHUNK_IHDR) {
+        png_error = PNG_EMALFORMED;
+        log_e("image data is not a valid PNG image");
+        return false;
+    }
+
+    /* read the values given in the header */
+    png_width = MAKE_DWORD_PTR(png_buffer + 16);
+    png_height = MAKE_DWORD_PTR(png_buffer + 20);
+    png_color_depth = png_buffer[24];
+    png_color_type = png_buffer[25];
+
+    // log_w("png_width=%i, png_height=%i, png_color_depth=%i, png_color_type=%i", png_width, png_height, png_color_depth, png_color_type);
+
+    /* determine our color format */
+    png_format = png_determine_format();
+    png_error = png_format == PNG_BADFORMAT ? PNG_EUNFORMAT : PNG_EOK;
+    // log_w("png_format=%i", png_format);
+    if(png_format == PNG_BADFORMAT) {
+        log_e("image color format is not supported");
+        return false;
+    }
+
+    /* check that the compression method (byte 27) is 0 (only allowed value in spec) */
+    if(png_buffer[26] != 0) {
+        png_error = PNG_EMALFORMED;
+        log_e("image data is not a valid PNG image");
+        return false;
+    }
+
+    /* check that the compression method (byte 27) is 0 (only allowed value in spec) */
+    if(png_buffer[27] != 0) {
+        png_error = PNG_EMALFORMED;
+        log_e("image data is not a valid PNG image");
+        return false;
+    }
+
+    /* check that the compression method (byte 27) is 0 (spec allows 1, but uPNG does not support it) */
+    if(png_buffer[28] != 0) {
+        png_error = PNG_EUNINTERLACED;
+        log_e("image interlacing is not supported");
+        return false;
+    }
+    return true;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int8_t TFT_SPI::png_get_error() { return png_error; }
+uint16_t TFT_SPI::png_get_width() { return png_width; }
+uint16_t TFT_SPI::png_get_height() { return png_height; }
+uint16_t TFT_SPI::png_get_bpp() { return png_get_bitdepth() * png_get_components(); }
+const char* TFT_SPI::png_get_outbuffer(){return png_outbuffer;}
+uint32_t TFT_SPI::png_get_size(){return png_outbuff_size;}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::png_get_components() {
+    switch(png_color_type) {
+        case PNG_LUM:
+            return 1;
+        case PNG_RGB:
+            return 3;
+        case PNG_LUMA:
+            return 2;
+        case PNG_RGBA:
+            return 4;
+        case PNG_PAL:
+            return 1;
+        default:
+            return 0;
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::png_get_bitdepth() { return png_color_depth; }
+//_______________________________________________________________________________________________________________________________
+uint16_t TFT_SPI::png_get_pixelsize() {
+    uint16_t bits = png_get_bitdepth() * png_get_components();
+    bits += bits % 8;
+    return bits;
+}
+
+TFT_SPI::png_format_t TFT_SPI::png_get_format() { return png_format; }
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::png_GetPixel(void* pixel, int x, int y) {
+    uint32_t bpp = png_get_bpp();
+    //    Serial.printf("\nbbp=%i\n",(int)bpp);
+    uint32_t   Bpp = ((bpp + 7) / 8);
+    uint32_t   position = (png_width * y + x) * Bpp;
+    //    Serial.printf("\nposition in file=%li\n",(long)position);
+    memcpy(pixel, png_buffer + position, Bpp);
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*Initializing color variables */
+
+TFT_SPI::png_s_rgb16b* TFT_SPI::InitColorR5G6B5() {
+png_s_rgb16b* color = (png_s_rgb16b*)malloc(sizeof(png_s_rgb16b));
+    if(color != 0) { ResetColor(color); }
+    return color;
+}
+TFT_SPI::png_s_rgb18b* TFT_SPI::InitColorR6G6B6() {
+    png_s_rgb18b* color = (png_s_rgb18b*)malloc(sizeof(png_s_rgb18b));
+    if(color != 0) { ResetColor(color); }
+    return color;
+}
+TFT_SPI::png_s_rgb24b* TFT_SPI::InitColorR8G8B8() {
+    png_s_rgb24b* color = (png_s_rgb24b*)malloc(sizeof(png_s_rgb24b));
+    if(color != 0) { ResetColor(color); }
+    return color;
+}
+
+void TFT_SPI::InitColor(png_s_rgb16b** dst) {
+    *dst = (png_s_rgb16b*)malloc(sizeof(png_s_rgb16b));
+    ResetColor(*dst);
+}
+void TFT_SPI::InitColor(png_s_rgb18b** dst) {
+    *dst = (png_s_rgb18b*)malloc(sizeof(png_s_rgb18b));
+    ResetColor(*dst);
+}
+void TFT_SPI::InitColor(png_s_rgb24b** dst) {
+    *dst = (png_s_rgb24b*)malloc(sizeof(png_s_rgb24b));
+    ResetColor(*dst);
+}
+
+void TFT_SPI::ResetColor(png_s_rgb16b* dst) { *dst = (png_s_rgb16b){0, 0, 0, 0}; }
+void TFT_SPI::ResetColor(png_s_rgb18b* dst) { *dst = (png_s_rgb18b){0, 0, 0, 0}; }
+void TFT_SPI::ResetColor(png_s_rgb24b* dst) { *dst = (png_s_rgb24b){0, 0, 0, 0}; }
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+/*Converting between colors*/
+
+void TFT_SPI::png_rgb24bto18b(png_s_rgb18b* dst, png_s_rgb24b* src) {
+    dst->r = src->r >> 2;  // 3;//2;
+    dst->g = src->g >> 2;
+    dst->b = src->b >> 2;  // 3;//2;
+}
+
+void TFT_SPI::png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src) {
+    dst->r = src->r >> 3;  // 3;//2;
+    dst->g = src->g >> 2;
+    dst->b = src->b >> 3;  // 3;//2;
+}
+void TFT_SPI::png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src) { memcpy(dst, src, sizeof(png_s_rgb18b)); }
+void TFT_SPI::png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src) { memcpy(dst, src, sizeof(png_s_rgb16b)); }
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format) {
+
+    uint16_t* rgb565Buffer = (uint16_t*)ps_malloc(w * h * 2);
+    if(!rgb565Buffer) {log_e("png_draw_into_AddrWindow: out of memory"); return;}
+
+    int numPixels = w * h;
+
+    for (int i = 0; i < numPixels; i++) {
+        int rgbaIndex = i * 4; // 4 Bytes pro Pixel (RGBA)
+
+        uint8_t r = rgbaBuffer[rgbaIndex];     // Rot (8 Bit)
+        uint8_t g = rgbaBuffer[rgbaIndex + 1]; // Grün (8 Bit)
+        uint8_t b = rgbaBuffer[rgbaIndex + 2]; // Blau (8 Bit)
+
+        // RGB565 Kodierung (5 Bit Rot, 6 Bit Grün, 5 Bit Blau)
+        rgb565Buffer[i] = ((r >> 3) << 11) |  // 8->5 Bit (Rot)
+                          ((g >> 2) << 5)  |  // 8->6 Bit (Grün)
+                          (b >> 3);         // 8->5 Bit (Blau)
+    }
+
+    startWrite();
+    setAddrWindow(x, y, w, h);
+    if (_TFTcontroller == ILI9341) {
+        writeCommand(ILI9341_RAMWR);                      // ILI9341
+        while (numPixels--) spi_TFT.write16(*rgb565Buffer++); // Send to TFT_SPI 16 bits at a time
+    } else if (_TFTcontroller == HX8347D) {
+        writeCommand(0x22);
+        while (numPixels--) spi_TFT.write16(*rgb565Buffer++); // Send to TFT_SPI 16 bits at a time
+    } else if (_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+        writeCommand(ILI9486_RAMWR);
+        while (numPixels--) spi_TFT.write16(*rgb565Buffer++); // Send to TFT_SPI 16 bits at a time
+    } else if (_TFTcontroller == ILI9488) {
+        writeCommand(ILI9488_RAMWR);
+        while (numPixels--) write24BitColor(*rgb565Buffer++); // Send to TFT_SPI 16 bits at a time
+    } else if (_TFTcontroller == ST7796 || _TFTcontroller == ST7796RPI) {
+        writeCommand(ST7796_RAMWR);
+        while (numPixels--) write24BitColor(*rgb565Buffer++); // Send to TFT_SPI 16 bits at a time
+    }
+    endWrite();
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -45,6 +45,9 @@
 #include "rtime.h"
 #include "IR.h"
 #include "tft_spi.h"
+#include "tft_rgb.h"
+#include "tp_xpt2046.h"
+#include "tp_gt911.h"
 #include "SPIFFS.h"
 #include "ESP32FtpServer.h"
 #include "Audio.h"
@@ -542,7 +545,14 @@ inline void SerialPrintflnCut(const char* item, const char* color, const char* s
     else { SerialPrintfln("%s%s%s", item, color, str); }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern TFT tft;
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+    extern TFT_SPI tft;
+#else
+    extern TFT_RGB tft;
+#endif
+
+
+
 inline void hardcopy(){
     const uint8_t bmp320x240[70] = {
         0x42, 0x4D, 0x46, 0x58, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x38, 0x00, 0x00, 0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00,
@@ -1252,7 +1262,7 @@ public:
         if(!m_stations.url[staNr]) return strdup("unknown");
         return m_stations.url[staNr];
     }
-    const char* getStatonCountry(uint16_t staNr){
+    const char* getStationCountry(uint16_t staNr){
         if(staNr > m_staCnt) return strdup("unknown");
         if(!m_stations.country[staNr]) return strdup("unknown");
         return m_stations.country[staNr];
@@ -3954,23 +3964,32 @@ private:
     uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t    m_timeColor = TFT_GREENYELLOW;
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_item_x = 6;
-    uint16_t    m_item_w = 174;
+    uint16_t    m_item_x = 0;
+    uint16_t    m_item_w = 180;
     uint16_t    m_volume_x = 180;
     uint16_t    m_volume_w = 50;
     uint16_t    m_time_x = 260;
     uint16_t    m_time_w = 60;
     uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
     uint8_t     m_time_ch_w = 9;
+    uint16_t    m_flag_x = 135;
+    uint16_t    m_flag_y = 0;
+    uint16_t    m_flag_w = 45;
+    uint16_t    m_flag_h = 0; // will be calculated
+
 #else // 480 x 320px
-    uint16_t    m_item_x = 6;
-    uint16_t    m_item_w = 274;
+    uint16_t    m_item_x = 0;
+    uint16_t    m_item_w = 280;
     uint16_t    m_volume_x = 280;
     uint16_t    m_volume_w = 100;
     uint16_t    m_time_x = 380;
     uint16_t    m_time_w = 100;
     uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
     uint8_t     m_time_ch_w = 13;
+    uint16_t    m_flag_x = 220;
+    uint16_t    m_flag_y = 3;
+    uint16_t    m_flag_w = 60;
+    uint16_t    m_flag_h = 0; // will be calculated
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -3989,6 +4008,7 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
+        m_flag_h = m_h;
     }
     const char* getName(){
         return m_name;
@@ -4020,6 +4040,7 @@ public:
     void updateItem(const char* hl_item){// radio, clock, audioplayer...
         if(!m_enabled) return;
         if(!hl_item) log_e("hl_item is NULL");
+        if(m_item && !strcmp(hl_item, m_item)) return; // nothing to do
         char* tmp = strdup(hl_item);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
@@ -4078,6 +4099,14 @@ public:
         m_timeColor = timeColor;
         updateTime(m_time, true);
     }
+    void setFlag(const char* flag){
+        if(!m_enabled) return;
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.fillRect(m_flag_x, m_flag_y, m_flag_w, m_flag_h, m_bgColor);
+        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_flag_y);
+        xSemaphoreGive(mutex_display);
+    }
+
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
         if(y < m_y) return false;

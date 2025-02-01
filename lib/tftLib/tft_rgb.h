@@ -73,18 +73,6 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define ANSI_ESC_AQUAMARINE     "\033[38;5;51m"
 #define ANSI_ESC_LAVENDER       "\033[38;5;189m"
 
-
-#define ILI9341_WIDTH  240
-#define ILI9341_HEIGHT 320
-#define HX8347D_WIDTH  240
-#define HX8347D_HEIGHT 320
-#define ILI9486_WIDTH  320
-#define ILI9486_HEIGHT 480
-#define ILI9488_WIDTH  320
-#define ILI9488_HEIGHT 480
-#define ST7796_WIDTH   320
-#define ST7796_HEIGHT  480
-
 // RGB565 Color definitions            R    G    B
 #define TFT_RED             0xF800 // 255,   0,   0
 #define TFT_DARKRED         0x8000 // 128,   0,   0
