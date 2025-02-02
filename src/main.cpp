@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.6.1j  - Feb 01/2025                                                                                                                   ";
+    Version 3.6.1j  - Feb 02/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -85,7 +85,6 @@ uint16_t                _irResult = 0;
 uint8_t                 _itemListPos = 0; // DLNA items
 uint16_t                _dlnaItemNr = 0;
 uint8_t                 _dlnaLevel = 0;
-int8_t                  _rssi_bt = -127;
 int16_t                 _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
 int16_t                 _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t                 _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
@@ -274,7 +273,6 @@ struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 
 struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;} const _winFooter;
 struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;} const _winStaNr;
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;} const _winSleep;
-struct w_r  {uint16_t x = 125; uint16_t y = 220; uint16_t w =  25; uint16_t h =  20;} const _winRSSID;
 struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;} const _winDigits;    // clock
@@ -334,7 +332,6 @@ struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 
 struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;} const _winFooter;
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;} const _winStaNr;
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;} const _winSleep;
-struct w_r  {uint16_t x = 172; uint16_t y = 290; uint16_t w =  32; uint16_t h =  30;} const _winRSSID;
 struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;} const _sdrOvBtns;   // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;} const _winDigits;
@@ -909,7 +906,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     if(endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
     if(endsWith(scImg, "gif")) { return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0); }
 
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpj graphic", scImg);
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpg graphic", scImg);
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************
@@ -1751,7 +1748,7 @@ void setStation(uint16_t sta) {
     if(_state == RADIO) {
         showLogoAndStationName(true);
         if(_cur_station == 0){
-            dispHeader.setFlag(NULL);
+            dispFooter.updateFlag(NULL);
         }
         else{
             char path[25] ="/flags/";
@@ -1759,7 +1756,7 @@ void setStation(uint16_t sta) {
             for(int i = 0; i< strlen(path); i++) path[i] = tolower(path[i]);
             strcat(path, ".jpg");
             const char* scaledpath = scaleImage(path);
-            dispHeader.setFlag(scaledpath);
+            dispFooter.updateFlag(scaledpath);
         }
     }
     dispFooter.updateStation(_cur_station);
@@ -2027,8 +2024,7 @@ void muteChanged(bool m) {
     else  {_f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
-    if(_f_mute) dispHeader.setVolumeColor(TFT_RED);
-    else        dispHeader.setVolumeColor(TFT_DEEPSKYBLUE);
+    dispHeader.speakerOnOff(_f_mute);
     dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
@@ -2353,6 +2349,7 @@ void changeState(int32_t state){
     dispFooter.enable();
     dispHeader.enable();
     dispHeader.updateItem(_hl_item[state]);
+    if(state != RADIO) {dispFooter.updateFlag(NULL);}
     switch(state) {
         case RADIO:{
             if(_state != RADIO) clearWithOutHeaderFooter();
@@ -2775,7 +2772,7 @@ void loop() {
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping) {
             dispHeader.updateTime(_time_s, false);
-            dispFooter.updateRSSI(WiFi.RSSI());
+            dispHeader.updateRSSI(WiFi.RSSI());
 
             if(_f_newBitRate) {
                _f_newBitRate = false;

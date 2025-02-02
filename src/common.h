@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 17.Jan 2025
+// updated: 02.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -3951,6 +3951,8 @@ private:
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
+    int8_t      m_rssi = 0;
+    int8_t      m_old_rssi = -1;
     uint8_t     m_fontSize = 0;
     uint8_t     m_volume = 0;
     uint32_t    m_bgColor = TFT_BLACK;
@@ -3959,37 +3961,38 @@ private:
     char        m_time[10] = {0};
     bool        m_enabled = false;
     bool        m_clicked = false;
+    const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.jpg", "/common/RSSI1.jpg", "/common/RSSI2.jpg", "/common/RSSI3.jpg", "/common/RSSI4.jpg"};
+    const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.jpg", "/common/Speaker_on.jpg"};
     releasedArg m_ra;
     uint16_t    m_itemColor = TFT_GREENYELLOW;
     uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t    m_timeColor = TFT_GREENYELLOW;
 #if TFT_CONTROLLER < 2 // 320 x 240px
     uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 180;
-    uint16_t    m_volume_x = 180;
-    uint16_t    m_volume_w = 50;
+    uint16_t    m_item_w = 140;
+    uint16_t    m_speaker_x =165;
+    uint16_t    m_speaker_w = 26;
+    uint16_t    m_volume_x = 195;
+    uint16_t    m_volume_w = 26;
     uint16_t    m_time_x = 260;
     uint16_t    m_time_w = 60;
     uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
     uint8_t     m_time_ch_w = 9;
-    uint16_t    m_flag_x = 135;
-    uint16_t    m_flag_y = 0;
-    uint16_t    m_flag_w = 45;
-    uint16_t    m_flag_h = 0; // will be calculated
-
+    uint16_t    m_rssiSymbol_x = 225;
+    uint16_t    m_rssiSymbol_w = 27;
 #else // 480 x 320px
     uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 280;
-    uint16_t    m_volume_x = 280;
-    uint16_t    m_volume_w = 100;
-    uint16_t    m_time_x = 380;
-    uint16_t    m_time_w = 100;
+    uint16_t    m_item_w = 240;
+    uint16_t    m_speaker_x = 240;
+    uint16_t    m_speaker_w = 36;
+    uint16_t    m_volume_x = 285;
+    uint16_t    m_volume_w = 40;
     uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
     uint8_t     m_time_ch_w = 13;
-    uint16_t    m_flag_x = 220;
-    uint16_t    m_flag_y = 3;
-    uint16_t    m_flag_w = 60;
-    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_rssiSymbol_x = 335;
+    uint16_t    m_rssiSymbol_w = 39;
+    uint16_t    m_time_x = 380;
+    uint16_t    m_time_w = 100;
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -4008,8 +4011,7 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-        m_flag_h = m_h;
-    }
+     }
     const char* getName(){
         return m_name;
     }
@@ -4019,9 +4021,11 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
+        m_old_rssi = -1;
         if(m_item) updateItem(m_item);
         else       updateItem("");
         updateVolume(m_volume);
+        updateRSSI(m_rssi);
         updateTime("        ", true);
     }
     void hide(){
@@ -4055,6 +4059,10 @@ public:
     void setItemColor(uint16_t itemColor){
         m_itemColor = itemColor;
     }
+
+    void speakerOnOff(bool on){
+        drawImage(m_speakerSymbol[!on], m_speaker_x, m_y);
+    }
     void updateVolume(uint8_t vol){
         m_volume = vol;
         if(!m_enabled) return;
@@ -4063,13 +4071,36 @@ public:
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
         tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
-        sprintf(buff, "Vol %d", m_volume);
-        tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h);
+        itoa(m_volume, buff, 10);
+        tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
         xSemaphoreGive(mutex_display);
     }
-    void setVolumeColor(uint16_t volColor){
-        m_volumeColor = volColor;
-        updateVolume(m_volume);
+
+    void updateRSSI(int8_t rssi, bool show = false){
+        static int32_t old_rssi = -1;
+        int8_t new_rssi = -1;
+        if(rssi >= 0) return;
+        m_rssi = rssi;
+        if(m_rssi < -1)  new_rssi = 4;
+        if(m_rssi < -50) new_rssi = 3;
+        if(m_rssi < -65) new_rssi = 2;
+        if(m_rssi < -75) new_rssi = 1;
+        if(m_rssi < -85) new_rssi = 0;
+
+        if(new_rssi != old_rssi) {
+            old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
+            if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
+                static int32_t tmp_rssi = 0;
+                if((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
+                tmp_rssi = rssi;
+            }
+            if(m_enabled) show = true;
+        }
+        if(show) {
+            xSemaphoreTake(mutex_display, portMAX_DELAY);
+            drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y);
+            xSemaphoreGive(mutex_display);
+        }
     }
     void updateTime(const char* hl_time, bool complete = true){
         if(!m_enabled) return;
@@ -4099,14 +4130,6 @@ public:
         m_timeColor = timeColor;
         updateTime(m_time, true);
     }
-    void setFlag(const char* flag){
-        if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.fillRect(m_flag_x, m_flag_y, m_flag_w, m_flag_h, m_bgColor);
-        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_flag_y);
-        xSemaphoreGive(mutex_display);
-    }
-
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
         if(y < m_y) return false;
@@ -4124,7 +4147,6 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-private:
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayFooter : public RegisterTable {
@@ -4133,8 +4155,6 @@ private:
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
-    int8_t      m_rssi = 0;
-    int8_t      m_old_rssi = -1;
     uint8_t     m_fontSize = 0;
     int8_t      m_timeCounter = 0;
     uint8_t     m_volume = 0;
@@ -4150,27 +4170,28 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     releasedArg m_ra;
-    const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.bmp", "/common/RSSI1.bmp", "/common/RSSI2.bmp", "/common/RSSI3.bmp", "/common/RSSI4.bmp"};
     const char  m_stationSymbol[16]     = "/common/STA.bmp";
     const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.bmp", "/common/Hourglass_red.bmp"};
 #if TFT_CONTROLLER < 2 // 320 x 240px
     uint16_t    m_staSymbol_x = 0;
     uint16_t    m_staNr_x = 25, m_staNr_w = 35;
-    uint16_t    m_offTimerSymbol_x = 60;
-    uint16_t    m_offTimerNr_x = 88, m_offTimerNr_w = 37;
-    uint16_t    m_rssiSymbol_x = 125;
-    uint16_t    m_rssiSymbol_w = 24;
-    uint16_t    m_bitRate_x = 150, m_bitRate_w = 40;
-    uint16_t    m_ipAddr_x = 190, m_ipAddr_w = 130;
+    uint16_t    m_flag_x = 60;
+    uint16_t    m_flag_w = 43;
+    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_offTimerSymbol_x = 100;
+    uint16_t    m_offTimerNr_x = 123, m_offTimerNr_w = 35;
+    uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
+    uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
 #else // 480 x 320px
     uint16_t    m_staSymbol_x = 0;
     uint16_t    m_staNr_x = 33, m_staNr_w = 52;
-    uint16_t    m_offTimerSymbol_x = 85;
-    uint16_t    m_offTimerNr_x = 118, m_offTimerNr_w = 54;
-    uint16_t    m_rssiSymbol_x = 172;
-    uint16_t    m_rssiSymbol_w = 32;
-    uint16_t    m_bitRate_x = 204, m_bitRate_w = 66;
-    uint16_t    m_ipAddr_x = 270, m_ipAddr_w = 210;
+    uint16_t    m_flag_x = 85;
+    uint16_t    m_flag_w = 43;
+    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_offTimerSymbol_x = 138;
+    uint16_t    m_offTimerNr_x = 170, m_offTimerNr_w = 54;
+    uint16_t    m_bitRate_x = 224, m_bitRate_w = 66;
+    uint16_t    m_ipAddr_x = 295, m_ipAddr_w = 185;
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4189,6 +4210,7 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
+        m_flag_h = m_h;
     }
     const char* getName(){
         return m_name;
@@ -4199,11 +4221,9 @@ public:
     void show(){
         m_enabled = true;
         m_clicked = false;
-        m_old_rssi = -1;
         drawImage(m_stationSymbol, m_staSymbol_x, m_y);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
-        updateRSSI(m_rssi);
         updateBitRate(m_bitRate);
         if(m_ipAddr) writeIpAddr(m_ipAddr);
         else         writeIpAddr("");
@@ -4236,6 +4256,13 @@ public:
     void setStationNrColor(uint16_t stationColor){
         m_stationColor = stationColor;
     }
+    void updateFlag(const char* flag){
+        if(!m_enabled) return;
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.fillRect(m_flag_x, m_y, m_flag_w, m_flag_h, m_bgColor);
+        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y, m_flag_w, m_h);
+        xSemaphoreGive(mutex_display);
+    }
     void updateOffTime(uint16_t offTime){
         m_offTime = offTime;
         if(!m_enabled) return;
@@ -4255,45 +4282,19 @@ public:
         tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
         xSemaphoreGive(mutex_display);
     }
-    void updateRSSI(int8_t rssi, bool show = false){
-        static int32_t old_rssi = -1;
-        int8_t new_rssi = -1;
-        if(rssi >= 0) return;
-        m_rssi = rssi;
-        if(m_rssi < -1)  new_rssi = 4;
-        if(m_rssi < -50) new_rssi = 3;
-        if(m_rssi < -65) new_rssi = 2;
-        if(m_rssi < -75) new_rssi = 1;
-        if(m_rssi < -85) new_rssi = 0;
-
-        if(new_rssi != old_rssi) {
-            old_rssi = new_rssi; // no need to draw a rssi icon if rssiRange has not changed
-            if(ARDUHAL_LOG_LEVEL >= ARDUHAL_LOG_LEVEL_INFO) {
-                static int32_t tmp_rssi = 0;
-                if((abs(rssi - tmp_rssi) > 4)) { SerialPrintfln("WiFI_info:   RSSI is " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " dB", rssi); }
-                tmp_rssi = rssi;
-            }
-            if(m_enabled) show = true;
-        }
-        if(show) {
-            xSemaphoreTake(mutex_display, portMAX_DELAY);
-            drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y + 2);
-            xSemaphoreGive(mutex_display);
-        }
-    }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
         if(!m_enabled) return;
         if(!m_timeCounter) {
-            tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
-            updateRSSI(m_rssi, true);
+            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+            updateBitRate(m_bitRate);
         }
         else{
-            uint16_t x0   = m_rssiSymbol_x;
-            uint16_t x1x2 = round(m_rssiSymbol_x + ((float)((m_rssiSymbol_w) / 10) * timeCounter));
+            uint16_t x0   = m_bitRate_x;
+            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter));
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
-            tft.fillRect(m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h, m_bgColor);
+            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
             tft.fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
         }
     }
@@ -4311,12 +4312,11 @@ public:
             sbr[4] = '\0';
         }
         xSemaphoreTake(mutex_display, portMAX_DELAY);
+        tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+        tft.drawRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bitRateColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_bitRateColor);
-        tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
-        uint8_t space = 2;
-        if(strlen(sbr) < 4) space += 5;
-        tft.writeText(sbr, m_bitRate_x + space, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        tft.writeText(sbr, m_bitRate_x, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         xSemaphoreGive(mutex_display);
     }
     void setBitRateColor(uint16_t bitRateColor){
@@ -4347,7 +4347,7 @@ public:
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
         uint8_t pos = 0;
-        if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
+    //    if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, pos);
         if(!m_enabled) return false;
         return true;
@@ -4450,32 +4450,32 @@ const char ir_buttons_json[] =
     "{\"19\":\"-1\",\"label\":\"-\"}]";
 
 const char stations_json[] =
-    "[[\"*\",\"D\",\"0N 70s\",\"http://0n-70s.radionetz.de:8000/0n-70s.mp3\"],"
-    "[\"*\",\"D\",\"0N 80s\",\"http://0n-80s.radionetz.de:8000/0n-80s.mp3\"],"
-    "[\"*\",\"D\",\"0N 90s\",\"http://0n-90s.radionetz.de:8000/0n-90s.mp3\"],"
-    "[\"*\",\"D\",\"0N Charts\",\"http://0n-charts.radionetz.de:8000/0n-charts.mp3\"],"
-    "[\"*\",\"D\",\"0N Dance\",\"http://0n-dance.radionetz.de:8000/0n-dance.mp3\"],"
-    "[\"*\",\"D\",\"0N Disco\",\"http://0n-disco.radionetz.de:8000/0n-disco.mp3\"],"
-    "[\"*\",\"D\",\"1000 Oldies\",\"http://c3.auracast.net:8010/stream\"],"
-    "[\"*\",\"D\",\"Eurodance\",\"http://www.laut.fm/eurodance\"],"
-    "[\"\",\"D\",\"extra-radio 88.0\",\"https://www.extra-radio.de/stream/listen.m3u\"],"
-    "[\"*\",\"D\",\"Hitradio SKW\",\"http://server4.streamserver24.com:2199/tunein/hitradio.asx\"],"
-    "[\"*\",\"D\",\"MacSlon's Irish Pub Radio\",\"http://macslons-irish-pub-radio.stream.laut.fm/macslons-irish-pub-radio\"],"
+    "[[\"*\",\"DE\",\"0N 70s\",\"http://0n-70s.radionetz.de:8000/0n-70s.mp3\"],"
+    "[\"*\",\"DE\",\"0N 80s\",\"http://0n-80s.radionetz.de:8000/0n-80s.mp3\"],"
+    "[\"*\",\"DE\",\"0N 90s\",\"http://0n-90s.radionetz.de:8000/0n-90s.mp3\"],"
+    "[\"*\",\"DE\",\"0N Charts\",\"http://0n-charts.radionetz.de:8000/0n-charts.mp3\"],"
+    "[\"*\",\"DE\",\"0N Dance\",\"http://0n-dance.radionetz.de:8000/0n-dance.mp3\"],"
+    "[\"*\",\"DE\",\"0N Disco\",\"http://0n-disco.radionetz.de:8000/0n-disco.mp3\"],"
+    "[\"*\",\"DE\",\"1000 Oldies\",\"http://c3.auracast.net:8010/stream\"],"
+    "[\"*\",\"DE\",\"Eurodance\",\"http://www.laut.fm/eurodance\"],"
+    "[\"\",\"DE\",\"extra-radio 88.0\",\"https://www.extra-radio.de/stream/listen.m3u\"],"
+    "[\"*\",\"DE\",\"Hitradio SKW\",\"http://server4.streamserver24.com:2199/tunein/hitradio.asx\"],"
+    "[\"*\",\"DE\",\"MacSlon's Irish Pub Radio\",\"http://macslons-irish-pub-radio.stream.laut.fm/macslons-irish-pub-radio\"],"
     "[\"\",\"GR\",\"Άνοιξη 100.7\",\"http://solid1.streamupsolutions.com:55023/stream\"],"
     "[\"\",\"RU\",\"НАШЕ Радио\",\"http://nashe1.hostingradio.ru/nashe-128.mp3\"],"
     "[\"\",\"RU\",\"Радио Русские Песни\",\"http://listen.rusongs.ru/ru-mp3-128\"],"
     "[\"\",\"BG\",\"Свежа България\",\"http://31.13.223.148:8000/fresh.mp3\"],"
     "[\"\",\"CH\",\"SWISS POP\",\"https://stream.srg-ssr.ch/rsp/aacp_48.asx\"],"
     "[\"\",\"BG\",\"BGRADIO\",\"http://play.global.audio/bgradio_low.ogg\"],"
-    "[\"\",\"D\",\"knixx.fm\",\"http://s1.knixx.fm:5347/dein_webradio_vbr.opus\"],"
-    "[\"*\",\"D\",\"- 0 N - Christmas on Radio\",\"https://0n-christmas.radionetz.de/0n-christmas.aac\"],"
-    "[\"*\",\"UK\",\"BBC 6music\",\"http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=96000.norewind.m3u8\"],"
-    "[\"\",\"D\",\"- 0 N - Movies on Radio\",\"https://0n-movies.radionetz.de/0n-movies.mp3\"],"
-    "[\"*\",\"D\",\"- 0 N - Top 40 on Radio\",\"https://0n-top40.radionetz.de/0n-top40.mp3\"],"
-    "[\"\",\"D\",\"ROCKANTENNE Alternative (mp3)\",\"https://stream.rockantenne.de/alternative/stream/mp3\"],"
-    "[\"\",\"P\",\"Gra Wrocław\",\"http://rmfstream2.interia.pl:8000/radio_gra_wroc\"],"
+    "[\"\",\"DE\",\"knixx.fm\",\"http://s1.knixx.fm:5347/dein_webradio_vbr.opus\"],"
+    "[\"*\",\"DE\",\"- 0 N - Christmas on Radio\",\"https://0n-christmas.radionetz.de/0n-christmas.aac\"],"
+    "[\"*\",\"GB\",\"BBC 6music\",\"http://as-hls-ww-live.akamaized.net/pool_904/live/ww/bbc_6music/bbc_6music.isml/bbc_6music-audio=96000.norewind.m3u8\"],"
+    "[\"\",\"DE\",\"- 0 N - Movies on Radio\",\"https://0n-movies.radionetz.de/0n-movies.mp3\"],"
+    "[\"*\",\"DE\",\"- 0 N - Top 40 on Radio\",\"https://0n-top40.radionetz.de/0n-top40.mp3\"],"
+    "[\"\",\"DE\",\"ROCKANTENNE Alternative (mp3)\",\"https://stream.rockantenne.de/alternative/stream/mp3\"],"
+    "[\"\",\"PL\",\"Gra Wrocław\",\"http://rmfstream2.interia.pl:8000/radio_gra_wroc\"],"
     "[\"*\",\"RU\",\"Classic EuroDisco Радио\",\"https://live.radiospinner.com/clsscrdsc-96\"],"
-    "[\"*\",\"D\",\"Hit Radio FFH - Soundtrack (AAC+)\",\"http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u\"]]";
+    "[\"*\",\"DE\",\"Hit Radio FFH - Soundtrack (AAC+)\",\"http://streams.ffh.de/ffhchannels/aac/soundtrack.m3u\"]]";
 
 const char timezones_json[] =
   "[[\"Africa/Accra\",\"GMT0\"],"
