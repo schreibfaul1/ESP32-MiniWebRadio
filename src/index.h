@@ -1337,9 +1337,9 @@ async function loadStationsFromSD(file_name) {
         } else {
             // Use default data when there is no stored data
             tableData = [
-                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
         }
 
@@ -1350,9 +1350,9 @@ async function loadStationsFromSD(file_name) {
     } catch (error) {
         console.error('Es gab ein Problem beim Laden der Datei:', error);
             tableData = [
-                ["*", "D", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "D", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "D", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
             ];
             saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
     }
