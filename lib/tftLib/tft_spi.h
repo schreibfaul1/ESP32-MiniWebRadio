@@ -256,7 +256,7 @@ class TFT_SPI {
 
   public:
     TFT_SPI(SPIClass& spi, int csPin);
-    virtual ~TFT_SPI() {}
+    ~TFT_SPI();
     void setTFTcontroller(uint8_t TFTcontroller);
     void setDiaplayInversion(uint8_t dispInv);
     void begin(uint8_t DC);
@@ -306,8 +306,8 @@ class TFT_SPI {
     SPIClass&   spi_TFT; // use in class TP
     uint16_t    m_h_res = 0;
     uint16_t    m_v_res = 0;
-    uint16_t*   m_framebuffer;
-
+    uint16_t*   m_framebuffer[2];
+    bool        m_framebuffer_index = 0;
     uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
 
     typedef struct {

@@ -14,6 +14,11 @@ TFT_SPI::TFT_SPI(SPIClass &spi, int csPin) : spi_TFT(spi){
     _freq = 20000000;
     _TFT_CS = csPin;
 }
+TFT_SPI::~TFT_SPI() {
+    if(m_framebuffer[0]) {
+        free(m_framebuffer[0]);
+    }
+}
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     _TFTcontroller = TFTcontroller; // 0=ILI9341, 1=HX8347D, 2=ILI9486(a), 3=ILI9486(b), 4= ILI9488, 5=ST7796
@@ -25,6 +30,13 @@ void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     if(_TFTcontroller == ILI9488)   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
     if(_TFTcontroller == ST7796 )   { m_h_res = 480; m_v_res = 320; _rotation = 0;}
     if(_TFTcontroller == ST7796RPI) { m_h_res = 480; m_v_res = 320; _rotation = 0;}
+
+    m_framebuffer[0] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
+    if(!m_framebuffer[0]) {
+        if(tft_info) tft_info("Error allocating memory");
+        return;
+    }
+    memset(m_framebuffer[0], 0, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setDiaplayInversion(uint8_t dispInv) {
@@ -1076,73 +1088,83 @@ void TFT_SPI::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-    // Bresenham's algorithm - thx wikipedia - speed enhanced by Bodmer to use an efficient FastH/V Line draw routine for line segments of 2 pixels or more
-    int16_t t;
-    bool    steep = abs(y1 - y0) > abs(x1 - x0);
-    if(steep) {
-        t = x0;
-        x0 = y0;
-        y0 = t; // swap (x0, y0);
-        t = x1;
-        x1 = y1;
-        y1 = t; // swap(x1, y1);
-    }
-    if(x0 > x1) {
-        t = x0;
-        x0 = x1;
-        x1 = t; // swap(x0, x1);
-        t = y0;
-        y0 = y1;
-        y1 = t; // swap(y0, y1);
-    }
-    int16_t dx = x1 - x0, dy = abs(y1 - y0);
-    ;
-    int16_t err = dx >> 1, ystep = -1, xs = x0, dlen = 0;
+    // Calculate differences
+    int16_t dx = abs(x1 - x0);
+    int16_t dy = abs(y1 - y0);
 
-    if(y0 < y1) ystep = 1;
-    startWrite();
-    // Split into steep and not steep for FastH/V separation
-    if(steep) {
-        for(; x0 <= x1; x0++) {
-            dlen++;
-            err -= dy;
-            if(err < 0) {
-                err += dx;
-                if(dlen == 1) writePixel(y0, xs, color);
-                else writeFastVLine(y0, xs, dlen, color);
-                dlen = 0;
-                y0 += ystep;
-                xs = x0 + 1;
-            }
+    // Determine directions
+    int16_t sx = (x0 < x1) ? 1 : -1;
+    int16_t sy = (y0 < y1) ? 1 : -1;
+
+    int16_t err = dx - dy; // Fehlerterm
+
+    int16_t x = x0;
+    int16_t y = y0;
+    int16_t w = dx + 1;
+    int16_t h = dy + 1;
+
+
+    while (true) {
+        // Set point in framebuffer if within bounds
+        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) {
+            m_framebuffer[0][y0 * m_h_res + x0] = color;
         }
-        if(dlen) writeFastVLine(y0, xs, dlen, color);
+
+        // Wenn Endpunkt erreicht, beenden
+        if (x0 == x1 && y0 == y1) break;
+
+        // Add error term twice and correct errors
+        int16_t e2 = err * 2;
+        if (e2 > -dy) {
+            err -= dy;
+            x0 += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y0 += sy;
+        }
     }
-    else {
-        for(; x0 <= x1; x0++) {
-            dlen++;
-            err -= dy;
-            if(err < 0) {
-                err += dx;
-                if(dlen == 1) writePixel(xs, y0, color);
-                else writeFastHLine(xs, y0, dlen, color);
-                dlen = 0;
-                y0 += ystep;
-                xs = x0 + 1;
-            }
-        }
-        if(dlen) writeFastHLine(xs, y0, dlen, color);
+    startWrite();
+    if(_TFTcontroller == ILI9341) { // ILI9341
+        writeCommand(ILI9341_MADCTL);
+        spi_TFT.write(ili9341_rotations[_rotation].bmpctl);
+    }
+    setAddrWindow(x, m_v_res - y - h, w, h);
+
+    for(int16_t j = y; j < h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::fillScreen(uint16_t color) {
-    fillRect(0, 0, m_h_res, m_v_res, color);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
+    // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
+    int16_t x0 = max((int16_t)0, x);
+    int16_t y0 = max((int16_t)0, y);
+    int16_t x1 = min((int)m_h_res, x + w); // Rechte Grenze
+    int16_t y1 = min((int)m_v_res, y + h); // Untere Grenze
+    // Zeichnen des Rechtecks nur im gültigen Bereich
+    for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
+        for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
+            m_framebuffer[0][j * m_h_res + i] = color;
+        }
+    }
+    startBitmap(x0, y0, x1 - x0, y1 - y0);
     startWrite();
-    writeFillRect(x, y, w, h, color);
+    for(int16_t j = y0; j < y1; j++) {
+        writeColor(color, x1 - x0);
+    }
     endWrite();
+    endBitmap();
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::fillScreen(uint16_t color) {
+    fill(m_framebuffer[0], m_framebuffer[0] + (m_h_res * m_v_res), color);
+    startBitmap(0, 0, m_h_res, m_v_res);
+    startWrite();
+    writeColor(color, m_h_res * m_v_res);
+    endWrite();
+    endBitmap();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
