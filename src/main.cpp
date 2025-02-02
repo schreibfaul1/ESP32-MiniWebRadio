@@ -2349,6 +2349,7 @@ void changeState(int32_t state){
     dispFooter.enable();
     dispHeader.enable();
     dispHeader.updateItem(_hl_item[state]);
+    if(state != RADIO) {dispFooter.updateFlag(NULL);}
     switch(state) {
         case RADIO:{
             if(_state != RADIO) clearWithOutHeaderFooter();
