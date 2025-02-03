@@ -1510,13 +1510,18 @@ void setup() {
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
-    tft.drawLine(0, 0, 400, 300, TFT_GREEN); // clear line
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
     updateSettings();
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
-
+    tft.drawTriangle(0, 0, 479, 0, 479, 319, TFT_RED);
+    tft.fillTriangle(0, 0, 479, 0, 479, 319, TFT_RED);
+    tft.drawRect(0, 0, 480, 320, TFT_WHITE);
+    tft.drawRoundRect(0, 0, 480, 320, 30, TFT_YELLOW);
+    tft.fillRoundRect(0, 0, 480, 320, 60, TFT_GREEN);
+    tft.drawCircle(240, 160, 20, TFT_BLACK);
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         openAccessPoint();

@@ -848,57 +848,57 @@ void TFT_SPI::startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
         spi_TFT.write(ili9341_rotations[_rotation].bmpctl);
     }
     setAddrWindow(x, m_v_res - y - h, w, h);
-    if(_TFTcontroller == HX8347D) { // HX8347D
-        if(_rotation == 0) {
-            writeCommand(0x16);
-            spi_TFT.write(0x88);
-        } // 0
-        if(_rotation == 1) {
-            writeCommand(0x16);
-            spi_TFT.write(0x38);
-        } // 90
-        if(_rotation == 2) {
-            writeCommand(0x16);
-            spi_TFT.write(0x48);
-        } // 180
-        if(_rotation == 3) {
-            writeCommand(0x16);
-            spi_TFT.write(0xE8);
-        } // 270
-        writeCommand(0x22);
-    }
-    if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
-        writeCommand(ILI9486_MADCTL);
-        if(_rotation == 0) { spi_TFT.write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_ML | ILI9486_MADCTL_BGR); }
-        if(_rotation == 1) { spi_TFT.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MV | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR); }
-        if(_rotation == 2) { spi_TFT.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_BGR); }
-        if(_rotation == 3) { spi_TFT.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR); }
-        writeCommand(ILI9486_RAMWR);
-    }
-    if(_TFTcontroller == ILI9488) {
-        writeCommand(ILI9488_MADCTL);
-        if(_rotation == 0) { spi_TFT.write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_ML | ILI9488_MADCTL_BGR); }
-        if(_rotation == 1) { spi_TFT.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MV | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR); }
-        if(_rotation == 2) { spi_TFT.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_BGR); }
-        if(_rotation == 3) { spi_TFT.write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR); }
-        writeCommand(ILI9488_RAMWR);
-    }
-    if(_TFTcontroller == ST7796) {
-        writeCommand(ST7796_MADCTL);
-        if(_rotation == 0) { spi_TFT.write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_ML | ST7796_MADCTL_BGR); }
-        if(_rotation == 1) { spi_TFT.write(ST7796_MADCTL_MH | ST7796_MADCTL_MV | ST7796_MADCTL_MX | ST7796_MADCTL_BGR); }
-        if(_rotation == 2) { spi_TFT.write(ST7796_MADCTL_MH | ST7796_MADCTL_BGR); }
-        if(_rotation == 3) { spi_TFT.write(ST7796_MADCTL_MV | ST7796_MADCTL_MY | ST7796_MADCTL_BGR); }
-        writeCommand(ST7796_RAMWR);
-    }
-    if(_TFTcontroller == ST7796RPI) {
-        writeCommand(ST7796_MADCTL);
-        if(_rotation == 0) { spi_TFT.write16(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_ML | ST7796_MADCTL_BGR); }
-        if(_rotation == 1) { spi_TFT.write16(ST7796_MADCTL_MH | ST7796_MADCTL_MV | ST7796_MADCTL_MX | ST7796_MADCTL_BGR); }
-        if(_rotation == 2) { spi_TFT.write16(ST7796_MADCTL_MH | ST7796_MADCTL_BGR); }
-        if(_rotation == 3) { spi_TFT.write16(ST7796_MADCTL_MV | ST7796_MADCTL_MY | ST7796_MADCTL_BGR); }
-        writeCommand(ST7796_RAMWR);
-    }
+    // if(_TFTcontroller == HX8347D) { // HX8347D
+    //     if(_rotation == 0) {
+    //         writeCommand(0x16);
+    //         spi_TFT.write(0x88);
+    //     } // 0
+    //     if(_rotation == 1) {
+    //         writeCommand(0x16);
+    //         spi_TFT.write(0x38);
+    //     } // 90
+    //     if(_rotation == 2) {
+    //         writeCommand(0x16);
+    //         spi_TFT.write(0x48);
+    //     } // 180
+    //     if(_rotation == 3) {
+    //         writeCommand(0x16);
+    //         spi_TFT.write(0xE8);
+    //     } // 270
+    //     writeCommand(0x22);
+    // }
+    // if(_TFTcontroller == ILI9486a || _TFTcontroller == ILI9486b) {
+    //     writeCommand(ILI9486_MADCTL);
+    //     if(_rotation == 0) { spi_TFT.write16(ILI9486_MADCTL_MX | ILI9486_MADCTL_MY | ILI9486_MADCTL_ML | ILI9486_MADCTL_BGR); }
+    //     if(_rotation == 1) { spi_TFT.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_MV | ILI9486_MADCTL_MX | ILI9486_MADCTL_BGR); }
+    //     if(_rotation == 2) { spi_TFT.write16(ILI9486_MADCTL_MH | ILI9486_MADCTL_BGR); }
+    //     if(_rotation == 3) { spi_TFT.write16(ILI9486_MADCTL_MV | ILI9486_MADCTL_MY | ILI9486_MADCTL_BGR); }
+    //     writeCommand(ILI9486_RAMWR);
+    // }
+    // if(_TFTcontroller == ILI9488) {
+    //     writeCommand(ILI9488_MADCTL);
+    //     if(_rotation == 0) { spi_TFT.write(ILI9488_MADCTL_MX | ILI9488_MADCTL_MY | ILI9488_MADCTL_ML | ILI9488_MADCTL_BGR); }
+    //     if(_rotation == 1) { spi_TFT.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_MV | ILI9488_MADCTL_MX | ILI9488_MADCTL_BGR); }
+    //     if(_rotation == 2) { spi_TFT.write(ILI9488_MADCTL_MH | ILI9488_MADCTL_BGR); }
+    //     if(_rotation == 3) { spi_TFT.write(ILI9488_MADCTL_MV | ILI9488_MADCTL_MY | ILI9488_MADCTL_BGR); }
+    //     writeCommand(ILI9488_RAMWR);
+    // }
+    // if(_TFTcontroller == ST7796) {
+    //     writeCommand(ST7796_MADCTL);
+    //     if(_rotation == 0) { spi_TFT.write(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_ML | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 1) { spi_TFT.write(ST7796_MADCTL_MH | ST7796_MADCTL_MV | ST7796_MADCTL_MX | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 2) { spi_TFT.write(ST7796_MADCTL_MH | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 3) { spi_TFT.write(ST7796_MADCTL_MV | ST7796_MADCTL_MY | ST7796_MADCTL_BGR); }
+    //     writeCommand(ST7796_RAMWR);
+    // }
+    // if(_TFTcontroller == ST7796RPI) {
+    //     writeCommand(ST7796_MADCTL);
+    //     if(_rotation == 0) { spi_TFT.write16(ST7796_MADCTL_MX | ST7796_MADCTL_MY | ST7796_MADCTL_ML | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 1) { spi_TFT.write16(ST7796_MADCTL_MH | ST7796_MADCTL_MV | ST7796_MADCTL_MX | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 2) { spi_TFT.write16(ST7796_MADCTL_MH | ST7796_MADCTL_BGR); }
+    //     if(_rotation == 3) { spi_TFT.write16(ST7796_MADCTL_MV | ST7796_MADCTL_MY | ST7796_MADCTL_BGR); }
+    //     writeCommand(ST7796_RAMWR);
+    // }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1125,12 +1125,7 @@ void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
         }
     }
     startWrite();
-    if(_TFTcontroller == ILI9341) { // ILI9341
-        writeCommand(ILI9341_MADCTL);
-        spi_TFT.write(ili9341_rotations[_rotation].bmpctl);
-    }
-    setAddrWindow(x, m_v_res - y - h, w, h);
-
+    setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < h; j++) {
         writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
@@ -1149,148 +1144,311 @@ void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
             m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
-    startBitmap(x0, y0, x1 - x0, y1 - y0);
     startWrite();
+    setAddrWindow(x, y, w, h);
     for(int16_t j = y0; j < y1; j++) {
         writeColor(color, x1 - x0);
     }
     endWrite();
-    endBitmap();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillScreen(uint16_t color) {
     fill(m_framebuffer[0], m_framebuffer[0] + (m_h_res * m_v_res), color);
-    startBitmap(0, 0, m_h_res, m_v_res);
+
     startWrite();
+    setAddrWindow(0, 0, m_h_res, m_v_res);
     writeColor(color, m_h_res * m_v_res);
     endWrite();
-    endBitmap();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    drawLine(x0, y0, x1, y1, color);
-    drawLine(x1, y1, x2, y2, color);
-    drawLine(x2, y2, x0, y0, color);
+    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
+
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
+        // Bresenham-Algorithmus für Linien
+        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int16_t err = dx + dy, e2; // Fehlerwert
+
+        while (true) {
+            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
+            if (x0 == x1 && y0 == y1) break;
+            e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    };
+
+
+    // Zeichne die drei Linien des Dreiecks
+    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
+    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
+    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
+
+    // Aktualisierung des gezeichneten Bereichs
+    int16_t x = std::min({x0, x1, x2});
+    int16_t y = std::min({y0, y1, y2});
+    int16_t w = std::max({x0, x1, x2}) - x + 1;
+    int16_t h = std::max({y0, y1, y2}) - y + 1;
+
+    startWrite();
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+    }
+    endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
-    int16_t a, b, y, last;
-    // Sort coordinates by Y order (y2 >= y1 >= y0)
-    if(y0 > y1) {
-        _swap_int16_t(y0, y1);
-        _swap_int16_t(x0, x1);
-    }
-    if(y1 > y2) {
-        _swap_int16_t(y2, y1);
-        _swap_int16_t(x2, x1);
-    }
-    if(y0 > y1) {
-        _swap_int16_t(y0, y1);
-        _swap_int16_t(x0, x1);
+    if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
+
+ // Helferfunktion zum Zeichnen einer horizontalen Linie
+    auto drawHorizontalLine = [&](int16_t x_start, int16_t x_end, int16_t y) {
+        if (y >= 0 && y < m_v_res) { // Clipping in y-Richtung
+            if (x_start > x_end) std::swap(x_start, x_end);
+            x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
+            x_end = std::min((int16_t)(m_h_res - 1), x_end);
+            for (int16_t x = x_start; x <= x_end; ++x) {
+                m_framebuffer[0][y * m_h_res + x] = color;
+            }
+        }
+    };
+
+    // Punkte nach ihrer y-Koordinate sortieren
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+    if (y1 > y2) { std::swap(y1, y2); std::swap(x1, x2); }
+    if (y0 > y1) { std::swap(y0, y1); std::swap(x0, x1); }
+
+    // Variablen zur Begrenzung des aktualisierten Bereichs
+    int16_t x_min = std::min({x0, x1, x2});
+    int16_t x_max = std::max({x0, x1, x2});
+    int16_t y_min = std::min({y0, y1, y2});
+    int16_t y_max = std::max({y0, y1, y2});
+
+    // Clipping auf Framebuffer-Grenzen
+    int16_t x = std::max((int16_t)0, x_min);
+    int16_t w = std::min((int16_t)(m_h_res - 1), x_max) - x + 1;
+    int16_t y = std::max((int16_t)0, y_min);
+    int16_t h = std::min((int16_t)(m_v_res - 1), y_max) - y + 1;
+
+
+    // Dreieck in zwei Teile zerlegen (oben und unten)
+    if (y1 == y2) { // Sonderfall: flaches unteres Dreieck
+        for (int16_t i = y0; i <= y1; ++i) {
+            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
+            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, i);
+        }
+    } else if (y0 == y1) { // Sonderfall: flaches oberes Dreieck
+        for (int16_t i = y0; i <= y2; ++i) {
+            int16_t x_start = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
+            int16_t x_end = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
+            drawHorizontalLine(x_start, x_end, i);
+        }
+    } else { // Allgemeiner Fall: Dreieck wird in zwei Teile aufgeteilt
+        for (int16_t i = y0; i <= y1; ++i) { // Unterer Teil
+            int16_t x_start = x0 + (x1 - x0) * (i - y0) / (y1 - y0);
+            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, i);
+        }
+        for (int16_t i = y1; i <= y2; ++i) { // Oberer Teil
+            int16_t x_start = x1 + (x2 - x1) * (i - y1) / (y2 - y1);
+            int16_t x_end = x0 + (x2 - x0) * (i - y0) / (y2 - y0);
+            drawHorizontalLine(x_start, x_end, i);
+        }
     }
     startWrite();
-    if(y0 == y2) { // Handle awkward all-on-same-line case as its own thing
-        a = b = x0;
-        if(x1 < a) a = x1;
-        else if(x1 > b) b = x1;
-        if(x2 < a) a = x2;
-        else if(x2 > b) b = x2;
-        writeFastHLine(a, y0, b - a + 1, color);
-        endWrite();
-        return;
-    }
-    int16_t dx01 = x1 - x0, dy01 = y1 - y0, dx02 = x2 - x0, dy02 = y2 - y0, dx12 = x2 - x1, dy12 = y2 - y1;
-    int32_t sa = 0, sb = 0;
-
-    // For upper part of triangle, find scanline crossings for segments 0-1 and 0-2.  If y1=y2 (flat-bottomed triangle), the scanline y1
-    // is included here (and second loop will be skipped, avoiding a /0 error there), otherwise scanline y1 is skipped here and handled
-    // in the second loop...which also avoids a /0 error here if y0=y1(flat-topped triangle).
-    if(y1 == y2) last = y1; // Include y1 scanline
-    else last = y1 - 1;     // Skip it
-
-    for(y = y0; y <= last; y++) {
-        a = x0 + sa / dy01;
-        b = x0 + sb / dy02;
-        sa += dx01;
-        sb += dx02;
-        /* longhand:
-         a = x0 + (x1 - x0) * (y - y0) / (y1 - y0);
-         b = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-         */
-        if(a > b) _swap_int16_t(a, b);
-        writeFastHLine(a, y, b - a + 1, color);
-    }
-
-    // For lower part of triangle, find scanline crossings for segments
-    // 0-2 and 1-2.  This loop is skipped if y1=y2.
-    sa = (int32_t)dx12 * (y - y1);
-    sb = (int32_t)dx02 * (y - y0);
-    for(; y <= y2; y++) {
-        a = x1 + sa / dy12;
-        b = x0 + sb / dy02;
-        sa += dx12;
-        sb += dx02;
-        /* longhand:
-         a = x1 + (x2 - x1) * (y - y1) / (y2 - y1);
-         b = x0 + (x2 - x0) * (y - y0) / (y2 - y0);
-         */
-        if(a > b) _swap_int16_t(a, b);
-        writeFastHLine(a, y, b - a + 1, color);
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
-    if(Width < 1 || Height < 1) return;
+    if(Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
+    if(Width == 0 || Height == 0) return;
+    if(Width > m_h_res - Xpos) Width = m_h_res - Xpos;
+    if(Height > m_v_res - Ypos) Height = m_v_res - Ypos;
+
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
+        // Bresenham-Algorithmus für Linien
+        int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+        int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+        int16_t err = dx + dy, e2; // Fehlerwert
+
+        while (true) {
+            fb[y0 * m_h_res + x0] = color; // Pixel setzen
+            if (x0 == x1 && y0 == y1) break;
+            e2 = 2 * err;
+            if (e2 >= dy) { err += dy; x0 += sx; }
+            if (e2 <= dx) { err += dx; y0 += sy; }
+        }
+    };
+
+    // Zeichne die vier Linien des Rechtecks
+    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
+    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
+    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
+    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
+
+    // Aktualisierung des gezeichneten Bereichs
+    int16_t x = std::min((int)Xpos, Xpos + Width);
+    int16_t y = std::min((int)Ypos, Ypos + Height);
+    int16_t w = std::max((int)Xpos, Xpos + Width) - x;
+    int16_t h = std::max((int)Ypos, Ypos + Height) - y;
+
     startWrite();
-    writeFastHLine(Xpos, Ypos, Width, Color);
-    writeFastHLine(Xpos, Ypos + Height - 1, Width, Color);
-    writeFastVLine(Xpos, Ypos, Height, Color);
-    writeFastVLine(Xpos + Width - 1, Ypos, Height, Color);
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+    }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // smarter version
+    // Helferfunktion: Kreislinie für die Ecken berechnen
+    auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
+        int16_t f = 1 - r;
+        int16_t ddF_x = 1;
+        int16_t ddF_y = -2 * r;
+        int16_t x = 0;
+        int16_t y = r;
+
+        while (x <= y) {
+            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
+            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
+            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // unten links
+            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // oben links
+
+            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
+            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
+            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
+            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
+
+            if (f >= 0) {
+                y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            x++;
+            ddF_x += 2;
+            f += ddF_x;
+        }
+    };
+
+    // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
+    for (int16_t i = x + r; i < x + w - r; i++) { // Obere und untere horizontale Linien
+        m_framebuffer[0][y * m_h_res + i] = color; // Oben
+        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // Unten
+    }
+    for (int16_t i = y + r; i < y + h - r; i++) { // Linke und rechte vertikale Linien
+        m_framebuffer[0][i * m_h_res + x] = color; // Links
+        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // Rechts
+    }
+
+    // Abgerundete Ecken zeichnen
+    drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
+    drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
+    drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+
+    // Aktualisierung des gezeichneten Bereichs
     startWrite();
-    writeFastHLine(x + r, y, w - 2 * r, color);         // Top
-    writeFastHLine(x + r, y + h - 1, w - 2 * r, color); // Bottom
-    writeFastVLine(x, y + r, h - 2 * r, color);         // Left
-    writeFastVLine(x + w - 1, y + r, h - 2 * r, color); // Right
-    // draw four corners
-    drawCircleHelper(x + r, y + r, r, 1, color);
-    drawCircleHelper(x + w - r - 1, y + r, r, 2, color);
-    drawCircleHelper(x + w - r - 1, y + h - r - 1, r, 4, color);
-    drawCircleHelper(x + r, y + h - r - 1, r, 8, color);
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+    }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // smarter version
-    startWrite();
-    writeFillRect(x + r, y, w - 2 * r, h, color);
+    // Helferfunktion: Kreisfüllung für die Ecken berechnen
+    auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
+        int16_t f = 1 - r;
+        int16_t ddF_x = 1;
+        int16_t ddF_y = -2 * r;
+        int16_t x = 0;
+        int16_t y = r;
 
-    // draw four corners
-    fillCircleHelper(x + w - r - 1, y + r, r, 1, h - 2 * r - 1, color);
-    fillCircleHelper(x + r, y + r, r, 2, h - 2 * r - 1, color);
+        while (x <= y) {
+            for (int16_t i = 0; i <= x; i++) {
+                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
+                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
+                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
+                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
+            }
+            for (int16_t i = 0; i <= y; i++) {
+                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
+                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
+                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
+                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
+            }
+
+            if (f >= 0) {
+                y--;
+                ddF_y += 2;
+                f += ddF_y;
+            }
+            x++;
+            ddF_x += 2;
+            f += ddF_x;
+        }
+    };
+
+    // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
+    for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
+        for (int16_t j = x + r; j < x + w - r; j++) {
+            m_framebuffer[0][i * m_h_res + j] = color;
+        }
+    }
+    for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
+        for (int16_t j = x + r; j < x + w - r; j++) {
+            m_framebuffer[0][i * m_h_res + j] = color;
+        }
+    }
+
+    // Vertikaler Bereich zwischen den Viertelkreisen füllen
+    for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
+        for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
+            m_framebuffer[0][i * m_h_res + j] = color;
+        }
+    }
+
+    // Viertelkreise in den Ecken füllen
+    fillCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
+    fillCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
+    fillCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
+    fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
+
+    // Aktualisierung des gezeichneten Bereichs
+    startWrite();
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+    }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
+void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
+    if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
+        return; // Kreis liegt komplett außerhalb, also nichts zeichnen
+    }
+    // Bresenham-Algorithmus für Kreise
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    startWrite();
-    writePixel(x0, y0 + r, color);
-    writePixel(x0, y0 - r, color);
-    writePixel(x0 + r, y0, color);
-    writePixel(x0 - r, y0, color);
+    // Setze die Anfangspunkte (Symmetrieachsen)
+    m_framebuffer[0][(cy + r) * m_h_res + cx] = color; // Oben
+    m_framebuffer[0][(cy - r) * m_h_res + cx] = color; // Unten
+    m_framebuffer[0][cy * m_h_res + (cx + r)] = color; // Rechts
+    m_framebuffer[0][cy * m_h_res + (cx - r)] = color; // Links
 
-    while(x < y) {
-        if(f >= 0) {
+    while (x < y) {
+        if (f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
@@ -1299,14 +1457,23 @@ void TFT_SPI::drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color) {
         ddF_x += 2;
         f += ddF_x;
 
-        writePixel(x0 + x, y0 + y, color);
-        writePixel(x0 - x, y0 + y, color);
-        writePixel(x0 + x, y0 - y, color);
-        writePixel(x0 - x, y0 - y, color);
-        writePixel(x0 + y, y0 + x, color);
-        writePixel(x0 - y, y0 + x, color);
-        writePixel(x0 + y, y0 - x, color);
-        writePixel(x0 - y, y0 - x, color);
+        // Punkte in den acht Symmetrieachsen zeichnen
+        m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
+        m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
+        m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
+        m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
+        m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
+        m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
+        m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
+        m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
+
+    }
+
+    // Aktualisierung des gezeichneten Bereichs
+    startWrite();
+    setAddrWindow(cx - r, cy - r, 2 * r + 1, 2 * r + 1);
+    for(int16_t j = cy - r; j <= cy + r; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + cx - r, 2 * r + 1);
     }
     endWrite();
 }
