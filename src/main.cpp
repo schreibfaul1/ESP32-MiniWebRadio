@@ -902,7 +902,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
-    if(endsWith(scImg, "bmp")) { return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
+    if(endsWith(scImg, "bmp")) { return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth, 1.0); }
     if(endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
     if(endsWith(scImg, "gif")) { return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0); }
 
@@ -1520,7 +1520,8 @@ void setup() {
     tft.drawRect(0, 0, 480, 320, TFT_WHITE);
     tft.drawRoundRect(0, 0, 480, 320, 30, TFT_YELLOW);
     tft.fillRoundRect(0, 0, 480, 320, 60, TFT_GREEN);
-    tft.drawCircle(240, 160, 20, TFT_BLACK);
+    tft.drawCircle(240, 160, 120, TFT_BLACK);
+    tft.fillCircle(240, 160, 100, TFT_WHITE);
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){

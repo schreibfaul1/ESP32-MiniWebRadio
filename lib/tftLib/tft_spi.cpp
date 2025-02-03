@@ -1075,63 +1075,6 @@ void TFT_SPI::drawPixel(int16_t x, int16_t y, uint16_t color) {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_SPI::color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3); }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color) {
-    startWrite();
-    writeFastVLine(x, y, h, color);
-    endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color) {
-    startWrite();
-    writeFastHLine(x, y, w, color);
-    endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-    // Calculate differences
-    int16_t dx = abs(x1 - x0);
-    int16_t dy = abs(y1 - y0);
-
-    // Determine directions
-    int16_t sx = (x0 < x1) ? 1 : -1;
-    int16_t sy = (y0 < y1) ? 1 : -1;
-
-    int16_t err = dx - dy; // Fehlerterm
-
-    int16_t x = x0;
-    int16_t y = y0;
-    int16_t w = dx + 1;
-    int16_t h = dy + 1;
-
-
-    while (true) {
-        // Set point in framebuffer if within bounds
-        if (x0 >= 0 && x0 < m_h_res && y0 >= 0 && y0 < m_v_res) {
-            m_framebuffer[0][y0 * m_h_res + x0] = color;
-        }
-
-        // Wenn Endpunkt erreicht, beenden
-        if (x0 == x1 && y0 == y1) break;
-
-        // Add error term twice and correct errors
-        int16_t e2 = err * 2;
-        if (e2 > -dy) {
-            err -= dy;
-            x0 += sx;
-        }
-        if (e2 < dx) {
-            err += dx;
-            y0 += sy;
-        }
-    }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-    }
-    endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
     int16_t x0 = max((int16_t)0, x);
@@ -1307,7 +1250,7 @@ void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helferfunktion: Kreislinie für die Ecken berechnen
+    // helper function: Calculate circular drawing for the corners
     auto drawCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
         int16_t f = 1 - r;
         int16_t ddF_x = 1;
@@ -1316,15 +1259,15 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         int16_t y = r;
 
         while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // oben rechts
-            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // unten rechts
-            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // unten links
-            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // oben links
+            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // up right
+            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // down right
+            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // down left
+            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // up left
 
-            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // oben rechts (90° gedreht)
-            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // unten rechts (90° gedreht)
-            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // unten links (90° gedreht)
-            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // oben links (90° gedreht)
+            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // up right (90° rotated)
+            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // down right (90° rotated)
+            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // down left (90° rotated)
+            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // up left (90° rotated)
 
             if (f >= 0) {
                 y--;
@@ -1337,23 +1280,23 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         }
     };
 
-    // Rechteckseiten zeichnen (ohne die abgerundeten Ecken)
-    for (int16_t i = x + r; i < x + w - r; i++) { // Obere und untere horizontale Linien
-        m_framebuffer[0][y * m_h_res + i] = color; // Oben
-        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // Unten
+    // draw horizontal lines above and below the quarter circles
+    for (int16_t i = x + r; i < x + w - r; i++) { // upper and lower horizontal lines
+        m_framebuffer[0][y * m_h_res + i] = color; // above
+        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // below
     }
-    for (int16_t i = y + r; i < y + h - r; i++) { // Linke und rechte vertikale Linien
-        m_framebuffer[0][i * m_h_res + x] = color; // Links
-        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // Rechts
+    for (int16_t i = y + r; i < y + h - r; i++) { // vertical lines
+        m_framebuffer[0][i * m_h_res + x] = color; // left
+        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // right
     }
 
-    // Abgerundete Ecken zeichnen
+    // fill the area between the quarter circles
     drawCircleQuadrant(x + w - r - 1, y + r, r, 0x1 | 0x10); // Oben rechts
     drawCircleQuadrant(x + w - r - 1, y + h - r - 1, r, 0x2 | 0x20); // Unten rechts
     drawCircleQuadrant(x + r, y + h - r - 1, r, 0x4 | 0x40); // Unten links
     drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
 
-    // Aktualisierung des gezeichneten Bereichs
+    // update the drawn area
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
@@ -1363,7 +1306,7 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
-    // Helferfunktion: Kreisfüllung für die Ecken berechnen
+    // Helper function: Calculate circular filling for the corners
     auto fillCircleQuadrant = [&](int16_t cx, int16_t cy, int16_t r, uint8_t quadrant) {
         int16_t f = 1 - r;
         int16_t ddF_x = 1;
@@ -1432,20 +1375,26 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     if (cx + r < 0 || cx - r >= m_h_res || cy + r < 0 || cy - r >= m_v_res) {
-        return; // Kreis liegt komplett außerhalb, also nichts zeichnen
+        return; // Circle is completely outside, so don't draw anything
     }
-    // Bresenham-Algorithmus für Kreise
+    // Bresenham-Algorithm for circles
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    // Setze die Anfangspunkte (Symmetrieachsen)
-    m_framebuffer[0][(cy + r) * m_h_res + cx] = color; // Oben
-    m_framebuffer[0][(cy - r) * m_h_res + cx] = color; // Unten
-    m_framebuffer[0][cy * m_h_res + (cx + r)] = color; // Rechts
-    m_framebuffer[0][cy * m_h_res + (cx - r)] = color; // Links
+    auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) { // Set pixel if it is within the framebuffer
+        if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
+            m_framebuffer[0][y * m_h_res + x] = color;
+        }
+    };
+
+    // set the initial pixels
+    setPixelSafe(cx, cy + r, color); // upper pixel
+    setPixelSafe(cx, cy - r, color); // lower pixel
+    setPixelSafe(cx + r, cy, color); // right pixel
+    setPixelSafe(cx - r, cy, color); // left pixel
 
     while (x < y) {
         if (f >= 0) {
@@ -1457,60 +1406,57 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
         ddF_x += 2;
         f += ddF_x;
 
-        // Punkte in den acht Symmetrieachsen zeichnen
-        m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // Quadrant 1
-        m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // Quadrant 2
-        m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // Quadrant 3
-        m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // Quadrant 4
-        m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // Quadrant 5
-        m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // Quadrant 6
-        m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // Quadrant 7
-        m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // Quadrant 8
-
+        // Draw points in the eight symmetry axes
+        setPixelSafe(cx + x, cy + y, color); // Quadrant 1
+        setPixelSafe(cx - x, cy + y, color); // Quadrant 2
+        setPixelSafe(cx + x, cy - y, color); // Quadrant 3
+        setPixelSafe(cx - x, cy - y, color); // Quadrant 4
+        setPixelSafe(cx + y, cy + x, color); // Quadrant 5
+        setPixelSafe(cx - y, cy + x, color); // Quadrant 6
+        setPixelSafe(cx + y, cy - x, color); // Quadrant 7
+        setPixelSafe(cx - y, cy - x, color); // Quadrant 8
     }
 
-    // Aktualisierung des gezeichneten Bereichs
+    int16_t x1 = std::max(cx - r, 1) - 1;
+    int16_t y1 = std::max(cy - r, 1) - 1;
+    int16_t w1 = std::min(cx + r, m_h_res - 1) - x1 + 1;
+    int16_t h1 = std::min(cy + r, m_v_res - 1) - y1 + 1;
+
+    // Update of the drawn area
     startWrite();
-    setAddrWindow(cx - r, cy - r, 2 * r + 1, 2 * r + 1);
-    for(int16_t j = cy - r; j <= cy + r; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + cx - r, 2 * r + 1);
+    setAddrWindow(x1, y1, w1, h1);
+    for(int16_t j = y1; j <= y1 + h1; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::fillCircle(int16_t  Xm, int16_t  Ym, uint16_t r, uint16_t color) {
-    int32_t f = 1 - r, ddF_x = 1, ddF_y = 0 - (2 * r), x = 0, y = r;
-    startWrite();
-    writeFastVLine(Xm, Ym - r, 2 * r, color);
-
-    while(x < y) {
-        if(f >= 0) {
-            y--;
-            ddF_y += 2;
-            f += ddF_y;
-        }
-
-        x++;
-        ddF_x += 2;
-        f += ddF_x;
-
-        writeFastVLine(Xm + x, Ym - y, 2 * y, color);
-        writeFastVLine(Xm - x, Ym - y, 2 * y, color);
-        writeFastVLine(Xm + y, Ym - x, 2 * x, color);
-        writeFastVLine(Xm - y, Ym - x, 2 * x, color);
-    }
-    endWrite();
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color) {
+void TFT_SPI::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
+//void TFT_RGB::drawFilledCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
+    // Bresenham-Algorithmus für Kreise
     int16_t f = 1 - r;
     int16_t ddF_x = 1;
     int16_t ddF_y = -2 * r;
     int16_t x = 0;
     int16_t y = r;
 
-    while(x < y) {
-        if(f >= 0) {
+    // Fülle die erste vertikale Linie durch den Mittelpunkt
+    for (int16_t i = Ym - r; i <= Ym + r; i++) {
+        m_framebuffer[0][i * m_h_res + Xm] = color;
+    }
+
+    while (x <= y) {
+        // Fülle horizontale Linien für alle acht Symmetrieachsen
+        for (int16_t i = Xm - x; i <= Xm + x; i++) {
+            m_framebuffer[0][(Ym + y) * m_h_res + i] = color; // Unten +y
+            m_framebuffer[0][(Ym - y) * m_h_res + i] = color; // Oben -y
+        }
+        for (int16_t i = Xm - y; i <= Xm + y; i++) {
+            m_framebuffer[0][(Ym + x) * m_h_res + i] = color; // Rechts +x
+            m_framebuffer[0][(Ym - x) * m_h_res + i] = color; // Links -x
+        }
+
+        if (f >= 0) {
             y--;
             ddF_y += 2;
             f += ddF_y;
@@ -1518,87 +1464,21 @@ void TFT_SPI::drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t corner
         x++;
         ddF_x += 2;
         f += ddF_x;
-        if(cornername & 0x4) {
-            writePixel(x0 + x, y0 + y, color);
-            writePixel(x0 + y, y0 + x, color);
-        }
-        if(cornername & 0x2) {
-            writePixel(x0 + x, y0 - y, color);
-            writePixel(x0 + y, y0 - x, color);
-        }
-        if(cornername & 0x8) {
-            writePixel(x0 - y, y0 + x, color);
-            writePixel(x0 - x, y0 + y, color);
-        }
-        if(cornername & 0x1) {
-            writePixel(x0 - y, y0 - x, color);
-            writePixel(x0 - x, y0 - y, color);
-        }
     }
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color) {
 
-    int16_t f = 1 - r;
-    int16_t ddF_x = 1;
-    int16_t ddF_y = -2 * r;
-    int16_t x = 0;
-    int16_t y = r;
-
-    while(x < y) {
-        if(f >= 0) {
-            y--;
-            ddF_y += 2;
-            f += ddF_y;
-        }
-        x++;
-        ddF_x += 2;
-        f += ddF_x;
-
-        if(cornername & 0x1) {
-            writeFastVLine(x0 + x, y0 - y, 2 * y + 1 + delta, color);
-            writeFastVLine(x0 + y, y0 - x, 2 * x + 1 + delta, color);
-        }
-        if(cornername & 0x2) {
-            writeFastVLine(x0 - x, y0 - y, 2 * y + 1 + delta, color);
-            writeFastVLine(x0 - y, y0 - x, 2 * x + 1 + delta, color);
-        }
-    }
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
-
-    uint16_t color = 0;
-
-    uint32_t dataSize = w * h;
-    uint32_t counter = 0;
+    // Update of the drawn area
     startWrite();
-    readAddrWindow(x, y, w, h);
-    readCommand(); // Dummy read to throw away don't care value
-
-    // Read window pixel 24-bit RGB values
-    uint8_t r, g, b;
-
-    while(dataSize--) {
-        if(_TFTcontroller == ILI9488) {
-            // The 6 colour bits are in MS 6 bits of each byte but we do not include the extra clock pulse so we use a trick
-            // and mask the middle 6 bits of the byte, then only shift 1 place left
-            r = (readCommand() & 0x7E) << 1;
-            g = (readCommand() & 0x7E) << 1;
-            b = (readCommand() & 0x7E) << 1;
-            color = color565(r, g, b);
-        }
-        else {
-            // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte as the TFT_SPI stores colours as 18 bits
-            r = readCommand();
-            g = readCommand();
-            b = readCommand();
-            color = color565(r, g, b);
-        }
-        data[counter] = color;
-        counter++;
+    setAddrWindow(Xm - r, Ym - r, Xm + r + 1, Ym + r + 1);
+    for(int16_t j = Ym - r; j <= Ym + r + 1; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + Xm - r, Xm + r);
     }
     endWrite();
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, uint16_t* data) {
+
+    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
+    return;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setFont(uint16_t font) {
@@ -2635,14 +2515,9 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
 exit:
     return charsDrawn;
 }
-
-/*******************************************************************************************************************************************************************************************************
- *                                                                                                                                                                                                     *
- *      ⏫⏫⏫⏫⏫⏫                                                           B I T M A P                                                                                  ⏫⏫⏫⏫⏫⏫              *
- *                                                                                                                                                                                                     *
- *******************************************************************************************************************************************************************************************************
- */
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  B I T M A P  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫              *
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 #define bmpRead32(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8 | (uint32_t)(d[(o) + 2]) << 16 | (uint32_t)(d[(o) + 3]) << 24)
 #define bmpRead16(d, o) (d[o] | (uint16_t)(d[(o) + 1]) << 8)
 
@@ -2650,129 +2525,127 @@ exit:
 #define bmpColor16(c) ((((uint8_t*)(c))[0] | ((uint16_t)((uint8_t*)(c))[1]) << 8))
 #define bmpColor24(c) (((uint16_t)(((uint8_t*)(c))[2] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[1] & 0xFC) << 3) | ((((uint8_t*)(c))[0] & 0xF8) >> 3))
 #define bmpColor32(c) (((uint16_t)(((uint8_t*)(c))[3] & 0xF8) << 8) | ((uint16_t)(((uint8_t*)(c))[2] & 0xFC) << 3) | ((((uint8_t*)(c))[1] & 0xF8) >> 3))
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::bmpSkipPixels(fs::File& file, uint8_t bitsPerPixel, size_t len) {
-    size_t bytesToSkip = (len * bitsPerPixel) / 8;
-    file.seek(bytesToSkip, SeekCur);
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void TFT_SPI::bmpAddPixels(fs::File& file, uint8_t bitsPerPixel, size_t len) {
-    size_t   bytesPerTransaction = bitsPerPixel * 4;
-    uint8_t  transBuf[bytesPerTransaction];
-    uint16_t pixBuf[32];
-    uint8_t* tBuf;
-    uint8_t  pixIndex = 0;
-    size_t   wIndex = 0, pixNow, bytesNow;
-    while(wIndex < len) {
-        pixNow = len - wIndex;
-        if(pixNow > 32) { pixNow = 32; }
-        bytesNow = (pixNow * bitsPerPixel) / 8;
-        file.read(transBuf, bytesNow);
-        tBuf = transBuf;
-        for(pixIndex = 0; pixIndex < pixNow; pixIndex++) {
-            if(bitsPerPixel == 32) {
-                pixBuf[pixIndex] = (bmpColor32(tBuf));
-                tBuf += 4;
-            }
-            else if(bitsPerPixel == 24) {
-                pixBuf[pixIndex] = (bmpColor24(tBuf));
-                tBuf += 3;
-            }
-            else if(bitsPerPixel == 16) {
-                pixBuf[pixIndex] = (bmpColor16(tBuf));
-                tBuf += 2;
-            }
-            else if(bitsPerPixel == 8) {
-                pixBuf[pixIndex] = (bmpColor8(tBuf));
-                tBuf += 1;
-            }
-            else if(bitsPerPixel == 4) {
-                uint16_t g = tBuf[0] & 0xF;
-                if(pixIndex & 1) { tBuf += 1; }
-                else { g = tBuf[0] >> 4; }
-                pixBuf[pixIndex] = ((g << 12) | (g << 7) | (g << 1));
-            }
-        }
 
-        startWrite();
-        writePixels(pixBuf, pixNow);
-        endWrite();
-        wIndex += pixNow;
-    }
-}
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, uint16_t offX, uint16_t offY) {
-    if((x + maxWidth) > m_h_res || (y + maxHeight) > m_v_res) {
-        log_e("Bad dimensions given");
+bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale) {
+    if (scale <= 0) {
+        log_e("Invalid scale value: %f", scale);
         return false;
     }
 
-    if(!maxWidth) { maxWidth = m_h_res- x; }
-    if(!maxHeight) { maxHeight = m_v_res - y; }
-    // log_i("maxWidth=%i, maxHeight=%i", maxWidth, maxHeight);
-    if(!fs.exists(path)) {
-        log_e("file %s not exists", path);
+    if (!fs.exists(path)) {
+        log_e("file %s does not exist", path);
         return false;
     }
 
     File bmp_file = fs.open(path);
-    if(!bmp_file) {
-        log_e("Failed to open file for reading %s", path);
+    if (!bmp_file) {
+        log_e("Failed to open file for reading: %s", path);
         return false;
     }
-    size_t  headerLen = 0x22;
-    size_t  fileSize = bmp_file.size();
+
+    constexpr size_t headerLen = 0x36; // BMP-Header-Größe
     uint8_t headerBuf[headerLen];
-    if(fileSize < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
+
+    if (bmp_file.size() < headerLen || bmp_file.read(headerBuf, headerLen) < headerLen) {
         log_e("Failed to read the file's header");
         bmp_file.close();
         return false;
     }
 
-    if(headerBuf[0] != 'B' || headerBuf[1] != 'M') {
-        log_e("Wrong file format");
+    if (headerBuf[0] != 'B' || headerBuf[1] != 'M') {
+        log_e("Invalid BMP file format");
         bmp_file.close();
         return false;
     }
 
-    // size_t bmpSize = bmpRead32(headerBuf, 0x02);
-    uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
-    int32_t  bmpWidthI = bmpRead32(headerBuf, 0x12);
-    int32_t  bmpHeightI = bmpRead32(headerBuf, 0x16);
-    uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
+    const uint32_t dataOffset = bmpRead32(headerBuf, 0x0A);
+    const int32_t bmpWidthI = bmpRead32(headerBuf, 0x12);
+    const int32_t bmpHeightI = bmpRead32(headerBuf, 0x16);
+    const uint16_t bitsPerPixel = bmpRead16(headerBuf, 0x1C);
+    const uint32_t compression = bmpRead32(headerBuf, 0x1E);
 
-    size_t bmpWidth = abs(bmpWidthI);
-    size_t bmpHeight = abs(bmpHeightI);
-
-    if(offX >= bmpWidth || offY >= bmpHeight) {
-        log_e("Offset Outside of bitmap size");
+    if (compression != 0) {
+        log_e("Compressed BMP files are not supported");
         bmp_file.close();
         return false;
     }
 
-    size_t bmpMaxWidth = bmpWidth - offX;
-    size_t bmpMaxHeight = bmpHeight - offY;
-    size_t outWidth = (bmpMaxWidth > maxWidth) ? maxWidth : bmpMaxWidth;
-    size_t outHeight = (bmpMaxHeight > maxHeight) ? maxHeight : bmpMaxHeight;
-    size_t ovfWidth = bmpMaxWidth - outWidth;
-    size_t ovfHeight = bmpMaxHeight - outHeight;
+    const size_t bmpWidth = abs(bmpWidthI);
+    const size_t bmpHeight = abs(bmpHeightI);
 
-    bmp_file.seek(dataOffset);
-    startBitmap(x, y, outWidth, outHeight);
+    const size_t scaledWidth = bmpWidth * scale;
+    const size_t scaledHeight = bmpHeight * scale;
 
-    if(ovfHeight) { bmpSkipPixels(bmp_file, bitsPerPixel, ovfHeight * bmpWidth); }
-    if(!offX && !ovfWidth) { bmpAddPixels(bmp_file, bitsPerPixel, outWidth * outHeight); }
-    else {
-        size_t ih;
-        for(ih = 0; ih < outHeight; ih++) {
-            if(offX) { bmpSkipPixels(bmp_file, bitsPerPixel, offX); }
-            bmpAddPixels(bmp_file, bitsPerPixel, outWidth);
-            if(ovfWidth) { bmpSkipPixels(bmp_file, bitsPerPixel, ovfWidth); }
+    // Wenn maxWidth oder maxHeight 0 ist, wird der Wert ignoriert
+    const size_t effectiveMaxWidth = (maxWidth == 0) ? scaledWidth : maxWidth;
+    const size_t effectiveMaxHeight = (maxHeight == 0) ? scaledHeight : maxHeight;
+
+    // Begrenzen der tatsächlichen Darstellungsgröße auf den verfügbaren Ausschnitt
+    const size_t displayWidth = std::min(effectiveMaxWidth, scaledWidth);
+    const size_t displayHeight = std::min(effectiveMaxHeight, scaledHeight);
+
+    const size_t rowSize = ((bmpWidth * bitsPerPixel / 8 + 3) & ~3);
+    uint8_t* rowBuffer = new uint8_t[rowSize];
+
+    for (size_t i_y = 0; i_y < displayHeight; ++i_y) {
+        const float srcY = i_y / scale;
+        const size_t srcRow = bmpHeight - 1 - (size_t)srcY;
+
+        if (srcRow >= bmpHeight) continue;
+
+        bmp_file.seek(dataOffset + srcRow * rowSize);
+        if (bmp_file.read(rowBuffer, rowSize) != rowSize) {
+            log_e("Failed to read BMP row data");
+            delete[] rowBuffer;
+            bmp_file.close();
+            return false;
+        }
+
+        for (size_t i_x = 0; i_x < displayWidth; ++i_x) {
+            const float srcX = i_x / scale;
+            const size_t srcCol = (size_t)srcX;
+
+            if (srcCol >= bmpWidth) continue;
+
+            const uint8_t* pixelPtr = rowBuffer + srcCol * (bitsPerPixel / 8);
+            uint16_t color;
+
+            switch (bitsPerPixel) {
+                case 16:
+                    color = bmpColor16(pixelPtr);
+                    break;
+                case 24:
+                    color = bmpColor24(pixelPtr);
+                    break;
+                case 32:
+                    color = bmpColor32(pixelPtr);
+                    break;
+                default:
+                    log_e("Unsupported bitsPerPixel: %d", bitsPerPixel);
+                    delete[] rowBuffer;
+                    bmp_file.close();
+                    return false;
+            }
+
+            const size_t xPos = x + i_x;
+            const size_t yPos = y + i_y;
+
+            if (xPos < m_h_res && yPos < m_v_res) {
+                m_framebuffer[0][yPos * m_h_res + xPos] = color;
+            }
         }
     }
 
-    endBitmap();
+    delete[] rowBuffer;
     bmp_file.close();
+
+    startWrite();
+    setAddrWindow(x, y, displayWidth, displayHeight);
+    for(int16_t j = y; j < y + displayHeight; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, displayWidth);
+    }
+    endWrite();
+
     return true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

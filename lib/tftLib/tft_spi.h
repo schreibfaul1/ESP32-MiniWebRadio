@@ -270,7 +270,7 @@ class TFT_SPI {
     void     drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
     void     drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
     void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
-    void     readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data);
+    void     readRect(int32_t x, int32_t y, int32_t w, uint16_t* data);
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
@@ -279,7 +279,7 @@ class TFT_SPI {
     void     fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
     void     drawCircle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
     void     fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color);
-    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0, uint16_t offX = 0, uint16_t offY = 0);
+    bool     drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint16_t maxWidth, uint16_t maxHeight, float scale);
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     void     writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);

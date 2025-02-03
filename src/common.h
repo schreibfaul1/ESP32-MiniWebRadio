@@ -569,7 +569,7 @@ inline void hardcopy(){
         hc.write(bmp320x240, sizeof(bmp320x240));
         uint16_t buff[320];
         for(int i = 240; i > 0; i--){
-            tft.readRect(0, i - 1, 320, 1, buff);
+            tft.readRect(0, i - 1, 320, buff);
             hc.write((uint8_t*)buff, 320 * 2);
         }
         hc.close();
@@ -578,7 +578,7 @@ inline void hardcopy(){
         hc.write(bmp480x320, sizeof(bmp480x320));
         uint16_t buff[480];
         for(int i = 320; i > 0; i--){
-            tft.readRect(0, i - 1, 480, 1, buff);
+            tft.readRect(0, i - 1, 480, buff);
             hc.write((uint8_t*)buff, 480 * 2);
         }
         hc.close();
