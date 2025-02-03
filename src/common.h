@@ -7,11 +7,11 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          4                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
+#define TP_VERSION              4                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
 #define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
@@ -569,7 +569,7 @@ inline void hardcopy(){
         hc.write(bmp320x240, sizeof(bmp320x240));
         uint16_t buff[320];
         for(int i = 240; i > 0; i--){
-            tft.readRect(0, i - 1, 320, 1, buff);
+            tft.readRect(0, i - 1, 320, buff);
             hc.write((uint8_t*)buff, 320 * 2);
         }
         hc.close();
@@ -578,7 +578,7 @@ inline void hardcopy(){
         hc.write(bmp480x320, sizeof(bmp480x320));
         uint16_t buff[480];
         for(int i = 320; i > 0; i--){
-            tft.readRect(0, i - 1, 480, 1, buff);
+            tft.readRect(0, i - 1, 480, buff);
             hc.write((uint8_t*)buff, 480 * 2);
         }
         hc.close();
@@ -1403,7 +1403,7 @@ private:
     }
     void drawNewSpot(uint16_t xPos){
         if(m_enabled){
-            tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius,     2 * m_spotRadius, 2 * m_spotRadius, m_bgColor);
+            tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - m_spotRadius,     2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             tft.fillRect(m_spotPos - m_spotRadius, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 1, m_railHigh,   m_railColor);
             tft.fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
         }
