@@ -266,9 +266,6 @@ class TFT_SPI {
     void scrollTo(uint16_t y);
 
     // Recommended Non-Transaction
-    void     drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
-    void     drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    void     drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
     void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
     void     readRect(int32_t x, int32_t y, int32_t w, uint16_t* data);
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
@@ -452,47 +449,20 @@ class TFT_SPI {
     inline void TFT_CS_HIGH() { gpio_set_level((gpio_num_t)_TFT_CS, 1); }
     inline void TFT_CS_LOW() { gpio_set_level((gpio_num_t)_TFT_CS, 0); }
 
-    inline void _swap_int16_t(int16_t& a, int16_t& b) {
-        int16_t t = a;
-        a = b;
-        b = t;
-    }
     void     init();
     void     writeCommand(uint16_t cmd);
     uint16_t readCommand();
 
     // Transaction API not used by GFX
     void     setAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void     readAddrWindow(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
     void     write24BitColor(uint16_t color);
     void     writePixels(uint16_t* colors, uint32_t len);
     void     writeColor(uint16_t color, uint32_t len);
-    uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
-
-    // Required Non-Transaction
-    void drawPixel(int16_t x, int16_t y, uint16_t color);
 
     // Transaction API
     void startWrite(void);
     void endWrite(void);
     void writePixel(int16_t x, int16_t y, uint16_t color);
-    void writeFillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
-    void writeFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
-    void writeFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
-
-    void fillCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, int16_t delta, uint16_t color);
-    void drawCircleHelper(int16_t x0, int16_t y0, int16_t r, uint8_t cornername, uint16_t color);
-    void startBitmap(uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void endBitmap();
-    void startJpeg();
-    void endJpeg();
-
-    void bmpSkipPixels(fs::File& file, uint8_t bitsPerPixel, size_t len);
-    void bmpAddPixels(fs::File& file, uint8_t bitsPerPixel, size_t len);
-    void drawBitmap(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t* pcolors);
-    void renderJPEG(int32_t xpos, int32_t ypos, uint16_t maxWidth, uint16_t maxHeight);
-
-    uint8_t readcommand8(uint8_t reg, uint8_t index = 0);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫

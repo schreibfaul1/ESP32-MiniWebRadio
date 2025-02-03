@@ -1515,13 +1515,6 @@ void setup() {
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
-    tft.drawTriangle(0, 0, 479, 0, 479, 319, TFT_RED);
-    tft.fillTriangle(0, 0, 479, 0, 479, 319, TFT_RED);
-    tft.drawRect(0, 0, 480, 320, TFT_WHITE);
-    tft.drawRoundRect(0, 0, 480, 320, 30, TFT_YELLOW);
-    tft.fillRoundRect(0, 0, 480, 320, 60, TFT_GREEN);
-    tft.drawCircle(240, 160, 120, TFT_BLACK);
-    tft.fillCircle(240, 160, 100, TFT_WHITE);
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
