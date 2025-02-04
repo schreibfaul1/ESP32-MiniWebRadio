@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.6.1j  - Feb 02/2025                                                                                                                   ";
+    Version 3.6.1k  - Feb 04/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -905,6 +905,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     if(endsWith(scImg, "bmp")) { return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth, 1.0); }
     if(endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
     if(endsWith(scImg, "gif")) { return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0); }
+    if(endsWith(scImg, "png")) { return tft.drawPngFile(SD_MMC, scImg, posX, posY); }
 
     SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpg graphic", scImg);
     return false; // neither jpg nor bmp
@@ -1632,10 +1633,10 @@ void setup() {
  *****************************************************************************************************************************************************/
 
 const char* scaleImage(const char* path) {
-    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") &&(!endsWith(path, "png8")))) { // not a image
+    if((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") &&(!endsWith(path, "png")))) { // not a image
         return path;
     }
-    if(startsWith(path, "/png")) return path; // nothing to do
+    if(startsWith(path, "/png")) return path; // nothing to do, icons for website
     static char pathBuff[256];
     memset(pathBuff, 0, sizeof(pathBuff));
     int idx = indexOf(path, "/", 1);
@@ -1977,6 +1978,8 @@ void wake_up() {
     changeState(RADIO);
     showLogoAndStationName(true);
     dispHeader.show();
+    dispHeader.speakerOnOff(_f_mute);
+    dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.show();
     if(_f_BTpower) BTpowerChanged(true);
 }
