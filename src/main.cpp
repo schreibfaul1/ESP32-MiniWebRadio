@@ -2119,13 +2119,13 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_settings.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_settings.setDefaultPicturePath("/btn/Button_Settings_Green.png");
                                                                                          btn_RA_settings.setClickedPicturePath("/btn/Button_Settings_Yellow.png");
                                                                                          btn_RA_settings.setAlternativePicturePath("/btn/Button_Settings_Magenta.png");
-    btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
-                                                                                         btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
-                                                                                         btn_RA_bt.setAlternativePicturePath("/btn/BT_Magenta.jpg");
-                                                                                         btn_RA_bt.setInactivePicturePath("/btn/BT_Grey.jpg");
-    btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
-                                                                                         btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
-                                                                                         btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.jpg");
+    btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/Button_Bluetooth_Green.png");
+                                                                                         btn_RA_bt.setClickedPicturePath("/btn/Button_Bluetooth_Yellow.png");
+                                                                                         btn_RA_bt.setAlternativePicturePath("/btn/Button_Bluetooth_Magenta.png");
+                                                                                         btn_RA_bt.setInactivePicturePath("/btn/Button_Bluetooth_Grey.png");
+    btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
+                                                                                         btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
+                                                                                         btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     txt_RA_sTitle.begin(      _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h);   txt_RA_sTitle.setFont(0); // 0 -> auto
     txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_RA_staName.setFont(0); // 0 -> auto
     txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_fonts[8]);
@@ -2173,9 +2173,9 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_radio.begin(   6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_radio.setDefaultPicturePath("/btn/Radio_Green.jpg");
                                                                                          btn_PL_radio.setClickedPicturePath("/btn/Radio_Yellow.jpg");
                                                                                          btn_PL_radio.setAlternativePicturePath("/btn/Radio_Magenta.jpg");
-    btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
-                                                                                         btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
-                                                                                         btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.jpg");
+    btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
+                                                                                         btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
+                                                                                         btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.jpg");
                                                                                          btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
                                                                                          btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.jpg");
@@ -2234,9 +2234,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_CL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
                                                                                          btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_MuteOn_Magenta.png");
                                                                                          btn_CL_mute.setValue(_f_mute);
-    btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.jpg");
-                                                                                         btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.jpg");
-                                                                                         btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.jpg");
+    btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
+                                                                                         btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.pngg");
+                                                                                         btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
