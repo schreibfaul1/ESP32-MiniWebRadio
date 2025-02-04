@@ -730,6 +730,13 @@ inline void clearSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y
 inline void clearDigits()             {tft.fillRect(_winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h,   TFT_BLACK);}
 inline void clearButtonBar()          {tft.fillRect( 0,              _winButton.y,    _dispWidth,      _winButton.h,   TFT_BLACK);}
 inline void clearAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
+
+// inline void clearStationName()        {tft.copyFramebuffer(0, 1, _winName.x,  _winName.y,  _winName.w,  _winName.h);}
+// inline void clearLogoAndStationname() {tft.copyFramebuffer(0, 1, _winFName.x, _winFName.y, _winFName.w, _winFName.h);}
+// inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(0, 1, _winWoHF.x,  _winWoHF.y,  _winWoHF.w,  _winWoHF.h);}
+// inline void clearTitle()              {tft.copyFramebuffer(0, 1, _winTitle.x, _winTitle.y, _winTitle.w, _winTitle.h);} // incl. VUmeter
+// inline void clearStreamTitle()        {tft.copyFramebuffer(0, 1, _winSTitle.x,_winSTitle.y,_winSTitle.w,_winSTitle.h);} // without VUmeter
+
 // clang-format on
 
 inline uint16_t txtlen(String str) {
@@ -740,7 +747,7 @@ inline uint16_t txtlen(String str) {
 }
 
 void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
-    tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
+//    tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
     tft.setTextColor(color);                                  // Set the requested color
     uint16_t ch_written = tft.writeText(str, xPos + margin_l, yPos, winWidth - margin_r, winHeight);
     if(ch_written < strlenUTF8(str)) {
@@ -1511,12 +1518,11 @@ void setup() {
     if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
-
     updateSettings();
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+//    vTaskDelay(2000 / portTICK_PERIOD_MS);
     SerialPrintfln("setup: ....  seek for WiFi networks");
     if(!connectToWiFi()){
         openAccessPoint();
@@ -1589,6 +1595,8 @@ void setup() {
 
 
     tft.fillScreen(TFT_BLACK); // Clear screen
+    //drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
+    //tft.copyFramebuffer( 1, 0, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
     muteChanged(_f_mute);
 
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
@@ -2102,15 +2110,15 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_dlna.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.png");
                                                                                          btn_RA_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.png");
                                                                                          btn_RA_dlna.setAlternativePicturePath("/btn/Button_DLNA_Magenta.png");
-    btn_RA_clock.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_clock.setDefaultPicturePath("/btn/Clock_Green.jpg");
-                                                                                         btn_RA_clock.setClickedPicturePath("/btn/Clock_Yellow.jpg");
-                                                                                         btn_RA_clock.setAlternativePicturePath("/btn/Clock_Magenta.jpg");
-    btn_RA_sleep.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_sleep.setDefaultPicturePath("/btn/Button_Sleep_Green.jpg");
-                                                                                         btn_RA_sleep.setClickedPicturePath("/btn/Button_Sleep_Yellow.jpg");
-                                                                                         btn_RA_sleep.setAlternativePicturePath("/btn/Button_Sleep_Magenta.jpg");
-    btn_RA_settings.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_settings.setDefaultPicturePath("/btn/Settings_Green.jpg");
-                                                                                         btn_RA_settings.setClickedPicturePath("/btn/Settings_Yellow.jpg");
-                                                                                         btn_RA_settings.setAlternativePicturePath("/btn/Settings_Magenta.jpg");
+    btn_RA_clock.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_clock.setDefaultPicturePath("/btn/Button_Clock_Green.png");
+                                                                                         btn_RA_clock.setClickedPicturePath("/btn/Button_Clock_Yellow.png");
+                                                                                         btn_RA_clock.setAlternativePicturePath("/btn/Button_Clock_Magenta.png");
+    btn_RA_sleep.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_sleep.setDefaultPicturePath("/btn/Button_OffTimer_Green.png");
+                                                                                         btn_RA_sleep.setClickedPicturePath("/btn/Button_OffTimer_Yellow.png");
+                                                                                         btn_RA_sleep.setAlternativePicturePath("/btn/Button_OffTimer_Magenta.pngg");
+    btn_RA_settings.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_settings.setDefaultPicturePath("/btn/Button_Settings_Green.png");
+                                                                                         btn_RA_settings.setClickedPicturePath("/btn/Button_Settings_Yellow.png");
+                                                                                         btn_RA_settings.setAlternativePicturePath("/btn/Button_Settings_Magenta.png");
     btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/BT_Green.jpg");
                                                                                          btn_RA_bt.setClickedPicturePath("/btn/BT_Yellow.jpg");
                                                                                          btn_RA_bt.setAlternativePicturePath("/btn/BT_Magenta.jpg");

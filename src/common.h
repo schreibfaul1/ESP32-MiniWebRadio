@@ -1661,6 +1661,7 @@ public:
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        //    tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
             tft.writeText(m_text, m_x + m_l_margin, m_y + m_t_margin, m_w - m_r_margin, m_h - m_d_margin, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
