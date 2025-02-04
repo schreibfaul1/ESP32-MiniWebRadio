@@ -2176,12 +2176,12 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.jpg");
-                                                                                         btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.jpg");
-                                                                                         btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.jpg");
-    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.jpg");
-                                                                                         btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.jpg");
-                                                                                         btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.jpg");
+    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.png");
+                                                                                         btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
+                                                                                         btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.png");
+    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.png");
+                                                                                         btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
+                                                                                         btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
 
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
     pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
@@ -2202,7 +2202,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
                                                                                          btn_DL_pause.setInactivePicturePath("/btn/Button_Pause_Grey.png");
                                                                                          btn_DL_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
-                                                                                         btn_DL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.jpg");
+                                                                                         btn_DL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
                                                                                          btn_DL_pause.setValue(false);
     btn_DL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
                                                                                          btn_DL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
@@ -2269,13 +2269,13 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
                                                                                          btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
     // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_SE_bright.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_bright.setDefaultPicturePath("/btn/Bulb_Green.jpg");
-                                                                                         btn_SE_bright.setClickedPicturePath("/btn/Bulb_Yellow.jpg");
-                                                                                         btn_SE_bright.setAlternativePicturePath("/btn/Bulb_Magenta.jpg");
-                                                                                         btn_SE_bright.setInactivePicturePath("/btn/Bulb_Grey.jpg");
-    btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_EQ_Green.jpg");
-                                                                                         btn_SE_equal.setClickedPicturePath("/btn/Button_EQ_Yellow.jpg");
-                                                                                         btn_SE_equal.setAlternativePicturePath("/btn/Button_EQ_Magenta.jpg");
+    btn_SE_bright.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_bright.setDefaultPicturePath("/btn/Button_Brightness_Green.png");
+                                                                                         btn_SE_bright.setClickedPicturePath("/btn/Button_Brightness_Yellow.png");
+                                                                                         btn_SE_bright.setAlternativePicturePath("/btn/Button_Brightness_Magenta.png");
+                                                                                         btn_SE_bright.setInactivePicturePath("/btn/Button_Brightness_Grey.png");
+    btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_Equalizer_Green.png");
+                                                                                         btn_SE_equal.setClickedPicturePath("/btn/Button_Equalizer_Yellow.png");
+                                                                                         btn_SE_equal.setAlternativePicturePath("/btn/Button_Equalizer_Magenta.png");
     btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
@@ -2285,7 +2285,7 @@ void placingGraphicObjects() { // and initialize them
     btn_BR_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
                                                                                          btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.jpg");
+    pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.png");
     txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h, -40,  6);          sdr_EQ_lowPass.setValue(_toneLP);
@@ -2296,18 +2296,18 @@ void placingGraphicObjects() { // and initialize them
     txt_EQ_bandPass.begin( _sdrBP.x +  _sdrBP.w + 2,  _sdrBP.y, 80, _sdrBP.h);           txt_EQ_bandPass.setFont(_fonts[2]);
     txt_EQ_highPass.begin( _sdrHP.x +  _sdrHP.w + 2,  _sdrHP.y, 80, _sdrHP.h);           txt_EQ_highPass.setFont(_fonts[2]);
     txt_EQ_balance.begin( _sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h);          txt_EQ_balance.setFont(_fonts[2]);
-    btn_EQ_lowPass.begin( _sdrLP.x - 60, _sdrLP.y + 1, 48, 48);                          btn_EQ_lowPass.setDefaultPicturePath("/btn/LP_Green.jpg");
-                                                                                         btn_EQ_lowPass.setClickedPicturePath("/btn/LP_Yellow.jpg");
-                                                                                         btn_EQ_lowPass.setAlternativePicturePath("/btn/LP_Magenta.jpg");
-    btn_EQ_bandPass.begin(_sdrBP.x - 60, _sdrBP.y + 1, 48, 48);                          btn_EQ_bandPass.setDefaultPicturePath("/btn/BP_Green.jpg");
-                                                                                         btn_EQ_bandPass.setClickedPicturePath("/btn/BP_Yellow.jpg");
-                                                                                         btn_EQ_bandPass.setAlternativePicturePath("/btn/BP_Magenta.jpg");
-    btn_EQ_highPass.begin(_sdrHP.x - 60, _sdrHP.y + 1, 48, 48);                          btn_EQ_highPass.setDefaultPicturePath("/btn/HP_Green.jpg");
-                                                                                         btn_EQ_highPass.setClickedPicturePath("/btn/HP_Yellow.jpg");
-                                                                                         btn_EQ_highPass.setAlternativePicturePath("/btn/HP_Magenta.jpg");
-    btn_EQ_balance.begin(_sdrBAL.x - 60, _sdrBAL.y + 1, 48, 48);                         btn_EQ_balance.setDefaultPicturePath("/btn/BAL_Green.jpg");
-                                                                                         btn_EQ_balance.setClickedPicturePath("/btn/BAL_Yellow.jpg");
-                                                                                         btn_EQ_balance.setAlternativePicturePath("/btn/BAL_Magenta.jpg");
+    btn_EQ_lowPass.begin( _sdrLP.x - 60, _sdrLP.y + 1, 48, 48);                          btn_EQ_lowPass.setDefaultPicturePath("/btn/Button_LP_Green.png");
+                                                                                         btn_EQ_lowPass.setClickedPicturePath("/btn/Button_LP_Yellow.png");
+                                                                                         btn_EQ_lowPass.setAlternativePicturePath("/btn/Button_LP_Magenta.png");
+    btn_EQ_bandPass.begin(_sdrBP.x - 60, _sdrBP.y + 1, 48, 48);                          btn_EQ_bandPass.setDefaultPicturePath("/btn/Button_BP_Green.png");
+                                                                                         btn_EQ_bandPass.setClickedPicturePath("/btn/Button_BP_Yellow.png");
+                                                                                         btn_EQ_bandPass.setAlternativePicturePath("/btn/Button_BP_Magenta.png");
+    btn_EQ_highPass.begin(_sdrHP.x - 60, _sdrHP.y + 1, 48, 48);                          btn_EQ_highPass.setDefaultPicturePath("/btn/Button_HP_Green.png");
+                                                                                         btn_EQ_highPass.setClickedPicturePath("/btn/Button_HP_Yellow.png");
+                                                                                         btn_EQ_highPass.setAlternativePicturePath("/btn/Button_HP_Magenta.png");
+    btn_EQ_balance.begin(_sdrBAL.x - 60, _sdrBAL.y + 1, 48, 48);                         btn_EQ_balance.setDefaultPicturePath("/btn/Button_BAL_Green.png");
+                                                                                         btn_EQ_balance.setClickedPicturePath("/btn/Button_BAL_Yellow.png");
+                                                                                         btn_EQ_balance.setAlternativePicturePath("/btn/Button_BAL_Magenta.png");
     btn_EQ_Radio.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_Radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_EQ_Radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_EQ_Radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
@@ -2334,10 +2334,10 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.jpg");
     btn_BT_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_BT_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_BT_power.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_power.setOffPicturePath("/btn/BT_Red.jpg");
-                                                                                         btn_BT_power.setOnPicturePath("/btn/BT_Blue.jpg");
-                                                                                         btn_BT_power.setClickedOffPicturePath("/btn/BT_Yellow.jpg");
-                                                                                         btn_BT_power.setClickedOnPicturePath("/btn/BT_Yellow.jpg");
+    btn_BT_power.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_power.setOffPicturePath("/btn/Button_Bluetooth_Red.png");
+                                                                                         btn_BT_power.setOnPicturePath("/btn/Button_Bluetooth_Blue.png");
+                                                                                         btn_BT_power.setClickedOffPicturePath("/btn/Button_Bluetooth_Yellow.png");
+                                                                                         btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
                                                                                          btn_BT_power.setValue(_f_BTpower);
                                                                                          pic_BT_mode.setPicturePath("/common/BTnc.jpg");
     pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.jpg");
