@@ -4978,7 +4978,6 @@ int8_t TFT_SPI::png_decode() {
     uint32_t       inflated_size;
     int8_t         error = 0;
 
-    Serial.printf("\n decode");
     /* if we have an error state, bail now */
     if(error != PNG_EOK) { return error; }
 
