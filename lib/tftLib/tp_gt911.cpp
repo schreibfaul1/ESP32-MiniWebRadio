@@ -1,3 +1,6 @@
+// first release on 01/2025
+// updated on Feb 01 2025
+
 #include "tp_gt911.h"
 
 // Interrupt handling

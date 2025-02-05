@@ -1,5 +1,7 @@
-// first release on 09/2019
-// updated on Jan 17 2025
+// first release on 01/2025
+// updated on Feb 02 2025
+
+
 #include "Arduino.h"
 #include "tft_rgb.h"
 
