@@ -2164,9 +2164,9 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.png");
                                                                                          btn_PL_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.png");
                                                                                          btn_PL_playAll.setAlternativePicturePath("/btn/Button_PlayAll_Magenta.png");
-    btn_PL_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.jpg");
-                                                                                         btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.jpg");
-                                                                                         btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.jpg");
+    btn_PL_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.png");
+                                                                                         btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.png");
+                                                                                         btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.png");
     btn_PL_fileList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
                                                                                          btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
                                                                                          btn_PL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
@@ -2322,16 +2322,16 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_EQ_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
                                                                                          btn_EQ_mute.setValue(_f_mute);
     // BLUETOOTH ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_BT_volDown.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.jpg");
-                                                                                         btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.jpg");
-    btn_BT_volUp.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.jpg");
-                                                                                         btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.jpg");
+    btn_BT_volDown.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.png");
+                                                                                         btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.png");
+    btn_BT_volUp.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.png");
+                                                                                         btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.png");
     btn_BT_pause.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
                                                                                          btn_BT_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
                                                                                          btn_BT_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
-                                                                                         btn_BT_pause.setClickedOnPicturePath("/btn/Button_Right_Yellow.jpg");
-    btn_BT_mode.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.jpg");
-                                                                                         btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.jpg");
+                                                                                         btn_BT_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
+    btn_BT_mode.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.png");
+                                                                                         btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.png");
     btn_BT_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_BT_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
     btn_BT_power.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_power.setOffPicturePath("/btn/Button_Bluetooth_Red.png");
