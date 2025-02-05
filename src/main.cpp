@@ -29,7 +29,7 @@ SET_LOOP_TASK_STACK_SIZE(10 * 1024);
 
 char _hl_item[16][40]{  "",                 // none
                         "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
-                        "Audio player",     // "** цифрово́й плеер **
+                        "Audio Player",     // "** цифрово́й плеер **
                         "DLNA",             // Digital Living Network Alliance
                         "Clock",            // Clock "** часы́ **"  "** ρολόι **"
                         "Brightness",       // Brightness яркость λάμψη
@@ -717,25 +717,36 @@ void timer100ms(){
  *****************************************************************************************************************************************************/
 
 // clang-format off
-inline void clearHeader()             {tft.fillRect(_winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h,   TFT_BLACK);}
-inline void clearLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
-inline void clearStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
-inline void clearLogoAndStationname() {tft.fillRect(_winFName.x,     _winFName.y,     _winFName.w,     _winFName.h,    TFT_BLACK);}
-inline void clearTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);} // incl. VUmeter
-inline void clearStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
-inline void clearWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
-inline void clearFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
-inline void clearStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
-inline void clearSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h,    TFT_BLACK);}
-inline void clearDigits()             {tft.fillRect(_winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h,   TFT_BLACK);}
-inline void clearButtonBar()          {tft.fillRect( 0,              _winButton.y,    _dispWidth,      _winButton.h,   TFT_BLACK);}
-inline void clearAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
+inline void bgColorHeader()             {tft.fillRect(_winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h,   TFT_BLACK);}
+inline void bgColorLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
+inline void bgColorStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
+inline void bgColorLogoAndStationname() {tft.fillRect(_winFName.x,     _winFName.y,     _winFName.w,     _winFName.h,    TFT_BLACK);}
+inline void bgColorTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);} // incl. VUmeter
+inline void bgColorStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
+inline void bgColorWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
+inline void bgColorFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
+inline void bgColorStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
+inline void bgColorSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h,    TFT_BLACK);}
+inline void bgColorDigits()             {tft.fillRect(_winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h,   TFT_BLACK);}
+inline void bgColorButtonBar()          {tft.fillRect( 0,              _winButton.y,    _dispWidth,      _winButton.h,   TFT_BLACK);}
+inline void bgColorAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
 
-// inline void clearStationName()        {tft.copyFramebuffer(0, 1, _winName.x,  _winName.y,  _winName.w,  _winName.h);}
-// inline void clearLogoAndStationname() {tft.copyFramebuffer(0, 1, _winFName.x, _winFName.y, _winFName.w, _winFName.h);}
-// inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(0, 1, _winWoHF.x,  _winWoHF.y,  _winWoHF.w,  _winWoHF.h);}
-// inline void clearTitle()              {tft.copyFramebuffer(0, 1, _winTitle.x, _winTitle.y, _winTitle.w, _winTitle.h);} // incl. VUmeter
-// inline void clearStreamTitle()        {tft.copyFramebuffer(0, 1, _winSTitle.x,_winSTitle.y,_winSTitle.w,_winSTitle.h);} // without VUmeter
+
+inline void clearHeader()             {tft.copyFramebuffer(0, 1, _winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h);}
+inline void clearLogo()               {tft.copyFramebuffer(0, 1, _winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h);}
+inline void clearStationName()        {tft.copyFramebuffer(0, 1, _winName.x,      _winName.y,      _winName.w,      _winName.h);}
+inline void clearLogoAndStationname() {tft.copyFramebuffer(0, 1, _winFName.x,     _winFName.y,     _winFName.w,     _winFName.h);}
+inline void clearTitle()              {tft.copyFramebuffer(0, 1, _winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h);} // incl. VUmeter
+inline void clearStreamTitle()        {tft.copyFramebuffer(0, 1, _winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h);} // without VUmeter
+inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(0, 1, _winWoHF.x,       _winWoHF.y,      _winWoHF.w,     _winWoHF.h);}
+inline void clearFooter()             {tft.copyFramebuffer(0, 1, _winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h);}
+inline void clearStaNr()              {tft.copyFramebuffer(0, 1, _winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h);}
+inline void clearSleep()              {tft.copyFramebuffer(0, 1, _winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h);}
+inline void clearDigits()             {tft.copyFramebuffer(0, 1, _winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h);}
+inline void clearButtonBar()          {tft.copyFramebuffer(0, 1,  0,              _winButton.y,    _dispWidth,      _winButton.h);}
+inline void clearAll()                {tft.copyFramebuffer(0, 1,  0,               0,              _dispWidth,      _dispHeight);}
+
+
 
 // clang-format on
 
@@ -829,8 +840,8 @@ void showFileLogo(uint8_t state) {
         return;
     }
     if(state == PLAYER) { // _state PLAYER
-        if(_cur_Codec == 0) logo = "/common/AudioPlayer.jpg";
-        else if(_playerSubMenue == 0) logo = "/common/AudioPlayer.jpg";
+        if(_cur_Codec == 0) logo = "/common/AudioPlayer.png";
+        else if(_playerSubMenue == 0) logo = "/common/AudioPlayer.png";
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
         pic_PL_logo.setPicturePath(logo.c_str());
         pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
@@ -1595,8 +1606,8 @@ void setup() {
 
 
     tft.fillScreen(TFT_BLACK); // Clear screen
-    //drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
-    //tft.copyFramebuffer( 1, 0, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
+    drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
+    tft.copyFramebuffer( 1, 0, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
     muteChanged(_f_mute);
 
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
@@ -2237,7 +2248,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.pngg");
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
+    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps, false); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
@@ -2339,8 +2350,8 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BT_power.setClickedOffPicturePath("/btn/Button_Bluetooth_Yellow.png");
                                                                                          btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
                                                                                          btn_BT_power.setValue(_f_BTpower);
-                                                                                         pic_BT_mode.setPicturePath("/common/BTnc.jpg");
-    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.jpg");
+                                                                                         pic_BT_mode.setPicturePath("/common/BTnc.png");
+    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
     txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h);   txt_BT_volume.setFont(_fonts[2]);
     txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2508,7 +2519,7 @@ void changeState(int32_t state){
             break;
         }
         case CLOCK:{
-            if(_state != CLOCK) {clearWithOutHeaderFooter();}
+            if(_state != CLOCK) {bgColorWithOutHeaderFooter();}
             clk_CL_green.show();
             if(_clockSubMenue == 0){
                 btn_CL_mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.hide(); btn_CL_off.hide();
@@ -2524,7 +2535,7 @@ void changeState(int32_t state){
             break;
         }
         case ALARM:{
-            if(_state != ALARM) clearWithOutHeaderFooter();
+            if(_state != ALARM) bgColorWithOutHeaderFooter();
             if(_alarmSubMenue == 0){
                 btn_AL_left.show(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
                 clk_AL_red.show();
@@ -4273,7 +4284,7 @@ void kcx_bt_info(const char* info, const char* val) {
         webSrv.send("KCX_BT_power=", "0");
         if(_state == BLUETOOTH) {
             btn_BT_power.setValue(false);
-            pic_BT_mode.setPicturePath("/common/BToff.jpg");
+            pic_BT_mode.setPicturePath("/common/BToff.png");
             pic_BT_mode.show();
         }
         webSrv.send("KCX_BT_connected=", "-1");
@@ -4284,7 +4295,7 @@ void kcx_bt_info(const char* info, const char* val) {
         webSrv.send("KCX_BT_power=", "1");
         if(_state == BLUETOOTH) {
             btn_BT_power.setValue(true);
-            pic_BT_mode.setPicturePath("/common/BTnc.jpg");
+            pic_BT_mode.setPicturePath("/common/BTnc.png");
             pic_BT_mode.show();
         }
         return;
@@ -4298,12 +4309,12 @@ void kcx_bt_status(bool status) { // is always called when the status changes fr
         if(!_f_BTcurPowerState) return;
         const char* mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
-        if(strcmp(mode, "TX") == 0) pic_BT_mode.setPicturePath("/common/BTgold.jpg");
-        else                      { pic_BT_mode.setPicturePath("/common/BTblue.jpg"); muteChanged(true);}
+        if(strcmp(mode, "TX") == 0) pic_BT_mode.setPicturePath("/common/BTgold.png");
+        else                      { pic_BT_mode.setPicturePath("/common/BTblue.png"); muteChanged(true);}
     }
     else {
         webSrv.send("KCX_BT_connected=", "0");
-        pic_BT_mode.setPicturePath("/common/BTnc.jpg"); // not connected
+        pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
     }
     if(_state == BLUETOOTH) pic_BT_mode.show();
 }

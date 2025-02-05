@@ -171,6 +171,12 @@ void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_SPI::readRect(uint16_t* data, int16_t x, int16_t y, int16_t w, int16_t h) {
+    for(uint16_t j = y; j < y + h; j++) {
+        memcpy(data + j * w * 2, m_framebuffer[0] + j * m_h_res + x, w * 2);
+    }
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
     // Clipping: Rechteck-Koordinaten auf den Framebuffer-Bereich beschränken
     int16_t x0 = max((int16_t)0, x);

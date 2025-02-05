@@ -268,6 +268,7 @@ class TFT_SPI {
     void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
     void     readRect(int32_t x, int32_t y, int32_t w, uint16_t* data);
     void     copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
+    void     readRect(uint16_t* data, int16_t x, int16_t y, int16_t w, int16_t h);
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
