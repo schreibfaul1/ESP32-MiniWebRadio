@@ -262,7 +262,6 @@ void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
 boolean        copySDtoFFat(const char* path);
-void           display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight);
 void           showStreamTitle(const char* streamTitle);
 void           showLogoAndStationName(bool force);
 void           showFileLogo(uint8_t state);
@@ -1407,12 +1406,12 @@ private:
     void drawNewSpot(uint16_t xPos){
         if(m_enabled){
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1);
+                tft.copyFramebuffer(0, 1, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             }
             else{
                 tft.fillRect(             m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
             }
-            tft.fillRect(           m_spotPos - m_spotRadius, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 1, m_railHigh,   m_railColor);
+            tft.fillRect(                 m_spotPos - m_spotRadius - 1, m_middle_h - (m_railHigh / 2), 2 * m_spotRadius + 2, m_railHigh,   m_railColor);
             tft.fillCircle(xPos, m_middle_h, m_spotRadius, m_spotColor);
         }
         m_spotPos = xPos;

@@ -381,6 +381,7 @@ button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList
 button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
 button1state  btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
 textbox       txt_PL_fName("txt_PL_fName");
+textbox       txt_PL_fNumber("txt_PL_fNumber");
 slider        sdr_PL_volume("sdr_PL_volume");
 pictureBox    pic_PL_logo("pic_PL_logo");
 progressbar   pgb_PL_progress("pgb_PL_progress");
@@ -757,19 +758,6 @@ inline uint16_t txtlen(String str) {
     return len;
 }
 
-void display_info(const char* str, int32_t xPos, int32_t yPos, uint16_t color, uint16_t margin_l, uint16_t margin_r, uint16_t winWidth, uint16_t winHeight) {
-//    tft.fillRect(xPos, yPos, winWidth, winHeight, TFT_BLACK); // Clear the space for new info
-    tft.setTextColor(color);                                  // Set the requested color
-    uint16_t ch_written = tft.writeText(str, xPos + margin_l, yPos, winWidth - margin_r, winHeight);
-    if(ch_written < strlenUTF8(str)) {
-        // If this message appears, there is not enough space on the display to write the entire text,
-        // a part of the text has been cut off
-        SerialPrintfln("txt overflow, winHeight=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", strlen=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", written=" ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE ", str=" ANSI_ESC_CYAN
-                       "%s",
-                       winHeight, strlenUTF8(str), ch_written, str);
-    }
-}
-
 void showStreamTitle(const char* streamtitle) {
     if(_f_sleeping) return;
 
@@ -864,17 +852,17 @@ void showFileName(const char* fname) {
 }
 
 void showPlsFileNumber() {
-    tft.setFont(_fonts[3]);
+    txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", _plsCurPos, _PLS_content.size());
-    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_LIGHTGREEN, 10, 0, _winFileNr.w, _winFileNr.h);
+    txt_PL_fNumber.writeText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
 }
 
 void showAudioFileNumber() {
-    tft.setFont(_fonts[3]);
+    txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", _cur_AudioFileNr + 1, _SD_content.getSize());
-    display_info(buf, _winFileNr.x, _winFileNr.y, TFT_ORANGE, 10, 0, _winFileNr.w, _winFileNr.h);
+    txt_PL_fNumber.writeText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
@@ -2195,7 +2183,8 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
 
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
-    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y);
+    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h); txt_PL_fNumber.setFont(_fonts[3]);
+    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y, true);
     pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
@@ -2292,11 +2281,11 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     pic_SE_logo.begin(        _winLogo.x,   _winLogo.y);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value.begin(      _sdrOvBtns.x,  _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, 5, 100); sdr_BR_value.setValue(_brightness);
-    btn_BR_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
+    sdr_BR_value.begin(   2 * _winButton.w, _winButton.y + 5,  4 * _winButton.w, _sdrOvBtns.h, 5, 100); sdr_BR_value.setValue(_brightness);
+    btn_BR_ready.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
                                                                                          btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.png");
+    pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h, -40,  6);          sdr_EQ_lowPass.setValue(_toneLP);
@@ -2446,6 +2435,7 @@ void changeState(int32_t state){
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
+                txt_PL_fNumber.show();
                 showAudioFileNumber();
                 btn_PL_prevFile.show(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
@@ -2456,6 +2446,7 @@ void changeState(int32_t state){
                 pgb_PL_progress.setValue(0); pgb_PL_progress.show();
                 sdr_PL_volume.show();
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
+                txt_PL_fNumber.show();
                 btn_PL_mute.show();
                 btn_PL_pause.setOff(); btn_PL_pause.show();
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
@@ -2468,6 +2459,7 @@ void changeState(int32_t state){
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
+                txt_PL_fNumber.show();
                 showAudioFileNumber();
                 btn_PL_prevFile.showAlternativePic(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
@@ -2478,6 +2470,7 @@ void changeState(int32_t state){
                 pgb_PL_progress.setValue(0); pgb_PL_progress.show();
                 sdr_PL_volume.show();
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
+                txt_PL_fNumber.show();
                 btn_PL_mute.showAlternativePic();
                 btn_PL_pause.setOff(); btn_PL_pause.show();
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
