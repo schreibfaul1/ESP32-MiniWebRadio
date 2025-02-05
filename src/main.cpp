@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1   - Feb 05/2025                                                                                                                   ";
+    Version 3.7-rc1.a   - Feb 05/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -2126,7 +2126,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_RA_clock.setAlternativePicturePath("/btn/Button_Clock_Magenta.png");
     btn_RA_sleep.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_sleep.setDefaultPicturePath("/btn/Button_OffTimer_Green.png");
                                                                                          btn_RA_sleep.setClickedPicturePath("/btn/Button_OffTimer_Yellow.png");
-                                                                                         btn_RA_sleep.setAlternativePicturePath("/btn/Button_OffTimer_Magenta.pngg");
+                                                                                         btn_RA_sleep.setAlternativePicturePath("/btn/Button_OffTimer_Magenta.png");
     btn_RA_settings.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_settings.setDefaultPicturePath("/btn/Button_Settings_Green.png");
                                                                                          btn_RA_settings.setClickedPicturePath("/btn/Button_Settings_Yellow.png");
                                                                                          btn_RA_settings.setAlternativePicturePath("/btn/Button_Settings_Magenta.png");
@@ -2220,7 +2220,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
     btn_DL_fileList.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
                                                                                          btn_DL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-                                                                                         btn_DL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.pngg");
+                                                                                         btn_DL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
     btn_DL_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
@@ -2246,7 +2246,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_MuteOn_Magenta.png");
                                                                                          btn_CL_mute.setValue(_f_mute);
     btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-                                                                                         btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.pngg");
+                                                                                         btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, 0, _volumeSteps, false); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2324,7 +2324,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_EQ_Radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     btn_EQ_Player.begin(  1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_Player.setDefaultPicturePath("/btn/Button_Player_Green.png");
                                                                                          btn_EQ_Player.setClickedPicturePath("/btn/Button_Player_Yellow.png");
-                                                                                         btn_EQ_Player.setAlternativePicturePath("/btn/Button_Player_Magenta.pngg");
+                                                                                         btn_EQ_Player.setAlternativePicturePath("/btn/Button_Player_Magenta.png");
     btn_EQ_mute.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
                                                                                          btn_EQ_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
                                                                                          btn_EQ_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
@@ -2420,8 +2420,8 @@ void changeState(int32_t state){
                 btn_RA_clock.show();
                 btn_RA_sleep.show();
                 btn_RA_settings.show();
-                btn_RA_bt.show();
-                btn_RA_off.show(!_f_BtEmitterFound);
+                btn_RA_bt.show(!_f_BtEmitterFound);
+                btn_RA_off.show();
                 setTimeCounter(2);
             }
             if(_state != RADIO) webSrv.send("changeState=", "RADIO");
