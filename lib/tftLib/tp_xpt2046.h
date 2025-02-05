@@ -1,3 +1,6 @@
+// first release on 09/2019
+// updated on Feb 02 2025
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //        T O U C H P A N E L
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -20,8 +23,6 @@ extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_pressed(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_released(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_long_released(uint16_t x, uint16_t y);
-
-
 
 class TP_XPT2046{
   private:
