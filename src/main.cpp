@@ -1760,16 +1760,21 @@ void setStation(uint16_t sta) {
             dispFooter.updateFlag(NULL);
         }
         else{
-            char path[25] ="/flags/";
-            strcat(path, staMgnt.getStationCountry(_cur_station));
-            for(int i = 0; i< strlen(path); i++) path[i] = tolower(path[i]);
-            strcat(path, ".jpg");
-            const char* scaledpath = scaleImage(path);
-            dispFooter.updateFlag(scaledpath);
+            dispFooter.updateFlag(getFlagPath(_cur_station));
         }
     }
     dispFooter.updateStation(_cur_station);
 }
+const char* getFlagPath(uint16_t station) {
+    char flagPath[40];
+    flagPath[0] = '\0';
+    strcpy(flagPath, "/flags/");
+    strcat(flagPath, staMgnt.getStationCountry(station));
+    for(int i = 0; i< strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
+    strcat(flagPath, ".jpg");
+    return scaleImage(flagPath);
+}
+
 void nextStation() {
     setStation(staMgnt.nextStation());
 }
@@ -2364,7 +2369,7 @@ void changeState(int32_t state){
     if(state != RADIO) {dispFooter.updateFlag(NULL);}
     switch(state) {
         case RADIO:{
-            if(_state != RADIO) clearWithOutHeaderFooter();
+            if(_state != RADIO) {clearWithOutHeaderFooter(); dispFooter.updateFlag(getFlagPath(_cur_station));}
             txt_RA_staName.enable();
             pic_RA_logo.enable();
             if(_radioSubMenue == 0){

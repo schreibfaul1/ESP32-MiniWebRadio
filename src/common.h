@@ -7,12 +7,12 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
-#define TP_ROTATION             3                               // 1 or 3 (landscape)
+#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
+#define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -280,6 +280,7 @@ void           setVolume(uint8_t vol);
 uint8_t        downvolume();
 uint8_t        upvolume();
 void           setStation(uint16_t sta);
+const char*    getFlagPath(uint16_t station);
 void           nextStation();
 void           prevStation();
 void           setStationByNumber(uint16_t staNr);
@@ -1623,6 +1624,7 @@ public:
         m_enabled = true;
     }
     void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
         if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
         else{m_autoSize = true;}
     }
@@ -4253,7 +4255,7 @@ private:
     const char  m_stationSymbol[22]     = "/common/Antenna.png";
     const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_staSymbol_x = 0;
+    uint16_t    m_antennaSymbol_x = 0;
     uint16_t    m_staNr_x = 25, m_staNr_w = 32;
     uint16_t    m_flag_x = 57;
     uint16_t    m_flag_w = 40;
@@ -4264,16 +4266,16 @@ private:
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
     uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
 #else // 480 x 320px
-    uint16_t    m_staSymbol_x = 0;
-    uint16_t    m_staNr_x = 33, m_staNr_w = 50;
-    uint16_t    m_flag_x = 83;
+    uint16_t    m_antennaSymbol_x = 0;
+    uint16_t    m_staNr_x = 30, m_staNr_w = 50;
+    uint16_t    m_flag_x = 80;
     uint16_t    m_flag_w = 48;
     uint16_t    m_flag_h = 0; // will be calculated
-    uint16_t    m_offTimerSymbol_x = 143;
+    uint16_t    m_offTimerSymbol_x = 132;
     uint16_t    m_offTimerSymbol_w = 24;
-    uint16_t    m_offTimerNr_x = 170, m_offTimerNr_w = 54;
-    uint16_t    m_bitRate_x = 224, m_bitRate_w = 66;
-    uint16_t    m_ipAddr_x = 295, m_ipAddr_w = 185;
+    uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
+    uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
+    uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4304,7 +4306,7 @@ public:
         m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
-        drawImage(m_stationSymbol, m_staSymbol_x, m_y);
+        drawImage(m_stationSymbol, m_antennaSymbol_x, m_y);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -4455,7 +4457,7 @@ public:
         else{
             tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
         }
-        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true);
+        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true, true, true);
         xSemaphoreGive(mutex_display);
     }
     void setIpAddrColor(uint16_t ipAddrColor){
