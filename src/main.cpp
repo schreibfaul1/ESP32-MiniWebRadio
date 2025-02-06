@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.a   - Feb 05/2025                                                                                                                   ";
+    Version 3.7-rc1.b   - Feb 06/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -1601,11 +1601,11 @@ void setup() {
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
     dispFooter.updateStation(_cur_station);
     dispFooter.updateOffTime(_sleeptime);
-    dispFooter.show();
+    dispFooter.show(true);
 
     dispHeader.updateItem(_hl_item[RADIO]);
     dispHeader.updateVolume(_cur_volume);
-    dispHeader.show();
+    dispHeader.show(true);
 
     _radioSubMenue = 0;
     _state = NONE;
@@ -1984,10 +1984,10 @@ void wake_up() {
     _radioSubMenue = 0;
     changeState(RADIO);
     showLogoAndStationName(true);
-    dispHeader.show();
+    dispHeader.show(true);
     dispHeader.speakerOnOff(_f_mute);
     dispHeader.updateRSSI(WiFi.RSSI(), true);
-    dispFooter.show();
+    dispFooter.show(true);
     if(_f_BTpower) BTpowerChanged(true);
 }
 
@@ -2753,7 +2753,7 @@ void loop() {
             clearAll();
             dispHeader.updateItem("ALARM");
             dispHeader.updateTime(_time_s);
-            dispFooter.show();
+            dispFooter.show(true);
             if(_ringVolume > 0){ // alarm with bell
                 showFileName("ALARM");
                 drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);

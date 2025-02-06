@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 05.Feb 2025
+// updated: 06.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -4000,8 +4000,9 @@ private:
     char        m_time[10] = {0};
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
     const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.jpg", "/common/RSSI1.jpg", "/common/RSSI2.jpg", "/common/RSSI3.jpg", "/common/RSSI4.jpg"};
-    const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.jpg", "/common/Speaker_on.jpg"};
+    const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
     releasedArg m_ra;
     uint16_t    m_itemColor = TFT_GREENYELLOW;
     uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
@@ -4023,7 +4024,7 @@ private:
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 240;
     uint16_t    m_speaker_x = 240;
-    uint16_t    m_speaker_w = 36;
+    uint16_t    m_speaker_w = 38;
     uint16_t    m_volume_x = 285;
     uint16_t    m_volume_w = 40;
     uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
@@ -4057,7 +4058,8 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(){
+    void show(bool transparency = false){
+        m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
@@ -4100,6 +4102,9 @@ public:
     }
 
     void speakerOnOff(bool on){
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_speaker_x, m_y, m_speaker_w, m_h);
+        }
         drawImage(m_speakerSymbol[!on], m_speaker_x, m_y);
     }
     void updateVolume(uint8_t vol){
@@ -4109,7 +4114,12 @@ public:
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
-        tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_volume_x, m_y, m_volume_w, m_h);
+        }
+        else{
+            tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
+        }
         itoa(m_volume, buff, 10);
         tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
         xSemaphoreGive(mutex_display);
@@ -4208,17 +4218,19 @@ private:
     char*       m_ipAddr = NULL;
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
     releasedArg m_ra;
-    const char  m_stationSymbol[16]     = "/common/STA.bmp";
-    const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.bmp", "/common/Hourglass_red.bmp"};
+    const char  m_stationSymbol[22]     = "/common/Antenna.png";
+    const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
 #if TFT_CONTROLLER < 2 // 320 x 240px
     uint16_t    m_staSymbol_x = 0;
-    uint16_t    m_staNr_x = 25, m_staNr_w = 35;
-    uint16_t    m_flag_x = 60;
-    uint16_t    m_flag_w = 43;
+    uint16_t    m_staNr_x = 25, m_staNr_w = 32;
+    uint16_t    m_flag_x = 57;
+    uint16_t    m_flag_w = 40;
     uint16_t    m_flag_h = 0; // will be calculated
     uint16_t    m_offTimerSymbol_x = 100;
-    uint16_t    m_offTimerNr_x = 123, m_offTimerNr_w = 35;
+    uint16_t    m_offTimerSymbol_w = 20;
+    uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
     uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
 #else // 480 x 320px
@@ -4227,7 +4239,8 @@ private:
     uint16_t    m_flag_x = 83;
     uint16_t    m_flag_w = 48;
     uint16_t    m_flag_h = 0; // will be calculated
-    uint16_t    m_offTimerSymbol_x = 138;
+    uint16_t    m_offTimerSymbol_x = 143;
+    uint16_t    m_offTimerSymbol_w = 24;
     uint16_t    m_offTimerNr_x = 170, m_offTimerNr_w = 54;
     uint16_t    m_bitRate_x = 224, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 295, m_ipAddr_w = 185;
@@ -4257,7 +4270,8 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(){
+    void show(bool transparency = false){
+        m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
         drawImage(m_stationSymbol, m_staSymbol_x, m_y);
@@ -4313,13 +4327,21 @@ public:
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_offTime){
             tft.setTextColor(TFT_RED);
+            if(m_backgroundTransparency){
+                tft.copyFramebuffer(0, 1, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
+            }
             drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y);
         }
         else{
             tft.setTextColor(TFT_DEEPSKYBLUE);
             drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y);
         }
-        tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
+        }
+        else{
+            tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
+        }
         tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
         xSemaphoreGive(mutex_display);
     }
