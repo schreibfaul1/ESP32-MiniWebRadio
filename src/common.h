@@ -7,12 +7,12 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
-#define TP_ROTATION             1                               // 1 or 3 (landscape)
+#define TP_VERSION              0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
+#define TP_ROTATION             3                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -3851,15 +3851,16 @@ public:
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class vuMeter : public RegisterTable {
 private:
-    int16_t     m_x = 0;
-    int16_t     m_y = 0;
-    int16_t     m_w = 0;
-    int16_t     m_h = 0;
+    uint16_t    m_x = 0;
+    uint16_t    m_y = 0;
+    uint16_t    m_w = 0;
+    uint16_t    m_h = 0;
     uint32_t    m_bgColor = TFT_BLACK;
     uint32_t    m_frameColor = TFT_DARKGREY;
     char*       m_name = NULL;
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
     uint8_t     m_VUleftCh = 0;   // VU meter left channel
     uint8_t     m_VUrightCh = 0;  // VU meter right channel
     releasedArg m_ra;
@@ -3899,10 +3900,16 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(){
+    void show(bool backgroundTransparency = false){
+        m_backgroundTransparency = backgroundTransparency;
         m_enabled = true;
         m_clicked = false;
-        tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_x, m_y, m_real_w, m_real_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
+        }
         tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
         for(uint8_t i = 0; i < 12; i++){
             drawRect(i, 0, 0);
@@ -3912,8 +3919,13 @@ public:
         m_VUrightCh = 0;
     }
     void hide(){
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
+        }
     }
     void disable(){
         m_enabled = false;
@@ -4001,7 +4013,7 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_backgroundTransparency = false;
-    const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.jpg", "/common/RSSI1.jpg", "/common/RSSI2.jpg", "/common/RSSI3.jpg", "/common/RSSI4.jpg"};
+    const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.png", "/common/RSSI1.png", "/common/RSSI2.png", "/common/RSSI3.png", "/common/RSSI4.png"};
     const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
     releasedArg m_ra;
     uint16_t    m_itemColor = TFT_GREENYELLOW;
@@ -4090,7 +4102,12 @@ public:
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_itemColor);
-        tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_item_x, m_y, m_item_w, m_h);
+        }
+        else{
+            tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
+        }
         tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
         x_ps_free(&m_item);
         m_item = strdup(tmp);
@@ -4147,6 +4164,9 @@ public:
         }
         if(show) {
             xSemaphoreTake(mutex_display, portMAX_DELAY);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h);
+        }
             drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y);
             xSemaphoreGive(mutex_display);
         }
@@ -4160,7 +4180,12 @@ public:
         tft.setFont(m_fontSize);
         tft.setTextColor(m_timeColor);
         if(complete == true) {
-            tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
+            if(m_backgroundTransparency){
+                tft.copyFramebuffer(0, 1, m_time_x, m_y, m_time_w, m_h);
+            }
+            else{
+                tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
+            }
             for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
         }
         for(uint8_t i = 0; i < 8; i++) {
@@ -4168,7 +4193,12 @@ public:
                 char ch[2] = {0, 0};
                 ch[0] = m_time[i];
                 pos = m_time_pos;
-                tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_BLACK);
+                if(m_backgroundTransparency){
+                    tft.copyFramebuffer(0, 1, m_time_x + pos[i], m_y, m_time_ch_w, m_h);
+                }
+                else{
+                    tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, m_bgColor);
+                }
                 tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
                 oldtime[i] = m_time[i];
             }
@@ -4298,7 +4328,12 @@ public:
         m_staNr = staNr;
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_staNr_x, m_y, m_staNr_w, m_h);
+        }
+        else{
+            tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
+        }
         tft.setFont(m_fontSize);
         tft.setTextColor(m_stationColor);
         char buff[10];
@@ -4312,9 +4347,12 @@ public:
     void updateFlag(const char* flag){
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        // if(m_backgroundTransparency) tft.copyFramebuffer(0, 1, m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
-        // else                         tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
-        tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_flag_x, m_y, m_flag_w, m_h);
+        }
+        else{
+            tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
+        }
         if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y, m_flag_w, m_h);
         xSemaphoreGive(mutex_display);
     }
@@ -4349,7 +4387,12 @@ public:
         m_timeCounter = timeCounter;
         if(!m_enabled) return;
         if(!m_timeCounter) {
-            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+            // if(m_backgroundTransparency){
+            //     tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+            // }
+            // else {
+            //     tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+            // }
             updateBitRate(m_bitRate);
         }
         else{
@@ -4357,7 +4400,12 @@ public:
             uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter));
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
-            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+            if(m_backgroundTransparency){
+                tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+            }
+            else{
+                tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+            }
             tft.fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
         }
     }
@@ -4375,7 +4423,12 @@ public:
             sbr[4] = '\0';
         }
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+        }
+        else{
+            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+        }
         tft.drawRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bitRateColor);
         tft.setFont(m_fontSize);
         tft.setTextColor(m_bitRateColor);
@@ -4396,7 +4449,12 @@ public:
         tft.setFont(m_fontSize);
         tft.setTextColor(m_ipAddrColor);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(0, 1, m_ipAddr_x, m_y, m_ipAddr_w, m_h);
+        }
+        else{
+            tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
+        }
         tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true);
         xSemaphoreGive(mutex_display);
     }

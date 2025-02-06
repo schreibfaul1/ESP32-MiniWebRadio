@@ -2371,7 +2371,7 @@ void changeState(int32_t state){
                 if(_f_irResultSeen){txt_RA_irNum.hide(); setStationByNumber(_irResult); _f_irResultSeen = false;} // ir_number, valid between 1 ... 999
                 if(_state != RADIO) {showLogoAndStationName(true);}
                 setTimeCounter(0);
-                VUmeter_RA.show();
+                VUmeter_RA.show(true);
                 txt_RA_sTitle.setText("");
                 txt_RA_sTitle.show();
                 _f_newStreamTitle = true;
