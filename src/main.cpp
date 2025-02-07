@@ -257,7 +257,7 @@ SemaphoreHandle_t mutex_display;
 //  +-------------------------------------------+ 240
 //                                             320
 
-const uint8_t _fonts[9] = { 15, 16, 21, 25, 27, 34, 38, 43, 156};
+const uint8_t _fonts[10] = { 15, 16, 21, 25, 27, 34, 38, 43, 81, 156};
 
 
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
@@ -317,7 +317,7 @@ uint8_t  _irNumber_y  = 40;
 //  +-------------------------------------------+ 320
 //                                             480
 
-const uint8_t _fonts[9] = {21, 25, 27, 34, 38, 43, 56, 66, 156};
+const uint8_t _fonts[10] = {21, 25, 27, 34, 38, 43, 56, 66, 81, 156};
 
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;} const _winHeader;
 struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;} const _winLogo;
@@ -1582,7 +1582,7 @@ void setup() {
     ticker100ms.attach(0.1, timer100ms);
     if(BT_EMITTER_CONNECT >= 0){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
-        digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100); digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
+       /*digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100);*/ digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
         _f_BTcurPowerState = true;
     }
 
@@ -3034,9 +3034,10 @@ endbrightness:
             SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
         }
         if(r.startsWith("st")){ // testtext for streamtitle
-            if(r[2] == '0') strcpy(_streamTitle, "A B C D E F G H I");
+            if(r[2] == '0') strcpy(_streamTitle, "ABΑЁЮ");
             if(r[2] == '1') strcpy(_streamTitle, "A B C D E F G H I");
-            if(r[2] == '2') strcpy(_streamTitle, "A B C D E F G H I J K L");
+            if(r[2] == '2') strcpy(_streamTitle, "A B C D E F G H I");
+            if(r[2] == '3') strcpy(_streamTitle, "A B C D E F G H I J K L");
             if(r[2] == '4') strcpy(_streamTitle, "A B C D E F G H I J K J M Q O");
             if(r[2] == '5') strcpy(_streamTitle, "A B C D E F G H I K L J M y O P Q R");
             if(r[2] == '6') strcpy(_streamTitle, "A B C D E F G H I K L J M g O P Q R S T V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");

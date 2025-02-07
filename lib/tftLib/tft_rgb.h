@@ -24,7 +24,7 @@
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/BigNumbers.h"
 #include "fonts/Arial.h"
-#include "fonts/Z300.h"
+#include "fonts/Z003.h"
 
 
 
@@ -135,7 +135,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #elif TFT_FONT == 3
 #define TFT_ARIAL
 #elif TFT_FONT == 4
-#define TFT_Z300
+#define TFT_Z003
 #else
 #define TFT_GARAMOND // if nothing is chosen
 #endif

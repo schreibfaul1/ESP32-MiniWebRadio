@@ -18,7 +18,7 @@
 #include "fonts/FreeSerifItalic.h"
 #include "fonts/BigNumbers.h"
 #include "fonts/Arial.h"
-#include "fonts/Z300.h"
+#include "fonts/Z003.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
 #include "esp_lcd_panel_io.h"
@@ -239,7 +239,7 @@ extern __attribute__((weak)) void tft_info(const char*);
 #elif TFT_FONT == 3
 #define TFT_ARIAL
 #elif TFT_FONT == 4
-#define TFT_Z300
+#define TFT_Z003
 #else
 #define TFT_GARAMOND // if nothing is chosen
 #endif
@@ -306,7 +306,7 @@ class TFT_SPI {
     uint16_t    m_v_res = 0;
     uint16_t*   m_framebuffer[3];
     bool        m_framebuffer_index = 0;
-    uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
+    uint8_t fontSizes[12] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81};
 
     typedef struct {
         const uint8_t*                     glyph_bitmap;

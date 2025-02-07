@@ -728,6 +728,17 @@ void TFT_SPI::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Times66->base_line;
             _current_font.lookup_table = cmaps_Times66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Times81;
+            _current_font.glyph_bitmap = glyph_bitmap_Times81;
+            _current_font.glyph_dsc = glyph_dsc_Times81;
+            _current_font.range_start = cmaps_Times81->range_start;
+            _current_font.range_length = cmaps_Times81->range_length;
+            _current_font.line_height = cmaps_Times81->line_height;
+            _current_font.font_height = cmaps_Times81->font_height;
+            _current_font.base_line = cmaps_Times81->base_line;
+            _current_font.lookup_table = cmaps_Times81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -866,6 +877,17 @@ void TFT_SPI::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Garamond66->base_line;
             _current_font.lookup_table = cmaps_Garamond66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Garamond81;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond81;
+            _current_font.glyph_dsc = glyph_dsc_Garamond81;
+            _current_font.range_start = cmaps_Garamond81->range_start;
+            _current_font.range_length = cmaps_Garamond81->range_length;
+            _current_font.line_height = cmaps_Garamond81->line_height;
+            _current_font.font_height = cmaps_Garamond81->font_height;
+            _current_font.base_line = cmaps_Garamond81->base_line;
+            _current_font.lookup_table = cmaps_Garamond81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -1003,6 +1025,17 @@ void TFT_SPI::setFont(uint16_t font) {
             _current_font.font_height = cmaps_FreeSerifItalic66->font_height;
             _current_font.base_line = cmaps_FreeSerifItalic66->base_line;
             _current_font.lookup_table = cmaps_FreeSerifItalic66->lookup_table;
+            break;
+        case 81:
+            _current_font.cmaps = cmaps_FreeSerifItalic81;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic81;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic81;
+            _current_font.range_start = cmaps_FreeSerifItalic81->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic81->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic81->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic81->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic81->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic81->lookup_table;
             break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
@@ -1143,6 +1176,17 @@ void TFT_SPI::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Arial66->base_line;
             _current_font.lookup_table = cmaps_Arial66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Arial81;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial81;
+            _current_font.glyph_dsc = glyph_dsc_Arial81;
+            _current_font.range_start = cmaps_Arial81->range_start;
+            _current_font.range_length = cmaps_Arial81->range_length;
+            _current_font.line_height = cmaps_Arial81->line_height;
+            _current_font.font_height = cmaps_Arial81->font_height;
+            _current_font.base_line = cmaps_Arial81->base_line;
+            _current_font.lookup_table = cmaps_Arial81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -1158,128 +1202,139 @@ void TFT_SPI::setFont(uint16_t font) {
     }
 #endif
 
-#ifdef TFT_Z300
+#ifdef TFT_Z003
     switch(font) {
         case 15:
-            _current_font.cmaps = cmaps_Z300_15;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_15;
-            _current_font.glyph_dsc = glyph_dsc_Z300_15;
-            _current_font.range_start = cmaps_Z300_15->range_start;
-            _current_font.range_length = cmaps_Z300_15->range_length;
-            _current_font.line_height = cmaps_Z300_15->line_height;
-            _current_font.font_height = cmaps_Z300_15->font_height;
-            _current_font.base_line = cmaps_Z300_15->base_line;
-            _current_font.lookup_table = cmaps_Z300_15->lookup_table;
+            _current_font.cmaps = cmaps_Z003_15;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_15;
+            _current_font.glyph_dsc = glyph_dsc_Z003_15;
+            _current_font.range_start = cmaps_Z003_15->range_start;
+            _current_font.range_length = cmaps_Z003_15->range_length;
+            _current_font.line_height = cmaps_Z003_15->line_height;
+            _current_font.font_height = cmaps_Z003_15->font_height;
+            _current_font.base_line = cmaps_Z003_15->base_line;
+            _current_font.lookup_table = cmaps_Z003_15->lookup_table;
             break;
         case 16:
-            _current_font.cmaps = cmaps_Z300_16;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_16;
-            _current_font.glyph_dsc = glyph_dsc_Z300_16;
-            _current_font.range_start = cmaps_Z300_16->range_start;
-            _current_font.range_length = cmaps_Z300_16->range_length;
-            _current_font.line_height = cmaps_Z300_16->line_height;
-            _current_font.font_height = cmaps_Z300_16->font_height;
-            _current_font.base_line = cmaps_Z300_16->base_line;
-            _current_font.lookup_table = cmaps_Z300_16->lookup_table;
+            _current_font.cmaps = cmaps_Z003_16;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_16;
+            _current_font.glyph_dsc = glyph_dsc_Z003_16;
+            _current_font.range_start = cmaps_Z003_16->range_start;
+            _current_font.range_length = cmaps_Z003_16->range_length;
+            _current_font.line_height = cmaps_Z003_16->line_height;
+            _current_font.font_height = cmaps_Z003_16->font_height;
+            _current_font.base_line = cmaps_Z003_16->base_line;
+            _current_font.lookup_table = cmaps_Z003_16->lookup_table;
             break;
         case 18:
-            _current_font.cmaps = cmaps_Z300_18;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_18;
-            _current_font.glyph_dsc = glyph_dsc_Z300_18;
-            _current_font.range_start = cmaps_Z300_18->range_start;
-            _current_font.range_length = cmaps_Z300_18->range_length;
-            _current_font.line_height = cmaps_Z300_18->line_height;
-            _current_font.font_height = cmaps_Z300_18->font_height;
-            _current_font.base_line = cmaps_Z300_18->base_line;
-            _current_font.lookup_table = cmaps_Z300_18->lookup_table;
+            _current_font.cmaps = cmaps_Z003_18;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_18;
+            _current_font.glyph_dsc = glyph_dsc_Z003_18;
+            _current_font.range_start = cmaps_Z003_18->range_start;
+            _current_font.range_length = cmaps_Z003_18->range_length;
+            _current_font.line_height = cmaps_Z003_18->line_height;
+            _current_font.font_height = cmaps_Z003_18->font_height;
+            _current_font.base_line = cmaps_Z003_18->base_line;
+            _current_font.lookup_table = cmaps_Z003_18->lookup_table;
             break;
         case 21:
-            _current_font.cmaps = cmaps_Z300_21;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_21;
-            _current_font.glyph_dsc = glyph_dsc_Z300_21;
-            _current_font.range_start = cmaps_Z300_21->range_start;
-            _current_font.range_length = cmaps_Z300_21->range_length;
-            _current_font.line_height = cmaps_Z300_21->line_height;
-            _current_font.font_height = cmaps_Z300_21->font_height;
-            _current_font.base_line = cmaps_Z300_21->base_line;
-            _current_font.lookup_table = cmaps_Z300_21->lookup_table;
+            _current_font.cmaps = cmaps_Z003_21;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_21;
+            _current_font.glyph_dsc = glyph_dsc_Z003_21;
+            _current_font.range_start = cmaps_Z003_21->range_start;
+            _current_font.range_length = cmaps_Z003_21->range_length;
+            _current_font.line_height = cmaps_Z003_21->line_height;
+            _current_font.font_height = cmaps_Z003_21->font_height;
+            _current_font.base_line = cmaps_Z003_21->base_line;
+            _current_font.lookup_table = cmaps_Z003_21->lookup_table;
             break;
         case 25:
-            _current_font.cmaps = cmaps_Z300_25;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_25;
-            _current_font.glyph_dsc = glyph_dsc_Z300_25;
-            _current_font.range_start = cmaps_Z300_25->range_start;
-            _current_font.range_length = cmaps_Z300_25->range_length;
-            _current_font.line_height = cmaps_Z300_25->line_height;
-            _current_font.font_height = cmaps_Z300_25->font_height;
-            _current_font.base_line = cmaps_Z300_25->base_line;
-            _current_font.lookup_table = cmaps_Z300_25->lookup_table;
+            _current_font.cmaps = cmaps_Z003_25;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_25;
+            _current_font.glyph_dsc = glyph_dsc_Z003_25;
+            _current_font.range_start = cmaps_Z003_25->range_start;
+            _current_font.range_length = cmaps_Z003_25->range_length;
+            _current_font.line_height = cmaps_Z003_25->line_height;
+            _current_font.font_height = cmaps_Z003_25->font_height;
+            _current_font.base_line = cmaps_Z003_25->base_line;
+            _current_font.lookup_table = cmaps_Z003_25->lookup_table;
             break;
         case 27:
-            _current_font.cmaps = cmaps_Z300_27;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_27;
-            _current_font.glyph_dsc = glyph_dsc_Z300_27;
-            _current_font.range_start = cmaps_Z300_27->range_start;
-            _current_font.range_length = cmaps_Z300_27->range_length;
-            _current_font.line_height = cmaps_Z300_27->line_height;
-            _current_font.font_height = cmaps_Z300_27->font_height;
-            _current_font.base_line = cmaps_Z300_27->base_line;
-            _current_font.lookup_table = cmaps_Z300_27->lookup_table;
+            _current_font.cmaps = cmaps_Z003_27;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_27;
+            _current_font.glyph_dsc = glyph_dsc_Z003_27;
+            _current_font.range_start = cmaps_Z003_27->range_start;
+            _current_font.range_length = cmaps_Z003_27->range_length;
+            _current_font.line_height = cmaps_Z003_27->line_height;
+            _current_font.font_height = cmaps_Z003_27->font_height;
+            _current_font.base_line = cmaps_Z003_27->base_line;
+            _current_font.lookup_table = cmaps_Z003_27->lookup_table;
             break;
         case 34:
-            _current_font.cmaps = cmaps_Z300_34;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_34;
-            _current_font.glyph_dsc = glyph_dsc_Z300_34;
-            _current_font.range_start = cmaps_Z300_34->range_start;
-            _current_font.range_length = cmaps_Z300_34->range_length;
-            _current_font.line_height = cmaps_Z300_34->line_height;
-            _current_font.font_height = cmaps_Z300_34->font_height;
-            _current_font.base_line = cmaps_Z300_34->base_line;
-            _current_font.lookup_table = cmaps_Z300_34->lookup_table;
+            _current_font.cmaps = cmaps_Z003_34;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_34;
+            _current_font.glyph_dsc = glyph_dsc_Z003_34;
+            _current_font.range_start = cmaps_Z003_34->range_start;
+            _current_font.range_length = cmaps_Z003_34->range_length;
+            _current_font.line_height = cmaps_Z003_34->line_height;
+            _current_font.font_height = cmaps_Z003_34->font_height;
+            _current_font.base_line = cmaps_Z003_34->base_line;
+            _current_font.lookup_table = cmaps_Z003_34->lookup_table;
             break;
         case 38:
-            _current_font.cmaps = cmaps_Z300_38;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_38;
-            _current_font.glyph_dsc = glyph_dsc_Z300_38;
-            _current_font.range_start = cmaps_Z300_38->range_start;
-            _current_font.range_length = cmaps_Z300_38->range_length;
-            _current_font.line_height = cmaps_Z300_38->line_height;
-            _current_font.font_height = cmaps_Z300_38->font_height;
-            _current_font.base_line = cmaps_Z300_38->base_line;
-            _current_font.lookup_table = cmaps_Z300_38->lookup_table;
+            _current_font.cmaps = cmaps_Z003_38;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_38;
+            _current_font.glyph_dsc = glyph_dsc_Z003_38;
+            _current_font.range_start = cmaps_Z003_38->range_start;
+            _current_font.range_length = cmaps_Z003_38->range_length;
+            _current_font.line_height = cmaps_Z003_38->line_height;
+            _current_font.font_height = cmaps_Z003_38->font_height;
+            _current_font.base_line = cmaps_Z003_38->base_line;
+            _current_font.lookup_table = cmaps_Z003_38->lookup_table;
             break;
         case 43:
-            _current_font.cmaps = cmaps_Z300_43;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_43;
-            _current_font.glyph_dsc = glyph_dsc_Z300_43;
-            _current_font.range_start = cmaps_Z300_43->range_start;
-            _current_font.range_length = cmaps_Z300_43->range_length;
-            _current_font.line_height = cmaps_Z300_43->line_height;
-            _current_font.font_height = cmaps_Z300_43->font_height;
-            _current_font.base_line = cmaps_Z300_43->base_line;
-            _current_font.lookup_table = cmaps_Z300_43->lookup_table;
+            _current_font.cmaps = cmaps_Z003_43;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_43;
+            _current_font.glyph_dsc = glyph_dsc_Z003_43;
+            _current_font.range_start = cmaps_Z003_43->range_start;
+            _current_font.range_length = cmaps_Z003_43->range_length;
+            _current_font.line_height = cmaps_Z003_43->line_height;
+            _current_font.font_height = cmaps_Z003_43->font_height;
+            _current_font.base_line = cmaps_Z003_43->base_line;
+            _current_font.lookup_table = cmaps_Z003_43->lookup_table;
             break;
         case 56:
-            _current_font.cmaps = cmaps_Z300_56;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_56;
-            _current_font.glyph_dsc = glyph_dsc_Z300_56;
-            _current_font.range_start = cmaps_Z300_56->range_start;
-            _current_font.range_length = cmaps_Z300_56->range_length;
-            _current_font.line_height = cmaps_Z300_56->line_height;
-            _current_font.font_height = cmaps_Z300_56->font_height;
-            _current_font.base_line = cmaps_Z300_56->base_line;
-            _current_font.lookup_table = cmaps_Z300_56->lookup_table;
+            _current_font.cmaps = cmaps_Z003_56;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_56;
+            _current_font.glyph_dsc = glyph_dsc_Z003_56;
+            _current_font.range_start = cmaps_Z003_56->range_start;
+            _current_font.range_length = cmaps_Z003_56->range_length;
+            _current_font.line_height = cmaps_Z003_56->line_height;
+            _current_font.font_height = cmaps_Z003_56->font_height;
+            _current_font.base_line = cmaps_Z003_56->base_line;
+            _current_font.lookup_table = cmaps_Z003_56->lookup_table;
             break;
         case 66:
-            _current_font.cmaps = cmaps_Z300_66;
-            _current_font.glyph_bitmap = glyph_bitmap_Z300_66;
-            _current_font.glyph_dsc = glyph_dsc_Z300_66;
-            _current_font.range_start = cmaps_Z300_66->range_start;
-            _current_font.range_length = cmaps_Z300_66->range_length;
-            _current_font.line_height = cmaps_Z300_66->line_height;
-            _current_font.font_height = cmaps_Z300_66->font_height;
-            _current_font.base_line = cmaps_Z300_66->base_line;
-            _current_font.lookup_table = cmaps_Z300_66->lookup_table;
+            _current_font.cmaps = cmaps_Z003_66;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_66;
+            _current_font.glyph_dsc = glyph_dsc_Z003_66;
+            _current_font.range_start = cmaps_Z003_66->range_start;
+            _current_font.range_length = cmaps_Z003_66->range_length;
+            _current_font.line_height = cmaps_Z003_66->line_height;
+            _current_font.font_height = cmaps_Z003_66->font_height;
+            _current_font.base_line = cmaps_Z003_66->base_line;
+            _current_font.lookup_table = cmaps_Z003_66->lookup_table;
+            break;
+        case 81:
+            _current_font.cmaps = cmaps_Z003_81;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_81;
+            _current_font.glyph_dsc = glyph_dsc_Z003_81;
+            _current_font.range_start = cmaps_Z003_81->range_start;
+            _current_font.range_length = cmaps_Z003_81->range_length;
+            _current_font.line_height = cmaps_Z003_81->line_height;
+            _current_font.font_height = cmaps_Z003_81->font_height;
+            _current_font.base_line = cmaps_Z003_81->base_line;
+            _current_font.lookup_table = cmaps_Z003_81->lookup_table;
             break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
@@ -1450,7 +1505,9 @@ uint16_t TFT_SPI::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, 
         }
         glyphPos = _current_font.lookup_table[cpArr[idx]];
         pxLength += _current_font.glyph_dsc[glyphPos].adv_w / 16;
-        if(!narrow) pxLength += _current_font.glyph_dsc[glyphPos].ofs_x;
+        int ofsX = _current_font.glyph_dsc[glyphPos].ofs_x;
+        if(ofsX < 0) ofsX = 0;
+        if(!narrow) pxLength += ofsX;
         if(pxLength > win_W || cpArr[idx] == '\n') { // force wrap
             if(noWrap) { return drawableChars; }
             if(lastSpacePos) {
@@ -1480,6 +1537,7 @@ uint8_t TFT_SPI::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win
     uint8_t  nrOfLines = 0;
     while(true){
         currentFontSize = fontSizes[nrOfFonts - 1];
+log_e("currentFontSize  %i", currentFontSize);
         if(currentFontSize == 0) break;
 
         setFont(currentFontSize);
@@ -1524,10 +1582,11 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         uint16_t box_h = _current_font.glyph_dsc[glyphPos].box_h;
         int16_t  ofs_x = _current_font.glyph_dsc[glyphPos].ofs_x;
         int16_t  ofs_y = _current_font.glyph_dsc[glyphPos].ofs_y;
+        if(ofs_x < 0) ofs_x = 0;
         x += ofs_x;
         y = y + (_current_font.line_height - _current_font.base_line - 1) - box_h - ofs_y;
         writeInAddrWindow(_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
-        if(!narrow) adv_w += ofs_x;
+        if(!narrow) {adv_w += ofs_x;}
         return adv_w;
     };
     //-------------------------------------------------------------------------------------------------------------------

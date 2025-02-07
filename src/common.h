@@ -2225,7 +2225,7 @@ private:
 
             // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
             // colorType = header[25];  // Position 25 = Farbtyp
-            log_w("w %i, h %i", m_w, m_h);
+            // log_w("w %i, h %i", m_w, m_h);
             return true;
         }
         log_e("unknown picture format");
