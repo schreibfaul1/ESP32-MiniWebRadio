@@ -304,7 +304,7 @@ class TFT_SPI {
     SPIClass&   spi_TFT; // use in class TP
     uint16_t    m_h_res = 0;
     uint16_t    m_v_res = 0;
-    uint16_t*   m_framebuffer[2];
+    uint16_t*   m_framebuffer[3];
     bool        m_framebuffer_index = 0;
     uint8_t fontSizes[11] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66};
 

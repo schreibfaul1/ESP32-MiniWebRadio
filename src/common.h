@@ -10,7 +10,7 @@
 #define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY           80000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
+#define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
 #define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
 #define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
@@ -1382,7 +1382,7 @@ public:
         m_enabled = false;
     }
     void hide(){
-        if(m_backgroundTransparency) tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
@@ -1407,7 +1407,7 @@ private:
     void drawNewSpot(uint16_t xPos){
         if(m_enabled){
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             }
             else{
                 tft.fillRect(             m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
@@ -1508,7 +1508,7 @@ public:
         m_enabled = false;
     }
     void hide(){
-        tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
     //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         m_enabled = false;
     }
@@ -1614,7 +1614,7 @@ public:
     }
     void hide(){
     //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         m_enabled = false;
     }
     void disable(){
@@ -1672,7 +1672,7 @@ public:
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
         //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
             tft.writeText(m_text, m_x + m_l_margin, m_y + m_t_margin, m_w - m_r_margin, m_h - m_d_margin, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
@@ -2063,6 +2063,7 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false; // is used and to draw further objects on this box
     releasedArg m_ra;
 public:
     pictureBox(const char* name){
@@ -2077,7 +2078,7 @@ public:
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y,  bool backgroundTransparency = false){
+    void begin(uint16_t x, uint16_t y, bool backgroundTransparency = false){
         m_x = x; // x pos
         m_y = y; // y pos
         m_enabled = false;
@@ -2089,26 +2090,42 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    bool show(){
+    bool show(bool saveBackground = false){
+        m_saveBackground = saveBackground;
         if(!GetImageSize(m_PicturePath)){
             GetImageSize(m_altPicturePath);
+            if(m_saveBackground){
+                tft.copyFramebuffer(1, 2, m_x, m_y, m_w, m_h);
+            }
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             }
             m_enabled = drawImage(m_altPicturePath, m_x, m_y);
+            if(m_saveBackground){
+                tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+            }
             return m_enabled;
         }
         else{
+            if(m_saveBackground){
+                tft.copyFramebuffer(1, 2, m_x, m_y, m_w, m_h);
+            }
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             }
             m_enabled = drawImage(m_PicturePath, m_x, m_y);
+            if(m_saveBackground){
+                tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+            }
             return m_enabled;
         }
     }
     void hide(){
+        if(m_saveBackground){
+            tft.copyFramebuffer(2, 1, m_x, m_y, m_w, m_h); // restore background
+        }
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         }
         else{
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -2116,6 +2133,9 @@ public:
         m_enabled = false;
     }
     void disable(){
+        if(m_saveBackground){
+            tft.copyFramebuffer(2, 1, m_x, m_y, m_w, m_h); // restore background
+        }
         m_enabled = false;
     }
     void enable(){
@@ -3907,7 +3927,7 @@ public:
         m_enabled = true;
         m_clicked = false;
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_x, m_y, m_real_w, m_real_h);
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_real_w, m_real_h);
         }
         else{
             tft.fillRect(m_x, m_y, m_real_w, m_real_h, m_bgColor);
@@ -3922,7 +3942,7 @@ public:
     }
     void hide(){
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
         }
         else{
             tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -4105,7 +4125,7 @@ public:
         tft.setFont(m_fontSize);
         tft.setTextColor(m_itemColor);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_item_x, m_y, m_item_w, m_h);
+            tft.copyFramebuffer(1, 0, m_item_x, m_y, m_item_w, m_h);
         }
         else{
             tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
@@ -4122,7 +4142,7 @@ public:
 
     void speakerOnOff(bool on){
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_speaker_x, m_y, m_speaker_w, m_h);
+            tft.copyFramebuffer(1, 0, m_speaker_x, m_y, m_speaker_w, m_h);
         }
         drawImage(m_speakerSymbol[!on], m_speaker_x, m_y);
     }
@@ -4134,7 +4154,7 @@ public:
         tft.setFont(m_fontSize);
         tft.setTextColor(m_volumeColor);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_volume_x, m_y, m_volume_w, m_h);
+            tft.copyFramebuffer(1, 0, m_volume_x, m_y, m_volume_w, m_h);
         }
         else{
             tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
@@ -4167,7 +4187,7 @@ public:
         if(show) {
             xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h);
+            tft.copyFramebuffer(1, 0, m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h);
         }
             drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y);
             xSemaphoreGive(mutex_display);
@@ -4183,7 +4203,7 @@ public:
         tft.setTextColor(m_timeColor);
         if(complete == true) {
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_time_x, m_y, m_time_w, m_h);
+                tft.copyFramebuffer(1, 0, m_time_x, m_y, m_time_w, m_h);
             }
             else{
                 tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
@@ -4196,7 +4216,7 @@ public:
                 ch[0] = m_time[i];
                 pos = m_time_pos;
                 if(m_backgroundTransparency){
-                    tft.copyFramebuffer(0, 1, m_time_x + pos[i], m_y, m_time_ch_w, m_h);
+                    tft.copyFramebuffer(1, 0, m_time_x + pos[i], m_y, m_time_ch_w, m_h);
                 }
                 else{
                     tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, m_bgColor);
@@ -4331,7 +4351,7 @@ public:
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_staNr_x, m_y, m_staNr_w, m_h);
+            tft.copyFramebuffer(1, 0, m_staNr_x, m_y, m_staNr_w, m_h);
         }
         else{
             tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
@@ -4350,7 +4370,7 @@ public:
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_flag_x, m_y, m_flag_w, m_h);
+            tft.copyFramebuffer(1, 0, m_flag_x, m_y, m_flag_w, m_h);
         }
         else{
             tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
@@ -4368,7 +4388,7 @@ public:
         if(m_offTime){
             tft.setTextColor(TFT_RED);
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
+                tft.copyFramebuffer(1, 0, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
             }
             drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y);
         }
@@ -4377,7 +4397,7 @@ public:
             drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y);
         }
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
+            tft.copyFramebuffer(1, 0, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
         }
         else{
             tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
@@ -4390,7 +4410,7 @@ public:
         if(!m_enabled) return;
         if(!m_timeCounter) {
             // if(m_backgroundTransparency){
-            //     tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+            //     tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
             // }
             // else {
             //     tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
@@ -4403,7 +4423,7 @@ public:
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+                tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
             }
             else{
                 tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
@@ -4426,7 +4446,7 @@ public:
         }
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_bitRate_x, m_y, m_bitRate_w, m_h);
+            tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
         }
         else{
             tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
@@ -4452,7 +4472,7 @@ public:
         tft.setTextColor(m_ipAddrColor);
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(0, 1, m_ipAddr_x, m_y, m_ipAddr_w, m_h);
+            tft.copyFramebuffer(1, 0, m_ipAddr_x, m_y, m_ipAddr_w, m_h);
         }
         else{
             tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);

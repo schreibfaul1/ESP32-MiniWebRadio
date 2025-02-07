@@ -17,6 +17,7 @@ TFT_SPI::TFT_SPI(SPIClass &spi, int csPin) : spi_TFT(spi){
 TFT_SPI::~TFT_SPI() {
     if(m_framebuffer[0]) {free(m_framebuffer[0]);}
     if(m_framebuffer[1]) {free(m_framebuffer[1]);}
+    if(m_framebuffer[2]) {free(m_framebuffer[2]);}
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
@@ -31,12 +32,16 @@ void TFT_SPI::setTFTcontroller(uint8_t TFTcontroller) {
     if(_TFTcontroller == ST7796RPI) { m_h_res = 480; m_v_res = 320; _rotation = 0;}
 
     m_framebuffer[0] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
-    if(!m_framebuffer[0]) {if(tft_info) tft_info("Error allocating memory"); return; }
+    if(!m_framebuffer[0]) {if(tft_info) tft_info("Error allocating memory framebuffer 0"); return; }
     memset(m_framebuffer[0], 0, m_h_res * m_v_res * 2);
 
     m_framebuffer[1] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
-    if(!m_framebuffer[1]) {if(tft_info) tft_info("Error allocating memory"); return; }
+    if(!m_framebuffer[1]) {if(tft_info) tft_info("Error allocating memory framebuffer 1"); return; }
     memset(m_framebuffer[1], 0, m_h_res * m_v_res * 2);
+
+    m_framebuffer[2] = (uint16_t*)ps_malloc(m_h_res * m_v_res * 2);
+    if(!m_framebuffer[2]) {if(tft_info) tft_info("Error allocating memory framebuffer 2"); return; }
+    memset(m_framebuffer[2], 0, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::setDiaplayInversion(uint8_t dispInv) {
@@ -166,14 +171,14 @@ void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::readRect(uint16_t* data, int16_t x, int16_t y, int16_t w, int16_t h) {
     for(uint16_t j = y; j < y + h; j++) {
-        memcpy(data + j * w * 2, m_framebuffer[0] + j * m_h_res + x, w * 2);
+        memcpy(data + j * w * 2, m_framebuffer[1] + j * m_h_res + x, w * 2);
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -186,7 +191,7 @@ void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
     // Zeichnen des Rechtecks nur im gültigen Bereich
     for (int16_t j = y0; j < y1; ++j) { // Zeilen iterieren
         for (int16_t i = x0; i < x1; ++i) { // Spalten iterieren
-            m_framebuffer[1][j * m_h_res + i] = color;
+            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
     startWrite();
@@ -198,7 +203,7 @@ void TFT_SPI::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::fillScreen(uint16_t color) {
-    fill(m_framebuffer[1], m_framebuffer[1] + (m_h_res * m_v_res), color);
+    fill(m_framebuffer[0], m_framebuffer[0] + (m_h_res * m_v_res), color);
 
     startWrite();
     setAddrWindow(0, 0, m_h_res, m_v_res);
@@ -209,14 +214,14 @@ void TFT_SPI::fillScreen(uint16_t color) {
 void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
     if(x0 < 0 || x0 >= m_h_res || x1 < 0 || x1 >= m_h_res || x2 < 0 || x2 >= m_h_res || y0 < 0 || y0 >= m_v_res || y1 < 0 || y1 >= m_v_res || y2 < 0 || y2 >= m_v_res) return;
 
-    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[1], uint16_t m_h_res) {
+    auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* m_framebuffer[0], uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
         int16_t dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
         int16_t dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
         int16_t err = dx + dy, e2; // Fehlerwert
 
         while (true) {
-            m_framebuffer[1][y0 * m_h_res + x0] = color; // Pixel setzen
+            m_framebuffer[0][y0 * m_h_res + x0] = color; // Pixel setzen
             if (x0 == x1 && y0 == y1) break;
             e2 = 2 * err;
             if (e2 >= dy) { err += dy; x0 += sx; }
@@ -226,9 +231,9 @@ void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
 
 
     // Zeichne die drei Linien des Dreiecks
-    drawLine(x0, y0, x1, y1, color, &m_framebuffer[1], m_h_res); // Linie von Punkt 0 nach Punkt 1
-    drawLine(x1, y1, x2, y2, color, &m_framebuffer[1], m_h_res); // Linie von Punkt 1 nach Punkt 2
-    drawLine(x2, y2, x0, y0, color, &m_framebuffer[1], m_h_res); // Linie von Punkt 2 nach Punkt 0
+    drawLine(x0, y0, x1, y1, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 0 nach Punkt 1
+    drawLine(x1, y1, x2, y2, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 1 nach Punkt 2
+    drawLine(x2, y2, x0, y0, color, &m_framebuffer[0], m_h_res); // Linie von Punkt 2 nach Punkt 0
 
     // Aktualisierung des gezeichneten Bereichs
     int16_t x = std::min({x0, x1, x2});
@@ -239,7 +244,7 @@ void TFT_SPI::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
@@ -254,7 +259,7 @@ void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
             x_start = std::max((int16_t)0, x_start); // Clipping in x-Richtung
             x_end = std::min((int16_t)(m_h_res - 1), x_end);
             for (int16_t x = x_start; x <= x_end; ++x) {
-                m_framebuffer[1][y * m_h_res + x] = color;
+                m_framebuffer[0][y * m_h_res + x] = color;
             }
         }
     };
@@ -305,7 +310,7 @@ void TFT_SPI::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
@@ -332,10 +337,10 @@ void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
     };
 
     // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[1], m_h_res); // Oben
-    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[1], m_h_res); // Rechts
-    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[1], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[1], m_h_res); // Links
+    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
+    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
+    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
+    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
 
     // Aktualisierung des gezeichneten Bereichs
     int16_t x = std::min((int)Xpos, Xpos + Width);
@@ -346,7 +351,7 @@ void TFT_SPI::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
@@ -361,15 +366,15 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
         int16_t y = r;
 
         while (x <= y) {
-            if (quadrant & 0x1) m_framebuffer[1][(cy - y) * m_h_res + (cx + x)] = color; // up right
-            if (quadrant & 0x2) m_framebuffer[1][(cy + y) * m_h_res + (cx + x)] = color; // down right
-            if (quadrant & 0x4) m_framebuffer[1][(cy + y) * m_h_res + (cx - x)] = color; // down left
-            if (quadrant & 0x8) m_framebuffer[1][(cy - y) * m_h_res + (cx - x)] = color; // up left
+            if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + x)] = color; // up right
+            if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + x)] = color; // down right
+            if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - x)] = color; // down left
+            if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - x)] = color; // up left
 
-            if (quadrant & 0x10) m_framebuffer[1][(cy - x) * m_h_res + (cx + y)] = color; // up right (90° rotated)
-            if (quadrant & 0x20) m_framebuffer[1][(cy + x) * m_h_res + (cx + y)] = color; // down right (90° rotated)
-            if (quadrant & 0x40) m_framebuffer[1][(cy + x) * m_h_res + (cx - y)] = color; // down left (90° rotated)
-            if (quadrant & 0x80) m_framebuffer[1][(cy - x) * m_h_res + (cx - y)] = color; // up left (90° rotated)
+            if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + y)] = color; // up right (90° rotated)
+            if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + y)] = color; // down right (90° rotated)
+            if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - y)] = color; // down left (90° rotated)
+            if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - y)] = color; // up left (90° rotated)
 
             if (f >= 0) {
                 y--;
@@ -384,12 +389,12 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 
     // draw horizontal lines above and below the quarter circles
     for (int16_t i = x + r; i < x + w - r; i++) { // upper and lower horizontal lines
-        m_framebuffer[1][y * m_h_res + i] = color; // above
-        m_framebuffer[1][(y + h - 1) * m_h_res + i] = color; // below
+        m_framebuffer[0][y * m_h_res + i] = color; // above
+        m_framebuffer[0][(y + h - 1) * m_h_res + i] = color; // below
     }
     for (int16_t i = y + r; i < y + h - r; i++) { // vertical lines
-        m_framebuffer[1][i * m_h_res + x] = color; // left
-        m_framebuffer[1][i * m_h_res + (x + w - 1)] = color; // right
+        m_framebuffer[0][i * m_h_res + x] = color; // left
+        m_framebuffer[0][i * m_h_res + (x + w - 1)] = color; // right
     }
 
     // fill the area between the quarter circles
@@ -402,7 +407,7 @@ void TFT_SPI::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
@@ -418,16 +423,16 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
 
         while (x <= y) {
             for (int16_t i = 0; i <= x; i++) {
-                if (quadrant & 0x1) m_framebuffer[1][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
-                if (quadrant & 0x2) m_framebuffer[1][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
-                if (quadrant & 0x4) m_framebuffer[1][(cy + y) * m_h_res + (cx - i)] = color; // unten links
-                if (quadrant & 0x8) m_framebuffer[1][(cy - y) * m_h_res + (cx - i)] = color; // oben links
+                if (quadrant & 0x1) m_framebuffer[0][(cy - y) * m_h_res + (cx + i)] = color; // oben rechts
+                if (quadrant & 0x2) m_framebuffer[0][(cy + y) * m_h_res + (cx + i)] = color; // unten rechts
+                if (quadrant & 0x4) m_framebuffer[0][(cy + y) * m_h_res + (cx - i)] = color; // unten links
+                if (quadrant & 0x8) m_framebuffer[0][(cy - y) * m_h_res + (cx - i)] = color; // oben links
             }
             for (int16_t i = 0; i <= y; i++) {
-                if (quadrant & 0x10) m_framebuffer[1][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
-                if (quadrant & 0x20) m_framebuffer[1][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
-                if (quadrant & 0x40) m_framebuffer[1][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
-                if (quadrant & 0x80) m_framebuffer[1][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
+                if (quadrant & 0x10) m_framebuffer[0][(cy - x) * m_h_res + (cx + i)] = color; // oben rechts (gedreht)
+                if (quadrant & 0x20) m_framebuffer[0][(cy + x) * m_h_res + (cx + i)] = color; // unten rechts (gedreht)
+                if (quadrant & 0x40) m_framebuffer[0][(cy + x) * m_h_res + (cx - i)] = color; // unten links (gedreht)
+                if (quadrant & 0x80) m_framebuffer[0][(cy - x) * m_h_res + (cx - i)] = color; // oben links (gedreht)
             }
 
             if (f >= 0) {
@@ -444,19 +449,19 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     // Horizontale Bereiche zwischen den oberen und unteren Viertelkreisen füllen
     for (int16_t i = y; i < y + r; i++) { // Bereich oberhalb der Viertelkreise
         for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[1][i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
     for (int16_t i = y + h - r; i < y + h; i++) { // Bereich unterhalb der Viertelkreise
         for (int16_t j = x + r; j < x + w - r; j++) {
-            m_framebuffer[1][i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
 
     // Vertikaler Bereich zwischen den Viertelkreisen füllen
     for (int16_t i = y + r; i < y + h - r; i++) { // Vertikaler Bereich
         for (int16_t j = x; j < x + w; j++) { // Horizontaler Bereich
-            m_framebuffer[1][i * m_h_res + j] = color;
+            m_framebuffer[0][i * m_h_res + j] = color;
         }
     }
 
@@ -470,7 +475,7 @@ void TFT_SPI::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     startWrite();
     setAddrWindow(x, y, w, h);
     for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
     endWrite();
 }
@@ -488,7 +493,7 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
 
     auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) { // Set pixel if it is within the framebuffer
         if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[1][y * m_h_res + x] = color;
+            m_framebuffer[0][y * m_h_res + x] = color;
         }
     };
 
@@ -528,7 +533,7 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     startWrite();
     setAddrWindow(x1, y1, w1, h1);
     for(int16_t j = y1; j <= y1 + h1; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x1, w1);
+        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
 }
@@ -547,7 +552,7 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
 
     auto setPixelSafe = [&](int16_t x, int16_t y, uint16_t color) {
         if (x >= 0 && x < m_h_res && y >= 0 && y < m_v_res) {
-            m_framebuffer[1][y * m_h_res + x] = color;
+            m_framebuffer[0][y * m_h_res + x] = color;
         }
     };
 
@@ -587,14 +592,14 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
     startWrite();
     setAddrWindow(x1, y1, w1, h1);
     for(int16_t j = y1; j <= y1 + h1; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x1, w1);
+        writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::readRect(int32_t x, int32_t y, int32_t w, uint16_t* data) {
 
-    memcpy(data, m_framebuffer[1] + y * m_h_res + x, w * sizeof(uint16_t));
+    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
     return;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1327,14 +1332,14 @@ void TFT_SPI::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t posY
             if(color == -1) {
                 continue;
             }
-            m_framebuffer[1][j * m_h_res + i] = color;
+            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
 
     startWrite();
     setAddrWindow(posX, posY, width, height);
     for(int16_t j = posY; j < posY + height; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + posX, width);
+        writePixels(m_framebuffer[0] + j * m_h_res + posX, width);
     }
     endWrite();
 }
@@ -1740,7 +1745,7 @@ bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
             const size_t yPos = y + i_y;
 
             if (xPos < m_h_res && yPos < m_v_res) {
-                m_framebuffer[1][yPos * m_h_res + xPos] = color;
+                m_framebuffer[0][yPos * m_h_res + xPos] = color;
             }
         }
     }
@@ -1751,7 +1756,7 @@ bool TFT_SPI::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     startWrite();
     setAddrWindow(x, y, displayWidth, displayHeight);
     for(int16_t j = y; j < y + displayHeight; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, displayWidth);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, displayWidth);
     }
     endWrite();
 
@@ -2476,7 +2481,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
 
             // check if pixel is within the screen
             if (fb_x < m_h_res && fb_y < m_v_res) {
-                m_framebuffer[1][fb_y * m_h_res + fb_x] = buf[row * gif_ImageWidth + col];
+                m_framebuffer[0][fb_y * m_h_res + fb_x] = buf[row * gif_ImageWidth + col];
             }
         }
     }
@@ -2484,7 +2489,7 @@ bool TFT_SPI::GIF_ReadImage(uint16_t x, uint16_t y) {
     startWrite();
     setAddrWindow(xpos, ypos, gif_ImageWidth, gif_ImageHeight);
     for(int16_t j = y; j < ypos + gif_ImageHeight; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + xpos, gif_ImageWidth);
+        writePixels(m_framebuffer[0] + j * m_h_res + xpos, gif_ImageWidth);
     }
     endWrite();
 
@@ -2560,7 +2565,7 @@ bool TFT_SPI::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     startWrite();
     setAddrWindow(x, y, m_jpgWidth, m_jpgHeight);
     for(int16_t j = y; j < y + m_jpgHeight; j++) {
-        writePixels(m_framebuffer[1] + j * m_h_res + x, m_jpgWidth);
+        writePixels(m_framebuffer[0] + j * m_h_res + x, m_jpgWidth);
     }
     endWrite();
 
@@ -2645,7 +2650,7 @@ bool TFT_SPI::JPEG_tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint
         uint16_t* src_ptr = bitmap + (clip_y_offset + j) * w + clip_x_offset;
 
         // Ziel im Framebuffer: Berechne die richtige Zeilenposition
-        uint16_t* dest_ptr = m_framebuffer[1] + (start_y + j) * m_h_res + start_x;
+        uint16_t* dest_ptr = m_framebuffer[0] + (start_y + j) * m_h_res + start_x;
 
         // Kopiere nur die sichtbare Breite
         memcpy(dest_ptr, src_ptr, visible_w * sizeof(uint16_t));
@@ -4710,7 +4715,7 @@ void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint1
             // only alpha blending if alpha is not full
             if (a < 255) {
                 // get the old pixel
-                uint16_t oldPixel = m_framebuffer[1][py * m_h_res + px];
+                uint16_t oldPixel = m_framebuffer[0][py * m_h_res + px];
 
                 // Extrahiere die RGB-Komponenten aus dem alten Pixel (RGB565 → 888)
                 uint8_t oldR = ((oldPixel >> 11) & 0x1F) << 3; // 5 Bit Rot → 8 Bit
@@ -4734,7 +4739,7 @@ void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint1
             }
 
             // set the new pixel in the framebuffer
-            m_framebuffer[1][py * m_h_res + px] = (r << 11) | (g << 5) | b;
+            m_framebuffer[0][py * m_h_res + px] = (r << 11) | (g << 5) | b;
         }
     }
 
@@ -4742,7 +4747,7 @@ void TFT_SPI::png_draw_into_AddrWindow(uint16_t x, uint16_t y, uint16_t w, uint1
     startWrite();
     setAddrWindow(x, y, w, h);
     for(uint16_t row = y; row < y + h; row++) {
-        writePixels(m_framebuffer[1] + row * m_h_res + x, w);
+        writePixels(m_framebuffer[0] + row * m_h_res + x, w);
     }
     endWrite();
 }

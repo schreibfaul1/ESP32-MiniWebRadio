@@ -733,19 +733,19 @@ inline void bgColorButtonBar()          {tft.fillRect( 0,              _winButto
 inline void bgColorAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
 
 
-inline void clearHeader()             {tft.copyFramebuffer(0, 1, _winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h);}
-inline void clearLogo()               {tft.copyFramebuffer(0, 1, _winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h);}
-inline void clearStationName()        {tft.copyFramebuffer(0, 1, _winName.x,      _winName.y,      _winName.w,      _winName.h);}
-inline void clearLogoAndStationname() {tft.copyFramebuffer(0, 1, _winFName.x,     _winFName.y,     _winFName.w,     _winFName.h);}
-inline void clearTitle()              {tft.copyFramebuffer(0, 1, _winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h);} // incl. VUmeter
-inline void clearStreamTitle()        {tft.copyFramebuffer(0, 1, _winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h);} // without VUmeter
-inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(0, 1, _winWoHF.x,       _winWoHF.y,      _winWoHF.w,     _winWoHF.h);}
-inline void clearFooter()             {tft.copyFramebuffer(0, 1, _winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h);}
-inline void clearStaNr()              {tft.copyFramebuffer(0, 1, _winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h);}
-inline void clearSleep()              {tft.copyFramebuffer(0, 1, _winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h);}
-inline void clearDigits()             {tft.copyFramebuffer(0, 1, _winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h);}
-inline void clearButtonBar()          {tft.copyFramebuffer(0, 1,  0,              _winButton.y,    _dispWidth,      _winButton.h);}
-inline void clearAll()                {tft.copyFramebuffer(0, 1,  0,               0,              _dispWidth,      _dispHeight);}
+inline void clearHeader()             {tft.copyFramebuffer(1, 0, _winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h);}
+inline void clearLogo()               {tft.copyFramebuffer(1, 0, _winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h);}
+inline void clearStationName()        {tft.copyFramebuffer(1, 0, _winName.x,      _winName.y,      _winName.w,      _winName.h);}
+inline void clearLogoAndStationname() {tft.copyFramebuffer(1, 0, _winFName.x,     _winFName.y,     _winFName.w,     _winFName.h);}
+inline void clearTitle()              {tft.copyFramebuffer(1, 0, _winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h);} // incl. VUmeter
+inline void clearStreamTitle()        {tft.copyFramebuffer(1, 0, _winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h);} // without VUmeter
+inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(1, 0, _winWoHF.x,       _winWoHF.y,      _winWoHF.w,     _winWoHF.h);}
+inline void clearFooter()             {tft.copyFramebuffer(1, 0, _winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h);}
+inline void clearStaNr()              {tft.copyFramebuffer(1, 0, _winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h);}
+inline void clearSleep()              {tft.copyFramebuffer(1, 0, _winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h);}
+inline void clearDigits()             {tft.copyFramebuffer(1, 0, _winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h);}
+inline void clearButtonBar()          {tft.copyFramebuffer(1, 0,  0,              _winButton.y,    _dispWidth,      _winButton.h);}
+inline void clearAll()                {tft.copyFramebuffer(1, 0,  0,               0,              _dispWidth,      _dispHeight);}
 
 
 
@@ -837,7 +837,7 @@ void showFileLogo(uint8_t state) {
         return;
     }
     if(state == SETTINGS) {
-        logo = "/common/Settings.jpg";
+        logo = "/common/Settings.png";
         pic_SE_logo.setPicturePath(logo.c_str());
         pic_SE_logo.setAlternativPicturePath("/common/unknown.jpg");
         pic_SE_logo.show();
@@ -1595,7 +1595,7 @@ void setup() {
 
     tft.fillScreen(TFT_BLACK); // Clear screen
     drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
-    tft.copyFramebuffer( 1, 0, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
+    tft.copyFramebuffer( 0, 1, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
     muteChanged(_f_mute);
 
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
@@ -2573,7 +2573,7 @@ void changeState(int32_t state){
             break;
         }
         case BRIGHTNESS:{
-            if(_state != BRIGHTNESS) {clearWithOutHeaderFooter(); pic_BR_logo.show();}
+            if(_state != BRIGHTNESS) {clearWithOutHeaderFooter(); pic_BR_logo.show(true);}
             sdr_BR_value.show();
             txt_BR_value.setText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
             txt_BR_value.show();
