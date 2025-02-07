@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 02 2025
+// updated on Feb 07 2025
 
 #include "tft_spi.h"
 #include "Arduino.h"
@@ -532,7 +532,7 @@ void TFT_SPI::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     // Update of the drawn area
     startWrite();
     setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j <= y1 + h1; j++) {
+    for(int16_t j = y1; j < y1 + h1; j++) {
         writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
@@ -591,7 +591,7 @@ void TFT_SPI::fillCircle(int16_t cx, int16_t cy, uint16_t r, uint16_t color){
     // Update of the drawn area
     startWrite();
     setAddrWindow(x1, y1, w1, h1);
-    for(int16_t j = y1; j <= y1 + h1; j++) {
+    for(int16_t j = y1; j < y1 + h1; j++) {
         writePixels(m_framebuffer[0] + j * m_h_res + x1, w1);
     }
     endWrite();
