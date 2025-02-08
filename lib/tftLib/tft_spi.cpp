@@ -1537,9 +1537,7 @@ uint8_t TFT_SPI::fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win
     uint8_t  nrOfLines = 0;
     while(true){
         currentFontSize = fontSizes[nrOfFonts - 1];
-log_e("currentFontSize  %i", currentFontSize);
         if(currentFontSize == 0) break;
-
         setFont(currentFontSize);
         drawableCharsTotal = 0;
         startPos = 0;

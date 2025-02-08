@@ -625,6 +625,17 @@ void TFT_RGB::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Times66->base_line;
             _current_font.lookup_table = cmaps_Times66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Times81;
+            _current_font.glyph_bitmap = glyph_bitmap_Times81;
+            _current_font.glyph_dsc = glyph_dsc_Times81;
+            _current_font.range_start = cmaps_Times81->range_start;
+            _current_font.range_length = cmaps_Times81->range_length;
+            _current_font.line_height = cmaps_Times81->line_height;
+            _current_font.font_height = cmaps_Times81->font_height;
+            _current_font.base_line = cmaps_Times81->base_line;
+            _current_font.lookup_table = cmaps_Times81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -763,6 +774,17 @@ void TFT_RGB::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Garamond66->base_line;
             _current_font.lookup_table = cmaps_Garamond66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Garamond81;
+            _current_font.glyph_bitmap = glyph_bitmap_Garamond81;
+            _current_font.glyph_dsc = glyph_dsc_Garamond81;
+            _current_font.range_start = cmaps_Garamond81->range_start;
+            _current_font.range_length = cmaps_Garamond81->range_length;
+            _current_font.line_height = cmaps_Garamond81->line_height;
+            _current_font.font_height = cmaps_Garamond81->font_height;
+            _current_font.base_line = cmaps_Garamond81->base_line;
+            _current_font.lookup_table = cmaps_Garamond81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -900,6 +922,17 @@ void TFT_RGB::setFont(uint16_t font) {
             _current_font.font_height = cmaps_FreeSerifItalic66->font_height;
             _current_font.base_line = cmaps_FreeSerifItalic66->base_line;
             _current_font.lookup_table = cmaps_FreeSerifItalic66->lookup_table;
+            break;
+        case 81:
+            _current_font.cmaps = cmaps_FreeSerifItalic81;
+            _current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic81;
+            _current_font.glyph_dsc = glyph_dsc_FreeSerifItalic81;
+            _current_font.range_start = cmaps_FreeSerifItalic81->range_start;
+            _current_font.range_length = cmaps_FreeSerifItalic81->range_length;
+            _current_font.line_height = cmaps_FreeSerifItalic81->line_height;
+            _current_font.font_height = cmaps_FreeSerifItalic81->font_height;
+            _current_font.base_line = cmaps_FreeSerifItalic81->base_line;
+            _current_font.lookup_table = cmaps_FreeSerifItalic81->lookup_table;
             break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
@@ -1040,6 +1073,17 @@ void TFT_RGB::setFont(uint16_t font) {
             _current_font.base_line = cmaps_Arial66->base_line;
             _current_font.lookup_table = cmaps_Arial66->lookup_table;
             break;
+        case 81:
+            _current_font.cmaps = cmaps_Arial81;
+            _current_font.glyph_bitmap = glyph_bitmap_Arial81;
+            _current_font.glyph_dsc = glyph_dsc_Arial81;
+            _current_font.range_start = cmaps_Arial81->range_start;
+            _current_font.range_length = cmaps_Arial81->range_length;
+            _current_font.line_height = cmaps_Arial81->line_height;
+            _current_font.font_height = cmaps_Arial81->font_height;
+            _current_font.base_line = cmaps_Arial81->base_line;
+            _current_font.lookup_table = cmaps_Arial81->lookup_table;
+            break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;
             _current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -1177,6 +1221,17 @@ void TFT_RGB::setFont(uint16_t font) {
             _current_font.font_height = cmaps_Z003_66->font_height;
             _current_font.base_line = cmaps_Z003_66->base_line;
             _current_font.lookup_table = cmaps_Z003_66->lookup_table;
+            break;
+        case 81:
+            _current_font.cmaps = cmaps_Z003_81;
+            _current_font.glyph_bitmap = glyph_bitmap_Z003_81;
+            _current_font.glyph_dsc = glyph_dsc_Z003_81;
+            _current_font.range_start = cmaps_Z003_81->range_start;
+            _current_font.range_length = cmaps_Z003_81->range_length;
+            _current_font.line_height = cmaps_Z003_81->line_height;
+            _current_font.font_height = cmaps_Z003_81->font_height;
+            _current_font.base_line = cmaps_Z003_81->base_line;
+            _current_font.lookup_table = cmaps_Z003_81->lookup_table;
             break;
         case 156:
             _current_font.cmaps = cmaps_BigNumbers;

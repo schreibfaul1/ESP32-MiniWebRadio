@@ -3034,8 +3034,8 @@ endbrightness:
             SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
         }
         if(r.startsWith("st")){ // testtext for streamtitle
-            if(r[2] == '0') strcpy(_streamTitle, "ABΑЁЮ");
-            if(r[2] == '1') strcpy(_streamTitle, "A B C D E F G H I");
+            if(r[2] == '0') strcpy(_streamTitle, "A Ё Ю");
+            if(r[2] == '1') strcpy(_streamTitle, "A B C D E F G");
             if(r[2] == '2') strcpy(_streamTitle, "A B C D E F G H I");
             if(r[2] == '3') strcpy(_streamTitle, "A B C D E F G H I J K L");
             if(r[2] == '4') strcpy(_streamTitle, "A B C D E F G H I J K J M Q O");
