@@ -298,7 +298,7 @@ uint8_t  _irNumber_y  = 40;
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6 // ⏹⏹⏹⏹⏫
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6  || TFT_CONTROLLER > 6 // ⏹⏹⏹⏹⏫
 // clang-format off
 //
 //  Display 480x320
@@ -1461,7 +1461,9 @@ void setup() {
 #if CONFIG_IDF_TARGET_ESP32
     tft.begin(TFT_CS, TFT_DC, VSPI, TFT_MOSI, TFT_MISO, TFT_SCK); // Init TFT interface ESP32
 #else
+#if TFT_CONTROLLER < 7
     tft.begin(TFT_DC); // Init TFT interface ESP32S3
+#endif
 #endif
 
 #if TFT_CONTROLLER < 7
