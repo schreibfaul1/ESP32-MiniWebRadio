@@ -1,5 +1,6 @@
+// tft_rgb_cpp
 // first release on 01/2025
-// updated on Feb 02 2025
+// updated on Feb 08 2025
 
 
 #include "Arduino.h"
@@ -36,7 +37,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
-    panel_config.num_fbs = 2;
+    panel_config.num_fbs = 3;
     panel_config.bounce_buffer_size_px = 0;
     // panel_config.psram_trans_align = 16;
     panel_config.dma_burst_size = 0;
@@ -59,7 +60,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.flags.disp_active_low = false;
     panel_config.flags.refresh_on_demand = false;
     panel_config.flags.fb_in_psram = true;
-    panel_config.flags.double_fb = true;
+    panel_config.flags.double_fb = false;
     panel_config.flags.no_fb = false;
     panel_config.flags.bb_invalidate_cache = false;
 
@@ -75,15 +76,18 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
-    void *fb0, *fb1;
-    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 2, &fb0, &fb1);
+    void *fb0, *fb1, *fb2;
+    esp_lcd_rgb_panel_get_frame_buffer(m_panel, 3, &fb0, &fb1, &fb2);
     m_framebuffer[0] = (uint16_t*)fb0;
     m_framebuffer[1] = (uint16_t*)fb1;
+    m_framebuffer[2] = (uint16_t*)fb2;
 
     log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
     memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
     log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
+    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
+    memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setDisplayInversion(bool invert) {
@@ -465,39 +469,16 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
     esp_lcd_panel_draw_bitmap(m_panel, Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer[0]);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_RGB::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    for(uint16_t j = y; j < y + h; j++) {
+        memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
+    }
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[destination]);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
-
-    // uint16_t color = 0;
-
-    // uint32_t dataSize = w * h;
-    // uint32_t counter = 0;
-    // startWrite();
-    // readAddrWindow(x, y, w, h);
-    // readCommand(); // Dummy read to throw away don't care value
-
-    // // Read window pixel 24-bit RGB values
-    // uint8_t r, g, b;
-
-    // while(dataSize--) {
-    //     if(_TFTcontroller == ILI9488) {
-    //         // The 6 colour bits are in MS 6 bits of each byte but we do not include the extra clock pulse so we use a trick
-    //         // and mask the middle 6 bits of the byte, then only shift 1 place left
-    //         r = (readCommand() & 0x7E) << 1;
-    //         g = (readCommand() & 0x7E) << 1;
-    //         b = (readCommand() & 0x7E) << 1;
-    //         color = color565(r, g, b);
-    //     }
-    //     else {
-    //         // Read the 3 RGB bytes, colour is actually only in the top 6 bits of each byte as the TFT_RGB stores colours as 18 bits
-    //         r = readCommand();
-    //         g = readCommand();
-    //         b = readCommand();
-    //         color = color565(r, g, b);
-    //     }
-    //     data[counter] = color;
-    //     counter++;
-    // }
-    // endWrite();
+    memcpy(data, m_framebuffer[0] + y * m_h_res + x, w * sizeof(uint16_t));
+    return;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setFont(uint16_t font) {
@@ -1253,43 +1234,38 @@ void TFT_RGB::setFont(uint16_t font) {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height) {
 
-    // Lambda für das Lesen der Bitmap-Bits
-    auto bitreader = [&](const uint8_t* bm) {
+    auto bitreader = [&](const uint8_t* bm) { // lambda
         static uint16_t       bmi = 0;
         static uint8_t        idx = 0;
         static const uint8_t* bitmap = NULL;
-        if (bm) {
+        if(bm) {
             bitmap = bm;
             idx = 0x80;
             bmi = 0;
-            return (uint16_t)0;
+            return (int32_t)0;
         }
         bool bit = *(bitmap + bmi) & idx;
         idx >>= 1;
-        if (idx == 0) {
+        if(idx == 0) {
             bmi++;
             idx = 0x80;
         }
-        return bit ? m_textColor : m_backGroundColor;
+        if(bit) { return (int32_t) m_textColor;}
+        return (int32_t)-1;  // _backColor, -1 is transparent
     };
 
-    // Bitmap initialisieren
     bitreader(bmi);
 
-    // Schreibe die Pixel in den Framebuffer
-    for (uint16_t y = 0; y < height; y++) {
-        for (uint16_t x = 0; x < width; x++) {
-            // Berechne die Zielkoordinate im Framebuffer
-            uint16_t fbX = posX + x;
-            uint16_t fbY = posY + y;
-
-            // Stelle sicher, dass die Koordinaten innerhalb des Framebuffers liegen (Clipping)
-            if (fbX >= m_h_res || fbY >= m_v_res) continue;
-
-            // Schreibe den berechneten Farbwert in den Framebuffer
-            m_framebuffer[0][fbY * m_h_res + fbX] = bitreader(nullptr);
+    for(int16_t j = posY; j < posY + height; j++) {
+        for(int16_t i = posX; i < posX + width; i++) {
+            int32_t color = bitreader(0);
+            if(color == -1) {
+                continue;
+            }
+            m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
+    esp_lcd_panel_draw_bitmap(m_panel, posX, posY, width, height, m_framebuffer[0]);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
