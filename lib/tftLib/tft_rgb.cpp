@@ -2,7 +2,7 @@
 // first release on 01/2025
 // updated on Feb 08 2025
 
-
+#ifdef CONFIG_IDF_TARGET_ESP32S3
 #include "Arduino.h"
 #include "tft_rgb.h"
 
@@ -4706,3 +4706,4 @@ void TFT_RGB::draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, &m_framebuffer[0][y * m_h_res + x]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#endif // CONFIG_IDF_TARGET_ESP32S3
