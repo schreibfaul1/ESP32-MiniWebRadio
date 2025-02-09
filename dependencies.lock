@@ -21,31 +21,6 @@ dependencies:
       registry_url: https://components.espressif.com/
       type: service
     version: 0.6.0~1
-  espressif/esp-dsp:
-    component_hash: 3e7bbd487f1357a1d4944d0c85966d049501ea281b8a4c7f93f7cfedd5b7f23d
-    dependencies:
-    - name: idf
-      registry_url: https://components.espressif.com
-      require: private
-      version: '>=4.2'
-    source:
-      registry_url: https://components.espressif.com
-      type: service
-    version: 1.4.12
-  espressif/esp-sr:
-    component_hash: 9b41fd5ae5960c393bfd3559cd6e5fa2a95c0bf833915cebafe57fb8c4e4c396
-    dependencies:
-    - name: espressif/esp-dsp
-      registry_url: https://components.espressif.com
-      require: private
-      version: <=1.5.0
-    - name: idf
-      require: private
-      version: '>=5.0'
-    source:
-      registry_url: https://components.espressif.com/
-      type: service
-    version: 1.9.5
   espressif/esp-zboss-lib:
     component_hash: fad683f7e04366398b61c0eea6e6517d4fe7ec4112407e26743dc80bafc0dcdc
     dependencies:
@@ -114,7 +89,6 @@ dependencies:
 direct_dependencies:
 - chmorgan/esp-libhelix-mp3
 - espressif/cbor
-- espressif/esp-sr
 - espressif/esp-zboss-lib
 - espressif/esp-zigbee-lib
 - espressif/esp_modem
@@ -123,5 +97,5 @@ direct_dependencies:
 - idf
 - joltwallet/littlefs
 manifest_hash: e4504f2a0f965d8014106cb391a40514667d3990bf0e5fc65a0bf17025133f95
-target: esp32s3
+target: esp32
 version: 2.0.0
