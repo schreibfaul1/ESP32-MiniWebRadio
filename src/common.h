@@ -7,7 +7,7 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          8                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7) Elecrow, (8) Sunton, (9) Waveshare
+#define TFT_CONTROLLER          7                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7) Elecrow, (8) Sunton, (9) Waveshare
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
@@ -161,13 +161,13 @@
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 5*1000*1000,
-        .hsync_pulse_width = 30,
-        .hsync_back_porch = 46,
-        .hsync_front_porch = 210,
-        .vsync_pulse_width = 13,
-        .vsync_back_porch = 23,
-        .vsync_front_porch = 22
+        .pixel_clock_hz = 5500000,
+        .hsync_pulse_width = 4,
+        .hsync_back_porch = 254,
+        .hsync_front_porch = 254,
+        .vsync_pulse_width = 4,
+        .vsync_back_porch = 8,
+        .vsync_front_porch = 8
     };
 
     #define TP_SDA             19
@@ -232,13 +232,13 @@
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 16000000,
-        .hsync_pulse_width = 30,
-        .hsync_back_porch = 16,
-        .hsync_front_porch = 180,
-        .vsync_pulse_width = 13,
-        .vsync_back_porch = 10,
-        .vsync_front_porch = 12
+        .pixel_clock_hz = 12000000,
+        .hsync_pulse_width = 2,
+        .hsync_back_porch = 43,
+        .hsync_front_porch = 8,
+        .vsync_pulse_width = 22,
+        .vsync_back_porch = 12,
+        .vsync_front_porch = 8
     };
 
     #define TP_SDA 19

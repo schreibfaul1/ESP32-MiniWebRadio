@@ -7,8 +7,38 @@
 
 #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
-TFT_RGB::TFT_RGB() {
-
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+TFT_RGB::TFT_RGB() { // Constructor
+    m_panel = NULL;
+    m_h_res = 0;
+    m_v_res = 0;
+    m_framebuffer[0] = NULL;
+    m_framebuffer[1] = NULL;
+    m_framebuffer[2] = NULL;
+    m_vsync_semaphore = xSemaphoreCreateBinary();
+    xSemaphoreGive(m_vsync_semaphore);
+}
+void TFT_RGB::loop(){
+    if(!m_refresh) handle_vsync_event(m_panel, nullptr);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx) { // static callback function
+    if (user_ctx) {
+        TFT_RGB* instance = static_cast<TFT_RGB*>(user_ctx);
+        return instance->handle_vsync_event(panel, edata);
+    }
+    return false;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
+    if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
+        esp_lcd_rgb_panel_refresh(m_panel);
+        xSemaphoreGive(m_vsync_semaphore);
+        m_refresh = true;
+        return true;
+    }
+    m_refresh = false;
+    return false;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
@@ -17,7 +47,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_timing = newTiming;
 
     esp_lcd_rgb_panel_config_t panel_config;
-    panel_config.clk_src = LCD_CLK_SRC_PLL160M;
+    panel_config.clk_src = LCD_CLK_SRC_PLL240M;
 
     panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
     panel_config.timings.h_res = m_timing.h_res;
@@ -39,7 +69,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.num_fbs = 3;
     panel_config.bounce_buffer_size_px = 0;
     // panel_config.psram_trans_align = 16;
-    panel_config.dma_burst_size = 0;
+    panel_config.dma_burst_size = 64;
     panel_config.hsync_gpio_num = m_pins.hsync;
     panel_config.vsync_gpio_num = m_pins.vsync;
     panel_config.de_gpio_num = m_pins.de;
@@ -57,7 +87,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
         panel_config.data_gpio_nums[i] = pinArr[i];
     }
     panel_config.flags.disp_active_low = false;
-    panel_config.flags.refresh_on_demand = false;
+    panel_config.flags.refresh_on_demand = true;
     panel_config.flags.fb_in_psram = true;
     panel_config.flags.double_fb = false;
     panel_config.flags.no_fb = false;
@@ -87,6 +117,18 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
     log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
     memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
+
+    esp_lcd_rgb_panel_event_callbacks_t cbs = {
+        .on_color_trans_done = nullptr,  // if not used, set to nullptr
+        .on_vsync = TFT_RGB::on_vsync_event,
+        .on_bounce_empty = nullptr,
+        .on_frame_buf_complete = nullptr,
+    };
+
+    esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
+    esp_lcd_rgb_panel_refresh(m_panel);
+
+
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::setDisplayInversion(bool invert) {
@@ -131,7 +173,10 @@ void TFT_RGB::drawLine(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t 
     int16_t update_y0 = std::min(y0, y1);
     int16_t update_x1 = std::max(x0, x1) + 1;
     int16_t update_y1 = std::max(y0, y1) + 1;
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, update_x0, update_y0, update_x1, update_y1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
+
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color) {
@@ -146,7 +191,9 @@ void TFT_RGB::fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t colo
             m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x0, y0, x1, y1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillScreen(uint16_t color) {
@@ -181,7 +228,9 @@ void TFT_RGB::drawTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     int16_t y_min = std::min({y0, y1, y2});
     int16_t x_max = std::max({x0, x1, x2});
     int16_t y_max = std::max({y0, y1, y2});
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
@@ -241,10 +290,16 @@ void TFT_RGB::fillTriangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16
     }
 
     // Aktualisierung nur des geänderten Bereichs
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color) {
+    if(Xpos < 0 || Xpos >= m_h_res || Ypos < 0 || Ypos >= m_v_res) return;
+    if(Width == 0 || Height == 0) return;
+    if(Width > m_h_res - Xpos) Width = m_h_res - Xpos;
+    if(Height > m_v_res - Ypos) Height = m_v_res - Ypos;
 
     auto drawLine = [](int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color, uint16_t* fb, uint16_t m_h_res) {
         // Bresenham-Algorithmus für Linien
@@ -262,18 +317,20 @@ void TFT_RGB::drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Heig
     };
 
     // Zeichne die vier Linien des Rechtecks
-    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[1], m_h_res); // Oben
-    drawLine(Xpos + Width, Ypos, Xpos + Width, Ypos + Height, Color, m_framebuffer[1], m_h_res); // Rechts
-    drawLine(Xpos + Width, Ypos + Height, Xpos, Ypos + Height, Color, m_framebuffer[1], m_h_res); // Unten
-    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[1], m_h_res); // Links
+    drawLine(Xpos, Ypos, Xpos + Width, Ypos, Color, m_framebuffer[0], m_h_res); // Oben
+    drawLine(Xpos + Width - 1, Ypos, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Rechts
+    drawLine(Xpos, Ypos + Height - 1, Xpos + Width - 1, Ypos + Height - 1, Color, m_framebuffer[0], m_h_res); // Unten
+    drawLine(Xpos, Ypos + Height, Xpos, Ypos, Color, m_framebuffer[0], m_h_res); // Links
 
     // Aktualisierung des gezeichneten Bereichs
-    int16_t x_min = std::min((int)Xpos, Xpos + Width);
-    int16_t y_min = std::min((int)Ypos, Ypos + Height);
-    int16_t x_max = std::max((int)Xpos, Xpos + Width);
-    int16_t y_max = std::max((int)Ypos, Ypos + Height);
+    int16_t x = std::min((int)Xpos, Xpos + Width);
+    int16_t y = std::min((int)Ypos, Ypos + Height);
+    int16_t w = std::max((int)Xpos, Xpos + Width) - x;
+    int16_t h = std::max((int)Ypos, Ypos + Height) - y;
 
-    esp_lcd_panel_draw_bitmap(m_panel, x_min, y_min, x_max + 1, y_max + 1, m_framebuffer[1]);
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
+    esp_lcd_panel_draw_bitmap(m_panel, x, y, w, h, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -324,7 +381,9 @@ void TFT_RGB::drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     drawCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color) {
@@ -387,7 +446,9 @@ void TFT_RGB::fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t 
     fillCircleQuadrant(x + r, y + r, r, 0x8 | 0x80); // Oben links
 
     // Aktualisierung des gezeichneten Bereichs
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
@@ -426,7 +487,9 @@ void TFT_RGB::drawCircle(int16_t cx, int16_t cy, int16_t r, uint16_t color) {
     }
 
     // Aktualisierung des gezeichneten Bereichs
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, cx - r, cy - r, cx + r + 1, cy + r + 1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
@@ -465,14 +528,18 @@ void TFT_RGB::fillCircle(int16_t Xm, int16_t Ym, uint16_t r, uint16_t color){
     }
 
     // Aktualisierung des gezeichneten Bereichs
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, Xm - r, Ym - r, Xm + r + 1, Ym + r + 1, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
     for(uint16_t j = y; j < y + h; j++) {
         memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
     }
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, m_framebuffer[destination]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {
@@ -1264,7 +1331,9 @@ void TFT_RGB::writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t pos
             m_framebuffer[0][j * m_h_res + i] = color;
         }
     }
-    esp_lcd_panel_draw_bitmap(m_panel, posX, posY, width, height, m_framebuffer[0]);
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
+    esp_lcd_panel_draw_bitmap(m_panel, posX, posY, posX + width, posY + height, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
@@ -1550,7 +1619,9 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         pW = win_W;
     } // outer while
 exit:
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, win_X, win_Y, win_X + win_W, win_Y + win_H, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
     return charsDrawn;
 }
 
@@ -1679,8 +1750,9 @@ bool TFT_RGB::drawBmpFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     bmp_file.close();
 
     // Nur den betroffenen Bereich auf dem Display aktualisieren
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + displayWidth, y + displayHeight, m_framebuffer[0]);
-
+    xSemaphoreGive(m_vsync_semaphore);
     return true;
 }
 
@@ -2436,7 +2508,10 @@ bool TFT_RGB::GIF_ReadImage(uint16_t x, uint16_t y) {
             }
         }
     }
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, xpos, ypos, xpos + gif_ImageWidth, ypos + gif_ImageHeight, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
+
     // Speicher freigeben
     if (buf) {
         free(buf);
@@ -2508,9 +2583,11 @@ bool TFT_RGB::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     if(!m_jpgSdFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
     int res = JPEG_drawSdJpg(x, y);
-log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
+    // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
+    xSemaphoreGive(m_vsync_semaphore);
     return true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3663,7 +3740,7 @@ bool TFT_RGB::drawPngFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     png_file.readBytes(png_buffer, (size_t)file_size);
     png_file.close();
     int err  = png_decode();
-    log_w("png_decode err=%i",err);
+//  log_w("png_decode err=%i",err);
     return err == PNG_EOK;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -4702,6 +4779,8 @@ void TFT_RGB::draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t
     }
 
     // Nur den veränderten Bereich zeichnen
+    xSemaphoreTake(m_vsync_semaphore, 0.3 * configTICK_RATE_HZ);
     esp_lcd_panel_draw_bitmap(m_panel, x, y, x + w, y + h, &m_framebuffer[0][y * m_h_res + x]);
+    xSemaphoreGive(m_vsync_semaphore);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

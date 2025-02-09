@@ -2635,6 +2635,7 @@ void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
     vTaskDelay(1);
+    tft.loop();
     audio.loop();
     webSrv.loop();
     ir.loop();
