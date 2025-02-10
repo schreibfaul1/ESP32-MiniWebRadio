@@ -10,10 +10,10 @@ SPIClass*   SPItransfer;
 
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-TFT_SPI::TFT_SPI(SPIClass &spi, int csPin){
+TFT_SPI::TFT_SPI(SPIClass& spiInstance, int csPin){
     _freq = 20000000;
     _TFT_CS = csPin;
-    spi_TFT = &spi;
+    spi_TFT = &spiInstance;
     pinMode(csPin, OUTPUT);
     digitalWrite(csPin, HIGH);
 }

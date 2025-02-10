@@ -214,14 +214,14 @@ TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
 
 #if CONFIG_IDF_TARGET_ESP32
-    SPIClass SPI1(VSPI);
+    SPIClass spiBus(VSPI);
 #else  // TARGET ESP32-S3
-    SPIClass SPI1(FSPI);
+    SPIClass spiBus(FSPI);
 #endif
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
-TFT_SPI     tft(SPI1, TFT_CS);
-TP_XPT2046  tp(SPI1, TP_CS);
+TFT_SPI     tft(spiBus, TFT_CS);
+TP_XPT2046  tp(spiBus, TP_CS);
 #else
 TFT_RGB     tft;
 TP_GT911    tp(&i2cBusOne);
@@ -1459,7 +1459,7 @@ void setup() {
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if TFT_CONTROLLER < 7
-    SPI1.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
+    spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
     tft.setTFTcontroller(TFT_CONTROLLER);
     tft.setDiaplayInversion(DISPLAY_INVERSION);
     tft.begin(TFT_DC); // Init TFT interface
