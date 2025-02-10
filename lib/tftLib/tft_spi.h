@@ -301,7 +301,7 @@ class TFT_SPI {
     enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
     uint8_t     _TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
-    SPIClass&   spi_TFT; // use in class TP
+    SPIClass*   spi_TFT; // use in class TP
     uint16_t    m_h_res = 0;
     uint16_t    m_v_res = 0;
     uint16_t*   m_framebuffer[3];

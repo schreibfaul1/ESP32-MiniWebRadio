@@ -10,9 +10,12 @@
 
 
 // Code für Touchpad mit XPT2046
-TP_XPT2046::TP_XPT2046(SPIClass &spi, int csPin) : spi_TP(spi){
+TP_XPT2046::TP_XPT2046(SPIClass &spi, int csPin){
     _TP_CS = csPin;
     _rotation = 0;
+    spi_TP = &spi;
+    pinMode(_TP_CS, OUTPUT);
+    digitalWrite(_TP_CS, HIGH);
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TP_XPT2046::begin(uint8_t IRQ){
@@ -28,12 +31,12 @@ void TP_XPT2046::begin(uint8_t IRQ){
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TP_XPT2046::TP_Send(uint8_t set_val) {
     uint16_t get_val;
-    spi_TP.beginTransaction(TP_SPI); // Prevent other SPI users
+    spi_TP->beginTransaction(TP_SPI); // Prevent other SPI users
     digitalWrite(_TP_CS, 0);
-    spi_TP.write(set_val);
-    get_val = spi_TP.transfer16(0);
+    spi_TP->write(set_val);
+    get_val = spi_TP->transfer16(0);
     digitalWrite(_TP_CS, 1);
-    spi_TP.endTransaction(); // Allow other SPI users
+    spi_TP->endTransaction(); // Allow other SPI users
     return get_val >> 4;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

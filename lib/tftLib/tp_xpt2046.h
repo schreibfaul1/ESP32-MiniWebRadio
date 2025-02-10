@@ -37,7 +37,7 @@ class TP_XPT2046{
     const uint16_t ST7796_WIDTH   = 320;
     const uint16_t ST7796_HEIGHT  = 480;
 
-    SPIClass    &spi_TP; // use in class TP_XPT2046
+    SPIClass* spi_TP; // use in class TP_XPT2046
   public:
     TP_XPT2046(SPIClass &spi, int csPin);
     void     begin(uint8_t IRQ);
