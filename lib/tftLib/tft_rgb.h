@@ -231,7 +231,8 @@ class TFT_RGB {
   private:
     File gif_file;
 
-    void     writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+    bool     panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap);
+    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
     uint16_t validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
@@ -719,7 +720,7 @@ class TFT_RGB {
     void          png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src);
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
-    void          draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+    void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 
 
 };

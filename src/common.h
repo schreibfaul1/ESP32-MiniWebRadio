@@ -7,7 +7,7 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          7                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7) Elecrow, (8) Sunton, (9) Waveshare
+#define TFT_CONTROLLER          8                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7) Elecrow, (8) Sunton, (9) Waveshare
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
@@ -161,10 +161,10 @@
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 5500000,
+        .pixel_clock_hz = 16000000,
         .hsync_pulse_width = 4,
-        .hsync_back_porch = 254,
-        .hsync_front_porch = 254,
+        .hsync_back_porch =  8,
+        .hsync_front_porch = 8,
         .vsync_pulse_width = 4,
         .vsync_back_porch = 8,
         .vsync_front_porch = 8
@@ -184,7 +184,7 @@
     #define I2S_DOUT           17
     #define I2S_BCLK           42
     #define I2S_LRC            18
-    #define I2S_MCLK            0
+    #define I2S_MCLK           -1  // important!
 
     #define IR_PIN             -1  // IR Receiver (if available)
     #define BT_EMITTER_RX      -1  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
@@ -209,7 +209,7 @@
         .b0 = 15,
         .b1 = 7,
         .b2 = 6,
-        .b3 = 6,
+        .b3 = 5,
         .b4 = 4,
         .g0 = 9,
         .g1 = 46,
@@ -232,13 +232,13 @@
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 12000000,
-        .hsync_pulse_width = 2,
-        .hsync_back_porch = 43,
-        .hsync_front_porch = 8,
-        .vsync_pulse_width = 22,
-        .vsync_back_porch = 12,
-        .vsync_front_porch = 8
+        .pixel_clock_hz = 16000000,
+        .hsync_pulse_width = 18,
+        .hsync_back_porch = 80,
+        .hsync_front_porch = 30,
+        .vsync_pulse_width = 13,
+        .vsync_back_porch = 110,
+        .vsync_front_porch = 12
     };
 
     #define TP_SDA 19
@@ -255,7 +255,7 @@
     #define I2S_DOUT            17
     #define I2S_BCLK            0
     #define I2S_LRC             18
-    #define I2S_MCLK            0
+    #define I2S_MCLK           -1  // important!
 
     #define IR_PIN             -1  // IR Receiver (if available)
     #define BT_EMITTER_RX      -1  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
@@ -311,20 +311,43 @@
         .hsync_front_porch = 8,
         .vsync_pulse_width = 4,
         .vsync_back_porch = 2,
-        .vsync_front_porch = 8
+        .vsync_front_porch = 18
     };
 
-    #define PIN_NUM_TP_SDA 8
-    #define PIN_NUM_TP_SCL 9
-    #define PIN_NUM_TP_IRQ -1
-
+    #define TP_SDA 8
+    #define TP_SCL 9
+    #define TP_IRQ -1
 
     #define SD_MMC_CMD         11
     #define SD_MMC_CLK         12
     #define SD_MMC_D0          13
 
-#define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-Frequenz
-#define GT911_I2C_ADDRESS 0x14 // I2C-Adresse des GT911
+    #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-Frequenz
+    #define GT911_I2C_ADDRESS 0x14 // I2C-Adresse des GT911
+
+    #define I2S_DOUT            6
+    #define I2S_BCLK           15
+    #define I2S_LRC            16
+    #define I2S_MCLK           -1  // important!
+
+    #define IR_PIN             -1  // IR Receiver (if available)
+    #define BT_EMITTER_RX      -1  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_TX      -1  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_LINK    -1  // high if connected                     (-1 if not available)
+    #define BT_EMITTER_MODE    -1  // high transmit - low receive           (-1 if not available)
+    #define BT_EMITTER_CONNECT -1  // -1 if not used
+
+    #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
+    #define I2C_DAC_SCL        -1
+    #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
+    #define HP_DETECT          -1
+    #define AMP_ENABLED        -1
+    #define TFT_BL             -1
+
+    #define I2C_SDA            -1  // I2C, dala line for capacitive touchpad
+    #define I2C_SCL            -1  // I2C, clock line for capacitive touchpad
+
+
 #endif // Waveshare
 #endif
 

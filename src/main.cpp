@@ -257,7 +257,7 @@ SemaphoreHandle_t mutex_display;
 //  +-------------------------------------------+ 240
 //                                             320
 
-const uint8_t _fonts[10] = { 15, 16, 21, 25, 27, 34, 38, 43, 81, 156};
+const uint8_t _fonts[10] = { 15, 16, 21, 25, 27, 34, 38, 43, 56, 156};
 
 
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;} const _winHeader;
@@ -298,7 +298,7 @@ uint8_t  _irNumber_y  = 40;
 // clang-format on
 #endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
 
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6  || TFT_CONTROLLER > 6 // ⏹⏹⏹⏹⏫
+#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6 // ⏹⏹⏹⏹⏫
 // clang-format off
 //
 //  Display 480x320
@@ -350,6 +350,65 @@ uint8_t  _alarmdays_w = 64 + 4;
 uint8_t  _alarmdays_h = 56;
 uint16_t _dispWidth   = 480;
 uint16_t _dispHeight  = 320;
+uint8_t  _tftSize     = 1;
+uint8_t  _irNumber_x  = 100;
+uint8_t  _irNumber_y  = 80;
+//
+// clang-format on
+#endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
+
+#if TFT_CONTROLLER >= 7 // ⏹⏹⏹⏹⏫
+// clang-format off
+//
+//  Display 800x480
+//  +-------------------------------------------+ _yHeader=0
+//  | Header                                    |       _winHeader=48px
+//  +-------------------------------------------+ _yName=48
+//  |                                           |
+//  | Logo                   StationName        |       _winFName=192px
+//  |                                           |
+//  +-------------------------------------------+ _yTitle=240
+//  |                                           |
+//  |              StreamTitle                  |       _winTitle=192px
+//  |                                           |
+//  +-------------------------------------------+ _yFooter=432
+//  | Footer                                    |       _winFooter=48px
+//  +-------------------------------------------+ 480
+//                                             800
+
+const uint8_t _fonts[10] = {21, 25, 27, 34, 38, 43, 56, 66, 81, 156};
+
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  48;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 192; uint16_t h = 192;} const _winLogo;
+struct w_n  {uint16_t x = 192; uint16_t y =  48; uint16_t w = 608; uint16_t h = 192;} const _winName;     // station nane
+struct w_e  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 800; uint16_t h = 192;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr; //todo
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;} const _winVolBox;   // volumeBox
+struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14;} const _winProgbar;  // progressbar
+struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 192;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 448; uint16_t h = 192;} const _winSTitle;   // streamTitle, space for VUmeter
+struct w_g  {uint16_t x = 448; uint16_t y = 240; uint16_t w =  32; uint16_t h = 192;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 432; uint16_t w = 800; uint16_t h =  48;} const _winFooter;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  48;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  48;} const _winSleep;
+struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 800; uint16_t h =  40;} const _sdrOvBtns;   // slider over buttons, max width
+struct w_o  {uint16_t x =   0; uint16_t y = 352; uint16_t w =  80; uint16_t h =  80;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 160;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 800; uint16_t h = 200;} const _winAlarm;
+struct w_w  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 800; uint16_t h = 432;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;} const _sdrHP;        // slider highpass in equalizer
+struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;} const _sdrBAL;       // slider balance in equalizer
+
+uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
+uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
+uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
+uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
+uint8_t  _alarmdays_w = 64 + 4;
+uint8_t  _alarmdays_h = 56;
+uint16_t _dispWidth   = 800;
+uint16_t _dispHeight  = 480;
 uint8_t  _tftSize     = 1;
 uint8_t  _irNumber_x  = 100;
 uint8_t  _irNumber_y  = 80;
@@ -1453,8 +1512,9 @@ void setup() {
 
     _cur_AudioFolder = strdup("/audiofiles/");
 
-    if(TFT_CONTROLLER < 2) strcpy(_prefix, "s/");
-    else                   strcpy(_prefix, "m/");
+    if(TFT_CONTROLLER < 2)      strcpy(_prefix, "s/");
+    else if(TFT_CONTROLLER < 7) strcpy(_prefix, "m/");
+    else                        strcpy(_prefix, "l/");
 
     pref.begin("Pref", false);         // instance of preferences from AccessPoint (SSID, PW ...)
 
