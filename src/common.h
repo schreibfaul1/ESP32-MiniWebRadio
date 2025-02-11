@@ -232,12 +232,12 @@
     const TFT_RGB::Timing RGB_TIMING = {
         .h_res = 800,
         .v_res = 480,
-        .pixel_clock_hz = 16000000,
+        .pixel_clock_hz = 10000000,
         .hsync_pulse_width = 18,
-        .hsync_back_porch = 80,
-        .hsync_front_porch = 30,
+        .hsync_back_porch = 18,
+        .hsync_front_porch = 6,
         .vsync_pulse_width = 13,
-        .vsync_back_porch = 110,
+        .vsync_back_porch = 11,
         .vsync_front_porch = 12
     };
 
@@ -4528,8 +4528,9 @@ private:
     uint16_t    m_staNr_x = 25, m_staNr_w = 32;
     uint16_t    m_flag_x = 57;
     uint16_t    m_flag_w = 40;
-    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_flag_h = 20;
     uint16_t    m_offTimerSymbol_x = 100;
+    uint16_t    m_offTimerSymbol_offset_y = 0;
     uint16_t    m_offTimerSymbol_w = 20;
     uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
@@ -4539,23 +4540,25 @@ private:
     uint16_t    m_staNr_x = 30, m_staNr_w = 50;
     uint16_t    m_flag_x = 80;
     uint16_t    m_flag_w = 48;
-    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_flag_h = 24;
     uint16_t    m_offTimerSymbol_x = 132;
+    uint16_t    m_offTimerSymbol_offset_y = 0;
     uint16_t    m_offTimerSymbol_w = 24;
     uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
     uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
 #else // 800 x 480px
     uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 50, m_staNr_w = 64;
-    uint16_t    m_flag_x = 100;
-    uint16_t    m_flag_w = 64;
-    uint16_t    m_flag_h = 0; // will be calculated
-    uint16_t    m_offTimerSymbol_x = 170;
+    uint16_t    m_staNr_x = 55, m_staNr_w = 70;
+    uint16_t    m_flag_x = 125;
+    uint16_t    m_flag_w = 80;
+    uint16_t    m_flag_h = 40;
+    uint16_t    m_offTimerSymbol_x = 225;
+    uint16_t    m_offTimerSymbol_offset_y = 2;
     uint16_t    m_offTimerSymbol_w = 40;
-    uint16_t    m_offTimerNr_x = 200, m_offTimerNr_w = 72;
-    uint16_t    m_bitRate_x = 272, m_bitRate_w = 88;
-    uint16_t    m_ipAddr_x = 360, m_ipAddr_w = 240;
+    uint16_t    m_offTimerNr_x = 265, m_offTimerNr_w = 75;
+    uint16_t    m_bitRate_x = 340, m_bitRate_w = 110;
+    uint16_t    m_ipAddr_x = 450, m_ipAddr_w = 350;
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4574,7 +4577,6 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-        m_flag_h = m_h;
     }
     const char* getName(){
         return m_name;
@@ -4586,7 +4588,9 @@ public:
         m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
         drawImage(m_stationSymbol, m_antennaSymbol_x, m_y);
+        xSemaphoreGive(mutex_display);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -4630,12 +4634,12 @@ public:
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_flag_x, m_y, m_flag_w, m_h);
+            tft.copyFramebuffer(1, 0, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h);
         }
         else{
-            tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
+            tft.fillRect(m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h, m_bgColor);
         }
-        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y, m_flag_w, m_h);
+        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
         xSemaphoreGive(mutex_display);
     }
     void updateOffTime(uint16_t offTime){
@@ -4650,11 +4654,11 @@ public:
             if(m_backgroundTransparency){
                 tft.copyFramebuffer(1, 0, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
             }
-            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y);
+            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
         }
         else{
             tft.setTextColor(TFT_DEEPSKYBLUE);
-            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y);
+            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
         }
         if(m_backgroundTransparency){
             tft.copyFramebuffer(1, 0, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
@@ -4679,7 +4683,7 @@ public:
         }
         else{
             uint16_t x0   = m_bitRate_x;
-            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter));
+            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter)) - 1;
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if(m_backgroundTransparency){
