@@ -378,20 +378,20 @@ uint8_t  _irNumber_y  = 80;
 
 const uint8_t _fonts[10] = {21, 25, 27, 34, 38, 43, 56, 66, 81, 156};
 
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  48;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 192; uint16_t h = 192;} const _winLogo;
-struct w_n  {uint16_t x = 192; uint16_t y =  48; uint16_t w = 608; uint16_t h = 192;} const _winName;     // station nane
-struct w_e  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 800; uint16_t h = 192;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr; //todo
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;} const _winVolBox;   // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14;} const _winProgbar;  // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 192;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 448; uint16_t h = 192;} const _winSTitle;   // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 448; uint16_t y = 240; uint16_t w =  32; uint16_t h = 192;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 432; uint16_t w = 800; uint16_t h =  48;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  48;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  48;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 800; uint16_t h =  40;} const _sdrOvBtns;   // slider over buttons, max width
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 190; uint16_t h = 190;} const _winLogo;
+struct w_n  {uint16_t x = 192; uint16_t y =  48; uint16_t w = 608; uint16_t h = 190;} const _winName;      // station nane
+struct w_e  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 800; uint16_t h = 190;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;} const _winFileNr;    //todo
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;} const _winVolBox;    // volumeBox
+struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14;} const _winProgbar;   // progressbar
+struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 760; uint16_t h = 190;} const _winSTitle;    // streamTitle, space for VUmeter
+struct w_g  {uint16_t x = 760; uint16_t y = 240; uint16_t w =  32; uint16_t h = 190;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50;} const _winFooter;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50;} const _winSleep;
+struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 800; uint16_t h =  40;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 352; uint16_t w =  80; uint16_t h =  80;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 160;} const _winDigits;
 struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 800; uint16_t h = 200;} const _winAlarm;
@@ -417,8 +417,8 @@ uint8_t  _irNumber_y  = 80;
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader", _fonts[1]);
-displayFooter dispFooter("dispFooter", _fonts[1]);
+displayHeader dispHeader("dispHeader", _fonts[4]);
+displayFooter dispFooter("dispFooter", _fonts[4]);
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO

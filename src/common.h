@@ -4290,7 +4290,7 @@ private:
     uint8_t     m_time_ch_w = 9;
     uint16_t    m_rssiSymbol_x = 225;
     uint16_t    m_rssiSymbol_w = 27;
-#else // 480 x 320px
+#elseif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 240;
     uint16_t    m_speaker_x = 240;
@@ -4303,6 +4303,19 @@ private:
     uint16_t    m_rssiSymbol_w = 39;
     uint16_t    m_time_x = 380;
     uint16_t    m_time_w = 100;
+#else // 800 x 480px
+    uint16_t    m_item_x = 0;
+    uint16_t    m_item_w = 400;
+    uint16_t    m_speaker_x = 400;
+    uint16_t    m_speaker_w = 60;
+    uint16_t    m_volume_x = 470;
+    uint16_t    m_volume_w = 60;
+    uint8_t     m_time_pos[8] = {10, 30, 50, 60, 80, 100, 110, 130}; // display 800x480
+    uint8_t     m_time_ch_w = 20;
+    uint16_t    m_rssiSymbol_x = 560;
+    uint16_t    m_rssiSymbol_w = 80;
+    uint16_t    m_time_x = 640;
+    uint16_t    m_time_w = 160;
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -4521,7 +4534,7 @@ private:
     uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
     uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
-#else // 480 x 320px
+#elseif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_antennaSymbol_x = 0;
     uint16_t    m_staNr_x = 30, m_staNr_w = 50;
     uint16_t    m_flag_x = 80;
@@ -4532,6 +4545,17 @@ private:
     uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
     uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
+#else // 800 x 480px
+    uint16_t    m_antennaSymbol_x = 0;
+    uint16_t    m_staNr_x = 50, m_staNr_w = 64;
+    uint16_t    m_flag_x = 100;
+    uint16_t    m_flag_w = 64;
+    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_offTimerSymbol_x = 170;
+    uint16_t    m_offTimerSymbol_w = 40;
+    uint16_t    m_offTimerNr_x = 200, m_offTimerNr_w = 72;
+    uint16_t    m_bitRate_x = 272, m_bitRate_w = 88;
+    uint16_t    m_ipAddr_x = 360, m_ipAddr_w = 240;
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){

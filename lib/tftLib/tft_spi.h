@@ -319,7 +319,7 @@ class TFT_SPI {
         uint16_t                           base_line;
         uint16_t*                          lookup_table;
     } fonts_t;
-    fonts_t _current_font;
+    fonts_t m_current_font;
     uint8_t _font;
 
     const uint16_t ILI9341_WIDTH = 240;
