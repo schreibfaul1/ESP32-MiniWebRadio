@@ -2126,7 +2126,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setFont(0); // 0 -> auto
     txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_RA_staName.setFont(0); // 0 -> auto
-    txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_fonts[8]);
+    txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_fonts[9]);
     pic_RA_logo.begin(          _winLogo.x,   _winLogo.y);
     VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
