@@ -376,7 +376,7 @@ uint8_t  _irNumber_y  = 80;
 //  +-------------------------------------------+ 480
 //                                             800
 
-const uint8_t _fonts[10] = {21, 25, 27, 34, 38, 43, 56, 66, 81, 156};
+const uint8_t _fonts[10] = {21, 25, 34, 38, 43, 56, 66, 81, 96, 156};
 //----------------------------------------------------------------------------------------padding-left-right-top-bottom
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
 struct w_l  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 190; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
@@ -417,8 +417,8 @@ uint8_t  _irNumber_y  = 80;
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader", _fonts[4]);
-displayFooter dispFooter("dispFooter", _fonts[4]);
+displayHeader dispHeader("dispHeader", _fonts[3]);
+displayFooter dispFooter("dispFooter", _fonts[3]);
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
