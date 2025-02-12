@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Feb 11 2025
+// updated on Feb 12 2025
 
 
 #include "Arduino.h"
@@ -670,6 +670,17 @@ void TFT_RGB::setFont(uint16_t font) {
             m_current_font.base_line = cmaps_Times81->base_line;
             m_current_font.lookup_table = cmaps_Times81->lookup_table;
             break;
+        case 96:
+            m_current_font.cmaps = cmaps_Times96;
+            m_current_font.glyph_bitmap = glyph_bitmap_Times96;
+            m_current_font.glyph_dsc = glyph_dsc_Times96;
+            m_current_font.range_start = cmaps_Times96->range_start;
+            m_current_font.range_length = cmaps_Times96->range_length;
+            m_current_font.line_height = cmaps_Times96->line_height;
+            m_current_font.font_height = cmaps_Times96->font_height;
+            m_current_font.base_line = cmaps_Times96->base_line;
+            m_current_font.lookup_table = cmaps_Times96->lookup_table;
+            break;
         case 156:
             m_current_font.cmaps = cmaps_BigNumbers;
             m_current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -819,6 +830,17 @@ void TFT_RGB::setFont(uint16_t font) {
             m_current_font.base_line = cmaps_Garamond81->base_line;
             m_current_font.lookup_table = cmaps_Garamond81->lookup_table;
             break;
+        case 96:
+            m_current_font.cmaps = cmaps_Garamond96;
+            m_current_font.glyph_bitmap = glyph_bitmap_Garamond96;
+            m_current_font.glyph_dsc = glyph_dsc_Garamond96;
+            m_current_font.range_start = cmaps_Garamond96->range_start;
+            m_current_font.range_length = cmaps_Garamond96->range_length;
+            m_current_font.line_height = cmaps_Garamond96->line_height;
+            m_current_font.font_height = cmaps_Garamond96->font_height;
+            m_current_font.base_line = cmaps_Garamond96->base_line;
+            m_current_font.lookup_table = cmaps_Garamond96->lookup_table;
+            break;
         case 156:
             m_current_font.cmaps = cmaps_BigNumbers;
             m_current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -967,6 +989,17 @@ void TFT_RGB::setFont(uint16_t font) {
             m_current_font.font_height = cmaps_FreeSerifItalic81->font_height;
             m_current_font.base_line = cmaps_FreeSerifItalic81->base_line;
             m_current_font.lookup_table = cmaps_FreeSerifItalic81->lookup_table;
+            break;
+        case 96:
+            m_current_font.cmaps = cmaps_FreeSerifItalic96;
+            m_current_font.glyph_bitmap = glyph_bitmap_FreeSerifItalic96;
+            m_current_font.glyph_dsc = glyph_dsc_FreeSerifItalic96;
+            m_current_font.range_start = cmaps_FreeSerifItalic96->range_start;
+            m_current_font.range_length = cmaps_FreeSerifItalic96->range_length;
+            m_current_font.line_height = cmaps_FreeSerifItalic96->line_height;
+            m_current_font.font_height = cmaps_FreeSerifItalic96->font_height;
+            m_current_font.base_line = cmaps_FreeSerifItalic96->base_line;
+            m_current_font.lookup_table = cmaps_FreeSerifItalic96->lookup_table;
             break;
         case 156:
             m_current_font.cmaps = cmaps_BigNumbers;
@@ -1118,6 +1151,17 @@ void TFT_RGB::setFont(uint16_t font) {
             m_current_font.base_line = cmaps_Arial81->base_line;
             m_current_font.lookup_table = cmaps_Arial81->lookup_table;
             break;
+        case 96:
+            m_current_font.cmaps = cmaps_Arial96;
+            m_current_font.glyph_bitmap = glyph_bitmap_Arial96;
+            m_current_font.glyph_dsc = glyph_dsc_Arial96;
+            m_current_font.range_start = cmaps_Arial96->range_start;
+            m_current_font.range_length = cmaps_Arial96->range_length;
+            m_current_font.line_height = cmaps_Arial96->line_height;
+            m_current_font.font_height = cmaps_Arial96->font_height;
+            m_current_font.base_line = cmaps_Arial96->base_line;
+            m_current_font.lookup_table = cmaps_Arial96->lookup_table;
+            break;
         case 156:
             m_current_font.cmaps = cmaps_BigNumbers;
             m_current_font.glyph_bitmap = glyph_bitmap_BiGNumbers;
@@ -1266,6 +1310,17 @@ void TFT_RGB::setFont(uint16_t font) {
             m_current_font.font_height = cmaps_Z003_81->font_height;
             m_current_font.base_line = cmaps_Z003_81->base_line;
             m_current_font.lookup_table = cmaps_Z003_81->lookup_table;
+            break;
+        case 96:
+            m_current_font.cmaps = cmaps_Z003_96;
+            m_current_font.glyph_bitmap = glyph_bitmap_Z003_96;
+            m_current_font.glyph_dsc = glyph_dsc_Z003_96;
+            m_current_font.range_start = cmaps_Z003_96->range_start;
+            m_current_font.range_length = cmaps_Z003_96->range_length;
+            m_current_font.line_height = cmaps_Z003_96->line_height;
+            m_current_font.font_height = cmaps_Z003_96->font_height;
+            m_current_font.base_line = cmaps_Z003_96->base_line;
+            m_current_font.lookup_table = cmaps_Z003_96->lookup_table;
             break;
         case 156:
             m_current_font.cmaps = cmaps_BigNumbers;
@@ -2562,7 +2617,7 @@ bool TFT_RGB::drawJpgFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, 
     m_jpgSdFile = fs.open(path, FILE_READ);
     if(!m_jpgSdFile) {log_e("Failed to open file for reading"); JPEG_setJpgScale(1); return false;}
     JPEG_getSdJpgSize(&m_jpgWidth, &m_jpgHeight);
-    int res = JPEG_drawSdJpg(x, y);
+    int res = JPEG_drawSdJpg(x, y); (void) res;
     // log_w("path %s, res %i, x %i, y %i, m_jpgWidth %i, m_jpgHeight %i", path, res, x, y, m_jpgWidth, m_jpgHeight);
     m_jpgSdFile.close();
     panelDrawBitmap(x, y, x + m_jpgWidth, y + m_jpgHeight, m_framebuffer[0]);
