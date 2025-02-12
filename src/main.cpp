@@ -378,28 +378,28 @@ uint8_t  _irNumber_y  = 80;
 
 const uint8_t _fonts[10] = {21, 25, 34, 38, 43, 56, 66, 81, 96, 156};
 //----------------------------------------------------------------------------------------padding-left-right-top-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 190; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
-struct w_n  {uint16_t x = 192; uint16_t y =  48; uint16_t w = 608; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station nane
-struct w_e  {uint16_t x =   0; uint16_t y =  48; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    //todo
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 6; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 5; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl = 5; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 160; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 800; uint16_t h = 200; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
-struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 190; uint16_t h = 190; uint8_t pl =  4; uint8_t pr = 4; uint8_t pt = 4; uint8_t pb = 4;} const _winLogo;
+struct w_n  {uint16_t x = 190; uint16_t y =  50; uint16_t w = 610; uint16_t h = 190; uint8_t pl = 15; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station nane
+struct w_e  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 190; uint8_t pl =  5; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    //todo
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
+struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
+struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 15; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 10; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
+struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
+struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
+struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 160; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 800; uint16_t h = 200; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
+struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
 uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
@@ -2191,9 +2191,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setFont(0); // 0 -> auto
-    txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_RA_staName.setFont(0); // 0 -> auto
+    txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pl);   txt_RA_staName.setFont(0); // 0 -> auto
     txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_fonts[8]);
-    pic_RA_logo.begin(          _winLogo.x,   _winLogo.y);
+    pic_RA_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.pl,  _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
     VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0], &_cur_station);
@@ -2249,7 +2249,7 @@ void placingGraphicObjects() { // and initialize them
 
     txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
     txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h); txt_PL_fNumber.setFont(_fonts[3]);
-    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y, true);
+    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
     pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
@@ -2279,9 +2279,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_DL_volume.setValue(_cur_volume);
-    txt_DL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
-    pic_DL_logo.begin(          _winLogo.x,   _winLogo.y);
-    pgb_DL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_DL_progress.setValue(0);
+    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,    _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
+    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _fonts[0]);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2344,13 +2344,13 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y);
+    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(   2 * _winButton.w, _winButton.y + 5,  4 * _winButton.w, _sdrOvBtns.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 5, 100, true); sdr_BR_value.setValue(_brightness);
     btn_BR_ready.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
                                                                                          btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    pic_BR_logo.begin(    0,  _winName.y) ;                                              pic_BR_logo.setPicturePath("/common/Brightness.jpg");
+    pic_BR_logo.begin(    0,  _winName.y, _winName.pl, _winName.pr, _winName.pt, _winName.pb, true); pic_BR_logo.setPicturePath("/common/Brightness.jpg");
     txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h,  _sdrLP.pl,  _sdrLP.pr,  _sdrLP.pt,  _sdrLP.pb, -40,  6, true); sdr_EQ_lowPass.setValue(_toneLP);
@@ -2405,7 +2405,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
                                                                                          btn_BT_power.setValue(_f_BTpower);
                                                                                          pic_BT_mode.setPicturePath("/common/BTnc.png");
-    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y);                                 pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
+    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y,   _winLogo.pl,  _winLogo.pr, _winLogo.pt, _winLogo.pb, true); pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
     txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h);   txt_BT_volume.setFont(_fonts[2]);
     txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

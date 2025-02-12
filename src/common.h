@@ -233,12 +233,12 @@
         .h_res = 800,
         .v_res = 480,
         .pixel_clock_hz = 10000000,
-        .hsync_pulse_width = 18,
-        .hsync_back_porch = 18,
-        .hsync_front_porch = 6,
+        .hsync_pulse_width = 30,
+        .hsync_back_porch = 16,
+        .hsync_front_porch = 210,
         .vsync_pulse_width = 13,
-        .vsync_back_porch = 11,
-        .vsync_front_porch = 12
+        .vsync_back_porch = 10,
+        .vsync_front_porch = 22
     };
 
     #define TP_SDA 19
@@ -2308,6 +2308,10 @@ private:
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
+    uint8_t     m_padding_left = 0; // left margin
+    uint8_t     m_paddig_right = 0; // right margin
+    uint8_t     m_paddig_top = 0; // top margin
+    uint8_t     m_paddig_bottom = 0; // bottom margin
     uint32_t    m_bgColor = 0;
     char*       m_PicturePath = NULL;
     char*       m_altPicturePath = NULL;
@@ -2330,9 +2334,13 @@ public:
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y, bool backgroundTransparency = false){
+    void begin(uint16_t x, uint16_t y,  uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, bool backgroundTransparency = false){
         m_x = x; // x pos
         m_y = y; // y pos
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
         m_enabled = false;
         m_backgroundTransparency = backgroundTransparency;
     }
@@ -2344,15 +2352,20 @@ public:
     }
     bool show(bool saveBackground = false){
         m_saveBackground = saveBackground;
+        int x = m_x + m_padding_left;
+        int y = m_y + m_paddig_top;
+        int w = m_w - (m_paddig_right + m_padding_left);
+        int h = m_h - (m_paddig_bottom + m_paddig_top);
         if(!GetImageSize(m_PicturePath)){
             GetImageSize(m_altPicturePath);
+
             if(m_saveBackground){
                 tft.copyFramebuffer(1, 2, m_x, m_y, m_w, m_h);
             }
             if(m_backgroundTransparency){
                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             }
-            m_enabled = drawImage(m_altPicturePath, m_x, m_y);
+            m_enabled = drawImage(m_altPicturePath, x, y, w, h);
             if(m_saveBackground){
                 tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
             }
@@ -2365,7 +2378,7 @@ public:
             if(m_backgroundTransparency){
                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             }
-            m_enabled = drawImage(m_PicturePath, m_x, m_y);
+            m_enabled = drawImage(m_PicturePath, x, y, w, h);
             if(m_saveBackground){
                 tft.copyFramebuffer(0, 1, m_x, m_y, m_w, m_h);
             }

@@ -58,8 +58,8 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
     panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
     panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
-    panel_config.timings.flags.hsync_idle_low = false;
-    panel_config.timings.flags.vsync_idle_low = false;
+    panel_config.timings.flags.hsync_idle_low = true;
+    panel_config.timings.flags.vsync_idle_low = true;
     panel_config.timings.flags.de_idle_high = false;
     panel_config.timings.flags.pclk_active_neg = true;
     panel_config.timings.flags.pclk_idle_high = false;
