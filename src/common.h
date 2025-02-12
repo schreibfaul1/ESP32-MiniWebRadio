@@ -1,3 +1,4 @@
+
 // created: 10.Feb.2022
 // updated: 07.Feb 2025
 
@@ -96,6 +97,7 @@
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP32S3
+#if TFT_CONTROLLER < 7
     // Digital I/O used
         #define TFT_CS              8
         #define TFT_DC             12
@@ -564,22 +566,38 @@ inline void hardcopy(){
         0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
+    const uint8_t bmp800x600[70] = {
+        0x42, 0x4D, 0x46, 0x6C, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x20, 0x03, 0x00, 0x00, 0x58, 0x02,
+        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    };
+
+
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
     if(TFT_CONTROLLER < 2){
         hc.write(bmp320x240, sizeof(bmp320x240));
         uint16_t buff[320];
         for(int i = 240; i > 0; i--){
-            tft.readRect(0, i - 1, 320, buff);
+            tft.readRect(0, i - 1, 320, 1, buff);
             hc.write((uint8_t*)buff, 320 * 2);
         }
         hc.close();
     }
-    else{
+    else if(TFT_CONTROLLER < 7){
         hc.write(bmp480x320, sizeof(bmp480x320));
         uint16_t buff[480];
         for(int i = 320; i > 0; i--){
-            tft.readRect(0, i - 1, 480, buff);
+            tft.readRect(0, i - 1, 480, 1, buff);
             hc.write((uint8_t*)buff, 480 * 2);
+        }
+        hc.close();
+    }
+    else{
+        hc.write(bmp800x600, sizeof(bmp800x600));
+        uint16_t buff[800];
+        for(int i = 600; i > 0; i--){
+            tft.readRect(0, i - 1, 800, 1, buff);
+            hc.write((uint8_t*)buff, 800 * 2);
         }
         hc.close();
     }
@@ -1564,11 +1582,10 @@ private:
     uint8_t         m_fontSize = 0;
     uint8_t         m_h_align = TFT_ALIGN_RIGHT;
     uint8_t         m_v_align = TFT_ALIGN_TOP;
-    uint8_t         m_l_margin = 0; // left margin
-    uint8_t         m_r_margin = 0; // right margin
-    uint8_t         m_t_margin = 0; // top margin
-    uint8_t         m_b_margin = 0; // bottom margin
-    uint8_t         m_d_margin = 0;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
     char*           m_text = NULL;
@@ -1590,15 +1607,15 @@ public:
         x_ps_free(&m_text);
         x_ps_free(&m_name);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left = 0, uint8_t paddig_right = 0, uint8_t paddig_top = 0, uint8_t paddig_bottom = 0){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        m_l_margin = 0;
-        m_r_margin = w / 100;
-        m_t_margin = 0;
-        m_b_margin = h / 50;
+        m_padding_left = paddig_left;
+        m_paddig_right = paddig_right;
+        m_paddig_top = paddig_top;
+        m_paddig_bottom = paddig_bottom;
     }
     const char* getName(){
         return m_name;
@@ -1674,7 +1691,11 @@ public:
         //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
-            tft.writeText(m_text, m_x + m_l_margin, m_y + m_t_margin, m_w - m_r_margin, m_h - m_d_margin, m_h_align, m_v_align, false, false, m_autoSize);
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -4054,7 +4075,7 @@ private:
     uint8_t     m_time_ch_w = 9;
     uint16_t    m_rssiSymbol_x = 225;
     uint16_t    m_rssiSymbol_w = 27;
-#else // 480 x 320px
+#elseif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 240;
     uint16_t    m_speaker_x = 240;
@@ -4067,6 +4088,19 @@ private:
     uint16_t    m_rssiSymbol_w = 39;
     uint16_t    m_time_x = 380;
     uint16_t    m_time_w = 100;
+#else // 800 x 480px
+    uint16_t    m_item_x = 0;
+    uint16_t    m_item_w = 400;
+    uint16_t    m_speaker_x = 400;
+    uint16_t    m_speaker_w = 60;
+    uint16_t    m_volume_x = 470;
+    uint16_t    m_volume_w = 60;
+    uint8_t     m_time_pos[8] = {10, 30, 50, 60, 80, 100, 110, 130}; // display 800x480
+    uint8_t     m_time_ch_w = 20;
+    uint16_t    m_rssiSymbol_x = 560;
+    uint16_t    m_rssiSymbol_w = 80;
+    uint16_t    m_time_x = 640;
+    uint16_t    m_time_w = 160;
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -4279,23 +4313,37 @@ private:
     uint16_t    m_staNr_x = 25, m_staNr_w = 32;
     uint16_t    m_flag_x = 57;
     uint16_t    m_flag_w = 40;
-    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_flag_h = 20;
     uint16_t    m_offTimerSymbol_x = 100;
+    uint16_t    m_offTimerSymbol_offset_y = 0;
     uint16_t    m_offTimerSymbol_w = 20;
     uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
     uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
-#else // 480 x 320px
+#elseif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_antennaSymbol_x = 0;
     uint16_t    m_staNr_x = 30, m_staNr_w = 50;
     uint16_t    m_flag_x = 80;
     uint16_t    m_flag_w = 48;
-    uint16_t    m_flag_h = 0; // will be calculated
+    uint16_t    m_flag_h = 24;
     uint16_t    m_offTimerSymbol_x = 132;
+    uint16_t    m_offTimerSymbol_offset_y = 0;
     uint16_t    m_offTimerSymbol_w = 24;
     uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
     uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
+#else // 800 x 480px
+    uint16_t    m_antennaSymbol_x = 3;
+    uint16_t    m_staNr_x = 58, m_staNr_w = 67;
+    uint16_t    m_flag_x = 125;
+    uint16_t    m_flag_w = 80;
+    uint16_t    m_flag_h = 40;
+    uint16_t    m_offTimerSymbol_x = 225;
+    uint16_t    m_offTimerSymbol_offset_y = 2;
+    uint16_t    m_offTimerSymbol_w = 40;
+    uint16_t    m_offTimerNr_x = 265, m_offTimerNr_w = 75;
+    uint16_t    m_bitRate_x = 340, m_bitRate_w = 110;
+    uint16_t    m_ipAddr_x = 450, m_ipAddr_w = 350;
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4314,7 +4362,6 @@ public:
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-        m_flag_h = m_h;
     }
     const char* getName(){
         return m_name;
@@ -4326,7 +4373,9 @@ public:
         m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
+        xSemaphoreTake(mutex_display, portMAX_DELAY);
         drawImage(m_stationSymbol, m_antennaSymbol_x, m_y);
+        xSemaphoreGive(mutex_display);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -4370,12 +4419,12 @@ public:
         if(!m_enabled) return;
         xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_flag_x, m_y, m_flag_w, m_h);
+            tft.copyFramebuffer(1, 0, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h);
         }
         else{
-            tft.fillRect(m_flag_x, m_y, m_flag_w, m_h, m_bgColor);
+            tft.fillRect(m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h, m_bgColor);
         }
-        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y, m_flag_w, m_h);
+        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
         xSemaphoreGive(mutex_display);
     }
     void updateOffTime(uint16_t offTime){
@@ -4390,11 +4439,11 @@ public:
             if(m_backgroundTransparency){
                 tft.copyFramebuffer(1, 0, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
             }
-            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y);
+            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
         }
         else{
             tft.setTextColor(TFT_DEEPSKYBLUE);
-            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y);
+            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
         }
         if(m_backgroundTransparency){
             tft.copyFramebuffer(1, 0, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
@@ -4419,7 +4468,7 @@ public:
         }
         else{
             uint16_t x0   = m_bitRate_x;
-            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter));
+            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter)) - 1;
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if(m_backgroundTransparency){
