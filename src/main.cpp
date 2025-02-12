@@ -1597,12 +1597,12 @@ void setup() {
     dispFooter.updateStation(_cur_station);
     dispFooter.updateOffTime(_sleeptime);
     dispFooter.show(true);
-
     dispHeader.updateItem(_hl_item[RADIO]);
     dispHeader.updateVolume(_cur_volume);
     dispHeader.show(true);
     _radioSubMenue = 0;
     _state = NONE;
+
     changeState(RADIO);
 
     if( _resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage

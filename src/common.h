@@ -131,6 +131,7 @@
 
         #define I2C_SDA            41  // I2C, dala line for capacitive touchpad
         #define I2C_SCL            42  // I2C, clock line for capacitive touchpad
+#endif // TFT_CONTROLLER < 7
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -4075,7 +4076,7 @@ private:
     uint8_t     m_time_ch_w = 9;
     uint16_t    m_rssiSymbol_x = 225;
     uint16_t    m_rssiSymbol_w = 27;
-#elseif TFT_CONTROLLER < 7 // 480 x 320px
+#elif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 240;
     uint16_t    m_speaker_x = 240;
@@ -4320,7 +4321,7 @@ private:
     uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
     uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
     uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
-#elseif TFT_CONTROLLER < 7 // 480 x 320px
+#elif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_antennaSymbol_x = 0;
     uint16_t    m_staNr_x = 30, m_staNr_w = 50;
     uint16_t    m_flag_x = 80;

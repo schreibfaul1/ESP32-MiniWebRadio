@@ -1,8 +1,7 @@
-// tft_rgb_h
 // first release on 01/2025
-// updated on Feb 08 2025
+// updated on Feb 11 2025
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+
 #pragma once
 
 #include "Arduino.h"
@@ -126,10 +125,9 @@ extern __attribute__((weak)) void tft_info(const char*);
 #define TFT_TURQUOISE       0x471A //  64, 224, 208
 #define TFT_VIOLET          0x801F // 128,   0, 255
 
-
-
-
-#if TFT_FONT == 1
+#if   TFT_FONT == 0
+#define TFT_GARAMOND
+#elif TFT_FONT == 1
 #define TFT_TIMES_NEW_ROMAN
 #elif TFT_FONT == 2
 #define TFT_FREE_SERIF_ITALIC
@@ -179,7 +177,7 @@ class TFT_RGB {
         uint32_t pixel_clock_hz;
         uint8_t  hsync_pulse_width;
         uint8_t  hsync_back_porch;
-        uint16_t  hsync_front_porch;
+        uint16_t hsync_front_porch;
         uint8_t  vsync_pulse_width;
         uint8_t  vsync_back_porch;
         uint8_t  vsync_front_porch;
@@ -187,9 +185,13 @@ class TFT_RGB {
 
     TFT_RGB();
     ~TFT_RGB() { ; }
-    void refresh();
-    void begin(const Pins& newPins, const Timing& newTiming);
-    void setDisplayInversion(bool i);
+  private:
+    static bool     on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata, void *user_ctx);
+    bool            handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata);
+  public:
+    void            loop();
+    void            begin(const Pins& newPins, const Timing& newTiming);
+    void            setDisplayInversion(bool i);
     // Recommended Non-Transaction
     void            drawLine(int16_t Xpos0, int16_t Ypos0, int16_t Xpos1, int16_t Ypos1, uint16_t color);
     void            drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
@@ -212,8 +214,8 @@ class TFT_RGB {
     inline uint16_t getTextColor() { return m_textColor; }
     void            setFont(uint16_t font);
     inline void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; } // 0 h other v
-    size_t          writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false,
-                       bool noWrap = false, bool autoSize = false);
+    size_t          writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
+
   private:
     Pins                   m_pins;
     Timing                 m_timing;
@@ -221,12 +223,15 @@ class TFT_RGB {
     uint16_t               m_h_res = 0;
     uint16_t               m_v_res = 0;
     uint16_t*              m_framebuffer[3];
-    bool                   m_framebuffer_index = 0;
+    SemaphoreHandle_t      m_vsync_semaphore;
+    TaskHandle_t           m_refresh_task_handle = NULL;
+    bool                   m_refresh = false;
 
   private:
     File gif_file;
 
-    void     writeToFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
+    bool     panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap);
+    void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
     uint16_t validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
@@ -245,9 +250,7 @@ class TFT_RGB {
         uint16_t                           base_line;
         uint16_t*                          lookup_table;
     } fonts_t;
-    fonts_t _current_font;
-    uint8_t _font;
-
+    fonts_t m_current_font;
 
     uint16_t m_backGroundColor = TFT_WHITE;
     uint16_t m_textColor = TFT_BLACK;
@@ -714,6 +717,7 @@ class TFT_RGB {
     void          png_rgb24bto16b(png_s_rgb16b* dst, png_s_rgb24b* src);
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
-    void          draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+    void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+
+
 };
-#endif // CONFIG_IDF_TARGET_ESP32S3

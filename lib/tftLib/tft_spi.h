@@ -269,7 +269,7 @@ class TFT_SPI {
     void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
     void     readRect(int32_t x, int32_t y, int32_t w, uint16_t* data);
     void     copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void     readRect(uint16_t* data, int16_t x, int16_t y, int16_t w, int16_t h);
+    void     readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data);
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
@@ -297,6 +297,7 @@ class TFT_SPI {
     int16_t         height(void) const;
     int16_t         width(void) const;
     uint8_t         getRotation(void) const;
+    void            loop();
 
   private:
     enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
