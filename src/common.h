@@ -1539,6 +1539,10 @@ private:
     uint16_t    m_middle_h = 0;
     uint16_t    m_spotPos = 0;
     uint8_t     m_spotRadius = 0;
+    uint8_t     m_padding_left = 0;
+    uint8_t     m_padding_right = 0;
+    uint8_t     m_padding_top = 0;
+    uint8_t     m_padding_bottom = 0;
     char*       m_name = NULL;
     releasedArg m_ra;
 public:
@@ -1555,15 +1559,19 @@ public:
     ~slider(){
         m_objectInit = false;
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal, bool backgroundTransparency = true){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal, bool backgroundTransparency = true){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_padding_left   = paddig_left;
+        m_padding_right  = paddig_right;
+        m_padding_top    = paddig_top;    // unused
+        m_padding_bottom = paddig_bottom; // unused
         m_minVal = minVal;
         m_maxVal = maxVal;
-        m_leftStop = m_x + m_spotRadius + 10; // x pos left stop
-        m_rightStop = m_x + m_w - m_spotRadius - 10; // x pos right stop
+        m_leftStop  = m_x +       m_padding_left +                   m_spotRadius + 10;  // x pos left stop
+        m_rightStop = m_x + m_w - m_padding_left - m_padding_right - m_spotRadius - 10 ; // x pos right stop
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
@@ -1611,7 +1619,12 @@ public:
     }
     void show(){
         m_enabled = true;
-        tft.fillRoundRect(m_x, m_middle_h - (m_railHigh / 2), m_w, m_railHigh, 2, m_railColor);
+        int x = m_x + m_padding_left;
+        int y = m_middle_h - (m_railHigh / 2);
+        int w = m_w - m_padding_left - m_padding_right;
+        int h = m_railHigh;
+        int r = 2;
+        tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
     void disable(){
@@ -1830,9 +1843,9 @@ public:
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        m_padding_left = paddig_left;
-        m_paddig_right = paddig_right;
-        m_paddig_top = paddig_top;
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
         m_paddig_bottom = paddig_bottom;
     }
     const char* getName(){
@@ -4283,8 +4296,9 @@ private:
 #if TFT_CONTROLLER < 2 // 320 x 240px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 140;
-    uint16_t    m_speaker_x =165;
-    uint16_t    m_speaker_w = 26;
+    uint16_t    m_speaker_symbol_x =165;
+    uint16_t    m_speaker_symbol_w = 26;
+    uint8_t     m_speaker_symbol_offset_y = 0;
     uint16_t    m_volume_x = 195;
     uint16_t    m_volume_w = 26;
     uint16_t    m_time_x = 260;
@@ -4296,8 +4310,9 @@ private:
 #elif TFT_CONTROLLER < 7 // 480 x 320px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 240;
-    uint16_t    m_speaker_x = 240;
-    uint16_t    m_speaker_w = 38;
+    uint16_t    m_speaker_symbol_x = 240;
+    uint16_t    m_speaker_symbol_w = 38;
+    uint8_t     m_speaker_symbol_offset_y = 0;
     uint16_t    m_volume_x = 285;
     uint16_t    m_volume_w = 40;
     uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
@@ -4309,8 +4324,9 @@ private:
 #else // 800 x 480px
     uint16_t    m_item_x = 0;
     uint16_t    m_item_w = 400;
-    uint16_t    m_speaker_x = 400;
-    uint16_t    m_speaker_w = 60;
+    uint16_t    m_speaker_symbol_x = 400;
+    uint16_t    m_speaker_symbol_w = 60;
+    uint8_t     m_speaker_symbol_offset_y = 2;
     uint16_t    m_volume_x = 470;
     uint16_t    m_volume_w = 60;
     uint8_t     m_time_pos[8] = {10, 30, 50, 60, 80, 100, 110, 130}; // display 800x480
@@ -4394,9 +4410,9 @@ public:
 
     void speakerOnOff(bool on){
         if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_speaker_x, m_y, m_speaker_w, m_h);
+            tft.copyFramebuffer(1, 0, m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y, m_speaker_symbol_w, m_h);
         }
-        drawImage(m_speakerSymbol[!on], m_speaker_x, m_y);
+        drawImage(m_speakerSymbol[!on], m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y);
     }
     void updateVolume(uint8_t vol){
         m_volume = vol;
