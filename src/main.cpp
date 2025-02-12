@@ -386,7 +386,7 @@ struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h = 
 struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
 struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
 struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 760; uint16_t h = 190; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSTitle;    // streamTitle, space for VUmeter
+struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 760; uint16_t h = 190; uint8_t pl = 5; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
 struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
 struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
 struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
@@ -2190,7 +2190,7 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    txt_RA_sTitle.begin(      _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h);   txt_RA_sTitle.setFont(0); // 0 -> auto
+    txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setFont(0); // 0 -> auto
     txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_RA_staName.setFont(0); // 0 -> auto
     txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_fonts[8]);
     pic_RA_logo.begin(          _winLogo.x,   _winLogo.y);

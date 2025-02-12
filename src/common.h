@@ -1800,11 +1800,10 @@ private:
     uint8_t         m_fontSize = 0;
     uint8_t         m_h_align = TFT_ALIGN_RIGHT;
     uint8_t         m_v_align = TFT_ALIGN_TOP;
-    uint8_t         m_l_margin = 0; // left margin
-    uint8_t         m_r_margin = 0; // right margin
-    uint8_t         m_t_margin = 0; // top margin
-    uint8_t         m_b_margin = 0; // bottom margin
-    uint8_t         m_d_margin = 0;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
     char*           m_text = NULL;
@@ -1826,15 +1825,15 @@ public:
         x_ps_free(&m_text);
         x_ps_free(&m_name);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left = 0, uint8_t paddig_right = 0, uint8_t paddig_top = 0, uint8_t paddig_bottom = 0){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        m_l_margin = 0;
-        m_r_margin = w / 100;
-        m_t_margin = 0;
-        m_b_margin = h / 50;
+        m_padding_left = paddig_left;
+        m_paddig_right = paddig_right;
+        m_paddig_top = paddig_top;
+        m_paddig_bottom = paddig_bottom;
     }
     const char* getName(){
         return m_name;
@@ -1910,7 +1909,11 @@ public:
         //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
             tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
-            tft.writeText(m_text, m_x + m_l_margin, m_y + m_t_margin, m_w - m_r_margin, m_h - m_d_margin, m_h_align, m_v_align, false, false, m_autoSize);
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -4548,8 +4551,8 @@ private:
     uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
     uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
 #else // 800 x 480px
-    uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 55, m_staNr_w = 70;
+    uint16_t    m_antennaSymbol_x = 3;
+    uint16_t    m_staNr_x = 58, m_staNr_w = 67;
     uint16_t    m_flag_x = 125;
     uint16_t    m_flag_w = 80;
     uint16_t    m_flag_h = 40;
