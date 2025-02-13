@@ -569,10 +569,15 @@ function connect() {
                                                             document.getElementById('canvas').height = 96;
                                                             console.log("tftSize is s");
                                         }
-                                        if(val == 'm')  { tft_size = 1;
+                                        if(val == 'm')  { tft_size = 1; // 480x320px
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
                                                             console.log("tftSize is m");
+                                        }
+                                        if(val == 'l')  { tft_size = 2; // 800x480px
+                                                            document.getElementById('canvas').width  = 184;
+                                                            document.getElementById('canvas').height = 184;
+                                                            console.log("tftSize is l");
                                         }
                                         break
             case  "volume":             resultstr1.value = "Volume is now " + val;

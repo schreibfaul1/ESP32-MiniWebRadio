@@ -1622,7 +1622,7 @@ public:
         int x = m_x + m_padding_left;
         int y = m_middle_h - (m_railHigh / 2);
         int w = m_w - m_padding_left - m_padding_right;
-        int h = m_railHigh;
+        int h = m_railHigh; (void) h;
         int r = 2;
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
@@ -2308,6 +2308,8 @@ private:
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
+    uint16_t    m_image_w = 0;
+    uint16_t    m_image_h = 0;
     uint8_t     m_padding_left = 0; // left margin
     uint8_t     m_paddig_right = 0; // right margin
     uint8_t     m_paddig_top = 0; // top margin
@@ -2334,9 +2336,11 @@ public:
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y,  uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, bool backgroundTransparency = false){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, bool backgroundTransparency = false){
         m_x = x; // x pos
         m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
         m_padding_left  = paddig_left;
         m_paddig_right  = paddig_right;
         m_paddig_top    = paddig_top;
@@ -2450,43 +2454,43 @@ private:
                 if(c1 == 0xFF){c2 = file.read(); if(c2 == 0xC0) break;} // 0xFFC0 Marker found
             }
             file.readBytes(buf,7);
-            m_h = buf[3] * 256 + buf[4];
-            m_w = buf[5] * 256 + buf[6];
+            m_image_h = buf[3] * 256 + buf[4];
+            m_image_w = buf[5] * 256 + buf[6];
         //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         if ((buf[0] == 'B') && (buf[1] == 'M') && (buf[2] == '6')) { // format bmp
             for(int i= 0; i < 15; i++) file.read(); // read 15 dummys
-            m_w  = file.read(); // pos 18
-            m_w += (file.read() << 8);
-            m_w += (file.read() << 16);
-            m_w += (file.read() << 24);
-            m_h  = file.read(); // pos 22
-            m_h += (file.read() << 8);
-            m_h += (file.read() << 16);
-            m_h += (file.read() << 24);
+            m_image_w  = file.read(); // pos 18
+            m_image_w += (file.read() << 8);
+            m_image_w += (file.read() << 16);
+            m_image_w += (file.read() << 24);
+            m_image_h  = file.read(); // pos 22
+            m_image_h += (file.read() << 8);
+            m_image_h += (file.read() << 16);
+            m_image_h += (file.read() << 24);
         //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         if ((buf[0] == 'G') && (buf[1] == 'I') && (buf[2] == 'F')) { // format gif
             for(int i= 0; i < 3; i++) file.read(); // read 3 dummys
-            m_w  = file.read(); // pos 6
-            m_w += (file.read() << 8);
-            m_h  = file.read(); // pos 8
-            m_h += (file.read() << 8);
+            m_image_w  = file.read(); // pos 6
+            m_image_w += (file.read() << 8);
+            m_image_h  = file.read(); // pos 8
+            m_image_h += (file.read() << 8);
         //    log_i("w %i, h %i", m_w, m_h);
             return true;
         }
         if ((buf[0] == 0x89) && (buf[1] == 'P') && (buf[2] == 'N')) { // format png
             for(int i= 0; i < 13; i++) file.read(); // read 13 dummys
-            m_w =  file.read() << 24; // pos 16
-            m_w += file.read() << 16; // pos 17
-            m_w += file.read() << 8;  // pos 18
-            m_w += file.read() ;      // pos 19
-            m_h =  file.read() << 24; // pos 20
-            m_h += file.read() << 16; // pos 21
-            m_h += file.read() << 8;  // pos 22
-            m_h += file.read() ;      // pos 23
+            m_image_w =  file.read() << 24; // pos 16
+            m_image_w += file.read() << 16; // pos 17
+            m_image_w += file.read() << 8;  // pos 18
+            m_image_w += file.read() ;      // pos 19
+            m_image_h =  file.read() << 24; // pos 20
+            m_image_h += file.read() << 16; // pos 21
+            m_image_h += file.read() << 8;  // pos 22
+            m_image_h += file.read() ;      // pos 23
 
             // bitDepth  = header[24];  // Position 24 = Bit-Tiefe
             // colorType = header[25];  // Position 25 = Farbtyp
@@ -2978,6 +2982,7 @@ private:
     int16_t                   m_h = 0;
     int32_t                   m_nr[10] = {0};
     uint8_t                   m_fontSize = 0;
+    uint8_t                   m_tftSize = 0;
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_mode = 0;
     uint32_t                  m_bgColor = 0;
@@ -3004,15 +3009,19 @@ public:
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
-        m_fontSize = fontSize;
+        m_fontSize = fontSize; // default font size
         m_enabled = false;
         m_lineHight = m_h / 10;
         m_buff = x_ps_malloc(1024);
     }
-    void setMode(uint8_t mode){
+    void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize){
         if(mode == RADIO)  {m_mode = RADIO;}
         if(mode == PLAYER) {m_mode  = PLAYER;}
         if(mode == DLNA)   {m_mode = DLNA;}
+        m_fontSize = fontSize;
+        if(strcmp(tftSize, "s") == 0) m_tftSize = 1;
+        if(strcmp(tftSize, "m") == 0) m_tftSize = 2;
+        if(strcmp(tftSize, "l") == 0) m_tftSize = 3;
     }
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -3020,13 +3029,29 @@ public:
            x_ps_free(&m_txt[i]);
            x_ps_free(&m_ext1[i]);
            x_ps_free(&m_ext2[i]);
-            m_nr[i] = -1;
+           m_nr[i] = -1;
         }
     }
     void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int32_t nr = -1){
         if(pos > 9) return;
         if(!txt) return;
+        uint8_t indentContent = 0;
+        uint8_t indentDirectory = 0;
         tft.setFont(m_fontSize);
+        switch(m_tftSize){
+            case 1: if(m_mode == RADIO) {indentDirectory = 15; indentContent = 15;} // 320x240
+                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 15;}
+                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 15;}
+                    break;
+            case 2: if(m_mode == RADIO) {indentDirectory = 20; indentContent = 20;} // 480x320
+                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 20;}
+                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 20;}
+                    break;
+            case 3: if(m_mode == RADIO) {indentDirectory = 30; indentContent = 30;} // 800x480
+                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 30;}
+                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 30;}
+                    break;
+        }
         if(m_mode == RADIO){
             sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , nr, color, txt);
             if(txt ){x_ps_free(&m_txt[pos]);  m_txt[pos]  = strdup(txt);}
@@ -3049,7 +3074,7 @@ public:
             else     sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li" , color, txt, nr);
             if(txt) {x_ps_free(&m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
         }
-        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        tft.writeText(m_buff, pos? indentContent : indentDirectory, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, const char* color){ // e.g. 1-9/65
         sprintf(m_buff, "%s%i-%i/%i", color, firstVal, secondVal, total);
@@ -3129,6 +3154,7 @@ private:
     char*                     m_pathBuff = NULL;
     char*                     m_chptr = NULL;
     char*                     m_buff = NULL;
+    const char*               m_tftSize = NULL;
     DLNA_Client::dlnaServer_t m_dlnaServer;
     DLNA_Client::srvContent_t m_srvContent;
     DLNA_Client*              m_dlna;
@@ -3158,7 +3184,7 @@ public:
         x_ps_free(&m_name);
         x_ps_free(&m_buff);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -3166,6 +3192,7 @@ public:
         m_fontSize = fontSize;
         m_enabled = false;
         m_lineHight = m_h / 10;
+        m_tftSize = tftSize;
     }
     const char* getName(){
         return m_name;
@@ -3232,7 +3259,7 @@ public:
 private:
     void dlnaItemsList(){
         uint8_t pos = 0;
-        myList.setMode(DLNA);
+        myList.setMode(DLNA, m_tftSize, m_fontSize);
         myList.clearList();
         myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
         tft.setTextColor(TFT_WHITE);
@@ -3576,6 +3603,7 @@ private:
     char*       m_curAudioPath = NULL;
     char*       m_curAudioName = NULL;
     char*       m_fileItemsPos = NULL;
+    const char* m_tftSize = NULL;
     const char* m_rootColor = ANSI_ESC_LIGHTBROWN;
     const char* m_folderColor = ANSI_ESC_ORANGE;
     const char* m_fileColor = ANSI_ESC_WHITE;
@@ -3608,7 +3636,7 @@ public:
         x_ps_free(&m_curAudioName);     //   song.mp3
         x_ps_free(&m_curAudioPath);     //   /audiofiles/folder1/song.mp3
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -3616,6 +3644,7 @@ public:
         m_lineHight = m_h / 10;
         m_fontSize = fontSize;
         m_enabled = false;
+        m_tftSize = tftSize;
     }
     const char* getName(){
         return m_name;
@@ -3830,7 +3859,7 @@ private:
         //--------------------------------------------------------------------------------------------------------------------------------------------
 
         tft.setFont(m_fontSize);
-        myList.setMode(PLAYER);
+        myList.setMode(PLAYER, m_tftSize, m_fontSize);
         myList.clearList();
         const char* color;
 
@@ -3953,6 +3982,7 @@ private:
     releasedArg m_ra;
     const char* m_colorToDraw = NULL;
     const char* m_staNameToDraw = NULL;
+    const char* m_tftSize = NULL;
     uint16_t    m_staNrToDraw = 0;
 
 public:
@@ -3974,7 +4004,7 @@ public:
         x_ps_free(&m_name);
         x_ps_free(&m_buff);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t fontSize, uint16_t* curStationNr){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize, uint16_t* curStationNr){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -3983,6 +4013,7 @@ public:
         m_fontSize = fontSize;
         m_curSstationNr = curStationNr;
         m_enabled = false;
+        m_tftSize = tftSize;
     }
     const char* getName(){
         return m_name;
@@ -4047,7 +4078,7 @@ private:
             if(m_curStaNrCpy == 0) m_curStaNrCpy = 1;
         }
         myList.clearList();
-        myList.setMode(RADIO);
+        myList.setMode(RADIO, m_tftSize, m_fontSize);
 
         for(uint8_t pos = 0; pos < 10; pos++) {
             if(pos + m_firstStationsLineNr + 1 > staMgnt.getSumStations()) break;
