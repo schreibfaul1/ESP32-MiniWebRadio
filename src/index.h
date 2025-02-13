@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 22.01.2025
+ *  Updated on: 13.02.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -569,7 +569,7 @@ function connect() {
                                                             document.getElementById('canvas').height = 96;
                                                             console.log("tftSize is s");
                                         }
-                                        if(val == 'm')  { tft_size = 1;
+                                        if(val == 'm')  { tft_size = 1; // 480x320px
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
                                                             console.log("tftSize is m");
