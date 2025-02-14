@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 13.Feb 2025
+// updated: 14.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -7,12 +7,12 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
-#define TP_ROTATION             1                               // 1 or 3 (landscape)
+#define TP_VERSION              0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
+#define TP_ROTATION             3                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -1406,6 +1406,8 @@ public:
         int w = m_w - m_padding_left - m_padding_right;
         int h = m_railHigh; (void) h;
         int r = 2;
+        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
@@ -1463,6 +1465,10 @@ private:
     int16_t     m_minVal = 0;
     int16_t     m_maxVal = 0;
     int16_t     m_oldPos = 0;
+    uint16_t    m_padding_left = 0;
+    uint16_t    m_padding_right = 0;
+    uint16_t    m_padding_top = 0;
+    uint16_t    m_padding_bottom = 0;
     uint32_t    m_bgColor = 0;
     uint32_t    m_frameColor = 0;
     uint32_t    m_railColorLeft = 0;
@@ -1487,11 +1493,15 @@ public:
     ~progressbar(){
         m_objectInit = false;
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, int16_t minVal, int16_t maxVal){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t padding_left, uint16_t padding_right, uint16_t padding_top, uint16_t padding_bottom, int16_t minVal, int16_t maxVal){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_padding_left = padding_left;
+        m_padding_right = padding_right;
+        m_padding_top = padding_top;
+        m_padding_bottom = padding_bottom;
         m_minVal = minVal;
         m_maxVal = maxVal;
         m_enabled = false;
@@ -1531,7 +1541,7 @@ public:
         m_maxVal = maxVal;
     }
     void show(){
-        tft.drawRect(m_x, m_y, m_w, m_h, m_frameColor);
+        tft.drawRect(m_x + m_padding_left, m_y, m_w - m_padding_left - m_padding_right, m_h, m_frameColor);
         drawNewValue();
         m_enabled = true;
     }
@@ -1566,19 +1576,22 @@ private:
         return round((float)(delta * rise) / run + out_min);
     }
     void drawNewValue(){
-        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
-        tft.fillRect(m_x + 1, m_y + 1,  pos, m_h - 2, m_railColorLeft);
-        tft.fillRect(pos, m_y + 1,  m_w  -  pos - 1, m_h - 2, m_railColorRight);
+        int x = m_x + 1 + m_padding_left;
+        int w = m_w - 1 - m_padding_right;
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, x, x + w);
+        tft.fillRect(x, m_y + 1,  pos, m_h - 2, m_railColorLeft);
+        tft.fillRect(pos, m_y + 1,  w -  pos, m_h - 2, m_railColorRight);
         m_oldPos = pos;
         if(graphicObjects_OnChange) graphicObjects_OnChange((const char*)m_name, m_val);
     }
     void drawChanges(){
-        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, m_x + 1, m_x + m_w - 2);
+        int x = m_x + 1 + m_padding_left;
+        int w = m_w - 1 - m_padding_right;
+        uint16_t pos = map_l(m_val, m_minVal, m_maxVal, x, x + w);
         if(pos > m_oldPos){
             tft.fillRect(m_oldPos, m_y + 1, pos - m_oldPos, m_h - 2, m_railColorLeft);
         }
         if(pos < m_oldPos){
-
             tft.fillRect(pos, m_y + 1,  m_oldPos - pos, m_h - 2, m_railColorRight);
         }
         m_oldPos = pos;
@@ -1728,6 +1741,7 @@ private:
     char*       m_alternativePicturePath = NULL; // e.g. IR select
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
     char*       m_name = NULL;
     releasedArg m_ra;
 public:
@@ -1749,12 +1763,13 @@ public:
         x_ps_free(&m_inactivePicturePath);
         x_ps_free(&m_alternativePicturePath);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, bool backgroundTransparency = false){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        m_backgroundTransparency = backgroundTransparency;
     }
     const char* getName(){
         return m_name;
@@ -1772,7 +1787,12 @@ public:
         m_enabled = true;
     }
     void hide(){
-        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     void disable(){
@@ -2293,9 +2313,12 @@ private:
 #if TFT_CONTROLLER < 2
     uint16_t    m_timeXPos7S[5] = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
     uint16_t    m_timeXPosFN[6] = {0, 56, 152, 208, 264, 112}; // folded numbers
-#else
+#elif TFT_CONTROLLER < 7
     uint16_t m_timeXPos7S[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
     uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
+#else
+    uint16_t m_timeXPos7S[5] = {36, 196, 436, 596, 356}; // seven segment digits "hhmm:"
+    uint16_t m_timeXPosFN[6] = {20, 112,  240, 352, 464, 208}; // folded numbers
 #endif
     uint16_t    m_minuteOfTheDay = 0;
     uint32_t    m_bgColor = 0;
@@ -2464,15 +2487,21 @@ private:
     uint8_t  m_alarmdaysW = 44;
     uint8_t  m_alarmdaysH = 25;
     uint8_t  m_fontSize = 16;
-#else
+#elif TFT_CONTROLLER < 7
     uint16_t m_alarmdaysXPos[7] = {9, 75, 141, 207, 273, 339, 405};
     uint16_t m_digitsPos[5] = {23, 123, 258, 358, 223}; // seven segment digits "hhmm:""
     uint8_t  m_alarmdaysW = 65;
     uint8_t  m_alarmdaysH = 25;
     uint8_t  m_fontSize = 21;
-
+#else
+    uint16_t m_alarmdaysXPos[7] = {50, 150, 250, 350, 450, 550, 650};
+    uint16_t m_digitsPos[5] = {94, 226, 406, 538, 356}; // seven segment digits "hhmm:"
+    uint8_t  m_alarmdaysW = 100;
+    uint8_t  m_alarmdaysH = 25;
+    uint8_t  m_fontSize = 21;
 #endif
-    uint32_t    m_bgColor = 0;
+
+uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_state = false;
@@ -2648,18 +2677,18 @@ public:
                 tft.setFont(m_fontSize);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_RED);
                 tft.setTextColor(TFT_RED);
-                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos,  m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos,  m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
 
                 tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
                 tft.setTextColor(TFT_GREEN);
-                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
             }
             else{                    // bit is not set
                 tft.setFont(m_fontSize);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
                 tft.setTextColor(TFT_DARKGREY);
-                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
 
                 tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
                 tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
@@ -2677,7 +2706,7 @@ public:
                 m_alarmTime[m_btnAlarmTime] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
                 char hhmm[10] = "00:00";
                 sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmTime] / 60, m_alarmTime[m_btnAlarmTime] % 60);
-                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
             }
             m_btnAlarmTime = -1;
         }
@@ -2716,7 +2745,7 @@ private:
             else color = TFT_DARKGREY;
             tft.drawRect(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, color);
             tft.setTextColor(color);
-            tft.writeText(m_WD[i], m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+            tft.writeText(m_WD[i], m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
             // alarmTime
             if(*m_alarmDays & mask){
             //    tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
@@ -2724,7 +2753,7 @@ private:
                 tft.setTextColor(TFT_GREEN);
                 char hhmm[10] = "00:00";
                 sprintf(hhmm, "%02d:%02d", m_alarmTime[i] / 60, m_alarmTime[i] % 60);
-                tft.writeText(hhmm, m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+                tft.writeText(hhmm, m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
             }
             else{
                 tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
@@ -2737,7 +2766,7 @@ private:
         tft.setFont(m_fontSize);
         tft.drawRect(m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
         tft.setTextColor(TFT_YELLOW);
-        tft.writeText(m_WD[idx], m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, true);
+        tft.writeText(m_WD[idx], m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
     }
     void alarmTimePressed(uint8_t idx){
         uint8_t mask = 0b00000001;

@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.e   - Feb 13/2025                                                                                                                   ";
+    Version 3.7-rc1.f   - Feb 14/2025                                                                                                                   ";
 
 /*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
@@ -262,6 +262,7 @@ const uint8_t _listFontSize = 16;
 const uint8_t _headerFontSize = 16;
 const uint8_t _footerFontSize = 16;
 const uint8_t _bigNumbersFontSize = 156;
+const uint8_t _fileNumberFontSize = 21;
 // ------------------------------------------------------------------------------------------padding-left, padding-right, padding-top, padding-bottom
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
 struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
@@ -286,12 +287,8 @@ struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h = 
 struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
 
-uint16_t _alarmdaysXPos[7] = {3, 48, 93, 138, 183, 228, 273};
-uint16_t _alarmtimeXPos7S[5] = {2, 75, 148, 173, 246}; // seven segment digits
-uint16_t _alarmtimeXPosFN[6] = {0, 56, 112, 152, 208, 264}; // folded numbers
 uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
-uint8_t  _alarmdays_w = 44 + 4;
-uint8_t  _alarmdays_h = 40;
+uint16_t _sleeptimeYPos = 48;
 uint16_t _dispWidth   = 320;
 uint16_t _dispHeight  = 240;
 const char _tftSize[2] = "s";
@@ -323,6 +320,7 @@ const uint8_t _listFontSize       = 21;
 const uint8_t _headerFontSize     = 21;
 const uint8_t _footerFontSize     = 21;
 const uint8_t _bigNumbersFontSize = 156;
+const uint8_t _fileNumberFontSize = 27;
 // -----------------------------------------------------------------------------------padding-left-right-top-bottom
 struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
 struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
@@ -347,12 +345,8 @@ struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h = 
 struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
 struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
 
-uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
-uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
-uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
 uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
-uint8_t  _alarmdays_w = 64 + 4;
-uint8_t  _alarmdays_h = 56;
+uint16_t _sleeptimeYPos = 48;
 uint16_t _dispWidth   = 480;
 uint16_t _dispHeight  = 320;
 const char _tftSize[2] = "m";
@@ -380,40 +374,37 @@ const char _tftSize[2] = "m";
 //                                             800
 
 const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-const uint8_t _listFontSize = 21;
-const uint8_t _headerFontSize = 21;
-const uint8_t _footerFontSize = 21;
+const uint8_t _listFontSize = 27;
+const uint8_t _headerFontSize = 38;
+const uint8_t _footerFontSize = 38;
 const uint8_t _bigNumbersFontSize = 156;
+const uint8_t _fileNumberFontSize = 34;
 //----------------------------------------------------------------------------------------padding-left-right-top-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 190; uint16_t h = 190; uint8_t pl =  4; uint8_t pr = 4; uint8_t pt = 4; uint8_t pb = 4;} const _winLogo;
-struct w_n  {uint16_t x = 190; uint16_t y =  50; uint16_t w = 610; uint16_t h = 190; uint8_t pl = 15; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station nane
-struct w_e  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 190; uint8_t pl =  5; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    //todo
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 800; uint16_t h =  14; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 15; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 10; uint8_t pr = 5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 160; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 800; uint16_t h = 200; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
-struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 190; uint16_t h = 190; uint8_t pl =  4; uint8_t pr =  4; uint8_t pt = 4; uint8_t pb = 4;} const _winLogo;
+struct w_n  {uint16_t x = 190; uint16_t y =  50; uint16_t w = 610; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station name
+struct w_e  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 190; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 190; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  4; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    // e.g. 020/066 in the middle of the logo
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
+struct w_a  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 800; uint16_t h =  14; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
+struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 10; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
+struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
+struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
+struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  80; uint16_t w = 800; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 200; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
+struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
 
-uint16_t _alarmdaysXPos[7] = {2, 70, 138, 206, 274, 342, 410};
-uint16_t _alarmtimeXPos7S[5] = {12, 118, 224, 266, 372}; // seven segment digits
-uint16_t _alarmtimeXPosFN[6] = {16, 96, 176, 224, 304, 384}; // folded numbers
-uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
-uint8_t  _alarmdays_w = 64 + 4;
-uint8_t  _alarmdays_h = 56;
+uint16_t _sleeptimeXPos[5] = {20, 137, 223, 106};
+uint16_t _sleeptimeYPos = 112;
 uint16_t _dispWidth   = 800;
 uint16_t _dispHeight  = 480;
 const char _tftSize[2] = "l";
@@ -961,7 +952,7 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
             if(!_sleeptime) strcat(path, "sgn.jpg");
             else strcat(path, "srt.jpg");
         }
-        drawImage(path, _sleeptimeXPos[i], 48);
+        drawImage(path, _sleeptimeXPos[i], _sleeptimeYPos);
     }
 }
 
@@ -1573,7 +1564,7 @@ void setup() {
     if(TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
 #endif
 
-    if(TFT_CONTROLLER > 6) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
+    if(TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
     drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
     updateSettings();
@@ -1940,9 +1931,7 @@ String setI2STone() {
 }
 
 void SD_playFile(const char* pathWoFileName, const char* fileName) { // pathWithoutFileName e.g. /audiofiles/playlist/
-log_e("SD_playFile: %s%s", pathWoFileName, fileName);
     sprintf(_chbuf, "%s%s", pathWoFileName, fileName);
-log_e("SD_playFile: %s", _chbuf);
     int32_t idx = indexOf(_chbuf, "\033[", 1);
     if(idx == -1) { ; }          // do nothing
     else { _chbuf[idx] = '\0'; } // remove color and filesize
@@ -2195,59 +2184,59 @@ void placingGraphicObjects() { // and initialize them
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize, &_cur_station);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_PL_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                         btn_PL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                         btn_PL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                         btn_PL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                         btn_PL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-                                                                                         btn_PL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
-                                                                                         btn_PL_mute.setValue(_f_mute);
-    btn_PL_pause.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
-                                                                                         btn_PL_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
-                                                                                         btn_PL_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
-                                                                                         btn_PL_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
-                                                                                         btn_PL_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
-                                                                                         btn_PL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
-                                                                                         btn_PL_pause.setValue(false);
-    btn_PL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
-                                                                                         btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-                                                                                         btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    sdr_PL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pl, 0, _volumeSteps, true); sdr_PL_volume.setValue(_cur_volume);
-    btn_PL_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-                                                                                         btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-                                                                                         btn_PL_prevFile.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
-    btn_PL_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-                                                                                         btn_PL_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-                                                                                         btn_PL_nextFile.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
-    btn_PL_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                         btn_PL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                         btn_PL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    btn_PL_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.png");
-                                                                                         btn_PL_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.png");
-                                                                                         btn_PL_playAll.setAlternativePicturePath("/btn/Button_PlayAll_Magenta.png");
-    btn_PL_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.png");
-                                                                                         btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.png");
-                                                                                         btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.png");
-    btn_PL_fileList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
-                                                                                         btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-                                                                                         btn_PL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
-    btn_PL_radio.begin(   6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_PL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                         btn_PL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-                                                                                         btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-                                                                                         btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.png");
-                                                                                         btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
-                                                                                         btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.png");
-    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.png");
-                                                                                         btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
-                                                                                         btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
+    btn_PL_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
+                                                                                             btn_PL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
+                                                                                             btn_PL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
+                                                                                             btn_PL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
+                                                                                             btn_PL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
+                                                                                             btn_PL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
+                                                                                             btn_PL_mute.setValue(_f_mute);
+    btn_PL_pause.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
+                                                                                             btn_PL_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
+                                                                                             btn_PL_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
+                                                                                             btn_PL_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
+                                                                                             btn_PL_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
+                                                                                             btn_PL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
+                                                                                             btn_PL_pause.setValue(false);
+    btn_PL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
+                                                                                             btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
+                                                                                             btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
+    sdr_PL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _dispWidth - (5 * _winButton.w + 20), _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_PL_volume.setValue(_cur_volume);
+    btn_PL_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
+                                                                                             btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
+                                                                                             btn_PL_prevFile.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
+    btn_PL_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.png");
+                                                                                             btn_PL_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.png");
+                                                                                             btn_PL_nextFile.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
+    btn_PL_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
+                                                                                             btn_PL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
+                                                                                             btn_PL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    btn_PL_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.png");
+                                                                                             btn_PL_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.png");
+                                                                                             btn_PL_playAll.setAlternativePicturePath("/btn/Button_PlayAll_Magenta.png");
+    btn_PL_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.png");
+                                                                                             btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.png");
+                                                                                             btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.png");
+    btn_PL_fileList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
+                                                                                             btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
+                                                                                             btn_PL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
+    btn_PL_radio.begin(   6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
+                                                                                             btn_PL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
+                                                                                             btn_PL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
+    btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
+                                                                                             btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
+                                                                                             btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
+    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.png");
+                                                                                             btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
+                                                                                             btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.png");
+    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.png");
+                                                                                             btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
+                                                                                             btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
 
-    txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_PL_fName.setFont(0); // 0 -> auto
-    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h); txt_PL_fNumber.setFont(_fonts[3]);
+    txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb);   txt_PL_fName.setFont(0); // 0 -> auto
+    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h, _winFileNr.pl, _winFileNr.pr, _winFileNr.pt, _winFileNr.pb); txt_PL_fNumber.setFont(_fileNumberFontSize);
     pic_PL_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
-    pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_PL_progress.setValue(0);
+    pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
     // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2276,9 +2265,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_DL_volume.setValue(_cur_volume);
-    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,    _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
-    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,    _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
-    pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, 0, 30); pgb_DL_progress.setValue(0);
+    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
+    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -2299,7 +2288,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_CL_volume.setValue(_cur_volume);
+    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, false); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
@@ -2496,6 +2485,7 @@ void changeState(int32_t state){
                 showFileLogo(PLAYER);
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
                 pgb_PL_progress.hide();
+                sdr_PL_volume.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show();
                 showAudioFileNumber();
@@ -2605,8 +2595,9 @@ void changeState(int32_t state){
         case SLEEPTIMER:{
             if(_state != SLEEPTIMER) {
                 clearWithOutHeaderFooter(); display_sleeptime();
-                if(TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
-                else                   drawImage("/common/Night_Gown.bmp", 280, 45);
+                if(     TFT_CONTROLLER < 2) drawImage("/common/Night_Gown.bmp", 198, 23);
+                else if(TFT_CONTROLLER < 7) drawImage("/common/Night_Gown.bmp", 280, 45);
+                else                        drawImage("/common/Night_Gown.jpg", 482, 112);
             }
             if(_sleepTimerSubMenue == 0){
                 btn_SL_up.show(); btn_SL_down.show(); btn_SL_ready.show(); btn_SL_cancel.show();
