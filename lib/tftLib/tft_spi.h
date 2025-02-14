@@ -253,9 +253,10 @@ extern __attribute__((weak)) void tft_info(const char*);
 class TFT_SPI {
   protected:
     File gif_file;
-
+  private:
+    SPIClass*   spi_TFT; // use in class TP
   public:
-    TFT_SPI(SPIClass& spi, int csPin);
+    TFT_SPI(SPIClass& spiInstance, int csPin);
     ~TFT_SPI();
     void setTFTcontroller(uint8_t TFTcontroller);
     void setDiaplayInversion(uint8_t dispInv);
@@ -268,7 +269,7 @@ class TFT_SPI {
     void     drawRect(int16_t Xpos, int16_t Ypos, uint16_t Width, uint16_t Height, uint16_t Color);
     void     readRect(int32_t x, int32_t y, int32_t w, uint16_t* data);
     void     copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, uint16_t y, uint16_t w, uint16_t h);
-    void     readRect(uint16_t* data, int16_t x, int16_t y, int16_t w, int16_t h);
+    void     readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data);
     void     fillRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t color);
     void     drawRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
     void     fillRoundRect(int16_t x, int16_t y, int16_t w, int16_t h, int16_t r, uint16_t color);
@@ -296,17 +297,18 @@ class TFT_SPI {
     int16_t         height(void) const;
     int16_t         width(void) const;
     uint8_t         getRotation(void) const;
+    void            loop();
 
   private:
     enum Ctrl { ILI9341 = 0, HX8347D = 1, ILI9486a = 2, ILI9486b = 3, ILI9488 = 4, ST7796 = 5, ST7796RPI = 6 };
     uint8_t     _TFTcontroller = ILI9341;
     SPISettings SPIset; // SPI settings for this slave
-    SPIClass&   spi_TFT; // use in class TP
+
     uint16_t    m_h_res = 0;
     uint16_t    m_v_res = 0;
     uint16_t*   m_framebuffer[3];
     bool        m_framebuffer_index = 0;
-    uint8_t fontSizes[12] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81};
+    uint8_t fontSizes[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
     typedef struct {
         const uint8_t*                     glyph_bitmap;
