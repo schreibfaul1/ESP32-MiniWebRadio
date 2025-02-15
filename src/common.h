@@ -7,12 +7,12 @@
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
 #define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          0                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
 #define DISPLAY_INVERSION       0                               // (0) off (1) on
 #define TFT_ROTATION            1                               // 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              0                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
-#define TP_ROTATION             3                               // 1 or 3 (landscape)
+#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
+#define TP_ROTATION             1                               // 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -1317,6 +1317,7 @@ private:
     bool        m_clicked = false;
     bool        m_objectInit = false;
     bool        m_backgroundTransparency = true;
+    bool        m_saveBackground = false;
     uint8_t     m_railHigh = 0;
     uint16_t    m_middle_h = 0;
     uint16_t    m_spotPos = 0;
@@ -1341,7 +1342,7 @@ public:
     ~slider(){
         m_objectInit = false;
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal, bool backgroundTransparency = true){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -1358,7 +1359,6 @@ public:
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
-        m_backgroundTransparency = backgroundTransparency;
     }
     const char* getName() {
         return m_name;
@@ -1399,15 +1399,22 @@ public:
         m_minVal = minVal;
         m_maxVal = maxVal;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
         m_enabled = true;
         int x = m_x + m_padding_left;
         int y = m_middle_h - (m_railHigh / 2);
         int w = m_w - m_padding_left - m_padding_right;
         int h = m_railHigh; (void) h;
         int r = 2;
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
@@ -1415,8 +1422,13 @@ public:
         m_enabled = false;
     }
     void hide(){
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     bool released(){
@@ -1440,7 +1452,8 @@ private:
     void drawNewSpot(uint16_t xPos){
         if(m_enabled){
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                else                 tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             }
             else{
                 tft.fillRect(             m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
@@ -1476,6 +1489,8 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_objectInit = false;
+    bool        m_backgroundTransparency = true;
+    bool        m_saveBackground = false;
     uint8_t     m_railHigh = 0;
     char*       m_name = NULL;
     releasedArg m_ra;
@@ -1540,7 +1555,16 @@ public:
         m_minVal = minVal;
         m_maxVal = maxVal;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         tft.drawRect(m_x + m_padding_left, m_y, m_w - m_padding_left - m_padding_right, m_h, m_frameColor);
         drawNewValue();
         m_enabled = true;
@@ -1549,8 +1573,13 @@ public:
         m_enabled = false;
     }
     void hide(){
-        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-    //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     bool released(){
@@ -1619,6 +1648,8 @@ private:
     bool            m_enabled = false;
     bool            m_clicked = false;
     bool            m_autoSize = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
     releasedArg     m_ra;
 public:
     textbox(const char* name){
@@ -1633,7 +1664,7 @@ public:
         x_ps_free(&m_text);
         x_ps_free(&m_name);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left = 0, uint8_t paddig_right = 0, uint8_t paddig_top = 0, uint8_t paddig_bottom = 0){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -1649,15 +1680,23 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
         if(!m_text){m_text = strdup("");}
-        writeText(m_text, m_h_align, m_v_align);
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
     }
     void hide(){
-    //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     void disable(){
@@ -1694,28 +1733,34 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT,  uint8_t v_align = TFT_ALIGN_TOP){ // prepare a text, wait of show() to write it
+    void setText(const char* txt){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
         x_ps_free(&m_text);
         m_text = x_ps_strdup(txt);
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
         m_h_align = h_align;
         m_v_align = v_align;
     }
-    void writeText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT, uint8_t v_align = TFT_ALIGN_TOP){
+
+    void writeText(const char* txt){
         if(!txt){txt = strdup("");}
         if(txt != m_text){ // no self copy
             x_ps_free(&m_text);
             m_text = x_ps_strdup(txt);
         }
-        m_h_align = h_align;
-        m_v_align = v_align;
         if(m_enabled){
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
-        //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
@@ -2138,7 +2183,7 @@ public:
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, bool backgroundTransparency = false){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -2148,7 +2193,6 @@ public:
         m_paddig_top    = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_enabled = false;
-        m_backgroundTransparency = backgroundTransparency;
     }
     const char* getName(){
         return m_name;
@@ -2156,7 +2200,8 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    bool show(bool saveBackground = false){
+    bool show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         int x = m_x + m_padding_left;
         int y = m_y + m_paddig_top;
@@ -2243,7 +2288,7 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {/*log_w("file %s not exists, objName: %s", scaledPicPath, m_name);*/ return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
         if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];

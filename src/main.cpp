@@ -322,28 +322,28 @@ const uint8_t _footerFontSize     = 21;
 const uint8_t _bigNumbersFontSize = 156;
 const uint8_t _fileNumberFontSize = 27;
 // -----------------------------------------------------------------------------------padding-left-right-top-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
-struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt = 0; uint8_t pb = 3;} const _winName;     // station nane
-struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 3;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 1; uint8_t pt = 0; uint8_t pb = 1;} const _winFileNr;
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;   // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;  // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt = 0; uint8_t pb = 3;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt = 0; uint8_t pb = 3;} const _winSTitle;   // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;   // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
-struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
+struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winHeader;
+struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winLogo;
+struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt =  0; uint8_t pb =  3;} const _winName;     // station nane
+struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt =  0; uint8_t pb =  3;} const _winFName;
+struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 1; uint8_t pt =  0; uint8_t pb =  1;} const _winFileNr;
+struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winVolBox;   // volumeBox
+struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winProgbar;  // progressbar
+struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt =  0; uint8_t pb =  3;} const _winTitle;
+struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt =  0; uint8_t pb =  3;} const _winSTitle;   // streamTitle, space for VUmeter
+struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winVUmeter;
+struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winFooter;
+struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winStaNr;
+struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winSleep;
+struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _sdrOvBtns;   // slider over buttons, max width
+struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winButton;
+struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winAlarm;
+struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winWoHF;      // without Header and Footer
+struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrHP;        // slider highpass in equalizer
+struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBP;        // slider bandpass in equalizer
+struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrLP;        // slider lowpass in equalizer
+struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBAL;       // slider balance in equalizer
 
 uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
 uint16_t _sleeptimeYPos = 48;
@@ -823,7 +823,7 @@ void showStreamTitle(const char* streamtitle) {
     // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
-    txt_RA_sTitle.writeText(st, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+    txt_RA_sTitle.writeText(st);
 
     x_ps_free(&st);
 }
@@ -851,14 +851,15 @@ void showLogoAndStationName(bool force) {
     x_ps_free(&old_SN_utf8);
     old_SN_utf8 = x_ps_strdup(SN_utf8);
     txt_RA_staName.setTextColor(TFT_CYAN);
-    txt_RA_staName.writeText(SN_utf8, TFT_ALIGN_LEFT, TFT_ALIGN_TOP);
+    txt_RA_staName.setText(SN_utf8);
+    txt_RA_staName.show(true, false);
 
     memmove(SN_utf8  + 6, SN_utf8, strlen(SN_utf8) + 1);
     memmove(SN_utf8, "/logo/", 6);
     strcat(SN_utf8, ".jpg");
     pic_RA_logo.setPicturePath(SN_utf8);
     pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
-    pic_RA_logo.show();
+    pic_RA_logo.show(true, false);
 exit:
     x_ps_free(&SN_utf8);
 }
@@ -870,7 +871,7 @@ void showFileLogo(uint8_t state) {
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
         pic_RA_logo.setPicturePath(logo.c_str());
         pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
-        pic_RA_logo.show();
+        pic_RA_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
     }
@@ -878,7 +879,7 @@ void showFileLogo(uint8_t state) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
         pic_DL_logo.setAlternativPicturePath("/common/unknown.jpg");
-        pic_DL_logo.show();
+        pic_DL_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
     }
@@ -888,14 +889,14 @@ void showFileLogo(uint8_t state) {
         else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
         pic_PL_logo.setPicturePath(logo.c_str());
         pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
-        pic_PL_logo.show();
+        pic_PL_logo.show(true, false);
         return;
     }
     if(state == SETTINGS) {
         logo = "/common/Settings.png";
         pic_SE_logo.setPicturePath(logo.c_str());
         pic_SE_logo.setAlternativPicturePath("/common/unknown.jpg");
-        pic_SE_logo.show();
+        pic_SE_logo.show(true, false);
         return;
     }
 }
@@ -903,21 +904,21 @@ void showFileLogo(uint8_t state) {
 void showFileName(const char* fname) {
     if(!fname) return;
     txt_PL_fName.setTextColor(TFT_CYAN);
-    txt_PL_fName.writeText(fname, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+    txt_PL_fName.writeText(fname);
 }
 
 void showPlsFileNumber() {
     txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", _plsCurPos, _PLS_content.size());
-    txt_PL_fNumber.writeText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+    txt_PL_fNumber.writeText(buf);
 }
 
 void showAudioFileNumber() {
     txt_PL_fNumber.setTextColor(TFT_ORANGE);
     char buf[15];
     sprintf(buf, "%03u/%03u", _cur_AudioFileNr + 1, _SD_content.getSize());
-    txt_PL_fNumber.writeText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+    txt_PL_fNumber.writeText(buf);
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
@@ -2141,7 +2142,7 @@ void placingGraphicObjects() { // and initialize them
     volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
     myList.begin(             _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_RA_volume.begin(      _sdrOvBtns.x, _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, _sdrOvBtns.pl, _sdrOvBtns.pr, _sdrOvBtns.pt, _sdrOvBtns.pb, 0, _volumeSteps, true);               sdr_RA_volume.setValue(_cur_volume);
+    sdr_RA_volume.begin(      _sdrOvBtns.x, _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, _sdrOvBtns.pl, _sdrOvBtns.pr, _sdrOvBtns.pt, _sdrOvBtns.pb, 0, _volumeSteps);               sdr_RA_volume.setValue(_cur_volume);
     btn_RA_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
                                                                                          btn_RA_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
                                                                                          btn_RA_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
@@ -2176,10 +2177,10 @@ void placingGraphicObjects() { // and initialize them
     btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setFont(0); // 0 -> auto
-    txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pl);   txt_RA_staName.setFont(0); // 0 -> auto
-    txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h);   txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_bigNumbersFontSize);
-    pic_RA_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,  _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_RA_sTitle.setFont(0); // 0 -> auto
+    txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pl);    txt_RA_staName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_TOP);    txt_RA_staName.setFont(0); // 0 -> auto
+    txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb);    txt_RA_irNum.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_bigNumbersFontSize);
+    pic_RA_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
     VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize, &_cur_station);
@@ -2201,7 +2202,7 @@ void placingGraphicObjects() { // and initialize them
     btn_PL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
                                                                                              btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
                                                                                              btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    sdr_PL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _dispWidth - (5 * _winButton.w + 20), _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_PL_volume.setValue(_cur_volume);
+    sdr_PL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _dispWidth - (5 * _winButton.w + 20), _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_PL_volume.setValue(_cur_volume);
     btn_PL_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
                                                                                              btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
                                                                                              btn_PL_prevFile.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
@@ -2233,9 +2234,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                              btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
                                                                                              btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
 
-    txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb);   txt_PL_fName.setFont(0); // 0 -> auto
-    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h, _winFileNr.pl, _winFileNr.pr, _winFileNr.pt, _winFileNr.pb); txt_PL_fNumber.setFont(_fileNumberFontSize);
-    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h,    _winName.pl,    _winName.pr,    _winName.pt,    _winName.pb);  txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_PL_fName.setFont(0); // 0 -> auto
+    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h,  _winFileNr.pl,  _winFileNr.pr,  _winFileNr.pt,  _winFileNr.pb);txt_PL_fNumber.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_PL_fNumber.setFont(_fileNumberFontSize);
+    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,    _winLogo.pl,    _winLogo.pr,    _winLogo.pt,    _winLogo.pb);
     pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_PL_progress.setValue(0);
     // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
@@ -2264,9 +2265,9 @@ void placingGraphicObjects() { // and initialize them
     btn_DL_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, true); sdr_DL_volume.setValue(_cur_volume);
-    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h);   txt_DL_fName.setFont(0); // 0 -> auto)
-    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_DL_volume.setValue(_cur_volume);
+    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb); txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); txt_DL_fName.setFont(0); // 0 -> auto)
+    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb);
     pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
@@ -2288,7 +2289,7 @@ void placingGraphicObjects() { // and initialize them
     btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
                                                                                          btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps, false); sdr_CL_volume.setValue(_cur_volume);
+    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
@@ -2330,23 +2331,23 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb, true);
+    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value.begin(   2 * _winButton.w, _winButton.y + 5,  4 * _winButton.w, _sdrOvBtns.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 5, 100, true); sdr_BR_value.setValue(_brightness);
+    sdr_BR_value.begin(   2 * _winButton.w, _winButton.y + 5,  4 * _winButton.w, _sdrOvBtns.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 5, 100); sdr_BR_value.setValue(_brightness);
     btn_BR_ready.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
                                                                                          btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
                                                                                          btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    pic_BR_logo.begin(    0,  _winName.y, _winName.w, _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb, true); pic_BR_logo.setPicturePath("/common/Brightness.jpg");
-    txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h);              txt_BR_value.setFont(_fonts[4]);
+    pic_BR_logo.begin(    0,  _winName.y, _winName.w, _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb); pic_BR_logo.setPicturePath("/common/Brightness.jpg");
+    txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb); txt_BR_value.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BR_value.setFont(_fonts[4]);
     // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h,  _sdrLP.pl,  _sdrLP.pr,  _sdrLP.pt,  _sdrLP.pb, -40,  6, true); sdr_EQ_lowPass.setValue(_toneLP);
-    sdr_EQ_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h,  _sdrBP.pl,  _sdrBP.pr,  _sdrBP.pt,  _sdrBP.pb, -40,  6, true); sdr_EQ_bandPass.setValue(_toneBP);
-    sdr_EQ_highPass.begin( _sdrHP.x,  _sdrHP.y,  _sdrHP.w,  _sdrHP.h,  _sdrHP.pl,  _sdrHP.pr,  _sdrHP.pt,  _sdrHP.pb, -40,  6, true); sdr_EQ_highPass.setValue(_toneHP);
-    sdr_EQ_balance.begin( _sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, _sdrBAL.pl, _sdrBAL.pr, _sdrBAL.pt, _sdrBAL.pb, -16, 16, true); sdr_EQ_balance.setValue(_toneBAL);
-    txt_EQ_lowPass.begin(  _sdrLP.x +  _sdrLP.w + 2,  _sdrLP.y, 80, _sdrLP.h);           txt_EQ_lowPass.setFont(_fonts[2]);
-    txt_EQ_bandPass.begin( _sdrBP.x +  _sdrBP.w + 2,  _sdrBP.y, 80, _sdrBP.h);           txt_EQ_bandPass.setFont(_fonts[2]);
-    txt_EQ_highPass.begin( _sdrHP.x +  _sdrHP.w + 2,  _sdrHP.y, 80, _sdrHP.h);           txt_EQ_highPass.setFont(_fonts[2]);
-    txt_EQ_balance.begin( _sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h);          txt_EQ_balance.setFont(_fonts[2]);
+    sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h,  _sdrLP.pl,  _sdrLP.pr,  _sdrLP.pt,  _sdrLP.pb, -40,  6); sdr_EQ_lowPass.setValue(_toneLP);
+    sdr_EQ_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h,  _sdrBP.pl,  _sdrBP.pr,  _sdrBP.pt,  _sdrBP.pb, -40,  6); sdr_EQ_bandPass.setValue(_toneBP);
+    sdr_EQ_highPass.begin( _sdrHP.x,  _sdrHP.y,  _sdrHP.w,  _sdrHP.h,  _sdrHP.pl,  _sdrHP.pr,  _sdrHP.pt,  _sdrHP.pb, -40,  6); sdr_EQ_highPass.setValue(_toneHP);
+    sdr_EQ_balance.begin( _sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, _sdrBAL.pl, _sdrBAL.pr, _sdrBAL.pt, _sdrBAL.pb, -16, 16); sdr_EQ_balance.setValue(_toneBAL);
+    txt_EQ_lowPass.begin(  _sdrLP.x +  _sdrLP.w + 2,  _sdrLP.y, 80, _sdrLP.h, _sdrLP.pl, _sdrLP.pr, _sdrLP.pt, _sdrLP.pb); txt_EQ_lowPass.setAlign( TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_EQ_lowPass.setFont(0); // 0 -> auto
+    txt_EQ_bandPass.begin( _sdrBP.x +  _sdrBP.w + 2,  _sdrBP.y, 80, _sdrBP.h, _sdrBP.pl, _sdrBP.pr, _sdrBP.pt, _sdrBP.pb); txt_EQ_bandPass.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_EQ_bandPass.setFont(0); // 0 -> auto
+    txt_EQ_highPass.begin( _sdrHP.x +  _sdrHP.w + 2,  _sdrHP.y, 80, _sdrHP.h, _sdrHP.pl, _sdrHP.pr, _sdrHP.pt, _sdrHP.pb); txt_EQ_highPass.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_EQ_highPass.setFont(0); // 0 -> auto
+    txt_EQ_balance.begin( _sdrBAL.x + _sdrBAL.w + 2, _sdrBAL.y, 80, _sdrBAL.h, _sdrBAL.pl, _sdrBAL.pr, _sdrBAL.pt, _sdrBAL.pb); txt_EQ_balance.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_EQ_balance.setFont(0); // 0 -> auto
     btn_EQ_lowPass.begin( _sdrLP.x - 60, _sdrLP.y + 1, 48, 48);                          btn_EQ_lowPass.setDefaultPicturePath("/btn/Button_LP_Green.png");
                                                                                          btn_EQ_lowPass.setClickedPicturePath("/btn/Button_LP_Yellow.png");
                                                                                          btn_EQ_lowPass.setAlternativePicturePath("/btn/Button_LP_Magenta.png");
@@ -2391,9 +2392,9 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
                                                                                          btn_BT_power.setValue(_f_BTpower);
                                                                                          pic_BT_mode.setPicturePath("/common/BTnc.png");
-    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,  _winLogo.pl,  _winLogo.pr, _winLogo.pt, _winLogo.pb, true); pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
-    txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h);   txt_BT_volume.setFont(_fonts[2]);
-    txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h);     txt_BT_mode.setFont(_fonts[5]);
+    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   _winLogo.pl,   _winLogo.pr,   _winLogo.pt,   _winLogo.pb); pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
+    txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h, _winFileNr.pl, _winFileNr.pr, _winFileNr.pt, _winFileNr.pb); txt_BT_volume.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_volume.setFont(_fonts[2]);
+    txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h,   _winName.pl,   _winName.pr,   _winName.pt,   _winName.pb); txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_mode.setFont(_fonts[5]);
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_IR_radio.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);     btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
@@ -2424,16 +2425,16 @@ void changeState(int32_t state){
                 setTimeCounter(0);
                 VUmeter_RA.show(true);
                 txt_RA_sTitle.setText("");
-                txt_RA_sTitle.show();
+                txt_RA_sTitle.show(true, false);
                 _f_newStreamTitle = true;
             }
             if(_radioSubMenue == 1){ // Mute, Vol+, Vol-, Sta+, Sta-, StaList
                 clearTitle();
                 txt_RA_sTitle.disable();
-                sdr_RA_volume.show();
+                sdr_RA_volume.show(true, false);
                 btn_RA_mute.show();
                 btn_RA_prevSta.show();   btn_RA_nextSta.show();
-            //    txt_RA_staName.show();
+            //    txt_RA_staName.show(true, false);
                 setTimeCounter(2);
             }
             if(_radioSubMenue == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
@@ -2447,8 +2448,8 @@ void changeState(int32_t state){
             if(_radioSubMenue == 3){ // show Numbers from IR
                 char buf[10];
                 itoa(_irNumber, buf, 10);
-                txt_RA_irNum.setText(buf, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-                txt_RA_irNum.show();
+                txt_RA_irNum.setText(buf);
+                txt_RA_irNum.show(true, false);
                 setTimeCounter(1);
             }
             if(_radioSubMenue == 4){ // IR select mode
@@ -2483,11 +2484,11 @@ void changeState(int32_t state){
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
-                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
                 sdr_PL_volume.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
-                txt_PL_fNumber.show();
+                txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
                 btn_PL_prevFile.show(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
@@ -2495,10 +2496,10 @@ void changeState(int32_t state){
                 btn_PL_fileList.hide();
                 btn_PL_radio.hide();
                 btn_PL_off.hide();
-                pgb_PL_progress.setValue(0); pgb_PL_progress.show();
-                sdr_PL_volume.show();
-                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
-                txt_PL_fNumber.show();
+                pgb_PL_progress.setValue(0); pgb_PL_progress.show(true, false);
+                sdr_PL_volume.show(true, false);
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show(true, false);
+                txt_PL_fNumber.show(true, false);
                 btn_PL_mute.show();
                 btn_PL_pause.setOff(); btn_PL_pause.show();
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
@@ -2508,10 +2509,10 @@ void changeState(int32_t state){
                 _SD_content.listFilesInDir(_cur_AudioFolder, true, false);
                 _cur_Codec = 0;
                 showFileLogo(PLAYER);
-                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
-                txt_PL_fNumber.show();
+                txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
                 btn_PL_prevFile.showAlternativePic(); btn_PL_nextFile.show(); btn_PL_ready.show(); btn_PL_playAll.show(); btn_PL_shuffle.show(); btn_PL_fileList.show(); btn_PL_radio.show(); btn_PL_off.show();
             }
@@ -2519,10 +2520,10 @@ void changeState(int32_t state){
                 btn_PL_fileList.hide();
                 btn_PL_radio.hide();
                 btn_PL_off.hide();
-                pgb_PL_progress.setValue(0); pgb_PL_progress.show();
-                sdr_PL_volume.show();
-                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show();
-                txt_PL_fNumber.show();
+                pgb_PL_progress.setValue(0); pgb_PL_progress.show(true, false);
+                sdr_PL_volume.show(true, false);
+                showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show(true, false);
+                txt_PL_fNumber.show(true, false);
                 btn_PL_mute.showAlternativePic();
                 btn_PL_pause.setOff(); btn_PL_pause.show();
                 btn_PL_cancel.show(); btn_PL_playPrev.show(); btn_PL_playNext.show();
@@ -2541,19 +2542,19 @@ void changeState(int32_t state){
                 clearWithOutHeaderFooter();
                 pic_DL_logo.enable();
                 pgb_DL_progress.setValue(0);
-                pgb_DL_progress.show();
-                txt_DL_fName.show();
+                pgb_DL_progress.show(true, false);
+                txt_DL_fName.show(true, false);
                 showFileLogo(DLNA);
             }
             if(_dlnaSubMenue == 0){ // TP submenu
                 if(audio.isRunning()) btn_DL_pause.setActive(true);
                 else                  btn_DL_pause.setActive(false);
-                btn_DL_pause.show(); sdr_DL_volume.show(); btn_DL_mute.show(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
+                btn_DL_pause.show(); sdr_DL_volume.show(true, false); btn_DL_mute.show(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             }
             if(_dlnaSubMenue == 1){ // IR submenu
                 if(audio.isRunning()) btn_DL_pause.setActive(true);
                 else                  btn_DL_pause.setActive(false);
-                btn_DL_pause.show(); sdr_DL_volume.show(); btn_DL_mute.showAlternativePic(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
+                btn_DL_pause.show(); sdr_DL_volume.show(true, false); btn_DL_mute.showAlternativePic(); btn_DL_cancel.show(); btn_DL_fileList.show(); btn_DL_radio.show();
             }
             if(_state != DLNA) webSrv.send("changeState=", "DLNA");
             break;
@@ -2571,11 +2572,11 @@ void changeState(int32_t state){
             }
             if(_clockSubMenue == 1){
                 setTimeCounter(2);
-                btn_CL_mute.show();     btn_CL_alarm.show();    btn_CL_radio.show(); sdr_CL_volume.show(); btn_CL_off.show();
+                btn_CL_mute.show();     btn_CL_alarm.show();    btn_CL_radio.show(); sdr_CL_volume.show(true, false); btn_CL_off.show();
             }
             if(_clockSubMenue == 2){ // same as _clockSubMenue 1 for IR
                 setTimeCounter(2);
-                btn_CL_alarm.showAlternativePic(); btn_CL_radio.show(); btn_CL_mute.show(); btn_CL_off.show(); sdr_CL_volume.show();
+                btn_CL_alarm.showAlternativePic(); btn_CL_radio.show(); btn_CL_mute.show(); btn_CL_off.show(); sdr_CL_volume.show(true, false);
             }
             break;
         }
@@ -2621,10 +2622,10 @@ void changeState(int32_t state){
             break;
         }
         case BRIGHTNESS:{
-            if(_state != BRIGHTNESS) {clearWithOutHeaderFooter(); pic_BR_logo.show(true);}
-            sdr_BR_value.show();
-            txt_BR_value.setText(int2str(_brightness), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-            txt_BR_value.show();
+            if(_state != BRIGHTNESS) {clearWithOutHeaderFooter(); pic_BR_logo.show(true, true);}
+            sdr_BR_value.show(true, true);
+            txt_BR_value.setText(int2str(_brightness));
+            txt_BR_value.show(true, true);
             if(_brightnessSubMenue == 0){
                 btn_BR_ready.show();
             }
@@ -2635,9 +2636,9 @@ void changeState(int32_t state){
         }
         case EQUALIZER:
             if(_state != EQUALIZER) clearWithOutHeaderFooter();
-            sdr_EQ_lowPass.show(); sdr_EQ_bandPass.show(); sdr_EQ_highPass.show(); sdr_EQ_balance.show();
+            sdr_EQ_lowPass.show(true, false); sdr_EQ_bandPass.show(true, false); sdr_EQ_highPass.show(true, false); sdr_EQ_balance.show(true, false);
             btn_EQ_lowPass.show(); btn_EQ_bandPass.show(); btn_EQ_highPass.show(); btn_EQ_balance.show(); btn_EQ_Player.show(); btn_EQ_mute.show();
-            txt_EQ_lowPass.show(); txt_EQ_bandPass.show(); txt_EQ_highPass.show(); txt_EQ_balance.show();
+            txt_EQ_lowPass.show(true, false); txt_EQ_bandPass.show(true, false); txt_EQ_highPass.show(true,  false); txt_EQ_balance.show(true, false);
             if(_equalizerSubMenue == 0){
                 btn_EQ_Radio.show();
             }
@@ -2649,17 +2650,17 @@ void changeState(int32_t state){
 
         case BLUETOOTH: {
             clearWithOutHeaderFooter();
-            btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show(); btn_BT_radio.show(); btn_BT_power.show(); pic_BT_mode.show();
+            btn_BT_volUp.show(); btn_BT_volDown.show(); btn_BT_pause.show(); btn_BT_mode.show(); btn_BT_radio.show(); btn_BT_power.show(); pic_BT_mode.show(true, false);
             char* mode = strdup(bt_emitter.getMode());
             if(strcmp(mode, "RX") == 0){
-                txt_BT_mode.writeText("RECEIVER", TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+                txt_BT_mode.writeText("RECEIVER");
                 if(bt_emitter.isConnected()) muteChanged(true);
             }
             else {
-                txt_BT_mode.writeText("EMITTER", TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+                txt_BT_mode.writeText("EMITTER");
             }
-            txt_BT_mode.setBGcolor(TFT_BROWN); txt_BT_mode.show();
-            char c[10]; sprintf(c, "Vol: %02i", bt_emitter.getVolume()); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_volume.show();
+            txt_BT_mode.setBGcolor(TFT_BROWN); txt_BT_mode.show(true, false);
+            char c[10]; sprintf(c, "Vol: %02i", bt_emitter.getVolume()); txt_BT_volume.writeText(c); txt_BT_volume.show(true, false);
             if(_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
             x_ps_free(&mode);
             break;
@@ -2733,7 +2734,7 @@ void loop() {
                     if(_f_sleeping) return; // tc is active by pressing a button, but do nothing if "off"
 
                     if(_state == RADIO) {
-                                            if(!txt_RA_staName.isEnabled()){  txt_RA_staName.show(); }// assume volBox is shown
+                                            if(!txt_RA_staName.isEnabled()){  txt_RA_staName.show(true, false); }// assume volBox is shown
                                             if(_radioSubMenue == 1) { _radioSubMenue = 0; changeState(RADIO);} // Mute, Vol+, Vol-, Sta+, Sta-, StaList
                                             if(_radioSubMenue == 2) { _radioSubMenue = 0; changeState(RADIO);} // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
                                             if(_radioSubMenue == 3) { _radioSubMenue = 0; changeState(RADIO);} // show Numbers from IR
@@ -2743,7 +2744,7 @@ void loop() {
                                             _radioSubMenue = 0; changeState(RADIO);
                     }
                     else if(_state == PLAYER){
-                                            if(!txt_PL_fName.isEnabled()){txt_PL_fName.show();} // assume volBox is shown
+                                            if(!txt_PL_fName.isEnabled()){txt_PL_fName.show(true, false);} // assume volBox is shown
                                             if(_playerSubMenue == 2) {_playerSubMenue = 0; changeState(PLAYER);}
                                             if(_playerSubMenue == 3){ _playerSubMenue = 1; changeState(PLAYER);}
                     }
@@ -2751,7 +2752,7 @@ void loop() {
                                             _playerSubMenue = 0; changeState(PLAYER);
                     }
                     else if(_state == DLNA) {
-                                            if(!txt_DL_fName.isEnabled()){ txt_DL_fName.show();} // assume volBox is shown
+                                            if(!txt_DL_fName.isEnabled()){ txt_DL_fName.show(true, false);} // assume volBox is shown
                                             if(_dlnaSubMenue == 1) {_dlnaSubMenue = 0; changeState(DLNA);}
                     }
                     else if(_state == DLNAITEMSLIST) {
@@ -3195,8 +3196,8 @@ void audio_eof_stream(const char* info) {
         }
     }
     if(_state == RADIO)  { clearWithOutHeaderFooter(); }
-    if(_state == DLNA)   { txt_DL_fName.setText(""); txt_DL_fName.show(); btn_DL_pause.setActive(false); btn_DL_pause.show();}
-    if(_state == PLAYER) { txt_PL_fName.setText(""); txt_PL_fName.show(); }
+    if(_state == DLNA)   { txt_DL_fName.setText(""); txt_DL_fName.show(true, false); btn_DL_pause.setActive(false); btn_DL_pause.show();}
+    if(_state == PLAYER) { txt_PL_fName.setText(""); txt_PL_fName.show(true, false); }
     _f_eof = true;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3439,7 +3440,7 @@ void ir_short_key(uint8_t key) {
                         if(_equalizerSubMenue == 1){
                             char c[10];
                             if(btnNr == 10){if(_toneBAL < 16){_toneBAL++; itoa(_toneBAL, c, 10); txt_EQ_balance.writeText(c); sdr_EQ_balance.setValue(_toneBAL);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // balance
-                            if(btnNr == 20){if(_toneLP < 6){_toneLP++; itoa(_toneLP, c, 10); txt_EQ_lowPass.writeText(c); sdr_EQ_lowPass.setValue(_toneLP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // HP
+                            if(btnNr == 20){if(_toneLP < 6){_toneLP++; itoa(_toneLP, c, 10); txt_EQ_lowPass.writeText( c); sdr_EQ_lowPass.setValue(_toneLP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // HP
                             if(btnNr == 30){if(_toneBP < 6){_toneBP++; itoa(_toneBP, c, 10); txt_EQ_bandPass.writeText(c); sdr_EQ_bandPass.setValue(_toneBP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // BP
                             if(btnNr == 40){if(_toneHP < 6){_toneHP++; itoa(_toneHP, c, 10); txt_EQ_highPass.writeText(c); sdr_EQ_highPass.setValue(_toneHP);} webSrv.send("settone=", setI2STone()); setTimeCounter(2); return;} // LP
                             if(btnNr == 1) {btnNr = 2; btn_EQ_Player.show(); btn_EQ_mute.showAlternativePic(); setTimeCounter(2); return;}
@@ -3712,7 +3713,7 @@ void ir_short_key(uint8_t key) {
                         break;
                     }
                     if(_state == DLNAITEMSLIST) {setTimeCounter(2); const char* r = lst_DLNA.getSelectedURL();
-                                                 if(r){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle(), TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+                                                 if(r){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(lst_DLNA.getSelectedTitle());
                                                        _dlnaSubMenue = 0; changeState(DLNA); connecttohost(r);}
                                                  break;
                     }
@@ -3772,8 +3773,8 @@ void ir_short_key(uint8_t key) {
                             if(btnNr == 0){btn_EQ_Radio.showClickedPic(); vTaskDelay(100);  setStation(_cur_station); _radioSubMenue = 0; changeState(RADIO); return;} // Radio
                             if(btnNr == 1){btn_EQ_Player.showClickedPic(); vTaskDelay(100); _playerSubMenue = 0; changeState(PLAYER); return;} // Player
                             if(btnNr == 2){btn_EQ_mute.showClickedPic(); vTaskDelay(100);  muteChanged(!_f_mute); btn_EQ_mute.showAlternativePic(); setTimeCounter(2); return;} // Mute
-                            if(btnNr == 10){btn_EQ_balance.showClickedPic(); _toneBAL = 0; txt_EQ_balance.writeText("0");  sdr_EQ_balance.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_balance.showAlternativePic();}
-                            if(btnNr == 20){btn_EQ_lowPass.showClickedPic();  _toneLP = 0; txt_EQ_lowPass.writeText("0");  sdr_EQ_lowPass.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_lowPass.showAlternativePic();}
+                            if(btnNr == 10){btn_EQ_balance.showClickedPic(); _toneBAL = 0; txt_EQ_balance.writeText( "0");  sdr_EQ_balance.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_balance.showAlternativePic();}
+                            if(btnNr == 20){btn_EQ_lowPass.showClickedPic();  _toneLP = 0; txt_EQ_lowPass.writeText( "0");  sdr_EQ_lowPass.setValue(_toneLP);  webSrv.send("settone=", setI2STone()); btn_EQ_lowPass.showAlternativePic();}
                             if(btnNr == 30){btn_EQ_bandPass.showClickedPic(); _toneBP = 0; txt_EQ_bandPass.writeText("0"); sdr_EQ_bandPass.setValue(_toneLP); webSrv.send("settone=", setI2STone()); btn_EQ_bandPass.showAlternativePic();}
                             if(btnNr == 40){btn_EQ_highPass.showClickedPic(); _toneHP = 0; txt_EQ_highPass.writeText("0"); sdr_EQ_highPass.setValue(_toneLP); webSrv.send("settone=", setI2STone()); btn_EQ_highPass.showAlternativePic();}
                         }
@@ -4320,11 +4321,11 @@ void kcx_bt_info(const char* info, const char* val) {
     }
 
     if(startsWith(info, "Volume")){
-        char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        char c[10]; sprintf(c, "Vol: %s", val); txt_BT_volume.writeText(c);
         if(_BTvolume != atoi(val)) bt_emitter.setVolume(_BTvolume);
     }
     if(startsWith(info, "Mode")){
-        txt_BT_mode.writeText(val, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_BT_mode.writeText(val);
     }
     if(startsWith(info, "POWER OFF")){
         _f_BTcurPowerState = false;
@@ -4333,7 +4334,7 @@ void kcx_bt_info(const char* info, const char* val) {
         if(_state == BLUETOOTH) {
             btn_BT_power.setValue(false);
             pic_BT_mode.setPicturePath("/common/BToff.png");
-            pic_BT_mode.show();
+            pic_BT_mode.show(true, false);
         }
         webSrv.send("KCX_BT_connected=", "-1");
     }
@@ -4344,7 +4345,7 @@ void kcx_bt_info(const char* info, const char* val) {
         if(_state == BLUETOOTH) {
             btn_BT_power.setValue(true);
             pic_BT_mode.setPicturePath("/common/BTnc.png");
-            pic_BT_mode.show();
+            pic_BT_mode.show(true, false);
         }
         return;
     }
@@ -4364,7 +4365,7 @@ void kcx_bt_status(bool status) { // is always called when the status changes fr
         webSrv.send("KCX_BT_connected=", "0");
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
     }
-    if(_state == BLUETOOTH) pic_BT_mode.show();
+    if(_state == BLUETOOTH) pic_BT_mode.show(true, false);
 }
 
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
@@ -4393,7 +4394,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
     if(strcmp(name, "sdr_PL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
     if(strcmp(name, "sdr_DL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
     if(strcmp(name, "sdr_CL_volume") == 0) {setTimeCounter(2); setVolume(arg1); return;}
-    if(strcmp(name, "sdr_BR_value") == 0)  {_brightness = arg1; setTFTbrightness(arg1); txt_BR_value.writeText(int2str(arg1), TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); return;}
+    if(strcmp(name, "sdr_BR_value") == 0)  {_brightness = arg1; setTFTbrightness(arg1); txt_BR_value.writeText(int2str(arg1)); return;}
     if(strcmp(name, "sdr_E_LP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_lowPass.writeText(c);  _toneLP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_BP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_bandPass.writeText(c); _toneBP = arg1;  webSrv.send("settone=", setI2STone()); return;}
     if(strcmp(name, "sdr_E_HP") == 0)  {itoa(arg1, c, 10); strcat(c, " dB"); txt_EQ_highPass.writeText(c); _toneHP = arg1;  webSrv.send("settone=", setI2STone()); return;}
@@ -4559,11 +4560,11 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_DL_pause") == 0)    {_f_pauseResume = audio.pauseResume(); return;}
         if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); _radioSubMenue = 0; changeState(RADIO); return;}
         if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
-        if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}
+        if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(true, false); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}
         if(strcmp(name, "sdr_DL_volume") == 0)   {return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); connecttohost(ra.arg1); _dlnaSubMenue = 0; changeState(DLNA);} // play a file
+        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2); connecttohost(ra.arg1); _dlnaSubMenue = 0; changeState(DLNA);} // play a file
                                                   if(ra.val1 == 2){dlna.browseServer(ra.val2, ra.arg1, 0, 50); _f_dlnaMakePlaylistOTF = true; } // browse dlna object, waiting for content and create a playlist
                                                   return;}
     }
