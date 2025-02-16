@@ -257,7 +257,7 @@
     #define I2S_LRC             18
     #define I2S_MCLK           -1  // important!
 
-    #define IR_PIN             -1  // IR Receiver (if available)
+    #define IR_PIN             38  // IR Receiver (if available)
     #define BT_EMITTER_RX      -1  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
     #define BT_EMITTER_TX      -1  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
     #define BT_EMITTER_LINK    -1  // high if connected                     (-1 if not available)
@@ -2308,7 +2308,8 @@ public:
         else     m_name = x_ps_strdup("numbersBox");
 
         if(TFT_CONTROLLER < 2) {m_segmWidth = 48;}
-        else                   {m_segmWidth = 64;}
+        else if (TFT_CONTROLLER < 7) {m_segmWidth = 64;}
+        else m_segmWidth = 86;
     }
     ~numbersBox(){
         x_ps_free(&m_name);
