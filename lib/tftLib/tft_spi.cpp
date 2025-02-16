@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 12 2025
+// updated on Feb 16 2025
 
 #include "tft_spi.h"
 #include "Arduino.h"
@@ -175,12 +175,14 @@ void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     for(uint16_t j = y; j < y + h; j++) {
         memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
     }
-    startWrite();
-    setAddrWindow(x, y, w, h);
-    for(int16_t j = y; j < y + h; j++) {
-        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+    if(destination == 0){
+        startWrite();
+        setAddrWindow(x, y, w, h);
+        for(int16_t j = y; j < y + h; j++) {
+            writePixels(m_framebuffer[0] + j * m_h_res + x, w);
+        }
+        endWrite();
     }
-    endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data) {
