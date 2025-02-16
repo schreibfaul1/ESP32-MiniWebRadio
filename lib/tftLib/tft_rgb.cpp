@@ -38,7 +38,7 @@ bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb
         return true;
     }
     m_refresh = false;
-    return false;
+    return true;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
@@ -123,11 +123,8 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
         .on_bounce_empty = nullptr,
         .on_frame_buf_complete = nullptr,
     };
-
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
-
-
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {
@@ -526,7 +523,7 @@ void TFT_RGB::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     for(uint16_t j = y; j < y + h; j++) {
         memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
     }
-    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[destination]);
+    if(destination == 0) panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]); // just draw when copied in fb0
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::readRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t* data) {

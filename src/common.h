@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 13.Feb 2025
+// updated: 14.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -269,7 +269,7 @@
     #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
     #define HP_DETECT          -1
     #define AMP_ENABLED        -1
-    #define TFT_BL             -1
+    #define TFT_BL              2  // same as RGB_PINS.bl
 
     #define I2C_SDA            -1  // I2C, dala line for capacitive touchpad
     #define I2C_SCL            -1  // I2C, clock line for capacitive touchpad
@@ -1534,7 +1534,8 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_objectInit = false;
-    bool        m_backgroundTransparency = true;
+    bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false;
     uint8_t     m_railHigh = 0;
     uint16_t    m_middle_h = 0;
     uint16_t    m_spotPos = 0;
@@ -1559,7 +1560,7 @@ public:
     ~slider(){
         m_objectInit = false;
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal, bool backgroundTransparency = true){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -1576,7 +1577,6 @@ public:
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
-        m_backgroundTransparency = backgroundTransparency;
     }
     const char* getName() {
         return m_name;
@@ -1617,25 +1617,38 @@ public:
         m_minVal = minVal;
         m_maxVal = maxVal;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
         m_enabled = true;
         int x = m_x + m_padding_left;
         int y = m_middle_h - (m_railHigh / 2);
         int w = m_w - m_padding_left - m_padding_right;
         int h = m_railHigh; (void) h;
         int r = 2;
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         tft.fillRoundRect(x, y, w, m_railHigh, r, m_railColor);
         drawNewSpot(m_spotPos);
     }
     void disable(){
+        if(m_enabled)hide();
         m_enabled = false;
     }
     void hide(){
-        if(m_backgroundTransparency) tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-        else                         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        m_enabled = false;
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = true;
     }
     bool released(){
         if(!m_enabled) return false;
@@ -1658,7 +1671,8 @@ private:
     void drawNewSpot(uint16_t xPos){
         if(m_enabled){
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
+                else                 tft.copyFramebuffer(1, 0, m_spotPos - m_spotRadius - 1, m_middle_h - m_spotRadius - 1, 2 * m_spotRadius + 2, 2 * m_spotRadius + 2);
             }
             else{
                 tft.fillRect(             m_spotPos - m_spotRadius, m_middle_h - m_spotRadius, 2 * m_spotRadius, 2 * m_spotRadius + 1, m_bgColor);
@@ -1694,6 +1708,8 @@ private:
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_objectInit = false;
+    bool        m_backgroundTransparency = true;
+    bool        m_saveBackground = false;
     uint8_t     m_railHigh = 0;
     char*       m_name = NULL;
     releasedArg m_ra;
@@ -1758,7 +1774,16 @@ public:
         m_minVal = minVal;
         m_maxVal = maxVal;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         tft.drawRect(m_x + m_padding_left, m_y, m_w - m_padding_left - m_padding_right, m_h, m_frameColor);
         drawNewValue();
         m_enabled = true;
@@ -1767,8 +1792,13 @@ public:
         m_enabled = false;
     }
     void hide(){
-        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
-    //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     bool released(){
@@ -1837,6 +1867,8 @@ private:
     bool            m_enabled = false;
     bool            m_clicked = false;
     bool            m_autoSize = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
     releasedArg     m_ra;
 public:
     textbox(const char* name){
@@ -1851,7 +1883,7 @@ public:
         x_ps_free(&m_text);
         x_ps_free(&m_name);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left = 0, uint8_t paddig_right = 0, uint8_t paddig_top = 0, uint8_t paddig_bottom = 0){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -1867,15 +1899,23 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    void show(){
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
         if(!m_text){m_text = strdup("");}
-        writeText(m_text, m_h_align, m_v_align);
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
     }
     void hide(){
-    //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-        tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         m_enabled = false;
     }
     void disable(){
@@ -1912,28 +1952,34 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void setText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT,  uint8_t v_align = TFT_ALIGN_TOP){ // prepare a text, wait of show() to write it
+    void setText(const char* txt){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
         x_ps_free(&m_text);
         m_text = x_ps_strdup(txt);
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
         m_h_align = h_align;
         m_v_align = v_align;
     }
-    void writeText(const char* txt, uint8_t h_align = TFT_ALIGN_RIGHT, uint8_t v_align = TFT_ALIGN_TOP){
+
+    void writeText(const char* txt){
         if(!txt){txt = strdup("");}
         if(txt != m_text){ // no self copy
             x_ps_free(&m_text);
             m_text = x_ps_strdup(txt);
         }
-        m_h_align = h_align;
-        m_v_align = v_align;
         if(m_enabled){
             uint16_t txtColor_tmp = tft.getTextColor();
             uint16_t bgColor_tmp = tft.getBackGroundColor();
             tft.setTextColor(m_fgColor);
             tft.setBackGoundColor(m_bgColor);
-        //    tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
             if(m_fontSize != 0){ tft.setFont(m_fontSize);}
             int x = m_x + m_padding_left;
             int y = m_y + m_paddig_top;
@@ -2356,7 +2402,7 @@ public:
         x_ps_free(&m_PicturePath);
         x_ps_free(&m_altPicturePath);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, bool backgroundTransparency = false){
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -2366,7 +2412,6 @@ public:
         m_paddig_top    = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_enabled = false;
-        m_backgroundTransparency = backgroundTransparency;
     }
     const char* getName(){
         return m_name;
@@ -2374,7 +2419,8 @@ public:
     bool isEnabled() {
         return m_enabled;
     }
-    bool show(bool saveBackground = false){
+    bool show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         int x = m_x + m_padding_left;
         int y = m_y + m_paddig_top;
@@ -2461,7 +2507,7 @@ public:
 private:
     bool GetImageSize(const char* picturePath){
         const char* scaledPicPath = scaleImage(picturePath);
-        if(!SD_MMC.exists(scaledPicPath)) {/*log_w("file %s not exists, objName: %s", scaledPicPath, m_name);*/ return false;}
+        if(!SD_MMC.exists(scaledPicPath)) {log_w("file %s not exists, objName: %s", scaledPicPath, m_name); return false;}
         File file = SD_MMC.open(scaledPicPath,"r", false);
         if(file.size() < 24) {log_w("file %s is too small", scaledPicPath); file.close(); return false;}
         char buf[8];
@@ -2517,7 +2563,7 @@ private:
             // log_w("w %i, h %i", m_w, m_h);
             return true;
         }
-        log_e("unknown picture format");
+        log_e("unknown picture format %s", picturePath);
         return false;
     }
 };
@@ -3015,6 +3061,8 @@ private:
     uint8_t                   m_lineHight = 0;
     uint8_t                   m_mode = 0;
     uint32_t                  m_bgColor = 0;
+    uint8_t                   m_indentContent = 0;
+    uint8_t                   m_indentDirectory = 0;
     char*                     m_name = NULL;
     char*                     m_buff = NULL;
     char*                     m_txt[10] = {0};
@@ -3045,12 +3093,26 @@ public:
     }
     void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize){
         if(mode == RADIO)  {m_mode = RADIO;}
-        if(mode == PLAYER) {m_mode  = PLAYER;}
+        if(mode == PLAYER) {m_mode = PLAYER;}
         if(mode == DLNA)   {m_mode = DLNA;}
         m_fontSize = fontSize;
         if(strcmp(tftSize, "s") == 0) m_tftSize = 1;
         if(strcmp(tftSize, "m") == 0) m_tftSize = 2;
         if(strcmp(tftSize, "l") == 0) m_tftSize = 3;
+        switch(m_tftSize){
+            case 1: if(m_mode == RADIO) {m_indentDirectory = 15; m_indentContent = 15;} // 320x240
+                    if(m_mode == DLNA)  {m_indentDirectory = 10; m_indentContent = 15;}
+                    if(m_mode == PLAYER){m_indentDirectory = 10; m_indentContent = 15;}
+                    break;
+            case 2: if(m_mode == RADIO) {m_indentDirectory = 20; m_indentContent = 20;} // 480x320
+                    if(m_mode == DLNA)  {m_indentDirectory = 10; m_indentContent = 20;}
+                    if(m_mode == PLAYER){m_indentDirectory = 10; m_indentContent = 20;}
+                    break;
+            case 3: if(m_mode == RADIO) {m_indentDirectory = 30; m_indentContent = 30;} // 800x480
+                    if(m_mode == DLNA)  {m_indentDirectory = 10; m_indentContent = 30;}
+                    if(m_mode == PLAYER){m_indentDirectory = 10; m_indentContent = 30;}
+                    break;
+        }
     }
     void clearList(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -3064,23 +3126,7 @@ public:
     void drawLine(uint8_t pos, const char* txt, const char* ext1 = NULL, const char* ext2 = NULL, const char* color = ANSI_ESC_WHITE, int32_t nr = -1){
         if(pos > 9) return;
         if(!txt) return;
-        uint8_t indentContent = 0;
-        uint8_t indentDirectory = 0;
         tft.setFont(m_fontSize);
-        switch(m_tftSize){
-            case 1: if(m_mode == RADIO) {indentDirectory = 15; indentContent = 15;} // 320x240
-                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 15;}
-                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 15;}
-                    break;
-            case 2: if(m_mode == RADIO) {indentDirectory = 20; indentContent = 20;} // 480x320
-                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 20;}
-                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 20;}
-                    break;
-            case 3: if(m_mode == RADIO) {indentDirectory = 30; indentContent = 30;} // 800x480
-                    if(m_mode == DLNA)  {indentDirectory = 10; indentContent = 30;}
-                    if(m_mode == PLAYER){indentDirectory = 10; indentContent = 30;}
-                    break;
-        }
         if(m_mode == RADIO){
             sprintf(m_buff, ANSI_ESC_YELLOW "%03li %s%s" , nr, color, txt);
             if(txt ){x_ps_free(&m_txt[pos]);  m_txt[pos]  = strdup(txt);}
@@ -3103,7 +3149,7 @@ public:
             else     sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li" , color, txt, nr);
             if(txt) {x_ps_free(&m_txt[pos]);  m_txt[pos] = strdup(txt);  m_nr[pos] = nr;}
         }
-        tft.writeText(m_buff, pos? indentContent : indentDirectory, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        tft.writeText(m_buff, pos? m_indentContent : m_indentDirectory, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     void drawPosInfo(int16_t firstVal, int16_t secondVal, int16_t total, const char* color){ // e.g. 1-9/65
         sprintf(m_buff, "%s%i-%i/%i", color, firstVal, secondVal, total);
@@ -3119,7 +3165,7 @@ public:
             if(m_nr[pos]) sprintf(m_buff, "%s%s" ANSI_ESC_YELLOW " %li", color, m_txt[pos], m_nr[pos]); // file
             else          sprintf(m_buff, "%s%s", color, m_txt[pos]);                                   // directory
         }
-        tft.writeText(m_buff, pos? 20 : 10, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        tft.writeText(m_buff, pos? m_indentContent : m_indentDirectory, m_y + pos *m_lineHight, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
     }
     const char* getTxtByPos(uint8_t pos){
         return m_txt[pos];
@@ -3717,6 +3763,7 @@ public:
 
         hasReleased(x - m_x, y - m_y);
         m_clicked = false;
+        int pos = (y - m_y) / m_lineHight;
 
         char* fileName = NULL;
 
@@ -3731,9 +3778,7 @@ public:
                                     }
         if(m_browseOnRelease == 3)  {   //log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
                                         if(!strcmp(m_curAudioFolder, "/audiofiles/")) goto exit; // is already the root
-                                        tft.setTextColor(TFT_CYAN);
-                                        tft.setFont(m_fontSize);
-                                        tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        myList.drawLine(pos, m_curAudioFolder, "", "", ANSI_ESC_CYAN, 1);
                                         int lastSlash = rfind(m_curAudioFolder, '/');
                                         if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
                                             int secondLastSlash = rfind(m_curAudioFolder, '/', lastSlash - 1);
@@ -3749,9 +3794,7 @@ public:
                                     }
         if(m_browseOnRelease == 4)  {   m_viewPos += m_fileListPos;                                                                 // next folder
                                         int16_t idx = m_viewPos -1;
-                                        tft.setTextColor(TFT_CYAN);
-                                        tft.setFont(m_fontSize);
-                                        tft.writeText(_SD_content.getColouredSStringByIndex(idx), 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        myList.drawLine(pos, _SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, 1);
                                         strcpy(m_curAudioFolder, _SD_content.getFilePathByIndex(idx));
                                         m_curAudioFileNr = 0;
                                         m_viewPos = 0;
@@ -3761,9 +3804,7 @@ public:
                                         m_ra.arg1 = m_curAudioFolder;
                                     }
         if(m_browseOnRelease == 5)  {   m_viewPos += m_fileListPos;                                                                 // play file
-                                        tft.setTextColor(TFT_CYAN);
-                                        tft.setFont(m_fontSize);
-                                        tft.writeText(m_curAudioName, 20, m_y + (m_fileListPos) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+                                        myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, 1);
                                         vTaskDelay(300 / portTICK_PERIOD_MS);
                                         m_ra.arg1 = m_curAudioFolder;      // fileFolder
                                         m_ra.arg2 = m_curAudioName;        // fileName
@@ -3837,9 +3878,7 @@ public:
     const char* getSelectedFile(){
         if(m_curAudioFileNr == -1) { // get parent folder
             if(!strcmp(m_curAudioFolder, "/audiofiles/")) return NULL; // is already the root
-            tft.setTextColor(TFT_CYAN);
-            tft.setFont(m_fontSize);
-            tft.writeText(m_curAudioFolder, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             int lastSlash = rfind(m_curAudioFolder, '/');
             if (lastSlash != -1) { // Look for the penultimate '/' before the position of the last
@@ -3853,17 +3892,13 @@ public:
             return NULL;
         }
         if(_SD_content.isDir(m_curAudioFileNr)){ // is child folder
-            tft.setTextColor(TFT_CYAN);
-            tft.setFont(m_fontSize);
-            tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+            myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
             show(m_curAudioPath, 0);
             return NULL;
         }
-        tft.setTextColor(TFT_CYAN); // is file
-        tft.setFont(m_fontSize);
-        tft.writeText(_SD_content.getColouredSStringByIndex(m_curAudioFileNr), 20, m_y + (m_curAudioFileNr + 1) * m_lineHight, m_w - 20, m_lineHight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true);
+        myList.colourLine(m_y, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
         return _SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
