@@ -2384,7 +2384,7 @@ private:
     uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
 #else
     uint16_t m_timeXPos7S[5] = {36, 196, 436, 596, 356}; // seven segment digits "hhmm:"
-    uint16_t m_timeXPosFN[6] = {20, 112,  240, 352, 464, 208}; // folded numbers
+    uint16_t m_timeXPosFN[6] = {36, 166,  374, 505, 634, 296}; // folded numbers
 #endif
     uint16_t    m_minuteOfTheDay = 0;
     uint32_t    m_bgColor = 0;
