@@ -271,8 +271,8 @@
     #define AMP_ENABLED        -1
     #define TFT_BL              2  // same as RGB_PINS.bl
 
-    #define I2C_SDA            -1  // I2C, dala line for capacitive touchpad
-    #define I2C_SCL            -1  // I2C, clock line for capacitive touchpad
+    #define I2C_SDA            19  // I2C, dala line for capacitive touchpad
+    #define I2C_SCL            20  // I2C, clock line for capacitive touchpad
 #endif // Sunton
 
 #if TFT_CONTROLLER == 9 // Waveshare
