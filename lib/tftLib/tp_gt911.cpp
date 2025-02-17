@@ -38,7 +38,10 @@ bool TP_GT911::begin(int8_t sda, int8_t scl, uint8_t addr, uint32_t clk, int8_t 
     m_wire->begin(m_sda, m_scl, m_clk);
     m_wire->beginTransmission(m_addr);
     if(m_wire->endTransmission() == 0) {
-        log_e("TouchPad found at 0x%02X", m_addr);
+        char buff[30] = {0};
+        sprintf(buff, "TouchPad found at 0x%02X", m_addr);
+        if(tp_info) tp_info(buff);
+
         readInfo(); // Need to get resolution to use rotation
         return true;
     }
@@ -118,10 +121,10 @@ void TP_GT911::loop() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool TP_GT911::getProductID() {
-    uint8_t buf[4];
-    memset(buf, 0, 4);
-    readBytes(GT911_REG_ID, buf, 4);
-    log_w("Product ID: %c%c%c%c", buf[0], buf[1], buf[2], buf[3]);
+    char buf[30] = {0};
+    strcpy(buf, "Product ID: ");
+    readBytes(GT911_REG_ID, (uint8_t*)buf + 12, 4);
+    if(tp_info) tp_info(buf);
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -110,11 +110,11 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
 
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
     memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
     memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
 
     esp_lcd_rgb_panel_event_callbacks_t cbs = {

@@ -152,7 +152,6 @@ bool                    _f_newStationName = false;
 bool                    _f_newCommercial = false;
 bool                    _f_volBarVisible = false;
 bool                    _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
-bool                    _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
 bool                    _f_timeAnnouncement = true;  // time announcement every full hour
 bool                    _f_playlistEnabled = false;
 bool                    _f_playlistNextFile = false;
@@ -212,12 +211,8 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+SPIClass            spiBus(FSPI);
 
-#if CONFIG_IDF_TARGET_ESP32
-    SPIClass spiBus(VSPI);
-#else  // TARGET ESP32-S3
-    SPIClass spiBus(FSPI);
-#endif
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI     tft(spiBus, TFT_CS);
@@ -228,13 +223,6 @@ TP_GT911    tp(&i2cBusOne);
 #endif
 
 stationManagement   staMgnt(&_cur_station);
-
-#if DECODER == 2 // ac101
-AC101 dac(&i2cBusTwo);
-#endif
-#if DECODER == 3 // es8388
-ES8388 dac(&i2cBusTwo);
-#endif
 
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
@@ -1623,10 +1611,6 @@ void setup() {
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
         setRTC(_TZString.c_str());
     }
-#if DECODER > 1 // DAC controlled by I2C
-    if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
-#endif
-
     placingGraphicObjects();
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
@@ -1654,15 +1638,6 @@ void setup() {
     ir.begin(); // Init InfraredDecoder
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
-
-    if(HP_DETECT >= 0) {
-        pinMode(HP_DETECT, INPUT);
-        attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
-    }
-    if(AMP_ENABLED >= 0) { // enable onboard amplifier
-        pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, HIGH);
-    }
 
     ticker100ms.attach(0.1, timer100ms);
     if(BT_EMITTER_CONNECT >= 0){
@@ -1751,38 +1726,6 @@ void setVolume(uint8_t vol) {
     sdr_PL_volume.setValue(_cur_volume);
     sdr_RA_volume.setValue(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
-
-#if DECODER > 1 // ES8388, AC101 ...
-    uint8_t v = map_l(_cur_volume, 0, _volumeSteps, 0, 63);
-    if(HP_DETECT == -1) {
-        if(_f_mute){
-            dac.SetVolumeSpeaker(0);
-            dac.SetVolumeHeadphone(0);
-        }
-        else{
-            dac.SetVolumeSpeaker(v);
-            dac.SetVolumeHeadphone(v);
-        }
-    }
-    else {
-        if(_f_mute){
-            dac.SetVolumeSpeaker(0);
-            dac.SetVolumeHeadphone(0);
-        }
-        else{
-            if(digitalRead(HP_DETECT) == HIGH) {
-                // SerialPrintfln("HP_Detect = High, volume %i", vol);
-                dac.SetVolumeSpeaker(v);
-                dac.SetVolumeHeadphone(0);
-            }
-            else {
-                // SerialPrintfln("HP_Detect = Low, volume %i", vol);
-                dac.SetVolumeSpeaker(0);
-                dac.SetVolumeHeadphone(v);
-            }
-        }
-    }
-#endif
 }
 
 uint8_t downvolume() {
@@ -2031,17 +1974,12 @@ bool SD_delete(const char* itemPath) {
     return success;
 }
 
-void headphoneDetect() { // called via interrupt
-    _f_hpChanged = true;
-}
-
 void fall_asleep() {
     _f_sleeping = true;
     _f_playlistEnabled = false;
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     audio.stopSong();
-    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, LOW);}
     if(_sleepMode == 0){
         clearAll();
         setTFTbrightness(0);
@@ -2064,7 +2002,6 @@ void wake_up() {
     muteChanged(false);
     clearAll();
     setTFTbrightness(_brightness);
-    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
     if(_cur_station) setStation(_cur_station);
     else connecttohost(_settings.lastconnectedhost);
     _radioSubMenue = 0;
@@ -2872,10 +2809,9 @@ void loop() {
             dispFooter.show(true);
             if(_ringVolume > 0){ // alarm with bell
                 showFileName("ALARM");
-                drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
+                drawImage("/common/Alarm.png", _winLogo.x, _winLogo.y);
                 setTFTbrightness(_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                 setVolume(_ringVolume);
                 audio.setVolume(_ringVolume, _volumeCurve);
                 muteChanged(false);
@@ -2939,13 +2875,6 @@ void loop() {
             if(_cur_station) setStation(_cur_station);
             else connecttohost(_settings.lastconnectedhost);
             return;
-        }
-        //------------------------------------------HEADPHONE / LOUDSPEAKER --------------------------------------------------------------------------
-        if(_f_hpChanged) {
-            setVolume(_cur_volume);
-            if(!digitalRead(HP_DETECT)) { SerialPrintfln("Headphone plugged in"); }
-            else { SerialPrintfln("Headphone unplugged"); }
-            _f_hpChanged = false;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
         if(audio.isRunning()){
@@ -3338,11 +3267,12 @@ void ftp_debug(const char* info) {
     SerialPrintfln("ftpServer:   %s", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+// Events from rtime library
 void RTIME_info(const char* info) { SerialPrintfln("rtime_info:  %s", info); }
-
 // Events from tft library
 void tft_info(const char* info) { SerialPrintfln("tft_info: .  %s", info); }
-
+// Events from tp library
+void tp_info(const char* info) { SerialPrintfln("tp_info: ..  %s", info); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Events from IR Library
 void ir_code(uint8_t addr, uint8_t cmd) {
