@@ -120,11 +120,10 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
     memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
 
-    esp_lcd_rgb_panel_event_callbacks_t cbs = {
-        .on_color_trans_done = nullptr,  // if not used, set to nullptr
+    esp_lcd_rgb_panel_event_callbacks_t cbs = { // if not used, set to nullptr
         .on_vsync = TFT_RGB::on_vsync_event,
-        .on_bounce_empty = nullptr,
-        .on_frame_buf_complete = nullptr,
+        .on_bounce_empty = nullptr,           /*!< Bounce buffer empty callback. */
+        .on_bounce_frame_finish = nullptr,    /*!< Bounce buffer finish callback. */
     };
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
