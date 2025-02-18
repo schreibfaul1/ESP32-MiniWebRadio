@@ -4778,33 +4778,32 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
             if (a < 255) {
                 // **Alpha-Blending mit vorhandenem Framebuffer-Wert**
 
-                // 1. Bestehenden RGB565-Wert auslesen
+                // 1. read old color from framebuffer
                 uint16_t oldColor = m_framebuffer[0][fbIndex];
 
-                // 2. Bestehendes RGB565-Pixel in 8-Bit RGB umwandeln
+                // 2. convert old color back into RGB888
                 uint8_t oldR = ((oldColor >> 11) & 0x1F) << 3;
                 uint8_t oldG = ((oldColor >> 5) & 0x3F) << 2;
                 uint8_t oldB = (oldColor & 0x1F) << 3;
 
-                // 3. Alpha-Blending Formel anwenden
+                // 3. calculate new color with alpha blending
                 uint8_t newR = ((r * a) + (oldR * (255 - a))) / 255;
                 uint8_t newG = ((g * a) + (oldG * (255 - a))) / 255;
                 uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
 
-                // 4. Neue Farbe wieder in RGB565 umwandeln
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) |  // 8->5 Bit (Rot)
-                                             ((newG >> 2) << 5)  |  // 8->6 Bit (Grün)
-                                             (newB >> 3);         // 8->5 Bit (Blau)
+                // 4. Convert new color back into RGB565
+                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) |  // 8->5 Bit (red)
+                                             ((newG >> 2) << 5)  |  // 8->6 Bit (green)
+                                             (newB >> 3);         // 8->5 Bit (blue)
             } else {
-                // **Normale RGB565-Konvertierung (kein Blending nötig, volle Deckkraft)**
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) |  // 8->5 Bit (Rot)
-                                             ((g >> 2) << 5)  |  // 8->6 Bit (Grün)
-                                             (b >> 3);         // 8->5 Bit (Blau)
+                // **Normal RGB565 conversion (no blending necessary, full opacity)**
+                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) |  // 8->5 Bit (red)
+                                             ((g >> 2) << 5)  |  // 8->6 Bit (green)
+                                             (b >> 3);         // 8->5 Bit (blue)
             }
         }
     }
-
-    // Nur den veränderten Bereich zeichnen
-    panelDrawBitmap(x, y, x + w, y + h, &m_framebuffer[0][y * m_h_res + x]);
+    // Only draw the changed area
+    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

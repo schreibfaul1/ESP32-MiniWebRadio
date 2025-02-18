@@ -151,6 +151,7 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
 #define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
 
+
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
