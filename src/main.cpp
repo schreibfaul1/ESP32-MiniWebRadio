@@ -1589,7 +1589,7 @@ void setup() {
 
     if(TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
-    drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
+    drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;

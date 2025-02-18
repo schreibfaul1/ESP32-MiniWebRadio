@@ -32,13 +32,15 @@ bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_pan
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
     if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
-        esp_lcd_rgb_panel_refresh(m_panel);
+        int res = esp_lcd_rgb_panel_refresh(m_panel);
         xSemaphoreGive(m_vsync_semaphore);
-        m_refresh = true;
-        return true;
+        if(res == ESP_OK){
+            m_refresh = true;
+            return true;
+        }
     }
     m_refresh = false;
-    return true;
+    return false;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
@@ -58,11 +60,11 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
     panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
     panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
-    panel_config.timings.flags.hsync_idle_low = false;
-    panel_config.timings.flags.vsync_idle_low = false;
+    panel_config.timings.flags.hsync_idle_low = true;
+    panel_config.timings.flags.vsync_idle_low = true;
     panel_config.timings.flags.de_idle_high = false;
     panel_config.timings.flags.pclk_active_neg = true;
-    panel_config.timings.flags.pclk_idle_high = false;
+    panel_config.timings.flags.pclk_idle_high = true;
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
@@ -98,9 +100,10 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     if(tft_info) tft_info("Display initialisiert.");
 
     // Hintergrundbeleuchtung einschalten
-    gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
-    gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
-
+    if(m_pins.bl >= 0){
+        gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
+        gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
+    }
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
