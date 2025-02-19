@@ -31,14 +31,14 @@ bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_pan
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
-    if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
+ //   if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
         int res = esp_lcd_rgb_panel_refresh(m_panel);
-        xSemaphoreGive(m_vsync_semaphore);
+ //       xSemaphoreGive(m_vsync_semaphore);
         if(res == ESP_OK){
             m_refresh = true;
             return true;
         }
-    }
+ //   }
     m_refresh = false;
     return false;
 }

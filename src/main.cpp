@@ -880,7 +880,7 @@ void showLogoAndStationName(bool force) {
     memmove(SN_utf8, "/logo/", 6);
     strcat(SN_utf8, ".jpg");
     pic_RA_logo.setPicturePath(SN_utf8);
-    pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+    pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
     pic_RA_logo.show(true, false);
 exit:
     x_ps_free(&SN_utf8);
@@ -889,10 +889,10 @@ exit:
 void showFileLogo(uint8_t state) {
     String logo;
     if(state == RADIO) {
-        if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".jpg";
-        else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".png";
+        else logo = "/common/" + (String)codecname[_cur_Codec] + ".png";
         pic_RA_logo.setPicturePath(logo.c_str());
-        pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
         pic_RA_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
@@ -900,7 +900,7 @@ void showFileLogo(uint8_t state) {
     else if(state == DLNA) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
-        pic_DL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
         pic_DL_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
@@ -908,16 +908,16 @@ void showFileLogo(uint8_t state) {
     if(state == PLAYER) { // _state PLAYER
         if(_cur_Codec == 0) logo = "/common/AudioPlayer.png";
         else if(_playerSubMenue == 0) logo = "/common/AudioPlayer.png";
-        else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        else logo = "/common/" + (String)codecname[_cur_Codec] + ".png";
         pic_PL_logo.setPicturePath(logo.c_str());
-        pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_PL_logo.setAlternativPicturePath("/common/unknown.png");
         pic_PL_logo.show(true, false);
         return;
     }
     if(state == SETTINGS) {
         logo = "/common/Settings.png";
         pic_SE_logo.setPicturePath(logo.c_str());
-        pic_SE_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_SE_logo.setAlternativPicturePath("/common/unknown.png");
         pic_SE_logo.show(true, false);
         return;
     }
