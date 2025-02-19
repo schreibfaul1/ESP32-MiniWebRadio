@@ -1,6 +1,6 @@
 // first release on 01/2025
 // updated on Feb 11 2025
-
+#ifdef CONFIG_IDF_TARGET_ESP32S3
 
 #pragma once
 
@@ -718,6 +718,5 @@ class TFT_RGB {
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
-
-
 };
+#endif // CONFIG_IDF_TARGET_ESP32S3
