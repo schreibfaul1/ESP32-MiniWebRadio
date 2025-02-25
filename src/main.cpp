@@ -6,13 +6,14 @@
     first release on 03/2017                                                                                                      */char Version[] ="\
     Version 3.7-rc1.g   - Feb 23/2025                                                                                                                   ";
 
-/*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
-    3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
-
+/*  display (320x240px) with controller ILI9341 or HX8347D (SPI) or
+    display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
+    display (800x480px) (RGB-HMI) with TP controller GT911 (I2C)
 
     SD_MMC is mandatory
     IR remote is optional
     BT Transmitter is optional
+    BH1750 (lightsensor) is optional
 
 *****************************************************************************************************************************************************/
 

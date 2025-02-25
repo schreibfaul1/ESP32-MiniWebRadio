@@ -4706,7 +4706,7 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
     UBaseType_t uxArraySize, x;
     uint8_t ulStatsAsPercentage;
     uint64_t ulTotalRunTime;
-    char leftSpace[] = "             ";
+    char leftSpace[] = "             |";
 
     // Take a snapshot of the number of tasks in case it changes while this function is executing.
     uxArraySize = uxTaskGetNumberOfTasks();
@@ -4723,9 +4723,9 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
 
         char* tmpBuff = (char*) malloc(100);
         strcpy(pcWriteBuffer, leftSpace);
-        strcat(pcWriteBuffer, ANSI_ESC_YELLOW "TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
+        strcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
         strcat(pcWriteBuffer, leftSpace);
-        strcat(pcWriteBuffer,                 "--------------------+----------------+-----------------+------+-------|\n");
+        strcat(pcWriteBuffer,                 "---------------------+----------------+-----------------+------+-------|\n");
 
         // Avoid divide by zero errors.
         if(ulTotalRunTime > 0){
@@ -4748,6 +4748,7 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
                 uint8_t i = 23; while(tmpBuff[i] == '0') {tmpBuff[i] = ' '; i++;}
                 if(tmpBuff[45] == '0') tmpBuff[45] = ' ';
                 strcat(pcWriteBuffer, leftSpace);
+                strcat(pcWriteBuffer, " ");
                 strcat(pcWriteBuffer, tmpBuff);
                 strcat(pcWriteBuffer, "\n");
             }
@@ -4756,33 +4757,6 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
         // The array is no longer needed, free the memory it consumes.
         vPortFree( pxTaskStatusArray );
     }
-    // TaskStatus_t *pxTaskStatusArray;
-    // uint16_t uxArraySize;
-    // uint8_t x;
-    // configRUN_TIME_COUNTER_TYPE ulTotalRunTime, ulStatsAsPercentage;
-    // pcWriteBuffer[0] = '\0'; // Make sure the write buffer does not contain a string.
-    // uxArraySize = uxTaskGetNumberOfTasks();// Take a snapshot of the number of tasks in case it changes while this function is executing.
-    // pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) ); // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
-
-    // if( pxTaskStatusArray != NULL ) {   // Generate raw status information about each task.
-    //     uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, uxArraySize, &ulTotalRunTime );
-    //     ulTotalRunTime /= 100UL; // For percentage calculations.
-
-    //     if( ulTotalRunTime > 0 ) { // Avoid divide by zero errors.
-    //         for( x = 0; x < uxArraySize; x++ ) { // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
-    //             // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer. ulTotalRunTimeDiv100 has already been divided by 100.
-    //             ulStatsAsPercentage = pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
-    //             if( ulStatsAsPercentage > 0UL ) {
-    //                 sprintf( pcWriteBuffer, "%s\t\t%lu\t\t%lu%%\r\n", pxTaskStatusArray[ x ].pcTaskName, pxTaskStatusArray[ x ].ulRunTimeCounter, ulStatsAsPercentage );
-    //             }
-    //             else{ // If the percentage is zero here then the task has consumed less than 1% of the total run time.
-    //                 sprintf( pcWriteBuffer, "%s\t\t%lu\t\t<1%%\r\n", pxTaskStatusArray[ x ].pcTaskName, pxTaskStatusArray[ x ].ulRunTimeCounter );
-    //             }
-    //             pcWriteBuffer += strlen( ( char * ) pcWriteBuffer );
-    //         }
-    //     }
-    //     vPortFree( pxTaskStatusArray ); // The array is no longer needed, free the memory it consumes.
-    // }
 }
 
 const char ir_buttons_json[] =
