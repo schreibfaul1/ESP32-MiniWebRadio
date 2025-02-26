@@ -1859,6 +1859,7 @@ void setStationViaURL(const char* url, const char* extension) {
     if(_state == RADIO) {
         clearStreamTitle();
         showLogoAndStationName(true);
+        dispFooter.updateFlag(NULL);
     }
     dispFooter.updateStation(0); // set 000
 }

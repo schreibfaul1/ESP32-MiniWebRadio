@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 23.Feb 2025
+// updated: 26.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -4570,7 +4570,10 @@ public:
         else{
             tft.fillRect(m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h, m_bgColor);
         }
-        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
+        if(flag){
+            if(!SD_MMC.exists(flag)) flag = scaleImage("/flags/unknown.jpg");
+            tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
+        }
         xSemaphoreGive(mutex_display);
     }
     void updateOffTime(uint16_t offTime){
@@ -4703,7 +4706,7 @@ private:
 
 inline void GetRunTimeStats( char *pcWriteBuffer ){
     TaskStatus_t *pxTaskStatusArray;
-    UBaseType_t uxArraySize, x;
+    UBaseType_t uxArraySize;
     uint8_t ulStatsAsPercentage;
     uint64_t ulTotalRunTime;
     char leftSpace[] = "             |";
@@ -4730,7 +4733,7 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
         // Avoid divide by zero errors.
         if(ulTotalRunTime > 0){
             // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
-            for( x = 0; x < uxArraySize; x++ ) {
+            for(int x = 0; x < uxArraySize; x++ ) {
                 // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
                 // ulTotalRunTimeDiv100 has already been divided by 100.
                 ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;

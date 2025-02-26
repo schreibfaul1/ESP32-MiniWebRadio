@@ -127,7 +127,7 @@ boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from 
         return false;
     }
     if (!fs.exists(path)) { // guard
-        log_e("file does not exist \"%s\"", path);
+    //    log_e("file does not exist \"%s\"", path);
         show_not_found();
         return false;
     }
