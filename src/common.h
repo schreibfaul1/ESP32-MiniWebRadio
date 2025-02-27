@@ -1663,8 +1663,10 @@ private:
     uint8_t         m_paddig_right = 0; // right margin
     uint8_t         m_paddig_top = 0; // top margin
     uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
     char*           m_text = NULL;
     char*           m_name = NULL;
     bool            m_enabled = false;
@@ -1680,6 +1682,7 @@ public:
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
     ~textbox(){
@@ -1738,6 +1741,17 @@ public:
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = max(m_padding_left, m_borderWidth);
+        m_paddig_right = max(m_paddig_right, m_borderWidth);
+        m_paddig_top = max(m_paddig_top, m_borderWidth);
+        m_paddig_bottom = max(m_paddig_bottom, m_borderWidth);
+    }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
         if(y < m_y) return false;
@@ -1788,6 +1802,8 @@ public:
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
+            if(m_borderWidth > 0){tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor);}
+            if(m_borderWidth > 1){tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor);}
             tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, false, false, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
