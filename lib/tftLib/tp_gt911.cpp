@@ -85,7 +85,7 @@ void TP_GT911::loop() {
     uint8_t t = touched(TP_GT911::GT911_MODE_POLLING); // number of touch points
     if(t == 1 && !m_f_isTouch) {
         p = getPoint(0);
-        log_w("X: %d, Y: %d", p.x, p.y);
+        // log_w("X: %d, Y: %d", p.x, p.y);
         if(tp_pressed) tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;
