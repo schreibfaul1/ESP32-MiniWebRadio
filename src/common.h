@@ -4555,7 +4555,7 @@ public:
         tft.setTextColor(m_stationColor);
         char buff[10];
         sprintf(buff, "%03d", staNr);
-        tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h);
+        tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true, true, true); // center, middle, autoSize
         xSemaphoreGive(mutex_display);
     }
     void setStationNrColor(uint16_t stationColor){
@@ -4600,7 +4600,7 @@ public:
         else{
             tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
         }
-        tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
+        tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true, true); // left, middle, narrow, noWrap, autoSize
         xSemaphoreGive(mutex_display);
     }
     void updateTC(uint8_t timeCounter){
