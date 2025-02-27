@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.h   - Feb 27/2025                                                                                                                   ";
+    Version 3.7-rc1.i   - Feb 27/2025                                                                                                                   ";
 
 /*  display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1793,13 +1793,13 @@ void setStation(uint16_t sta) {
     dispFooter.updateStation(_cur_station);
 }
 const char* getFlagPath(uint16_t station) {
-    char flagPath[40];
+    static char flagPath[40];
     flagPath[0] = '\0';
     strcpy(flagPath, "/flags/");
     strcat(flagPath, staMgnt.getStationCountry(station));
     for(int i = 0; i< strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
     strcat(flagPath, ".jpg");
-    return scaleImage(flagPath);
+    return flagPath;
 }
 
 void nextStation() {

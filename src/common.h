@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 26.Feb 2025
+// updated: 27.Feb 2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -1672,6 +1672,8 @@ private:
     bool            m_enabled = false;
     bool            m_clicked = false;
     bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
     bool            m_backgroundTransparency = false;
     bool            m_saveBackground         = false;
     releasedArg     m_ra;
@@ -1769,10 +1771,12 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void setText(const char* txt){ // prepare a text, wait of show() to write it
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
         x_ps_free(&m_text);
         m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
     }
     void setAlign(uint8_t h_align, uint8_t v_align){
         m_h_align = h_align;
@@ -1804,7 +1808,7 @@ public:
             int h = m_h - (m_paddig_bottom + m_paddig_top);
             if(m_borderWidth > 0){tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor);}
             if(m_borderWidth > 1){tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor);}
-            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, false, false, m_autoSize);
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -4447,7 +4451,14 @@ public:
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayFooter : public RegisterTable {
-private:
+  private:
+    pictureBox* pic_Antenna   = new pictureBox("footer_Antenna");   // antenna symbol
+    textbox*    txt_StaNr     = new textbox("footer_StaNr");        // station number
+    pictureBox* pic_Flag      = new pictureBox("footer_Flag");      // flag symbol
+    pictureBox* pic_Hourglass = new pictureBox("footer_Hourglass"); // hourglass symbol
+    textbox*    txt_OffTimer  = new textbox("footer_OffTimer");     // off timer
+    textbox*    txt_BitRate   = new textbox("footer_BitRate");      // bit rate
+    textbox*    txt_IpAddr    = new textbox("footer_IPaddr");       // ip address
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -4471,41 +4482,35 @@ private:
     const char  m_stationSymbol[22]     = "/common/Antenna.png";
     const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 25, m_staNr_w = 32;
-    uint16_t    m_flag_x = 57;
-    uint16_t    m_flag_w = 40;
-    uint16_t    m_flag_h = 20;
-    uint16_t    m_offTimerSymbol_x = 100;
-    uint16_t    m_offTimerSymbol_offset_y = 0;
-    uint16_t    m_offTimerSymbol_w = 20;
-    uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
-    uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
-    uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   0; uint16_t w =  25; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 19 x 20 px
+    struct w_s  {uint16_t x =  25; uint16_t w =  32; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x =  57; uint16_t w =  40; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Flag;      // Flags:  33...40 x 20 px
+    struct w_h  {uint16_t x = 100; uint16_t w =  20; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   16 x 20 px
+    struct w_o  {uint16_t x = 122; uint16_t w =  35; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 158; uint16_t w =  42; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 200; uint16_t w = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 30, m_staNr_w = 50;
-    uint16_t    m_flag_x = 80;
-    uint16_t    m_flag_w = 48;
-    uint16_t    m_flag_h = 24;
-    uint16_t    m_offTimerSymbol_x = 132;
-    uint16_t    m_offTimerSymbol_offset_y = 0;
-    uint16_t    m_offTimerSymbol_w = 24;
-    uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
-    uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
-    uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   1; uint16_t w =  30; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 29 x 30 px
+    struct w_s  {uint16_t x =  30; uint16_t w =  50; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x =  80; uint16_t w =  48; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 3; uint8_t pb = 0;} const s_Flag;      // Flags:  40...48 x 24 px
+    struct w_h  {uint16_t x = 132; uint16_t w =  24; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   23 x 30 px
+    struct w_o  {uint16_t x = 160; uint16_t w =  54; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 214; uint16_t w =  66; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 280; uint16_t w = 200; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #else // 800 x 480px
-    uint16_t    m_antennaSymbol_x = 3;
-    uint16_t    m_staNr_x = 58, m_staNr_w = 67;
-    uint16_t    m_flag_x = 125;
-    uint16_t    m_flag_w = 80;
-    uint16_t    m_flag_h = 40;
-    uint16_t    m_offTimerSymbol_x = 225;
-    uint16_t    m_offTimerSymbol_offset_y = 2;
-    uint16_t    m_offTimerSymbol_w = 40;
-    uint16_t    m_offTimerNr_x = 265, m_offTimerNr_w = 75;
-    uint16_t    m_bitRate_x = 340, m_bitRate_w = 110;
-    uint16_t    m_ipAddr_x = 450, m_ipAddr_w = 350;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   0; uint16_t w =  51; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 47 x 48 px
+    struct w_s  {uint16_t x =  51; uint16_t w =  84; uint8_t pl =  5; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x = 135; uint16_t w =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 5; uint8_t pb = 0;} const s_Flag;      // Flags:  60...80 x 40 px
+    struct w_h  {uint16_t x = 225; uint16_t w =  40; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 3; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   35 x 44 px
+    struct w_o  {uint16_t x = 265; uint16_t w =  75; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 340; uint16_t w = 110; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 450; uint16_t w = 350; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4518,12 +4523,32 @@ public:
     ~displayFooter(){
         x_ps_free(&m_name);
         x_ps_free(&m_ipAddr);
+        delete pic_Antenna;
+        delete txt_StaNr;
+        delete pic_Flag;
+        delete pic_Hourglass;
+        delete txt_OffTimer;
+        delete txt_BitRate;
+        delete txt_IpAddr;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
         m_h = h;
+        pic_Antenna->begin(  s_Antenna.x,   m_y, s_Antenna.w,   m_h, s_Antenna.pl,   s_Antenna.pr,   s_Antenna.pt,   s_Antenna.pb);
+        txt_StaNr->begin(    s_StaNr.x,     m_y, s_StaNr.w,     m_h, s_StaNr.pl,     s_StaNr.pr,     s_StaNr.pt,     s_StaNr.pb);
+        pic_Flag->begin(     s_Flag.x,      m_y, s_Flag.w,      m_h, s_Flag.pl,      s_Flag.pr,      s_Flag.pt,      s_Flag.pb);
+        pic_Hourglass->begin(s_Hourglass.x, m_y, s_Hourglass.w, m_h, s_Hourglass.pl, s_Hourglass.pr, s_Hourglass.pt, s_Hourglass.pb);
+        txt_OffTimer->begin( s_OffTimer.x,  m_y, s_OffTimer.w,  m_h, s_OffTimer.pl,  s_OffTimer.pr,  s_OffTimer.pt,  s_OffTimer.pb);
+        txt_BitRate->begin(  s_BitRate.x,   m_y, s_BitRate.w,   m_h, s_BitRate.pl,   s_BitRate.pr,   s_BitRate.pt,   s_BitRate.pb);
+        txt_IpAddr->begin(   s_IPaddr.x,    m_y, s_IPaddr.w,    m_h, s_IPaddr.pl,    s_IPaddr.pr,    s_IPaddr.pt,    s_IPaddr.pb);
+
+        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);     txt_StaNr->setTextColor(m_stationColor); txt_StaNr->setFont(0); // 0 -> auto
+        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_OffTimer->setFont(0); // 0 -> auto
+        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BitRate->setTextColor(m_bitRateColor); txt_BitRate->setBorderColor(m_bitRateColor); txt_BitRate->setBorderWidth(1); txt_BitRate->setFont(0);  // 0 -> auto
+        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);  txt_IpAddr->setTextColor(m_ipAddrColor); txt_IpAddr->setFont(0);   // 0 -> auto
+        pic_Antenna->setPicturePath(m_stationSymbol);
     }
     const char* getName(){
         return m_name;
@@ -4535,9 +4560,7 @@ public:
         m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        drawImage(m_stationSymbol, m_antennaSymbol_x, m_y);
-        xSemaphoreGive(mutex_display);
+        pic_Antenna->show(m_backgroundTransparency, false);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -4557,90 +4580,61 @@ public:
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
-    void updateStation(uint16_t staNr){// radio, clock, audioplayer...
+    void updateStation(uint16_t staNr){
         m_staNr = staNr;
-        if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_staNr_x, m_y, m_staNr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
-        }
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_stationColor);
         char buff[10];
-        sprintf(buff, "%03d", staNr);
-        tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true, true, true); // center, middle, autoSize
-        xSemaphoreGive(mutex_display);
+        sprintf(buff, "%03d", m_staNr);
+        txt_StaNr->setText(buff);   txt_StaNr->show(m_backgroundTransparency, false);
     }
     void setStationNrColor(uint16_t stationColor){
         m_stationColor = stationColor;
     }
     void updateFlag(const char* flag){
-        if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h);
+        if(flag){
+            pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
+            pic_Flag->setPicturePath(flag);
+            pic_Flag->show(m_backgroundTransparency, false);
         }
         else{
-            tft.fillRect(m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h, m_bgColor);
+            pic_Flag->hide();
         }
-        if(flag){
-            if(!SD_MMC.exists(flag)) flag = scaleImage("/flags/unknown.jpg");
-            tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
-        }
-        xSemaphoreGive(mutex_display);
     }
     void updateOffTime(uint16_t offTime){
         m_offTime = offTime;
         if(!m_enabled) return;
         char buff[15];
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
-        tft.setFont(m_fontSize);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_offTime){
-            tft.setTextColor(TFT_RED);
-            if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
-            }
-            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
+            txt_OffTimer->setTextColor(TFT_RED);
+            txt_OffTimer->setText(buff);
+            txt_OffTimer->show(m_backgroundTransparency, false);
+            pic_Hourglass->setPicturePath(m_hourGlassymbol[1]);
+            pic_Hourglass->show(m_backgroundTransparency, false);
         }
         else{
-            tft.setTextColor(TFT_DEEPSKYBLUE);
-            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
+            txt_OffTimer->setTextColor(TFT_DEEPSKYBLUE);
+            txt_OffTimer->setText(buff);
+            txt_OffTimer->show(m_backgroundTransparency, false);
+            pic_Hourglass->setPicturePath(m_hourGlassymbol[0]);
+            pic_Hourglass->show(m_backgroundTransparency, false);
         }
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
-        }
-        tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, true, true); // left, middle, narrow, noWrap, autoSize
-        xSemaphoreGive(mutex_display);
     }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
         if(!m_enabled) return;
         if(!m_timeCounter) {
-            // if(m_backgroundTransparency){
-            //     tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
-            // }
-            // else {
-            //     tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
-            // }
             updateBitRate(m_bitRate);
         }
         else{
-            uint16_t x0   = m_bitRate_x;
-            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter)) - 1;
+            uint16_t x0   = s_BitRate.x;
+            uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
+                tft.copyFramebuffer(1, 0, s_BitRate.x, m_y, s_BitRate.w, m_h);
             }
             else{
-                tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+                tft.fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bgColor);
             }
             tft.fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
         }
@@ -4658,21 +4652,12 @@ public:
             sbr[3] = 'M';
             sbr[4] = '\0';
         }
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
-        }
-        else{
-            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
-        }
-        tft.drawRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bitRateColor);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_bitRateColor);
-        tft.writeText(sbr, m_bitRate_x, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        xSemaphoreGive(mutex_display);
+        txt_BitRate->setText(sbr); txt_BitRate->show(m_backgroundTransparency, false);
     }
     void setBitRateColor(uint16_t bitRateColor){
         m_bitRateColor = bitRateColor;
+        txt_BitRate->setBorderColor(m_bitRateColor);
+        txt_BitRate->setTextColor(m_bitRateColor);
     }
     void setIpAddr(const char* ipAddr){
         if(!ipAddr)return;
@@ -4682,20 +4667,11 @@ public:
     void writeIpAddr(const char* ipAddr){
         char myIP[30] = "IP:";
         strcat(myIP, ipAddr);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_ipAddrColor);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_ipAddr_x, m_y, m_ipAddr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
-        }
-        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true, true, true);
-        xSemaphoreGive(mutex_display);
+        txt_IpAddr->setText(myIP, true, true); txt_IpAddr->show(m_backgroundTransparency, false);
     }
     void setIpAddrColor(uint16_t ipAddrColor){
         m_ipAddrColor = ipAddrColor;
+        txt_IpAddr->setTextColor(m_ipAddrColor);
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -4704,8 +4680,14 @@ public:
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
         uint8_t pos = 0;
-    //    if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, pos);
+        pic_Antenna->positionXY(x, y); // transfer the position to the graphic objects
+        txt_StaNr->positionXY(x, y);
+        pic_Flag->positionXY(x, y);
+        pic_Hourglass->positionXY(x, y);
+        txt_OffTimer->positionXY(x, y);
+        txt_BitRate->positionXY(x, y);
+        txt_IpAddr->positionXY(x, y);
         if(!m_enabled) return false;
         return true;
     }
