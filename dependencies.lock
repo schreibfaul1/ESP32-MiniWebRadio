@@ -47,7 +47,7 @@ dependencies:
       type: service
     version: 1.9.5
   espressif/esp-zboss-lib:
-    component_hash: fad683f7e04366398b61c0eea6e6517d4fe7ec4112407e26743dc80bafc0dcdc
+    component_hash: 2a2256a8d20e5ade59a8e084760c84faa87dc9332523afcb6e245a744420839a
     dependencies:
     - name: idf
       require: private
@@ -55,9 +55,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.6.0
+    version: 1.6.3
   espressif/esp-zigbee-lib:
-    component_hash: 0026979f590d7f2b07f433bb0fd031a12b0c2cc0eec8584b59cb6e567d5afd82
+    component_hash: 73112d38839c7460bd713f9e3a5b2baeab351ee01a4b9091c7df8b50ce524947
     dependencies:
     - name: idf
       require: private
@@ -65,7 +65,7 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.6.0
+    version: 1.6.3
   espressif/esp_modem:
     component_hash: 681d7c8417ce0f2a11a562c6998b7b379a4847be41d84673c11c0c7a6b00e918
     dependencies:
@@ -100,17 +100,17 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.3.2
+    version: 5.4.0
   joltwallet/littlefs:
-    component_hash: add3caf39a265868f70e55f17e8bfb401f200e45a601dc392832e7ac2c1487bc
+    component_hash: 6d24e25b71528abb83f416085e52e766e909d5809653f33926415cd7265a37c0
     dependencies:
     - name: idf
       require: private
-      version: '>=4.3'
+      version: '>=5.0'
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.16.4
+    version: 1.17.0
 direct_dependencies:
 - chmorgan/esp-libhelix-mp3
 - espressif/cbor
@@ -122,6 +122,6 @@ direct_dependencies:
 - espressif/network_provisioning
 - idf
 - joltwallet/littlefs
-manifest_hash: d5b61e33b1ecefaeb4d0744cd599ab93af1faa45dd6d76a73bb99a4444cbcdc3
+manifest_hash: e9919b5b28bb7bb038864af176d8e81936400eff14ef44258dd5186bdc427ec2
 target: esp32s3
 version: 2.0.0
