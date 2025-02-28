@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Feb 01 2025
+// updated on Feb 28 2025
 
 #include "tp_gt911.h"
 
@@ -133,7 +133,7 @@ void TP_GT911::reset() {
     pinMode(m_intPin, OUTPUT); digitalWrite(m_intPin, LOW);
     pinMode(m_rstPin, OUTPUT); digitalWrite(m_rstPin, LOW);
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    digitalWrite(m_intPin, m_addr);
+    digitalWrite(m_intPin, HIGH);
     pinMode(m_rstPin, INPUT);
     vTaskDelay(10 / portTICK_PERIOD_MS);
     digitalWrite(m_intPin, LOW);

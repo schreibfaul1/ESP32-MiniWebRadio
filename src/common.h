@@ -666,6 +666,7 @@ inline void disableAllObjects() {
 inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     for (auto obj : registertable_objects) {
         if (obj->isEnabled() && obj->positionXY(x, y)) {
+            if(strcmp(obj->getName(), "dispFooter") == 0) continue;
             return obj->getName();
         }
     }
