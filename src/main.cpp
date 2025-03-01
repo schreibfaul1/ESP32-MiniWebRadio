@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.i   - Feb 27/2025                                                                                                                   ";
+    Version 3.7-rc1.j   - Mar 01/2025                                                                                                                   ";
 
 /*  display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -407,7 +407,7 @@ struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h = 
 struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
 struct w_d  {uint16_t x =   0; uint16_t y =  80; uint16_t w = 800; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 200; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
 struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 200; uint16_t y =  53; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 200; uint16_t y = 126; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -480,7 +480,7 @@ button2state  btn_CL_mute("btn_CL_mute");
 button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
 slider        sdr_CL_volume("sdr_CL_volume");
 // ALARM
-alarmClock    clk_AL_red("clk_CL_green");
+alarmClock    clk_AL_red("clk_AL_red");
 button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
 button1state  btn_AL_ready("btn_AL_ready");
 // SETTINGS
@@ -2574,7 +2574,7 @@ void changeState(int32_t state){
                 btn_AL_left.show(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
                 clk_AL_red.show();
             }
-            if(_alarmSubMenue == 1){ // same as _alarmSubMenue fot IR
+            if(_alarmSubMenue == 1){ // same as _alarmSubMenue for IR
                 setTimeCounter(2);
                 btn_AL_left.showAlternativePic(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
                 clk_AL_red.show();
