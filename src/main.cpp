@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.j   - Mar 01/2025                                                                                                                   ";
+    Version 3.7-rc1.k   - Mar 02/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -268,8 +268,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h = 
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock
-struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -337,8 +336,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h = 
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _sdrOvBtns;   // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBP;        // slider bandpass in equalizer
@@ -406,8 +404,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h = 
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  80; uint16_t w = 800; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 200; uint16_t y =  53; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 200; uint16_t y = 126; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -475,7 +472,8 @@ progressbar   pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
-imgClock      clk_CL_green("clk_CL_green");
+imgClock24    clk_CL_24("clk_CL_24");
+imgClock12    clk_CL_12("clk_CL_12");
 button2state  btn_CL_mute("btn_CL_mute");
 button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
 slider        sdr_CL_volume("sdr_CL_volume");
@@ -773,21 +771,15 @@ void urldecode(char* str) {
 // clang-format off
 void timer100ms(){
     static uint16_t ms100 = 0;
-    static uint8_t semaphore = 0;
     _f_100ms = true;
     ms100 ++;
     if(!(ms100 % 10))   {
         _f_1sec  = true;
         _time_s = rtc.gettime_s();
         if(endsWith(_time_s, "59:53"))  _f_timeSpeech = true;
-        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
-        if(_f_alarm)        {semaphore++;}
-        if(semaphore)       {semaphore++;}
-        if(semaphore >= 65) {semaphore = 0;}
     }
     if(!(ms100 % 100))  _f_10sec = true;
     if(!(ms100 % 600)) {_f_1min  = true; ms100 = 0;}
-
 }
 // clang-format on
 
@@ -2025,6 +2017,16 @@ void setRTC(const char* TZString) {
     // }
 }
 
+boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime){
+    uint8_t mask = 0b00000001 << weekDay;
+    if(alarmDays & mask){ // yes, is alarmDay
+        if(alarmTime[weekDay] == minuteOfTheDay){ // yes, is alarmTime
+            return true;
+        }
+    }
+    return false;
+}
+
 boolean copySDtoFFat(const char* path) {
     if(!_f_FFatFound) return false;
     uint8_t buffer[1024];
@@ -2245,7 +2247,8 @@ void placingGraphicObjects() { // and initialize them
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_CL_green.begin(       _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);   clk_CL_green.setTimeFormat(_timeFormat);
+    clk_CL_24.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
+    clk_CL_12.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
     btn_CL_alarm.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_alarm.setDefaultPicturePath("/btn/Button_Bell_Green.png");
                                                                                          btn_CL_alarm.setClickedPicturePath("/btn/Button_Bell_Yellow.png");
                                                                                          btn_CL_alarm.setAlternativePicturePath("/btn/Button_Bell_Magenta.png");
@@ -2264,7 +2267,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
+    clk_AL_red.begin(         _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
                                                                                          btn_AL_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
                                                                                          btn_AL_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
@@ -2552,7 +2555,8 @@ void changeState(int32_t state){
             dispHeader.show(false);
             dispFooter.show(false);
             if(_state != CLOCK) {bgColorWithOutHeaderFooter();}
-            clk_CL_green.show();
+            if(_timeFormat == 24) clk_CL_24.show();
+            else                  clk_CL_12.show();
             if(_clockSubMenue == 0){
                 btn_CL_mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.disable(); btn_CL_off.hide();
             }
@@ -2800,7 +2804,15 @@ void loop() {
 
     if(_f_1sec) { // calls every second
         _f_1sec = false;
-        clk_CL_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
+        uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
+        uint8_t  weekDay = rtc.getweekday();
+        if(_timeFormat == 24) clk_CL_24.updateTime(minuteOfTheDay, weekDay);
+        else                  clk_CL_12.updateTime(minuteOfTheDay, weekDay);
+        static uint8_t semaphore = 0;
+        if(!semaphore) {_f_alarm = isAlarm(weekDay, _alarmdays, minuteOfTheDay, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
+        if(_f_alarm)        {semaphore++;}
+        if(semaphore)       {semaphore++;}
+        if(semaphore >= 65) {semaphore = 0;}
 
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
         if(_f_alarm) {
@@ -3887,7 +3899,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_DLNA.released(x, y);
             break;
         case CLOCK:
-            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_green.released(); sdr_CL_volume.released(); btn_CL_off.released();
+            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
         case ALARM:
             clk_AL_red.released(); btn_AL_left.released(); btn_AL_right.released(); btn_AL_up.released(); btn_AL_down.released(); btn_AL_ready.released();
@@ -4196,7 +4208,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "setTimeFormat"){     _timeFormat = param.toInt();
-                                    clk_CL_green.setTimeFormat(_timeFormat);
                                     if(_state == CLOCK){
                                          clearWithOutHeaderFooter();
                                     }
@@ -4454,7 +4465,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && strcmp(name, "btn_CL_mute") == 0)    {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}
         if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
         if( val && strcmp(name, "btn_CL_radio") == 0)   {return;}
-        if( val && strcmp(name, "clk_CL_green") == 0)   {return;}
+        if( val && strcmp(name, "clk_CL_12") == 0) {return;}
+        if( val && strcmp(name, "clk_CL_24") == 0) {return;}
         if( val && strcmp(name, "btn_CL_off") == 0)     {return;}
     }
     if(_state == ALARM) {
@@ -4566,7 +4578,8 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(strcmp(name, "btn_CL_mute") == 0)     {muteChanged(btn_CL_mute.getValue()); return;}
         if(strcmp(name, "btn_CL_alarm") == 0)    {changeState(ALARM); return;}
         if(strcmp(name, "btn_CL_radio") == 0)    {_clockSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "clk_CL_green") == 0)    {_clockSubMenue = 1; changeState(CLOCK); return;}
+        if(strcmp(name, "clk_CL_12") == 0)       {_clockSubMenue = 1; changeState(CLOCK); return;}
+        if(strcmp(name, "clk_CL_24") == 0)       {_clockSubMenue = 1; changeState(CLOCK); return;}
         if(strcmp(name, "btn_CL_off") == 0)      {fall_asleep(); return;}
         if(strcmp(name, "sdr_CL_volume") == 0)   {return;}
     }
