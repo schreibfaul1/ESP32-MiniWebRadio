@@ -6,7 +6,7 @@
 // clang-format off
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
-#define TFT_CONTROLLER          7                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
 #define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -1816,6 +1816,156 @@ public:
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_h_align = TFT_ALIGN_CENTER;
+    uint8_t     m_v_align = TFT_ALIGN_CENTER;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_fgColor = 0;
+    uint32_t    m_borderColor = 0;
+    char*       m_name = NULL;
+    char        m_time[10] = "00:00:00";
+    bool        m_enabled = false;
+    bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
+    textbox*    txt_time    = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"), textbox("txt_timeM10"),
+                                  textbox("txt_timeM01"), textbox("txt_timeC2"), textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
+public:
+    timeString(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("timeString");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_fontSize = fontSize;
+    }
+    ~timeString(){
+        x_ps_free(&m_name);
+        delete[] txt_time;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t pl, uint16_t pr, uint16_t pt, uint16_t pb){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        uint8_t w_digits  = m_w / 7;
+        uint8_t w_colon   = w_digits / 2;
+        uint16_t xPos[8] = {
+            static_cast<uint16_t>(m_x + pl + 0 * w_digits + 0 * w_colon), /* H10 */
+            static_cast<uint16_t>(m_x + pl + 1 * w_digits + 0 * w_colon), /* H01 */
+            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 0 * w_colon), /* C1 */
+            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 1 * w_colon), /* M10 */
+            static_cast<uint16_t>(m_x + pl + 3 * w_digits + 1 * w_colon), /* M01 */
+            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 1 * w_colon), /* C2 */
+            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 2 * w_colon), /* S10 */
+            static_cast<uint16_t>(m_x + pl + 5 * w_digits + 2 * w_colon)  /* S01 */
+        };
+        uint8_t width[8]  = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
+        for(uint8_t i = 0; i < 8; i++){
+            txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
+            txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_time[i].setTextColor(m_fgColor);
+            txt_time[i].setFont(m_fontSize);
+        }
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        updateTime(m_time, true);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = size;
+        m_fontSize = size; tft.setFont(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+        for(uint8_t i = 0; i < 8; i++) {
+            txt_time[i].setTextColor(m_fgColor);
+        }
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void updateTime(const char* hl_time, bool complete = true){
+        if(!hl_time) return;
+        if(strlen(hl_time) != 8) return;
+        if(!m_enabled) return;
+        memcpy(m_time, hl_time, 8); // hhmmss
+        static char oldtime[8] = {255}; // hhmmss
+        tft.setFont(m_fontSize);
+        tft.setTextColor(m_fgColor);
+        if(complete == true) {
+            if(m_backgroundTransparency){
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        }
+        for(uint8_t i = 0; i < 8; i++) {
+            if(oldtime[i] != m_time[i]) {
+                char ch[2] = {0, 0};
+                ch[0] = m_time[i];
+                txt_time[i].setText(ch, true);
+                txt_time[i].show(m_backgroundTransparency, m_saveBackground);
+                oldtime[i] = m_time[i];
+            }
+        }
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -4429,6 +4579,11 @@ private:
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayHeader : public RegisterTable {
 private:
+    textbox*    txt_Item      = new textbox("header_Item");          // Radio, Player, Clock....
+    pictureBox* pic_Speaker   = new pictureBox("header_Speaker");    // loudspeaker symbol
+    textbox*    txt_Volume    = new textbox("header_Volume");        // volume
+    pictureBox* pic_RSSID     = new pictureBox("header_RSSID");      // RSSID symbol
+    timeString* m_timeStringObject  = NULL;
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -4440,9 +4595,10 @@ private:
     uint32_t    m_bgColor = TFT_BLACK;
     char*       m_name = NULL;
     char*       m_item = NULL;
-    char        m_time[10] = {0};
+    char        m_time[10] = "00:00:00";
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_speakerOn = false;
     bool        m_backgroundTransparency = false;
     const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.png", "/common/RSSI1.png", "/common/RSSI2.png", "/common/RSSI3.png", "/common/RSSI4.png"};
     const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
@@ -4451,47 +4607,26 @@ private:
     uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t    m_timeColor = TFT_GREENYELLOW;
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 140;
-    uint16_t    m_speaker_symbol_x =165;
-    uint16_t    m_speaker_symbol_w = 26;
-    uint8_t     m_speaker_symbol_offset_y = 0;
-    uint16_t    m_volume_x = 195;
-    uint16_t    m_volume_w = 26;
-    uint16_t    m_time_x = 260;
-    uint16_t    m_time_w = 60;
-    uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     m_time_ch_w = 9;
-    uint16_t    m_rssiSymbol_x = 225;
-    uint16_t    m_rssiSymbol_w = 27;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 165; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 165; uint16_t w =  30; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 25 x 20 px
+    struct w_v  {uint16_t x = 195; uint16_t w =  30; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 225; uint16_t w =  35; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 27 x 20 px
+    struct w_t  {uint16_t x = 260; uint16_t w =  60; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 240;
-    uint16_t    m_speaker_symbol_x = 240;
-    uint16_t    m_speaker_symbol_w = 38;
-    uint8_t     m_speaker_symbol_offset_y = 0;
-    uint16_t    m_volume_x = 285;
-    uint16_t    m_volume_w = 40;
-    uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
-    uint8_t     m_time_ch_w = 13;
-    uint16_t    m_rssiSymbol_x = 335;
-    uint16_t    m_rssiSymbol_w = 39;
-    uint16_t    m_time_x = 380;
-    uint16_t    m_time_w = 100;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 240; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 240; uint16_t w =  45; uint8_t pl =  3; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 38 x 30 px
+    struct w_v  {uint16_t x = 285; uint16_t w =  50; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 335; uint16_t w =  45; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 39 x 30 px
+    struct w_t  {uint16_t x = 380; uint16_t w = 100; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #else // 800 x 480px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 400;
-    uint16_t    m_speaker_symbol_x = 400;
-    uint16_t    m_speaker_symbol_w = 60;
-    uint8_t     m_speaker_symbol_offset_y = 2;
-    uint16_t    m_volume_x = 470;
-    uint16_t    m_volume_w = 60;
-    uint8_t     m_time_pos[8] = {10, 30, 50, 60, 80, 100, 110, 130}; // display 800x480
-    uint8_t     m_time_ch_w = 20;
-    uint16_t    m_rssiSymbol_x = 560;
-    uint16_t    m_rssiSymbol_w = 80;
-    uint16_t    m_time_x = 640;
-    uint16_t    m_time_w = 160;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 400; uint8_t pl =  5; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 400; uint16_t w =  60; uint8_t pl =  1; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 57 x 46 px
+    struct w_v  {uint16_t x = 460; uint16_t w = 100; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 560; uint16_t w =  80; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 64 x 48 px
+    struct w_t  {uint16_t x = 640; uint16_t w = 140; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -4500,17 +4635,33 @@ public:
         else     m_name = x_ps_strdup("displayHeader");
         m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
+        m_timeStringObject  = new timeString("timeString", m_fontSize);
     }
     ~displayHeader(){
         x_ps_free(&m_name);
         x_ps_free(&m_item);
+        delete txt_Item;
+        delete pic_Speaker;
+        delete txt_Volume;
+        delete pic_RSSID;
+        delete m_timeStringObject;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-     }
+        txt_Item->begin(          s_Item.x,    m_y, s_Item.w,    m_h, s_Item.pl,    s_Item.pr,    s_Item.pt,    s_Item.pb);
+        pic_Speaker->begin(       s_Speaker.x, m_y, s_Speaker.w, m_h, s_Speaker.pl, s_Speaker.pr, s_Speaker.pt, s_Speaker.pb);
+        txt_Volume->begin(        s_Volume.x,  m_y, s_Volume.w,  m_h, s_Volume.pl,  s_Volume.pr,  s_Volume.pt,  s_Volume.pb);
+        pic_RSSID->begin(         s_RSSID.x,   m_y, s_RSSID.w,   m_h, s_RSSID.pl,   s_RSSID.pr,   s_RSSID.pt,   s_RSSID.pb);
+        m_timeStringObject->begin(s_time.x,    m_y, s_time.w,    m_h, s_time.pl,    s_time.pr,    s_time.pt,    s_time.pb);
+
+        txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);   txt_Item->setTextColor(m_itemColor); txt_Item->setFont(m_fontSize); // 0 -> auto
+        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
+        txt_Volume->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); txt_Volume->setFont(m_fontSize); // 0 -> auto
+        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
+    }
     const char* getName(){
         return m_name;
     }
@@ -4519,14 +4670,16 @@ public:
     }
     void show(bool transparency = false){
         m_backgroundTransparency = transparency;
+        m_timeStringObject->show(m_backgroundTransparency, false);
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
         if(m_item) updateItem(m_item);
         else       updateItem("");
+        speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
         updateRSSI(m_rssi);
-        updateTime("        ", true);
+        updateTime(m_time, true);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -4543,50 +4696,32 @@ public:
     }
     void updateItem(const char* hl_item){// radio, clock, audioplayer...
         if(!m_enabled) return;
-        if(!hl_item) log_e("hl_item is NULL");
+        if(!hl_item) {log_e("hl_item is NULL"); return;}
         if(m_item && !strcmp(hl_item, m_item)) return; // nothing to do
-        char* tmp = strdup(hl_item);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_itemColor);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_item_x, m_y, m_item_w, m_h);
-        }
-        else{
-            tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
-        }
-        tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
         x_ps_free(&m_item);
-        m_item = strdup(tmp);
-        x_ps_free(&tmp);
-        xSemaphoreGive(mutex_display);
+        m_item = strdup(hl_item);
+        txt_Item->setText(hl_item);
+        txt_Item->show(m_backgroundTransparency, false);
     }
     void setItemColor(uint16_t itemColor){
         m_itemColor = itemColor;
+        txt_Item->setTextColor(m_itemColor);
     }
 
     void speakerOnOff(bool on){
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y, m_speaker_symbol_w, m_h);
-        }
-        drawImage(m_speakerSymbol[!on], m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y);
+        m_speakerOn = on;
+        if(!m_enabled) return;
+        pic_Speaker->setPicturePath(m_speakerSymbol[m_speakerOn]);
+        pic_Speaker->show(m_backgroundTransparency, false);
     }
     void updateVolume(uint8_t vol){
         m_volume = vol;
         if(!m_enabled) return;
         char buff[15];
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_volumeColor);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_volume_x, m_y, m_volume_w, m_h);
-        }
-        else{
-            tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
-        }
         itoa(m_volume, buff, 10);
-        tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
-        xSemaphoreGive(mutex_display);
+        txt_Volume->setTextColor(m_volumeColor);
+        txt_Volume->setText(buff);
+        txt_Volume->show(m_backgroundTransparency, false);
     }
 
     void updateRSSI(int8_t rssi, bool show = false){
@@ -4610,50 +4745,18 @@ public:
             if(m_enabled) show = true;
         }
         if(show) {
-            xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h);
-        }
-            drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y);
-            xSemaphoreGive(mutex_display);
+            pic_RSSID->setPicturePath(m_rssiSymbol[new_rssi]);
+            pic_RSSID->show(m_backgroundTransparency, false);
         }
     }
     void updateTime(const char* hl_time, bool complete = true){
         if(!m_enabled) return;
         memcpy(m_time, hl_time, 8); // hhmmss
-        static char oldtime[8] = {255}; // hhmmss
-        uint8_t*    pos = NULL;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_timeColor);
-        if(complete == true) {
-            if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_time_x, m_y, m_time_w, m_h);
-            }
-            else{
-                tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
-            }
-            for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-        }
-        for(uint8_t i = 0; i < 8; i++) {
-            if(oldtime[i] != m_time[i]) {
-                char ch[2] = {0, 0};
-                ch[0] = m_time[i];
-                pos = m_time_pos;
-                if(m_backgroundTransparency){
-                    tft.copyFramebuffer(1, 0, m_time_x + pos[i], m_y, m_time_ch_w, m_h);
-                }
-                else{
-                    tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, m_bgColor);
-                }
-                tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
-                oldtime[i] = m_time[i];
-            }
-        }
-        xSemaphoreGive(mutex_display);
+        m_timeStringObject->updateTime(m_time, false);
     }
     void setTimeColor(uint16_t timeColor){
         m_timeColor = timeColor;
+        m_timeStringObject->setTextColor(m_timeColor);
         updateTime(m_time, true);
     }
     bool positionXY(uint16_t x, uint16_t y){
@@ -4769,10 +4872,10 @@ public:
         txt_BitRate->begin(  s_BitRate.x,   m_y, s_BitRate.w,   m_h, s_BitRate.pl,   s_BitRate.pr,   s_BitRate.pt,   s_BitRate.pb);
         txt_IpAddr->begin(   s_IPaddr.x,    m_y, s_IPaddr.w,    m_h, s_IPaddr.pl,    s_IPaddr.pr,    s_IPaddr.pt,    s_IPaddr.pb);
 
-        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);     txt_StaNr->setTextColor(m_stationColor); txt_StaNr->setFont(0); // 0 -> auto
-        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_OffTimer->setFont(0); // 0 -> auto
-        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BitRate->setTextColor(m_bitRateColor); txt_BitRate->setBorderColor(m_bitRateColor); txt_BitRate->setBorderWidth(1); txt_BitRate->setFont(0);  // 0 -> auto
-        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);  txt_IpAddr->setTextColor(m_ipAddrColor); txt_IpAddr->setFont(0);   // 0 -> auto
+        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);     txt_StaNr->setTextColor(m_stationColor); txt_StaNr->setFont(m_fontSize); // 0 -> auto
+        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_OffTimer->setFont(m_fontSize); // 0 -> auto
+        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BitRate->setTextColor(m_bitRateColor); txt_BitRate->setBorderColor(m_bitRateColor); txt_BitRate->setBorderWidth(1); txt_BitRate->setFont(m_fontSize);  // 0 -> auto
+        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);  txt_IpAddr->setTextColor(m_ipAddrColor); txt_IpAddr->setFont(m_fontSize);   // 0 -> auto
         pic_Antenna->setPicturePath(m_stationSymbol);
     }
     const char* getName(){

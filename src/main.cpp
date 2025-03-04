@@ -248,8 +248,8 @@ SemaphoreHandle_t mutex_display;
 
 const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 const uint8_t _listFontSize = 16;
-const uint8_t _headerFontSize = 16;
-const uint8_t _footerFontSize = 16;
+const uint8_t _headerFontSize = 0; //16; // 0 -> autoSize
+const uint8_t _footerFontSize = 0; //16; // 0 -> autoSize
 const uint8_t _bigNumbersFontSize = 156;
 const uint8_t _fileNumberFontSize = 21;
 // ------------------------------------------------------------------------------------------padding-left, padding-right, padding-top, padding-bottom
@@ -316,8 +316,8 @@ const char _tftSize[2] = "s";
 
 const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 const uint8_t _listFontSize       = 21;
-const uint8_t _headerFontSize     = 21;
-const uint8_t _footerFontSize     = 21;
+const uint8_t _headerFontSize     = 0; //21; // 0 -> autoSize
+const uint8_t _footerFontSize     = 0; //21; // 0 -> autoSize
 const uint8_t _bigNumbersFontSize = 156;
 const uint8_t _fileNumberFontSize = 27;
 // -----------------------------------------------------------------------------------padding-left-right-top-bottom
@@ -433,8 +433,8 @@ const char _tftSize[2] = "l";
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader", _headerFontSize);
-displayFooter dispFooter("dispFooter", _footerFontSize);
+displayHeader dispHeader("dispHeader", _headerFontSize); // 0 -> autoSize
+displayFooter dispFooter("dispFooter", _footerFontSize); // 0 -> autoSize
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
@@ -1657,6 +1657,7 @@ void setup() {
 
     dispHeader.updateItem(_hl_item[RADIO]);
     dispHeader.updateVolume(_cur_volume);
+    dispHeader.speakerOnOff(!_f_mute);
     dispHeader.show(true);
     _radioSubMenue = 0;
     _state = NONE;
@@ -2002,7 +2003,7 @@ void wake_up() {
     changeState(RADIO);
     showLogoAndStationName(true);
     dispHeader.show(true);
-    dispHeader.speakerOnOff(_f_mute);
+    dispHeader.speakerOnOff(!_f_mute);
     dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.show(true);
     if(_f_BTpower) BTpowerChanged(true);
@@ -2062,7 +2063,7 @@ void muteChanged(bool m) {
     else  {_f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
-    dispHeader.speakerOnOff(_f_mute);
+    dispHeader.speakerOnOff(!_f_mute);
     dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
@@ -2112,7 +2113,7 @@ void setTimeCounter(uint8_t sec){
 // clang-format off
 void placingGraphicObjects() { // and initialize them
     // ALL STATE
-    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
+    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);   dispHeader.setTimeColor(TFT_LIGHTGREEN);
     dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
     volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
     myList.begin(             _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _fonts[0]);
@@ -3830,7 +3831,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     if(_f_sleeping) return;  // awake in tp_released()
     const char* objName = NULL;
-    if(_state == RADIO && y > _winHeader.y && y < _sdrOvBtns.y){
+    if(_state == RADIO && y > _winHeader.y + _winHeader.h && y < _sdrOvBtns.y){
         objName = "backpane";
         _radioSubMenue++;
         if(_radioSubMenue == 3) _radioSubMenue = 0;
