@@ -59,6 +59,7 @@ const TFT_RGB::Timing RGB_TIMING = { // ELECROW
 #define BT_EMITTER_CONNECT -1  // must be -1, not enough pins
 
 #define TFT_BL              2  // same as RGB_PINS.bl
+#define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
 
 #define I2C_SDA            -1  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
 #define I2C_SCL            -1  // I2C line, same as clock line for capacitive touchpad (-1 if not used)

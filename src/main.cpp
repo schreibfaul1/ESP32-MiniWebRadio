@@ -1613,6 +1613,11 @@ void setup() {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
+    if(AMP_ENABLED >= 0) { // enable onboard amplifier
+        pinMode(AMP_ENABLED, OUTPUT);
+        digitalWrite(AMP_ENABLED, LOW);
+    }
+
     sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps);
     sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps);
     sdr_PL_volume.setNewMinMaxVal(0, _volumeSteps);
@@ -1971,6 +1976,7 @@ bool SD_delete(const char* itemPath) {
 
 void fall_asleep() {
     _f_sleeping = true;
+    _f_mute = true;
     _f_playlistEnabled = false;
     _f_isFSConnected = false;
     _f_isWebConnected = false;
@@ -1991,6 +1997,7 @@ void fall_asleep() {
 
 void wake_up() {
     _f_sleeping = false;
+    _f_mute = false;
     _f_irOnOff = false;
     SerialPrintfln("awake");
     _f_mute = true;
@@ -2788,6 +2795,17 @@ void loop() {
         }
 
         int16_t audioVol = audio.getVolume();
+        //------------------------------------------------------------------------
+        if(AMP_ENABLED >= 0){                // An external amplifier can be switched, if a GPIO has been assigned.
+            static bool av = false;          // The amplifier switches off when the real volume (not _cur_volume) reaches the value 0.
+            if((audioVol > 0) != av){        // This is also the case in sleep mode.
+                av = (audioVol > 0);
+                digitalWrite(AMP_ENABLED, av);
+                if(av)  {SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was activated");}
+                else    {SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was deactivated");}
+            }
+        }
+        //------------------------------------------------------------------------
         uint8_t currVol = _cur_volume;
         if(_f_mute) currVol = 0;
         uint8_t steps = _volumeSteps / 7;
