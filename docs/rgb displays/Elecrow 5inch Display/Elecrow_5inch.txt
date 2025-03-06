@@ -23,10 +23,10 @@ const TFT_RGB::Pins RGB_PINS = {
     .bl = 2
 };
 
-const TFT_RGB::Timing RGB_TIMING = {
+const TFT_RGB::Timing RGB_TIMING = { // ELECROW
     .h_res = 800,
     .v_res = 480,
-    .pixel_clock_hz = 12000000,
+    .pixel_clock_hz = 11000000,
     .hsync_pulse_width = 4,
     .hsync_back_porch = 43,
     .hsync_front_porch = 8,

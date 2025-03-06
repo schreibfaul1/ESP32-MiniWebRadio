@@ -1,5 +1,5 @@
 
-const TFT_RGB::Pins RGB_PINS = {
+const TFT_RGB::Pins RGB_PINS = { // WAVESHARE
     .b0 = 14,
     .b1 = 38,
     .b2 = 18,
@@ -26,13 +26,13 @@ const TFT_RGB::Pins RGB_PINS = {
 const TFT_RGB::Timing RGB_TIMING = {
     .h_res = 800,
     .v_res = 480,
-    .pixel_clock_hz = 13000000,
-    .hsync_pulse_width = 4,
-    .hsync_back_porch = 14,
-    .hsync_front_porch = 8,
+    .pixel_clock_hz = 12000000,
+    .hsync_pulse_width = 1,
+    .hsync_back_porch = 1,
+    .hsync_front_porch = 1,
     .vsync_pulse_width = 4,
-    .vsync_back_porch = 2,
-    .vsync_front_porch = 8
+    .vsync_back_porch = 4,
+    .vsync_front_porch = 4
 };
 
 #define TP_SDA 8
