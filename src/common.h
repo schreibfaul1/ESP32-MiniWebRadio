@@ -154,7 +154,6 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
 
 
-
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3377,7 +3376,9 @@ public:
     }
     void drawTriangeUp(){
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-         triangleUp(0, m_y + (1 * m_lineHight), m_lineHight / 3.5);
+        int line = 1;
+        if(m_mode == RADIO) line = 0;
+        triangleUp(0, m_y + (line* m_lineHight), m_lineHight / 3.5);
     }
     void drawTriangeDown(){
         auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
@@ -4355,6 +4356,8 @@ private:
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1);                          // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                                                    // the station number
             myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw, m_staNrToDraw);
+            if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp();}
+            if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown();}
         }
         xSemaphoreGive(mutex_display);
     }
