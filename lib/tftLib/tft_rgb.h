@@ -190,6 +190,8 @@ class TFT_RGB {
     bool            handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata);
   public:
     void            loop();
+    uint64_t        getVsyncCounter() {return m_vsyncCounter;}
+    void            clearVsyncCounter() {m_vsyncCounter = 0;}
     void            begin(const Pins& newPins, const Timing& newTiming);
     void            setDisplayInversion(bool i);
     // Recommended Non-Transaction
@@ -255,6 +257,7 @@ class TFT_RGB {
     uint16_t m_backGroundColor = TFT_WHITE;
     uint16_t m_textColor = TFT_BLACK;
     uint8_t  m_textorientation = 0;
+    uint64_t m_vsyncCounter = 0;
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫

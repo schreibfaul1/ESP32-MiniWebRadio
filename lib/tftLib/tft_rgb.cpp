@@ -16,6 +16,7 @@ TFT_RGB::TFT_RGB() { // Constructor
     m_framebuffer[1] = NULL;
     m_framebuffer[2] = NULL;
     m_vsync_semaphore = xSemaphoreCreateBinary();
+    m_vsyncCounter = 0;
     xSemaphoreGive(m_vsync_semaphore);
 }
 void TFT_RGB::loop(){
@@ -36,6 +37,7 @@ bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb
  //       xSemaphoreGive(m_vsync_semaphore);
         if(res == ESP_OK){
             m_refresh = true;
+            m_vsyncCounter++;
             return true;
         }
  //   }

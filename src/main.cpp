@@ -106,6 +106,7 @@ uint32_t                _audioFileSize = 0;
 uint32_t                _media_downloadPort = 0;
 uint32_t                _audioCurrentTime = 0;
 uint32_t                _audioFileDuration = 0;
+uint64_t                _totalRuntime = 0; // total runtime in seconds since start
 uint8_t                 _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*             _pressBtn[8];
 const char*             _releaseBtn[8];
@@ -1691,6 +1692,9 @@ void setup() {
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
     bt_emitter.begin();
+    #if TFT_CONTROLLER == 7
+        tft.clearVsyncCounter(); // clear the vsync counter and start them
+    #endif
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2823,6 +2827,7 @@ void loop() {
 
     if(_f_1sec) { // calls every second
         _f_1sec = false;
+        _totalRuntime++;
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
         if(_timeFormat == 24) clk_CL_24.updateTime(minuteOfTheDay, weekDay);

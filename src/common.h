@@ -5056,7 +5056,7 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
         // For percentage calculations.
         ulTotalRunTime /= 100UL;
 
-        char* tmpBuff = (char*) malloc(100);
+        char* tmpBuff = x_ps_malloc(100);
         strcpy(pcWriteBuffer, leftSpace);
         strcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
         strcat(pcWriteBuffer, leftSpace);
@@ -5087,10 +5087,19 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
                 strcat(pcWriteBuffer, tmpBuff);
                 strcat(pcWriteBuffer, "\n");
             }
-            free(tmpBuff);
+            x_ps_free(&tmpBuff);
            }
         // The array is no longer needed, free the memory it consumes.
         vPortFree( pxTaskStatusArray );
+
+        #if TFT_CONTROLLER == 7
+            extern uint64_t _totalRuntime;
+            tmpBuff = x_ps_malloc(100);
+            strcat(pcWriteBuffer, leftSpace);
+            sprintf(tmpBuff, ANSI_ESC_LIGHTGREEN " time since start: %llu s, VSYNCS: %llu  ==> fps: %llu\n", _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            strcat(pcWriteBuffer, tmpBuff);
+            x_ps_free(&tmpBuff);
+        #endif
     }
 }
 
