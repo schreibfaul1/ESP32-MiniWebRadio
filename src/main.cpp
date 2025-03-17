@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.k   - Mar 02/2025                                                                                                               ";
+    Version 3.7-rc1.l   - Mar 17/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or HX8347D (SPI) or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1638,7 +1638,6 @@ void setup() {
 
     webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    ticker100ms.attach(0.1, timer100ms);
     if(BT_EMITTER_CONNECT >= 0){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
        /*digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100);*/ digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
@@ -1692,6 +1691,7 @@ void setup() {
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
     bt_emitter.begin();
+    ticker100ms.attach(0.1, timer100ms);
     #if TFT_CONTROLLER == 7
         tft.clearVsyncCounter(); // clear the vsync counter and start them
     #endif

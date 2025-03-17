@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 02.Mar.2025
+// updated: 17.Mar.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -5094,12 +5094,15 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
 
         #if TFT_CONTROLLER == 7
             extern uint64_t _totalRuntime;
-            tmpBuff = x_ps_malloc(100);
-            strcat(pcWriteBuffer, leftSpace);
-            sprintf(tmpBuff, ANSI_ESC_LIGHTGREEN " time since start: %llu s, VSYNCS: %llu  ==> fps: %llu\n", _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            tmpBuff = x_ps_malloc(130);
+            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            strcat(tmpBuff, "                                   ");
+            tmpBuff[90] = '\0';
+            strcat(tmpBuff, ANSI_ESC_YELLOW "|\n");
             strcat(pcWriteBuffer, tmpBuff);
             x_ps_free(&tmpBuff);
         #endif
+        strcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n");
     }
 }
 
