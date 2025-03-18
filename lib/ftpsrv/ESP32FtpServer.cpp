@@ -368,13 +368,7 @@ boolean FtpServer::processCommand() {
                 while(file) {
 
                     String fn, fs;
-                    if(ESP_ARDUINO_VERSION_MAJOR < 2){
-                        fn = file.name();
-                    }
-                    else{
-                        fn = file.path();
-                    }
-
+                    fn = file.path();
                     fn.remove(0, 1);
                     sprintf(chbuf, "File Name = %s", fn.c_str());
                     if(ftp_debug) ftp_debug(chbuf);
@@ -407,16 +401,8 @@ boolean FtpServer::processCommand() {
             else {
                 File file = dir.openNextFile();
                 while(file) {
-
                     String fn, fs;
-
-                    if(ESP_ARDUINO_VERSION_MAJOR < 2){
-                        fn = file.name();
-                    }
-                    else{
-                        fn = file.path();
-                    }
-
+                    fn = file.path();
                     fn.remove(0, strlen(cwdName));
                     if(fn[0] == '/') fn.remove(0, 1);
                     fs = String(file.size());
@@ -453,18 +439,9 @@ boolean FtpServer::processCommand() {
                 File file = dir.openNextFile();
 
                 while(file) {
-
-                    if(ESP_ARDUINO_VERSION_MAJOR <2){
-                        data.println(file.name());
-                        sprintf(chbuf, "File Name = %s", file.name());
-                        if(ftp_debug) ftp_debug(chbuf);
-                    }
-                    else{
-                        data.println(file.path());
-                        sprintf(chbuf, "File Path/Name = %s", file.path());
-                        if(ftp_debug) ftp_debug(chbuf);
-                    }
-
+                    data.println(file.path());
+                    sprintf(chbuf, "File Path/Name = %s", file.path());
+                    if(ftp_debug) ftp_debug(chbuf);
                     nm++;
                     file = dir.openNextFile();
                 }
