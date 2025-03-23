@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 22.01.2025
+ *  Updated on: 23.03.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -452,6 +452,7 @@ let ir_arr = new Array(23);
 var bt_RxTx = 'TX'
 var state = 'RADIO'
 var cur_volumeSteps = 21
+var stationsLoaded = false
 
 
 function ping() {
@@ -486,10 +487,13 @@ function connect() {
         setInterval(ping, 20000)
         loadStationsFromSD("/stations.json")
             .then(() => {
+                stationsLoaded = true
+                console.log("stations loaded")
                 socket.send('to_listen');
             })
             .catch(error => {
-            console.error("Error loading stations:", error);
+                stationsLoaded = false
+                console.error("Error loading stations:", error);
         });
         loadFileFromSD("/ir_buttons.json", "application/json")
             .then(data => {ir_buttons = data;});
@@ -1341,11 +1345,12 @@ async function loadStationsFromSD(file_name) {
             tableData = JSON.parse(jsonContent);
         } else {
             // Use default data when there is no stored data
-            tableData = [
-                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
+            // tableData = [
+            //     ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+            //     ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+            //     ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            // ];
+            return false
         }
 
         // Tabelle erst laden, wenn die Daten bereitgestellt wurden
@@ -1354,13 +1359,15 @@ async function loadStationsFromSD(file_name) {
 
     } catch (error) {
         console.error('Es gab ein Problem beim Laden der Datei:', error);
-            tableData = [
-                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
-            saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
+            // tableData = [
+            //     ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+            //     ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+            //     ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            // ];
+            // saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
+            return false
     }
+    return true;
 }
 
 // Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
@@ -1416,6 +1423,7 @@ function updateStationlist () { // select in tab Radio
 }
 
 function saveStations_json(){
+    if(loadStations == false) return
     // Create a blob with the content
     const blob = new Blob([JSON.stringify(tableData, 0, 2)], { type: 'application/json' });
 
@@ -1445,9 +1453,11 @@ function loadStations_json(event){
         }
     }
     reader.onerror = function (ex) {
+        loadsStations = false
         console.log(ex)
     }
     reader.readAsText(file)
+    loadsStations = true
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------- TAB AUDIO PLAYER ------------------------------------------------------------------------
