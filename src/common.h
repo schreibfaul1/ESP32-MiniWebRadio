@@ -88,7 +88,7 @@
 
 #if TFT_CONTROLLER == 7 // RGB display
 
-const TFT_RGB::Pins RGB_PINS = {  // SUNTON
+const TFT_RGB::Pins RGB_PINS = {  // SUNTON 7"
     .b0 = 15,
     .b1 = 7,
     .b2 = 6,
@@ -148,11 +148,10 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define BT_EMITTER_CONNECT -1  // must be -1, not enough pins
 
 #define TFT_BL              2  // same as RGB_PINS.bl
-#define AMP_ENABLED        10  // control pin for extenal amplifier (if available)
+#define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
 
 #define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
 #define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
-
 
 
 #endif

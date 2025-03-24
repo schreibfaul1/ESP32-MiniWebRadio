@@ -1,4 +1,4 @@
-    const TFT_RGB::Pins RGB_PINS = {  // SUNTON
+    const TFT_RGB::Pins RGB_PINS = {  // SUNTON 7"
         .b0 = 15,
         .b1 = 7,
         .b2 = 6,

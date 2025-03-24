@@ -1,24 +1,24 @@
 
-const TFT_RGB::Pins RGB_PINS = { // ELECROW 5"
-    .b0 = 8,
-    .b1 = 3,
-    .b2 = 46,
-    .b3 = 9,
-    .b4 = 1,
-    .g0 = 5,
-    .g1 = 6,
-    .g2 = 7,
-    .g3 = 15,
+const TFT_RGB::Pins RGB_PINS = { // ELECROW 7"
+    .b0 = 15,
+    .b1 = 7,
+    .b2 = 6,
+    .b3 = 5,
+    .b4 = 4,
+    .g0 = 9,
+    .g1 = 46,
+    .g2 = 3,
+    .g3 = 8,
     .g4 = 16,
-    .g5 = 4,
-    .r0 = 45,
-    .r1 = 48,
+    .g5 = 1,
+    .r0 = 14,
+    .r1 = 21,
     .r2 = 47,
-    .r3 = 21,
-    .r4 = 14,
+    .r3 = 48,
+    .r4 = 45,
     .hsync = 39,
-    .vsync = 41,
-    .de = 40,
+    .vsync = 40,
+    .de = 41,
     .pclk = 0,
     .bl = 2
 };
@@ -28,11 +28,11 @@ const TFT_RGB::Timing RGB_TIMING = {
     .v_res = 480,
     .pixel_clock_hz = 11000000,
     .hsync_pulse_width = 4,
-    .hsync_back_porch = 43,
-    .hsync_front_porch = 8,
+    .hsync_back_porch = 160,
+    .hsync_front_porch = 1,
     .vsync_pulse_width = 4,
-    .vsync_back_porch = 12,
-    .vsync_front_porch = 8
+    .vsync_back_porch = 140,
+    .vsync_front_porch = 1
 };
 
 #define TP_SDA 19
@@ -43,7 +43,7 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define SD_MMC_CLK         12
 #define SD_MMC_D0          13
 
-#define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
+#define I2C_MASTER_FREQ_HZ 200000 // 400 kHz I2C-frequency
 #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
 
 #define I2S_DOUT           17

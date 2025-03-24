@@ -51,6 +51,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_timing = newTiming;
 
     esp_lcd_rgb_panel_config_t panel_config;
+    memset(&panel_config, 0, sizeof(panel_config));
     panel_config.clk_src = LCD_CLK_SRC_PLL240M;
 
     panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
@@ -130,6 +131,10 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     };
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_RGB::reset() {
+    ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {

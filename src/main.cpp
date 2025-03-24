@@ -1552,6 +1552,8 @@ void setup() {
     tp.setRotation(TP_GT911::Rotate::_0);
     tft.begin(RGB_PINS, RGB_TIMING);
     tft.setDisplayInversion(false);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    tft.reset();
 #endif
 
     SerialPrintfln("setup: ....  Init SD card");
@@ -1560,7 +1562,6 @@ void setup() {
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
 #endif
-
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
@@ -2698,7 +2699,6 @@ void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
     vTaskDelay(1);
-    tft.loop();
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -2707,6 +2707,7 @@ void loop() {
     ArduinoOTA.handle();
     dlna.loop();
     bt_emitter.loop();
+    tft.loop();
 
     if(_f_dlnaBrowseServer) {_f_dlnaBrowseServer = false; dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _totalNumberReturned);}
     if(_f_clearLogo)        {_f_clearLogo = false; clearLogo();}

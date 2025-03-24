@@ -190,6 +190,7 @@ class TFT_RGB {
     bool            handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata);
   public:
     void            loop();
+    void            reset();
     uint64_t        getVsyncCounter() {return m_vsyncCounter;}
     void            clearVsyncCounter() {m_vsyncCounter = 0;}
     void            begin(const Pins& newPins, const Timing& newTiming);
