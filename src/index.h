@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 23.03.2025
+ *  Updated on: 25.03.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1691,15 +1691,15 @@ function loadJSON (path, success, error) {
 
 function selectcategory (presctrl) { // tab Search: preset, select a category
 
-  if(presctrl.value == "bycountry")  {loadJSON('https://de1.api.radio-browser.info/json/countries#name', gotCountries, 'jsonp'); category="country"}
-  if(presctrl.value == "bylanguage") {loadJSON('https://de1.api.radio-browser.info/json/languages/?hidebroken=true&limit=100&reverse=true&order=stationcount', gotLanguages, 'jsonp'); category="language"}
-  if(presctrl.value == "bytag")      {loadJSON('https://de1.api.radio-browser.info/json/tags/?hidebroken=true&limit=100&reverse=true&order=stationcount',      gotTags, 'jsonp'); category="tag"}
+  if(presctrl.value == "bycountry")  {loadJSON('https://de2.api.radio-browser.info/json/countries#name', gotCountries, 'jsonp'); category="country"}
+  if(presctrl.value == "bylanguage") {loadJSON('https://de2.api.radio-browser.info/json/languages/?hidebroken=true&limit=100&reverse=true&order=stationcount', gotLanguages, 'jsonp'); category="language"}
+  if(presctrl.value == "bytag")      {loadJSON('https://de2.api.radio-browser.info/json/tags/?hidebroken=true&limit=100&reverse=true&order=stationcount',      gotTags, 'jsonp'); category="tag"}
 }
 
 function selectitem (presctrl) { // tab Search: preset, select a station
-  if(category == "country")  loadJSON('https://de1.api.radio-browser.info/json/stations/bycountrycodeexact/'  + presctrl.value.substring(0, 2) + "#name", gotStations, 'jsonp')
-  if(category == "language") loadJSON('https://de1.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
-  if(category == "tag")      loadJSON('https://de1.api.radio-browser.info/json/stations/bytag/'      + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
+  if(category == "country")  loadJSON('https://de2.api.radio-browser.info/json/stations/bycountrycodeexact/'  + presctrl.value.substring(0, 2) + "#name", gotStations, 'jsonp')
+  if(category == "language") loadJSON('https://de2.api.radio-browser.info/json/stations/bylanguage/' + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
+  if(category == "tag")      loadJSON('https://de2.api.radio-browser.info/json/stations/bytag/'      + presctrl.value.substring(0, presctrl.value.lastIndexOf(" ")), gotStations, 'jsonp')
 
 }
 
