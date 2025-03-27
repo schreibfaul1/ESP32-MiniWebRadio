@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 25.03.2025
+ *  Updated on: 27.03.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -198,7 +198,7 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/png/MiniWebRadioV3.png);
+            background-image : url(SD/common/MiniWebRadioV4.jpg);
             width : 480px;
             height : 320px;
             margin-top: 5px;
@@ -571,16 +571,25 @@ function connect() {
             case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
                                                             document.getElementById('canvas').width  = 96;
                                                             document.getElementById('canvas').height = 96;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '320px';
+                                                            img.style.height = '240px';
                                                             console.log("tftSize is s");
                                         }
                                         if(val == 'm')  { tft_size = 1; // 480x320px
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '480px';
+                                                            img.style.height = '320px';
                                                             console.log("tftSize is m");
                                         }
                                         if(val == 'l')  { tft_size = 2; // 800x480px
                                                             document.getElementById('canvas').width  = 184;
                                                             document.getElementById('canvas').height = 184;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '800px';
+                                                            img.style.height = '480px';
                                                             console.log("tftSize is l");
                                         }
                                         break
@@ -2418,7 +2427,7 @@ function clear_BT_memItems(){
         <img data-src="SD/png/Button_Pause_Yellow.png"           >
         <img data-src="SD/png/Button_Download_Blue.png"          >
         <img data-src="SD/png/Button_Download_Yellow.png"        >
-        <img data-src="SD/common/MiniWebRadioV3.jpg"             >
+        <img data-src="SD/common/MiniWebRadioV4.jpg"             >
     </div>
 
     <div id="dialog">
@@ -2991,7 +3000,7 @@ function clear_BT_memItems(){
         <table>
             <tr>
                 <label for="label-infopic" onclick="socket.send('hardcopy')">
-                    <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
+                    <img id="label-infopic" src="SD/common/MiniWebRadioV4.jpg" alt="img">
                 </label>
             </tr>
         </table>
