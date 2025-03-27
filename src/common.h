@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 17.Mar.2025
+// updated: 27.Mar.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -76,6 +76,7 @@
         #define I2S_LRC             1
         #define I2S_MCLK            0
 
+        #define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
         #define BT_EMITTER_RX      45  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_TX      38  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_LINK    19  // high if connected                     (-1 if not available)
@@ -224,6 +225,7 @@ enum status {
     EQUALIZER = 12,
     SETTINGS = 13,
     IR_SETTINGS = 14,
+    TEXT_INPUT = 16,
     UNDEFINED = 255
 };
 
@@ -1818,6 +1820,407 @@ public:
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class textbutton : public RegisterTable {
+  private:
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    int16_t         m_r = 0; // radius round rect
+    uint8_t         m_fontSize = 0;
+    uint8_t         m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_v_align = TFT_ALIGN_TOP;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
+    uint32_t        m_clickColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
+    releasedArg     m_ra;
+  public:
+    textbutton(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        m_fontSize = 1;
+    }
+    ~textbutton(){
+        x_ps_free(&m_text);
+        x_ps_free(&m_name);
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, uint8_t radius){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_r = radius;
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(!m_text){m_text = strdup("");}
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setClickColor(uint32_t color){
+        m_clickColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = max(m_padding_left, m_borderWidth);
+        m_paddig_right = max(m_paddig_right, m_borderWidth);
+        m_paddig_top = max(m_paddig_top, m_borderWidth);
+        m_paddig_bottom = max(m_paddig_bottom, m_borderWidth);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        writeText(m_text);
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        writeText(m_text);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        x_ps_free(&m_text);
+        m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
+    }
+    const char* getText(){
+        return m_text;
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
+        m_h_align = h_align;
+        m_v_align = v_align;
+    }
+    void writeText(const char* txt){
+        if(!txt){txt = strdup("");}
+        if(txt != m_text){ // no self copy
+            x_ps_free(&m_text);
+            m_text = x_ps_strdup(txt);
+        }
+        if(m_enabled){
+            uint16_t txtColor_tmp = tft.getTextColor();
+            uint16_t bgColor_tmp = tft.getBackGroundColor();
+            if(!m_clicked) tft.setTextColor(m_fgColor);
+            else           tft.setTextColor(m_clickColor);
+            tft.setBackGoundColor(m_bgColor);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            if(m_fontSize != 0){ tft.setFont(m_fontSize);}
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            if(!m_clicked){
+                if(m_borderWidth > 0){tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_borderColor);}
+                if(m_borderWidth > 1){tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_borderColor);}
+            }
+            else{
+                if(m_borderWidth > 0){tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_clickColor);}
+                if(m_borderWidth > 1){tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_clickColor);}
+            }
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
+        }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+  private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    int16_t     m_r = 0;
+    uint8_t     m_padding_left = 0;
+    uint8_t     m_paddig_right = 0;
+    uint8_t     m_paddig_top = 0;
+    uint8_t     m_paddig_bottom = 0;
+    uint8_t     m_fontSize = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false;
+    char*       m_name = NULL;
+    float       m_row1[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    float       m_row2[11] = {1.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.6};
+    float       m_row3[11] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.1};
+    const char  m_alpha1[12][4]   = {"1..", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "BS"};
+    const char  m_alpha2[11][4]   = {"A..", "a", "s", "d", "f", "g", "h", "j", "k", "l", "RET"};
+    const char  m_alpha3[11][5]   = {"#..", ".", "z", "x", "c", "v", "b", "n", "m", "_", "   "};
+    const char  m_Alpha1[12][4]   = {"1..", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "BS"};
+    const char  m_Alpha2[11][4]   = {"a..", "A", "S", "D", "F", "G", "H", "J", "K", "L", "RET"};
+    const char  m_Alpha3[11][5]   = {"#..", ".", "Z", "X", "C", "V", "B", "N", "M", "_", "   "};
+    const char  m_special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
+    const char  m_special2[11][4] = {"a..", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "RET"};
+    const char  m_special3[11][5] = {"#..", "*", "+", ",", "-", "*", "-", ".", "/", ":", "   "};
+    const char  m_Special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
+    const char  m_Special2[11][4] = {"a..", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "RET"};
+    const char  m_Special3[11][5] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
+    uint32_t    m_color1[12] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
+    uint32_t    m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
+    uint32_t    m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_fgColor = 0;
+    uint32_t    m_clickColor = TFT_CYAN;
+    textbutton* txt_btn_array = new textbutton[34]{
+        textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
+        textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),  textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"),
+        textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
+        textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"),
+        textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"), textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"),
+        textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")
+    };
+
+  public:
+    keyBoard(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("timeString");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_fontSize = fontSize;
+    }
+    ~keyBoard(){
+        x_ps_free(&m_name);
+        delete[] txt_btn_array;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        uint8_t btnW = (m_w - (paddig_left + paddig_right)) / 12;
+        uint8_t btnH = (m_h - (paddig_top + paddig_bottom)) / 3;
+        uint8_t margin = btnW / 17; btnW -= margin; btnH -= margin;
+        uint8_t radius = btnW / 10;
+        uint16_t posX = m_x + paddig_left;
+        uint16_t posY = m_y + m_paddig_top;
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+        m_w = 12 * btnW + 11 * margin + paddig_left + paddig_right; // recalculate width
+        m_h = 3 * btnH + 2 * margin + paddig_top + paddig_bottom; // recalculate high
+        for(int i = 0; i < 12; i++){ // row 1
+            txt_btn_array[i].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row1[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i].setBGcolor(m_bgColor);
+            txt_btn_array[i].setTextColor(m_color1[i]);
+            txt_btn_array[i].setBorderColor(m_color1[i]);
+            txt_btn_array[i].setClickColor(m_clickColor);
+            txt_btn_array[i].setBorderWidth(1);
+            txt_btn_array[i].setFont(m_fontSize);
+            txt_btn_array[i].setText(m_alpha1[i]);
+            txt_btn_array[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row1[i] * btnW + margin;
+        }
+        posY += btnH + margin;
+        posX = m_x;
+        for(int i = 0; i < 11; i++){ // row 2
+            txt_btn_array[i + 12].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row2[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i + 12].setBGcolor(m_bgColor);
+            txt_btn_array[i + 12].setTextColor(m_color2[i]);
+            txt_btn_array[i + 12].setBorderColor(m_color2[i]);
+            txt_btn_array[i + 12].setClickColor(m_clickColor);
+            txt_btn_array[i + 12].setBorderWidth(1);
+            txt_btn_array[i + 12].setFont(m_fontSize);
+            txt_btn_array[i + 12].setText(m_alpha2[i]);
+            txt_btn_array[i + 12].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row2[i] * btnW + margin;
+        }
+        posY += btnH + margin;
+        posX = m_x;
+        for(int i = 0; i < 11; i++){ // row 3
+            txt_btn_array[i + 23].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row3[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i + 23].setBGcolor(m_bgColor);
+            txt_btn_array[i + 23].setTextColor(m_color3[i]);
+            txt_btn_array[i + 23].setBorderColor(m_color3[i]);
+            txt_btn_array[i + 23].setClickColor(m_clickColor);
+            txt_btn_array[i + 23].setBorderWidth(1);
+            txt_btn_array[i + 23].setFont(m_fontSize);
+            txt_btn_array[i + 23].setText(m_alpha3[i]);
+            txt_btn_array[i + 23].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row3[i] * btnW + margin;
+        }
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if(!m_backgroundTransparency) tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        for(int i = 0; i< 34; i++){
+            txt_btn_array[i].show(m_backgroundTransparency, m_saveBackground);
+        }
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        const char * txt = NULL;
+        for(int i = 0; i < 34; i++){
+            if(txt_btn_array[i].positionXY(x, y)) txt = txt_btn_array[i].getText();
+        }
+        uint8_t val = 0;
+        if(txt){
+            if     (strcmp(txt, "BS")  == 0){ val = 10;} // BS
+            else if(strcmp(txt, "RET") == 0){ val = 13;} // CR
+            else if(strcmp(txt, "   ") == 0){ val = 32;} // space
+            else if(strcmp(txt, "1..") == 0){ val = 0; }
+            else if(strcmp(txt, "a..") == 0){ val = 0; }
+            else if(strcmp(txt, "A..") == 0){ val = 0; }
+            else if(strcmp(txt, "#..") == 0){ val = 0; }
+            else val = txt[0];
+
+        }
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, val);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        // if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        for(int i = 0; i< 34; i++){
+            if(txt_btn_array[i].released()){
+                if(strcmp(txt_btn_array[i].getText(), "A..") == 0){ // upcase
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_Alpha1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_Alpha2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_Alpha3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "a..") == 0){ // lowcase
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_alpha1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_alpha2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_alpha3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "1..") == 0){ // special
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_special1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_special2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_special3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "#..") == 0){ // Special
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_Special1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_Special2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_Special3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+            }
+        }
+        return true;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
