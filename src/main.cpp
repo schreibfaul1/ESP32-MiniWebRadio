@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.o   - Mar 27/2025                                                                                                               ";
+    Version 3.7-rc1.p   - Mar 28/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -44,7 +44,7 @@ char _hl_item[18][40]{  "",                 // none
                         "Settings",
                         "IR Settings",
                         "",
-                        "Input",             // set text via keyboard
+                        "WiFi Settings",     //
                         ""};
 
 settings_t              _settings;
@@ -488,7 +488,7 @@ button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_u
 button1state  btn_AL_ready("btn_AL_ready");
 // SETTINGS
 pictureBox    pic_SE_logo("pic_SE_logo");
-button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_radio("btn_SE_radio");
+button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
 // BRIGHTNESS
 button1state  btn_BR_ready("btn_BR_ready");
 pictureBox    pic_BR_logo("pic_BR_logo");
@@ -511,8 +511,8 @@ textbox       txt_BT_mode("txt_BT_mode");
 textbox       txt_BT_volume("txt_BT_volume");
 // IR_SETTINGS
 button1state  btn_IR_radio("btn_IR_radio");
-// TEXT_INPUT
-keyBoard      key_TT_input("key_TT_input", 3);
+// WIFI_SETTINGS
+keyBoard      key_WI_input("key_WI_input", 3);
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -2323,7 +2323,10 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_Equalizer_Green.png");
                                                                                          btn_SE_equal.setClickedPicturePath("/btn/Button_Equalizer_Yellow.png");
                                                                                          btn_SE_equal.setAlternativePicturePath("/btn/Button_Equalizer_Magenta.png");
-    btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
+    btn_SE_wifi.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_wifi.setDefaultPicturePath("/btn/Button_WiFi_Green.png");
+                                                                                         btn_SE_wifi.setClickedPicturePath("/btn/Button_WiFi_Yellow.png");
+                                                                                         btn_SE_wifi.setAlternativePicturePath("/btn/Button_WiFi_Magenta.png");
+    btn_SE_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     pic_SE_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
@@ -2394,7 +2397,7 @@ void placingGraphicObjects() { // and initialize them
     btn_IR_radio.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);     btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
     // TEST --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    key_TT_input.begin(_winKeybrd.x, _winKeybrd.y, _winKeybrd.w, _winKeybrd.h, _winKeybrd.pl, _winKeybrd.pr, _winKeybrd.pt, _winKeybrd.pb);
+    key_WI_input.begin(_winKeybrd.x, _winKeybrd.y, _winKeybrd.w, _winKeybrd.h, _winKeybrd.pl, _winKeybrd.pr, _winKeybrd.pt, _winKeybrd.pb);
 }
 // clang-format off
 
@@ -2631,10 +2634,10 @@ void changeState(int32_t state){
                 showFileLogo(SETTINGS);
             }
             if(_settingsSubMenue == 0){
-                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
             }
             if(_settingsSubMenue == 1){
-                btn_SE_bright.showAlternativePic(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+                btn_SE_bright.showAlternativePic(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
             }
             break;
         }
@@ -2695,11 +2698,11 @@ void changeState(int32_t state){
             btn_IR_radio.show();
             break;
 
-        case TEXT_INPUT:
+        case WIFI_SETTINGS:
             dispHeader.show(true);
             dispFooter.show(true);
             clearWithOutHeaderFooter();
-            key_TT_input.show(false, false);
+            key_WI_input.show(false, false);
             break;
     }
     _state = state;
@@ -3096,7 +3099,7 @@ endbrightness:
         }
     }
 
-    //-------------------------------------------------DEBUG / TEXT_INPUT ----------------------------------------------------------------------------------
+    //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if(Serial.available()) { // input: serial terminal
         String r = Serial.readString();
         r.replace("\n", "");
@@ -3170,7 +3173,7 @@ endbrightness:
             _f_timeSpeech = true;
         }
         if(r.startsWith("txt")){
-            changeState(TEXT_INPUT);
+            changeState(WIFI_SETTINGS);
         }
     }
 }
@@ -3470,10 +3473,11 @@ void ir_short_key(uint8_t key) {
                         }
                     }
                     if(_state == SETTINGS){
-                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
-                            if(btnNr < 2) btnNr++;
+                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, wifi, radio)
+                            if(btnNr < 3) btnNr++;
                             if(btnNr == 1){btn_SE_bright.show(); btn_SE_equal.showAlternativePic();}
-                            if(btnNr == 2){btn_SE_equal.show(); btn_SE_radio.showAlternativePic();}
+                            if(btnNr == 2){btn_SE_equal.show(); btn_SE_wifi.showAlternativePic();}
+                            if(btnNr == 3){btn_SE_wifi.show(); btn_SE_radio.showAlternativePic();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3604,7 +3608,8 @@ void ir_short_key(uint8_t key) {
                         if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
                             if(btnNr > 0) btnNr--;
                             if(btnNr == 0){btn_SE_bright.showAlternativePic(); btn_SE_equal.show();}
-                            if(btnNr == 1){btn_SE_equal.showAlternativePic(); btn_SE_radio.show();}
+                            if(btnNr == 1){btn_SE_equal.showAlternativePic(); btn_SE_wifi.show();}
+                            if(btnNr == 2){btn_SE_wifi.showAlternativePic(); btn_SE_radio.show();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3809,7 +3814,8 @@ void ir_short_key(uint8_t key) {
                         if(_settingsSubMenue == 1){
                             if(btnNr == 0){btn_SE_bright.showClickedPic(); vTaskDelay(100); btnNr = 0; _brightnessSubMenue = 1;  changeState(BRIGHTNESS); setTimeCounter(2); return;}
                             if(btnNr == 1){btn_SE_equal.showClickedPic(); vTaskDelay(100); btnNr = 0; _equalizerSubMenue = 1; changeState(EQUALIZER); setTimeCounter(2); return;}
-                            if(btnNr == 2){btn_SE_radio.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
+                            if(btnNr == 2){btn_SE_wifi.showClickedPic(); vTaskDelay(100); btnNr = 0; changeState(WIFI_SETTINGS); return;}
+                            if(btnNr == 3){btn_SE_radio.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
                         }
                     }
                     if(_state == BRIGHTNESS){
@@ -3953,7 +3959,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
             break;
         case SETTINGS:
-            btn_SE_bright.released(); btn_SE_equal.released(); btn_SE_radio.released();
+            btn_SE_bright.released(); btn_SE_equal.released();  btn_SE_wifi.released(); btn_SE_radio.released();
             break;
         case BRIGHTNESS:
             sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
@@ -3969,8 +3975,8 @@ void tp_released(uint16_t x, uint16_t y){
         case IR_SETTINGS:
             btn_IR_radio.released();
             break;
-        case TEXT_INPUT:
-            key_TT_input.released();
+        case WIFI_SETTINGS:
+            key_WI_input.released();
             break;
         default:
             break;
@@ -4537,6 +4543,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(_state == SETTINGS) {
         if( val && !strcmp(name, "btn_SE_bright"))   {return;}
         if( val && !strcmp(name, "btn_SE_equal"))    {return;}
+        if( val && !strcmp(name, "btn_SE_wifi"))    {return;}
         if( val && !strcmp(name, "btn_SE_radio"))    {return;}
     }
     if(_state == BRIGHTNESS){
@@ -4563,8 +4570,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(_state == IR_SETTINGS) {
         if( val && !strcmp(name, "btn_IR_radio"))    {return;}
     }
-    if(_state == TEXT_INPUT) {
-        if( val && !strcmp(name, "key_TT_input"))    {log_e("val %i", val); if(val == 13){ _radioSubMenue = 0; changeState(RADIO); return;}}
+    if(_state == WIFI_SETTINGS) {
+        if( val && !strcmp(name, "key_WI_input"))    {log_e("val %i", val); if(val == 13){ _radioSubMenue = 0; changeState(RADIO); return;}}
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
@@ -4661,8 +4668,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(!strcmp(name, "btn_EQ_mute"))     {muteChanged(btn_EQ_mute.getValue()); return;}
     }
     if(_state == SETTINGS) {
-        if(!strcmp(name, "btn_SE_bright"))   { changeState(BRIGHTNESS);  return;}
-        if(!strcmp(name, "btn_SE_equal"))    { changeState(EQUALIZER);   return;}
+        if(!strcmp(name, "btn_SE_bright"))   { changeState(BRIGHTNESS);    return;}
+        if(!strcmp(name, "btn_SE_equal"))    { changeState(EQUALIZER);     return;}
+        if(!strcmp(name, "btn_SE_wifi"))     { changeState(WIFI_SETTINGS); return;}
         if(!strcmp(name, "btn_SE_radio"))    {_radioSubMenue = 0; changeState(RADIO); return;}
     }
     if(_state == BLUETOOTH) {
