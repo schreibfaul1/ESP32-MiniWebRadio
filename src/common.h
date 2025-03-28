@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 27.Mar.2025
+// updated: 28.Mar.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -1881,6 +1881,50 @@ class textbutton : public RegisterTable {
         x_ps_free(&m_text);
         x_ps_free(&m_name);
     }
+    void drawTriangeUp(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_h - m_paddig_bottom;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = x0 + (x1 - x0) / 2;
+        int16_t y2 = m_y - m_paddig_top;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeDown(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_paddig_top;
+        int16_t x2 = x0 + (x1 - x0) / 2;
+        int16_t y2 = m_y + m_h - m_paddig_bottom;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeLeft(){
+        int16_t x0 = m_x + m_w - m_paddig_right;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = m_x + m_padding_left;
+        int16_t y2 = y0 + (y1 - y0) / 2;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeRight(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_padding_left;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = m_x + m_w - m_paddig_right;
+        int16_t y2 = y0 + (y1 - y0) / 2;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, uint8_t radius){
         m_x = x; // x pos
         m_y = y; // y pos
@@ -2014,7 +2058,11 @@ class textbutton : public RegisterTable {
                 if(m_borderWidth > 0){tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_clickColor);}
                 if(m_borderWidth > 1){tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_clickColor);}
             }
-            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            if     (strcmp(m_text, "/l") == 0) {drawTriangeLeft();}
+            else if(strcmp(m_text, "/r") == 0) {drawTriangeRight();}
+            else if(strcmp(m_text, "/u") == 0) {drawTriangeUp();}
+            else if(strcmp(m_text, "/d") == 0) {drawTriangeDown();}
+            else    tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }

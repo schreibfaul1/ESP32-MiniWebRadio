@@ -1512,7 +1512,7 @@ void setup() {
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("   ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V3     *    ");
+    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V4     *    ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
     SerialPrintfln("   ");
     if(startsWith(chipModel, "ESP32-D")) { ; } // ESP32-D    ...  okay
