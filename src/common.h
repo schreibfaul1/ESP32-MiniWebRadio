@@ -6,7 +6,7 @@
 // clang-format off
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER          7                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
 #define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -336,8 +336,7 @@ void           placingGraphicObjects();
 void           muteChanged(bool m);
 void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void           setTimeCounter(uint8_t sec);
-
-
+void           wifiSettings();
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -1772,10 +1771,10 @@ public:
     void setBorderWidth(uint8_t width){ // 0 = no border
         m_borderWidth = width;
         if(m_borderWidth > 2) m_borderWidth = 2;
-        m_padding_left = max(m_padding_left, m_borderWidth);
-        m_paddig_right = max(m_paddig_right, m_borderWidth);
-        m_paddig_top = max(m_paddig_top, m_borderWidth);
-        m_paddig_bottom = max(m_paddig_bottom, m_borderWidth);
+        m_padding_left = m_padding_left + m_borderWidth;
+        m_paddig_right = m_paddig_right + m_borderWidth;
+        m_paddig_top = m_paddig_top + m_borderWidth;
+        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -1887,7 +1886,7 @@ class textbutton : public RegisterTable {
         int16_t x1 = m_x + m_w - m_paddig_right;
         int16_t y1 = m_y + m_h - m_paddig_bottom;
         int16_t x2 = x0 + (x1 - x0) / 2;
-        int16_t y2 = m_y - m_paddig_top;
+        int16_t y2 = m_y + m_paddig_top;
         uint32_t color = m_fgColor;
         if(m_clicked) color = m_clickColor;
         tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
@@ -2066,6 +2065,210 @@ class textbutton : public RegisterTable {
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class selectbox : public RegisterTable {
+
+/*    —————————————————————————————————————————————————————————————————————————————
+     |                   textbox                               |  ⏬  |  ⏫  |idx |
+      —————————————————————————————————————————————————————————————————————————————
+*/
+  private:
+    int16_t            m_x = 0;
+    int16_t            m_y = 0;
+    int16_t            m_w = 0;
+    int16_t            m_h = 0;
+    uint8_t            m_fontSize = 0;
+    uint8_t            m_padding_left = 0; // left margin
+    uint8_t            m_paddig_right = 0; // right margin
+    uint8_t            m_paddig_top = 0; // top margin
+    uint8_t            m_paddig_bottom = 0; // bottom margin
+    uint8_t            m_borderWidth = 0;
+    uint8_t            m_idx = 0;
+    uint32_t           m_bgColor = 0;
+    uint32_t           m_fgColor = 0;
+    uint32_t           m_borderColor = 0;
+    char*              m_name = NULL;
+    bool               m_enabled = false;
+    bool               m_clicked = false;
+    bool               m_autoSize = false;
+    bool               m_narrow = false;
+    bool               m_noWrap = false;
+    bool               m_backgroundTransparency = false;
+    bool               m_saveBackground         = false;
+    releasedArg        m_ra;
+    textbox*           m_txt_select   = new textbox("select_txtbox_ssid");
+    textbutton*        m_txt_btn_down = new textbutton("select_txtbtn_down");
+    textbutton*        m_txt_btn_up   = new textbutton("select_txtbtn_up");
+    textbox*           m_txt_btn_idx  = new textbox("select_txtbox_idx");
+    std::vector<char*> m_selContent;
+  public:
+    selectbox(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        setFontSize(fontSize);
+    }
+    ~selectbox(){
+        vector_clear_and_shrink(m_selContent);
+        x_ps_free(&m_name);
+        delete m_txt_select;
+        delete m_txt_btn_down;
+        delete m_txt_btn_up;
+        delete m_txt_btn_idx;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; if(m_w < 40) {log_e("width < 40px"); return;} // width
+        m_h = h; if(m_h < 10) {log_e("height < 10px"); return;}// high
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+        m_txt_select->begin(  m_x,  m_y, m_w - (m_h * 3), m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_btn_down->begin(m_x + m_w - (m_h * 3), m_y, m_h, m_h, m_h / 5 ,m_h / 5, m_h / 5, m_h / 5, 0);
+        m_txt_btn_up->begin(  m_x + m_w - (m_h * 2), m_y, m_h, m_h, m_h / 5 ,m_h / 5, m_h / 5, m_h / 5, 0);
+        m_txt_btn_idx->begin( m_x + m_w - (m_h * 1), m_y, m_h, m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_btn_down->setClickColor(TFT_CYAN);
+        m_txt_btn_down->setText("/d");
+        m_txt_btn_up->setClickColor(TFT_CYAN);
+        m_txt_btn_up->setText("/u");
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_txt_select->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_down->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_up->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
+        m_enabled = true;
+        m_clicked = false;
+
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        m_idx = 0;
+        if(m_selContent.size() > 0)writeText(m_idx);
+    }
+    void hide(){
+        m_enabled = false;
+        m_txt_select->hide();
+        m_txt_btn_down->hide();
+        m_txt_btn_up->hide();
+        m_txt_btn_idx->hide();
+    }
+    void disable(){
+        m_enabled = false;
+        m_txt_select->disable();
+        m_txt_btn_down->disable();
+        m_txt_btn_up->disable();
+        m_txt_btn_idx->disable();
+    }
+    void enable(){
+        m_enabled = true;
+        m_txt_select->enable();
+        m_txt_btn_down->enable();
+        m_txt_btn_up->enable();
+        m_txt_btn_idx->enable();
+    }
+    void setFontSize(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+        m_txt_select->setFont(m_fontSize);
+        m_txt_btn_down->setFont(m_fontSize);
+        m_txt_btn_up->setFont(m_fontSize);
+        m_txt_btn_idx->setFont(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+        m_txt_select->setTextColor(m_fgColor);
+        m_txt_btn_down->setTextColor(m_fgColor);
+        m_txt_btn_up->setTextColor(m_fgColor);
+        m_txt_btn_idx->setTextColor(m_fgColor);
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+        m_txt_select->setBGcolor(m_bgColor);
+        m_txt_btn_down->setBGcolor(m_bgColor);
+        m_txt_btn_up->setBGcolor(m_bgColor);
+        m_txt_btn_idx->setBGcolor(m_bgColor);
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+        m_txt_select->setBorderColor(m_borderColor);
+        m_txt_btn_down->setBorderColor(m_borderColor);
+        m_txt_btn_up->setBorderColor(m_borderColor);
+        m_txt_btn_idx->setBorderColor(m_borderColor);
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_txt_select->setBorderWidth(m_borderWidth);
+        m_txt_btn_down->setBorderWidth(m_borderWidth);
+        m_txt_btn_up->setBorderWidth(m_borderWidth);
+        m_txt_btn_idx->setBorderWidth(m_borderWidth);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        m_txt_select->positionXY(x, y);
+        if(m_txt_btn_down->positionXY(x, y)) log_e("btn_down");
+        if(m_txt_btn_up->positionXY(x, y)) log_e("btn_up");
+        m_txt_btn_idx->positionXY(x, y);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        bool ret = false;
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_txt_select->released();
+        if(m_txt_btn_down->released()) if(m_idx < m_selContent.size() - 1){m_idx++; log_e("btn_down %i", m_idx);  writeText(m_idx); ret = true;}
+        if(m_txt_btn_up->released()) if(m_idx > 0                        ){m_idx--; log_e("btn_up %i", m_idx);    writeText(m_idx); ret = true;}
+        m_txt_btn_idx->released();
+        m_clicked = false;
+        return ret;
+    }
+    void addText(const char* txt){
+        if(!txt){txt = strdup("");}
+        log_w("addText: %s", txt);
+        m_selContent.push_back(x_ps_strdup(txt));
+    }
+    void writeText(uint8_t idx){
+        char* txt = NULL;
+        if(!m_selContent.size()){txt = strdup("");}
+        else txt = m_selContent[idx];
+        if(m_enabled){
+            log_w("writeText: %s", txt);
+            m_txt_select->setText(txt, m_narrow, m_noWrap);
+            m_txt_select->show(m_backgroundTransparency, m_saveBackground);
+            char c_idx[5] = {0}; itoa(idx + 1, c_idx, 10);
+            m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
+            m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
+        }
+    }
+    char* getSelectedText(){
+        if(m_selContent.size() > 0){return m_selContent[m_idx];}
+        return NULL;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2285,6 +2488,23 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
         }
         return true;
     }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class wifiSettings : public RegisterTable {
+/*                —————————————————————————————————————————————————————————————————————————————
+                 |                             selectbox (SSID)            |  ⏬  |  ⏫  |idx |
+                  —————————————————————————————————————————————————————————————————————————————
+                  —————————————————————————————————————————————————————————————————————————————
+                 |                             textbox (Password)                             |
+                  —————————————————————————————————————————————————————————————————————————————
+                  —————————————————————————————————————————————————————————————————————————————
+                 |                                                                            |
+                 |                                                                            |
+                 |                                 keyBoard                                   |
+                 |                                                                            |
+                 |                                                                            |
+                  —————————————————————————————————————————————————————————————————————————————
+*/
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
