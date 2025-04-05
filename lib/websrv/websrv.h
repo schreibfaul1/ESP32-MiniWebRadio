@@ -2,7 +2,7 @@
  * websrv.h
  *
  *  Created on: 09.07.2017
- *  updated on: 06.11.2024
+ *  updated on: 05.05.2025
  *      Author: Wolle
  */
 
@@ -17,6 +17,7 @@
 #include "mbedtls/base64.h"
 
 extern __attribute__((weak)) void WEBSRV_onInfo(const char*);
+extern __attribute__((weak)) void WEBSRV_onError(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength);
 extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg);

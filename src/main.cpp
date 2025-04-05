@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.p   - Mar 28/2025                                                                                                               ";
+    Version 3.7-rc1.q   - Apr 05/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -271,9 +271,6 @@ struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h = 
 struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
 struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
-
-struct w_se {uint16_t x =  10; uint16_t y =  40; uint16_t w = 300; uint16_t h =  28;  uint8_t pl = 1; uint8_t pr = 1; uint8_t pt = 1; uint8_t pb = 1;} const _winSelect;    // selectbox
-struct w_k  {uint16_t x =  10; uint16_t y = 120; uint16_t w = 300; uint16_t h =  75;  uint8_t pl = 1; uint8_t pr = 1; uint8_t pt = 1; uint8_t pb = 1;} const _winKeybrd;
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -342,9 +339,6 @@ struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h = 
 struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _sdrOvBtns;   // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winButton;
 struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;    // clock and alarm digits
-
-struct w_se {uint16_t x =  12; uint16_t y =  50; uint16_t w = 456; uint16_t h =  30;  uint8_t pl = 1; uint8_t pr = 1; uint8_t pt =  1; uint8_t pb =  1;} const _winSelect;    // selectbox
-struct w_k  {uint16_t x =  12; uint16_t y = 160; uint16_t w = 456; uint16_t h = 114;  uint8_t pl = 1; uint8_t pr = 1; uint8_t pt =  1; uint8_t pb =  1;} const _winKeybrd;    // keyboard
 struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBP;        // slider bandpass in equalizer
@@ -413,9 +407,6 @@ struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h = 
 struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
 struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
-
-struct w_se {uint16_t x =  82; uint16_t y =  70; uint16_t w = 636; uint16_t h =  50; uint8_t pl =  1; uint8_t pr =  1; uint8_t pt = 1; uint8_t pb = 1;} const _winSelect;    // selectbox
-struct w_k  {uint16_t x =  82; uint16_t y = 240; uint16_t w = 636; uint16_t h = 160; uint8_t pl =  1; uint8_t pr =  1; uint8_t pt = 1; uint8_t pb = 1;} const _winKeybrd;    // keyboard
 struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 200; uint16_t y =  53; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 200; uint16_t y = 126; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -518,8 +509,7 @@ textbox       txt_BT_volume("txt_BT_volume");
 // IR_SETTINGS
 button1state  btn_IR_radio("btn_IR_radio");
 // WIFI_SETTINGS
-keyBoard      key_WI_input("key_WI_input", 3);
-selectbox     sel_WI_input("sel_WI_ssid", 3);
+wifiSettings  cls_wifiSettings("wifiSettings", 2);
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -2176,15 +2166,6 @@ void setTimeCounter(uint8_t sec){
     }
 }
 
-void wifiSettings(){
-    int16_t n = WiFi.scanNetworks();
-    SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
-    for(int i = 0; i < n; i++){
-        SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-    }
-}
-
-
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                  M E N U E / B U T T O N S                                                                  ║
@@ -2458,9 +2439,8 @@ void placingGraphicObjects() { // and initialize them
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_IR_radio.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);     btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    // TEST --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    key_WI_input.begin(_winKeybrd.x, _winKeybrd.y, _winKeybrd.w, _winKeybrd.h, _winKeybrd.pl, _winKeybrd.pr, _winKeybrd.pt, _winKeybrd.pb);
-    sel_WI_input.begin(_winSelect.x, _winSelect.y, _winSelect.w, _winSelect.h, _winSelect.pl, _winSelect.pr, _winSelect.pt, _winSelect.pb);
+    // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    cls_wifiSettings.begin(_winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb);
 }
 // clang-format off
 
@@ -2765,21 +2745,106 @@ void changeState(int32_t state){
             dispHeader.show(true);
             dispFooter.show(true);
             clearWithOutHeaderFooter();
-            key_WI_input.show(false, false);
-            sel_WI_input.setFontSize(2);
-            sel_WI_input.addText("Wolles-Fritzbox1");
-            sel_WI_input.addText("Wolles-Fritzbox2");
-            sel_WI_input.addText("Wolles-Fritzbox3");
-            sel_WI_input.setBorderColor(TFT_LIGHTGREY);
-            sel_WI_input.setTextColor(TFT_LIGHTGREY);
-            sel_WI_input.setBorderWidth(1);
-            sel_WI_input.show(false, false);
-            wifiSettings();
+            cls_wifiSettings.clearText();
+            int16_t n = WiFi.scanNetworks();
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
+            for(int i = 0; i < n; i++){
+                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+                const char* pw = getWiFiPW(WiFi.SSID(i).c_str());
+                if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
+                else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
+                cls_wifiSettings.addWiFiItems(WiFi.SSID(i).c_str(), pw);
+            }
+            cls_wifiSettings.show(false, false);
             break;
     }
     _state = state;
 }
 // clang-format on
+
+const char* getWiFiPW(const char* ssid){
+    static char* line = NULL;
+    if(line) x_ps_free(&line);
+    line = (char*)x_ps_malloc(512);
+    if(!line) { log_e("oom"); return NULL;}
+    for(int j = 0; j < 6; j++){
+        if(j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(startsWith(line, ssid)) {
+            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "%s (%d)", line, (int16_t)strlen(line));
+            if(indexOf(line, "\t", 0) > 0) {
+                static char* password = line + indexOf(line, "\t", 0) + 1;
+                SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID %s, PW %s", ssid, password);
+                return password;
+            }
+            else {
+                SerialPrintfln("WiFi: .....  " ANSI_ESC_RED "no password found for SSID %s", ssid);
+                return NULL;
+            }
+        }
+    }
+    return NULL;
+}
+
+bool setWiFiPW(const char* ssid, const char* password){
+    if(!ssid || !password) return NULL;
+    static char* line = NULL;
+    if(line) x_ps_free(&line);
+    line = (char*)x_ps_malloc(512);
+    if(!line) { log_e("oom"); return NULL;}
+    strcpy(line, ssid);
+    strcat(line, "\t");
+    strcat(line, password);
+
+    for(int j = 1; j < 6; j++){
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(startsWith(line, ssid)) {
+            switch(j){
+                case 1: pref.putString("wifiStr1", line); break;
+                case 2: pref.putString("wifiStr2", line); break;
+                case 3: pref.putString("wifiStr3", line); break;
+                case 4: pref.putString("wifiStr4", line); break;
+                case 5: pref.putString("wifiStr5", line); break;
+            }
+            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new PW for SSID %s,  %s", ssid, line);
+            return true;
+        }
+    }
+    for(int j = 0; j < 6; j++){
+        if(j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(strcmp(line, "\t") == 0) {
+            switch(j){
+                case 0: pref.putString("wifiStr0", line); break;
+                case 1: pref.putString("wifiStr1", line); break;
+                case 2: pref.putString("wifiStr2", line); break;
+                case 3: pref.putString("wifiStr3", line); break;
+                case 4: pref.putString("wifiStr4", line); break;
+                case 5: pref.putString("wifiStr5", line); break;
+            }
+            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new SSID and PW %s,  %s", ssid, line);
+            return true;
+        }
+    }
+    SerialPrintfln("WiFi: .....  " ANSI_ESC_RED "no free space for new SSID and PW %s,  %s", ssid, line);
+    x_ps_free(&line);
+    return false;
+}
+
+
+
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                    L O O P                                                                                  ║
@@ -3244,7 +3309,7 @@ endbrightness:
         if(r.startsWith("tsp")){
             _f_timeSpeech = true;
         }
-        if(r.startsWith("txt")){
+        if(r.startsWith("pwd")){ // set password for WiFi
             changeState(WIFI_SETTINGS);
         }
     }
@@ -4048,8 +4113,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_IR_radio.released();
             break;
         case WIFI_SETTINGS:
-            key_WI_input.released();
-            sel_WI_input.released();
+            cls_wifiSettings.released();
             break;
         default:
             break;
@@ -4402,7 +4466,12 @@ void WEBSRV_onInfo(const char* info) {
     if(!strcmp("to_listen", info)) return;         // suppress to_isten
     if(startsWith(info, "Command client")) return; // suppress Command client available
     if(startsWith(info, "Content-D")) return;      // Content-Disposition
-//    SerialPrintfln("WebSrv Info: " ANSI_ESC_YELLOW "%s", info); // infos for debug
+    if(startsWith(info, "test=")) return;          // stackHighWaterMark
+    // SerialPrintfln("WebSrv Info: " ANSI_ESC_YELLOW "%s", info); // infos for debug
+}
+
+void WEBSRV_onError(const char* info) {
+    SerialPrintfln("WebSrv Err:  " ANSI_ESC_RED "%s", info);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
@@ -4413,7 +4482,7 @@ void dlna_info(const char* info) {
         lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         setTimeCounter(4);
     }
-    SerialPrintfln("DLNA_info:    %s", info);
+    SerialPrintfln("DLNA_info:   %s", info);
 }
 
 void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL) {
