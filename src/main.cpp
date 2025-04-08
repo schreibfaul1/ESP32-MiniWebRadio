@@ -1245,14 +1245,14 @@ bool connectToWiFi() {
 
 #if 0
     // create nvs entries if they do not exist
-    if(!pref.isKey("wifiStr0")) pref.putString("wifiStr0", "\t"); // SSID + \t + PW
-    if(!pref.isKey("wifiStr1")) pref.putString("wifiStr1", "\t");
-    if(!pref.isKey("wifiStr2")) pref.putString("wifiStr2", "\t");
-    if(!pref.isKey("wifiStr3")) pref.putString("wifiStr3", "\t");
-    if(!pref.isKey("wifiStr4")) pref.putString("wifiStr4", "\t");
-    if(!pref.isKey("wifiStr5")) pref.putString("wifiStr5", "\t");
+    if(!pref.isKey("wifiStr0")) pref.putString("wifiStr0", ""); // SSID + \t + PW
+    if(!pref.isKey("wifiStr1")) pref.putString("wifiStr1", "");
+    if(!pref.isKey("wifiStr2")) pref.putString("wifiStr2", "");
+    if(!pref.isKey("wifiStr3")) pref.putString("wifiStr3", "");
+    if(!pref.isKey("wifiStr4")) pref.putString("wifiStr4", "");
+    if(!pref.isKey("wifiStr5")) pref.putString("wifiStr5", "");
 
-    const char* ssid = _SSID;
+    const char* ssid = "DIRECT-9F-HP Laser 150nw"; // _SSID;
     const char* pw = _PW;
     line[0] = '\0';
     strcpy(line, ssid); strcat(line, "\t"); strcat(line, pw);
@@ -1276,10 +1276,11 @@ bool connectToWiFi() {
         char* pw = line + pos + 1;        // password is the second part
         // log_w("wifiStr%i: ssid: %s, pw: %s", i, ssid, pw);
         wifiMulti.addAP(ssid, pw);
-        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", ssid);
+        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s" ANSI_ESC_YELLOW " [%s:%d]", ssid, __FILENAME__, __LINE__);
     }
 
-#else
+#endif
+#if 1
 
     uint16_t idx = 0;
     wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
