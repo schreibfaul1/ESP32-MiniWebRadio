@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 04.Apr.2025
+// updated: 10.Apr.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -10,8 +10,8 @@
 #define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
 #define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911
-#define TP_ROTATION             1                               // only SPI displays, 1 or 3 (landscape)
+#define TP_VERSION              0                               // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911
+#define TP_ROTATION             3                               // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // only SPI displays, (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -39,7 +39,6 @@
 #include <vector>
 #include "index.h"
 #include "index.js.h"
-#include "accesspoint.h"
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
@@ -303,7 +302,7 @@ boolean        isAudio(File file);
 boolean        isAudio(const char* path);
 boolean        isPlaylist(File file);
 bool           connectToWiFi();
-void           openAccessPoint();
+void           setWiFiCredentials(const char* ssid, const char* password);
 const char*    scaleImage(const char* path);
 void           setVolume(uint8_t vol);
 uint8_t        downvolume();
@@ -2231,10 +2230,10 @@ class selectbox : public RegisterTable {
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
-        m_txt_select->positionXY(x, y);
-        if(m_txt_btn_down->positionXY(x, y)) log_e("btn_down");
-        if(m_txt_btn_up->positionXY(x, y))   log_e("btn_up");
-        m_txt_btn_idx->positionXY(x, y);
+        if(m_txt_select->positionXY(x, y)){;}
+        if(m_txt_btn_down->positionXY(x, y)){;}
+        if(m_txt_btn_up->positionXY(x, y)){;}
+        if(m_txt_btn_idx->positionXY(x, y)){;}
         if(!m_enabled) return false;
         return true;
     }
@@ -2244,8 +2243,8 @@ class selectbox : public RegisterTable {
         if(!m_clicked) return false;
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         m_txt_select->released();
-        if(m_txt_btn_down->released()) if(m_idx < m_selContent.size() - 1){m_idx++; log_e("btn_down %i/%i", m_idx, m_selContent.size());  writeText(m_idx); ret = true;}
-        if(m_txt_btn_up->released()) if(m_idx > 0                        ){m_idx--; log_e("btn_up %i/%i",   m_idx, m_selContent.size());  writeText(m_idx); ret = true;}
+        if(m_txt_btn_down->released()) if(m_idx < m_selContent.size() - 1){m_idx++; /* log_e("btn_down %i/%i", m_idx, m_selContent.size()); */ writeText(m_idx); ret = true;}
+        if(m_txt_btn_up->released()) if(m_idx > 0                        ){m_idx--; /* log_e("btn_up %i/%i",   m_idx, m_selContent.size()); */ writeText(m_idx); ret = true;}
         m_txt_btn_idx->released();
         m_clicked = false;
         return ret;
@@ -2260,11 +2259,9 @@ class selectbox : public RegisterTable {
                 }
             }
         }
-        log_w("addText: %s", txt);
         m_selContent.push_back(x_ps_strdup(txt));
     }
     void clearText(){
-        log_e("clearText");
         vector_clear_and_shrink(m_selContent);
     }
     void writeText(uint8_t idx){
@@ -2272,7 +2269,7 @@ class selectbox : public RegisterTable {
         if(idx >= m_selContent.size()){txt = strdup("");}
         else txt = m_selContent[idx];
         if(m_enabled){
-            log_w("writeText: %s", txt);
+            // log_w("writeText: %s", txt);
             m_txt_select->setText(txt, m_narrow, m_noWrap);
             m_txt_select->show(m_backgroundTransparency, m_saveBackground);
             char c_idx[5] = {0}; itoa(idx + 1, c_idx, 10);
@@ -2452,7 +2449,7 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
             if(txt_btn_array[i].positionXY(x, y)) m_txt = txt_btn_array[i].getText();
         }
         if(m_txt){
-            if     (strcmp(m_txt, "BS")  == 0){ m_val = 10;} // BS
+            if     (strcmp(m_txt, "BS")  == 0){ m_val =  8;} // BS
             else if(strcmp(m_txt, "RET") == 0){ m_val = 13;} // CR
             else if(strcmp(m_txt, "   ") == 0){ m_val = 32;} // space
             else if(strcmp(m_txt, "1..") == 0){ m_val = 0; }
@@ -2532,10 +2529,11 @@ uint8_t            m_padding_left = 0;  // left margin
 uint8_t            m_paddig_right = 0;  // right margin
 uint8_t            m_paddig_top = 0;    // top margin
 uint8_t            m_paddig_bottom = 0; // bottom margin
+uint8_t            m_pwd_idx = 0;
 uint8_t            m_borderWidth = 0;
 uint32_t           m_bgColor = 0;
 uint32_t           m_fgColor = 0;
-uint32_t           m_borderColor = 0;
+uint32_t           m_borderColor = TFT_BLACK;
 char*              m_name = NULL;
 bool               m_enabled = false;
 bool               m_clicked = false;
@@ -2544,11 +2542,14 @@ bool               m_narrow = false;
 bool               m_noWrap = false;
 bool               m_backgroundTransparency = false;
 bool               m_saveBackground         = false;
+std::vector<char*> m_ssid;
+std::vector<char*> m_password;
 releasedArg        m_ra;
 selectbox*         m_sel_ssid     = new selectbox("wifiSettings_selectbox_ssid", 0);
 textbox*           m_txt_password = new textbox("wifiSettings_txtbox_pwd");
 keyBoard*          m_keyboard     = new keyBoard("wifiSettings_keyBoard", 0);
 struct w_se       {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winSelect;
+struct w_pwd      {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winPWD;
 struct w_k        {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winKeybrd;
 
 public:
@@ -2558,11 +2559,18 @@ public:
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
-        m_borderColor = TFT_BLACK;
+        m_borderColor = TFT_LIGHTGREY;
         setFontSize(fontSize);
+        m_txt_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_txt_password->setTextColor(m_fgColor);
+        m_txt_password->setBGcolor(m_bgColor);
+        m_txt_password->setBorderColor(m_borderColor);
+        m_txt_password->setBorderWidth(m_borderWidth);
+        m_txt_password->setFont(0); // auto size
     }
     ~wifiSettings(){
         x_ps_free(&m_name);
+        vector_clear_and_shrink(m_password);
         delete m_sel_ssid;
         delete m_txt_password;
         delete m_keyboard;
@@ -2571,14 +2579,17 @@ public:
 
         if(w == 320){  // s 320x240
             m_winSelect.x = 10; m_winSelect.y = 40;  m_winSelect.w = 300; m_winSelect.h = 28; m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 10; m_winPWD.y    = 80;  m_winPWD.w    = 300; m_winPWD.h    = 28; m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
             m_winKeybrd.x = 10; m_winKeybrd.y = 120; m_winKeybrd.w = 300; m_winKeybrd.h = 75; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
         }
         else if( w == 480){  // m 480x320
             m_winSelect.x = 12; m_winSelect.y = 50;  m_winSelect.w = 456; m_winSelect.h = 30;  m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 12; m_winPWD.y    = 90;  m_winPWD.w    = 456; m_winPWD.h    = 30;  m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
             m_winKeybrd.x = 12; m_winKeybrd.y = 160; m_winKeybrd.w = 456; m_winKeybrd.h = 114; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
         }
         else if(w == 800){  // l 800x480
             m_winSelect.x = 82; m_winSelect.y = 70;  m_winSelect.w = 636; m_winSelect.h =  50; m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 82; m_winPWD.y    = 130; m_winPWD.w    = 636; m_winPWD.h    =  50; m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
             m_winKeybrd.x = 82; m_winKeybrd.y = 240; m_winKeybrd.w = 636; m_winKeybrd.h = 160; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
         }
         m_x = x; // x pos
@@ -2590,6 +2601,7 @@ public:
         m_paddig_top    = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
+        m_txt_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
     const char* getName(){
@@ -2599,10 +2611,7 @@ public:
         return m_enabled;
     }
     void show(bool backgroundTransparency, bool saveBackground){
-        // m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-        // m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        // m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        // m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_sel_ssid->show(m_backgroundTransparency, m_saveBackground);
@@ -2670,9 +2679,14 @@ public:
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
-        m_sel_ssid->positionXY(x, y);
-        m_txt_password->positionXY(x, y);
-        if(m_keyboard->positionXY(x, y)) {log_e("key pressed %i", m_keyboard->getVal());}
+        if(m_sel_ssid->positionXY(x, y)){;}
+        if(m_txt_password->positionXY(x, y)){;}
+        if(m_keyboard->positionXY(x, y)) {
+            // log_e("key pressed %i", m_keyboard->getVal());
+            changePassword(m_keyboard->getVal(), m_pwd_idx);
+            m_txt_password->setText(m_password[m_pwd_idx]);
+            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+        }
         if(!m_enabled) return false;
         return true;
     }
@@ -2680,37 +2694,74 @@ public:
         bool ret = false;
         if(!m_enabled) return false;
         if(!m_clicked) return false;
-        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-        m_sel_ssid->released();
-        if(m_txt_password->released()) {log_e("m_txt_password released");}
-        if(m_keyboard->released())     {log_e("keyboard released");}
+        if(m_sel_ssid->released()){
+            const char* selTxt = m_sel_ssid->getSelectedText();
+            if(selTxt){
+                for(int i = 0; i < m_ssid.size(); i++){
+                    if(strcmp(selTxt, m_ssid[i]) == 0){
+                        m_txt_password->setText(m_password[i]);
+                        m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+                        m_pwd_idx = i;
+                    }
+                }
+            } log_w("selected %s", selTxt);
+            ret = true;
+        }
+        if(m_txt_password->released()) {/*log_e("m_txt_password released")*/ ;}
+        if(m_keyboard->released())     {/*log_e("keyboard released")*/ ;}
+        if(m_keyboard->getVal() == 0x0D){ // enter
+            m_ra.arg1 = m_ssid[m_pwd_idx]; // ssid
+            m_ra.arg2 = m_password[m_pwd_idx]; // password
+            // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
+            if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        }
+
         m_clicked = false;
         return ret;
     }
     void addWiFiItems(const char* ssid, const char* pw){
         if(!ssid){ssid = strdup("");}
-        if(!pw) {pw = strdup("");}
+        char* pwd = x_ps_calloc(64, sizeof(char)); // password max 63 chars
+        if(!pw) {strcpy(pwd, "");}
+        else    {strcpy(pwd, pw);}
         m_sel_ssid->addText(ssid);
+        m_ssid.push_back(strdup(ssid));
+        if(m_ssid.size() == 1){
+            m_txt_password->setText(pwd);
+            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+        }
+        m_password.push_back(strndup(pwd, 64));
+        x_ps_free(&pwd);
     }
     void clearText(){
         m_sel_ssid->clearText();
+        vector_clear_and_shrink(m_password);
+        vector_clear_and_shrink(m_ssid);
+        m_txt_password->setText("");
     }
-    // void writeText(uint8_t idx){
-    //     char* txt = NULL;
-    //     if(!m_selContent.size()){txt = strdup("");}
-    //     else txt = m_selContent[idx];
-    //     if(m_enabled){
-    //         log_w("writeText: %s", txt);
-    //         m_txt_select->setText(txt, m_narrow, m_noWrap);
-    //         m_txt_select->show(m_backgroundTransparency, m_saveBackground);
-    //         char c_idx[5] = {0}; itoa(idx + 1, c_idx, 10);
-    //         m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
-    //         m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
-    //     }
-    // }
     char* getSelectedText(){
     //    if(m_selContent.size() > 0){return m_selContent[m_idx];}
         return NULL;
+    }
+  private:
+    void changePassword(char ch, uint8_t idx){
+        if(ch == 0x08){ // backspace
+            if(m_password[idx][0] == 0) return;
+            m_password[idx][strlen(m_password[idx]) - 1] = 0;
+            m_txt_password->setText(m_password[idx]);
+            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+        }
+        else if(ch == 0x0D){ // enter
+        //    log_w("enter pressed");
+        }
+        else{
+            if(strlen(m_password[idx]) < 63){
+                int len = strlen(m_password[idx]);
+                m_password[idx][len] = ch;
+                m_password[idx][len + 1] = 0;
+
+            }
+        }
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

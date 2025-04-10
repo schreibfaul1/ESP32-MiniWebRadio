@@ -1,10 +1,10 @@
 #include "common.h"
-// clang-format off
+// clang-format off 🟢🟡🔴
 /*****************************************************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.q   - Apr 05/2025                                                                                                               ";
+    Version 3.7-rc1.r   - Apr 10/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -22,7 +22,7 @@
 // AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
-// clang-format on
+// clang-format on  🟢🟡🔴
 
 SET_LOOP_TASK_STACK_SIZE(10 * 1024);
 
@@ -160,7 +160,6 @@ bool                    _f_playlistEnabled = false;
 bool                    _f_playlistNextFile = false;
 bool                    _f_logoUnknown = false;
 bool                    _f_pauseResume = false;
-bool                    _f_accessPoint = false;
 bool                    _f_SD_Upload = false;
 bool                    _f_PSRAMfound = false;
 bool                    _f_FFatFound = false;
@@ -183,11 +182,11 @@ bool                    _f_BTpower = false;
 bool                    _f_BTcurPowerState = false;
 bool                    _f_timeSpeech = false;
 bool                    _f_stationsChanged = false;
+bool                    _f_WiFiConnected = false;
 String                  _station = "";
 char*                   _stationName_air = NULL;
 String                  _homepage = "";
 String                  _filename = "";
-String                  _scannedNetworks = "";
 String                  _TZName = "Europe/Berlin";
 String                  _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String                  _media_downloadIP = "";
@@ -230,7 +229,7 @@ stationManagement   staMgnt(&_cur_station);
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // ⏹⏹⏹⏹
-// clang-format off
+// clang-format off 
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -515,7 +514,7 @@ wifiSettings  cls_wifiSettings("wifiSettings", 2);
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-// clang-format off
+// clang-format off  🟢🟡🔴
 boolean defaultsettings(){
 
     if(!SD_MMC.exists("/ir_buttons.json")){  // if not found ir_buttons.json create a default file
@@ -617,9 +616,9 @@ boolean defaultsettings(){
     staMgnt.updateStationsList();
     return true;
 }
-// clang-format on
+// clang-format on  🟢🟡🔴
 
-// clang-format off
+// clang-format off  🟢🟡🔴
 void updateSettings(){
     if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
     if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("/audiofiles/");
@@ -1243,7 +1242,6 @@ bool connectToWiFi() {
     char* line = x_ps_malloc(512);
     if(!line) { log_e("oom"); return false;}
 
-#if 0
     // create nvs entries if they do not exist
     if(!pref.isKey("wifiStr0")) pref.putString("wifiStr0", ""); // SSID + \t + PW
     if(!pref.isKey("wifiStr1")) pref.putString("wifiStr1", "");
@@ -1252,10 +1250,10 @@ bool connectToWiFi() {
     if(!pref.isKey("wifiStr4")) pref.putString("wifiStr4", "");
     if(!pref.isKey("wifiStr5")) pref.putString("wifiStr5", "");
 
-    const char* ssid = "DIRECT-9F-HP Laser 150nw"; // _SSID;
-    const char* pw = _PW;
+    const char* SSID = _SSID;
+    const char* PW = _PW;
     line[0] = '\0';
-    strcpy(line, ssid); strcat(line, "\t"); strcat(line, pw);
+    strcpy(line, SSID); strcat(line, "\t"); strcat(line, PW);
     pref.putString("wifiStr0", line);
 
     for(int i = 0; i < 6; i++) {
@@ -1274,72 +1272,14 @@ bool connectToWiFi() {
         line[pos] = '\0';                 // terminate ssid
         char* ssid = line;                // ssid is the first part
         char* pw = line + pos + 1;        // password is the second part
-        // log_w("wifiStr%i: ssid: %s, pw: %s", i, ssid, pw);
-        wifiMulti.addAP(ssid, pw);
-        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s" ANSI_ESC_YELLOW " [%s:%d]", ssid, __FILENAME__, __LINE__);
+
+        wifiMulti.addAP(ssid, pw); // SSID and PW in code"
+        char pass[64 * 4] = {0}; for(int j = 0; j < strlen(pw); j++) {strcat(pass, "🟢");}
+        SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
     }
-
-#endif
-#if 1
-
-    uint16_t idx = 0;
-    wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
-    SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", _SSID);
-
-    if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
-        String ap_ssid = pref.getString("ap_ssid", ""); // credentials from accesspoint
-        String ap_pw = pref.getString("ap_pw", "");
-        if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
-        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", ap_ssid.c_str());
-    }
-
-    File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
-    if(file) {                                // try to read from SD_MMC
-        while(file.available()) {
-            char emptyStr[1] = "";
-            char* s_ssid = emptyStr;
-            char* s_password = emptyStr;
-            char* s_info = emptyStr;
-            idx = file.readBytesUntil('\n', line, 512);     // read the line
-            if(idx == 0) break;
-            line[idx] = '\0';                               // terminate the line
-            if(line[0] == '*') continue;                    // ignore this, goto next line
-            if(line[0] == '\n') continue;                   // empty line
-            if(line[0] == ' ') continue;                    // space as first char
-
-            uint8_t p = 0;
-            uint16_t slen = strlen(line);
-            for(int16_t i = 0; i < slen; i++) {
-                if(line[i] == '\n') {                       // make LF ineffective
-                    line[i] = '\0';
-                    continue;
-                }
-                if(i == 0) s_ssid = line;                   // string at pos 0 is ssid
-                if(line[i] == '\t') {
-                    line[i] = '\0';
-                    if(p == 0) {s_password = line + i + 1;} // string after first tab is passwort (if available)
-                    if(p == 1) {    s_info = line + i + 1;} // string after second tab is info (if available)
-                    p++;
-                }
-            }
-            if(strlen(s_ssid) == 0) continue;               // ssid is empty
-        //    log_i("%s, %s, %s",  s_ssid, s_password, s_info);
-            wifiMulti.addAP(s_ssid, s_password);
-            SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", s_ssid);
-            (void) s_info; // unused
-        }
-        file.close();
-        x_ps_free(&line);
-    }
-    /* int16_t n = WiFi.scanNetworks();
-    SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
-    for(int i = 0; i < n; i++){
-        SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-    } */
-
-#endif
 
     wifiMulti.setStrictMode(true);
+    WiFi.mode(WIFI_STA);
     wifiMulti.run();
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -1359,48 +1299,85 @@ bool connectToWiFi() {
     }
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void setWiFiCredentials(const char* ssid, const char* password) {
+    if(!ssid || !password) return;
+    if(strlen(ssid) < 5 || strlen(password) < 5) return; // min length
 
-void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
-    _f_accessPoint = true;
-    char buf[200];
-    int16_t n = 0, i = 0;
-    n = WiFi.scanNetworks();
-    while(n < 1){
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        i++;
-        if(i == 8) break;
-    }
-    if(n == 0) {
-        SerialPrintfln("setup: ....  no WiFi networks found");
-        tft.setFont(_fonts[4]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.fillScreen(TFT_BLACK);
-        sprintf(buf, "No WiFi networks found");
-        tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-        while(true) { vTaskDelay(10 / portTICK_PERIOD_MS); }
-    }
-    else {
-        SerialPrintfln("setup: ....  %d WiFi networks found", n);
-        for(int32_t i = 0; i < n; ++i) {
-            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-            _scannedNetworks += WiFi.SSID(i) + '\n';
+    log_e("ssid %s pw %s", ssid, password);
+
+    char* line = x_ps_malloc(512);
+    int i = 0, state = 0;
+    if(!line) { log_e("oom"); goto exit; }
+
+    for(i = 0; i < 6; i++) {
+        line[0] = '\0'; // Move this line outside the switch statement
+        switch (i) {
+            case 0: strcpy(line,pref.getString("wifiStr0").c_str()); break;
+            case 1: strcpy(line,pref.getString("wifiStr1").c_str()); break;
+            case 2: strcpy(line,pref.getString("wifiStr2").c_str()); break;
+            case 3: strcpy(line,pref.getString("wifiStr3").c_str()); break;
+            case 4: strcpy(line,pref.getString("wifiStr4").c_str()); break;
+            case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
+        }
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
+            if(strlen(password) > 0) {
+                line[0] = '\0'; // clear line
+                strcat(line, ssid);
+                strcat(line, "\t");
+                strcat(line, password);
+                if(i == 0) {log_e("password can't changed, is hard coded"); state = 0;goto exit;}
+                if(i == 1) {pref.putString("wifiStr1", line); state = 1; goto exit;}
+                if(i == 2) {pref.putString("wifiStr2", line); state = 1; goto exit;}
+                if(i == 3) {pref.putString("wifiStr3", line); state = 1; goto exit;}
+                if(i == 4) {pref.putString("wifiStr4", line); state = 1; goto exit;}
+                if(i == 5) {pref.putString("wifiStr5", line); state = 1; goto exit;}
+            }
         }
     }
+    for(i = 1; i < 6; i++) {
+        line[0] = '\0';
+        switch (i) {
+            case 1: strcpy(line,pref.getString("wifiStr1").c_str()); break;
+            case 2: strcpy(line,pref.getString("wifiStr2").c_str()); break;
+            case 3: strcpy(line,pref.getString("wifiStr3").c_str()); break;
+            case 4: strcpy(line,pref.getString("wifiStr4").c_str()); break;
+            case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
+        }
+        if(strlen(line) < 5) { // line is empty
+            line[0] = '\0'; // clear line
+            strcat(line, ssid);
+            strcat(line, "\t");
+            strcat(line, password);
+            if(i == 1) {pref.putString("wifiStr1", line); state = 2; goto exit;}
+            if(i == 2) {pref.putString("wifiStr2", line); state = 2; goto exit;}
+            if(i == 3) {pref.putString("wifiStr3", line); state = 2; goto exit;}
+            if(i == 4) {pref.putString("wifiStr4", line); state = 2; goto exit;}
+            if(i == 5) {pref.putString("wifiStr5", line); state = 2; goto exit;}
+        }
+    }
+    state = 3;
 
-    WiFi.softAP("MiniWebRadio");
-    IPAddress myIP = WiFi.softAPIP();
-    String    AccesspointIP = myIP.toString();
-
-    tft.setFont(_fonts[4]);
-    tft.setTextColor(TFT_YELLOW);
-    tft.fillScreen(TFT_BLACK);
-    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
-    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
-
-    webSrv.begin(80, 81); // HTTP port, WebSocket port
+exit:
+    x_ps_free(&line); // free memory
+    if(state == 0) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("S S I D and password are hard coded", "en");
+    }
+    if(state == 1) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The password has been changed", "en");
+    }
+    if(state == 2) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The credentials has been added", "en");
+    }
+    if(state == 3) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The S S I D and password can't be stored", "en");
+    }
     return;
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
@@ -1637,20 +1614,14 @@ void setup() {
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
-//    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    SerialPrintfln("setup: ....  seek for WiFi networks");
-    if(!connectToWiFi()){
-        openAccessPoint();
-        return;
-    }
-    else{
-    //if(connectToWiFi()){
+
+    _f_WiFiConnected = connectToWiFi();
+    if(_f_WiFiConnected){
         strcpy(_myIP, WiFi.localIP().toString().c_str());
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
                                                     ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
                                                     ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI())
-    }
-    if(!_f_accessPoint){
+
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
@@ -1687,7 +1658,7 @@ void setup() {
 
     ir.begin(); // Init InfraredDecoder
 
-    webSrv.begin(80, 81); // HTTP port, WebSocket port
+    if(_f_WiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
     if(BT_EMITTER_CONNECT >= 0){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
@@ -1744,7 +1715,7 @@ void setup() {
     dispHeader.show(true);
     _radioSubMenue = 0;
     _state = NONE;
-    if(WiFi.isConnected()) changeState(RADIO);
+    if(_f_WiFiConnected) changeState(RADIO);
     else changeState(WIFI_SETTINGS);
 }
 /*****************************************************************************************************************************************************
@@ -2747,13 +2718,14 @@ void changeState(int32_t state){
             dispFooter.show(true);
             clearWithOutHeaderFooter();
             cls_wifiSettings.clearText();
+            cls_wifiSettings.setBorderWidth(1);
             int16_t n = WiFi.scanNetworks();
             SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
             for(int i = 0; i < n; i++){
                 SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
                 const char* pw = getWiFiPW(WiFi.SSID(i).c_str());
-                if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
-                else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
+                // if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
+                // else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
                 cls_wifiSettings.addWiFiItems(WiFi.SSID(i).c_str(), pw);
             }
             cls_wifiSettings.show(false, false);
@@ -2766,8 +2738,13 @@ void changeState(int32_t state){
 const char* getWiFiPW(const char* ssid){
     static char* line = NULL;
     if(line) x_ps_free(&line);
-    line = (char*)x_ps_malloc(512);
-    if(!line) { log_e("oom"); return NULL;}
+    line = (char*)x_ps_malloc(128);
+
+    static char* password = NULL;
+    if(line) x_ps_free(&password);
+    password = (char*)x_ps_malloc(128);
+    if(!password) { log_e("oom"); return NULL;}
+
     for(int j = 0; j < 6; j++){
         if(j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
         if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
@@ -2775,15 +2752,15 @@ const char* getWiFiPW(const char* ssid){
         if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
         if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
         if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
-        if(startsWith(line, ssid)) {
-            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "%s (%d)", line, (int16_t)strlen(line));
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
             if(indexOf(line, "\t", 0) > 0) {
-                static char* password = line + indexOf(line, "\t", 0) + 1;
-                SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID %s, PW %s", ssid, password);
+                int idx = indexOf(line, "\t", 0);
+                strcpy(password, line + idx + 1);
+                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, password);
                 return password;
             }
             else {
-                SerialPrintfln("WiFi: .....  " ANSI_ESC_RED "no password found for SSID %s", ssid);
+                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, "is not set");
                 return NULL;
             }
         }
@@ -2807,7 +2784,7 @@ bool setWiFiPW(const char* ssid, const char* password){
         if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
         if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
         if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
-        if(startsWith(line, ssid)) {
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
             switch(j){
                 case 1: pref.putString("wifiStr1", line); break;
                 case 2: pref.putString("wifiStr2", line); break;
@@ -3137,7 +3114,7 @@ void loop() {
             else connecttohost(_settings.lastconnectedhost);
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if(_f_reconnect && !_f_accessPoint){
+        if(_f_reconnect && !_f_WiFiConnected){
             _f_reconnect = false;
             connecttohost(_settings.lastconnectedhost);
         }
@@ -3157,7 +3134,7 @@ void loop() {
             _f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if(!_f_accessPoint){
+        if(_f_WiFiConnected){
             if((WiFi.status() != WL_CONNECTED)) {
                 _WiFi_disconnectCnt ++;
                 if(_WiFi_disconnectCnt == 15){
@@ -3242,12 +3219,12 @@ endbrightness:
         String r = Serial.readString();
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s", r.c_str());
-        if(r.startsWith("p")) {
+        if(r.startsWith("pr")) {
             _f_pauseResume = audio.pauseResume();
             if(_f_pauseResume) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume"); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible"); }
         }
-        if(r.startsWith("h")) { // A hardcopy of the display is created and written to the SD card
+        if(r.startsWith("hc")) { // A hardcopy of the display is created and written to the SD card
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
             hardcopy();
         }
@@ -4175,10 +4152,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
 
-    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
-                                                        webSrv.show(accesspoint_html, webSrv.TEXT);}
-                                    else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
-                                                        webSrv.show(index_html, webSrv.TEXT);      }
+    if(cmd == "index.html"){        SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");                                                     // via XMLHttpRequest
+                                    webSrv.show(index_html, webSrv.TEXT);
                                     return;}
 
     if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
@@ -4334,14 +4309,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     _totalNumberReturned = 0;
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
-
-    if(cmd == "AP_ready"){          SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "send scanned networks");  webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
-
-    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n")); // from accesspoint.h                                   // via websocket
-                                    String AP_PW =   param.substring(param.indexOf("\n") + 1);
-                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
-                                    AP_SSID.c_str(), AP_PW.c_str());
-                                    pref.putString("ap_ssid", AP_SSID); pref.putString("ap_pw", AP_PW); ESP.restart();}
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
@@ -4826,6 +4793,9 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == IR_SETTINGS) {
         if(!strcmp(name, "btn_IR_radio"))    {_radioSubMenue = 0; changeState(RADIO); return;}
+    }
+    if(_state == WIFI_SETTINGS) {
+        if(!strcmp(name, "wifiSettings"))    {setWiFiCredentials(ra.arg1, ra.arg2); ESP.restart();}
     }
     log_d("unused event: graphicObject %s was released", name);
 }
