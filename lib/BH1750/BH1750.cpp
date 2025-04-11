@@ -27,6 +27,7 @@ bool hp_BH1750::setResolutionMode(uint8_t resolutionMode){
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool hp_BH1750::begin(uint8_t address, int8_t sda, int8_t scl) {
     _address = address;             // Store one of the two available addresses
+    _wire->end(); // if already started
     _wire->begin(sda, scl, 400000); // Initialisation of wire object with standard SDA/SCL lines
     return writeMtreg(BH1750_MTREG_DEFAULT); // Set standard sensitivity
 }

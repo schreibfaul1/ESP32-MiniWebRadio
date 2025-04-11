@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Feb 01 2025
+// updated on Feb 28 2025
 
 #include "tp_gt911.h"
 
@@ -38,7 +38,10 @@ bool TP_GT911::begin(int8_t sda, int8_t scl, uint8_t addr, uint32_t clk, int8_t 
     m_wire->begin(m_sda, m_scl, m_clk);
     m_wire->beginTransmission(m_addr);
     if(m_wire->endTransmission() == 0) {
-        log_e("TouchPad found at 0x%02X", m_addr);
+        char buff[30] = {0};
+        sprintf(buff, "TouchPad found at 0x%02X", m_addr);
+        if(tp_info) tp_info(buff);
+
         readInfo(); // Need to get resolution to use rotation
         return true;
     }
@@ -82,7 +85,7 @@ void TP_GT911::loop() {
     uint8_t t = touched(TP_GT911::GT911_MODE_POLLING); // number of touch points
     if(t == 1 && !m_f_isTouch) {
         p = getPoint(0);
-        log_w("X: %d, Y: %d", p.x, p.y);
+        // log_w("X: %d, Y: %d", p.x, p.y);
         if(tp_pressed) tp_pressed(p.x, p.y);
         ts = millis();
         m_f_isTouch = true;
@@ -118,10 +121,10 @@ void TP_GT911::loop() {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 bool TP_GT911::getProductID() {
-    uint8_t buf[4];
-    memset(buf, 0, 4);
-    readBytes(GT911_REG_ID, buf, 4);
-    log_w("Product ID: %c%c%c%c", buf[0], buf[1], buf[2], buf[3]);
+    char buf[30] = {0};
+    strcpy(buf, "Product ID: ");
+    readBytes(GT911_REG_ID, (uint8_t*)buf + 12, 4);
+    if(tp_info) tp_info(buf);
     return true;
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,7 +133,7 @@ void TP_GT911::reset() {
     pinMode(m_intPin, OUTPUT); digitalWrite(m_intPin, LOW);
     pinMode(m_rstPin, OUTPUT); digitalWrite(m_rstPin, LOW);
     vTaskDelay(10 / portTICK_PERIOD_MS);
-    digitalWrite(m_intPin, m_addr);
+    digitalWrite(m_intPin, HIGH);
     pinMode(m_rstPin, INPUT);
     vTaskDelay(10 / portTICK_PERIOD_MS);
     digitalWrite(m_intPin, LOW);

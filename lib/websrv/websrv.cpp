@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 13.12.2024
+ *  updated on: 05.04.2025
  *      Author: Wolle
  */
 
@@ -127,7 +127,7 @@ boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from 
         return false;
     }
     if (!fs.exists(path)) { // guard
-        log_e("file does not exist \"%s\"", path);
+    //    log_e("file does not exist \"%s\"", path);
         show_not_found();
         return false;
     }
@@ -344,7 +344,7 @@ boolean WebSrv::uploadB64image(fs::FS &fs,const char* path, uint32_t contentLeng
     return true;
 
 exit:
-    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
+    if (WEBSRV_onError) WEBSRV_onError(m_buff);
     if(b64buff){free(b64buff); b64buff = NULL;}
     return false;
 }
@@ -411,13 +411,13 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
     return true;
 
 exit:
-    if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
+    if (WEBSRV_onError) WEBSRV_onError(m_buff);
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
     method = HTTP_NONE;
-    m_bytesPerTransaction = 4096 / 2;
+    m_bytesPerTransaction = 4096;
     m_transBuf = x_ps_malloc(m_bytesPerTransaction);
     if(!m_transBuf){log_e("WebServer: not enough memory");}
     m_buff = (char*)x_ps_malloc(1024);

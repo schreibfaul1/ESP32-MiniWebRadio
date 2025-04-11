@@ -21,6 +21,7 @@
 //  2019: modified by @HenrikSte
 //  2021: modified by @schreibfaul1 add PSRAM and callbacks
 //  2023: modified by @schreibfaul1 SDFAT removed
+//  2025: modified by @schreibfaul1 no loop before begin
 
 #include "ESP32FtpServer.h"
 
@@ -43,6 +44,7 @@ FtpServer::FtpServer() {
         return;
     }
     _fs  = &SD;  // will be overwritten in begin()
+    m_f_begin = false;
 }
 //----------------------------------------------------------------------------------------------------------------------
 FtpServer::~FtpServer()
@@ -54,6 +56,7 @@ FtpServer::~FtpServer()
 //----------------------------------------------------------------------------------------------------------------------
 void FtpServer::begin(fs::FS &fs, String uname, String pword) {
     // Tells the ftp server to begin listening for incoming connection
+    m_f_begin = true;
     _FTP_USER = uname;
     _FTP_PASS = pword;
     _fs = &fs;
@@ -88,6 +91,7 @@ void FtpServer::iniVariables() {
 }
 //----------------------------------------------------------------------------------------------------------------------
 int32_t FtpServer::handleFTP() {
+    if(!m_f_begin) return 0;
     if((int32_t) (millisDelay - millis()) > 0) return 0;
 
     if(ftpServer.hasClient()) {
@@ -368,13 +372,7 @@ boolean FtpServer::processCommand() {
                 while(file) {
 
                     String fn, fs;
-                    if(ESP_ARDUINO_VERSION_MAJOR < 2){
-                        fn = file.name();
-                    }
-                    else{
-                        fn = file.path();
-                    }
-
+                    fn = file.path();
                     fn.remove(0, 1);
                     sprintf(chbuf, "File Name = %s", fn.c_str());
                     if(ftp_debug) ftp_debug(chbuf);
@@ -407,16 +405,8 @@ boolean FtpServer::processCommand() {
             else {
                 File file = dir.openNextFile();
                 while(file) {
-
                     String fn, fs;
-
-                    if(ESP_ARDUINO_VERSION_MAJOR < 2){
-                        fn = file.name();
-                    }
-                    else{
-                        fn = file.path();
-                    }
-
+                    fn = file.path();
                     fn.remove(0, strlen(cwdName));
                     if(fn[0] == '/') fn.remove(0, 1);
                     fs = String(file.size());
@@ -453,18 +443,9 @@ boolean FtpServer::processCommand() {
                 File file = dir.openNextFile();
 
                 while(file) {
-
-                    if(ESP_ARDUINO_VERSION_MAJOR <2){
-                        data.println(file.name());
-                        sprintf(chbuf, "File Name = %s", file.name());
-                        if(ftp_debug) ftp_debug(chbuf);
-                    }
-                    else{
-                        data.println(file.path());
-                        sprintf(chbuf, "File Path/Name = %s", file.path());
-                        if(ftp_debug) ftp_debug(chbuf);
-                    }
-
+                    data.println(file.path());
+                    sprintf(chbuf, "File Path/Name = %s", file.path());
+                    if(ftp_debug) ftp_debug(chbuf);
                     nm++;
                     file = dir.openNextFile();
                 }

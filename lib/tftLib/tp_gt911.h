@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 
+extern __attribute__((weak)) void tp_info(const char* info);
 extern __attribute__((weak)) void tp_positionXY(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_moved(uint16_t x, uint16_t y);
 extern __attribute__((weak)) void tp_pressed(uint16_t x, uint16_t y);

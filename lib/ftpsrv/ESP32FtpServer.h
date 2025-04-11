@@ -103,6 +103,7 @@ private:
     char     *cwdName = NULL;               // name of current directory
     char     command[5];                    // command sent by client
     boolean  rnfrCmd = false;               // previous command was RNFR
+    boolean  m_f_begin = false;             // true after begin()
     char     *parameters = NULL;            // point to begin of parameters sent by client
     uint16_t iCL = 0;                       // pointer to cmdLine next incoming char
     int8_t   cmdStatus = 0;                 // status of ftp command connection

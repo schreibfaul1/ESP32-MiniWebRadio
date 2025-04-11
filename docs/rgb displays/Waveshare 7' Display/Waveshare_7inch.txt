@@ -1,0 +1,65 @@
+
+const TFT_RGB::Pins RGB_PINS = { // WAVESHARE
+    .b0 = 14,
+    .b1 = 38,
+    .b2 = 18,
+    .b3 = 17,
+    .b4 = 10,
+    .g0 = 39,
+    .g1 = 0,
+    .g2 = 45,
+    .g3 = 48,
+    .g4 = 47,
+    .g5 = 21,
+    .r0 = 1,
+    .r1 = 2,
+    .r2 = 42,
+    .r3 = 41,
+    .r4 = 40,
+    .hsync = 46,
+    .vsync = 3,
+    .de = 5,
+    .pclk = 7,
+    .bl = -1
+};
+
+const TFT_RGB::Timing RGB_TIMING = {
+    .h_res = 800,
+    .v_res = 480,
+    .pixel_clock_hz = 12000000,
+    .hsync_pulse_width = 1,
+    .hsync_back_porch = 1,
+    .hsync_front_porch = 1,
+    .vsync_pulse_width = 4,
+    .vsync_back_porch = 4,
+    .vsync_front_porch = 4
+};
+
+#define TP_SDA 8
+#define TP_SCL 9
+#define TP_IRQ -1
+
+#define SD_MMC_CMD         11
+#define SD_MMC_CLK         12
+#define SD_MMC_D0          13
+
+#define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
+#define GT911_I2C_ADDRESS  0x14 //0x5D   // default I2C-address of GT911
+
+#define I2S_DOUT           19
+#define I2S_BCLK           20
+#define I2S_LRC            15
+#define I2S_MCLK           -1  // important, don't change!
+
+#define IR_PIN              6  // IR Receiver (if available)
+#define BT_EMITTER_RX      -1  // must be -1, not enough pins
+#define BT_EMITTER_TX      -1  // must be -1, not enough pins
+#define BT_EMITTER_LINK    -1  // must be -1, not enough pins
+#define BT_EMITTER_MODE    -1  // must be -1, not enough pins
+#define BT_EMITTER_CONNECT -1  // must be -1, not enough pins
+
+#define TFT_BL             -1  // same as RGB_PINS.bl
+#define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
+
+#define I2C_SDA            -1  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
+#define I2C_SCL            -1  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
