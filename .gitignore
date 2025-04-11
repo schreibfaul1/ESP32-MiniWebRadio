@@ -4,4 +4,5 @@
 build
 logs
 managed_components
+dependencies.lock
 
