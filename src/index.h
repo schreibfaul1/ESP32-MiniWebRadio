@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 13.02.2025
+ *  Updated on: 11.04.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -198,7 +198,7 @@ const char index_html[] PROGMEM = R"=====(
             border-style: solid;
             border-width: 2px;
             display : inline-block;
-            background-image : url(SD/png/MiniWebRadioV3.png);
+            background-image : url(SD/common/MiniWebRadioV4.jpg);
             width : 480px;
             height : 320px;
             margin-top: 5px;
@@ -452,6 +452,7 @@ let ir_arr = new Array(23);
 var bt_RxTx = 'TX'
 var state = 'RADIO'
 var cur_volumeSteps = 21
+var stationsLoaded = false
 
 
 function ping() {
@@ -486,10 +487,13 @@ function connect() {
         setInterval(ping, 20000)
         loadStationsFromSD("/stations.json")
             .then(() => {
+                stationsLoaded = true
+                console.log("stations loaded")
                 socket.send('to_listen');
             })
             .catch(error => {
-            console.error("Error loading stations:", error);
+                stationsLoaded = false
+                console.error("Error loading stations:", error);
         });
         loadFileFromSD("/ir_buttons.json", "application/json")
             .then(data => {ir_buttons = data;});
@@ -523,7 +527,7 @@ function connect() {
         if (n >= 0) {
             var msg  = socketMsg.substring(0, n)
             var val  = socketMsg.substring(n + 1)
-            console.log("para ",msg, " val ",val)
+            // console.log("para ",msg, " val ",val)
         }
         else {
             msg = socketMsg
@@ -567,12 +571,26 @@ function connect() {
             case "tftSize":             if(val == 's')  { tft_size = 0; // 320x240px
                                                             document.getElementById('canvas').width  = 96;
                                                             document.getElementById('canvas').height = 96;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '320px';
+                                                            img.style.height = '240px';
                                                             console.log("tftSize is s");
                                         }
                                         if(val == 'm')  { tft_size = 1; // 480x320px
                                                             document.getElementById('canvas').width  = 128;
                                                             document.getElementById('canvas').height = 128;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '480px';
+                                                            img.style.height = '320px';
                                                             console.log("tftSize is m");
+                                        }
+                                        if(val == 'l')  { tft_size = 2; // 800x480px
+                                                            document.getElementById('canvas').width  = 184;
+                                                            document.getElementById('canvas').height = 184;
+                                                            const img = document.getElementById('label-infopic');
+                                                            img.style.width = '800px';
+                                                            img.style.height = '480px';
+                                                            console.log("tftSize is l");
                                         }
                                         break
             case  "volume":             resultstr1.value = "Volume is now " + val;
@@ -676,6 +694,9 @@ function connect() {
                                             document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
                                             bt_RxTx = 'RX'
                                         }
+                                        break;
+            case "timezones":           console.log(msg, val)
+                                        fillTimeZoneSelect(val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -870,14 +891,13 @@ function showTab6 () {
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Yellow.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    // getTimeZoneName()
-    loadTimeZones()
     loadRingVolume()
     loadVolumeAfterAlarm()
     loadVolumeSteps()
     socket.send('getRingVolume')
     socket.send('getVolAfterAlarm')
     socket.send("getTimeSpeechLang")
+    socket.send("getTimeZones")  // fetch timezones_json
 }
 
 function showTab7 () {
@@ -1336,11 +1356,12 @@ async function loadStationsFromSD(file_name) {
             tableData = JSON.parse(jsonContent);
         } else {
             // Use default data when there is no stored data
-            tableData = [
-                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
+            // tableData = [
+            //     ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+            //     ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+            //     ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            // ];
+            return false
         }
 
         // Tabelle erst laden, wenn die Daten bereitgestellt wurden
@@ -1349,13 +1370,15 @@ async function loadStationsFromSD(file_name) {
 
     } catch (error) {
         console.error('Es gab ein Problem beim Laden der Datei:', error);
-            tableData = [
-                ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
-                ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
-                ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
-            ];
-            saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
+            // tableData = [
+            //     ["*", "DE", "0N 70s", "http://0n-70s.radionetz.de:8000/0n-70s.mp3"],
+            //     ["*", "DE", "0N 80s", "http://0n-80s.radionetz.de:8000/0n-80s.mp3"],
+            //     ["*", "DE", "0N 90s", "http://0n-90s.radionetz.de:8000/0n-90s.mp3"]
+            // ];
+            // saveJsonFileToSD("/stations.json", JSON.stringify(tableData, 0, 2));  // Speichert die geänderten Daten
+            return false
     }
+    return true;
 }
 
 // Event-Listener für alle <tr>-Elemente in der Tabelle hinzufügen
@@ -1411,6 +1434,7 @@ function updateStationlist () { // select in tab Radio
 }
 
 function saveStations_json(){
+    if(loadStations == false) return
     // Create a blob with the content
     const blob = new Blob([JSON.stringify(tableData, 0, 2)], { type: 'application/json' });
 
@@ -1440,9 +1464,11 @@ function loadStations_json(event){
         }
     }
     reader.onerror = function (ex) {
+        loadsStations = false
         console.log(ex)
     }
     reader.readAsText(file)
+    loadsStations = true
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // --------------------------------------------------------- TAB AUDIO PLAYER ------------------------------------------------------------------------
@@ -1962,18 +1988,17 @@ function getTimeZoneName() {
                 if (xhr.status === 200) {
                     const timeZoneName = xhr.responseText;
                     console.log("tzName=", timeZoneName);
-                    resolve(timeZoneName); // Promise mit dem erhaltenen Wert auflösen
+                    resolve(timeZoneName); // Dissolve the promise with the value obtained
                 } else {
                     console.log("xhr.status=", xhr.status);
-                    reject(`Fehler: Status ${xhr.status}`); // Promise ablehnen, falls ein Fehler auftritt
+                    reject(`Error: Status ${xhr.status}`); // Reject the promise if an error occurs
                 }
             }
         };
         xhr.ontimeout = () => {
             console.log("timeout in getTimeZoneName()");
-            reject("Fehler: Anfragezeitüberschreitung"); // Promise ablehnen, falls ein Timeout auftritt
+            reject("Error: Investigation of the request"); // Reject the promise if a timeout occurs
         };
-
         xhr.send();
     });
 }
@@ -1984,48 +2009,26 @@ function setTimeZone(selectObject){
     socket.send("setTimeZone=" + txt + "&" + value)
 }
 
-async function loadTimeZones() {
-    try {
-        g_timeZoneName = await getTimeZoneName(); // Warten, bis getTimeZoneName abgeschlossen ist
-        const tzFile = new XMLHttpRequest();
-        tzFile.timeout = 2000; // Zeit in Millisekunden
-        tzFile.open('GET', 'SD_Download?/timezones.csv', true);
-
-        tzFile.onreadystatechange = function () {
-            if (tzFile.readyState === 4) {
-                const tzdata = tzFile.responseText;
-                const tzNames = tzdata.split("\n");
-                const select = document.getElementById('TimeZoneSelect');
-                select.options.length = 0;
-
-                for (let i = 0; i < tzNames.length; i++) {
-                    const [tzItem1, tzItem2] = tzNames[i].split("\t");
-                    if (!tzItem1 || !tzItem2) continue;
-
-                    const opt = document.createElement('OPTION');
-                    opt.text = tzItem1;
-                    opt.value = tzItem2;
-                    select.add(opt);
-                }
-
-                // Auswahl basierend auf g_timeZoneName setzen
-                for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].text === g_timeZoneName) {
-                        select.selectedIndex = i;
-                        break;
-                    }
-                }
+function fillTimeZoneSelect(timezones_json){
+    const timezones = JSON.parse(timezones_json);
+    const selectElement = document.getElementById('TimeZoneSelect');
+    timezones.forEach(([name, offset]) => {
+        const option = document.createElement('option');
+        option.value = offset;
+        option.textContent = name;
+        selectElement.appendChild(option);
+    });
+    getTimeZoneName().then((tzName) => {
+        const selectElement = document.getElementById('TimeZoneSelect');
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].text === tzName) {
+                selectElement.selectedIndex = i;
+                break;
             }
-        };
-
-        tzFile.ontimeout = () => {
-            console.log("load SD/timezones.csv timeout");
-        };
-
-        tzFile.send();
-    } catch (error) {
-        console.error("Fehler beim Laden des Zeitzonennamens:", error);
-    }
+        }
+    }).catch((error) => {
+        console.error("Error when calling up the time zone name:", error);
+    });
 }
 
 function loadRingVolume(){
@@ -2037,7 +2040,7 @@ function loadRingVolume(){
         option.value = i;
         option.textContent = i;
         if (i === 0) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectRingVolume.appendChild(option);
     }
@@ -2052,7 +2055,7 @@ function loadVolumeAfterAlarm(){
         option.value = i;
         option.textContent = i;
         if (i === 0) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectVolumeAfterAlarm.appendChild(option);
     }
@@ -2068,7 +2071,7 @@ function loadVolumeSteps(){
         option.value = i;
         option.textContent = i;
         if (i === 21) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectVolumeSteps.appendChild(option);
     }
@@ -2156,22 +2159,22 @@ function chIRcmd(btn){  // IR command, value changed
 function writeJSONToTable(jsonIrString) {
     // console.log(jsonIrString)
     if (!jsonIrString) {
-        console.error("Kein JSON zum Rückschreiben verfügbar.");
+        console.error("No JSON available for a return writing.");
         return;
     }
     const data = JSON.parse(jsonIrString);
         data.forEach(item => {
-        const keys = Object.keys(item); // Hole die Schlüssel des Objekts (z.B. "0", "label")
-        const number = keys[0]; // Die erste Zahl (z.B. "0", "10", "20")
-        const command = item[number]; // Der Wert des Befehls
+        const keys = Object.keys(item); // Get the keys of the object (z.B. "0", "label")
+        const number = keys[0]; // The first number(z.B. "0", "10", "20")
+        const command = item[number]; // The value of the command
         ir_arr[number] = command
         const label = item["label"]; // Das Label
-        // Schreibe den Befehl zurück in das entsprechende Input-Feld
+        // Write the command back to the corresponding input field
         const inputField = document.getElementById(`ir_command_${number}`);
         if (inputField) {
             inputField.value = command;
         }
-        // Schreibe das Label zurück in die Tabelle
+        // Write the label back into the table
         const labelCell = inputField?.parentElement?.nextElementSibling;
         // if (labelCell) {
         //     labelCell.textContent = label;
@@ -2183,7 +2186,7 @@ function writeJSONToTable(jsonIrString) {
 function getTableDataAsJSON(tableId) { // make a JSON string from IR table
     const table = document.getElementById(tableId);
     if (!table) {
-        console.error(`Tabelle mit der ID ${tableId} nicht gefunden.`);
+        console.error(`Table with the ID ${tableId} not found.`);
         return;
     }
     const rows = table.getElementsByTagName('tr');
@@ -2193,7 +2196,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
         if(i == 0) cells = rows[i].getElementsByTagName('th'); // header
         else       cells = rows[i].getElementsByTagName('td');
         if (cells.length > 0) {
-            // Erste Gruppe: Erste Spalte und Kommando/Label 1
+            // First group: First column and command/label 1
             const number1 = cells[0].textContent.trim();
             const command1 = document.getElementById(`ir_command_${number1}`)?.value || "";
             const label1 = cells[2].textContent.trim();
@@ -2203,7 +2206,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj1["label"] = label1;
                 data.push(obj1);
             }
-            // Zweite Gruppe: Vierte Spalte und Kommando/Label 2
+            // Second group: Fourth column and command/label 2
             const number2 = cells[3].textContent.trim();
             const command2 = document.getElementById(`ir_command_${number2}`)?.value || "";
             const label2 = cells[5].textContent.trim();
@@ -2213,7 +2216,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj2["label"] = label2;
                 data.push(obj2);
             }
-            // Dritte Gruppe: Sechste Spalte und Kommando/Label 3
+            // Third group: sixth column and command/label 3
             const number3 = cells[6]?.textContent.trim() || "";
             const command3 = document.getElementById(`ir_command_${number3}`)?.value || "";
             const label3 = cells[8]?.textContent.trim() || "";
@@ -2223,7 +2226,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj3["label"] = label3;
                 data.push(obj3);
             }
-            // Vierte Gruppe: Achte Spalte und Kommando/Label 4
+            // Fourth group: eighth column and command/label 4
             const number4 = cells[9]?.textContent.trim() || "";
             const command4 = document.getElementById(`ir_command_${number4}`)?.value || "";
             const label4 = cells[11]?.textContent.trim() || "";
@@ -2235,7 +2238,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
             }
         }
     }
-    return JSON.stringify(data, null, 2); // JSON formatieren (schönere Ausgabe)
+    return JSON.stringify(data, null, 2); // Format Json (more beautiful edition)
 }
 
 function IRupdateJSON(btnNr){
@@ -2403,7 +2406,7 @@ function clear_BT_memItems(){
         <img data-src="SD/png/Button_Pause_Yellow.png"           >
         <img data-src="SD/png/Button_Download_Blue.png"          >
         <img data-src="SD/png/Button_Download_Yellow.png"        >
-        <img data-src="SD/common/MiniWebRadioV3.jpg"             >
+        <img data-src="SD/common/MiniWebRadioV4.jpg"             >
     </div>
 
     <div id="dialog">
@@ -2976,7 +2979,7 @@ function clear_BT_memItems(){
         <table>
             <tr>
                 <label for="label-infopic" onclick="socket.send('hardcopy')">
-                    <img id="label-infopic" src="SD/png/MiniWebRadioV3.png" alt="img">
+                    <img id="label-infopic" src="SD/common/MiniWebRadioV4.jpg" alt="img">
                 </label>
             </tr>
         </table>

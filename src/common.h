@@ -1,20 +1,19 @@
 // created: 10.Feb.2022
-// updated: 19.Feb 2025
+// updated: 10.Apr.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
 // clang-format off
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
-#define DECODER                 1                               // (1)MAX98357A PCM5102A CS4344... (2)AC101, (3)ES8388
-#define TFT_CONTROLLER          5                               // (0)ILI9341, (1)HX8347D, (2)ILI9486a, (3)ILI9486b, (4)ILI9488, (5)ST7796, (6)ST7796RPI
-#define DISPLAY_INVERSION       0                               // (0) off (1) on
-#define TFT_ROTATION            1                               // 1 or 3 (landscape)
-#define TFT_FREQUENCY           40000000                        // 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              5                               // (0)ILI9341, (1)ILI9341RPI, (2)HX8347D, (3)ILI9486, (4)ILI9488, (5)ST7796, (6)ST7796RPI, (7)GT911
-#define TP_ROTATION             1                               // 1 or 3 (landscape)
-#define TP_H_MIRROR             0                               // (0) default, (1) mirror up <-> down
-#define TP_V_MIRROR             0                               // (0) default, (1) mittor left <-> right
+#define TFT_CONTROLLER          7                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
+#define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
+#define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
+#define TP_VERSION              5                               // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911
+#define TP_ROTATION             1                               // only SPI displays, 1 or 3 (landscape)
+#define TP_H_MIRROR             0                               // only SPI displays, (0) default, (1) mirror up <-> down
+#define TP_V_MIRROR             0                               // only SPI displays, (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY         80000000                        // 80000000 or 40000000 Hz
 #define FTP_USERNAME            "esp32"                         // user and pw in FTP Client
@@ -40,7 +39,6 @@
 #include <vector>
 #include "index.h"
 #include "index.js.h"
-#include "accesspoint.h"
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
@@ -51,51 +49,12 @@
 #include "SPIFFS.h"
 #include "ESP32FtpServer.h"
 #include "Audio.h"
-#include "AC101.h"
-#include "ES8388.h"
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
 #include "BH1750.h"
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
 
-#ifdef CONFIG_IDF_TARGET_ESP32
-    // Digital I/O used
-        #define TFT_CS             22
-        #define TFT_DC             21
-        #define TFT_BL             12  // at -1 the brightness menu is not displayed
-        #define TP_IRQ             39  // VN
-        #define TP_CS               5
-        #define SD_MMC_D0           2  // cannot be changed
-        #define SD_MMC_CLK         14  // cannot be changed
-        #define SD_MMC_CMD         15  // cannot be changed
-        #define IR_PIN             35  // IR Receiver (if available)
-        #define TFT_MOSI           23  // TFT and TP (VSPI)
-        #define TFT_MISO           19  // TFT and TP (VSPI)
-        #define TFT_SCK            18  // TFT and TP (VSPI)
-
-        #define I2S_DOUT           25
-        #define I2S_BCLK           27
-        #define I2S_LRC            26
-        #define I2S_MCLK            0  // mostly not used
-
-        #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
-        #define I2C_DAC_SCL        -1
-        #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT          -1
-        #define AMP_ENABLED        -1
-
-        #define BT_EMITTER_RX      33  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
-        #define BT_EMITTER_TX      36  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-        #define BT_EMITTER_LINK    34  // high if connected                     (-1 if not available)
-        #define BT_EMITTER_MODE    13  // high transmit - low receive           (-1 if not available)
-        #define BT_EMITTER_CONNECT 32  // -1 if not used
-
-        #define I2C_SDA            -1  // I2C, dala line for additional HW
-        #define I2C_SCL            -1  // I2C, clock line for additional HW
-#endif
-
-#ifdef CONFIG_IDF_TARGET_ESP32S3
 #if TFT_CONTROLLER < 7
     // Digital I/O used
         #define TFT_CS              8
@@ -116,12 +75,7 @@
         #define I2S_LRC             1
         #define I2S_MCLK            0
 
-        #define I2C_DAC_SDA        -1  // some DACs are controlled via I2C
-        #define I2C_DAC_SCL        -1
-        #define SD_DETECT          -1  // some pins on special boards: Lyra, Olimex, A1S ...
-        #define HP_DETECT          -1
-        #define AMP_ENABLED        -1
-
+        #define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
         #define BT_EMITTER_RX      45  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_TX      38  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_LINK    19  // high if connected                     (-1 if not available)
@@ -130,7 +84,77 @@
 
         #define I2C_SDA            41  // I2C, dala line for capacitive touchpad
         #define I2C_SCL            42  // I2C, clock line for capacitive touchpad
-#endif // TFT_CONTROLLER < 7
+#endif
+
+#if TFT_CONTROLLER == 7 // RGB display
+
+const TFT_RGB::Pins RGB_PINS = {  // SUNTON 7"
+    .b0 = 15,
+    .b1 = 7,
+    .b2 = 6,
+    .b3 = 5,
+    .b4 = 4,
+    .g0 = 9,
+    .g1 = 46,
+    .g2 = 3,
+    .g3 = 8,
+    .g4 = 16,
+    .g5 = 1,
+    .r0 = 14,
+    .r1 = 21,
+    .r2 = 47,
+    .r3 = 48,
+    .r4 = 45,
+    .hsync = 39,
+    .vsync = 40,
+    .de = 41,
+    .pclk = 42,
+    .bl = 2
+};
+
+const TFT_RGB::Timing RGB_TIMING = {
+    .h_res = 800,
+    .v_res = 480,
+    .pixel_clock_hz = 10000000,
+    .hsync_pulse_width = 30,
+    .hsync_back_porch = 16,
+    .hsync_front_porch = 210,
+    .vsync_pulse_width = 13,
+    .vsync_back_porch = 10,
+    .vsync_front_porch = 22
+};
+
+#define TP_SDA 19
+#define TP_SCL 20
+#define TP_IRQ -1
+
+#define SD_MMC_CMD         11
+#define SD_MMC_CLK         12
+#define SD_MMC_D0          13
+
+#define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
+#define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
+
+#define I2S_DOUT           17
+#define I2S_BCLK           0
+#define I2S_LRC            18
+#define I2S_MCLK           -1  // important!
+
+#define IR_PIN             38  // IR Receiver (if available)
+#define BT_EMITTER_RX      -1  // must be -1, not enough pins
+#define BT_EMITTER_TX      -1  // must be -1, not enough pins
+#define BT_EMITTER_LINK    -1  // must be -1, not enough pins
+#define BT_EMITTER_MODE    -1  // must be -1, not enough pins
+#define BT_EMITTER_CONNECT -1  // must be -1, not enough pins
+
+#define TFT_BL              2  // same as RGB_PINS.bl
+#define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
+
+#define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
+#define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
+
+
+
 #endif
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -201,6 +225,7 @@ enum status {
     EQUALIZER = 12,
     SETTINGS = 13,
     IR_SETTINGS = 14,
+    WIFI_SETTINGS = 16,
     UNDEFINED = 255
 };
 
@@ -263,6 +288,7 @@ void           setTFTbrightness(uint8_t duty);
 void           fall_asleep();
 void           wake_up();
 void           setRTC(const char* TZString);
+boolean        isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean        copySDtoFFat(const char* path);
 void           showStreamTitle(const char* streamTitle);
 void           showLogoAndStationName(bool force);
@@ -276,7 +302,7 @@ boolean        isAudio(File file);
 boolean        isAudio(const char* path);
 boolean        isPlaylist(File file);
 bool           connectToWiFi();
-void           openAccessPoint();
+void           setWiFiCredentials(const char* ssid, const char* password);
 const char*    scaleImage(const char* path);
 void           setVolume(uint8_t vol);
 uint8_t        downvolume();
@@ -310,8 +336,8 @@ void           placingGraphicObjects();
 void           muteChanged(bool m);
 void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void           setTimeCounter(uint8_t sec);
-
-
+const char*    getWiFiPW(const char* ssid);
+bool           setWiFiPW(const char* ssid, const char* password);
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -566,11 +592,26 @@ inline void hardcopy(){
         0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     };
-    const uint8_t bmp800x600[70] = {
-        0x42, 0x4D, 0x46, 0x6C, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x20, 0x03, 0x00, 0x00, 0x58, 0x02,
-        0x00, 0x00, 0x01, 0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0xB0, 0x04, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x23, 0x2E, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00, 0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    const uint8_t bmp800x480[70] = {
+        0x42, 0x4D, 0x46, 0xC4, 0x0B, 0x00, 0x00, 0x00, 0x00, 0x00, // BM + File size 768070
+        0x46, 0x00, 0x00, 0x00,                                     // Pixel data offset (70 bytes)
+        0x28, 0x00, 0x00, 0x00,                                     // DIB header size
+        0x20, 0x03, 0x00, 0x00,                                     // Width: 800
+        0xE0, 0x01, 0x00, 0x00,                                     // Height: 480
+        0x01, 0x00,                                                 // Color planes
+        0x10, 0x00,                                                 // Bit count: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00,                                     // Compression: BI_BITFIELDS (3)
+        0x00, 0xB0, 0x04, 0x00,                                     // Image size (kept same, optional)
+        0x23, 0x2E, 0x00, 0x00,                                     // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00,                                     // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00,                                     // Colors used
+        0x00, 0x00, 0x00, 0x00,                                     // Important colors
+        0x00, 0xF8, 0x00, 0x00,                                     // Red mask
+        0xE0, 0x07, 0x00, 0x00,                                     // Green mask
+        0x1F, 0x00, 0x00, 0x00,                                     // Blue mask
+        0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional, empty)
     };
+
 
 
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
@@ -593,9 +634,9 @@ inline void hardcopy(){
         hc.close();
     }
     else{
-        hc.write(bmp800x600, sizeof(bmp800x600));
+        hc.write(bmp800x480, sizeof(bmp800x480));
         uint16_t buff[800];
-        for(int i = 600; i > 0; i--){
+        for(int i = 480; i > 0; i--){
             tft.readRect(0, i - 1, 800, 1, buff);
             hc.write((uint8_t*)buff, 800 * 2);
         }
@@ -643,12 +684,15 @@ inline void disableAllObjects() {
     }
 }
 inline const char* isObjectClicked(uint16_t x, uint16_t y) {
+    static char objName[100];
+    objName[0] = '\0';
     for (auto obj : registertable_objects) {
         if (obj->isEnabled() && obj->positionXY(x, y)) {
-            return obj->getName();
+            if(strlen(objName) > 0) strcat(objName, ", ");
+            strcat(objName, obj->getName());
         }
     }
-    return NULL;
+    return objName;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
@@ -1642,13 +1686,17 @@ private:
     uint8_t         m_paddig_right = 0; // right margin
     uint8_t         m_paddig_top = 0; // top margin
     uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
     uint32_t        m_bgColor = 0;
     uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
     char*           m_text = NULL;
     char*           m_name = NULL;
     bool            m_enabled = false;
     bool            m_clicked = false;
     bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
     bool            m_backgroundTransparency = false;
     bool            m_saveBackground         = false;
     releasedArg     m_ra;
@@ -1659,6 +1707,7 @@ public:
         else     m_name = x_ps_strdup("textbox");
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
         m_fontSize = 1;
     }
     ~textbox(){
@@ -1717,6 +1766,17 @@ public:
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = m_padding_left + m_borderWidth;
+        m_paddig_right = m_paddig_right + m_borderWidth;
+        m_paddig_top = m_paddig_top + m_borderWidth;
+        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
         if(y < m_y) return false;
@@ -1734,10 +1794,12 @@ public:
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         return true;
     }
-    void setText(const char* txt){ // prepare a text, wait of show() to write it
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
         if(!txt){txt = strdup("");}
         x_ps_free(&m_text);
         m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
     }
     void setAlign(uint8_t h_align, uint8_t v_align){
         m_h_align = h_align;
@@ -1767,10 +1829,1264 @@ public:
             int y = m_y + m_paddig_top;
             int w = m_w - (m_paddig_right + m_padding_left);
             int h = m_h - (m_paddig_bottom + m_paddig_top);
-            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, false, false, m_autoSize);
+            if(m_borderWidth > 0){tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor);}
+            if(m_borderWidth > 1){tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor);}
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class inputbox : public RegisterTable {
+  private:
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    uint8_t         m_fontSize = 0;
+    uint8_t         m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_v_align = TFT_ALIGN_TOP;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
+    releasedArg     m_ra;
+  public:
+    inputbox(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        m_fontSize = 1;
+    }
+    ~inputbox(){
+        x_ps_free(&m_text);
+        x_ps_free(&m_name);
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(!m_text){m_text = strdup("");}
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = m_padding_left + m_borderWidth;
+        m_paddig_right = m_paddig_right + m_borderWidth;
+        m_paddig_top = m_paddig_top + m_borderWidth;
+        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        x_ps_free(&m_text);
+        m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
+        m_h_align = h_align;
+        m_v_align = v_align;
+    }
+    void writeText(const char* txt){
+        if(!txt){txt = strdup("");}
+        if(txt != m_text){ // no self copy
+            x_ps_free(&m_text);
+            m_text = x_ps_strdup(txt);
+        }
+        if(m_enabled){
+            uint16_t txtColor_tmp = tft.getTextColor();
+            uint16_t bgColor_tmp = tft.getBackGroundColor();
+            tft.setTextColor(m_fgColor);
+            tft.setBackGoundColor(m_bgColor);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            if(m_fontSize != 0){ tft.setFont(m_fontSize);}
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            if(m_borderWidth > 0){tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor);}
+            if(m_borderWidth > 1){tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor);}
+
+            uint16_t lineLength = 0;
+            uint16_t txtMaxWidth = w - 2 * h;
+            uint16_t idx = 0;
+            lineLength = tft.getLineLength(m_text, m_narrow);
+            while(lineLength > txtMaxWidth){
+                lineLength = tft.getLineLength(m_text + idx, m_narrow);
+                if(lineLength > txtMaxWidth){
+                    idx++;
+                    if(idx > strlen(m_text)) break;
+                }
+            }
+        log_w("lineLength: %d, txtMaxWidth: %d, idx: %d", lineLength, txtMaxWidth, idx);
+            tft.writeText(m_text + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
+        }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class textbutton : public RegisterTable {
+  private:
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    int16_t         m_r = 0; // radius round rect
+    uint8_t         m_fontSize = 0;
+    uint8_t         m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_v_align = TFT_ALIGN_TOP;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
+    uint32_t        m_clickColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
+    releasedArg     m_ra;
+  public:
+    textbutton(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        m_fontSize = 1;
+    }
+    ~textbutton(){
+        x_ps_free(&m_text);
+        x_ps_free(&m_name);
+    }
+    void drawTriangeUp(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_h - m_paddig_bottom;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = x0 + (x1 - x0) / 2;
+        int16_t y2 = m_y + m_paddig_top;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeDown(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_paddig_top;
+        int16_t x2 = x0 + (x1 - x0) / 2;
+        int16_t y2 = m_y + m_h - m_paddig_bottom;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeLeft(){
+        int16_t x0 = m_x + m_w - m_paddig_right;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_w - m_paddig_right;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = m_x + m_padding_left;
+        int16_t y2 = y0 + (y1 - y0) / 2;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void drawTriangeRight(){
+        int16_t x0 = m_x + m_padding_left;
+        int16_t y0 = m_y + m_paddig_top;
+        int16_t x1 = m_x + m_padding_left;
+        int16_t y1 = m_y + m_h - m_paddig_bottom;
+        int16_t x2 = m_x + m_w - m_paddig_right;
+        int16_t y2 = y0 + (y1 - y0) / 2;
+        uint32_t color = m_fgColor;
+        if(m_clicked) color = m_clickColor;
+        tft.fillTriangle(x0, y0, x1, y1, x2, y2, color);
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, uint8_t radius){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_r = radius;
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(!m_text){m_text = strdup("");}
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setClickColor(uint32_t color){
+        m_clickColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = max(m_padding_left, m_borderWidth);
+        m_paddig_right = max(m_paddig_right, m_borderWidth);
+        m_paddig_top = max(m_paddig_top, m_borderWidth);
+        m_paddig_bottom = max(m_paddig_bottom, m_borderWidth);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        writeText(m_text);
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        writeText(m_text);
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        x_ps_free(&m_text);
+        m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
+    }
+    const char* getText(){
+        return m_text;
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
+        m_h_align = h_align;
+        m_v_align = v_align;
+    }
+    void writeText(const char* txt){
+        if(!txt){txt = strdup("");}
+        if(txt != m_text){ // no self copy
+            x_ps_free(&m_text);
+            m_text = x_ps_strdup(txt);
+        }
+        if(m_enabled){
+            uint16_t txtColor_tmp = tft.getTextColor();
+            uint16_t bgColor_tmp = tft.getBackGroundColor();
+            if(!m_clicked) tft.setTextColor(m_fgColor);
+            else           tft.setTextColor(m_clickColor);
+            tft.setBackGoundColor(m_bgColor);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            if(m_fontSize != 0){ tft.setFont(m_fontSize);}
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            if(!m_clicked){
+                if(m_borderWidth > 0){tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_borderColor);}
+                if(m_borderWidth > 1){tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_borderColor);}
+            }
+            else{
+                if(m_borderWidth > 0){tft.drawRoundRect(m_x, m_y, m_w, m_h, m_r, m_clickColor);}
+                if(m_borderWidth > 1){tft.drawRoundRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_r, m_clickColor);}
+            }
+            if     (strcmp(m_text, "/l") == 0) {drawTriangeLeft();}
+            else if(strcmp(m_text, "/r") == 0) {drawTriangeRight();}
+            else if(strcmp(m_text, "/u") == 0) {drawTriangeUp();}
+            else if(strcmp(m_text, "/d") == 0) {drawTriangeDown();}
+            else    tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
+        }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class selectbox : public RegisterTable {
+
+/*    —————————————————————————————————————————————————————————————————————————————
+     |                   textbox                               |  ⏬  |  ⏫  |idx |
+      —————————————————————————————————————————————————————————————————————————————
+*/
+  private:
+    int16_t            m_x = 0;
+    int16_t            m_y = 0;
+    int16_t            m_w = 0;
+    int16_t            m_h = 0;
+    uint8_t            m_fontSize = 0;
+    uint8_t            m_padding_left = 0; // left margin
+    uint8_t            m_paddig_right = 0; // right margin
+    uint8_t            m_paddig_top = 0; // top margin
+    uint8_t            m_paddig_bottom = 0; // bottom margin
+    uint8_t            m_borderWidth = 0;
+    int8_t             m_idx = 0;
+    uint32_t           m_bgColor = 0;
+    uint32_t           m_fgColor = 0;
+    uint32_t           m_borderColor = 0;
+    char*              m_name = NULL;
+    bool               m_enabled = false;
+    bool               m_clicked = false;
+    bool               m_autoSize = false;
+    bool               m_narrow = false;
+    bool               m_noWrap = false;
+    bool               m_backgroundTransparency = false;
+    bool               m_saveBackground         = false;
+    releasedArg        m_ra;
+    textbox*           m_txt_select   = new textbox("select_txtbox_ssid");
+    textbutton*        m_txt_btn_down = new textbutton("select_txtbtn_down");
+    textbutton*        m_txt_btn_up   = new textbutton("select_txtbtn_up");
+    textbox*           m_txt_btn_idx  = new textbox("select_txtbox_idx");
+    std::vector<char*> m_selContent;
+  public:
+    selectbox(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        setFontSize(fontSize);
+    }
+    ~selectbox(){
+        vector_clear_and_shrink(m_selContent);
+        x_ps_free(&m_name);
+        delete m_txt_select;
+        delete m_txt_btn_down;
+        delete m_txt_btn_up;
+        delete m_txt_btn_idx;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; if(m_w < 40) {log_e("width < 40px"); return;} // width
+        m_h = h; if(m_h < 10) {log_e("height < 10px"); return;}// high
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+        m_txt_select->begin(  m_x,  m_y, m_w - (m_h * 3), m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_btn_down->begin(m_x + m_w - (m_h * 3), m_y, m_h, m_h, m_h / 5 ,m_h / 5, m_h / 5, m_h / 5, 0);
+        m_txt_btn_up->begin(  m_x + m_w - (m_h * 2), m_y, m_h, m_h, m_h / 5 ,m_h / 5, m_h / 5, m_h / 5, 0);
+        m_txt_btn_idx->begin( m_x + m_w - (m_h * 1), m_y, m_h, m_h, m_padding_left, m_paddig_right, m_paddig_top, m_paddig_bottom);
+        m_txt_btn_down->setClickColor(TFT_CYAN);
+        m_txt_btn_down->setText("/d");
+        m_txt_btn_up->setClickColor(TFT_CYAN);
+        m_txt_btn_up->setText("/u");
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_txt_btn_idx->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_txt_select->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_down->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_up->show(m_backgroundTransparency, m_saveBackground);
+        m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
+        m_enabled = true;
+        m_clicked = false;
+
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        m_idx = 0;
+        if(m_selContent.size() > 0)writeText(m_idx);
+    }
+    void hide(){
+        m_enabled = false;
+        m_txt_select->hide();
+        m_txt_btn_down->hide();
+        m_txt_btn_up->hide();
+        m_txt_btn_idx->hide();
+    }
+    void disable(){
+        m_enabled = false;
+        m_txt_select->disable();
+        m_txt_btn_down->disable();
+        m_txt_btn_up->disable();
+        m_txt_btn_idx->disable();
+    }
+    void enable(){
+        m_enabled = true;
+        m_txt_select->enable();
+        m_txt_btn_down->enable();
+        m_txt_btn_up->enable();
+        m_txt_btn_idx->enable();
+    }
+    void setFontSize(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+        m_txt_select->setFont(m_fontSize);
+        m_txt_btn_down->setFont(m_fontSize);
+        m_txt_btn_up->setFont(m_fontSize);
+        m_txt_btn_idx->setFont(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+        m_txt_select->setTextColor(m_fgColor);
+        m_txt_btn_down->setTextColor(m_fgColor);
+        m_txt_btn_up->setTextColor(m_fgColor);
+        m_txt_btn_idx->setTextColor(m_fgColor);
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+        m_txt_select->setBGcolor(m_bgColor);
+        m_txt_btn_down->setBGcolor(m_bgColor);
+        m_txt_btn_up->setBGcolor(m_bgColor);
+        m_txt_btn_idx->setBGcolor(m_bgColor);
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+        m_txt_select->setBorderColor(m_borderColor);
+        m_txt_btn_down->setBorderColor(m_borderColor);
+        m_txt_btn_up->setBorderColor(m_borderColor);
+        m_txt_btn_idx->setBorderColor(m_borderColor);
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_txt_select->setBorderWidth(m_borderWidth);
+        m_txt_btn_down->setBorderWidth(m_borderWidth);
+        m_txt_btn_up->setBorderWidth(m_borderWidth);
+        m_txt_btn_idx->setBorderWidth(m_borderWidth);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(m_txt_select->positionXY(x, y)){;}
+        if(m_txt_btn_down->positionXY(x, y)){;}
+        if(m_txt_btn_up->positionXY(x, y)){;}
+        if(m_txt_btn_idx->positionXY(x, y)){;}
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        bool ret = false;
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_txt_select->released();
+        if(m_txt_btn_down->released()) if(m_idx < m_selContent.size() - 1){m_idx++; /* log_e("btn_down %i/%i", m_idx, m_selContent.size()); */ writeText(m_idx); ret = true;}
+        if(m_txt_btn_up->released()) if(m_idx > 0                        ){m_idx--; /* log_e("btn_up %i/%i",   m_idx, m_selContent.size()); */ writeText(m_idx); ret = true;}
+        m_txt_btn_idx->released();
+        m_clicked = false;
+        return ret;
+    }
+    void addText(const char* txt){
+        if(!txt){return;}
+        if(m_selContent.size() > 0){
+            for(uint8_t i = 0; i < m_selContent.size(); i++){
+                if(strcmp(txt, m_selContent[i]) == 0){
+                //    log_w("addText: %s already in list", txt);
+                    return;
+                }
+            }
+        }
+        m_selContent.push_back(x_ps_strdup(txt));
+    }
+    void clearText(){
+        vector_clear_and_shrink(m_selContent);
+    }
+    void writeText(uint8_t idx){
+        char* txt = NULL;
+        if(idx >= m_selContent.size()){txt = strdup("");}
+        else txt = m_selContent[idx];
+        if(m_enabled){
+            // log_w("writeText: %s", txt);
+            m_txt_select->setText(txt, m_narrow, m_noWrap);
+            m_txt_select->show(m_backgroundTransparency, m_saveBackground);
+            char c_idx[5] = {0}; itoa(idx + 1, c_idx, 10);
+            m_txt_btn_idx->setText(c_idx, m_narrow, m_noWrap);
+            m_txt_btn_idx->show(m_backgroundTransparency, m_saveBackground);
+        }
+    }
+    char* getSelectedText(){
+        if(m_selContent.size() > 0){return m_selContent[m_idx];}
+        return NULL;
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+  private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    int16_t     m_r = 0;
+    uint8_t     m_padding_left = 0;
+    uint8_t     m_paddig_right = 0;
+    uint8_t     m_paddig_top = 0;
+    uint8_t     m_paddig_bottom = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_val = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false;
+    char*       m_name = NULL;
+    const char* m_txt = NULL;
+    float       m_row1[12] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+    float       m_row2[11] = {1.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.6};
+    float       m_row3[11] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.1};
+    const char  m_alpha1[12][4]   = {"1..", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "BS"};
+    const char  m_alpha2[11][4]   = {"A..", "a", "s", "d", "f", "g", "h", "j", "k", "l", "RET"};
+    const char  m_alpha3[11][5]   = {"#..", ".", "z", "x", "c", "v", "b", "n", "m", "_", "   "};
+    const char  m_Alpha1[12][4]   = {"1..", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "BS"};
+    const char  m_Alpha2[11][4]   = {"a..", "A", "S", "D", "F", "G", "H", "J", "K", "L", "RET"};
+    const char  m_Alpha3[11][5]   = {"#..", ".", "Z", "X", "C", "V", "B", "N", "M", "_", "   "};
+    const char  m_special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
+    const char  m_special2[11][4] = {"a..", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "RET"};
+    const char  m_special3[11][5] = {"#..", "*", "+", ",", "-", "*", "-", ".", "/", ":", "   "};
+    const char  m_Special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
+    const char  m_Special2[11][4] = {"a..", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "RET"};
+    const char  m_Special3[11][5] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
+    uint32_t    m_color1[12] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
+    uint32_t    m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
+    uint32_t    m_color3[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY};
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_fgColor = 0;
+    uint32_t    m_clickColor = TFT_CYAN;
+    textbutton* txt_btn_array = new textbutton[34]{
+        textbutton("txt_btn0"),  textbutton("txt_btn1"),  textbutton("txt_btn2"),  textbutton("txt_btn3"),  textbutton("txt_btn4"),  textbutton("txt_btn5"),
+        textbutton("txt_btn6"),  textbutton("txt_btn7"),  textbutton("txt_btn8"),  textbutton("txt_btn9"),  textbutton("txt_btn10"), textbutton("txt_btn11"),
+        textbutton("txt_btn12"), textbutton("txt_btn13"), textbutton("txt_btn14"), textbutton("txt_btn15"), textbutton("txt_btn16"), textbutton("txt_btn17"),
+        textbutton("txt_btn18"), textbutton("txt_btn19"), textbutton("txt_btn20"), textbutton("txt_btn21"), textbutton("txt_btn22"), textbutton("txt_btn23"),
+        textbutton("txt_btn24"), textbutton("txt_btn25"), textbutton("txt_btn26"), textbutton("txt_btn27"), textbutton("txt_btn28"), textbutton("txt_btn29"),
+        textbutton("txt_btn30"), textbutton("txt_btn31"), textbutton("txt_btn32"), textbutton("txt_btn33")
+    };
+
+  public:
+    keyBoard(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("timeString");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_fontSize = fontSize;
+    }
+    ~keyBoard(){
+        x_ps_free(&m_name);
+        delete[] txt_btn_array;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        uint8_t btnW = (m_w - (paddig_left + paddig_right)) / 12;
+        uint8_t btnH = (m_h - (paddig_top + paddig_bottom)) / 3;
+        uint8_t margin = btnW / 17; btnW -= margin; btnH -= margin;
+        uint8_t radius = btnW / 10;
+        uint16_t posX = m_x + paddig_left;
+        uint16_t posY = m_y + m_paddig_top;
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+        m_w = 12 * btnW + 11 * margin + paddig_left + paddig_right; // recalculate width
+        m_h = 3 * btnH + 2 * margin + paddig_top + paddig_bottom; // recalculate high
+        for(int i = 0; i < 12; i++){ // row 1
+            txt_btn_array[i].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row1[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i].setBGcolor(m_bgColor);
+            txt_btn_array[i].setTextColor(m_color1[i]);
+            txt_btn_array[i].setBorderColor(m_color1[i]);
+            txt_btn_array[i].setClickColor(m_clickColor);
+            txt_btn_array[i].setBorderWidth(1);
+            txt_btn_array[i].setFont(m_fontSize);
+            txt_btn_array[i].setText(m_alpha1[i]);
+            txt_btn_array[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row1[i] * btnW + margin;
+        }
+        posY += btnH + margin;
+        posX = m_x;
+        for(int i = 0; i < 11; i++){ // row 2
+            txt_btn_array[i + 12].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row2[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i + 12].setBGcolor(m_bgColor);
+            txt_btn_array[i + 12].setTextColor(m_color2[i]);
+            txt_btn_array[i + 12].setBorderColor(m_color2[i]);
+            txt_btn_array[i + 12].setClickColor(m_clickColor);
+            txt_btn_array[i + 12].setBorderWidth(1);
+            txt_btn_array[i + 12].setFont(m_fontSize);
+            txt_btn_array[i + 12].setText(m_alpha2[i]);
+            txt_btn_array[i + 12].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row2[i] * btnW + margin;
+        }
+        posY += btnH + margin;
+        posX = m_x;
+        for(int i = 0; i < 11; i++){ // row 3
+            txt_btn_array[i + 23].begin(posX + m_padding_left, posY + m_paddig_top, btnW * m_row3[i], btnH, 0, 0, 0, 0, radius);
+            txt_btn_array[i + 23].setBGcolor(m_bgColor);
+            txt_btn_array[i + 23].setTextColor(m_color3[i]);
+            txt_btn_array[i + 23].setBorderColor(m_color3[i]);
+            txt_btn_array[i + 23].setClickColor(m_clickColor);
+            txt_btn_array[i + 23].setBorderWidth(1);
+            txt_btn_array[i + 23].setFont(m_fontSize);
+            txt_btn_array[i + 23].setText(m_alpha3[i]);
+            txt_btn_array[i + 23].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            posX += m_row3[i] * btnW + margin;
+        }
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if(!m_backgroundTransparency) tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        for(int i = 0; i< 34; i++){
+            txt_btn_array[i].show(m_backgroundTransparency, m_saveBackground);
+        }
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    uint8_t getVal(){
+        return m_val;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        for(int i = 0; i < 34; i++){
+            if(txt_btn_array[i].positionXY(x, y)) m_txt = txt_btn_array[i].getText();
+        }
+        if(m_txt){
+            if     (strcmp(m_txt, "BS")  == 0){ m_val =  8;} // BS
+            else if(strcmp(m_txt, "RET") == 0){ m_val = 13;} // CR
+            else if(strcmp(m_txt, "   ") == 0){ m_val = 32;} // space
+            else if(strcmp(m_txt, "1..") == 0){ m_val = 0; }
+            else if(strcmp(m_txt, "a..") == 0){ m_val = 0; }
+            else if(strcmp(m_txt, "A..") == 0){ m_val = 0; }
+            else if(strcmp(m_txt, "#..") == 0){ m_val = 0; }
+            else m_val = m_txt[0];
+
+        }
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_val);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        // if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        for(int i = 0; i< 34; i++){
+            if(txt_btn_array[i].released()){
+                if(strcmp(txt_btn_array[i].getText(), "A..") == 0){ // upcase
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_Alpha1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_Alpha2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_Alpha3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "a..") == 0){ // lowcase
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_alpha1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_alpha2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_alpha3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "1..") == 0){ // special
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_special1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_special2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_special3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+                if(strcmp(txt_btn_array[i].getText(), "#..") == 0){ // Special
+                    for(int j = 0; j < 12; j++){txt_btn_array[j     ].setText(m_Special1[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 12].setText(m_Special2[j]);}
+                    for(int j = 0; j < 11; j++){txt_btn_array[j + 23].setText(m_Special3[j]);}
+                    for(int j = 0; j < 34; j++){txt_btn_array[j].show(m_backgroundTransparency, m_saveBackground);}
+                    break;
+                }
+            }
+        }
+        return true;
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class wifiSettings : public RegisterTable {
+/*                —————————————————————————————————————————————————————————————————————————————
+                 |                             selectbox (SSID)            |  ⏬  |  ⏫  |idx |
+                  —————————————————————————————————————————————————————————————————————————————
+                  —————————————————————————————————————————————————————————————————————————————
+                 |                             inputbox (Password)                            |
+                  —————————————————————————————————————————————————————————————————————————————
+                  —————————————————————————————————————————————————————————————————————————————
+                 |                                                                            |
+                 |                                                                            |
+                 |                                 keyBoard                                   |
+                 |                                                                            |
+                 |                                                                            |
+                  —————————————————————————————————————————————————————————————————————————————
+*/
+private:
+int16_t            m_x = 0;
+int16_t            m_y = 0;
+int16_t            m_w = 0;
+int16_t            m_h = 0;
+uint8_t            m_fontSize = 0;
+uint8_t            m_padding_left = 0;  // left margin
+uint8_t            m_paddig_right = 0;  // right margin
+uint8_t            m_paddig_top = 0;    // top margin
+uint8_t            m_paddig_bottom = 0; // bottom margin
+uint8_t            m_pwd_idx = 0;
+uint8_t            m_borderWidth = 0;
+uint32_t           m_bgColor = 0;
+uint32_t           m_fgColor = 0;
+uint32_t           m_borderColor = TFT_BLACK;
+char*              m_name = NULL;
+bool               m_enabled = false;
+bool               m_clicked = false;
+bool               m_autoSize = false;
+bool               m_narrow = false;
+bool               m_noWrap = false;
+bool               m_backgroundTransparency = false;
+bool               m_saveBackground         = false;
+std::vector<char*> m_ssid;
+std::vector<char*> m_password;
+releasedArg        m_ra;
+selectbox*         m_sel_ssid     = new selectbox("wifiSettings_selectbox_ssid", 0);
+inputbox*          m_in_password = new inputbox("wifiSettings_txtbox_pwd");
+keyBoard*          m_keyboard     = new keyBoard("wifiSettings_keyBoard", 0);
+struct w_se       {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winSelect;
+struct w_pwd      {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winPWD;
+struct w_k        {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winKeybrd;
+
+public:
+    wifiSettings(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_LIGHTGREY;
+        setFontSize(fontSize);
+        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setTextColor(m_fgColor);
+        m_in_password->setBGcolor(m_bgColor);
+        m_in_password->setBorderColor(m_borderColor);
+        m_in_password->setBorderWidth(m_borderWidth);
+        m_in_password->setFont(0); // auto size
+    }
+    ~wifiSettings(){
+        x_ps_free(&m_name);
+        vector_clear_and_shrink(m_password);
+        delete m_sel_ssid;
+        delete m_in_password;
+        delete m_keyboard;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+
+        if(w == 320){  // s 320x240
+            m_winSelect.x = 10; m_winSelect.y = 40;  m_winSelect.w = 300; m_winSelect.h = 28; m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 10; m_winPWD.y    = 80;  m_winPWD.w    = 300; m_winPWD.h    = 28; m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
+            m_winKeybrd.x = 10; m_winKeybrd.y = 120; m_winKeybrd.w = 300; m_winKeybrd.h = 75; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
+        }
+        else if( w == 480){  // m 480x320
+            m_winSelect.x = 12; m_winSelect.y = 50;  m_winSelect.w = 456; m_winSelect.h = 30;  m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 12; m_winPWD.y    = 90;  m_winPWD.w    = 456; m_winPWD.h    = 30;  m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
+            m_winKeybrd.x = 12; m_winKeybrd.y = 160; m_winKeybrd.w = 456; m_winKeybrd.h = 114; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
+        }
+        else if(w == 800){  // l 800x480
+            m_winSelect.x = 82; m_winSelect.y = 70;  m_winSelect.w = 636; m_winSelect.h =  50; m_winSelect.pl = 1; m_winSelect.pr = 1; m_winSelect.pt = 1; m_winSelect.pb = 1; // selectbox
+            m_winPWD.x    = 82; m_winPWD.y    = 130; m_winPWD.w    = 636; m_winPWD.h    =  50; m_winPWD.pl    = 1; m_winPWD.pr    = 1; m_winPWD.pt    = 1; m_winPWD.pb    = 1; // password
+            m_winKeybrd.x = 82; m_winKeybrd.y = 240; m_winKeybrd.w = 636; m_winKeybrd.h = 160; m_winKeybrd.pl = 1; m_winKeybrd.pr = 1; m_winKeybrd.pt = 1; m_winKeybrd.pb = 1; // keyboard
+        }
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; if(m_w < 40) {log_e("width < 40px"); return;} // width
+        m_h = h; if(m_h < 10) {log_e("height < 10px"); return;}// high
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+        m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
+        m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
+        m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_sel_ssid->show(m_backgroundTransparency, m_saveBackground);
+        m_in_password->show(m_backgroundTransparency, m_saveBackground);
+        m_keyboard->show(m_backgroundTransparency, m_saveBackground);
+        m_enabled = true;
+        m_clicked = false;
+
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+    }
+    void hide(){
+        m_enabled = false;
+        m_sel_ssid->hide();
+        m_in_password->hide();
+        m_keyboard->hide();
+    }
+    void disable(){
+        m_enabled = false;
+        m_sel_ssid->disable();
+        m_in_password->disable();
+        m_keyboard->disable();
+    }
+    void enable(){
+        m_enabled = true;
+        m_sel_ssid->enable();
+        m_in_password->enable();
+        m_keyboard->enable();
+    }
+    void setFontSize(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+        m_sel_ssid->setFontSize(m_fontSize);
+        m_in_password->setFont(m_fontSize);
+    //    m_keyboard->setFontSize(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+        m_sel_ssid->setTextColor(m_fgColor);
+        m_in_password->setTextColor(m_fgColor);
+        // m_keyboard->setTextColor(m_fgColor);
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+        m_sel_ssid->setBGcolor(m_bgColor);
+        m_in_password->setBGcolor(m_bgColor);
+    //    m_keyboard->setBGcolor(m_bgColor);
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+        m_sel_ssid->setBorderColor(m_borderColor);
+        m_in_password->setBorderColor(m_borderColor);
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_sel_ssid->setBorderWidth(m_borderWidth);
+        m_in_password->setBorderWidth(m_borderWidth);
+    //    m_keyboard->setBorderWidth(m_borderWidth);
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(m_sel_ssid->positionXY(x, y)){;}
+        if(m_in_password->positionXY(x, y)){;}
+        if(m_keyboard->positionXY(x, y)) {
+            // log_e("key pressed %i", m_keyboard->getVal());
+            changePassword(m_keyboard->getVal(), m_pwd_idx);
+            m_in_password->setText(m_password[m_pwd_idx]);
+            m_in_password->show(m_backgroundTransparency, m_saveBackground);
+        }
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        bool ret = false;
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(m_sel_ssid->released()){
+            const char* selTxt = m_sel_ssid->getSelectedText();
+            if(selTxt){
+                for(int i = 0; i < m_ssid.size(); i++){
+                    if(strcmp(selTxt, m_ssid[i]) == 0){
+                        m_in_password->setText(m_password[i]);
+                        m_in_password->show(m_backgroundTransparency, m_saveBackground);
+                        m_pwd_idx = i;
+                    }
+                }
+            } log_w("selected %s", selTxt);
+            ret = true;
+        }
+        if(m_in_password->released()) {/*log_e("m_txt_password released")*/ ;}
+        if(m_keyboard->released())     {/*log_e("keyboard released")*/ ;}
+        if(m_keyboard->getVal() == 0x0D){ // enter
+            m_ra.arg1 = m_ssid[m_pwd_idx]; // ssid
+            m_ra.arg2 = m_password[m_pwd_idx]; // password
+            // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
+            if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        }
+
+        m_clicked = false;
+        return ret;
+    }
+    void addWiFiItems(const char* ssid, const char* pw){
+        if(!ssid){ssid = strdup("");}
+        char* pwd = x_ps_calloc(64, sizeof(char)); // password max 63 chars
+        if(!pw) {strcpy(pwd, "");}
+        else    {strcpy(pwd, pw);}
+        m_sel_ssid->addText(ssid);
+        m_ssid.push_back(strdup(ssid));
+        if(m_ssid.size() == 1){
+            m_in_password->setText(pwd);
+            m_in_password->show(m_backgroundTransparency, m_saveBackground);
+        }
+        m_password.push_back(strndup(pwd, 64));
+        x_ps_free(&pwd);
+    }
+    void clearText(){
+        m_sel_ssid->clearText();
+        vector_clear_and_shrink(m_password);
+        vector_clear_and_shrink(m_ssid);
+        m_in_password->setText("");
+    }
+    char* getSelectedText(){
+    //    if(m_selContent.size() > 0){return m_selContent[m_idx];}
+        return NULL;
+    }
+  private:
+    void changePassword(char ch, uint8_t idx){
+        if(ch == 0x08){ // backspace
+            if(m_password[idx][0] == 0) return;
+            m_password[idx][strlen(m_password[idx]) - 1] = 0;
+        }
+        else if(ch == 0x0D){ // enter
+        //    log_w("enter pressed");
+        }
+        else{
+            if(strlen(m_password[idx]) < 63){
+                int len = strlen(m_password[idx]);
+                m_password[idx][len] = ch;
+                m_password[idx][len + 1] = 0;
+
+            }
+        }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class timeString : public RegisterTable { // show time "hh:mm:ss" e.g. in header
+private:
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint8_t     m_fontSize = 0;
+    uint8_t     m_h_align = TFT_ALIGN_CENTER;
+    uint8_t     m_v_align = TFT_ALIGN_CENTER;
+    uint32_t    m_bgColor = 0;
+    uint32_t    m_fgColor = 0;
+    uint32_t    m_borderColor = 0;
+    char*       m_name = NULL;
+    char        m_time[10] = "00:00:00";
+    bool        m_enabled = false;
+    bool        m_backgroundTransparency = false;
+    bool        m_saveBackground = false;
+    bool        m_clicked = false;
+    releasedArg m_ra;
+    textbox*    txt_time    = new textbox[8]{textbox("txt_timeH10"), textbox("txt_timeH01"), textbox("txt_timeC1"), textbox("txt_timeM10"),
+                                  textbox("txt_timeM01"), textbox("txt_timeC2"), textbox("txt_timeS10"), textbox("txt_timeS01")}; // time of the day
+public:
+    timeString(const char* name, uint8_t fontSize){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("timeString");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_fontSize = fontSize;
+    }
+    ~timeString(){
+        x_ps_free(&m_name);
+        delete[] txt_time;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint16_t pl, uint16_t pr, uint16_t pt, uint16_t pb){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        uint8_t w_digits  = m_w / 7;
+        uint8_t w_colon   = w_digits / 2;
+        uint16_t xPos[8] = {
+            static_cast<uint16_t>(m_x + pl + 0 * w_digits + 0 * w_colon), /* H10 */
+            static_cast<uint16_t>(m_x + pl + 1 * w_digits + 0 * w_colon), /* H01 */
+            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 0 * w_colon), /* C1 */
+            static_cast<uint16_t>(m_x + pl + 2 * w_digits + 1 * w_colon), /* M10 */
+            static_cast<uint16_t>(m_x + pl + 3 * w_digits + 1 * w_colon), /* M01 */
+            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 1 * w_colon), /* C2 */
+            static_cast<uint16_t>(m_x + pl + 4 * w_digits + 2 * w_colon), /* S10 */
+            static_cast<uint16_t>(m_x + pl + 5 * w_digits + 2 * w_colon)  /* S01 */
+        };
+        uint8_t width[8]  = {w_digits, w_digits, w_colon, w_digits, w_digits, w_colon, w_digits, w_digits};
+        for(uint8_t i = 0; i < 8; i++){
+            txt_time[i].begin(xPos[i], m_y + pt, width[i], h, 0, 0, 0, 0);
+            txt_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_time[i].setTextColor(m_fgColor);
+            txt_time[i].setFont(m_fontSize);
+        }
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        updateTime(m_time, true);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = size;
+        m_fontSize = size; tft.setFont(m_fontSize);
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+        for(uint8_t i = 0; i < 8; i++) {
+            txt_time[i].setTextColor(m_fgColor);
+        }
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void updateTime(const char* hl_time, bool complete = true){
+        if(!hl_time) return;
+        if(strlen(hl_time) != 8) return;
+        if(!m_enabled) return;
+        memcpy(m_time, hl_time, 8); // hhmmss
+        static char oldtime[8] = {255}; // hhmmss
+        tft.setFont(m_fontSize);
+        tft.setTextColor(m_fgColor);
+        if(complete == true) {
+            if(m_backgroundTransparency){
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
+        }
+        for(uint8_t i = 0; i < 8; i++) {
+            if(oldtime[i] != m_time[i]) {
+                char ch[2] = {0, 0};
+                ch[0] = m_time[i];
+                txt_time[i].setText(ch, true);
+                txt_time[i].show(m_backgroundTransparency, m_saveBackground);
+                oldtime[i] = m_time[i];
+            }
+        }
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -2090,7 +3406,8 @@ public:
         else     m_name = x_ps_strdup("numbersBox");
 
         if(TFT_CONTROLLER < 2) {m_segmWidth = 48;}
-        else                   {m_segmWidth = 64;}
+        else if (TFT_CONTROLLER < 7) {m_segmWidth = 64;}
+        else m_segmWidth = 86;
     }
     ~numbersBox(){
         x_ps_free(&m_name);
@@ -2350,47 +3667,75 @@ private:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-class imgClock : public RegisterTable { // draw a clock in 12 or 24h format
+class imgClock24 : public RegisterTable { // draw a clock in 24h format
 private:
+    pictureBox* pic_clock24_digitsH10   = new pictureBox("clock24_digitsH10");   // digits hour   * 10
+    pictureBox* pic_clock24_digitsH01   = new pictureBox("clock24_digitsH01");   // digits hour   * 01
+    pictureBox* pic_clock24_digitsM10   = new pictureBox("clock24_digitsM10");   // digits minute * 10
+    pictureBox* pic_clock24_digitsM01   = new pictureBox("clock24_digitsM01");   // digits minute * 01
+    pictureBox* pic_clock24_digitsColon = new pictureBox("clock24_digitsColon"); // digits colon
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
     int16_t     m_h = 0;
 #if TFT_CONTROLLER < 2
-    uint16_t    m_timeXPos7S[5] = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
-    uint16_t    m_timeXPosFN[6] = {0, 56, 152, 208, 264, 112}; // folded numbers
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =   4; uint16_t w =  72; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10     72 x 120 px
+    struct w_h01  {uint16_t x =  76; uint16_t w =  72; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01     72 x 120 px
+    struct w_c    {uint16_t x = 148; uint16_t w =  24; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         24 x 120 px
+    struct w_m10  {uint16_t x = 172; uint16_t w =  72; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10   72 x 120 px
+    struct w_m01  {uint16_t x = 244; uint16_t w =  72; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01   72 x 120 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7
-    uint16_t m_timeXPos7S[5] = {12, 118, 266, 372, 224}; // seven segment digits "hhmm:""
-    uint16_t m_timeXPosFN[6] = {16, 96,  224, 304, 384, 176}; // folded numbers
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =  32; uint16_t w =  96; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10     96 x 160 px
+    struct w_h01  {uint16_t x = 128; uint16_t w =  96; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01     96 x 160 px
+    struct w_c    {uint16_t x = 224; uint16_t w =  32; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         32 x 160 px
+    struct w_m10  {uint16_t x = 256; uint16_t w =  96; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10   96 x 160 px
+    struct w_m01  {uint16_t x = 352; uint16_t w =  96; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01   96 x 160 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #else
-    uint16_t m_timeXPos7S[5] = {36, 196, 436, 596, 356}; // seven segment digits "hhmm:"
-    uint16_t m_timeXPosFN[6] = {20, 112,  240, 352, 464, 208}; // folded numbers
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =  36; uint16_t w = 168; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10    168 x 260 px
+    struct w_h01  {uint16_t x = 204; uint16_t w = 168; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01    168 x 260 px
+    struct w_c    {uint16_t x = 372; uint16_t w =  56; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         56 x 260 px
+    struct w_m10  {uint16_t x = 428; uint16_t w = 168; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10  168 x 260 px
+    struct w_m01  {uint16_t x = 596; uint16_t w = 168; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01  168 x 260 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
-    uint16_t    m_minuteOfTheDay = 0;
     uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_state = false;
-    uint8_t     m_timeFormat = 24;
+    bool        m_backgroundTransparency = false;
+    uint16_t    m_digitsYPos = 0;
     bool        m_showAll = false;
     char*       m_name = NULL;
     char*       m_pathBuff = NULL;
     uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
     releasedArg m_ra;
 public:
-    imgClock(const char* name){
+    imgClock24(const char* name){
         register_object(this);
         if(name) m_name = x_ps_strdup(name);
-        else     m_name = x_ps_strdup("imgClock");
+        else     m_name = x_ps_strdup("imgClock24");
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
         m_state = false;
         m_pathBuff = x_ps_malloc(50);
     }
-    ~imgClock(){
+    ~imgClock24(){
         x_ps_free(&m_name);
         x_ps_free(&m_pathBuff);
+        delete pic_clock24_digitsH10;
+        delete pic_clock24_digitsH01;
+        delete pic_clock24_digitsColon;
+        delete pic_clock24_digitsM10;
+        delete pic_clock24_digitsM01;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -2398,6 +3743,12 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
+        m_digitsYPos = m_y + m_digitsYoffset;
+        pic_clock24_digitsH10->begin(  s_h10.x, m_digitsYPos, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
+        pic_clock24_digitsH01->begin(  s_h01.x, m_digitsYPos, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
+        pic_clock24_digitsColon->begin(s_c.x,   m_digitsYPos, s_c.w,   s_c.h,   s_c.pl,   s_c.pr,   s_c.pt,   s_c.pb);
+        pic_clock24_digitsM10->begin(  s_m10.x, m_digitsYPos, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
+        pic_clock24_digitsM01->begin(  s_m01.x, m_digitsYPos, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
     }
     const char* getName(){
         return m_name;
@@ -2432,7 +3783,6 @@ public:
     void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
         // minuteOfTheDay counts at 00:00, from 0...23*60+59
         // weekDay So - 0, Mo - 1 ... Sa - 6
-        m_minuteOfTheDay = minuteOfTheDay;
         m_hour = minuteOfTheDay / 60;
         m_min  = minuteOfTheDay % 60;
         m_weekday  = weekday;
@@ -2445,58 +3795,205 @@ public:
         time[0] = m_hour / 10; time[1] = m_hour % 10;
         time[2] = m_min / 10;  time[3] = m_min % 10;
 
-        if(m_timeFormat == 24){
-            for(uint8_t i = 0; i < 4; i++){
-                if((time[i] != oldTime[i]) || m_showAll){
-                    sprintf(m_pathBuff, "/digits/sevenSegment/%igreen.jpg", time[i]);
-                    drawImage(m_pathBuff, m_timeXPos7S[i], m_y);
-                }
-                oldTime[i] = time[i];
+
+        for(uint8_t i = 0; i < 4; i++){
+            if((time[i] != oldTime[i]) || m_showAll){
+                sprintf(m_pathBuff, "/digits/sevenSegment/%igreen.jpg", time[i]);
+                if(i == 0) {pic_clock24_digitsH10->setPicturePath(m_pathBuff); pic_clock24_digitsH10->show(m_backgroundTransparency, false);}
+                if(i == 1) {pic_clock24_digitsH01->setPicturePath(m_pathBuff); pic_clock24_digitsH01->show(m_backgroundTransparency, false);}
+                if(i == 2) {pic_clock24_digitsM10->setPicturePath(m_pathBuff); pic_clock24_digitsM10->show(m_backgroundTransparency, false);}
+                if(i == 3) {pic_clock24_digitsM01->setPicturePath(m_pathBuff); pic_clock24_digitsM01->show(m_backgroundTransparency, false);}
             }
+            oldTime[i] = time[i];
         }
-        else { // 12h format
-             bool isPM = true;
-             static bool isOldPM = false;
-            for(uint8_t i = 0; i < 4; i++){
-                uint8_t hour = m_hour;
-                if(hour > 0 && hour < 13) isPM = false;
-                else(hour -= 12);
-                time[0] = hour / 10; time[1] = hour % 10;
-                if((time[i] != oldTime[i]) || m_showAll){
-                    sprintf(m_pathBuff, "/digits/foldedNumbers/%iwhite.jpg", time[i]);
-                    drawImage(m_pathBuff, m_timeXPosFN[i], m_y);
-                }
-                oldTime[i] = time[i];
-            }
-            if((isPM != isOldPM) || m_showAll){
-                if(isPM) drawImage("/digits/foldedNumbers/pmwhite.jpg", m_timeXPosFN[4], m_y);
-                else     drawImage("/digits/foldedNumbers/amwhite.jpg", m_timeXPosFN[4], m_y);
-                isOldPM = isPM;
-            }
-        }
+
         k = !k;
-        if(m_timeFormat == 24){
-            if(k) drawImage("/digits/sevenSegment/dgreen.jpg", m_timeXPos7S[4], m_y);
-            else  drawImage("/digits/sevenSegment/egreen.jpg", m_timeXPos7S[4], m_y);
-        }
-        else{
-            if(k) drawImage("/digits/foldedNumbers/dwhite.jpg", m_timeXPosFN[5], m_y);
-            else  drawImage("/digits/foldedNumbers/ewhite.jpg", m_timeXPosFN[5], m_y);
-        }
+        if(k) {pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/dgreen.jpg"); pic_clock24_digitsColon->show(m_backgroundTransparency, false);}
+        else  {pic_clock24_digitsColon->setPicturePath("/digits/sevenSegment/egreen.jpg"); pic_clock24_digitsColon->show(m_backgroundTransparency, false);}
         m_showAll = false;
     }
-    void setTimeFormat(uint8_t timeFormat){
-        m_timeFormat = timeFormat;
-        m_showAll = true;
+
+    bool positionXY(uint16_t x, uint16_t y){
+        if(!m_enabled) return false;
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+    //    if(!m_enabled) return false;
+        return true;
     }
-    bool isAlarm(uint8_t alarmdays, int16_t* alarmtime){
-        uint8_t mask = 0b00000001 << m_weekday;
-        if(alarmdays & mask){ // yes, is alarmday
-            if(alarmtime[m_weekday] == m_minuteOfTheDay){ // yes, is alarmtime
-                return true;
-            }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_clicked = false;
+        return true;
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class imgClock12 : public RegisterTable { // draw a clock in 12h format
+private:
+    pictureBox* pic_clock12_digitsH10    = new pictureBox("clock12_digitsH10");    // digits hour   * 10
+    pictureBox* pic_clock12_digitsH01    = new pictureBox("clock12_digitsH01");    // digits hour   * 01
+    pictureBox* pic_clock12_digitsM10    = new pictureBox("clock12_digitsM10");    // digits minute * 10
+    pictureBox* pic_clock12_digitsM01    = new pictureBox("clock12_digitsM01");    // digits minute * 01
+    pictureBox* pic_clock12_digitsColon  = new pictureBox("clock12_digitsColon");  // digits colon
+    pictureBox* pic_clock12_digits_AM_PM = new pictureBox("clock12_digits_AM_PM"); // digits AM/PM
+    int16_t     m_x = 0;
+    int16_t     m_y = 0;
+    int16_t     m_w = 0;
+    int16_t     m_h = 0;
+    uint16_t    m_digitsYPos = 0;
+#if TFT_CONTROLLER < 2
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =   0; uint16_t w =  56; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10     56 x 120 px
+    struct w_h01  {uint16_t x =  56; uint16_t w =  56; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01     56 x 120 px
+    struct w_c    {uint16_t x = 112; uint16_t w =  40; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         40 x 120 px
+    struct w_m10  {uint16_t x = 152; uint16_t w =  56; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10   56 x 120 px
+    struct w_m01  {uint16_t x = 208; uint16_t w =  56; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01   56 x 120 px
+    struct w_ap   {uint16_t x = 264; uint16_t w =  56; uint16_t h = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_ap;    // AM_PM         56 x 120 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
+#elif TFT_CONTROLLER < 7
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =  16; uint16_t w =  80; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10     80 x 160 px
+    struct w_h01  {uint16_t x =  96; uint16_t w =  80; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01     80 x 160 px
+    struct w_c    {uint16_t x = 176; uint16_t w =  48; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         48 x 160 px
+    struct w_m10  {uint16_t x = 224; uint16_t w =  80; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10   80 x 160 px
+    struct w_m01  {uint16_t x = 304; uint16_t w =  80; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01   80 x 160 px
+    struct w_ap   {uint16_t x = 384; uint16_t w =  80; uint16_t h = 160; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_ap;    // AM_PM         80 x 160 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
+#else
+    uint16_t m_digitsYoffset = 30;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =  36; uint16_t w = 130; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10    130 x 260 px
+    struct w_h01  {uint16_t x = 166; uint16_t w = 130; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01    130 x 260 px
+    struct w_c    {uint16_t x = 296; uint16_t w =  78; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         78 x 260 px
+    struct w_m10  {uint16_t x = 374; uint16_t w = 130; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10  130 x 260 px
+    struct w_m01  {uint16_t x = 504; uint16_t w = 130; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01  130 x 260 px
+    struct w_ap   {uint16_t x = 634; uint16_t w = 130; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_ap;    // AM_PM        130 x 260 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
+#endif
+    uint32_t    m_bgColor = 0;
+    bool        m_enabled = false;
+    bool        m_clicked = false;
+    bool        m_state = false;
+    bool        m_showAll = false;
+    bool        m_backgroundTransparency = false;
+    char*       m_name = NULL;
+    char*       m_pathBuff = NULL;
+    uint8_t     m_min = 0, m_hour = 0, m_weekday = 0;
+    releasedArg m_ra;
+public:
+    imgClock12(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("imgClock12");
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+    }
+    ~imgClock12(){
+        x_ps_free(&m_name);
+        x_ps_free(&m_pathBuff);
+        delete pic_clock12_digitsH10;
+        delete pic_clock12_digitsH01;
+        delete pic_clock12_digitsColon;
+        delete pic_clock12_digitsM10;
+        delete pic_clock12_digitsM01;
+        delete pic_clock12_digits_AM_PM;
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_enabled = false;
+        m_digitsYPos = m_y + m_digitsYoffset;
+        pic_clock12_digitsH10->begin(   s_h10.x, m_digitsYPos, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
+        pic_clock12_digitsH01->begin(   s_h01.x, m_digitsYPos, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
+        pic_clock12_digitsColon->begin( s_c.x,   m_digitsYPos, s_c.w,   s_c.h,   s_c.pl,   s_c.pr,   s_c.pt,   s_c.pb);
+        pic_clock12_digitsM10->begin(   s_m10.x, m_digitsYPos, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
+        pic_clock12_digitsM01->begin(   s_m01.x, m_digitsYPos, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
+        pic_clock12_digits_AM_PM->begin(s_ap.x,  m_digitsYPos, s_ap.w,  s_ap.h,  s_ap.pl,  s_ap.pr,  s_ap.pt,  s_ap.pb);
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool inactive = false){
+        m_clicked = false;
+        if(inactive){
+        //    setInactive();
+            return;
         }
-        return false;
+        m_enabled = true;
+        m_showAll = true;
+        writeTime(m_hour, m_min);
+    }
+    void hide(){
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable(){
+        m_enabled = false;
+        m_showAll = false;
+    }
+    bool isDisabled(){
+        return !m_enabled;
+    }
+    bool enable(){
+        return m_enabled = true;
+    }
+    void updateTime(uint16_t minuteOfTheDay, uint8_t weekday){
+        // minuteOfTheDay counts at 00:00, from 0...23*60+59
+        // weekDay So - 0, Mo - 1 ... Sa - 6
+        m_hour = minuteOfTheDay / 60;
+        m_min  = minuteOfTheDay % 60;
+        m_weekday  = weekday;
+        if(m_enabled) writeTime(m_hour, m_min);
+    }
+    void writeTime(uint8_t m_hour, uint8_t  m_min){
+        static uint8_t oldTime[4];
+        static bool k = false;
+        uint8_t time[5];
+        time[0] = m_hour / 10; time[1] = m_hour % 10;
+        time[2] = m_min / 10;  time[3] = m_min % 10;
+
+        bool isPM = true;
+        static bool isOldPM = false;
+        for(uint8_t i = 0; i < 4; i++){
+            uint8_t hour = m_hour;
+            if(hour > 0 && hour < 13) isPM = false;
+            else(hour -= 12);
+            time[0] = hour / 10; time[1] = hour % 10;
+            if((time[i] != oldTime[i]) || m_showAll){
+                sprintf(m_pathBuff, "/digits/foldedNumbers/%iwhite.jpg", time[i]);
+                if(i == 0) {pic_clock12_digitsH10->setPicturePath(m_pathBuff); pic_clock12_digitsH10->show(m_backgroundTransparency, false);}
+                if(i == 1) {pic_clock12_digitsH01->setPicturePath(m_pathBuff); pic_clock12_digitsH01->show(m_backgroundTransparency, false);}
+                if(i == 2) {pic_clock12_digitsM10->setPicturePath(m_pathBuff); pic_clock12_digitsM10->show(m_backgroundTransparency, false);}
+                if(i == 3) {pic_clock12_digitsM01->setPicturePath(m_pathBuff); pic_clock12_digitsM01->show(m_backgroundTransparency, false);}
+            }
+            oldTime[i] = time[i];
+        }
+        if((isPM != isOldPM) || m_showAll){
+            if(isPM) {pic_clock12_digits_AM_PM->setPicturePath("/digits/foldedNumbers/pmwhite.jpg"); pic_clock12_digits_AM_PM->show(m_backgroundTransparency, false);}
+            else     {pic_clock12_digits_AM_PM->setPicturePath("/digits/foldedNumbers/amwhite.jpg"); pic_clock12_digits_AM_PM->show(m_backgroundTransparency, false);}
+            isOldPM = isPM;
+        }
+
+        k = !k;
+        if(k) {pic_clock12_digitsColon->setPicturePath("/digits/foldedNumbers/dwhite.jpg"); pic_clock12_digitsColon->show(m_backgroundTransparency, false);}
+        else  {pic_clock12_digitsColon->setPicturePath("/digits/foldedNumbers/ewhite.jpg"); pic_clock12_digitsColon->show(m_backgroundTransparency, false);}
+
+        m_showAll = false;
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(!m_enabled) return false;
@@ -2520,6 +4017,16 @@ public:
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
 private:
+    pictureBox* pic_alarm_digitsH10   = new pictureBox("alarm_digitsH10");   // digits hour   * 10
+    pictureBox* pic_alarm_digitsH01   = new pictureBox("alarm_digitsH01");   // digits hour   * 01
+    pictureBox* pic_alarm_digitsM10   = new pictureBox("alarm_digitsM10");   // digits minute * 10
+    pictureBox* pic_alarm_digitsM01   = new pictureBox("alarm_digitsM01");   // digits minute * 01
+    pictureBox* pic_alarm_digitsColon = new pictureBox("alarm_digitsColon"); // digits colon
+    textbox*    txt_alarm_days    = new textbox[7]{textbox("txt_alarm_days0"), textbox("txt_alarm_days1"), textbox("txt_alarm_days2"), textbox("txt_alarm_days3"),
+                                                   textbox("txt_alarm_days4"), textbox("txt_alarm_days5"), textbox("txt_alarm_days6")}; // days of the week
+    textbox*    txt_alarm_time    = new textbox[7]{textbox("txt_alarm_time0"), textbox("txt_alarm_time1"), textbox("txt_alarm_time2"), textbox("txt_alarm_time3"),
+                                                   textbox("txt_alarm_time4"), textbox("txt_alarm_time5"), textbox("txt_alarm_time6")}; // time of the day
+
     int16_t  m_x = 0;
     int16_t  m_y = 0;
     int16_t  m_w = 0;
@@ -2529,29 +4036,51 @@ private:
     uint16_t m_digitsYPos       = 0;
 #if TFT_CONTROLLER < 2
     uint16_t m_alarmdaysXPos[7] = {2, 47, 92, 137, 182, 227, 272}; // same as altarmTimeXPos
-    uint16_t m_digitsPos[5]     = {2, 75, 173, 246, 148}; // seven segment digits "hhmm:"
+    uint8_t  m_alarmdaysYoffset = 2;
     uint8_t  m_alarmdaysW = 44;
     uint8_t  m_alarmdaysH = 25;
-    uint8_t  m_fontSize = 16;
+    uint8_t  m_fontSize = 0; // auto
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =   4; uint16_t w = 72; uint16_t h = 104; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10    72 x 104 px
+    struct w_h01  {uint16_t x =  76; uint16_t w = 72; uint16_t h = 104; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01    72 x 104 px
+    struct w_c    {uint16_t x = 148; uint16_t w = 72; uint16_t h = 104; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon        24 x 104 px
+    struct w_m10  {uint16_t x = 172; uint16_t w = 72; uint16_t h = 104; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10  72 x 104 px
+    struct w_m01  {uint16_t x = 244; uint16_t w = 72; uint16_t h = 104; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01  72 x 104 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7
     uint16_t m_alarmdaysXPos[7] = {9, 75, 141, 207, 273, 339, 405};
-    uint16_t m_digitsPos[5] = {23, 123, 258, 358, 223}; // seven segment digits "hhmm:""
+    uint8_t  m_alarmdaysYoffset = 2;
     uint8_t  m_alarmdaysW = 65;
-    uint8_t  m_alarmdaysH = 25;
-    uint8_t  m_fontSize = 21;
-#else
+    uint8_t  m_alarmdaysH = 23;
+    uint8_t  m_fontSize = 0; // auto
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x =  32; uint16_t w = 96; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10     96 x 150 px
+    struct w_h01  {uint16_t x = 128; uint16_t w = 96; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01     96 x 150 px
+    struct w_c    {uint16_t x = 224; uint16_t w = 32; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         32 x 150 px
+    struct w_m10  {uint16_t x = 255; uint16_t w = 96; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10   96 x 150 px
+    struct w_m01  {uint16_t x = 352; uint16_t w = 96; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01   96 x 150 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
+#else // 800 x 480px
     uint16_t m_alarmdaysXPos[7] = {50, 150, 250, 350, 450, 550, 650};
-    uint16_t m_digitsPos[5] = {94, 226, 406, 538, 356}; // seven segment digits "hhmm:"
+    uint8_t  m_alarmdaysYoffset = 10;
     uint8_t  m_alarmdaysW = 100;
-    uint8_t  m_alarmdaysH = 25;
-    uint8_t  m_fontSize = 21;
+    uint8_t  m_alarmdaysH = 32;
+    uint8_t  m_fontSize = 0; // auto
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_h10  {uint16_t x = 112; uint16_t w = 132; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h10;   // Hour * 10    132 x 220 px
+    struct w_h01  {uint16_t x = 244; uint16_t w = 132; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_h01;   // Hour * 01    132 x 220 px
+    struct w_c    {uint16_t x = 376; uint16_t w =  80; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_c;     // Colon         47 x 220 px
+    struct w_m10  {uint16_t x = 423; uint16_t w = 132; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m10;   // Minute * 10  132 x 220 px
+    struct w_m01  {uint16_t x = 555; uint16_t w = 132; uint16_t h = 220; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_m01;   // Minute * 01  132 x 220 px
+    //-------------------------------------------------------------------------------------------------------------------------------------------------------
 #endif
 
-uint32_t    m_bgColor = 0;
+    uint32_t    m_bgColor = 0;
     bool        m_enabled = false;
     bool        m_clicked = false;
     bool        m_state = false;
     bool        m_showAll = false;
+    bool        m_backgroundTransparency = false;
     char*       m_name = NULL;
     char*       m_pathBuff = NULL;
     uint8_t*    m_alarmDays = NULL;
@@ -2581,6 +4110,13 @@ public:
     ~alarmClock(){
         x_ps_free(&m_name);
         x_ps_free(&m_pathBuff);
+        delete pic_alarm_digitsH10;
+        delete pic_alarm_digitsH01;
+        delete pic_alarm_digitsColon;
+        delete pic_alarm_digitsM10;
+        delete pic_alarm_digitsM01;
+        delete[] txt_alarm_days;
+        delete[] txt_alarm_time;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
@@ -2588,9 +4124,25 @@ public:
         m_w = w; // width
         m_h = h; // high
         m_enabled = false;
-        m_alarmdaysYPos    = m_y; // m_y;
-        m_alarmtimeYPos    = m_alarmdaysYPos + 25 + 1;
-        m_digitsYPos       = m_alarmtimeYPos + 25 + 1;
+        m_alarmdaysYPos    = m_y + m_alarmdaysYoffset; // m_y;
+        m_alarmtimeYPos    = m_alarmdaysYPos + m_alarmdaysH + 1;
+        m_digitsYPos       = m_alarmtimeYPos + m_alarmdaysH + 1;
+        pic_alarm_digitsH10->begin(  s_h10.x, m_digitsYPos, s_h10.w, s_h10.h, s_h10.pl, s_h10.pr, s_h10.pt, s_h10.pb);
+        pic_alarm_digitsH01->begin(  s_h01.x, m_digitsYPos, s_h01.w, s_h01.h, s_h01.pl, s_h01.pr, s_h01.pt, s_h01.pb);
+        pic_alarm_digitsColon->begin(s_c.x,   m_digitsYPos, s_c.w,   s_c.h,   s_c.pl,   s_c.pr,   s_c.pt,   s_c.pb);
+        pic_alarm_digitsM10->begin(  s_m10.x, m_digitsYPos, s_m10.w, s_m10.h, s_m10.pl, s_m10.pr, s_m10.pt, s_m10.pb);
+        pic_alarm_digitsM01->begin(  s_m01.x, m_digitsYPos, s_m01.w, s_m10.h, s_m01.pl, s_m01.pr, s_m01.pt, s_m01.pb);
+        for(uint8_t i = 0; i < 7; i++){
+            txt_alarm_days[i].begin(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
+            txt_alarm_days[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_days[i].setBorderWidth(1);
+            txt_alarm_days[i].setFont(m_fontSize);
+            txt_alarm_days[i].setText(m_WD[i]);
+            txt_alarm_time[i].begin(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, 0, 0, 0, 0);
+            txt_alarm_time[i].setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+            txt_alarm_time[i].setBorderWidth(1);
+            txt_alarm_time[i].setFont(m_fontSize);
+        }
     }
     const char* getName(){
         return m_name;
@@ -2606,7 +4158,7 @@ public:
         }
         m_enabled = true;
         m_showAll = true;
-        updateDigit();
+        updateDigits();
         updateAlarmDaysAndTime();
     }
     void hide(){
@@ -2620,13 +4172,13 @@ public:
         m_idx++;
         if(m_idx == 4) m_idx = 0;
         m_showAll = true;
-        updateDigit();
+        updateDigits();
     }
     void shiftLeft(){
         m_idx--;
         if(m_idx == -1) m_idx = 0;
         m_showAll = true;
-        updateDigit();
+        updateDigits();
     }
     void digitUp(){
         if(m_idx == 0){ // 10h
@@ -2648,7 +4200,7 @@ public:
             m_alarmDigits[3]++;
         }
         m_showAll = true;
-        updateDigit();
+        updateDigits();
     }
     void digitDown(){
         if(m_idx == 0){ // 10h
@@ -2668,7 +4220,7 @@ public:
             m_alarmDigits[3]--;
         }
         m_showAll = true;
-        updateDigit();
+        updateDigits();
     }
     void setAlarmTimeAndDays(uint8_t* alarmDays, int16_t alarmTime[7]){
         m_alarmTime = alarmTime;
@@ -2682,27 +4234,12 @@ public:
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(!m_enabled) return false;
-        if(y <= m_alarmtimeYPos){
-            m_btnAlarmDay = -1;
-            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmDay = 6;}
-            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmDay = 5;}
-            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmDay = 4;}
-            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmDay = 3;}
-            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmDay = 2;}
-            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmDay = 1;}
-            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmDay = 0;}
-            if(m_btnAlarmDay >= 0) alarmDaysPressed(m_btnAlarmDay);
+        for(int i = 0; i < 7; i++){
+            if(txt_alarm_days[i].positionXY(x, y)) m_btnAlarmDay = i;
+            if(txt_alarm_time[i].positionXY(x, y)) m_btnAlarmTime = i;
         }
-        else if(y <= m_digitsYPos){
-            if     (x >= m_alarmdaysXPos[6]) {m_btnAlarmTime = 6;}
-            else if(x >= m_alarmdaysXPos[5]) {m_btnAlarmTime = 5;}
-            else if(x >= m_alarmdaysXPos[4]) {m_btnAlarmTime = 4;}
-            else if(x >= m_alarmdaysXPos[3]) {m_btnAlarmTime = 3;}
-            else if(x >= m_alarmdaysXPos[2]) {m_btnAlarmTime = 2;}
-            else if(x >= m_alarmdaysXPos[1]) {m_btnAlarmTime = 1;}
-            else if(x >= m_alarmdaysXPos[0]) {m_btnAlarmTime = 0;}
-            if(m_btnAlarmTime >= 0) alarmTimePressed(m_btnAlarmTime);
-        }
+        if(m_btnAlarmDay >= 0) alarmDaysPressed(m_btnAlarmDay);
+        if(m_btnAlarmTime >= 0) alarmTimePressed(m_btnAlarmTime);
         return true;
     }
     bool released(){
@@ -2713,31 +4250,30 @@ public:
             sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmDay] / 60, m_alarmTime[m_btnAlarmDay] % 60);
         }
         if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+
         if(m_btnAlarmDay >= 0){
             uint8_t mask = 0b00000001;
             mask <<= m_btnAlarmDay;
-        //    log_w("mask %i, m_alarmDays %i", mask, *m_alarmDays);
             *m_alarmDays ^= mask;    // toggle the bit
-        //    log_w("m_alarmDays %i", *m_alarmDays);
             if(*m_alarmDays & mask){ // is set
-                tft.setFont(m_fontSize);
-                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_RED);
-                tft.setTextColor(TFT_RED);
-                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos,  m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
-
-                tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
-                tft.setTextColor(TFT_GREEN);
-                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
+                txt_alarm_days[m_btnAlarmDay].setBorderColor(TFT_RED);
+                txt_alarm_days[m_btnAlarmDay].setTextColor(TFT_RED);
+                txt_alarm_days[m_btnAlarmDay].setText(m_WD[m_btnAlarmDay]);
+                txt_alarm_days[m_btnAlarmDay].show(m_backgroundTransparency, false);
+                txt_alarm_time[m_btnAlarmDay].setBorderColor(TFT_GREEN);
+                txt_alarm_time[m_btnAlarmDay].setTextColor(TFT_GREEN);
+                txt_alarm_time[m_btnAlarmDay].setText(hhmm);
+                txt_alarm_time[m_btnAlarmDay].show(m_backgroundTransparency, false);
             }
             else{                    // bit is not set
-                tft.setFont(m_fontSize);
-                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
-                tft.setTextColor(TFT_DARKGREY);
-                tft.writeText(m_WD[m_btnAlarmDay], m_alarmdaysXPos[m_btnAlarmDay], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
-
-                tft.fillRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-                tft.drawRect(m_alarmdaysXPos[m_btnAlarmDay], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
+                txt_alarm_days[m_btnAlarmDay].setBorderColor(TFT_DARKGREY);
+                txt_alarm_days[m_btnAlarmDay].setTextColor(TFT_DARKGREY);
+                txt_alarm_days[m_btnAlarmDay].setText(m_WD[m_btnAlarmDay]);
+                txt_alarm_days[m_btnAlarmDay].show(m_backgroundTransparency, false);
+                txt_alarm_time[m_btnAlarmDay].setBorderColor(TFT_DARKGREY);
+                txt_alarm_time[m_btnAlarmDay].setTextColor(TFT_DARKGREY);
+                txt_alarm_time[m_btnAlarmDay].setText("");
+                txt_alarm_time[m_btnAlarmDay].show(m_backgroundTransparency, false);
             }
             m_btnAlarmDay = -1;
         }
@@ -2745,14 +4281,13 @@ public:
             uint8_t mask = 0b00000001;
             mask <<= m_btnAlarmTime;
             if(mask & *m_alarmDays){ // bit is set -> alarm is active for that day
-                tft.setFont(m_fontSize);
-            //    tft.fillRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-                tft.drawRect(m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
-                tft.setTextColor(TFT_GREEN);
+                txt_alarm_time[m_btnAlarmTime].setBorderColor(TFT_GREEN);
+                txt_alarm_time[m_btnAlarmTime].setTextColor(TFT_GREEN);
                 m_alarmTime[m_btnAlarmTime] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
                 char hhmm[10] = "00:00";
                 sprintf(hhmm, "%02d:%02d", m_alarmTime[m_btnAlarmTime] / 60, m_alarmTime[m_btnAlarmTime] % 60);
-                tft.writeText(hhmm, m_alarmdaysXPos[m_btnAlarmTime], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
+                txt_alarm_time[m_btnAlarmTime].setText(hhmm);
+                txt_alarm_time[m_btnAlarmTime].show(m_backgroundTransparency, false);
             }
             m_btnAlarmTime = -1;
         }
@@ -2760,72 +4295,75 @@ public:
         return true;
     }
 private:
-    void updateDigit(){
+    void updateDigits(){
         static uint8_t m_oldAlarmDigits[4] = {0};
-        if(m_showAll) drawImage("/digits/sevenSegment/dred.jpg", m_digitsPos[4], m_digitsYPos); // colon
         for(uint8_t i = 0; i < 4; i++){
             if(m_oldAlarmDigits[i] != m_alarmDigits[i] || m_showAll){
-                if(i == m_idx){
-                    m_pathBuff[m_p1Len + 0] = m_alarmDigits[i] + 48;
-                    m_pathBuff[m_p1Len + 1] = '\0';
-                    strcat(m_pathBuff, "orange.jpg");
-                }
-                else{
-                    m_pathBuff[m_p1Len + 0] =  m_alarmDigits[i] + 48;
-                    m_pathBuff[m_p1Len + 1] = '\0';
-                    strcat(m_pathBuff, "red.jpg");
-                }
-                drawImage(m_pathBuff, m_digitsPos[i], m_digitsYPos);
+                m_pathBuff[m_p1Len + 0] = m_alarmDigits[i] + 48;
+                m_pathBuff[m_p1Len + 1] = '\0';
 
+                if(i == m_idx){strcat(m_pathBuff, "orange.jpg");}
+                else{          strcat(m_pathBuff, "red.jpg");}
+
+                if(i == 0) {pic_alarm_digitsH10->setPicturePath(m_pathBuff); pic_alarm_digitsH10->show(m_backgroundTransparency, false);}
+                if(i == 1) {pic_alarm_digitsH01->setPicturePath(m_pathBuff); pic_alarm_digitsH01->show(m_backgroundTransparency, false);}
+                if(i == 2) {pic_alarm_digitsM10->setPicturePath(m_pathBuff); pic_alarm_digitsM10->show(m_backgroundTransparency, false);}
+                if(i == 3) {pic_alarm_digitsM01->setPicturePath(m_pathBuff); pic_alarm_digitsM01->show(m_backgroundTransparency, false);}
             }
             m_oldAlarmDigits[i] = m_alarmDigits[i];
         }
+        if(m_showAll){
+            pic_alarm_digitsColon->setPicturePath("/digits/sevenSegment/dred.jpg");
+            pic_alarm_digitsColon->show(m_backgroundTransparency, false);
+        }
     }
     void updateAlarmDaysAndTime(){
-        tft.setFont(m_fontSize);
         uint8_t mask = 0b00000001;
         uint16_t color = TFT_BLACK;
+
         for(int i = 0; i < 7; i++){
             // alarmDays
             if(*m_alarmDays & mask) color = TFT_RED;
             else color = TFT_DARKGREY;
-            tft.drawRect(m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, color);
-            tft.setTextColor(color);
-            tft.writeText(m_WD[i], m_alarmdaysXPos[i], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
-            // alarmTime
+            txt_alarm_days[i].setBorderColor(color);
+            txt_alarm_days[i].setTextColor(color);
+            txt_alarm_days[i].setText(m_WD[i]);
+            txt_alarm_days[i].show(m_backgroundTransparency, false);
+            char hhmm[10] = "00:00";
+            sprintf(hhmm, "%02d:%02d", m_alarmTime[i] / 60, m_alarmTime[i] % 60);
             if(*m_alarmDays & mask){
-            //    tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-                tft.drawRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_GREEN);
-                tft.setTextColor(TFT_GREEN);
-                char hhmm[10] = "00:00";
-                sprintf(hhmm, "%02d:%02d", m_alarmTime[i] / 60, m_alarmTime[i] % 60);
-                tft.writeText(hhmm, m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
+                txt_alarm_time[i].setBorderColor(TFT_GREEN);
+                txt_alarm_time[i].setTextColor(TFT_GREEN);
+                txt_alarm_time[i].setText(hhmm);
             }
             else{
-                tft.fillRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-                tft.drawRect(m_alarmdaysXPos[i], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_DARKGREY);
+                txt_alarm_time[i].setBorderColor(TFT_DARKGREY);
+                txt_alarm_time[i].setTextColor(TFT_DARKGREY);
+                txt_alarm_time[i].setText("");
             }
+            txt_alarm_time[i].show(m_backgroundTransparency, false);
             mask <<= 1;
         }
     }
+
     void alarmDaysPressed(uint8_t idx){
-        tft.setFont(m_fontSize);
-        tft.drawRect(m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
-        tft.setTextColor(TFT_YELLOW);
-        tft.writeText(m_WD[idx], m_alarmdaysXPos[idx], m_alarmdaysYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
+        txt_alarm_days[idx].setBorderColor(TFT_YELLOW);
+        txt_alarm_days[idx].setTextColor(TFT_YELLOW);
+        txt_alarm_days[idx].setText(m_WD[idx]);
+        txt_alarm_days[idx].show(m_backgroundTransparency, false);
     }
     void alarmTimePressed(uint8_t idx){
         uint8_t mask = 0b00000001;
         mask <<= idx;
         if(mask & *m_alarmDays){ // bit is set -> active
-            tft.setFont(m_fontSize);
-            tft.fillRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_BLACK);
-            tft.drawRect(m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_YELLOW);
-            tft.setTextColor(TFT_YELLOW);
             m_alarmTime[idx] = (m_alarmDigits[0] * 10 + m_alarmDigits[1]) * 60  + (m_alarmDigits[2] * 10 + m_alarmDigits[3]);
-            char hhmm[10] = "00:00";
+            char hhmm[10] = {0};
             sprintf(hhmm, "%02d:%02d", m_alarmTime[idx] / 60, m_alarmTime[idx] % 60);
-            tft.writeText(hhmm, m_alarmdaysXPos[idx], m_alarmtimeYPos, m_alarmdaysW, m_alarmdaysH, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true);
+            txt_alarm_time[idx].setBorderColor(TFT_YELLOW);
+            txt_alarm_time[idx].setTextColor(TFT_YELLOW);
+            txt_alarm_time[idx].setText(hhmm);
+            tft.setTextColor(TFT_YELLOW);
+            txt_alarm_time[idx].show(m_backgroundTransparency, false);
         }
     }
 };
@@ -2957,7 +4495,9 @@ public:
     }
     void drawTriangeUp(){
         auto triangleUp = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + s, y + 0, x + 0, y + 2 * s, x + 2 * s, y + 2 * s, TFT_RED); };
-         triangleUp(0, m_y + (1 * m_lineHight), m_lineHight / 3.5);
+        int line = 1;
+        if(m_mode == RADIO) line = 0;
+        triangleUp(0, m_y + (line* m_lineHight), m_lineHight / 3.5);
     }
     void drawTriangeDown(){
         auto triangleDown = [&](int16_t x, int16_t y, uint8_t s) { tft.fillTriangle(x + 0, y + 0, x + 2 * s, y + 0, x + s, y + 2 * s, TFT_RED); };
@@ -3176,11 +4716,10 @@ private:
 
     void hasReleased(uint16_t x, uint16_t y){
 
+        m_itemListPos = y / (m_h / 10);
         bool guard1 = false; if(m_dlnaServer.friendlyName.size() > (m_itemListPos -1)) guard1 = true;
         bool guard2 = false; if(m_srvContent.itemURL.size() >  (m_itemListPos - 1)) guard2 = true;
         bool guard3 = false; if(m_srvContent.title.size() > (m_itemListPos - 1)) guard3 = true;
-
-        m_itemListPos = y / (m_h / 10);
 
         if(m_oldY && (m_oldY + 7 * m_lineHight < y)) {     // fast wipe down
             m_ra.val1 = 0;
@@ -3223,7 +4762,7 @@ private:
         }
 
         if(m_itemListPos == 0){ // previous level, content list
-            if(*m_dlnaLevel == 0) goto exit;
+            if(*m_dlnaLevel == 0) {goto exit;}
             m_viewPoint = 0;
             m_browseOnRelease = 2;
             goto exit;
@@ -3935,6 +5474,8 @@ private:
             m_staNameToDraw = staMgnt.getStationName(pos + m_firstStationsLineNr + 1);                          // the station name
             m_staNrToDraw = pos + m_firstStationsLineNr + 1;                                                    // the station number
             myList.drawLine(pos, m_staNameToDraw, NULL, NULL, m_colorToDraw, m_staNrToDraw);
+            if (pos == 1 && m_firstStationsLineNr > 0 && staMgnt.getSumStations()) { myList.drawTriangeUp();}
+            if (pos == 9 && m_firstStationsLineNr + 10 < staMgnt.getSumStations()) { myList.drawTriangeDown();}
         }
         xSemaphoreGive(mutex_display);
     }
@@ -4162,6 +5703,11 @@ private:
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayHeader : public RegisterTable {
 private:
+    textbox*    txt_Item      = new textbox("header_Item");          // Radio, Player, Clock....
+    pictureBox* pic_Speaker   = new pictureBox("header_Speaker");    // loudspeaker symbol
+    textbox*    txt_Volume    = new textbox("header_Volume");        // volume
+    pictureBox* pic_RSSID     = new pictureBox("header_RSSID");      // RSSID symbol
+    timeString* m_timeStringObject  = NULL;
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -4173,9 +5719,10 @@ private:
     uint32_t    m_bgColor = TFT_BLACK;
     char*       m_name = NULL;
     char*       m_item = NULL;
-    char        m_time[10] = {0};
+    char        m_time[10] = "00:00:00";
     bool        m_enabled = false;
     bool        m_clicked = false;
+    bool        m_speakerOn = false;
     bool        m_backgroundTransparency = false;
     const char  m_rssiSymbol[5][18]     = {"/common/RSSI0.png", "/common/RSSI1.png", "/common/RSSI2.png", "/common/RSSI3.png", "/common/RSSI4.png"};
     const char  m_speakerSymbol[2][25]  = {"/common/Speaker_off.png", "/common/Speaker_on.png"};
@@ -4184,47 +5731,26 @@ private:
     uint16_t    m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t    m_timeColor = TFT_GREENYELLOW;
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 140;
-    uint16_t    m_speaker_symbol_x =165;
-    uint16_t    m_speaker_symbol_w = 26;
-    uint8_t     m_speaker_symbol_offset_y = 0;
-    uint16_t    m_volume_x = 195;
-    uint16_t    m_volume_w = 26;
-    uint16_t    m_time_x = 260;
-    uint16_t    m_time_w = 60;
-    uint8_t     m_time_pos[8] = {0, 9, 18, 21, 30, 39, 42, 51};  // display 320x240
-    uint8_t     m_time_ch_w = 9;
-    uint16_t    m_rssiSymbol_x = 225;
-    uint16_t    m_rssiSymbol_w = 27;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 165; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 165; uint16_t w =  30; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 25 x 20 px
+    struct w_v  {uint16_t x = 195; uint16_t w =  30; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 225; uint16_t w =  35; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 27 x 20 px
+    struct w_t  {uint16_t x = 260; uint16_t w =  60; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 240;
-    uint16_t    m_speaker_symbol_x = 240;
-    uint16_t    m_speaker_symbol_w = 38;
-    uint8_t     m_speaker_symbol_offset_y = 0;
-    uint16_t    m_volume_x = 285;
-    uint16_t    m_volume_w = 40;
-    uint8_t     m_time_pos[8] = {7, 20, 33, 40, 53, 66, 73, 86}; // display 480x320
-    uint8_t     m_time_ch_w = 13;
-    uint16_t    m_rssiSymbol_x = 335;
-    uint16_t    m_rssiSymbol_w = 39;
-    uint16_t    m_time_x = 380;
-    uint16_t    m_time_w = 100;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 240; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 240; uint16_t w =  45; uint8_t pl =  3; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 38 x 30 px
+    struct w_v  {uint16_t x = 285; uint16_t w =  50; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 335; uint16_t w =  45; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 39 x 30 px
+    struct w_t  {uint16_t x = 380; uint16_t w = 100; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #else // 800 x 480px
-    uint16_t    m_item_x = 0;
-    uint16_t    m_item_w = 400;
-    uint16_t    m_speaker_symbol_x = 400;
-    uint16_t    m_speaker_symbol_w = 60;
-    uint8_t     m_speaker_symbol_offset_y = 2;
-    uint16_t    m_volume_x = 470;
-    uint16_t    m_volume_w = 60;
-    uint8_t     m_time_pos[8] = {10, 30, 50, 60, 80, 100, 110, 130}; // display 800x480
-    uint8_t     m_time_ch_w = 20;
-    uint16_t    m_rssiSymbol_x = 560;
-    uint16_t    m_rssiSymbol_w = 80;
-    uint16_t    m_time_x = 640;
-    uint16_t    m_time_w = 160;
+    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    struct w_i  {uint16_t x =   0; uint16_t w = 400; uint8_t pl =  5; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Item;      // Radio, Player, Clock...
+    struct w_l  {uint16_t x = 400; uint16_t w =  60; uint8_t pl =  1; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 57 x 46 px
+    struct w_v  {uint16_t x = 460; uint16_t w = 100; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
+    struct w_r  {uint16_t x = 560; uint16_t w =  80; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 64 x 48 px
+    struct w_t  {uint16_t x = 640; uint16_t w = 140; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
@@ -4233,17 +5759,33 @@ public:
         else     m_name = x_ps_strdup("displayHeader");
         m_bgColor = TFT_BLACK;
         m_fontSize = fontSize;
+        m_timeStringObject  = new timeString("timeString", m_fontSize);
     }
     ~displayHeader(){
         x_ps_free(&m_name);
         x_ps_free(&m_item);
+        delete txt_Item;
+        delete pic_Speaker;
+        delete txt_Volume;
+        delete pic_RSSID;
+        delete m_timeStringObject;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
         m_h = h;
-     }
+        txt_Item->begin(          s_Item.x,    m_y, s_Item.w,    m_h, s_Item.pl,    s_Item.pr,    s_Item.pt,    s_Item.pb);
+        pic_Speaker->begin(       s_Speaker.x, m_y, s_Speaker.w, m_h, s_Speaker.pl, s_Speaker.pr, s_Speaker.pt, s_Speaker.pb);
+        txt_Volume->begin(        s_Volume.x,  m_y, s_Volume.w,  m_h, s_Volume.pl,  s_Volume.pr,  s_Volume.pt,  s_Volume.pb);
+        pic_RSSID->begin(         s_RSSID.x,   m_y, s_RSSID.w,   m_h, s_RSSID.pl,   s_RSSID.pr,   s_RSSID.pt,   s_RSSID.pb);
+        m_timeStringObject->begin(s_time.x,    m_y, s_time.w,    m_h, s_time.pl,    s_time.pr,    s_time.pt,    s_time.pb);
+
+        txt_Item->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);   txt_Item->setTextColor(m_itemColor); txt_Item->setFont(m_fontSize); // 0 -> auto
+        pic_Speaker->setPicturePath(m_speakerSymbol[0]);
+        txt_Volume->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); txt_Volume->setFont(m_fontSize); // 0 -> auto
+        pic_RSSID->setPicturePath(m_rssiSymbol[0]);
+    }
     const char* getName(){
         return m_name;
     }
@@ -4252,14 +5794,16 @@ public:
     }
     void show(bool transparency = false){
         m_backgroundTransparency = transparency;
+        m_timeStringObject->show(m_backgroundTransparency, false);
         m_enabled = true;
         m_clicked = false;
         m_old_rssi = -1;
         if(m_item) updateItem(m_item);
         else       updateItem("");
+        speakerOnOff(m_speakerOn);
         updateVolume(m_volume);
         updateRSSI(m_rssi);
-        updateTime("        ", true);
+        updateTime(m_time, true);
     }
     void hide(){
         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
@@ -4276,50 +5820,32 @@ public:
     }
     void updateItem(const char* hl_item){// radio, clock, audioplayer...
         if(!m_enabled) return;
-        if(!hl_item) log_e("hl_item is NULL");
+        if(!hl_item) {log_e("hl_item is NULL"); return;}
         if(m_item && !strcmp(hl_item, m_item)) return; // nothing to do
-        char* tmp = strdup(hl_item);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_itemColor);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_item_x, m_y, m_item_w, m_h);
-        }
-        else{
-            tft.fillRect(m_item_x, m_y, m_item_w, m_h, m_bgColor);
-        }
-        tft.writeText(hl_item, m_item_x, m_y, m_item_w, m_h);
         x_ps_free(&m_item);
-        m_item = strdup(tmp);
-        x_ps_free(&tmp);
-        xSemaphoreGive(mutex_display);
+        m_item = strdup(hl_item);
+        txt_Item->setText(hl_item);
+        txt_Item->show(m_backgroundTransparency, false);
     }
     void setItemColor(uint16_t itemColor){
         m_itemColor = itemColor;
+        txt_Item->setTextColor(m_itemColor);
     }
 
     void speakerOnOff(bool on){
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y, m_speaker_symbol_w, m_h);
-        }
-        drawImage(m_speakerSymbol[!on], m_speaker_symbol_x, m_y + m_speaker_symbol_offset_y);
+        m_speakerOn = on;
+        if(!m_enabled) return;
+        pic_Speaker->setPicturePath(m_speakerSymbol[m_speakerOn]);
+        pic_Speaker->show(m_backgroundTransparency, false);
     }
     void updateVolume(uint8_t vol){
         m_volume = vol;
         if(!m_enabled) return;
         char buff[15];
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_volumeColor);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_volume_x, m_y, m_volume_w, m_h);
-        }
-        else{
-            tft.fillRect(m_volume_x, m_y, m_volume_w, m_h, m_bgColor);
-        }
         itoa(m_volume, buff, 10);
-        tft.writeText(buff, m_volume_x, m_y, m_volume_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
-        xSemaphoreGive(mutex_display);
+        txt_Volume->setTextColor(m_volumeColor);
+        txt_Volume->setText(buff);
+        txt_Volume->show(m_backgroundTransparency, false);
     }
 
     void updateRSSI(int8_t rssi, bool show = false){
@@ -4343,50 +5869,18 @@ public:
             if(m_enabled) show = true;
         }
         if(show) {
-            xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_rssiSymbol_x, m_y, m_rssiSymbol_w, m_h);
-        }
-            drawImage(m_rssiSymbol[new_rssi], m_rssiSymbol_x, m_y);
-            xSemaphoreGive(mutex_display);
+            pic_RSSID->setPicturePath(m_rssiSymbol[new_rssi]);
+            pic_RSSID->show(m_backgroundTransparency, false);
         }
     }
     void updateTime(const char* hl_time, bool complete = true){
         if(!m_enabled) return;
         memcpy(m_time, hl_time, 8); // hhmmss
-        static char oldtime[8] = {255}; // hhmmss
-        uint8_t*    pos = NULL;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_timeColor);
-        if(complete == true) {
-            if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_time_x, m_y, m_time_w, m_h);
-            }
-            else{
-                tft.fillRect(m_time_x, m_y, m_time_w, m_h, m_bgColor);
-            }
-            for(uint8_t i = 0; i < 8; i++) { oldtime[i] = 255; }
-        }
-        for(uint8_t i = 0; i < 8; i++) {
-            if(oldtime[i] != m_time[i]) {
-                char ch[2] = {0, 0};
-                ch[0] = m_time[i];
-                pos = m_time_pos;
-                if(m_backgroundTransparency){
-                    tft.copyFramebuffer(1, 0, m_time_x + pos[i], m_y, m_time_ch_w, m_h);
-                }
-                else{
-                    tft.fillRect(m_time_x + pos[i], m_y, m_time_ch_w, m_h, m_bgColor);
-                }
-                tft.writeText(ch, m_time_x + pos[i], m_y, m_time_ch_w, m_h, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true);
-                oldtime[i] = m_time[i];
-            }
-        }
-        xSemaphoreGive(mutex_display);
+        m_timeStringObject->updateTime(m_time, false);
     }
     void setTimeColor(uint16_t timeColor){
         m_timeColor = timeColor;
+        m_timeStringObject->setTextColor(m_timeColor);
         updateTime(m_time, true);
     }
     bool positionXY(uint16_t x, uint16_t y){
@@ -4409,7 +5903,14 @@ public:
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class displayFooter : public RegisterTable {
-private:
+  private:
+    pictureBox* pic_Antenna   = new pictureBox("footer_Antenna");   // antenna symbol
+    textbox*    txt_StaNr     = new textbox("footer_StaNr");        // station number
+    pictureBox* pic_Flag      = new pictureBox("footer_Flag");      // flag symbol
+    pictureBox* pic_Hourglass = new pictureBox("footer_Hourglass"); // hourglass symbol
+    textbox*    txt_OffTimer  = new textbox("footer_OffTimer");     // off timer
+    textbox*    txt_BitRate   = new textbox("footer_BitRate");      // bit rate
+    textbox*    txt_IpAddr    = new textbox("footer_IPaddr");       // ip address
     int16_t     m_x = 0;
     int16_t     m_y = 0;
     int16_t     m_w = 0;
@@ -4433,41 +5934,35 @@ private:
     const char  m_stationSymbol[22]     = "/common/Antenna.png";
     const char  m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 25, m_staNr_w = 32;
-    uint16_t    m_flag_x = 57;
-    uint16_t    m_flag_w = 40;
-    uint16_t    m_flag_h = 20;
-    uint16_t    m_offTimerSymbol_x = 100;
-    uint16_t    m_offTimerSymbol_offset_y = 0;
-    uint16_t    m_offTimerSymbol_w = 20;
-    uint16_t    m_offTimerNr_x = 122, m_offTimerNr_w = 35;
-    uint16_t    m_bitRate_x = 158, m_bitRate_w = 42;
-    uint16_t    m_ipAddr_x = 200, m_ipAddr_w = 120;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   0; uint16_t w =  25; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 19 x 20 px
+    struct w_s  {uint16_t x =  25; uint16_t w =  32; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x =  57; uint16_t w =  40; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Flag;      // Flags:  33...40 x 20 px
+    struct w_h  {uint16_t x = 100; uint16_t w =  20; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   16 x 20 px
+    struct w_o  {uint16_t x = 122; uint16_t w =  35; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 158; uint16_t w =  42; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 200; uint16_t w = 120; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    uint16_t    m_antennaSymbol_x = 0;
-    uint16_t    m_staNr_x = 30, m_staNr_w = 50;
-    uint16_t    m_flag_x = 80;
-    uint16_t    m_flag_w = 48;
-    uint16_t    m_flag_h = 24;
-    uint16_t    m_offTimerSymbol_x = 132;
-    uint16_t    m_offTimerSymbol_offset_y = 0;
-    uint16_t    m_offTimerSymbol_w = 24;
-    uint16_t    m_offTimerNr_x = 160, m_offTimerNr_w = 54;
-    uint16_t    m_bitRate_x = 214, m_bitRate_w = 66;
-    uint16_t    m_ipAddr_x = 280, m_ipAddr_w = 200;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   1; uint16_t w =  30; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 29 x 30 px
+    struct w_s  {uint16_t x =  30; uint16_t w =  50; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x =  80; uint16_t w =  48; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 3; uint8_t pb = 0;} const s_Flag;      // Flags:  40...48 x 24 px
+    struct w_h  {uint16_t x = 132; uint16_t w =  24; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   23 x 30 px
+    struct w_o  {uint16_t x = 160; uint16_t w =  54; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 214; uint16_t w =  66; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 280; uint16_t w = 200; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #else // 800 x 480px
-    uint16_t    m_antennaSymbol_x = 3;
-    uint16_t    m_staNr_x = 58, m_staNr_w = 67;
-    uint16_t    m_flag_x = 125;
-    uint16_t    m_flag_w = 80;
-    uint16_t    m_flag_h = 40;
-    uint16_t    m_offTimerSymbol_x = 225;
-    uint16_t    m_offTimerSymbol_offset_y = 2;
-    uint16_t    m_offTimerSymbol_w = 40;
-    uint16_t    m_offTimerNr_x = 265, m_offTimerNr_w = 75;
-    uint16_t    m_bitRate_x = 340, m_bitRate_w = 110;
-    uint16_t    m_ipAddr_x = 450, m_ipAddr_w = 350;
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a  {uint16_t x =   0; uint16_t w =  51; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_Antenna;   // Antenna.png: 47 x 48 px
+    struct w_s  {uint16_t x =  51; uint16_t w =  84; uint8_t pl =  5; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_StaNr;
+    struct w_f  {uint16_t x = 135; uint16_t w =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 5; uint8_t pb = 0;} const s_Flag;      // Flags:  60...80 x 40 px
+    struct w_h  {uint16_t x = 225; uint16_t w =  40; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 3; uint8_t pb = 0;} const s_Hourglass; // Hourglass:   35 x 44 px
+    struct w_o  {uint16_t x = 265; uint16_t w =  75; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_OffTimer;
+    struct w_b  {uint16_t x = 340; uint16_t w = 110; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_BitRate;
+    struct w_i  {uint16_t x = 450; uint16_t w = 350; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #endif
 public:
     displayFooter(const char* name, uint8_t fontSize){
@@ -4480,12 +5975,32 @@ public:
     ~displayFooter(){
         x_ps_free(&m_name);
         x_ps_free(&m_ipAddr);
+        delete pic_Antenna;
+        delete txt_StaNr;
+        delete pic_Flag;
+        delete pic_Hourglass;
+        delete txt_OffTimer;
+        delete txt_BitRate;
+        delete txt_IpAddr;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h){
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w;
         m_h = h;
+        pic_Antenna->begin(  s_Antenna.x,   m_y, s_Antenna.w,   m_h, s_Antenna.pl,   s_Antenna.pr,   s_Antenna.pt,   s_Antenna.pb);
+        txt_StaNr->begin(    s_StaNr.x,     m_y, s_StaNr.w,     m_h, s_StaNr.pl,     s_StaNr.pr,     s_StaNr.pt,     s_StaNr.pb);
+        pic_Flag->begin(     s_Flag.x,      m_y, s_Flag.w,      m_h, s_Flag.pl,      s_Flag.pr,      s_Flag.pt,      s_Flag.pb);
+        pic_Hourglass->begin(s_Hourglass.x, m_y, s_Hourglass.w, m_h, s_Hourglass.pl, s_Hourglass.pr, s_Hourglass.pt, s_Hourglass.pb);
+        txt_OffTimer->begin( s_OffTimer.x,  m_y, s_OffTimer.w,  m_h, s_OffTimer.pl,  s_OffTimer.pr,  s_OffTimer.pt,  s_OffTimer.pb);
+        txt_BitRate->begin(  s_BitRate.x,   m_y, s_BitRate.w,   m_h, s_BitRate.pl,   s_BitRate.pr,   s_BitRate.pt,   s_BitRate.pb);
+        txt_IpAddr->begin(   s_IPaddr.x,    m_y, s_IPaddr.w,    m_h, s_IPaddr.pl,    s_IPaddr.pr,    s_IPaddr.pt,    s_IPaddr.pb);
+
+        txt_StaNr->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);     txt_StaNr->setTextColor(m_stationColor); txt_StaNr->setFont(m_fontSize); // 0 -> auto
+        txt_OffTimer->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_OffTimer->setFont(m_fontSize); // 0 -> auto
+        txt_BitRate->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BitRate->setTextColor(m_bitRateColor); txt_BitRate->setBorderColor(m_bitRateColor); txt_BitRate->setBorderWidth(1); txt_BitRate->setFont(m_fontSize);  // 0 -> auto
+        txt_IpAddr->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);  txt_IpAddr->setTextColor(m_ipAddrColor); txt_IpAddr->setFont(m_fontSize);   // 0 -> auto
+        pic_Antenna->setPicturePath(m_stationSymbol);
     }
     const char* getName(){
         return m_name;
@@ -4497,9 +6012,7 @@ public:
         m_backgroundTransparency = transparency;
         m_enabled = true;
         m_clicked = false;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        drawImage(m_stationSymbol, m_antennaSymbol_x, m_y);
-        xSemaphoreGive(mutex_display);
+        pic_Antenna->show(m_backgroundTransparency, false);
         updateStation(m_staNr);
         updateOffTime(m_offTime);
         updateBitRate(m_bitRate);
@@ -4519,87 +6032,61 @@ public:
     void setBGcolor(uint32_t color){
         m_bgColor = color;
     }
-    void updateStation(uint16_t staNr){// radio, clock, audioplayer...
+    void updateStation(uint16_t staNr){
         m_staNr = staNr;
-        if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_staNr_x, m_y, m_staNr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_staNr_x, m_y, m_staNr_w, m_h, m_bgColor);
-        }
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_stationColor);
         char buff[10];
-        sprintf(buff, "%03d", staNr);
-        tft.writeText(buff, m_staNr_x, m_y, m_staNr_w, m_h);
-        xSemaphoreGive(mutex_display);
+        sprintf(buff, "%03d", m_staNr);
+        txt_StaNr->setText(buff);   txt_StaNr->show(m_backgroundTransparency, false);
     }
     void setStationNrColor(uint16_t stationColor){
         m_stationColor = stationColor;
     }
     void updateFlag(const char* flag){
-        if(!m_enabled) return;
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h);
+        if(flag){
+            pic_Flag->setAlternativPicturePath("/flags/unknown.jpg");
+            pic_Flag->setPicturePath(flag);
+            pic_Flag->show(m_backgroundTransparency, false);
         }
         else{
-            tft.fillRect(m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_flag_h, m_bgColor);
+            pic_Flag->hide();
         }
-        if(flag) tft.drawJpgFile(SD_MMC, flag, m_flag_x, m_y + (m_h - m_flag_h) / 2, m_flag_w, m_h);
-        xSemaphoreGive(mutex_display);
     }
     void updateOffTime(uint16_t offTime){
         m_offTime = offTime;
         if(!m_enabled) return;
         char buff[15];
         sprintf(buff, "%d:%02d", m_offTime / 60, m_offTime % 60);
-        tft.setFont(m_fontSize);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
         if(m_offTime){
-            tft.setTextColor(TFT_RED);
-            if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_offTimerSymbol_x, m_y, m_offTimerSymbol_w, m_h);
-            }
-            drawImage(m_hourGlassymbol[1], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
+            txt_OffTimer->setTextColor(TFT_RED);
+            txt_OffTimer->setText(buff);
+            txt_OffTimer->show(m_backgroundTransparency, false);
+            pic_Hourglass->setPicturePath(m_hourGlassymbol[1]);
+            pic_Hourglass->show(m_backgroundTransparency, false);
         }
         else{
-            tft.setTextColor(TFT_DEEPSKYBLUE);
-            drawImage(m_hourGlassymbol[0], m_offTimerSymbol_x, m_y + m_offTimerSymbol_offset_y);
+            txt_OffTimer->setTextColor(TFT_DEEPSKYBLUE);
+            txt_OffTimer->setText(buff);
+            txt_OffTimer->show(m_backgroundTransparency, false);
+            pic_Hourglass->setPicturePath(m_hourGlassymbol[0]);
+            pic_Hourglass->show(m_backgroundTransparency, false);
         }
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_offTimerNr_x, m_y, m_offTimerNr_w, m_h, m_bgColor);
-        }
-        tft.writeText(buff, m_offTimerNr_x, m_y, m_offTimerNr_w, m_h);
-        xSemaphoreGive(mutex_display);
     }
     void updateTC(uint8_t timeCounter){
         m_timeCounter = timeCounter;
         if(!m_enabled) return;
         if(!m_timeCounter) {
-            // if(m_backgroundTransparency){
-            //     tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
-            // }
-            // else {
-            //     tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
-            // }
             updateBitRate(m_bitRate);
         }
         else{
-            uint16_t x0   = m_bitRate_x;
-            uint16_t x1x2 = round(m_bitRate_x + ((float)((m_bitRate_w) / 10) * timeCounter)) - 1;
+            uint16_t x0   = s_BitRate.x;
+            uint16_t x1x2 = round(s_BitRate.x + ((float)((s_BitRate.w) / 10) * timeCounter)) - 1;
             uint16_t y0y1 = m_y + m_h - 5;
             uint16_t y2   = round((m_y  + m_h - 5) - ((float)(m_h - 6) / 10) * timeCounter);
             if(m_backgroundTransparency){
-                tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
+                tft.copyFramebuffer(1, 0, s_BitRate.x, m_y, s_BitRate.w, m_h);
             }
             else{
-                tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
+                tft.fillRect(s_BitRate.x, m_y, s_BitRate.w, m_h, m_bgColor);
             }
             tft.fillTriangle(x0, y0y1, x1x2, y0y1, x1x2, y2, TFT_RED);
         }
@@ -4617,21 +6104,12 @@ public:
             sbr[3] = 'M';
             sbr[4] = '\0';
         }
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_bitRate_x, m_y, m_bitRate_w, m_h);
-        }
-        else{
-            tft.fillRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bgColor);
-        }
-        tft.drawRect(m_bitRate_x, m_y, m_bitRate_w, m_h, m_bitRateColor);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_bitRateColor);
-        tft.writeText(sbr, m_bitRate_x, m_y, m_bitRate_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        xSemaphoreGive(mutex_display);
+        txt_BitRate->setText(sbr); txt_BitRate->show(m_backgroundTransparency, false);
     }
     void setBitRateColor(uint16_t bitRateColor){
         m_bitRateColor = bitRateColor;
+        txt_BitRate->setBorderColor(m_bitRateColor);
+        txt_BitRate->setTextColor(m_bitRateColor);
     }
     void setIpAddr(const char* ipAddr){
         if(!ipAddr)return;
@@ -4641,20 +6119,11 @@ public:
     void writeIpAddr(const char* ipAddr){
         char myIP[30] = "IP:";
         strcat(myIP, ipAddr);
-        tft.setFont(m_fontSize);
-        tft.setTextColor(m_ipAddrColor);
-        xSemaphoreTake(mutex_display, portMAX_DELAY);
-        if(m_backgroundTransparency){
-            tft.copyFramebuffer(1, 0, m_ipAddr_x, m_y, m_ipAddr_w, m_h);
-        }
-        else{
-            tft.fillRect(m_ipAddr_x, m_y, m_ipAddr_w, m_h, m_bgColor);
-        }
-        tft.writeText(myIP, m_ipAddr_x, m_y, m_ipAddr_w, m_h, TFT_ALIGN_CENTER, TFT_ALIGN_CENTER, true, true, true);
-        xSemaphoreGive(mutex_display);
+        txt_IpAddr->setText(myIP, true, true); txt_IpAddr->show(m_backgroundTransparency, false);
     }
     void setIpAddrColor(uint16_t ipAddrColor){
         m_ipAddrColor = ipAddrColor;
+        txt_IpAddr->setTextColor(m_ipAddrColor);
     }
     bool positionXY(uint16_t x, uint16_t y){
         if(x < m_x) return false;
@@ -4663,8 +6132,14 @@ public:
         if(y > m_y + m_h) return false;
         if(m_enabled) m_clicked = true;
         uint8_t pos = 0;
-    //    if(x >= m_rssiSymbol_x && x <= m_rssiSymbol_x + m_rssiSymbol_w) pos = 3; // RSSI or TC
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, pos);
+        pic_Antenna->positionXY(x, y); // transfer the position to the graphic objects
+        txt_StaNr->positionXY(x, y);
+        pic_Flag->positionXY(x, y);
+        pic_Hourglass->positionXY(x, y);
+        txt_OffTimer->positionXY(x, y);
+        txt_BitRate->positionXY(x, y);
+        txt_IpAddr->positionXY(x, y);
         if(!m_enabled) return false;
         return true;
     }
@@ -4680,62 +6155,73 @@ private:
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline void GetRunTimeStats( char *pcWriteBuffer ){
-    // TaskStatus_t *pxTaskStatusArray;
-    // volatile UBaseType_t uxArraySize, x;
-    // uint32_t ulTotalRunTime, ulStatsAsPercentage;
-    // char leftSpace[] = "             ";
+    TaskStatus_t *pxTaskStatusArray;
+    UBaseType_t uxArraySize;
+    uint8_t ulStatsAsPercentage;
+    uint64_t ulTotalRunTime;
+    char leftSpace[] = "             |";
 
-    // // Make sure the write buffer does not contain a string.
-    // *pcWriteBuffer = 0x00;
+    // Take a snapshot of the number of tasks in case it changes while this function is executing.
+    uxArraySize = uxTaskGetNumberOfTasks();
 
-    // // Take a snapshot of the number of tasks in case it changes while this function is executing.
-    // uxArraySize = uxTaskGetNumberOfTasks();
+    // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
+    pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
 
-    // // Allocate a TaskStatus_t structure for each task.  An array could be allocated statically at compile time.
-    // pxTaskStatusArray = (TaskStatus_t*)pvPortMalloc( uxArraySize * sizeof( TaskStatus_t ) );
+    if( pxTaskStatusArray != NULL ) {
+    // Generate raw status information about each task.
+        uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime );
 
-    // if( pxTaskStatusArray != NULL ) {
-    // // Generate raw status information about each task.
-    //     uxArraySize = uxTaskGetSystemState( pxTaskStatusArray, (UBaseType_t)uxArraySize, &ulTotalRunTime );
+        // For percentage calculations.
+        ulTotalRunTime /= 100UL;
 
-    //     // For percentage calculations.
-    //     ulTotalRunTime /= 100UL;
+        char* tmpBuff = x_ps_malloc(100);
+        strcpy(pcWriteBuffer, leftSpace);
+        strcat(pcWriteBuffer, ANSI_ESC_YELLOW " TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
+        strcat(pcWriteBuffer, leftSpace);
+        strcat(pcWriteBuffer,                 "---------------------+----------------+-----------------+------+-------|\n");
 
-    //     char* tmpBuff = (char*) malloc(100);
-    //     strcpy(pcWriteBuffer, leftSpace);
-    //     strcat(pcWriteBuffer, ANSI_ESC_YELLOW "TASKNAME            | RUNTIMECOUNTER | TOTALRUNTIME[%] | CORE | PRIO  |\n");
-    //     strcat(pcWriteBuffer, leftSpace);
-    //     strcat(pcWriteBuffer,                 "--------------------+----------------+-----------------+------+-------|\n");
+        // Avoid divide by zero errors.
+        if(ulTotalRunTime > 0){
+            // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
+            for(int x = 0; x < uxArraySize; x++ ) {
+                // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
+                // ulTotalRunTimeDiv100 has already been divided by 100.
+                ulStatsAsPercentage = pxTaskStatusArray[x].ulRunTimeCounter / ulTotalRunTime;
+                memset(tmpBuff, 0x20, 100);
+                memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
+                tmpBuff[20] = '|';
+                int8_t  core = (pxTaskStatusArray[x].xCoreID);
+                uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
+                if(ulStatsAsPercentage){
+                    sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
+                }
+                else{
+                    sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4i  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, core, prio);
+                }
+                uint8_t i = 23; while(tmpBuff[i] == '0') {tmpBuff[i] = ' '; i++;}
+                if(tmpBuff[45] == '0') tmpBuff[45] = ' ';
+                strcat(pcWriteBuffer, leftSpace);
+                strcat(pcWriteBuffer, " ");
+                strcat(pcWriteBuffer, tmpBuff);
+                strcat(pcWriteBuffer, "\n");
+            }
+            x_ps_free(&tmpBuff);
+           }
+        // The array is no longer needed, free the memory it consumes.
+        vPortFree( pxTaskStatusArray );
 
-    //     // Avoid divide by zero errors.
-    //     if(ulTotalRunTime > 0){
-    //         // For each populated position in the pxTaskStatusArray array, format the raw data as human readable ASCII data
-    //         for( x = 0; x < uxArraySize; x++ ) {
-    //             // What percentage of the total run time has the task used? This will always be rounded down to the nearest integer.
-    //             // ulTotalRunTimeDiv100 has already been divided by 100.
-    //             ulStatsAsPercentage = pxTaskStatusArray[ x ].ulRunTimeCounter / ulTotalRunTime;
-    //             memset(tmpBuff, 0x20, 100);
-    //             memcpy(tmpBuff, pxTaskStatusArray[x].pcTaskName, strlen(pxTaskStatusArray[x].pcTaskName));
-    //             tmpBuff[20] = '|';
-    //             uint8_t core = (pxTaskStatusArray[x].xCoreID);
-    //             uint8_t prio = (pxTaskStatusArray[x].uxBasePriority);
-    //             if(ulStatsAsPercentage){
-    //                 sprintf(tmpBuff + 23, "%12lu  |       %02lu%%       |%4d  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, (long unsigned int)ulStatsAsPercentage, core, prio);
-    //             }
-    //             else{
-    //                 sprintf(tmpBuff + 23, "%12lu  |       <1%%       |%4d  |%5d  |", (long unsigned int)pxTaskStatusArray[ x ].ulRunTimeCounter, core, prio);
-    //             }
-    //             uint8_t i = 23; while(tmpBuff[i] == '0') {tmpBuff[i] = ' '; i++;}
-    //             if(tmpBuff[45] == '0') tmpBuff[45] = ' ';
-    //             strcat(pcWriteBuffer, leftSpace);
-    //             strcat(pcWriteBuffer, tmpBuff);
-    //             strcat(pcWriteBuffer, "\n");
-    //         }
-    //         free(tmpBuff);
-    //        }
-    //     // The array is no longer needed, free the memory it consumes.
-    //     vPortFree( pxTaskStatusArray );
-    // }
+        #if TFT_CONTROLLER == 7
+            extern uint64_t _totalRuntime;
+            tmpBuff = x_ps_malloc(130);
+            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            strcat(tmpBuff, "                                   ");
+            tmpBuff[90] = '\0';
+            strcat(tmpBuff, ANSI_ESC_YELLOW "|\n");
+            strcat(pcWriteBuffer, tmpBuff);
+            x_ps_free(&tmpBuff);
+        #endif
+        strcat(pcWriteBuffer, "             |---------------------+----------------+-----------------+------+-------|\n");
+    }
 }
 
 const char ir_buttons_json[] =

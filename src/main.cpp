@@ -1,18 +1,19 @@
 #include "common.h"
-// clang-format off
+// clang-format off 🟢🟡🔴
 /*****************************************************************************************************************************************************
-    MiniWebRadio -- Webradio receiver for ESP32
+    MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7 - Feb 19/2025                                                                                                                   ";
+    Version 3.7-rc1.s   - Apr 11/2025                                                                                                               ";
 
-/*  2.8" color display (320x240px) with controller ILI9341 or HX8347D (SPI) or
-    3.5" color display (480x320px) with controller ILI9486 or ILI9488 (SPI)
-
+/*  display (320x240px) with controller ILI9341 or
+    display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
+    display (800x480px) (RGB-HMI) with TP controller GT911 (I2C)
 
     SD_MMC is mandatory
     IR remote is optional
     BT Transmitter is optional
+    BH1750 (lightsensor) is optional
 
 *****************************************************************************************************************************************************/
 
@@ -21,13 +22,13 @@
 // AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
 // CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE
 
-// clang-format on
+// clang-format on  🟢🟡🔴
 
 SET_LOOP_TASK_STACK_SIZE(10 * 1024);
 
 // global variables
 
-char _hl_item[16][40]{  "",                 // none
+char _hl_item[18][40]{  "",                 // none
                         "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
                         "Audio Player",     // "** цифрово́й плеер **
                         "DLNA",             // Digital Living Network Alliance
@@ -42,7 +43,8 @@ char _hl_item[16][40]{  "",                 // none
                         "Equalizer",
                         "Settings",
                         "IR Settings",
-                        ""
+                        "",
+                        "WiFi Settings",     //
                         ""};
 
 settings_t              _settings;
@@ -105,6 +107,7 @@ uint32_t                _audioFileSize = 0;
 uint32_t                _media_downloadPort = 0;
 uint32_t                _audioCurrentTime = 0;
 uint32_t                _audioFileDuration = 0;
+uint64_t                _totalRuntime = 0; // total runtime in seconds since start
 uint8_t                 _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*             _pressBtn[8];
 const char*             _releaseBtn[8];
@@ -152,13 +155,11 @@ bool                    _f_newStationName = false;
 bool                    _f_newCommercial = false;
 bool                    _f_volBarVisible = false;
 bool                    _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
-bool                    _f_hpChanged = false;        // true, if HeadPhone is plugged or unplugged
 bool                    _f_timeAnnouncement = true;  // time announcement every full hour
 bool                    _f_playlistEnabled = false;
 bool                    _f_playlistNextFile = false;
 bool                    _f_logoUnknown = false;
 bool                    _f_pauseResume = false;
-bool                    _f_accessPoint = false;
 bool                    _f_SD_Upload = false;
 bool                    _f_PSRAMfound = false;
 bool                    _f_FFatFound = false;
@@ -181,11 +182,11 @@ bool                    _f_BTpower = false;
 bool                    _f_BTcurPowerState = false;
 bool                    _f_timeSpeech = false;
 bool                    _f_stationsChanged = false;
+bool                    _f_WiFiConnected = false;
 String                  _station = "";
 char*                   _stationName_air = NULL;
 String                  _homepage = "";
 String                  _filename = "";
-String                  _scannedNetworks = "";
 String                  _TZName = "Europe/Berlin";
 String                  _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String                  _media_downloadIP = "";
@@ -212,12 +213,8 @@ KCX_BT_Emitter      bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT
 TwoWire             i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire             i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750           BH1750(&i2cBusOne);     // create the sensor
+SPIClass            spiBus(FSPI);
 
-#if CONFIG_IDF_TARGET_ESP32
-    SPIClass spiBus(VSPI);
-#else  // TARGET ESP32-S3
-    SPIClass spiBus(FSPI);
-#endif
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI     tft(spiBus, TFT_CS);
@@ -229,17 +226,10 @@ TP_GT911    tp(&i2cBusOne);
 
 stationManagement   staMgnt(&_cur_station);
 
-#if DECODER == 2 // ac101
-AC101 dac(&i2cBusTwo);
-#endif
-#if DECODER == 3 // es8388
-ES8388 dac(&i2cBusTwo);
-#endif
-
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // ⏹⏹⏹⏹
-// clang-format off
+// clang-format off 
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -259,8 +249,8 @@ SemaphoreHandle_t mutex_display;
 
 const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 const uint8_t _listFontSize = 16;
-const uint8_t _headerFontSize = 16;
-const uint8_t _footerFontSize = 16;
+const uint8_t _headerFontSize = 0; //16; // 0 -> autoSize
+const uint8_t _footerFontSize = 0; //16; // 0 -> autoSize
 const uint8_t _bigNumbersFontSize = 156;
 const uint8_t _fileNumberFontSize = 21;
 // ------------------------------------------------------------------------------------------padding-left, padding-right, padding-top, padding-bottom
@@ -279,8 +269,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h = 
 struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 320; uint16_t h = 120;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock
-struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -288,14 +277,14 @@ struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h = 
 struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
 
 // derived structs
-struct w_b1 {uint16_t x = 20;                  uint16_t y = _sdrHP.y;  uint16_t w = _sdrHP.w;  uint16_t h = _sdrHP.h; } const _btnHP;
-struct w_b2 {uint16_t x = 20;                  uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
-struct w_b3 {uint16_t x = 20;                  uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
-struct w_b4 {uint16_t x = 20;                  uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
-struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 85;        uint16_t h = _sdrHP.h; } const _txtHP;
-struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 85;        uint16_t h = _sdrBP.h; } const _txtBP;
-struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 85;        uint16_t h = _sdrLP.h; } const _txtLP;
-struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 85;        uint16_t h = _sdrBAL.h;} const _txtBAL;
+struct w_b1 {uint16_t x = 10;                  uint16_t y = _sdrHP.y;  uint16_t w = _sdrHP.w;  uint16_t h = _sdrHP.h; } const _btnHP;
+struct w_b2 {uint16_t x = 10;                  uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
+struct w_b3 {uint16_t x = 10;                  uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
+struct w_b4 {uint16_t x = 10;                  uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
+struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 90;        uint16_t h = _sdrHP.h; } const _txtHP;
+struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 90;        uint16_t h = _sdrBP.h; } const _txtBP;
+struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 90;        uint16_t h = _sdrLP.h; } const _txtLP;
+struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 90;        uint16_t h = _sdrBAL.h;} const _txtBAL;
 
 uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
 uint16_t _sleeptimeYPos = 48;
@@ -328,8 +317,8 @@ const char _tftSize[2] = "s";
 
 const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 const uint8_t _listFontSize       = 21;
-const uint8_t _headerFontSize     = 21;
-const uint8_t _footerFontSize     = 21;
+const uint8_t _headerFontSize     = 0; //21; // 0 -> autoSize
+const uint8_t _footerFontSize     = 0; //21; // 0 -> autoSize
 const uint8_t _bigNumbersFontSize = 156;
 const uint8_t _fileNumberFontSize = 27;
 // -----------------------------------------------------------------------------------padding-left-right-top-bottom
@@ -348,8 +337,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h = 
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _sdrOvBtns;   // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 480; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBP;        // slider bandpass in equalizer
@@ -361,10 +349,10 @@ struct w_b1 {uint16_t x = 50;                  uint16_t y = _sdrHP.y;  uint16_t 
 struct w_b2 {uint16_t x = 50;                  uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
 struct w_b3 {uint16_t x = 50;                  uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
 struct w_b4 {uint16_t x = 50;                  uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
-struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 135;       uint16_t h = _sdrHP.h; } const _txtHP;
-struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 135;       uint16_t h = _sdrBP.h; } const _txtBP;
-struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 135;       uint16_t h = _sdrLP.h; } const _txtLP;
-struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 135;       uint16_t h = _sdrBAL.h;} const _txtBAL;
+struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 140;       uint16_t h = _sdrHP.h; } const _txtHP;
+struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 140;       uint16_t h = _sdrBP.h; } const _txtBP;
+struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 140;       uint16_t h = _sdrLP.h; } const _txtLP;
+struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 140;       uint16_t h = _sdrBAL.h;} const _txtBAL;
 
 uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
 uint16_t _sleeptimeYPos = 48;
@@ -407,7 +395,7 @@ struct w_l  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 190; uint16_t h = 
 struct w_n  {uint16_t x = 190; uint16_t y =  50; uint16_t w = 610; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station name
 struct w_e  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 190; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
 struct w_j  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 190; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  4; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    // e.g. 020/066 in the middle of the logo
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
+struct w_v  {uint16_t x = 200; uint16_t y =  73; uint16_t w = 258; uint16_t h = 144; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
 struct w_a  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 800; uint16_t h =  14; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
 struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
 struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 10; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
@@ -417,8 +405,7 @@ struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h = 
 struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
 struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
 struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_d  {uint16_t x =   0; uint16_t y =  80; uint16_t w = 800; uint16_t h = 260; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;
-struct w_y  {uint16_t x =   0; uint16_t y =  70; uint16_t w = 800; uint16_t h = 200; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winAlarm;
+struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
 struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
 struct w_s1 {uint16_t x = 200; uint16_t y =  53; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
 struct w_s2 {uint16_t x = 200; uint16_t y = 126; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
@@ -447,8 +434,8 @@ const char _tftSize[2] = "l";
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader", _headerFontSize);
-displayFooter dispFooter("dispFooter", _footerFontSize);
+displayHeader dispHeader("dispHeader", _headerFontSize); // 0 -> autoSize
+displayFooter dispFooter("dispFooter", _footerFontSize); // 0 -> autoSize
 numbersBox    volBox("volBox");
 uniList       myList("myList");
 // RADIO
@@ -486,17 +473,18 @@ progressbar   pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
 dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
-imgClock      clk_CL_green("clk_CL_green");
+imgClock24    clk_CL_24("clk_CL_24");
+imgClock12    clk_CL_12("clk_CL_12");
 button2state  btn_CL_mute("btn_CL_mute");
 button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
 slider        sdr_CL_volume("sdr_CL_volume");
 // ALARM
-alarmClock    clk_AL_red("clk_CL_green");
+alarmClock    clk_AL_red("clk_AL_red");
 button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
 button1state  btn_AL_ready("btn_AL_ready");
 // SETTINGS
 pictureBox    pic_SE_logo("pic_SE_logo");
-button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_radio("btn_SE_radio");
+button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
 // BRIGHTNESS
 button1state  btn_BR_ready("btn_BR_ready");
 pictureBox    pic_BR_logo("pic_BR_logo");
@@ -519,12 +507,14 @@ textbox       txt_BT_mode("txt_BT_mode");
 textbox       txt_BT_volume("txt_BT_volume");
 // IR_SETTINGS
 button1state  btn_IR_radio("btn_IR_radio");
+// WIFI_SETTINGS
+wifiSettings  cls_wifiSettings("wifiSettings", 2);
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-// clang-format off
+// clang-format off  🟢🟡🔴
 boolean defaultsettings(){
 
     if(!SD_MMC.exists("/ir_buttons.json")){  // if not found ir_buttons.json create a default file
@@ -626,9 +616,9 @@ boolean defaultsettings(){
     staMgnt.updateStationsList();
     return true;
 }
-// clang-format on
+// clang-format on  🟢🟡🔴
 
-// clang-format off
+// clang-format off  🟢🟡🔴
 void updateSettings(){
     if(!_settings.lastconnectedhost) _settings.lastconnectedhost= strdup("");
     if(!_settings.lastconnectedfile) _settings.lastconnectedfile= strdup("/audiofiles/");
@@ -784,21 +774,15 @@ void urldecode(char* str) {
 // clang-format off
 void timer100ms(){
     static uint16_t ms100 = 0;
-    static uint8_t semaphore = 0;
     _f_100ms = true;
     ms100 ++;
     if(!(ms100 % 10))   {
         _f_1sec  = true;
         _time_s = rtc.gettime_s();
         if(endsWith(_time_s, "59:53"))  _f_timeSpeech = true;
-        if(!semaphore) { _f_alarm = clk_CL_green.isAlarm(_alarmdays, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
-        if(_f_alarm)        {semaphore++;}
-        if(semaphore)       {semaphore++;}
-        if(semaphore >= 65) {semaphore = 0;}
     }
     if(!(ms100 % 100))  _f_10sec = true;
     if(!(ms100 % 600)) {_f_1min  = true; ms100 = 0;}
-
 }
 // clang-format on
 
@@ -892,7 +876,7 @@ void showLogoAndStationName(bool force) {
     memmove(SN_utf8, "/logo/", 6);
     strcat(SN_utf8, ".jpg");
     pic_RA_logo.setPicturePath(SN_utf8);
-    pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+    pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
     pic_RA_logo.show(true, false);
 exit:
     x_ps_free(&SN_utf8);
@@ -901,10 +885,10 @@ exit:
 void showFileLogo(uint8_t state) {
     String logo;
     if(state == RADIO) {
-        if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".jpg";
-        else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        if(endsWith(_stationURL, "m3u8")) logo = "/common/" + (String) "M3U8" + ".png";
+        else logo = "/common/" + (String)codecname[_cur_Codec] + ".png";
         pic_RA_logo.setPicturePath(logo.c_str());
-        pic_RA_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
         pic_RA_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
@@ -912,7 +896,7 @@ void showFileLogo(uint8_t state) {
     else if(state == DLNA) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
-        pic_DL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
         pic_DL_logo.show(true, false);
         webSrv.send("stationLogo=", logo);
         return;
@@ -920,16 +904,16 @@ void showFileLogo(uint8_t state) {
     if(state == PLAYER) { // _state PLAYER
         if(_cur_Codec == 0) logo = "/common/AudioPlayer.png";
         else if(_playerSubMenue == 0) logo = "/common/AudioPlayer.png";
-        else logo = "/common/" + (String)codecname[_cur_Codec] + ".jpg";
+        else logo = "/common/" + (String)codecname[_cur_Codec] + ".png";
         pic_PL_logo.setPicturePath(logo.c_str());
-        pic_PL_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_PL_logo.setAlternativPicturePath("/common/unknown.png");
         pic_PL_logo.show(true, false);
         return;
     }
     if(state == SETTINGS) {
         logo = "/common/Settings.png";
         pic_SE_logo.setPicturePath(logo.c_str());
-        pic_SE_logo.setAlternativPicturePath("/common/unknown.jpg");
+        pic_SE_logo.setAlternativPicturePath("/common/unknown.png");
         pic_SE_logo.show(true, false);
         return;
     }
@@ -1256,61 +1240,46 @@ exit:
 bool connectToWiFi() {
 
     char* line = x_ps_malloc(512);
-    uint16_t idx = 0;
-    wifiMulti.addAP(_SSID, _PW);                        // SSID and PW in code
-    SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", _SSID);
+    if(!line) { log_e("oom"); return false;}
 
-    if(pref.isKey("ap_ssid") && pref.isKey("ap_pw")) {  // exists?
-        String ap_ssid = pref.getString("ap_ssid", ""); // credentials from accesspoint
-        String ap_pw = pref.getString("ap_pw", "");
-        if(ap_ssid.length() > 0 && ap_pw.length() > 0) wifiMulti.addAP(ap_ssid.c_str(), ap_pw.c_str());
-        SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", ap_ssid.c_str());
-    }
+    // create nvs entries if they do not exist
+    if(!pref.isKey("wifiStr0")) pref.putString("wifiStr0", ""); // SSID + \t + PW
+    if(!pref.isKey("wifiStr1")) pref.putString("wifiStr1", "");
+    if(!pref.isKey("wifiStr2")) pref.putString("wifiStr2", "");
+    if(!pref.isKey("wifiStr3")) pref.putString("wifiStr3", "");
+    if(!pref.isKey("wifiStr4")) pref.putString("wifiStr4", "");
+    if(!pref.isKey("wifiStr5")) pref.putString("wifiStr5", "");
 
-    File file = SD_MMC.open("/networks.csv"); // try credentials given in "/networks.txt"
-    if(file) {                                // try to read from SD_MMC
-        while(file.available()) {
-            char emptyStr[1] = "";
-            char* s_ssid = emptyStr;
-            char* s_password = emptyStr;
-            char* s_info = emptyStr;
-            idx = file.readBytesUntil('\n', line, 512);     // read the line
-            if(idx == 0) break;
-            line[idx] = '\0';                               // terminate the line
-            if(line[0] == '*') continue;                    // ignore this, goto next line
-            if(line[0] == '\n') continue;                   // empty line
-            if(line[0] == ' ') continue;                    // space as first char
+    const char* SSID = _SSID;
+    const char* PW = _PW;
+    line[0] = '\0';
+    strcpy(line, SSID); strcat(line, "\t"); strcat(line, PW);
+    pref.putString("wifiStr0", line);
 
-            uint8_t p = 0;
-            uint16_t slen = strlen(line);
-            for(int16_t i = 0; i < slen; i++) {
-                if(line[i] == '\n') {                       // make LF ineffective
-                    line[i] = '\0';
-                    continue;
-                }
-                if(i == 0) s_ssid = line;                   // string at pos 0 is ssid
-                if(line[i] == '\t') {
-                    line[i] = '\0';
-                    if(p == 0) {s_password = line + i + 1;} // string after first tab is passwort (if available)
-                    if(p == 1) {    s_info = line + i + 1;} // string after second tab is info (if available)
-                    p++;
-                }
-            }
-            if(strlen(s_ssid) == 0) continue;               // ssid is empty
-        //    log_i("%s, %s, %s",  s_ssid, s_password, s_info);
-            wifiMulti.addAP(s_ssid, s_password);
-            SerialPrintfln("WiFI_info:   add SSID: " ANSI_ESC_CYAN "%s", s_ssid);
-            (void) s_info; // unused
+    for(int i = 0; i < 6; i++) {
+        line[0] = '\0'; // Move this line outside the switch statement
+        switch (i) {
+            case 0: strcpy(line,pref.getString("wifiStr0").c_str()); break;
+            case 1: strcpy(line,pref.getString("wifiStr1").c_str()); break;
+            case 2: strcpy(line,pref.getString("wifiStr2").c_str()); break;
+            case 3: strcpy(line,pref.getString("wifiStr3").c_str()); break;
+            case 4: strcpy(line,pref.getString("wifiStr4").c_str()); break;
+            case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
         }
-        file.close();
-        x_ps_free(&line);
+        if(strlen(line) < 5) continue;    // line is empty
+        int pos = indexOf(line, "\t", 0); // find first tab
+        if(pos < 0) continue;             // no tab found
+        line[pos] = '\0';                 // terminate ssid
+        char* ssid = line;                // ssid is the first part
+        char* pw = line + pos + 1;        // password is the second part
+
+        wifiMulti.addAP(ssid, pw); // SSID and PW in code"
+        char pass[64 * 4] = {0}; for(int j = 0; j < strlen(pw); j++) {strcat(pass, "🟢");}
+        SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
     }
-    /* int16_t n = WiFi.scanNetworks();
-    SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
-    for(int i = 0; i < n; i++){
-        SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-    } */
+
     wifiMulti.setStrictMode(true);
+    WiFi.mode(WIFI_STA);
     wifiMulti.run();
     if(WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   Connecting WiFi...");
@@ -1329,48 +1298,86 @@ bool connectToWiFi() {
         return false; // can't connect to any network
     }
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void setWiFiCredentials(const char* ssid, const char* password) {
+    if(!ssid || !password) return;
+    if(strlen(ssid) < 5 || strlen(password) < 5) return; // min length
 
-void openAccessPoint() { // if credentials are not correct open AP at 192.168.4.1
-    _f_accessPoint = true;
-    char buf[200];
-    int16_t n = 0, i = 0;
-    n = WiFi.scanNetworks();
-    while(n < 1){
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-        i++;
-        if(i == 8) break;
-    }
-    if(n == 0) {
-        SerialPrintfln("setup: ....  no WiFi networks found");
-        tft.setFont(_fonts[4]);
-        tft.setTextColor(TFT_YELLOW);
-        tft.fillScreen(TFT_BLACK);
-        sprintf(buf, "No WiFi networks found");
-        tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-        while(true) { vTaskDelay(10 / portTICK_PERIOD_MS); }
-    }
-    else {
-        SerialPrintfln("setup: ....  %d WiFi networks found", n);
-        for(int32_t i = 0; i < n; ++i) {
-            SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-            _scannedNetworks += WiFi.SSID(i) + '\n';
+    log_e("ssid %s pw %s", ssid, password);
+
+    char* line = x_ps_malloc(512);
+    int i = 0, state = 0;
+    if(!line) { log_e("oom"); goto exit; }
+
+    for(i = 0; i < 6; i++) {
+        line[0] = '\0'; // Move this line outside the switch statement
+        switch (i) {
+            case 0: strcpy(line,pref.getString("wifiStr0").c_str()); break;
+            case 1: strcpy(line,pref.getString("wifiStr1").c_str()); break;
+            case 2: strcpy(line,pref.getString("wifiStr2").c_str()); break;
+            case 3: strcpy(line,pref.getString("wifiStr3").c_str()); break;
+            case 4: strcpy(line,pref.getString("wifiStr4").c_str()); break;
+            case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
+        }
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
+            if(strlen(password) > 0) {
+                line[0] = '\0'; // clear line
+                strcat(line, ssid);
+                strcat(line, "\t");
+                strcat(line, password);
+                if(i == 0) {log_e("password can't changed, is hard coded"); state = 0;goto exit;}
+                if(i == 1) {pref.putString("wifiStr1", line); state = 1; goto exit;}
+                if(i == 2) {pref.putString("wifiStr2", line); state = 1; goto exit;}
+                if(i == 3) {pref.putString("wifiStr3", line); state = 1; goto exit;}
+                if(i == 4) {pref.putString("wifiStr4", line); state = 1; goto exit;}
+                if(i == 5) {pref.putString("wifiStr5", line); state = 1; goto exit;}
+            }
         }
     }
+    for(i = 1; i < 6; i++) {
+        line[0] = '\0';
+        switch (i) {
+            case 1: strcpy(line,pref.getString("wifiStr1").c_str()); break;
+            case 2: strcpy(line,pref.getString("wifiStr2").c_str()); break;
+            case 3: strcpy(line,pref.getString("wifiStr3").c_str()); break;
+            case 4: strcpy(line,pref.getString("wifiStr4").c_str()); break;
+            case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
+        }
+        if(strlen(line) < 5) { // line is empty
+            line[0] = '\0'; // clear line
+            strcat(line, ssid);
+            strcat(line, "\t");
+            strcat(line, password);
+            if(i == 1) {pref.putString("wifiStr1", line); state = 2; goto exit;}
+            if(i == 2) {pref.putString("wifiStr2", line); state = 2; goto exit;}
+            if(i == 3) {pref.putString("wifiStr3", line); state = 2; goto exit;}
+            if(i == 4) {pref.putString("wifiStr4", line); state = 2; goto exit;}
+            if(i == 5) {pref.putString("wifiStr5", line); state = 2; goto exit;}
+        }
+    }
+    state = 3;
 
-    WiFi.softAP("MiniWebRadio");
-    IPAddress myIP = WiFi.softAPIP();
-    String    AccesspointIP = myIP.toString();
-
-    tft.setFont(_fonts[4]);
-    tft.setTextColor(TFT_YELLOW);
-    tft.fillScreen(TFT_BLACK);
-    sprintf(buf, "WiFi credentials are not correct \nAccesspoint IP: " ANSI_ESC_CYAN "%s", AccesspointIP.c_str());
-    tft.writeText(buf, 0, 0, _dispWidth, _dispHeight, TFT_ALIGN_LEFT, TFT_ALIGN_CENTER, true, false);
-    SerialPrintfln("Accesspoint: " ANSI_ESC_RED "IP: %s", AccesspointIP.c_str());
-
-    webSrv.begin(80, 81); // HTTP port, WebSocket port
+exit:
+    x_ps_free(&line); // free memory
+    if(state == 0) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("S S I D and password are hard coded", "en");
+    }
+    if(state == 1) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The password has been changed", "en");
+    }
+    if(state == 2) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The credentials has been added", "en");
+    }
+    if(state == 3) {
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid);
+        if(_f_WiFiConnected) audio.connecttospeech("The S S I D and password can't be stored", "en");
+    }
     return;
 }
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
@@ -1524,7 +1531,7 @@ void setup() {
     mutex_display = xSemaphoreCreateMutex();
     SerialPrintfln("   ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V3     *    ");
+    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V4     *    ");
     SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
     SerialPrintfln("   ");
     if(startsWith(chipModel, "ESP32-D")) { ; } // ESP32-D    ...  okay
@@ -1570,6 +1577,8 @@ void setup() {
     tp.setRotation(TP_GT911::Rotate::_0);
     tft.begin(RGB_PINS, RGB_TIMING);
     tft.setDisplayInversion(false);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    tft.reset();
 #endif
 
     SerialPrintfln("setup: ....  Init SD card");
@@ -1578,7 +1587,6 @@ void setup() {
 #ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
 #endif
-
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if(!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
@@ -1601,32 +1609,24 @@ void setup() {
 
     if(TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
-    drawImage("/common/MiniWebRadioV3.jpg", 0, 0); // Welcomescreen
+    drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
     if(_brightness < 5) _brightness = 5;
     if(_volumeSteps < 21) _volumeSteps = 21;
     setTFTbrightness(_brightness);
-//    vTaskDelay(2000 / portTICK_PERIOD_MS);
-    SerialPrintfln("setup: ....  seek for WiFi networks");
-    if(!connectToWiFi()){
-        openAccessPoint();
-        return;
-    }
 
-    strcpy(_myIP, WiFi.localIP().toString().c_str());
-    SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
-                                                                   ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
-                                                                   ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI())
-    if(!_f_accessPoint){
+    _f_WiFiConnected = connectToWiFi();
+    if(_f_WiFiConnected){
+        strcpy(_myIP, WiFi.localIP().toString().c_str());
+        SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
+                                                    ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
+                                                    ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI())
+
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
         setRTC(_TZString.c_str());
     }
-#if DECODER > 1 // DAC controlled by I2C
-    if(!dac.begin(I2C_DAC_SDA, I2C_DAC_SCL, 400000)) { SerialPrintfln(ANSI_ESC_RED "The DAC was not be initialized"); }
-#endif
-
     placingGraphicObjects();
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
@@ -1635,6 +1635,11 @@ void setup() {
     audio.setVolume(0);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
+
+    if(AMP_ENABLED >= 0) { // enable onboard amplifier
+        pinMode(AMP_ENABLED, OUTPUT);
+        digitalWrite(AMP_ENABLED, LOW);
+    }
 
     sdr_CL_volume.setNewMinMaxVal(0, _volumeSteps);
     sdr_DL_volume.setNewMinMaxVal(0, _volumeSteps);
@@ -1653,18 +1658,8 @@ void setup() {
 
     ir.begin(); // Init InfraredDecoder
 
-    webSrv.begin(80, 81); // HTTP port, WebSocket port
+    if(_f_WiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
-    if(HP_DETECT >= 0) {
-        pinMode(HP_DETECT, INPUT);
-        attachInterrupt(HP_DETECT, headphoneDetect, CHANGE);
-    }
-    if(AMP_ENABLED >= 0) { // enable onboard amplifier
-        pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, HIGH);
-    }
-
-    ticker100ms.attach(0.1, timer100ms);
     if(BT_EMITTER_CONNECT >= 0){
         pinMode(BT_EMITTER_CONNECT, OUTPUT);
        /*digitalWrite(BT_EMITTER_CONNECT, LOW); vTaskDelay(100);*/ digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
@@ -1677,28 +1672,11 @@ void setup() {
     _dlnaHistory[1].objId = strdup("0");
     _f_dlnaSeekServer = true;
 
-
-    tft.fillScreen(TFT_BLACK); // Clear screen
-    drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
-    tft.copyFramebuffer( 0, 1, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
-    muteChanged(_f_mute);
-    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
-    dispFooter.updateStation(_cur_station);
-    dispFooter.updateOffTime(_sleeptime);
-    dispFooter.show(true);
-
-    dispHeader.updateItem(_hl_item[RADIO]);
-    dispHeader.updateVolume(_cur_volume);
-    dispHeader.show(true);
-    _radioSubMenue = 0;
-    _state = NONE;
-    changeState(RADIO);
-
     if( _resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage
         _resetResaon == ESP_RST_SW ||        // ESP.restart()
         _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
         _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
-        if(!_f_accessPoint){
+        if(WiFi.isConnected()){
             if(_cur_station > 0) setStation(_cur_station);
             else { setStationViaURL(_settings.lastconnectedhost, ""); }
         }
@@ -1717,6 +1695,28 @@ void setup() {
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
     bt_emitter.begin();
+    ticker100ms.attach(0.1, timer100ms);
+    #if TFT_CONTROLLER == 7
+        tft.clearVsyncCounter(); // clear the vsync counter and start them
+    #endif
+
+    tft.fillScreen(TFT_BLACK); // Clear screen
+    drawImage("/common/Wallpaper.jpg", 0, 0); // Wallpaper
+    tft.copyFramebuffer( 0, 1, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
+    muteChanged(_f_mute);
+    dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
+    dispFooter.updateStation(_cur_station);
+    dispFooter.updateOffTime(_sleeptime);
+    dispFooter.show(true);
+
+    dispHeader.updateItem(_hl_item[RADIO]);
+    dispHeader.updateVolume(_cur_volume);
+    dispHeader.speakerOnOff(!_f_mute);
+    dispHeader.show(true);
+    _radioSubMenue = 0;
+    _state = NONE;
+    if(_f_WiFiConnected) changeState(RADIO);
+    else changeState(WIFI_SETTINGS);
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -1751,38 +1751,6 @@ void setVolume(uint8_t vol) {
     sdr_PL_volume.setValue(_cur_volume);
     sdr_RA_volume.setValue(_cur_volume);
     SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", _cur_volume);
-
-#if DECODER > 1 // ES8388, AC101 ...
-    uint8_t v = map_l(_cur_volume, 0, _volumeSteps, 0, 63);
-    if(HP_DETECT == -1) {
-        if(_f_mute){
-            dac.SetVolumeSpeaker(0);
-            dac.SetVolumeHeadphone(0);
-        }
-        else{
-            dac.SetVolumeSpeaker(v);
-            dac.SetVolumeHeadphone(v);
-        }
-    }
-    else {
-        if(_f_mute){
-            dac.SetVolumeSpeaker(0);
-            dac.SetVolumeHeadphone(0);
-        }
-        else{
-            if(digitalRead(HP_DETECT) == HIGH) {
-                // SerialPrintfln("HP_Detect = High, volume %i", vol);
-                dac.SetVolumeSpeaker(v);
-                dac.SetVolumeHeadphone(0);
-            }
-            else {
-                // SerialPrintfln("HP_Detect = Low, volume %i", vol);
-                dac.SetVolumeSpeaker(0);
-                dac.SetVolumeHeadphone(v);
-            }
-        }
-    }
-#endif
 }
 
 uint8_t downvolume() {
@@ -1849,13 +1817,13 @@ void setStation(uint16_t sta) {
     dispFooter.updateStation(_cur_station);
 }
 const char* getFlagPath(uint16_t station) {
-    char flagPath[40];
+    static char flagPath[40];
     flagPath[0] = '\0';
     strcpy(flagPath, "/flags/");
     strcat(flagPath, staMgnt.getStationCountry(station));
     for(int i = 0; i< strlen(flagPath); i++) flagPath[i] = tolower(flagPath[i]);
     strcat(flagPath, ".jpg");
-    return scaleImage(flagPath);
+    return flagPath;
 }
 
 void nextStation() {
@@ -1915,6 +1883,7 @@ void setStationViaURL(const char* url, const char* extension) {
     if(_state == RADIO) {
         clearStreamTitle();
         showLogoAndStationName(true);
+        dispFooter.updateFlag(NULL);
     }
     dispFooter.updateStation(0); // set 000
 }
@@ -2031,17 +2000,13 @@ bool SD_delete(const char* itemPath) {
     return success;
 }
 
-void headphoneDetect() { // called via interrupt
-    _f_hpChanged = true;
-}
-
 void fall_asleep() {
     _f_sleeping = true;
+    _f_mute = true;
     _f_playlistEnabled = false;
     _f_isFSConnected = false;
     _f_isWebConnected = false;
     audio.stopSong();
-    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, LOW);}
     if(_sleepMode == 0){
         clearAll();
         setTFTbrightness(0);
@@ -2058,20 +2023,20 @@ void fall_asleep() {
 
 void wake_up() {
     _f_sleeping = false;
+    _f_mute = false;
     _f_irOnOff = false;
     SerialPrintfln("awake");
     _f_mute = true;
     muteChanged(false);
     clearAll();
     setTFTbrightness(_brightness);
-    if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
     if(_cur_station) setStation(_cur_station);
     else connecttohost(_settings.lastconnectedhost);
     _radioSubMenue = 0;
     changeState(RADIO);
     showLogoAndStationName(true);
     dispHeader.show(true);
-    dispHeader.speakerOnOff(_f_mute);
+    dispHeader.speakerOnOff(!_f_mute);
     dispHeader.updateRSSI(WiFi.RSSI(), true);
     dispFooter.show(true);
     if(_f_BTpower) BTpowerChanged(true);
@@ -2084,6 +2049,16 @@ void setRTC(const char* TZString) {
     //     SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
     //     ESP.restart();
     // }
+}
+
+boolean isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime){
+    uint8_t mask = 0b00000001 << weekDay;
+    if(alarmDays & mask){ // yes, is alarmDay
+        if(alarmTime[weekDay] == minuteOfTheDay){ // yes, is alarmTime
+            return true;
+        }
+    }
+    return false;
 }
 
 boolean copySDtoFFat(const char* path) {
@@ -2121,7 +2096,7 @@ void muteChanged(bool m) {
     else  {_f_mute = false;}
     if(m) webSrv.send("mute=", "1");
     else webSrv.send("mute=", "0");
-    dispHeader.speakerOnOff(_f_mute);
+    dispHeader.speakerOnOff(!_f_mute);
     dispHeader.updateVolume(_cur_volume);
     updateSettings();
 };
@@ -2171,7 +2146,7 @@ void setTimeCounter(uint8_t sec){
 // clang-format off
 void placingGraphicObjects() { // and initialize them
     // ALL STATE
-    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);
+    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);   dispHeader.setTimeColor(TFT_LIGHTGREEN);
     dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
     volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
     myList.begin(             _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _fonts[0]);
@@ -2306,7 +2281,8 @@ void placingGraphicObjects() { // and initialize them
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_CL_green.begin(       _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);   clk_CL_green.setTimeFormat(_timeFormat);
+    clk_CL_24.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
+    clk_CL_12.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
     btn_CL_alarm.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_alarm.setDefaultPicturePath("/btn/Button_Bell_Green.png");
                                                                                          btn_CL_alarm.setClickedPicturePath("/btn/Button_Bell_Yellow.png");
                                                                                          btn_CL_alarm.setAlternativePicturePath("/btn/Button_Bell_Magenta.png");
@@ -2325,7 +2301,7 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_AL_red.begin(          _winAlarm.x, _winAlarm.y, _winAlarm.w, _winAlarm.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
+    clk_AL_red.begin(         _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
     btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
                                                                                          btn_AL_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
                                                                                          btn_AL_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
@@ -2362,7 +2338,10 @@ void placingGraphicObjects() { // and initialize them
     btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_Equalizer_Green.png");
                                                                                          btn_SE_equal.setClickedPicturePath("/btn/Button_Equalizer_Yellow.png");
                                                                                          btn_SE_equal.setAlternativePicturePath("/btn/Button_Equalizer_Magenta.png");
-    btn_SE_radio.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
+    btn_SE_wifi.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_wifi.setDefaultPicturePath("/btn/Button_WiFi_Green.png");
+                                                                                         btn_SE_wifi.setClickedPicturePath("/btn/Button_WiFi_Yellow.png");
+                                                                                         btn_SE_wifi.setAlternativePicturePath("/btn/Button_WiFi_Magenta.png");
+    btn_SE_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
                                                                                          btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
     pic_SE_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
@@ -2432,6 +2411,8 @@ void placingGraphicObjects() { // and initialize them
     // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_IR_radio.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);     btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
                                                                                          btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
+    // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    cls_wifiSettings.begin(_winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb);
 }
 // clang-format off
 
@@ -2474,7 +2455,6 @@ void changeState(int32_t state){
                 setTimeCounter(2);
             }
             if(_radioSubMenue == 2){ // Player, DLNA, Clock, SleepTime, Brightness, EQ, BT, Off
-                sdr_RA_volume.hide();
                 btn_RA_staList.show();
                 btn_RA_player.show();    btn_RA_dlna.show();  btn_RA_clock.show();
                 btn_RA_sleep.show(); btn_RA_settings.show();
@@ -2526,7 +2506,7 @@ void changeState(int32_t state){
                 showFileLogo(PLAYER);
                 showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); txt_PL_fName.show(true, false);
                 pgb_PL_progress.hide();
-                sdr_PL_volume.hide();
+                sdr_PL_volume.disable();
                 if(_state != PLAYER) webSrv.send("changeState=", "PLAYER");
                 txt_PL_fNumber.show(true, false);
                 showAudioFileNumber();
@@ -2614,7 +2594,8 @@ void changeState(int32_t state){
             dispHeader.show(false);
             dispFooter.show(false);
             if(_state != CLOCK) {bgColorWithOutHeaderFooter();}
-            clk_CL_green.show();
+            if(_timeFormat == 24) clk_CL_24.show();
+            else                  clk_CL_12.show();
             if(_clockSubMenue == 0){
                 btn_CL_mute.hide(); btn_CL_alarm.hide(); btn_CL_radio.hide(); sdr_CL_volume.disable(); btn_CL_off.hide();
             }
@@ -2636,7 +2617,7 @@ void changeState(int32_t state){
                 btn_AL_left.show(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
                 clk_AL_red.show();
             }
-            if(_alarmSubMenue == 1){ // same as _alarmSubMenue fot IR
+            if(_alarmSubMenue == 1){ // same as _alarmSubMenue for IR
                 setTimeCounter(2);
                 btn_AL_left.showAlternativePic(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
                 clk_AL_red.show();
@@ -2668,10 +2649,10 @@ void changeState(int32_t state){
                 showFileLogo(SETTINGS);
             }
             if(_settingsSubMenue == 0){
-                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+                btn_SE_bright.show(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
             }
             if(_settingsSubMenue == 1){
-                btn_SE_bright.showAlternativePic(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_radio.show();
+                btn_SE_bright.showAlternativePic(!_f_brightnessIsChangeable); btn_SE_equal.show(); btn_SE_wifi.show(); btn_SE_radio.show();
             }
             break;
         }
@@ -2731,10 +2712,118 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             btn_IR_radio.show();
             break;
+
+        case WIFI_SETTINGS:
+            dispHeader.show(true);
+            dispFooter.show(true);
+            clearWithOutHeaderFooter();
+            cls_wifiSettings.clearText();
+            cls_wifiSettings.setBorderWidth(1);
+            cls_wifiSettings.setFontSize(_listFontSize);
+            int16_t n = WiFi.scanNetworks();
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
+            for(int i = 0; i < n; i++){
+                SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
+                const char* pw = getWiFiPW(WiFi.SSID(i).c_str());
+                // if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
+                // else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
+                cls_wifiSettings.addWiFiItems(WiFi.SSID(i).c_str(), pw);
+            }
+            cls_wifiSettings.show(false, false);
+            break;
     }
     _state = state;
 }
 // clang-format on
+
+const char* getWiFiPW(const char* ssid){
+    static char* line = NULL;
+    if(line) x_ps_free(&line);
+    line = (char*)x_ps_malloc(128);
+
+    static char* password = NULL;
+    if(line) x_ps_free(&password);
+    password = (char*)x_ps_malloc(128);
+    if(!password) { log_e("oom"); return NULL;}
+
+    for(int j = 0; j < 6; j++){
+        if(j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
+            if(indexOf(line, "\t", 0) > 0) {
+                int idx = indexOf(line, "\t", 0);
+                strcpy(password, line + idx + 1);
+                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, password);
+                return password;
+            }
+            else {
+                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, "is not set");
+                return NULL;
+            }
+        }
+    }
+    return NULL;
+}
+
+bool setWiFiPW(const char* ssid, const char* password){
+    if(!ssid || !password) return NULL;
+    static char* line = NULL;
+    if(line) x_ps_free(&line);
+    line = (char*)x_ps_malloc(512);
+    if(!line) { log_e("oom"); return NULL;}
+    strcpy(line, ssid);
+    strcat(line, "\t");
+    strcat(line, password);
+
+    for(int j = 1; j < 6; j++){
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
+            switch(j){
+                case 1: pref.putString("wifiStr1", line); break;
+                case 2: pref.putString("wifiStr2", line); break;
+                case 3: pref.putString("wifiStr3", line); break;
+                case 4: pref.putString("wifiStr4", line); break;
+                case 5: pref.putString("wifiStr5", line); break;
+            }
+            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new PW for SSID %s,  %s", ssid, line);
+            return true;
+        }
+    }
+    for(int j = 0; j < 6; j++){
+        if(j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
+        if(j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
+        if(j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
+        if(j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
+        if(j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
+        if(j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
+        if(strcmp(line, "\t") == 0) {
+            switch(j){
+                case 0: pref.putString("wifiStr0", line); break;
+                case 1: pref.putString("wifiStr1", line); break;
+                case 2: pref.putString("wifiStr2", line); break;
+                case 3: pref.putString("wifiStr3", line); break;
+                case 4: pref.putString("wifiStr4", line); break;
+                case 5: pref.putString("wifiStr5", line); break;
+            }
+            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new SSID and PW %s,  %s", ssid, line);
+            return true;
+        }
+    }
+    SerialPrintfln("WiFi: .....  " ANSI_ESC_RED "no free space for new SSID and PW %s,  %s", ssid, line);
+    x_ps_free(&line);
+    return false;
+}
+
+
+
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                    L O O P                                                                                  ║
@@ -2744,7 +2833,6 @@ void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
     vTaskDelay(1);
-    tft.loop();
     audio.loop();
     webSrv.loop();
     ir.loop();
@@ -2753,6 +2841,7 @@ void loop() {
     ArduinoOTA.handle();
     dlna.loop();
     bt_emitter.loop();
+    tft.loop();
 
     if(_f_dlnaBrowseServer) {_f_dlnaBrowseServer = false; dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _totalNumberReturned);}
     if(_f_clearLogo)        {_f_clearLogo = false; clearLogo();}
@@ -2845,6 +2934,17 @@ void loop() {
         }
 
         int16_t audioVol = audio.getVolume();
+        //------------------------------------------------------------------------
+        if(AMP_ENABLED >= 0){                // An external amplifier can be switched, if a GPIO has been assigned.
+            static bool av = false;          // The amplifier switches off when the real volume (not _cur_volume) reaches the value 0.
+            if((audioVol > 0) != av){        // This is also the case in sleep mode.
+                av = (audioVol > 0);
+                digitalWrite(AMP_ENABLED, av);
+                if(av)  {SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was activated");}
+                else    {SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was deactivated");}
+            }
+        }
+        //------------------------------------------------------------------------
         uint8_t currVol = _cur_volume;
         if(_f_mute) currVol = 0;
         uint8_t steps = _volumeSteps / 7;
@@ -2862,7 +2962,16 @@ void loop() {
 
     if(_f_1sec) { // calls every second
         _f_1sec = false;
-        clk_CL_green.updateTime(rtc.getMinuteOfTheDay(), rtc.getweekday());
+        _totalRuntime++;
+        uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
+        uint8_t  weekDay = rtc.getweekday();
+        if(_timeFormat == 24) clk_CL_24.updateTime(minuteOfTheDay, weekDay);
+        else                  clk_CL_12.updateTime(minuteOfTheDay, weekDay);
+        static uint8_t semaphore = 0;
+        if(!semaphore) {_f_alarm = isAlarm(weekDay, _alarmdays, minuteOfTheDay, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
+        if(_f_alarm)        {semaphore++;}
+        if(semaphore)       {semaphore++;}
+        if(semaphore >= 65) {semaphore = 0;}
 
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
         if(_f_alarm) {
@@ -2873,10 +2982,9 @@ void loop() {
             dispFooter.show(true);
             if(_ringVolume > 0){ // alarm with bell
                 showFileName("ALARM");
-                drawImage("/common/Alarm.jpg", _winLogo.x, _winLogo.y);
+                drawImage("/common/Alarm.png", _winLogo.x, _winLogo.y);
                 setTFTbrightness(_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                if(AMP_ENABLED != -1) {digitalWrite(AMP_ENABLED, HIGH);}
                 setVolume(_ringVolume);
                 audio.setVolume(_ringVolume, _volumeCurve);
                 muteChanged(false);
@@ -2940,13 +3048,6 @@ void loop() {
             if(_cur_station) setStation(_cur_station);
             else connecttohost(_settings.lastconnectedhost);
             return;
-        }
-        //------------------------------------------HEADPHONE / LOUDSPEAKER --------------------------------------------------------------------------
-        if(_f_hpChanged) {
-            setVolume(_cur_volume);
-            if(!digitalRead(HP_DETECT)) { SerialPrintfln("Headphone plugged in"); }
-            else { SerialPrintfln("Headphone unplugged"); }
-            _f_hpChanged = false;
         }
         //------------------------------------------AUDIO_CURRENT_TIME - DURATION---------------------------------------------------------------------
         if(audio.isRunning()){
@@ -3014,7 +3115,7 @@ void loop() {
             else connecttohost(_settings.lastconnectedhost);
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if(_f_reconnect && !_f_accessPoint){
+        if(_f_reconnect && !_f_WiFiConnected){
             _f_reconnect = false;
             connecttohost(_settings.lastconnectedhost);
         }
@@ -3034,7 +3135,7 @@ void loop() {
             _f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if(!_f_accessPoint){
+        if(_f_WiFiConnected){
             if((WiFi.status() != WL_CONNECTED)) {
                 _WiFi_disconnectCnt ++;
                 if(_WiFi_disconnectCnt == 15){
@@ -3073,9 +3174,9 @@ void loop() {
         //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
         if(_f_BH1750_found){
             int32_t ambVal = BH1750.getBrightness();
-            if(ambVal <= 0) goto endbrightness;
-            if(ambVal > 1500) ambVal = 1500;
-            _bh1750Value = map_l(ambVal, 0, 1500, 5, 100);
+            if(ambVal < 0) goto endbrightness;
+            if(ambVal > 350) ambVal = 350;
+            _bh1750Value = map_l(ambVal, 0, 350, 5, 100);
         //    log_i("_bh1750Value %i, _brightness %i", _bh1750Value, _brightness);
             if(!_f_sleeping){
                 if(_bh1750Value >= _brightness) setTFTbrightness(_bh1750Value);
@@ -3114,24 +3215,25 @@ endbrightness:
         }
     }
 
-    //-------------------------------------------------DEBUG / TEST ----------------------------------------------------------------------------------
+    //-------------------------------------------------DEBUG / WIFI_SETTINGS ----------------------------------------------------------------------------------
     if(Serial.available()) { // input: serial terminal
         String r = Serial.readString();
         r.replace("\n", "");
         SerialPrintfln("Terminal  :  " ANSI_ESC_YELLOW "%s", r.c_str());
-        if(r.startsWith("p")) {
+        if(r.startsWith("pr")) {
             _f_pauseResume = audio.pauseResume();
             if(_f_pauseResume) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume"); }
             else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible"); }
         }
-        if(r.startsWith("h")) { // A hardcopy of the display is created and written to the SD card
+        if(r.startsWith("hc")) { // A hardcopy of the display is created and written to the SD card
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
             hardcopy();
         }
         if(r.startsWith("rts")) {
-            char timeStatsBuffer[1024 * 2];
+            char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
             GetRunTimeStats(timeStatsBuffer);
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
+            x_ps_free(&timeStatsBuffer);
         }
         if(r.startsWith("cts")) {
             audio.connecttospeech("Hallo, wie geht es dir?", "de");
@@ -3161,7 +3263,7 @@ endbrightness:
         }
         if(r.startsWith("ais")){ // openAIspeech
             log_w("openAI speech");
-            audio.openai_speech("openAI-key", "tts-1", "shimmer", "Today is a wonderful day to build something people love!", "mp3", "1");
+            audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
         }
         // if(r.startsWith("ctfs")){ // connecttoFS
         //     log_w("SPIFFS");
@@ -3185,6 +3287,9 @@ endbrightness:
         }
         if(r.startsWith("tsp")){
             _f_timeSpeech = true;
+        }
+        if(r.startsWith("pwd")){ // set password for WiFi
+            changeState(WIFI_SETTINGS);
         }
     }
 }
@@ -3339,11 +3444,12 @@ void ftp_debug(const char* info) {
     SerialPrintfln("ftpServer:   %s", info);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+// Events from rtime library
 void RTIME_info(const char* info) { SerialPrintfln("rtime_info:  %s", info); }
-
 // Events from tft library
 void tft_info(const char* info) { SerialPrintfln("tft_info: .  %s", info); }
-
+// Events from tp library
+void tp_info(const char* info) { SerialPrintfln("tp_info: ..  %s", info); }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Events from IR Library
 void ir_code(uint8_t addr, uint8_t cmd) {
@@ -3483,10 +3589,11 @@ void ir_short_key(uint8_t key) {
                         }
                     }
                     if(_state == SETTINGS){
-                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
-                            if(btnNr < 2) btnNr++;
+                        if(_settingsSubMenue == 1){ // scroll forward (bright, equal, wifi, radio)
+                            if(btnNr < 3) btnNr++;
                             if(btnNr == 1){btn_SE_bright.show(); btn_SE_equal.showAlternativePic();}
-                            if(btnNr == 2){btn_SE_equal.show(); btn_SE_radio.showAlternativePic();}
+                            if(btnNr == 2){btn_SE_equal.show(); btn_SE_wifi.showAlternativePic();}
+                            if(btnNr == 3){btn_SE_wifi.show(); btn_SE_radio.showAlternativePic();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3617,7 +3724,8 @@ void ir_short_key(uint8_t key) {
                         if(_settingsSubMenue == 1){ // scroll forward (bright, equal, radio)
                             if(btnNr > 0) btnNr--;
                             if(btnNr == 0){btn_SE_bright.showAlternativePic(); btn_SE_equal.show();}
-                            if(btnNr == 1){btn_SE_equal.showAlternativePic(); btn_SE_radio.show();}
+                            if(btnNr == 1){btn_SE_equal.showAlternativePic(); btn_SE_wifi.show();}
+                            if(btnNr == 2){btn_SE_wifi.showAlternativePic(); btn_SE_radio.show();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3822,7 +3930,8 @@ void ir_short_key(uint8_t key) {
                         if(_settingsSubMenue == 1){
                             if(btnNr == 0){btn_SE_bright.showClickedPic(); vTaskDelay(100); btnNr = 0; _brightnessSubMenue = 1;  changeState(BRIGHTNESS); setTimeCounter(2); return;}
                             if(btnNr == 1){btn_SE_equal.showClickedPic(); vTaskDelay(100); btnNr = 0; _equalizerSubMenue = 1; changeState(EQUALIZER); setTimeCounter(2); return;}
-                            if(btnNr == 2){btn_SE_radio.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
+                            if(btnNr == 2){btn_SE_wifi.showClickedPic(); vTaskDelay(100); btnNr = 0; changeState(WIFI_SETTINGS); return;}
+                            if(btnNr == 3){btn_SE_radio.showClickedPic(); vTaskDelay(100); _radioSubMenue = 0; changeState(RADIO); return;}
                         }
                     }
                     if(_state == BRIGHTNESS){
@@ -3886,7 +3995,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     if(_f_sleeping) return;  // awake in tp_released()
     const char* objName = NULL;
-    if(_state == RADIO && y > _winHeader.y && y < _sdrOvBtns.y){
+    if(_state == RADIO && y > _winHeader.y + _winHeader.h && y < _sdrOvBtns.y){
         objName = "backpane";
         _radioSubMenue++;
         if(_radioSubMenue == 3) _radioSubMenue = 0;
@@ -3895,7 +4004,9 @@ void tp_pressed(uint16_t x, uint16_t y) {
     }
     objName = isObjectClicked(x, y);
 exit:
-    if(objName) SerialPrintfln("click on ..  %s", objName);
+    if(objName){
+        SerialPrintfln("click on ..  %s", objName);
+    }
     return;
 }
 void tp_long_pressed(uint16_t x, uint16_t y){
@@ -3955,7 +4066,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_DLNA.released(x, y);
             break;
         case CLOCK:
-            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_green.released(); sdr_CL_volume.released(); btn_CL_off.released();
+            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
         case ALARM:
             clk_AL_red.released(); btn_AL_left.released(); btn_AL_right.released(); btn_AL_up.released(); btn_AL_down.released(); btn_AL_ready.released();
@@ -3964,7 +4075,7 @@ void tp_released(uint16_t x, uint16_t y){
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
             break;
         case SETTINGS:
-            btn_SE_bright.released(); btn_SE_equal.released(); btn_SE_radio.released();
+            btn_SE_bright.released(); btn_SE_equal.released();  btn_SE_wifi.released(); btn_SE_radio.released();
             break;
         case BRIGHTNESS:
             sdr_BR_value.released();  btn_BR_ready.released(); pic_BR_logo.released();
@@ -3979,6 +4090,12 @@ void tp_released(uint16_t x, uint16_t y){
             break;
         case IR_SETTINGS:
             btn_IR_radio.released();
+            break;
+        case WIFI_SETTINGS:
+            cls_wifiSettings.released();
+            break;
+        default:
+            break;
     }
     // SerialPrintfln("tp_released, state is: %i", _state);
 }
@@ -4036,10 +4153,8 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "ping"){              webSrv.send("pong"); return;}                                                                                     // via websocket
 
-    if(cmd == "index.html"){        if(_f_accessPoint) {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "accesspoint.html");                           // via XMLHttpRequest
-                                                        webSrv.show(accesspoint_html, webSrv.TEXT);}
-                                    else               {SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");
-                                                        webSrv.show(index_html, webSrv.TEXT);      }
+    if(cmd == "index.html"){        SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "index.html");                                                     // via XMLHttpRequest
+                                    webSrv.show(index_html, webSrv.TEXT);
                                     return;}
 
     if(cmd == "index.js"){          SerialPrintfln("Script:      " ANSI_ESC_ORANGE "index.js");                                                       // via XMLHttpRequest
@@ -4130,7 +4245,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "get_tftSize"){       webSrv.send("tftSize=", _tftSize); return;};
 
-    if(cmd == "getTimeZones"){      webSrv.streamfile(SD_MMC, "/timezones.csv"); return;}
+    if(cmd == "getTimeZones"){      webSrv.send("timezones=", timezones_json); return;}
 
     if(cmd == "setTimeZone"){       _TZName = param;  _TZString = arg;
                                     SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s", param.c_str(), arg.c_str());
@@ -4196,14 +4311,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId);
                                     return;}
 
-    if(cmd == "AP_ready"){          SerialPrintfln("Webpage:     " ANSI_ESC_ORANGE "send scanned networks");  webSrv.send("networks=", _scannedNetworks); return;}                                                              // via websocket
-
-    if(cmd == "credentials"){       String AP_SSID = param.substring(0, param.indexOf("\n")); // from accesspoint.h                                   // via websocket
-                                    String AP_PW =   param.substring(param.indexOf("\n") + 1);
-                                    SerialPrintfln("credentials: SSID " ANSI_ESC_BLUE "%s" ANSI_ESC_WHITE ", PW " ANSI_ESC_BLUE "%s",
-                                    AP_SSID.c_str(), AP_PW.c_str());
-                                    pref.putString("ap_ssid", AP_SSID); pref.putString("ap_pw", AP_PW); ESP.restart();}
-
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "File not found " ANSI_ESC_RED "\"%s\"", str.c_str());
@@ -4264,7 +4371,6 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
                                     return;}
 
     if(cmd == "setTimeFormat"){     _timeFormat = param.toInt();
-                                    clk_CL_green.setTimeFormat(_timeFormat);
                                     if(_state == CLOCK){
                                          clearWithOutHeaderFooter();
                                     }
@@ -4329,7 +4435,12 @@ void WEBSRV_onInfo(const char* info) {
     if(!strcmp("to_listen", info)) return;         // suppress to_isten
     if(startsWith(info, "Command client")) return; // suppress Command client available
     if(startsWith(info, "Content-D")) return;      // Content-Disposition
-//    SerialPrintfln("WebSrv Info: " ANSI_ESC_YELLOW "%s", info); // infos for debug
+    if(startsWith(info, "test=")) return;          // stackHighWaterMark
+    // SerialPrintfln("WebSrv Info: " ANSI_ESC_YELLOW "%s", info); // infos for debug
+}
+
+void WEBSRV_onError(const char* info) {
+    SerialPrintfln("WebSrv Err:  " ANSI_ESC_RED "%s", info);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
@@ -4340,7 +4451,7 @@ void dlna_info(const char* info) {
         lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         setTimeCounter(4);
     }
-    SerialPrintfln("DLNA_info:    %s", info);
+    SerialPrintfln("DLNA_info:   %s", info);
 }
 
 void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL) {
@@ -4467,106 +4578,111 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is inactive
     // all state
-    if(val == 3 && strcmp(name, "dispFooter") == 0)     {setTimeCounter(0); return;} // pos 3 is RSSI or TC
+    if(val == 3 && !strcmp(name, "dispFooter"))      {setTimeCounter(0); return;} // pos 3 is RSSI or TC
 
     if(_state == RADIO) {
-        if( val && strcmp(name, "btn_RA_mute") == 0)    {setTimeCounter(2); {if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_RA_prevSta") == 0) {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_RA_nextSta") == 0) {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_RA_staList") == 0) {return;}
-        if( val && strcmp(name, "btn_RA_player") == 0)  {return;}
-        if( val && strcmp(name, "btn_RA_dlna") == 0)    {return;}
-        if( val && strcmp(name, "btn_RA_clock") == 0)   {return;}
-        if( val && strcmp(name, "btn_RA_sleep") == 0)   {return;}
-        if( val && strcmp(name, "btn_RA_bright") == 0)  {return;}
-        if(!val && strcmp(name, "btn_RA_bright") == 0)  {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_RA_equal") == 0)   {return;}
-        if( val && strcmp(name, "btn_RA_bt") == 0)      {return;}
-        if(!val && strcmp(name, "btn_RA_bt") == 0)      {setTimeCounter(2); return;}
-        if( val && strcmp(name, "btn_RA_off") == 0)     {return;}
-        if( val && strcmp(name, "VUmeter_RA") == 0)     {return;}
+        if( val && !strcmp(name, "btn_RA_mute"))     {setTimeCounter(2); {if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && !strcmp(name, "btn_RA_prevSta"))  {setTimeCounter(2); return;}
+        if( val && !strcmp(name, "btn_RA_nextSta"))  {setTimeCounter(2); return;}
+        if( val && !strcmp(name, "btn_RA_staList"))  {return;}
+        if( val && !strcmp(name, "btn_RA_player"))   {return;}
+        if( val && !strcmp(name, "btn_RA_dlna"))     {return;}
+        if( val && !strcmp(name, "btn_RA_clock"))    {return;}
+        if( val && !strcmp(name, "btn_RA_sleep"))    {return;}
+        if( val && !strcmp(name, "btn_RA_bright"))   {return;}
+        if(!val && !strcmp(name, "btn_RA_bright"))   {setTimeCounter(2); return;}
+        if( val && !strcmp(name, "btn_RA_equal"))    {return;}
+        if( val && !strcmp(name, "btn_RA_bt"))       {return;}
+        if(!val && !strcmp(name, "btn_RA_bt"))       {setTimeCounter(2); return;}
+        if( val && !strcmp(name, "btn_RA_off"))      {return;}
+        if( val && !strcmp(name, "VUmeter_RA"))      {return;}
     }
     if(_state == STATIONSLIST) {
-        if( val && strcmp(name, "lst_RADIO") == 0)      {setTimeCounter(4); return;}
+        if( val && !strcmp(name, "lst_RADIO"))       {setTimeCounter(4); return;}
     }
     if(_state == PLAYER) {
-        if( val && strcmp(name, "btn_PL_mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_PL_pause") == 0)   {return;}
-        if( val && strcmp(name, "btn_PL_cancel") == 0)  {return;}
-        if( val && strcmp(name, "btn_PL_prevFile") == 0){if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
-        if( val && strcmp(name, "btn_PL_nextFile") == 0){if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
-        if( val && strcmp(name, "btn_PL_ready") == 0)   {return;}
-        if( val && strcmp(name, "btn_PL_playAll") == 0) {return;}
-        if( val && strcmp(name, "btn_PL_shuffle") == 0) {return;}
-        if( val && strcmp(name, "btn_PL_fileList") == 0){return;}
-        if( val && strcmp(name, "btn_PL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_PL_off") == 0)     {return;}
-        if( val && strcmp(name, "btn_PL_playPrev") == 0){_cur_AudioFileNr = _SD_content.getPrevAudioFile(_cur_AudioFileNr); return;}
-        if( val && strcmp(name, "btn_PL_playNext") == 0){_cur_AudioFileNr = _SD_content.getNextAudioFile(_cur_AudioFileNr); return;}
-        if( val && strcmp(name, "pgb_PL_progress") == 0){return;}
+        if( val && !strcmp(name, "btn_PL_mute"))     {{if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && !strcmp(name, "btn_PL_pause"))    {return;}
+        if( val && !strcmp(name, "btn_PL_cancel"))   {return;}
+        if( val && !strcmp(name, "btn_PL_prevFile")) {if(_cur_AudioFileNr > 0) {_cur_AudioFileNr--; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+        if( val && !strcmp(name, "btn_PL_nextFile")) {if(_cur_AudioFileNr + 1 < _SD_content.getSize()) {_cur_AudioFileNr++; showFileName(_SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber();} return;}
+        if( val && !strcmp(name, "btn_PL_ready"))    {return;}
+        if( val && !strcmp(name, "btn_PL_playAll"))  {return;}
+        if( val && !strcmp(name, "btn_PL_shuffle"))  {return;}
+        if( val && !strcmp(name, "btn_PL_fileList")) {return;}
+        if( val && !strcmp(name, "btn_PL_radio"))    {return;}
+        if( val && !strcmp(name, "btn_PL_off"))      {return;}
+        if( val && !strcmp(name, "btn_PL_playPrev")) {_cur_AudioFileNr = _SD_content.getPrevAudioFile(_cur_AudioFileNr); return;}
+        if( val && !strcmp(name, "btn_PL_playNext")) {_cur_AudioFileNr = _SD_content.getNextAudioFile(_cur_AudioFileNr); return;}
+        if( val && !strcmp(name, "pgb_PL_progress")) {return;}
     }
     if(_state == AUDIOFILESLIST) {
-        if( val && strcmp(name, "lst_PLAYER") == 0)     {setTimeCounter(4); return;}
+        if( val && !strcmp(name, "lst_PLAYER"))      {setTimeCounter(4); return;}
     }
     if(_state == DLNA) {
-        if( val && strcmp(name, "btn_DL_mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_DL_pause") == 0)   {return;}
-        if( val && strcmp(name, "btn_DL_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_DL_fileList") == 0){return;}
-        if( val && strcmp(name, "btn_DL_cancel") == 0)  {clearStationName(); btn_DL_pause.setActive(false); return;}
+        if( val && !strcmp(name, "btn_DL_mute"))     {{if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && !strcmp(name, "btn_DL_pause"))    {return;}
+        if( val && !strcmp(name, "btn_DL_radio"))    {return;}
+        if( val && !strcmp(name, "btn_DL_fileList")) {return;}
+        if( val && !strcmp(name, "btn_DL_cancel"))   {clearStationName(); btn_DL_pause.setActive(false); return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if( val && strcmp(name, "lst_DLNA") == 0)       {setTimeCounter(15); _f_dlnaWaitForResponse = true; return;}
+        if( val && !strcmp(name, "lst_DLNA"))        {setTimeCounter(15); _f_dlnaWaitForResponse = true; return;}
     }
     if(_state == CLOCK) {
-        if( val && strcmp(name, "btn_CL_mute") == 0)    {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}
-        if( val && strcmp(name, "btn_CL_alarm") == 0)   {return;}
-        if( val && strcmp(name, "btn_CL_radio") == 0)   {return;}
-        if( val && strcmp(name, "clk_CL_green") == 0)   {return;}
-        if( val && strcmp(name, "btn_CL_off") == 0)     {return;}
+        if( val && !strcmp(name, "btn_CL_mute"))     {setTimeCounter(2); if(!_f_mute){ _f_muteIsPressed = true;} return;}
+        if( val && !strcmp(name, "btn_CL_alarm"))    {return;}
+        if( val && !strcmp(name, "btn_CL_radio"))    {return;}
+        if( val && !strcmp(name, "clk_CL_12"))       {return;}
+        if( val && !strcmp(name, "clk_CL_24"))       {return;}
+        if( val && !strcmp(name, "btn_CL_off"))      {return;}
     }
     if(_state == ALARM) {
-        if( val && strcmp(name, "clk_AL_red") == 0)     {return;}
-        if( val && strcmp(name, "btn_AL_left") == 0)    {return;}
-        if( val && strcmp(name, "btn_AL_right") == 0)   {return;}
-        if( val && strcmp(name, "btn_AL_up") == 0)      {return;}
-        if( val && strcmp(name, "btn_AL_down") == 0)    {return;}
-        if( val && strcmp(name, "btn_AL_ready") == 0)   {return;}
+        if( val && !strcmp(name, "clk_AL_red"))      {return;}
+        if( val && !strcmp(name, "btn_AL_left"))     {return;}
+        if( val && !strcmp(name, "btn_AL_right"))    {return;}
+        if( val && !strcmp(name, "btn_AL_up"))       {return;}
+        if( val && !strcmp(name, "btn_AL_down"))     {return;}
+        if( val && !strcmp(name, "btn_AL_ready"))    {return;}
     }
     if(_state == SLEEPTIMER) {
-        if( val && strcmp(name, "btn_SL_up") == 0)      {return;}
-        if( val && strcmp(name, "btn_SL_down") == 0)    {return;}
-        if( val && strcmp(name, "btn_SL_ready") == 0)   {return;}
-        if( val && strcmp(name, "btn_SL_cancel") == 0)  {return;}
+        if( val && !strcmp(name, "btn_SL_up"))       {return;}
+        if( val && !strcmp(name, "btn_SL_down"))     {return;}
+        if( val && !strcmp(name, "btn_SL_ready"))    {return;}
+        if( val && !strcmp(name, "btn_SL_cancel"))   {return;}
     }
     if(_state == SETTINGS) {
-        if( val && strcmp(name, "btn_SE_bright") == 0)  {return;}
-        if( val && strcmp(name, "btn_SE_equal") == 0)   {return;}
-        if( val && strcmp(name, "btn_SE_radio") == 0)   {return;}
+        if( val && !strcmp(name, "btn_SE_bright"))   {return;}
+        if( val && !strcmp(name, "btn_SE_equal"))    {return;}
+        if( val && !strcmp(name, "btn_SE_wifi"))    {return;}
+        if( val && !strcmp(name, "btn_SE_radio"))    {return;}
     }
     if(_state == BRIGHTNESS){
-        if( val && strcmp(name, "btn_BR_ready") == 0)   {return;}
-        if( val && strcmp(name, "pic_BR_logo") == 0)    {return;}
+        if( val && !strcmp(name, "btn_BR_ready"))    {return;}
+        if( val && !strcmp(name, "pic_BR_logo"))     {return;}
     }
     if(_state == EQUALIZER) {
-        if( val && strcmp(name, "btn_E_LP") == 0)       {sdr_EQ_lowPass.setValue(0);  return;}
-        if( val && strcmp(name, "btn_E_BP") == 0)       {sdr_EQ_bandPass.setValue(0); return;}
-        if( val && strcmp(name, "btn_E_HP") == 0)       {sdr_EQ_highPass.setValue(0); return;}
-        if( val && strcmp(name, "btn_E_BAL") == 0)      {sdr_EQ_balance.setValue(0);  return;}
-        if( val && strcmp(name, "btn_EQ_Radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_EQ_Player") == 0)  {return;}
-        if( val && strcmp(name, "btn_EQ_mute") == 0)    {{if(!_f_mute) _f_muteIsPressed = true;} return;}
+        if( val && !strcmp(name, "btn_E_LP"))        {sdr_EQ_lowPass.setValue(0);  return;}
+        if( val && !strcmp(name, "btn_E_BP"))        {sdr_EQ_bandPass.setValue(0); return;}
+        if( val && !strcmp(name, "btn_E_HP"))        {sdr_EQ_highPass.setValue(0); return;}
+        if( val && !strcmp(name, "btn_E_BAL"))       {sdr_EQ_balance.setValue(0);  return;}
+        if( val && !strcmp(name, "btn_EQ_Radio"))    {return;}
+        if( val && !strcmp(name, "btn_EQ_Player"))   {return;}
+        if( val && !strcmp(name, "btn_EQ_mute"))     {{if(!_f_mute) _f_muteIsPressed = true;} return;}
     }
     if(_state == BLUETOOTH) {
-        if( val && strcmp(name, "btn_BT_pause") == 0)   {bt_emitter.pauseResume(); return;}
-        if( val && strcmp(name, "btn_BT_radio") == 0)   {return;}
-        if( val && strcmp(name, "btn_BT_volDown") == 0) {if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
-        if( val && strcmp(name, "btn_BT_volUp") == 0)   {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}  return;}
-        if( val && strcmp(name, "btn_BT_mode") == 0)    {bt_emitter.changeMode(); return;}
-        if( val && strcmp(name, "btn_BT_power") == 0)   {return;}
+        if( val && !strcmp(name, "btn_BT_pause"))    {bt_emitter.pauseResume(); return;}
+        if( val && !strcmp(name, "btn_BT_radio"))    {return;}
+        if( val && !strcmp(name, "btn_BT_volDown"))  {if(_BTvolume > 0)  {_BTvolume--; bt_emitter.downvolume();} return;}
+        if( val && !strcmp(name, "btn_BT_volUp"))    {if(_BTvolume < 31) {_BTvolume++; bt_emitter.upvolume();}  return;}
+        if( val && !strcmp(name, "btn_BT_mode"))     {bt_emitter.changeMode(); return;}
+        if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }
     if(_state == IR_SETTINGS) {
-        if( val && strcmp(name, "btn_IR_radio") == 0)   {return;}
+        if( val && !strcmp(name, "btn_IR_radio"))    {return;}
+    }
+    if(_state == WIFI_SETTINGS) {
+        if( val && !strcmp(name, "key_WI_input"))    {log_e("val %i", val); if(val == 13){ _radioSubMenue = 0; changeState(RADIO); return;}}
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
@@ -4574,108 +4690,113 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
 void graphicObjects_OnRelease(const char* name, releasedArg ra) {
 
     // all state
-        if(strcmp(name, "dispFooter") == 0)      {return;}
+        if(!strcmp(name, "dispFooter"))      {return;}
 
     if(_state == RADIO) {
-        if(strcmp(name, "btn_RA_mute") == 0)     {muteChanged(btn_RA_mute.getValue()); return;}
-        if(strcmp(name, "btn_RA_prevSta") == 0)  {prevFavStation(); dispFooter.updateStation(_cur_station); return;}
-        if(strcmp(name, "btn_RA_nextSta") == 0)  {nextFavStation(); dispFooter.updateStation(_cur_station); return;}
-        if(strcmp(name, "btn_RA_staList") == 0)  {_radioSubMenue = 0; changeState(STATIONSLIST); return;}
-        if(strcmp(name, "btn_RA_player") == 0)   {_playerSubMenue = 0; stopSong(); _playerSubMenue = 0; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_RA_dlna") == 0)     {_dlnaSubMenue = 0; stopSong(); _dlnaSubMenue = 0; changeState(DLNA); return;}
-        if(strcmp(name, "btn_RA_clock") == 0)    {_clockSubMenue = 0; _clockSubMenue = 0; changeState(CLOCK); return;}
-        if(strcmp(name, "btn_RA_sleep") == 0)    {_radioSubMenue = 0; changeState(SLEEPTIMER); return;}
-        if(strcmp(name, "btn_RA_settings") == 0) {_settingsSubMenue = 0; changeState(SETTINGS); return;}
-        if(strcmp(name, "btn_RA_equal") == 0)    {_radioSubMenue = 0; changeState(EQUALIZER); return;}
-        if(strcmp(name, "btn_RA_bt") == 0)       {_radioSubMenue = 0; changeState(BLUETOOTH); return;}
-        if(strcmp(name, "btn_RA_off") == 0)      {fall_asleep(); return;}
-        if(strcmp(name, "VUmeter_RA") == 0)      {return;}
-        if(strcmp(name, "sdr_RA_volume") == 0)   {return;}
+        if(!strcmp(name, "btn_RA_mute"))     {muteChanged(btn_RA_mute.getValue()); return;}
+        if(!strcmp(name, "btn_RA_prevSta"))  {prevFavStation(); dispFooter.updateStation(_cur_station); return;}
+        if(!strcmp(name, "btn_RA_nextSta"))  {nextFavStation(); dispFooter.updateStation(_cur_station); return;}
+        if(!strcmp(name, "btn_RA_staList"))  {_radioSubMenue = 0; changeState(STATIONSLIST); return;}
+        if(!strcmp(name, "btn_RA_player"))   {_playerSubMenue = 0; stopSong(); _playerSubMenue = 0; changeState(PLAYER); return;}
+        if(!strcmp(name, "btn_RA_dlna"))     {_dlnaSubMenue = 0; stopSong(); _dlnaSubMenue = 0; changeState(DLNA); return;}
+        if(!strcmp(name, "btn_RA_clock"))    {_clockSubMenue = 0; _clockSubMenue = 0; changeState(CLOCK); return;}
+        if(!strcmp(name, "btn_RA_sleep"))    {_radioSubMenue = 0; changeState(SLEEPTIMER); return;}
+        if(!strcmp(name, "btn_RA_settings")) {_settingsSubMenue = 0; changeState(SETTINGS); return;}
+        if(!strcmp(name, "btn_RA_equal"))    {_radioSubMenue = 0; changeState(EQUALIZER); return;}
+        if(!strcmp(name, "btn_RA_bt"))       {_radioSubMenue = 0; changeState(BLUETOOTH); return;}
+        if(!strcmp(name, "btn_RA_off"))      {fall_asleep(); return;}
+        if(!strcmp(name, "VUmeter_RA"))      {return;}
+        if(!strcmp(name, "sdr_RA_volume"))   {return;}
     }
     if(_state == STATIONSLIST) {
-        if(strcmp(name, "lst_RADIO") == 0)       {if(ra.val1){_radioSubMenue = 0; setStationByNumber(ra.val1); _radioSubMenue = 0; changeState(RADIO);} return;}
+        if(!strcmp(name, "lst_RADIO"))       {if(ra.val1){_radioSubMenue = 0; setStationByNumber(ra.val1); _radioSubMenue = 0; changeState(RADIO);} return;}
     }
     if(_state == PLAYER) {
-        if(strcmp(name, "btn_PL_mute") == 0)     {muteChanged(btn_PL_mute.getValue()); return;}
-        if(strcmp(name, "btn_PL_pause") == 0)    {if(_f_isFSConnected) {_f_pauseResume = audio.pauseResume();} return;}
-        if(strcmp(name, "btn_PL_cancel") == 0)   {_playerSubMenue = 0; stopSong(); changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_prevFile") == 0) {return;}
-        if(strcmp(name, "btn_PL_nextFile") == 0) {return;}
-        if(strcmp(name, "btn_PL_ready") == 0)    {stopSong(); SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubMenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playAll") == 0)  { _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_shuffle") == 0)  { _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_PL_fileList") == 0) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
-        if(strcmp(name, "btn_PL_radio") == 0)    {setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_PL_off") == 0)      {fall_asleep(); return;}
-        if(strcmp(name, "sdr_PL_volume") == 0)   {return;}
-        if(strcmp(name, "btn_PL_playNext") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
-        if(strcmp(name, "btn_PL_playPrev") == 0) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
-        if(strcmp(name, "pgb_PL_progress") == 0) {audio.setTimeOffset(ra.val2); return;}
+        if(!strcmp(name, "btn_PL_mute"))     {muteChanged(btn_PL_mute.getValue()); return;}
+        if(!strcmp(name, "btn_PL_pause"))    {if(_f_isFSConnected) {_f_pauseResume = audio.pauseResume();} return;}
+        if(!strcmp(name, "btn_PL_cancel"))   {_playerSubMenue = 0; stopSong(); changeState(PLAYER); return;}
+        if(!strcmp(name, "btn_PL_prevFile")) {return;}
+        if(!strcmp(name, "btn_PL_nextFile")) {return;}
+        if(!strcmp(name, "btn_PL_ready"))    {stopSong(); SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); _playerSubMenue = 1; changeState(PLAYER); showAudioFileNumber(); return;}
+        if(!strcmp(name, "btn_PL_playAll"))  { _f_shuffle = false; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
+        if(!strcmp(name, "btn_PL_shuffle"))  { _f_shuffle = true; preparePlaylistFromSDFolder(_cur_AudioFolder); processPlaylist(true); _playerSubMenue = 1; changeState(PLAYER); return;}
+        if(!strcmp(name, "btn_PL_fileList")) {_SD_content.listFilesInDir(_cur_AudioFolder, true, false); changeState(AUDIOFILESLIST); return;}
+        if(!strcmp(name, "btn_PL_radio"))    {setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_PL_off"))      {fall_asleep(); return;}
+        if(!strcmp(name, "sdr_PL_volume"))   {return;}
+        if(!strcmp(name, "btn_PL_playNext")) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(!strcmp(name, "btn_PL_playPrev")) {SD_playFile(_cur_AudioFolder, _SD_content.getColouredSStringByIndex(_cur_AudioFileNr)); showAudioFileNumber(); return;}
+        if(!strcmp(name, "pgb_PL_progress")) {audio.setTimeOffset(ra.val2); return;}
     }
     if(_state == AUDIOFILESLIST){
-        if(strcmp(name, "lst_PLAYER") == 0)      {if(ra.val1 == 1){;} // wipe up/down
-                                                  if(ra.val1 == 2){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
-                                                  if(ra.val1 == 3){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; stopSong(); SD_playFile(ra.arg3);} return;}
+        if(!strcmp(name, "lst_PLAYER"))      {if(ra.val1 == 1){;} // wipe up/down
+                                              if(ra.val1 == 2){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; lst_PLAYER.show(_cur_AudioFolder, _cur_AudioFileNr);   } // next prev folder
+                                              if(ra.val1 == 3){x_ps_free(&_cur_AudioFolder); _cur_AudioFolder = strdup(ra.arg1); _cur_AudioFileNr = ra.val2; stopSong(); SD_playFile(ra.arg3);} return;}
     }
     if(_state == DLNA) {
-        if(strcmp(name, "btn_DL_mute") == 0)     {muteChanged(btn_DL_mute.getValue()); return;}
-        if(strcmp(name, "btn_DL_pause") == 0)    {_f_pauseResume = audio.pauseResume(); return;}
-        if(strcmp(name, "btn_DL_radio") == 0)    {setStation(_cur_station); txt_DL_fName.setText(""); _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_DL_fileList") == 0) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
-        if(strcmp(name, "btn_DL_cancel") == 0)   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(true, false); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}
-        if(strcmp(name, "sdr_DL_volume") == 0)   {return;}
+        if(!strcmp(name, "btn_DL_mute") )    {muteChanged(btn_DL_mute.getValue()); return;}
+        if(!strcmp(name, "btn_DL_pause"))    {_f_pauseResume = audio.pauseResume(); return;}
+        if(!strcmp(name, "btn_DL_radio"))    {setStation(_cur_station); txt_DL_fName.setText(""); _radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_DL_fileList")) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
+        if(!strcmp(name, "btn_DL_cancel"))   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(true, false); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}
+        if(!strcmp(name, "sdr_DL_volume"))   {return;}
     }
     if(_state == DLNAITEMSLIST) {
-        if(strcmp(name, "lst_DLNA") == 0)        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2); connecttohost(ra.arg1); _dlnaSubMenue = 0; changeState(DLNA);} // play a file
-                                                  if(ra.val1 == 2){dlna.browseServer(ra.val2, ra.arg1, 0, 50); _f_dlnaMakePlaylistOTF = true; } // browse dlna object, waiting for content and create a playlist
-                                                  return;}
+        if(!strcmp(name, "lst_DLNA"))        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2); connecttohost(ra.arg1); _dlnaSubMenue = 0; changeState(DLNA);} // play a file
+                                              if(ra.val1 == 2){dlna.browseServer(ra.val2, ra.arg1, 0, 50); _f_dlnaMakePlaylistOTF = true; } // browse dlna object, waiting for content and create a playlist
+                                              return;}
     }
     if(_state == CLOCK) {
-        if(strcmp(name, "btn_CL_mute") == 0)     {muteChanged(btn_CL_mute.getValue()); return;}
-        if(strcmp(name, "btn_CL_alarm") == 0)    {changeState(ALARM); return;}
-        if(strcmp(name, "btn_CL_radio") == 0)    {_clockSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "clk_CL_green") == 0)    {_clockSubMenue = 1; changeState(CLOCK); return;}
-        if(strcmp(name, "btn_CL_off") == 0)      {fall_asleep(); return;}
-        if(strcmp(name, "sdr_CL_volume") == 0)   {return;}
+        if(!strcmp(name, "btn_CL_mute"))     {muteChanged(btn_CL_mute.getValue()); return;}
+        if(!strcmp(name, "btn_CL_alarm"))    {changeState(ALARM); return;}
+        if(!strcmp(name, "btn_CL_radio"))    {_clockSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "clk_CL_12"))       {_clockSubMenue = 1; changeState(CLOCK); return;}
+        if(!strcmp(name, "clk_CL_24"))       {_clockSubMenue = 1; changeState(CLOCK); return;}
+        if(!strcmp(name, "btn_CL_off"))      {fall_asleep(); return;}
+        if(!strcmp(name, "sdr_CL_volume"))   {return;}
     }
     if(_state == ALARM) {
-        if(strcmp(name, "clk_AL_red") == 0)      {return;}
-        if(strcmp(name, "btn_AL_left") == 0)     {clk_AL_red.shiftLeft(); return;}
-        if(strcmp(name, "btn_AL_right") == 0)    {clk_AL_red.shiftRight(); return;}
-        if(strcmp(name, "btn_AL_up") == 0)       {clk_AL_red.digitUp(); return;}
-        if(strcmp(name, "btn_AL_down") == 0)     {clk_AL_red.digitDown(); return;}
-        if(strcmp(name, "btn_AL_ready") == 0)    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
+        if(!strcmp(name, "clk_AL_red"))      {return;}
+        if(!strcmp(name, "btn_AL_left"))     {clk_AL_red.shiftLeft(); return;}
+        if(!strcmp(name, "btn_AL_right"))    {clk_AL_red.shiftRight(); return;}
+        if(!strcmp(name, "btn_AL_up"))       {clk_AL_red.digitUp(); return;}
+        if(!strcmp(name, "btn_AL_down"))     {clk_AL_red.digitDown(); return;}
+        if(!strcmp(name, "btn_AL_ready"))    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
     }
     if(_state == SLEEPTIMER) {
-        if(strcmp(name, "btn_SL_up") == 0)       {display_sleeptime(1); return;}
-        if(strcmp(name, "btn_SL_down") == 0)     {display_sleeptime(-1); return;}
-        if(strcmp(name, "btn_SL_ready") == 0)    {dispFooter.updateOffTime(_sleeptime); _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_SL_cancel") == 0)   {_radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_SL_up"))       {display_sleeptime(1); return;}
+        if(!strcmp(name, "btn_SL_down"))     {display_sleeptime(-1); return;}
+        if(!strcmp(name, "btn_SL_ready"))    {dispFooter.updateOffTime(_sleeptime); _radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_SL_cancel"))   {_radioSubMenue = 0; changeState(RADIO); return;}
     }
     if(_state == BRIGHTNESS){
-        if(strcmp(name, "btn_BR_ready") == 0)    {_radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "pic_BR_logo") == 0)     {return;}
+        if(!strcmp(name, "btn_BR_ready"))    {_radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "pic_BR_logo"))     {return;}
     }
     if(_state == EQUALIZER) {
-        if(strcmp(name, "btn_EQ_Radio") == 0)    {setStation(_cur_station); _radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_EQ_Player") == 0)   {_playerSubMenue = 0; changeState(PLAYER); return;}
-        if(strcmp(name, "btn_EQ_mute") == 0)     {muteChanged(btn_EQ_mute.getValue()); return;}
+        if(!strcmp(name, "btn_EQ_Radio"))    {setStation(_cur_station); _radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_EQ_Player"))   {_playerSubMenue = 0; changeState(PLAYER); return;}
+        if(!strcmp(name, "btn_EQ_mute"))     {muteChanged(btn_EQ_mute.getValue()); return;}
     }
     if(_state == SETTINGS) {
-        if(strcmp(name, "btn_SE_bright") == 0)   { changeState(BRIGHTNESS);  return;}
-        if(strcmp(name, "btn_SE_equal") == 0)    { changeState(EQUALIZER);   return;}
-        if(strcmp(name, "btn_SE_radio") == 0)    {_radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_SE_bright"))   { changeState(BRIGHTNESS);    return;}
+        if(!strcmp(name, "btn_SE_equal"))    { changeState(EQUALIZER);     return;}
+        if(!strcmp(name, "btn_SE_wifi"))     { changeState(WIFI_SETTINGS); return;}
+        if(!strcmp(name, "btn_SE_radio"))    {_radioSubMenue = 0; changeState(RADIO); return;}
     }
     if(_state == BLUETOOTH) {
-        if(strcmp(name, "btn_BT_pause") == 0)    {return;}
-        if(strcmp(name, "btn_BT_radio") == 0)    {_radioSubMenue = 0; changeState(RADIO); return;}
-        if(strcmp(name, "btn_BT_volDown") == 0)  {return;}
-        if(strcmp(name, "btn_BT_volUp") == 0)    {return;}
-        if(strcmp(name, "btn_BT_mode") == 0)     {return;}
-        if(strcmp(name, "btn_BT_power") == 0)    {_f_BTpower = !_f_BTcurPowerState; BTpowerChanged(!_f_BTcurPowerState); return;}
+        if(!strcmp(name, "btn_BT_pause"))    {return;}
+        if(!strcmp(name, "btn_BT_radio"))    {_radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_BT_volDown"))  {return;}
+        if(!strcmp(name, "btn_BT_volUp"))    {return;}
+        if(!strcmp(name, "btn_BT_mode"))     {return;}
+        if(!strcmp(name, "btn_BT_power"))    {_f_BTpower = !_f_BTcurPowerState; BTpowerChanged(!_f_BTcurPowerState); return;}
     }
     if(_state == IR_SETTINGS) {
-        if(strcmp(name, "btn_IR_radio") == 0)    {_radioSubMenue = 0; changeState(RADIO); return;}
+        if(!strcmp(name, "btn_IR_radio"))    {_radioSubMenue = 0; changeState(RADIO); return;}
+    }
+    if(_state == WIFI_SETTINGS) {
+        if(!strcmp(name, "wifiSettings"))    {setWiFiCredentials(ra.arg1, ra.arg2); ESP.restart();}
     }
     log_d("unused event: graphicObject %s was released", name);
 }
