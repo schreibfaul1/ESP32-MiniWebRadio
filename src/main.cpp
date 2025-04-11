@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 3.7-rc1.r   - Apr 10/2025                                                                                                               ";
+    Version 3.7-rc1.s   - Apr 11/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -4245,7 +4245,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd == "get_tftSize"){       webSrv.send("tftSize=", _tftSize); return;};
 
-    if(cmd == "getTimeZones"){      webSrv.streamfile(SD_MMC, "/timezones.csv"); return;}
+    if(cmd == "getTimeZones"){      webSrv.send("timezones=", timezones_json); return;}
 
     if(cmd == "setTimeZone"){       _TZName = param;  _TZString = arg;
                                     SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s", param.c_str(), arg.c_str());

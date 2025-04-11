@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 27.03.2025
+ *  Updated on: 11.04.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -527,7 +527,7 @@ function connect() {
         if (n >= 0) {
             var msg  = socketMsg.substring(0, n)
             var val  = socketMsg.substring(n + 1)
-            console.log("para ",msg, " val ",val)
+            // console.log("para ",msg, " val ",val)
         }
         else {
             msg = socketMsg
@@ -694,6 +694,9 @@ function connect() {
                                             document.getElementById('label-bt-mode').innerHTML= "RECEIVER"
                                             bt_RxTx = 'RX'
                                         }
+                                        break;
+            case "timezones":           console.log(msg, val)
+                                        fillTimeZoneSelect(val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -888,14 +891,13 @@ function showTab6 () {
     document.getElementById('btn5').src = 'SD/png/Search_Green.png'
     document.getElementById('btn6').src = 'SD/png/Settings_Yellow.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
-    // getTimeZoneName()
-    loadTimeZones()
     loadRingVolume()
     loadVolumeAfterAlarm()
     loadVolumeSteps()
     socket.send('getRingVolume')
     socket.send('getVolAfterAlarm')
     socket.send("getTimeSpeechLang")
+    socket.send("getTimeZones")  // fetch timezones_json
 }
 
 function showTab7 () {
@@ -1997,7 +1999,6 @@ function getTimeZoneName() {
             console.log("timeout in getTimeZoneName()");
             reject("Fehler: Anfragezeitüberschreitung"); // Promise ablehnen, falls ein Timeout auftritt
         };
-
         xhr.send();
     });
 }
@@ -2008,48 +2009,26 @@ function setTimeZone(selectObject){
     socket.send("setTimeZone=" + txt + "&" + value)
 }
 
-async function loadTimeZones() {
-    try {
-        g_timeZoneName = await getTimeZoneName(); // Warten, bis getTimeZoneName abgeschlossen ist
-        const tzFile = new XMLHttpRequest();
-        tzFile.timeout = 2000; // Zeit in Millisekunden
-        tzFile.open('GET', 'SD_Download?/timezones.csv', true);
-
-        tzFile.onreadystatechange = function () {
-            if (tzFile.readyState === 4) {
-                const tzdata = tzFile.responseText;
-                const tzNames = tzdata.split("\n");
-                const select = document.getElementById('TimeZoneSelect');
-                select.options.length = 0;
-
-                for (let i = 0; i < tzNames.length; i++) {
-                    const [tzItem1, tzItem2] = tzNames[i].split("\t");
-                    if (!tzItem1 || !tzItem2) continue;
-
-                    const opt = document.createElement('OPTION');
-                    opt.text = tzItem1;
-                    opt.value = tzItem2;
-                    select.add(opt);
-                }
-
-                // Auswahl basierend auf g_timeZoneName setzen
-                for (let i = 0; i < select.options.length; i++) {
-                    if (select.options[i].text === g_timeZoneName) {
-                        select.selectedIndex = i;
-                        break;
-                    }
-                }
+function fillTimeZoneSelect(timezones_json){
+    const timezones = JSON.parse(timezones_json);
+    const selectElement = document.getElementById('TimeZoneSelect');
+    timezones.forEach(([name, offset]) => {
+        const option = document.createElement('option');
+        option.value = offset;
+        option.textContent = name;
+        selectElement.appendChild(option);
+    });
+    getTimeZoneName().then((tzName) => {
+        const selectElement = document.getElementById('TimeZoneSelect');
+        for (let i = 0; i < selectElement.options.length; i++) {
+            if (selectElement.options[i].text === tzName) {
+                selectElement.selectedIndex = i;
+                break;
             }
-        };
-
-        tzFile.ontimeout = () => {
-            console.log("load SD/timezones.csv timeout");
-        };
-
-        tzFile.send();
-    } catch (error) {
-        console.error("Fehler beim Laden des Zeitzonennamens:", error);
-    }
+        }
+    }).catch((error) => {
+        console.error("Fehler beim Abrufen des Zeitzonennamens:", error);
+    });
 }
 
 function loadRingVolume(){
