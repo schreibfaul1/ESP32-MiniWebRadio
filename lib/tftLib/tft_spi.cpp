@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 16 2025
+// updated on Feb 12 2025
 
 #include "tft_spi.h"
 #include "Arduino.h"
@@ -175,14 +175,12 @@ void TFT_SPI::copyFramebuffer(uint8_t source, uint8_t destination, uint16_t x, u
     for(uint16_t j = y; j < y + h; j++) {
         memcpy(m_framebuffer[destination] + j * m_h_res + x, m_framebuffer[source] + j * m_h_res + x, w * 2);
     }
-    if(destination == 0){
-        startWrite();
-        setAddrWindow(x, y, w, h);
-        for(int16_t j = y; j < y + h; j++) {
-            writePixels(m_framebuffer[0] + j * m_h_res + x, w);
-        }
-        endWrite();
+    startWrite();
+    setAddrWindow(x, y, w, h);
+    for(int16_t j = y; j < y + h; j++) {
+        writePixels(m_framebuffer[0] + j * m_h_res + x, w);
     }
+    endWrite();
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_SPI::readRect(int16_t x, int16_t y, int16_t w, int16_t h, uint16_t* data) {
@@ -1548,6 +1546,21 @@ uint16_t TFT_SPI::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
         }
     }
     return chLen;
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+uint16_t TFT_SPI::getLineLength(const char* txt, bool narrow){
+    // returns the length of the string in pixels
+    uint16_t pxLength = 0;
+    uint16_t idx = 0;
+    while((uint8_t)txt[idx] != 0) {
+        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
+        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+        if(ofsX < 0) ofsX = 0;
+        if(!narrow) pxLength += ofsX;
+        idx++;
+    }
+    return pxLength;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_SPI::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){

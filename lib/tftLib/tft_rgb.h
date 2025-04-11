@@ -1,6 +1,6 @@
 // first release on 01/2025
 // updated on Feb 11 2025
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+
 
 #pragma once
 
@@ -190,6 +190,9 @@ class TFT_RGB {
     bool            handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata);
   public:
     void            loop();
+    void            reset();
+    uint64_t        getVsyncCounter() {return m_vsyncCounter;}
+    void            clearVsyncCounter() {m_vsyncCounter = 0;}
     void            begin(const Pins& newPins, const Timing& newTiming);
     void            setDisplayInversion(bool i);
     // Recommended Non-Transaction
@@ -215,6 +218,7 @@ class TFT_RGB {
     void            setFont(uint16_t font);
     inline void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; } // 0 h other v
     size_t          writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
+    uint16_t        getLineLength(const char* txt, bool narrow);
 
   private:
     Pins                   m_pins;
@@ -255,6 +259,7 @@ class TFT_RGB {
     uint16_t m_backGroundColor = TFT_WHITE;
     uint16_t m_textColor = TFT_BLACK;
     uint8_t  m_textorientation = 0;
+    uint64_t m_vsyncCounter = 0;
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
@@ -718,5 +723,6 @@ class TFT_RGB {
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+
+
 };
-#endif // CONFIG_IDF_TARGET_ESP32S3

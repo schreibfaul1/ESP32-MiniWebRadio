@@ -1,6 +1,6 @@
 // first release on 01/2025
-// updated on Feb 12 2025
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+// updated on Feb 28 2025
+
 
 #include "Arduino.h"
 #include "tft_rgb.h"
@@ -16,6 +16,7 @@ TFT_RGB::TFT_RGB() { // Constructor
     m_framebuffer[1] = NULL;
     m_framebuffer[2] = NULL;
     m_vsync_semaphore = xSemaphoreCreateBinary();
+    m_vsyncCounter = 0;
     xSemaphoreGive(m_vsync_semaphore);
 }
 void TFT_RGB::loop(){
@@ -31,12 +32,15 @@ bool TFT_RGB::on_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_pan
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::handle_vsync_event(esp_lcd_panel_handle_t panel, const esp_lcd_rgb_panel_event_data_t *edata) {
-    if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
-        esp_lcd_rgb_panel_refresh(m_panel);
-        xSemaphoreGive(m_vsync_semaphore);
-        m_refresh = true;
-        return true;
-    }
+ //   if (xSemaphoreTake(m_vsync_semaphore, 0) == pdTRUE) {
+        int res = esp_lcd_rgb_panel_refresh(m_panel);
+ //       xSemaphoreGive(m_vsync_semaphore);
+        if(res == ESP_OK){
+            m_refresh = true;
+            m_vsyncCounter++;
+            return true;
+        }
+ //   }
     m_refresh = false;
     return false;
 }
@@ -47,6 +51,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_timing = newTiming;
 
     esp_lcd_rgb_panel_config_t panel_config;
+    memset(&panel_config, 0, sizeof(panel_config));
     panel_config.clk_src = LCD_CLK_SRC_PLL240M;
 
     panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
@@ -58,11 +63,11 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     panel_config.timings.vsync_pulse_width = m_timing.vsync_pulse_width;
     panel_config.timings.vsync_back_porch = m_timing.vsync_back_porch;
     panel_config.timings.vsync_front_porch = m_timing.vsync_front_porch;
-    panel_config.timings.flags.hsync_idle_low = false;
-    panel_config.timings.flags.vsync_idle_low = false;
+    panel_config.timings.flags.hsync_idle_low = true;
+    panel_config.timings.flags.vsync_idle_low = true;
     panel_config.timings.flags.de_idle_high = false;
     panel_config.timings.flags.pclk_active_neg = true;
-    panel_config.timings.flags.pclk_idle_high = false;
+    panel_config.timings.flags.pclk_idle_high = true;
 
     panel_config.data_width = 16; // RGB565
     panel_config.bits_per_pixel = 16;
@@ -98,9 +103,10 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     if(tft_info) tft_info("Display initialisiert.");
 
     // Hintergrundbeleuchtung einschalten
-    gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
-    gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
-
+    if(m_pins.bl >= 0){
+        gpio_set_direction((gpio_num_t)m_pins.bl, GPIO_MODE_OUTPUT);
+        gpio_set_level((gpio_num_t)m_pins.bl, 1); // Hintergrundbeleuchtung aktivieren
+    }
     m_h_res = m_timing.h_res;
     m_v_res = m_timing.v_res;
 
@@ -110,21 +116,25 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
 
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[0] %i", m_h_res, m_v_res, m_framebuffer[0]);
     memset(m_framebuffer[0], 0xFF, m_h_res * m_v_res * 2);
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[1] %i", m_h_res, m_v_res, m_framebuffer[1]);
     memset(m_framebuffer[1], 0xFF, m_h_res * m_v_res * 2);
-    log_e("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
+    // log_w("m_h_res: %d, m_v_res: %d, m_framebuffer[2] %i", m_h_res, m_v_res, m_framebuffer[2]);
     memset(m_framebuffer[2], 0xFF, m_h_res * m_v_res * 2);
 
-    esp_lcd_rgb_panel_event_callbacks_t cbs = {
-    //    .on_color_trans_done = nullptr,  // if not used, set to nullptr
+    esp_lcd_rgb_panel_event_callbacks_t cbs = { // if not used, set to nullptr
+        .on_color_trans_done = nullptr,
         .on_vsync = TFT_RGB::on_vsync_event,
-        .on_bounce_empty = nullptr,
-    //    .on_frame_buf_complete = nullptr,
+        .on_bounce_empty = nullptr,           /*!< Bounce buffer empty callback. */
+        .on_frame_buf_complete = nullptr      /*!< A whole frame buffer was just sent to the LCD DMA */
     };
     esp_lcd_rgb_panel_register_event_callbacks(m_panel, &cbs, this);
     esp_lcd_rgb_panel_refresh(m_panel);
+}
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void TFT_RGB::reset() {
+    ESP_ERROR_CHECK(esp_lcd_panel_reset(m_panel));
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool TFT_RGB::panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap) {
@@ -1458,6 +1468,21 @@ uint16_t TFT_RGB::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
         }
     }
     return chLen;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t TFT_RGB::getLineLength(const char* txt, bool narrow){
+    // returns the length of the string in pixels
+    uint16_t pxLength = 0;
+    uint16_t idx = 0;
+    while((uint8_t)txt[idx] != 0) {
+        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
+        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+        if(ofsX < 0) ofsX = 0;
+        if(!narrow) pxLength += ofsX;
+        idx++;
+    }
+    return pxLength;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
@@ -4776,34 +4801,32 @@ void TFT_RGB::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
             if (a < 255) {
                 // **Alpha-Blending mit vorhandenem Framebuffer-Wert**
 
-                // 1. Bestehenden RGB565-Wert auslesen
+                // 1. read old color from framebuffer
                 uint16_t oldColor = m_framebuffer[0][fbIndex];
 
-                // 2. Bestehendes RGB565-Pixel in 8-Bit RGB umwandeln
+                // 2. convert old color back into RGB888
                 uint8_t oldR = ((oldColor >> 11) & 0x1F) << 3;
                 uint8_t oldG = ((oldColor >> 5) & 0x3F) << 2;
                 uint8_t oldB = (oldColor & 0x1F) << 3;
 
-                // 3. Alpha-Blending Formel anwenden
+                // 3. calculate new color with alpha blending
                 uint8_t newR = ((r * a) + (oldR * (255 - a))) / 255;
                 uint8_t newG = ((g * a) + (oldG * (255 - a))) / 255;
                 uint8_t newB = ((b * a) + (oldB * (255 - a))) / 255;
 
-                // 4. Neue Farbe wieder in RGB565 umwandeln
-                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) |  // 8->5 Bit (Rot)
-                                             ((newG >> 2) << 5)  |  // 8->6 Bit (Grün)
-                                             (newB >> 3);         // 8->5 Bit (Blau)
+                // 4. Convert new color back into RGB565
+                m_framebuffer[0][fbIndex] = ((newR >> 3) << 11) |  // 8->5 Bit (red)
+                                             ((newG >> 2) << 5)  |  // 8->6 Bit (green)
+                                             (newB >> 3);         // 8->5 Bit (blue)
             } else {
-                // **Normale RGB565-Konvertierung (kein Blending nötig, volle Deckkraft)**
-                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) |  // 8->5 Bit (Rot)
-                                             ((g >> 2) << 5)  |  // 8->6 Bit (Grün)
-                                             (b >> 3);         // 8->5 Bit (Blau)
+                // **Normal RGB565 conversion (no blending necessary, full opacity)**
+                m_framebuffer[0][fbIndex] = ((r >> 3) << 11) |  // 8->5 Bit (red)
+                                             ((g >> 2) << 5)  |  // 8->6 Bit (green)
+                                             (b >> 3);         // 8->5 Bit (blue)
             }
         }
     }
-
-    // Nur den veränderten Bereich zeichnen
-    panelDrawBitmap(x, y, x + w, y + h, &m_framebuffer[0][y * m_h_res + x]);
+    // Only draw the changed area
+    panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#endif // CONFIG_IDF_TARGET_ESP32S3
