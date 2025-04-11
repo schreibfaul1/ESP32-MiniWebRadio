@@ -218,6 +218,7 @@ class TFT_RGB {
     void            setFont(uint16_t font);
     inline void     setTextOrientation(uint16_t orientation = 0) { m_textorientation = orientation; } // 0 h other v
     size_t          writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16_t win_W, int16_t win_H, uint8_t h_align = TFT_ALIGN_LEFT, uint8_t v_align = TFT_ALIGN_CENTER, bool narrow = false, bool noWrap = false, bool autoSize = false);
+    uint16_t        getLineLength(const char* txt, bool narrow);
 
   private:
     Pins                   m_pins;

@@ -1470,6 +1470,21 @@ uint16_t TFT_RGB::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
     return chLen;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+uint16_t TFT_RGB::getLineLength(const char* txt, bool narrow){
+    // returns the length of the string in pixels
+    uint16_t pxLength = 0;
+    uint16_t idx = 0;
+    while((uint8_t)txt[idx] != 0) {
+        uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
+        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+        if(ofsX < 0) ofsX = 0;
+        if(!narrow) pxLength += ofsX;
+        idx++;
+    }
+    return pxLength;
+}
+//------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
     // cpArr contains the CodePoints of all printable characters in the string. chLength is the length of cpArr. From a starting position, the characters that fit into a width of win_W are determined.
     // The ending of a word is defined by a space or an \n. The number of characters that can be written is returned. For later alignment of the characters, the length is passed in usedPxLength.

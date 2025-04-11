@@ -131,6 +131,10 @@ The remote control must support the NEC protocol. If several remote controls are
 The RT pin is not part of the soldering strip, but is located in the middle of the right side.<br>
 ![PCM5102A Board](docs/KCX_BT_EMITTER_pins.jpg)<br>
 
+### WiFi Credentials
+If you see that, there are illegal characters in the WIFI access data. Sometimes only an `erase flash` help
+![Wrong Credentials](docs/wrong_credentials.jpg)<br>
+
 <br>
 ___________________________________________________________
 <br>

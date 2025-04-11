@@ -10,8 +10,8 @@
 #define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
 #define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_VERSION              0                               // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911
-#define TP_ROTATION             3                               // only SPI displays, 1 or 3 (landscape)
+#define TP_VERSION              5                               // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911
+#define TP_ROTATION             1                               // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR             0                               // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR             0                               // only SPI displays, (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT            0                               // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
@@ -1838,6 +1838,183 @@ public:
     }
 };
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class inputbox : public RegisterTable {
+  private:
+    int16_t         m_x = 0;
+    int16_t         m_y = 0;
+    int16_t         m_w = 0;
+    int16_t         m_h = 0;
+    uint8_t         m_fontSize = 0;
+    uint8_t         m_h_align = TFT_ALIGN_RIGHT;
+    uint8_t         m_v_align = TFT_ALIGN_TOP;
+    uint8_t         m_padding_left = 0; // left margin
+    uint8_t         m_paddig_right = 0; // right margin
+    uint8_t         m_paddig_top = 0; // top margin
+    uint8_t         m_paddig_bottom = 0; // bottom margin
+    uint8_t         m_borderWidth = 0;
+    uint32_t        m_bgColor = 0;
+    uint32_t        m_fgColor = 0;
+    uint32_t        m_borderColor = 0;
+    char*           m_text = NULL;
+    char*           m_name = NULL;
+    bool            m_enabled = false;
+    bool            m_clicked = false;
+    bool            m_autoSize = false;
+    bool            m_narrow = false;
+    bool            m_noWrap = false;
+    bool            m_backgroundTransparency = false;
+    bool            m_saveBackground         = false;
+    releasedArg     m_ra;
+  public:
+    inputbox(const char* name){
+        register_object(this);
+        if(name) m_name = x_ps_strdup(name);
+        else     m_name = x_ps_strdup("textbox");
+        m_bgColor = TFT_BLACK;
+        m_fgColor = TFT_LIGHTGREY;
+        m_borderColor = TFT_BLACK;
+        m_fontSize = 1;
+    }
+    ~inputbox(){
+        x_ps_free(&m_text);
+        x_ps_free(&m_name);
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_padding_left  = paddig_left;
+        m_paddig_right  = paddig_right;
+        m_paddig_top    = paddig_top;
+        m_paddig_bottom = paddig_bottom;
+    }
+    const char* getName(){
+        return m_name;
+    }
+    bool isEnabled() {
+        return m_enabled;
+    }
+    void show(bool backgroundTransparency, bool saveBackground){
+        m_backgroundTransparency = backgroundTransparency;
+        m_saveBackground = saveBackground;
+        m_enabled = true;
+        m_clicked = false;
+        if(!m_text){m_text = strdup("");}
+        if(m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        writeText(m_text);
+    }
+    void hide(){
+        if(m_backgroundTransparency){
+            if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+            else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        }
+        else{
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+    void disable(){
+        m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
+    }
+    void setFont(uint8_t size){ // size 0 -> auto, choose besr font size
+        m_fontSize = 0;
+        if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
+        else{m_autoSize = true;}
+    }
+    void setTextColor(uint32_t color){
+        m_fgColor = color;
+    }
+    void setBGcolor(uint32_t color){
+        m_bgColor = color;
+    }
+    void setBorderColor(uint32_t color){
+        m_borderColor = color;
+    }
+    void setBorderWidth(uint8_t width){ // 0 = no border
+        m_borderWidth = width;
+        if(m_borderWidth > 2) m_borderWidth = 2;
+        m_padding_left = m_padding_left + m_borderWidth;
+        m_paddig_right = m_paddig_right + m_borderWidth;
+        m_paddig_top = m_paddig_top + m_borderWidth;
+        m_paddig_bottom = m_paddig_bottom + m_borderWidth;
+    }
+    bool positionXY(uint16_t x, uint16_t y){
+        if(x < m_x) return false;
+        if(y < m_y) return false;
+        if(x > m_x + m_w) return false;
+        if(y > m_y + m_h) return false;
+        if(m_enabled) m_clicked = true;
+        if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if(!m_enabled) return false;
+        return true;
+    }
+    bool released(){
+        if(!m_enabled) return false;
+        if(!m_clicked) return false;
+        m_clicked = false;
+        if(graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        return true;
+    }
+    void setText(const char* txt, bool narrow = false, bool noWrap = false){ // prepare a text, wait of show() to write it
+        if(!txt){txt = strdup("");}
+        x_ps_free(&m_text);
+        m_text = x_ps_strdup(txt);
+        m_narrow = narrow;
+        m_noWrap = noWrap;
+    }
+    void setAlign(uint8_t h_align, uint8_t v_align){
+        m_h_align = h_align;
+        m_v_align = v_align;
+    }
+    void writeText(const char* txt){
+        if(!txt){txt = strdup("");}
+        if(txt != m_text){ // no self copy
+            x_ps_free(&m_text);
+            m_text = x_ps_strdup(txt);
+        }
+        if(m_enabled){
+            uint16_t txtColor_tmp = tft.getTextColor();
+            uint16_t bgColor_tmp = tft.getBackGroundColor();
+            tft.setTextColor(m_fgColor);
+            tft.setBackGoundColor(m_bgColor);
+            if(m_backgroundTransparency){
+                if(m_saveBackground) tft.copyFramebuffer(2, 0, m_x, m_y, m_w, m_h);
+                else                 tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+            }
+            else{
+                tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+            }
+            if(m_fontSize != 0){ tft.setFont(m_fontSize);}
+            int x = m_x + m_padding_left;
+            int y = m_y + m_paddig_top;
+            int w = m_w - (m_paddig_right + m_padding_left);
+            int h = m_h - (m_paddig_bottom + m_paddig_top);
+            if(m_borderWidth > 0){tft.drawRect(m_x, m_y, m_w, m_h, m_borderColor);}
+            if(m_borderWidth > 1){tft.drawRect(m_x + 1, m_y + 1, m_w - 2, m_h - 2, m_borderColor);}
+
+            uint16_t lineLength = 0;
+            uint16_t txtMaxWidth = w - 2 * h;
+            uint16_t idx = 0;
+            lineLength = tft.getLineLength(m_text, m_narrow);
+            while(lineLength > txtMaxWidth){
+                lineLength = tft.getLineLength(m_text + idx, m_narrow);
+                if(lineLength > txtMaxWidth){
+                    idx++;
+                    if(idx > strlen(m_text)) break;
+                }
+            }
+        log_w("lineLength: %d, txtMaxWidth: %d, idx: %d", lineLength, txtMaxWidth, idx);
+            tft.writeText(m_text + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
+            tft.setTextColor(txtColor_tmp);
+            tft.setBackGoundColor(bgColor_tmp);
+        }
+    }
+};
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class textbutton : public RegisterTable {
   private:
     int16_t         m_x = 0;
@@ -2509,7 +2686,7 @@ class wifiSettings : public RegisterTable {
                  |                             selectbox (SSID)            |  ⏬  |  ⏫  |idx |
                   —————————————————————————————————————————————————————————————————————————————
                   —————————————————————————————————————————————————————————————————————————————
-                 |                             textbox (Password)                             |
+                 |                             inputbox (Password)                            |
                   —————————————————————————————————————————————————————————————————————————————
                   —————————————————————————————————————————————————————————————————————————————
                  |                                                                            |
@@ -2546,7 +2723,7 @@ std::vector<char*> m_ssid;
 std::vector<char*> m_password;
 releasedArg        m_ra;
 selectbox*         m_sel_ssid     = new selectbox("wifiSettings_selectbox_ssid", 0);
-textbox*           m_txt_password = new textbox("wifiSettings_txtbox_pwd");
+inputbox*          m_in_password = new inputbox("wifiSettings_txtbox_pwd");
 keyBoard*          m_keyboard     = new keyBoard("wifiSettings_keyBoard", 0);
 struct w_se       {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winSelect;
 struct w_pwd      {uint16_t x = 0; uint16_t y = 0; uint16_t w = 0; uint16_t h = 0;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} m_winPWD;
@@ -2561,18 +2738,18 @@ public:
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
         setFontSize(fontSize);
-        m_txt_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
-        m_txt_password->setTextColor(m_fgColor);
-        m_txt_password->setBGcolor(m_bgColor);
-        m_txt_password->setBorderColor(m_borderColor);
-        m_txt_password->setBorderWidth(m_borderWidth);
-        m_txt_password->setFont(0); // auto size
+        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setTextColor(m_fgColor);
+        m_in_password->setBGcolor(m_bgColor);
+        m_in_password->setBorderColor(m_borderColor);
+        m_in_password->setBorderWidth(m_borderWidth);
+        m_in_password->setFont(0); // auto size
     }
     ~wifiSettings(){
         x_ps_free(&m_name);
         vector_clear_and_shrink(m_password);
         delete m_sel_ssid;
-        delete m_txt_password;
+        delete m_in_password;
         delete m_keyboard;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom){
@@ -2601,7 +2778,7 @@ public:
         m_paddig_top    = paddig_top;
         m_paddig_bottom = paddig_bottom;
         m_sel_ssid->begin(m_winSelect.x, m_winSelect.y, m_winSelect.w, m_winSelect.h, m_winSelect.pl, m_winSelect.pr, m_winSelect.pt, m_winSelect.pb);
-        m_txt_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
+        m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
     const char* getName(){
@@ -2611,11 +2788,11 @@ public:
         return m_enabled;
     }
     void show(bool backgroundTransparency, bool saveBackground){
-        m_txt_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
+        m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_sel_ssid->show(m_backgroundTransparency, m_saveBackground);
-        m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+        m_in_password->show(m_backgroundTransparency, m_saveBackground);
         m_keyboard->show(m_backgroundTransparency, m_saveBackground);
         m_enabled = true;
         m_clicked = false;
@@ -2625,19 +2802,19 @@ public:
     void hide(){
         m_enabled = false;
         m_sel_ssid->hide();
-        m_txt_password->hide();
+        m_in_password->hide();
         m_keyboard->hide();
     }
     void disable(){
         m_enabled = false;
         m_sel_ssid->disable();
-        m_txt_password->disable();
+        m_in_password->disable();
         m_keyboard->disable();
     }
     void enable(){
         m_enabled = true;
         m_sel_ssid->enable();
-        m_txt_password->enable();
+        m_in_password->enable();
         m_keyboard->enable();
     }
     void setFontSize(uint8_t size){ // size 0 -> auto, choose besr font size
@@ -2645,31 +2822,31 @@ public:
         if(size != 0) {m_fontSize = size; tft.setFont(m_fontSize);}
         else{m_autoSize = true;}
         m_sel_ssid->setFontSize(m_fontSize);
-        m_txt_password->setFont(m_fontSize);
+        m_in_password->setFont(m_fontSize);
     //    m_keyboard->setFontSize(m_fontSize);
     }
     void setTextColor(uint32_t color){
         m_fgColor = color;
         m_sel_ssid->setTextColor(m_fgColor);
-        m_txt_password->setTextColor(m_fgColor);
+        m_in_password->setTextColor(m_fgColor);
         // m_keyboard->setTextColor(m_fgColor);
     }
     void setBGcolor(uint32_t color){
         m_bgColor = color;
         m_sel_ssid->setBGcolor(m_bgColor);
-        m_txt_password->setBGcolor(m_bgColor);
+        m_in_password->setBGcolor(m_bgColor);
     //    m_keyboard->setBGcolor(m_bgColor);
     }
     void setBorderColor(uint32_t color){
         m_borderColor = color;
         m_sel_ssid->setBorderColor(m_borderColor);
-        m_txt_password->setBorderColor(m_borderColor);
+        m_in_password->setBorderColor(m_borderColor);
     }
     void setBorderWidth(uint8_t width){ // 0 = no border
         m_borderWidth = width;
         if(m_borderWidth > 2) m_borderWidth = 2;
         m_sel_ssid->setBorderWidth(m_borderWidth);
-        m_txt_password->setBorderWidth(m_borderWidth);
+        m_in_password->setBorderWidth(m_borderWidth);
     //    m_keyboard->setBorderWidth(m_borderWidth);
     }
     bool positionXY(uint16_t x, uint16_t y){
@@ -2680,12 +2857,12 @@ public:
         if(m_enabled) m_clicked = true;
         if(graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
         if(m_sel_ssid->positionXY(x, y)){;}
-        if(m_txt_password->positionXY(x, y)){;}
+        if(m_in_password->positionXY(x, y)){;}
         if(m_keyboard->positionXY(x, y)) {
             // log_e("key pressed %i", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_pwd_idx);
-            m_txt_password->setText(m_password[m_pwd_idx]);
-            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+            m_in_password->setText(m_password[m_pwd_idx]);
+            m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
         if(!m_enabled) return false;
         return true;
@@ -2699,15 +2876,15 @@ public:
             if(selTxt){
                 for(int i = 0; i < m_ssid.size(); i++){
                     if(strcmp(selTxt, m_ssid[i]) == 0){
-                        m_txt_password->setText(m_password[i]);
-                        m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+                        m_in_password->setText(m_password[i]);
+                        m_in_password->show(m_backgroundTransparency, m_saveBackground);
                         m_pwd_idx = i;
                     }
                 }
             } log_w("selected %s", selTxt);
             ret = true;
         }
-        if(m_txt_password->released()) {/*log_e("m_txt_password released")*/ ;}
+        if(m_in_password->released()) {/*log_e("m_txt_password released")*/ ;}
         if(m_keyboard->released())     {/*log_e("keyboard released")*/ ;}
         if(m_keyboard->getVal() == 0x0D){ // enter
             m_ra.arg1 = m_ssid[m_pwd_idx]; // ssid
@@ -2727,8 +2904,8 @@ public:
         m_sel_ssid->addText(ssid);
         m_ssid.push_back(strdup(ssid));
         if(m_ssid.size() == 1){
-            m_txt_password->setText(pwd);
-            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
+            m_in_password->setText(pwd);
+            m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
         m_password.push_back(strndup(pwd, 64));
         x_ps_free(&pwd);
@@ -2737,7 +2914,7 @@ public:
         m_sel_ssid->clearText();
         vector_clear_and_shrink(m_password);
         vector_clear_and_shrink(m_ssid);
-        m_txt_password->setText("");
+        m_in_password->setText("");
     }
     char* getSelectedText(){
     //    if(m_selContent.size() > 0){return m_selContent[m_idx];}
@@ -2748,8 +2925,6 @@ public:
         if(ch == 0x08){ // backspace
             if(m_password[idx][0] == 0) return;
             m_password[idx][strlen(m_password[idx]) - 1] = 0;
-            m_txt_password->setText(m_password[idx]);
-            m_txt_password->show(m_backgroundTransparency, m_saveBackground);
         }
         else if(ch == 0x0D){ // enter
         //    log_w("enter pressed");

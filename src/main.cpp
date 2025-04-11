@@ -2719,6 +2719,7 @@ void changeState(int32_t state){
             clearWithOutHeaderFooter();
             cls_wifiSettings.clearText();
             cls_wifiSettings.setBorderWidth(1);
+            cls_wifiSettings.setFontSize(_listFontSize);
             int16_t n = WiFi.scanNetworks();
             SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
             for(int i = 0; i < n; i++){
