@@ -1988,16 +1988,16 @@ function getTimeZoneName() {
                 if (xhr.status === 200) {
                     const timeZoneName = xhr.responseText;
                     console.log("tzName=", timeZoneName);
-                    resolve(timeZoneName); // Promise mit dem erhaltenen Wert auflösen
+                    resolve(timeZoneName); // Dissolve the promise with the value obtained
                 } else {
                     console.log("xhr.status=", xhr.status);
-                    reject(`Fehler: Status ${xhr.status}`); // Promise ablehnen, falls ein Fehler auftritt
+                    reject(`Error: Status ${xhr.status}`); // Reject the promise if an error occurs
                 }
             }
         };
         xhr.ontimeout = () => {
             console.log("timeout in getTimeZoneName()");
-            reject("Fehler: Anfragezeitüberschreitung"); // Promise ablehnen, falls ein Timeout auftritt
+            reject("Error: Investigation of the request"); // Reject the promise if a timeout occurs
         };
         xhr.send();
     });
@@ -2027,7 +2027,7 @@ function fillTimeZoneSelect(timezones_json){
             }
         }
     }).catch((error) => {
-        console.error("Fehler beim Abrufen des Zeitzonennamens:", error);
+        console.error("Error when calling up the time zone name:", error);
     });
 }
 
@@ -2040,7 +2040,7 @@ function loadRingVolume(){
         option.value = i;
         option.textContent = i;
         if (i === 0) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectRingVolume.appendChild(option);
     }
@@ -2055,7 +2055,7 @@ function loadVolumeAfterAlarm(){
         option.value = i;
         option.textContent = i;
         if (i === 0) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectVolumeAfterAlarm.appendChild(option);
     }
@@ -2071,7 +2071,7 @@ function loadVolumeSteps(){
         option.value = i;
         option.textContent = i;
         if (i === 21) {
-            option.selected = true; // Setzt den Standardwert
+            option.selected = true; // Sets the default value
         }
         selectVolumeSteps.appendChild(option);
     }
@@ -2159,22 +2159,22 @@ function chIRcmd(btn){  // IR command, value changed
 function writeJSONToTable(jsonIrString) {
     // console.log(jsonIrString)
     if (!jsonIrString) {
-        console.error("Kein JSON zum Rückschreiben verfügbar.");
+        console.error("No JSON available for a return writing.");
         return;
     }
     const data = JSON.parse(jsonIrString);
         data.forEach(item => {
-        const keys = Object.keys(item); // Hole die Schlüssel des Objekts (z.B. "0", "label")
-        const number = keys[0]; // Die erste Zahl (z.B. "0", "10", "20")
-        const command = item[number]; // Der Wert des Befehls
+        const keys = Object.keys(item); // Get the keys of the object (z.B. "0", "label")
+        const number = keys[0]; // The first number(z.B. "0", "10", "20")
+        const command = item[number]; // The value of the command
         ir_arr[number] = command
         const label = item["label"]; // Das Label
-        // Schreibe den Befehl zurück in das entsprechende Input-Feld
+        // Write the command back to the corresponding input field
         const inputField = document.getElementById(`ir_command_${number}`);
         if (inputField) {
             inputField.value = command;
         }
-        // Schreibe das Label zurück in die Tabelle
+        // Write the label back into the table
         const labelCell = inputField?.parentElement?.nextElementSibling;
         // if (labelCell) {
         //     labelCell.textContent = label;
@@ -2186,7 +2186,7 @@ function writeJSONToTable(jsonIrString) {
 function getTableDataAsJSON(tableId) { // make a JSON string from IR table
     const table = document.getElementById(tableId);
     if (!table) {
-        console.error(`Tabelle mit der ID ${tableId} nicht gefunden.`);
+        console.error(`Table with the ID ${tableId} not found.`);
         return;
     }
     const rows = table.getElementsByTagName('tr');
@@ -2196,7 +2196,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
         if(i == 0) cells = rows[i].getElementsByTagName('th'); // header
         else       cells = rows[i].getElementsByTagName('td');
         if (cells.length > 0) {
-            // Erste Gruppe: Erste Spalte und Kommando/Label 1
+            // First group: First column and command/label 1
             const number1 = cells[0].textContent.trim();
             const command1 = document.getElementById(`ir_command_${number1}`)?.value || "";
             const label1 = cells[2].textContent.trim();
@@ -2206,7 +2206,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj1["label"] = label1;
                 data.push(obj1);
             }
-            // Zweite Gruppe: Vierte Spalte und Kommando/Label 2
+            // Second group: Fourth column and command/label 2
             const number2 = cells[3].textContent.trim();
             const command2 = document.getElementById(`ir_command_${number2}`)?.value || "";
             const label2 = cells[5].textContent.trim();
@@ -2216,7 +2216,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj2["label"] = label2;
                 data.push(obj2);
             }
-            // Dritte Gruppe: Sechste Spalte und Kommando/Label 3
+            // Third group: sixth column and command/label 3
             const number3 = cells[6]?.textContent.trim() || "";
             const command3 = document.getElementById(`ir_command_${number3}`)?.value || "";
             const label3 = cells[8]?.textContent.trim() || "";
@@ -2226,7 +2226,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
                 obj3["label"] = label3;
                 data.push(obj3);
             }
-            // Vierte Gruppe: Achte Spalte und Kommando/Label 4
+            // Fourth group: eighth column and command/label 4
             const number4 = cells[9]?.textContent.trim() || "";
             const command4 = document.getElementById(`ir_command_${number4}`)?.value || "";
             const label4 = cells[11]?.textContent.trim() || "";
@@ -2238,7 +2238,7 @@ function getTableDataAsJSON(tableId) { // make a JSON string from IR table
             }
         }
     }
-    return JSON.stringify(data, null, 2); // JSON formatieren (schönere Ausgabe)
+    return JSON.stringify(data, null, 2); // Format Json (more beautiful edition)
 }
 
 function IRupdateJSON(btnNr){
