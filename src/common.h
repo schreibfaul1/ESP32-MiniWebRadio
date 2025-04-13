@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 10.Apr.2025
+// updated: 13.Apr.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -5750,7 +5750,7 @@ private:
     struct w_l  {uint16_t x = 400; uint16_t w =  60; uint8_t pl =  1; uint8_t pr =  0; uint8_t pt = 2; uint8_t pb = 0;} const s_Speaker;   // loudspeaker symbol 57 x 46 px
     struct w_v  {uint16_t x = 460; uint16_t w = 100; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_Volume;    // volume
     struct w_r  {uint16_t x = 560; uint16_t w =  80; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 1; uint8_t pb = 0;} const s_RSSID;     // RSSID symbol 64 x 48 px
-    struct w_t  {uint16_t x = 640; uint16_t w = 140; uint8_t pl = 10; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
+    struct w_t  {uint16_t x = 640; uint16_t w = 160; uint8_t pl =  2; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const s_time;      // time object
 #endif
 public:
     displayHeader(const char* name, uint8_t fontSize){
