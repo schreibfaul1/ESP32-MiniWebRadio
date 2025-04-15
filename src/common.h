@@ -1,5 +1,5 @@
 // created: 10.Feb.2022
-// updated: 13.Apr.2025
+// updated: 15.Apr.2025
 
 #pragma once
 #pragma GCC optimize("Os") // optimize for code size
@@ -2007,7 +2007,6 @@ class inputbox : public RegisterTable {
                     if(idx > strlen(m_text)) break;
                 }
             }
-        log_w("lineLength: %d, txtMaxWidth: %d, idx: %d", lineLength, txtMaxWidth, idx);
             tft.writeText(m_text + idx, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, false);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
@@ -2881,7 +2880,7 @@ public:
                         m_pwd_idx = i;
                     }
                 }
-            } log_w("selected %s", selTxt);
+            }
             ret = true;
         }
         if(m_in_password->released()) {/*log_e("m_txt_password released")*/ ;}
@@ -2907,7 +2906,7 @@ public:
             m_in_password->setText(pwd);
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
-        m_password.push_back(strndup(pwd, 64));
+        m_password.push_back(strndup(pwd, strlen(pwd) + 1));
         x_ps_free(&pwd);
     }
     void clearText(){
@@ -2923,8 +2922,8 @@ public:
   private:
     void changePassword(char ch, uint8_t idx){
         if(ch == 0x08){ // backspace
-            if(m_password[idx][0] == 0) return;
-            m_password[idx][strlen(m_password[idx]) - 1] = 0;
+            if(m_password[idx][0] == '\0') return;
+            m_password[idx][strlen(m_password[idx]) - 1] = '\0';
         }
         else if(ch == 0x0D){ // enter
         //    log_w("enter pressed");
@@ -2933,7 +2932,7 @@ public:
             if(strlen(m_password[idx]) < 63){
                 int len = strlen(m_password[idx]);
                 m_password[idx][len] = ch;
-                m_password[idx][len + 1] = 0;
+                m_password[idx][len + 1] = '\0';
 
             }
         }

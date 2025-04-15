@@ -1301,7 +1301,7 @@ bool connectToWiFi() {
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void setWiFiCredentials(const char* ssid, const char* password) {
     if(!ssid || !password) return;
-    if(strlen(ssid) < 5 || strlen(password) < 5) return; // min length
+    if(strlen(ssid) < 5) return; // min length
 
     log_e("ssid %s pw %s", ssid, password);
 
@@ -1320,18 +1320,16 @@ void setWiFiCredentials(const char* ssid, const char* password) {
             case 5: strcpy(line,pref.getString("wifiStr5").c_str()); break;
         }
         if(startsWith(line, ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
-            if(strlen(password) > 0) {
-                line[0] = '\0'; // clear line
-                strcat(line, ssid);
-                strcat(line, "\t");
-                strcat(line, password);
-                if(i == 0) {log_e("password can't changed, is hard coded"); state = 0;goto exit;}
-                if(i == 1) {pref.putString("wifiStr1", line); state = 1; goto exit;}
-                if(i == 2) {pref.putString("wifiStr2", line); state = 1; goto exit;}
-                if(i == 3) {pref.putString("wifiStr3", line); state = 1; goto exit;}
-                if(i == 4) {pref.putString("wifiStr4", line); state = 1; goto exit;}
-                if(i == 5) {pref.putString("wifiStr5", line); state = 1; goto exit;}
-            }
+            line[0] = '\0'; // clear line
+            strcat(line, ssid);
+            strcat(line, "\t");
+            strcat(line, password);
+            if(i == 0) {log_e("password can't changed, is hard coded"); state = 0;goto exit;}
+            if(i == 1) {pref.putString("wifiStr1", line); state = 1; goto exit;}
+            if(i == 2) {pref.putString("wifiStr2", line); state = 1; goto exit;}
+            if(i == 3) {pref.putString("wifiStr3", line); state = 1; goto exit;}
+            if(i == 4) {pref.putString("wifiStr4", line); state = 1; goto exit;}
+            if(i == 5) {pref.putString("wifiStr5", line); state = 1; goto exit;}
         }
     }
     for(i = 1; i < 6; i++) {
