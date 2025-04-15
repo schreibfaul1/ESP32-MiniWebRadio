@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Apr 11/2025                                                                                                               ";
+    Version 4.0-rc2   - Apr 15/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -49,6 +49,7 @@ char _hl_item[18][40]{  "",                 // none
 
 settings_t              _settings;
 const uint16_t          _max_stations = 1000;
+const char              _greenDot[5] = {0xF0, 0x9F, 0x9F, 0xA2, 0x00};     // UTF-8: "🟢"
 int8_t                  _currDLNAsrvNr = -1;
 uint8_t                 _alarmdays = 0;
 uint8_t                 _cur_volume = 21;
@@ -1274,7 +1275,12 @@ bool connectToWiFi() {
         char* pw = line + pos + 1;        // password is the second part
 
         wifiMulti.addAP(ssid, pw); // SSID and PW in code"
-        char pass[64 * 4] = {0}; for(int j = 0; j < strlen(pw); j++) {strcat(pass, "🟢");}
+        size_t offset = 0;
+        size_t pwlen = strlen(pw);
+        size_t dot_len = strlen(_greenDot); // = 4
+        size_t buf_size = pwlen * dot_len + 1; // +1 für '\0'
+        char pass[buf_size]; for(size_t j = 0; j < pwlen; j++) {memcpy(pass + offset, _greenDot, dot_len); offset += dot_len;}
+        pass[offset] = '\0'; // Zero-terminate the string
         SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
     }
 
