@@ -3291,6 +3291,10 @@ endbrightness:
         if(r.startsWith("pwd")){ // set password for WiFi
             changeState(WIFI_SETTINGS);
         }
+        if(r.startsWith("gif")){ // draw gif image
+            log_w("gif");
+            drawImage("/common/Tom_Jerry.gif", 100, 100);
+        }
     }
 }
 

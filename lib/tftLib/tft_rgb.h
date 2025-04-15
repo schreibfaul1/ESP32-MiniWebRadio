@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Feb 11 2025
+// updated on Apr 15 2025
 
 
 #pragma once
@@ -262,10 +262,54 @@ class TFT_RGB {
     uint64_t m_vsyncCounter = 0;
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫   J P E G   ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
-    bool debug = false;
+  private:
+    struct _gif{
+        bool     decodeSdFile_firstread = false;
+        bool     GlobalColorTableFlag = false;
+        bool     LocalColorTableFlag = false;
+        bool     SortFlag = false;
+        bool     TransparentColorFlag = false;
+        bool     UserInputFlag = false;
+        bool     ZeroDataBlock = 0;
+        bool     InterlaceFlag = false;
+        bool     drawNextImage = false;
+        uint8_t  BackgroundColorIndex = 0;
+        uint8_t  BlockTerninator = 0;
+        uint8_t  CharacterCellWidth = 0;
+        uint8_t  CharacterCellHeight = 0;
+        uint8_t  CodeSize = 0;
+        uint8_t  ColorResulution = 0;
+        uint8_t  DisposalMethod = 0;
+        uint8_t  ImageSeparator = 0;
+        uint8_t  lenDatablock = 0;
+        uint8_t  LZWMinimumCodeSize = 0;
+        uint8_t  PackedFields = 0;
+        uint8_t  PixelAspectRatio = 0;
+        uint8_t  TextBackgroundColorIndex = 0;
+        uint8_t  TextForegroundColorIndex = 0;
+        uint8_t  TransparentColorIndex = 0;
+        uint16_t ClearCode = 0;
+        uint16_t DelayTime = 0;
+        uint16_t EOIcode = 0; // End Of Information
+        uint16_t ImageHeight = 0;
+        uint16_t ImageWidth = 0;
+        uint16_t ImageLeftPosition = 0;
+        uint16_t ImageTopPosition = 0;
+        uint16_t LogicalScreenWidth = 0;
+        uint16_t LogicalScreenHeight = 0;
+        uint16_t MaxCode = 0;
+        uint16_t MaxCodeSize = 0;
+        uint16_t SizeOfGlobalColorTable = 0;
+        uint16_t SizeOfLocalColorTable = 0;
+        uint16_t TextGridLeftPosition = 0;
+        uint16_t TextGridTopPosition = 0;
+        uint16_t TextGridWidth = 0;
+        uint16_t TextGridHeight = 0;
+        uint32_t TimeStamp = 0;
+        uint32_t Iterations = 0;
+    } gif;
 
     vector<unsigned short> gif_next;
     vector<uint8_t>        gif_vals;
@@ -274,59 +318,19 @@ class TFT_RGB {
     vector<uint16_t>       gif_LocalColorTable;
 
     const uint8_t gif_MaxLzwBits = 12;
-
-    bool gif_decodeSdFile_firstread = false;
-    bool gif_GlobalColorTableFlag = false;
-    bool gif_LocalColorTableFlag = false;
-    bool gif_SortFlag = false;
-    bool gif_TransparentColorFlag = false;
-    bool gif_UserInputFlag = false;
-    bool gif_ZeroDataBlock = 0;
-    bool gif_InterlaceFlag = false;
+    uint16_t*     gif_ImageBuffer = NULL; // disposal method 0, 1 or 2
+    uint16_t*     gif_RestoreBuffer = NULL; // disposal method 3
 
     char gif_buffer[15];
     char gif_DSBbuffer[256]; // DataSubBlock
 
     String gif_GifHeader = "";
 
-    uint8_t gif_BackgroundColorIndex = 0;
-    uint8_t gif_BlockTerninator = 0;
-    uint8_t gif_CharacterCellWidth = 0;
-    uint8_t gif_CharacterCellHeight = 0;
-    uint8_t gif_CodeSize = 0;
-    uint8_t gif_ColorResulution = 0;
-    uint8_t gif_DisposalMethod = 0;
-    uint8_t gif_ImageSeparator = 0;
-    uint8_t gif_lenDatablock = 0;
-    uint8_t gif_LZWMinimumCodeSize = 0;
-    uint8_t gif_PackedFields = 0;
-    uint8_t gif_PixelAspectRatio = 0;
-    uint8_t gif_TextBackgroundColorIndex = 0;
-    uint8_t gif_TextForegroundColorIndex = 0;
-    uint8_t gif_TransparentColorIndex = 0;
-
-    uint16_t gif_ClearCode = 0;
-    uint16_t gif_DelayTime = 0;
-    uint16_t gif_EOIcode = 0; // End Of Information
-
-    uint16_t gif_ImageHeight = 0;
-    uint16_t gif_ImageWidth = 0;
-    uint16_t gif_ImageLeftPosition = 0;
-    uint16_t gif_ImageTopPosition = 0;
-    uint16_t gif_LogicalScreenWidth = 0;
-    uint16_t gif_LogicalScreenHeight = 0;
-    uint16_t gif_MaxCode = 0;
-    uint16_t gif_MaxCodeSize = 0;
-    uint16_t gif_SizeOfGlobalColorTable = 0;
-    uint16_t gif_SizeOfLocalColorTable = 0;
-    uint16_t gif_TextGridLeftPosition = 0;
-    uint16_t gif_TextGridTopPosition = 0;
-    uint16_t gif_TextGridWidth = 0;
-    uint16_t gif_TextGridHeight = 0;
-
     int32_t GIF_readGifItems();
     bool    GIF_decodeGif(uint16_t x, uint16_t y);
+    bool    GIF_loop();
     void    GIF_freeMemory();
+    void    GIF_DecoderReset();
     void    GIF_readHeader();
     void    GIF_readLogicalScreenDescriptor();
     void    GIF_readImageDescriptor();
@@ -723,6 +727,8 @@ class TFT_RGB {
     void          png_rgb18btouint32(uint32_t* dst, png_s_rgb18b* src);
     void          png_rgb16btouint32(uint32_t* dst, png_s_rgb16b* src);
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 };

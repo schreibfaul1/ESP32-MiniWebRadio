@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Feb 05 2025
+// updated on Apr 15 2025
 
 
 #pragma once
@@ -360,84 +360,92 @@ class TFT_SPI {
     uint8_t  buf[1024];
     char     chbuf[256 * 2];
 
-    //    ------------GIF-------------------
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+//  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  G I F  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫ ⏫⏫⏫⏫⏫⏫  ⏫⏫⏫⏫⏫⏫
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+  private:
+  struct _gif{
+      bool     decodeSdFile_firstread = false;
+      bool     GlobalColorTableFlag = false;
+      bool     LocalColorTableFlag = false;
+      bool     SortFlag = false;
+      bool     TransparentColorFlag = false;
+      bool     UserInputFlag = false;
+      bool     ZeroDataBlock = 0;
+      bool     InterlaceFlag = false;
+      bool     drawNextImage = false;
+      uint8_t  BackgroundColorIndex = 0;
+      uint8_t  BlockTerninator = 0;
+      uint8_t  CharacterCellWidth = 0;
+      uint8_t  CharacterCellHeight = 0;
+      uint8_t  CodeSize = 0;
+      uint8_t  ColorResulution = 0;
+      uint8_t  DisposalMethod = 0;
+      uint8_t  ImageSeparator = 0;
+      uint8_t  lenDatablock = 0;
+      uint8_t  LZWMinimumCodeSize = 0;
+      uint8_t  PackedFields = 0;
+      uint8_t  PixelAspectRatio = 0;
+      uint8_t  TextBackgroundColorIndex = 0;
+      uint8_t  TextForegroundColorIndex = 0;
+      uint8_t  TransparentColorIndex = 0;
+      uint16_t ClearCode = 0;
+      uint16_t DelayTime = 0;
+      uint16_t EOIcode = 0; // End Of Information
+      uint16_t ImageHeight = 0;
+      uint16_t ImageWidth = 0;
+      uint16_t ImageLeftPosition = 0;
+      uint16_t ImageTopPosition = 0;
+      uint16_t LogicalScreenWidth = 0;
+      uint16_t LogicalScreenHeight = 0;
+      uint16_t MaxCode = 0;
+      uint16_t MaxCodeSize = 0;
+      uint16_t SizeOfGlobalColorTable = 0;
+      uint16_t SizeOfLocalColorTable = 0;
+      uint16_t TextGridLeftPosition = 0;
+      uint16_t TextGridTopPosition = 0;
+      uint16_t TextGridWidth = 0;
+      uint16_t TextGridHeight = 0;
+      uint32_t TimeStamp = 0;
+      uint32_t Iterations = 0;
+  } gif;
 
-    bool debug = false;
+  vector<unsigned short> gif_next;
+  vector<uint8_t>        gif_vals;
+  vector<uint8_t>        gif_stack;
+  vector<uint16_t>       gif_GlobalColorTable;
+  vector<uint16_t>       gif_LocalColorTable;
 
-    vector<unsigned short> gif_next;
-    vector<uint8_t>        gif_vals;
-    vector<uint8_t>        gif_stack;
-    vector<uint16_t>       gif_GlobalColorTable;
-    vector<uint16_t>       gif_LocalColorTable;
+  const uint8_t gif_MaxLzwBits = 12;
+  uint16_t*     gif_ImageBuffer = NULL; // disposal method 0, 1 or 2
+  uint16_t*     gif_RestoreBuffer = NULL; // disposal method 3
 
-    const uint8_t gif_MaxLzwBits = 12;
+  char gif_buffer[15];
+  char gif_DSBbuffer[256]; // DataSubBlock
 
-    bool gif_decodeSdFile_firstread = false;
-    bool gif_GlobalColorTableFlag = false;
-    bool gif_LocalColorTableFlag = false;
-    bool gif_SortFlag = false;
-    bool gif_TransparentColorFlag = false;
-    bool gif_UserInputFlag = false;
-    bool gif_ZeroDataBlock = 0;
-    bool gif_InterlaceFlag = false;
+  String gif_GifHeader = "";
 
-    char gif_buffer[15];
-    char gif_DSBbuffer[256]; // DataSubBlock
+  int32_t GIF_readGifItems();
+  bool    GIF_decodeGif(uint16_t x, uint16_t y);
+  bool    GIF_loop();
+  void    GIF_freeMemory();
+  void    GIF_DecoderReset();
+  void    GIF_readHeader();
+  void    GIF_readLogicalScreenDescriptor();
+  void    GIF_readImageDescriptor();
+  void    GIF_readLocalColorTable();
+  void    GIF_readGlobalColorTable();
+  void    GIF_readGraphicControlExtension();
+  uint8_t GIF_readPlainTextExtension(char* buf);
+  uint8_t GIF_readApplicationExtension(char* buf);
+  uint8_t GIF_readCommentExtension(char* buf);
+  uint8_t GIF_readDataSubBlock(char* buf);
+  bool    GIF_readExtension(char Label);
+  int32_t GIF_GetCode(int32_t code_size, int32_t flag);
+  int32_t GIF_LZWReadByte(bool init);
+  bool    GIF_ReadImage(uint16_t x, uint16_t y);
 
-    String gif_GifHeader = "";
-
-    uint8_t gif_BackgroundColorIndex = 0;
-    uint8_t gif_BlockTerninator = 0;
-    uint8_t gif_CharacterCellWidth = 0;
-    uint8_t gif_CharacterCellHeight = 0;
-    uint8_t gif_CodeSize = 0;
-    uint8_t gif_ColorResulution = 0;
-    uint8_t gif_DisposalMethod = 0;
-    uint8_t gif_ImageSeparator = 0;
-    uint8_t gif_lenDatablock = 0;
-    uint8_t gif_LZWMinimumCodeSize = 0;
-    uint8_t gif_PackedFields = 0;
-    uint8_t gif_PixelAspectRatio = 0;
-    uint8_t gif_TextBackgroundColorIndex = 0;
-    uint8_t gif_TextForegroundColorIndex = 0;
-    uint8_t gif_TransparentColorIndex = 0;
-
-    uint16_t gif_ClearCode = 0;
-    uint16_t gif_DelayTime = 0;
-    uint16_t gif_EOIcode = 0; // End Of Information
-
-    uint16_t gif_ImageHeight = 0;
-    uint16_t gif_ImageWidth = 0;
-    uint16_t gif_ImageLeftPosition = 0;
-    uint16_t gif_ImageTopPosition = 0;
-    uint16_t gif_LogicalScreenWidth = 0;
-    uint16_t gif_LogicalScreenHeight = 0;
-    uint16_t gif_MaxCode = 0;
-    uint16_t gif_MaxCodeSize = 0;
-    uint16_t gif_SizeOfGlobalColorTable = 0;
-    uint16_t gif_SizeOfLocalColorTable = 0;
-    uint16_t gif_TextGridLeftPosition = 0;
-    uint16_t gif_TextGridTopPosition = 0;
-    uint16_t gif_TextGridWidth = 0;
-    uint16_t gif_TextGridHeight = 0;
-
-    int32_t GIF_readGifItems();
-    bool    GIF_decodeGif(uint16_t x, uint16_t y);
-    void    GIF_freeMemory();
-    void    GIF_readHeader();
-    void    GIF_readLogicalScreenDescriptor();
-    void    GIF_readImageDescriptor();
-    void    GIF_readLocalColorTable();
-    void    GIF_readGlobalColorTable();
-    void    GIF_readGraphicControlExtension();
-    uint8_t GIF_readPlainTextExtension(char* buf);
-    uint8_t GIF_readApplicationExtension(char* buf);
-    uint8_t GIF_readCommentExtension(char* buf);
-    uint8_t GIF_readDataSubBlock(char* buf);
-    bool    GIF_readExtension(char Label);
-    int32_t GIF_GetCode(int32_t code_size, int32_t flag);
-    int32_t GIF_LZWReadByte(bool init);
-    bool    GIF_ReadImage(uint16_t x, uint16_t y);
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
     //------------TFT_SPI-------------------
 
