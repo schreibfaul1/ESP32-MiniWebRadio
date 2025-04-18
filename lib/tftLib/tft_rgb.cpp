@@ -1392,6 +1392,7 @@ uint16_t TFT_RGB::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
     int32_t  codePoint = -1;
     uint16_t idx = 0;
     uint16_t chLen = 0;
+
     while((uint8_t)str[idx] != 0) {
         switch((uint8_t)str[idx]) {
             case '\033': // ANSI sequence
@@ -1464,23 +1465,37 @@ uint16_t TFT_RGB::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
                 break;
             case 0xE1 ... 0xEF: idx += 3; break;
             case 0xF0 ... 0xFF:
-                if(!strncmp(str + idx, "🟢", 4)) {codePoint = 0xF9A2; idx += 4; chArr[chLen] = codePoint; log_w("🟢 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟡", 4)) {codePoint = 0xF9A1; idx += 4; chArr[chLen] = codePoint; log_w("🟡 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🔴", 4)) {codePoint = 0xF9B4; idx += 4; chArr[chLen] = codePoint; log_w("🔴 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🔵", 4)) {codePoint = 0xF9B5; idx += 4; chArr[chLen] = codePoint; log_w("🔵 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟠", 4)) {codePoint = 0xF9A0; idx += 4; chArr[chLen] = codePoint; log_w("🟠 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟣", 4)) {codePoint = 0xF9A3; idx += 4; chArr[chLen] = codePoint; log_w("🟣 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟤", 4)) {codePoint = 0xF9A4; idx += 4; chArr[chLen] = codePoint; log_w("🟤 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟩", 4)) {codePoint = 0xF9A9; idx += 4; chArr[chLen] = codePoint; log_w("🟩 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟨", 4)) {codePoint = 0xF9A8; idx += 4; chArr[chLen] = codePoint; log_w("🟨 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟥", 4)) {codePoint = 0xF9A5; idx += 4; chArr[chLen] = codePoint; log_w("🟥 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟦", 4)) {codePoint = 0xF9A6; idx += 4; chArr[chLen] = codePoint; log_w("🟦 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟧", 4)) {codePoint = 0xF9A7; idx += 4; chArr[chLen] = codePoint; log_w("🟧 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟪", 4)) {codePoint = 0xF9AA; idx += 4; chArr[chLen] = codePoint; log_w("🟪 %04X", chArr[chLen]); chLen += 1; break;}
-                if(!strncmp(str + idx, "🟫", 4)) {codePoint = 0xF9AB; idx += 4; chArr[chLen] = codePoint; log_w("🟫 %04X", chArr[chLen]); chLen += 1; break;}
-                log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
-                idx += 4;
+                codePoint = -1;
+                if(!strncmp(str + idx, "🟢", 4)) {codePoint = 0xF9A2;}
+                if(!strncmp(str + idx, "🟡", 4)) {codePoint = 0xF9A1;}
+                if(!strncmp(str + idx, "🔴", 4)) {codePoint = 0xF9B4;}
+                if(!strncmp(str + idx, "🔵", 4)) {codePoint = 0xF9B5;}
+                if(!strncmp(str + idx, "🟠", 4)) {codePoint = 0xF9A0;}
+                if(!strncmp(str + idx, "🟣", 4)) {codePoint = 0xF9A3;}
+                if(!strncmp(str + idx, "🟤", 4)) {codePoint = 0xF9A4;}
+                if(!strncmp(str + idx, "🟩", 4)) {codePoint = 0xF9A9;}
+                if(!strncmp(str + idx, "🟨", 4)) {codePoint = 0xF9A8;}
+                if(!strncmp(str + idx, "🟥", 4)) {codePoint = 0xF9A5;}
+                if(!strncmp(str + idx, "🟦", 4)) {codePoint = 0xF9A6;}
+                if(!strncmp(str + idx, "🟧", 4)) {codePoint = 0xF9A7;}
+                if(!strncmp(str + idx, "🟪", 4)) {codePoint = 0xF9AA;}
+                if(!strncmp(str + idx, "🟫", 4)) {codePoint = 0xF9AB;}
+                if(codePoint != -1) {
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                    idx += 4;
+                    break;
+                }
+                if(m_current_font.lookup_table[codePoint] != 0) { // is invalid UTF8 char
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                }
+                else{
+                    log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
+                    idx += 4;
+                }
                 break;
+
             case 0x0A: idx+=1; break; // is '/n'
             default: log_w("char is not printable 0x%02X", (uint8_t)str[idx]); idx += 1;
         }
@@ -1492,25 +1507,30 @@ uint16_t TFT_RGB::getLineLength(const char* txt, bool narrow){
     // returns the length of the string in pixels
     uint16_t pxLength = 0;
     uint16_t idx = 0;
+    bool     isEmoji = false;
     while((uint8_t)txt[idx] != 0) {
+        isEmoji = false;
         if(txt[idx] == 0xF0) { // UTF8
-            if(!strncmp(txt + idx, "🟢", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟡", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🔴", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🔵", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟠", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟣", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟤", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟩", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟨", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟥", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟦", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟧", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟪", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            if(!strncmp(txt + idx, "🟫", 4)) { log_w("%02X, %02X, %02X, %02X", txt[idx], txt[idx+1], txt[idx+2], txt[idx+3]);}
-            idx += 4;
-            pxLength += m_current_font.font_height; // high as wide
-            continue;
+            if(!strncmp(txt + idx, "🟢", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟡", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🔴", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🔵", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟠", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟣", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟤", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟩", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟨", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟥", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟦", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟧", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟪", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟫", 4)) {isEmoji = true;}
+            if(isEmoji){
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3; // high as wide - 1/3
+                idx += 4;
+                continue;
+            }
         }
         uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
         pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
@@ -1533,28 +1553,33 @@ uint16_t TFT_RGB::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, 
     uint16_t drawableChars = 0;
     uint16_t lastUsedPxLength = 0;
     uint16_t glyphPos = 0;
+    bool     isEmoji = false;
     while(cpArr[idx] != 0) {
         *usedPxLength = pxLength;
         if(cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
             lastSpacePos = drawableChars;
             lastUsedPxLength = pxLength;
         }
+        isEmoji = false;
         if((cpArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
-            if(cpArr[idx] == 0xF9A2) {idx += 2; log_w("🟢");}
-            if(cpArr[idx] == 0xF9A1) {idx += 2; log_w("🟡");}
-            if(cpArr[idx] == 0xF9B4) {idx += 2; log_w("🔴");}
-            if(cpArr[idx] == 0xF9B5) {idx += 2; log_w("🔵");}
-            if(cpArr[idx] == 0xF9A0) {idx += 2; log_w("🟠");}
-            if(cpArr[idx] == 0xF9A3) {idx += 2; log_w("🟣");}
-            if(cpArr[idx] == 0xF9A4) {idx += 2; log_w("🟤");}
-            if(cpArr[idx] == 0xF9A9) {idx += 2; log_w("🟩");}
-            if(cpArr[idx] == 0xF9A8) {idx += 2; log_w("🟨");}
-            if(cpArr[idx] == 0xF9A5) {idx += 2; log_w("🟥");}
-            if(cpArr[idx] == 0xF9A6) {idx += 2; log_w("🟦");}
-            if(cpArr[idx] == 0xF9A7) {idx += 2; log_w("🟧");}
-            if(cpArr[idx] == 0xF9AA) {idx += 2; log_w("🟪");}
-            if(cpArr[idx] == 0xF9AB) {idx += 2; log_w("🟫");}
-
+            if(cpArr[idx] == 0xF9A2) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A1) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9B4) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9B5) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A0) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A3) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A4) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A9) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A8) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A5) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A6) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A7) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9AA) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9AB) {isEmoji = true;}
+            if(isEmoji){
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3; // high as wide - 1/3
+            }
         }
         else{ // This is a valid character, get the width from the fonts table
             glyphPos = m_current_font.lookup_table[cpArr[idx]];
@@ -1625,7 +1650,54 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     int8_t   ansiArr[strlen(str) + 1] = {0};
     uint16_t strChLength = 0; // nr. of chars
     uint8_t  nrOfLines = 1;
+    bool     isEmoji = false;
 
+    //-------------------------------------------------------------------------------------------------------------------
+    auto drawEmoji= [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
+        uint8_t emoji = (utfPosArr[idx] & 0x00FF);
+        log_w("emoji 0x%02X", emoji);
+        uint16_t color = 0;
+        char shape = 'x';
+        switch(emoji){
+            case 0xA2: color = TFT_GREEN;    shape = 'c'; break;     // UTF-8: "🟢"
+            case 0xA1: color = TFT_YELLOW;   shape = 'c'; break;     // UTF-8: "🟡"
+            case 0xB4: color = TFT_RED;      shape = 'c'; break;     // UTF-8: "🔴"
+            case 0xB5: color = TFT_BLUE;     shape = 'c'; break;     // UTF-8: "🔵"
+            case 0xA0: color = TFT_ORANGE;   shape = 'c'; break;     // UTF-8: "🟠"
+            case 0xA3: color = TFT_VIOLET;   shape = 'c'; break;     // UTF-8: "🟣"
+            case 0xA4: color = TFT_BROWN;    shape = 'c'; break;     // UTF-8: "🟤"
+            case 0xA9: color = TFT_GREEN;    shape = 's'; break;     // UTF-8: "🟩"
+            case 0xA8: color = TFT_YELLOW;   shape = 's'; break;     // UTF-8: "🟨"
+            case 0xA5: color = TFT_RED;      shape = 's'; break;     // UTF-8: "🟥"
+            case 0xA6: color = TFT_BLUE;     shape = 's'; break;     // UTF-8: "🟦"
+            case 0xA7: color = TFT_ORANGE;   shape = 's'; break;     // UTF-8: "🟧"
+            case 0xAA: color = TFT_VIOLET;   shape = 's'; break;     // UTF-8: "🟪"
+            case 0xAB: color = TFT_BROWN;    shape = 's'; break;     // UTF-8: "🟫
+        }
+        log_w("drawEmoji %c", shape);
+        if(shape == 'c') {
+            uint16_t fh = m_current_font.font_height; // font height
+            uint16_t fw = fh - fh / 3; // font height - 1/3
+            uint16_t p = fh / 5; // padding
+            uint16_t r = (fh - 2 * p) / 2; // radius
+            uint16_t cx = x + fh / 2;
+            uint16_t cy = y +  fw / 2 + p;
+            fillCircle(cx, cy, r, color);
+        }
+        else if(shape == 's') {
+            uint16_t fh = m_current_font.font_height; // font height
+            uint16_t fw = fh - fh / 3; // font height - 1/3
+            uint16_t p = fh / 5; // padding
+            uint16_t a = (fh - 2 * p); // side length
+            uint16_t sx = x + fh / 2;
+            uint16_t sy = y + fw / 2 + p;
+            fillRect(sx - a / 2, sy - a / 2, a, a, color);
+        }
+        else {
+            log_w("unknown shape %c", shape);
+        }
+        return m_current_font.font_height;
+    };
     //-------------------------------------------------------------------------------------------------------------------
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
         uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idx]];
@@ -1674,6 +1746,7 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     uint16_t charsDrawn = 0;
     while(true) { // outer while
         if(noWrap && idx) goto exit;
+        isEmoji = false;
         if(pH < m_current_font.line_height) { goto exit; }
         //charsToDraw = fitinline(idx, pW, &usedPxLength);
         charsToDraw = fitinline(utfPosArr, strChLength, idx, pW, &usedPxLength, narrow, noWrap);
@@ -1723,7 +1796,32 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
                 charsDrawn++;
                 continue;
             } // skip leading spaces
-            uint16_t res = drawChar(idx, pX, pY);
+            if((utfPosArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
+                if(utfPosArr[idx] == 0xF9A2) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A1) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9B4) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9B5) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A0) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A3) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A4) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A9) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A8) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A5) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A6) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A7) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9AA) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9AB) {isEmoji = true;}
+            }
+            else{
+                ;
+            }
+            uint16_t res = 0;
+            if(isEmoji) {
+                res = drawEmoji(idx, pX, pY);
+            }
+            else {
+                res = drawChar(idx, pX, pY);
+            }
             pX += res;
             pW -= res;
             idx++;
