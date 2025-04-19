@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Apr 15 2025
+// updated on Apr 19 2025
 
 
 #pragma once
@@ -236,7 +236,7 @@ class TFT_RGB {
 
     bool     panelDrawBitmap(int16_t x0, int16_t y0, int16_t x1, int16_t y1, const void *bitmap);
     void     writeTheFramebuffer(const uint8_t* bmi, uint16_t posX, uint16_t posY, uint16_t width, uint16_t height);
-    uint16_t validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
+    uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
 

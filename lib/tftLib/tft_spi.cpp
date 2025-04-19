@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Apr 15 2025
+// updated on Apr 19 2025
 
 #include "tft_spi.h"
 #include "Arduino.h"
@@ -1464,55 +1464,59 @@ void TFT_SPI::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t posY
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // The function is passed a string and two arrays of length strlen(str + 1). This is definitely enough, since ANSI sequences or non-ASCII UTF-8 characters are always greater than 1.
 // For each printable character found in the LookUp table, the codepoint is written to the next position in the charr. The number of printable characters is increased by one.
-// If an ANSI sequence is found, the color found is written into ansiArr at the position of the current character. The return value is the number of printable character.
-uint16_t TFT_SPI::validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr) {
-    int16_t  codePoint = -1;
-    uint16_t idx = 0;
+// If an ANSI sequence is found, the color found is written into colorArr at the position of the current character. The return value is the number of printable character.
+uint16_t TFT_SPI::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor) {
     uint16_t chLen = 0;
+    uint16_t idx = 0;
+    int32_t  codePoint = -1;
+    colorArr[0] = startColor;
+
     while((uint8_t)str[idx] != 0) {
+        colorArr[chLen + 1] = colorArr[chLen]; // set next color to the last one
         switch((uint8_t)str[idx]) {
             case '\033': // ANSI sequence
-                if(strncmp(str + idx, "\033[30m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 1;  break;} // ANSI_ESC_BLACK
-                if(strncmp(str + idx, "\033[31m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 2;  break;} // ANSI_ESC_RED
-                if(strncmp(str + idx, "\033[32m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 3;  break;} // ANSI_ESC_GREEN
-                if(strncmp(str + idx, "\033[33m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 4;  break;} // ANSI_ESC_YELLOW
-                if(strncmp(str + idx, "\033[34m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 5;  break;} // ANSI_ESC_BLUE
-                if(strncmp(str + idx, "\033[35m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 6;  break;} // ANSI_ESC_MAGENTA
-                if(strncmp(str + idx, "\033[36m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 7;  break;} // ANSI_ESC_CYAN
-                if(strncmp(str + idx, "\033[37m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 8;  break;} // ANSI_ESC_WHITE
-                if(strncmp(str + idx, "\033[38;5;130m", 11) == 0)           {idx += 11; ansiArr[chLen] = 9;  break;} // ANSI_ESC_BROWN
-                if(strncmp(str + idx, "\033[38;5;214m", 11) == 0)           {idx += 11; ansiArr[chLen] = 10; break;} // ANSI_ESC_ORANGE
-                if(strncmp(str + idx, "\033[90m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 11; break;} // ANSI_ESC_GREY
-                if(strncmp(str + idx, "\033[91m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 12; break;} // ANSI_ESC_LIGHTRED
-                if(strncmp(str + idx, "\033[92m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 13; break;} // ANSI_ESC_LIGHTGREEN
-                if(strncmp(str + idx, "\033[93m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 14; break;} // ANSI_ESC_LIGHTYELLOW
-                if(strncmp(str + idx, "\033[94m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 15; break;} // ANSI_ESC_LIGHTBLUE
-                if(strncmp(str + idx, "\033[95m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 16; break;} // ANSI_ESC_LIGHTMAGENTA
-                if(strncmp(str + idx, "\033[96m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 17; break;} // ANSI_ESC_LIGHTCYAN
-                if(strncmp(str + idx, "\033[97m", 5) == 0)                  {idx += 5;  ansiArr[chLen] = 18; break;} // ANSI_ESC_LIGHTGREY
-                if(strncmp(str + idx, "\033[38;5;52m", 10) == 0)            {idx += 10; ansiArr[chLen] = 19; break;} // ANSI_ESC_DARKRED
-                if(strncmp(str + idx, "\033[38;5;22m", 10) == 0)            {idx += 10; ansiArr[chLen] = 20; break;} // ANSI_ESC_DARKGREEN
-                if(strncmp(str + idx, "\033[38;5;136m", 11) == 0)           {idx += 11; ansiArr[chLen] = 21; break;} // ANSI_ESC_DARKYELLOW
-                if(strncmp(str + idx, "\033[38;5;17m", 10) == 0)            {idx += 10; ansiArr[chLen] = 22; break;} // ANSI_ESC_DARKBLUE
-                if(strncmp(str + idx, "\033[38;5;53m", 10) == 0)            {idx += 10; ansiArr[chLen] = 23; break;} // ANSI_ESC_DARKMAGENTA
-                if(strncmp(str + idx, "\033[38;5;23m", 10) == 0)            {idx += 10; ansiArr[chLen] = 24; break;} // ANSI_ESC_DARKCYAN
-                if(strncmp(str + idx, "\033[38;5;240m", 11) == 0)           {idx += 11; ansiArr[chLen] = 25; break;} // ANSI_ESC_DARKGREY
-                if(strncmp(str + idx, "\033[38;5;166m", 11) == 0)           {idx += 11; ansiArr[chLen] = 26; break;} // ANSI_ESC_DARKORANGE
-                if(strncmp(str + idx, "\033[38;5;215m", 11) == 0)           {idx += 11; ansiArr[chLen] = 27; break;} // ANSI_ESC_LIGHTORANGE
-                if(strncmp(str + idx, "\033[38;5;129m", 11) == 0)           {idx += 11; ansiArr[chLen] = 28; break;} // ANSI_ESC_PURPLE
-                if(strncmp(str + idx, "\033[38;5;213m", 11) == 0)           {idx += 11; ansiArr[chLen] = 29; break;} // ANSI_ESC_PINK
-                if(strncmp(str + idx, "\033[38;5;190m", 11) == 0)           {idx += 11; ansiArr[chLen] = 30; break;} // ANSI_ESC_LIME
-                if(strncmp(str + idx, "\033[38;5;25m", 10) == 0)            {idx += 10; ansiArr[chLen] = 31; break;} // ANSI_ESC_NAVY
-                if(strncmp(str + idx, "\033[38;5;51m", 10) == 0)            {idx += 10; ansiArr[chLen] = 32; break;} // ANSI_ESC_AQUAMARINE
-                if(strncmp(str + idx, "\033[38;5;189m", 11) == 0)           {idx += 11; ansiArr[chLen] = 33; break;} // ANSI_ESC_LAVENDER
-                if(strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0)   {idx += 19; ansiArr[chLen] = 34; break;} // ANSI_ESC_LIGHTBROWN
-                if(strncmp(str + idx, "\033[0m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_RESET       unused
-                if(strncmp(str + idx, "\033[1m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_BOLD        unused
-                if(strncmp(str + idx, "\033[2m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_FAINT       unused
-                if(strncmp(str + idx, "\033[3m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_ITALIC      unused
-                if(strncmp(str + idx, "\033[4m", 4) == 0)                   {idx += 4;  ansiArr[chLen] = -1; break;} // ANSI_ESC_UNDERLINE   unused
-                log_w("unknown ANSI ESC SEQUENCE");                         {idx += 4;  ansiArr[chLen] = -1; break;} // unknown
+                if(strncmp(str + idx, "\033[30m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_BLACK;        break;} // ANSI_ESC_BLACK
+                if(strncmp(str + idx, "\033[31m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_RED;          break;} // ANSI_ESC_RED
+                if(strncmp(str + idx, "\033[32m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_GREEN;        break;} // ANSI_ESC_GREEN
+                if(strncmp(str + idx, "\033[33m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_YELLOW;       break;} // ANSI_ESC_YELLOW
+                if(strncmp(str + idx, "\033[34m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_BLUE;         break;} // ANSI_ESC_BLUE
+                if(strncmp(str + idx, "\033[35m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_MAGENTA;      break;} // ANSI_ESC_MAGENTA
+                if(strncmp(str + idx, "\033[36m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_CYAN;         break;} // ANSI_ESC_CYAN
+                if(strncmp(str + idx, "\033[37m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_WHITE;        break;} // ANSI_ESC_WHITE
+                if(strncmp(str + idx, "\033[38;5;130m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_BROWN;        break;} // ANSI_ESC_BROWN
+                if(strncmp(str + idx, "\033[38;5;214m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_ORANGE;       break;} // ANSI_ESC_ORANGE
+                if(strncmp(str + idx, "\033[90m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_GREY;         break;} // ANSI_ESC_GREY
+                if(strncmp(str + idx, "\033[91m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTRED;     break;} // ANSI_ESC_LIGHTRED
+                if(strncmp(str + idx, "\033[92m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTGREEN;   break;} // ANSI_ESC_LIGHTGREEN
+                if(strncmp(str + idx, "\033[93m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTYELLOW;  break;} // ANSI_ESC_LIGHTYELLOW
+                if(strncmp(str + idx, "\033[94m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTBLUE;    break;} // ANSI_ESC_LIGHTBLUE
+                if(strncmp(str + idx, "\033[95m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTMAGENTA; break;} // ANSI_ESC_LIGHTMAGENTA
+                if(strncmp(str + idx, "\033[96m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTCYAN;    break;} // ANSI_ESC_LIGHTCYAN
+                if(strncmp(str + idx, "\033[97m", 5) == 0)                  {idx += 5;  colorArr[chLen] = TFT_LIGHTGREY;    break;} // ANSI_ESC_LIGHTGREY
+                if(strncmp(str + idx, "\033[38;5;52m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKRED;      break;} // ANSI_ESC_DARKRED
+                if(strncmp(str + idx, "\033[38;5;22m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKGREEN;    break;} // ANSI_ESC_DARKGREEN
+                if(strncmp(str + idx, "\033[38;5;136m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKYELLOW;   break;} // ANSI_ESC_DARKYELLOW
+                if(strncmp(str + idx, "\033[38;5;17m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKBLUE;     break;} // ANSI_ESC_DARKBLUE
+                if(strncmp(str + idx, "\033[38;5;53m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKMAGENTA;  break;} // ANSI_ESC_DARKMAGENTA
+                if(strncmp(str + idx, "\033[38;5;23m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_DARKCYAN;     break;} // ANSI_ESC_DARKCYAN
+                if(strncmp(str + idx, "\033[38;5;240m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKGREY;     break;} // ANSI_ESC_DARKGREY
+                if(strncmp(str + idx, "\033[38;5;166m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_DARKORANGE;   break;} // ANSI_ESC_DARKORANGE
+                if(strncmp(str + idx, "\033[38;5;215m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LIGHTORANGE;  break;} // ANSI_ESC_LIGHTORANGE
+                if(strncmp(str + idx, "\033[38;5;129m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_PURPLE;       break;} // ANSI_ESC_PURPLE
+                if(strncmp(str + idx, "\033[38;5;213m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_PINK;         break;} // ANSI_ESC_PINK
+                if(strncmp(str + idx, "\033[38;5;190m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LIME;         break;} // ANSI_ESC_LIME
+                if(strncmp(str + idx, "\033[38;5;25m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_NAVY;         break;} // ANSI_ESC_NAVY
+                if(strncmp(str + idx, "\033[38;5;51m", 10) == 0)            {idx += 10; colorArr[chLen] = TFT_AQUAMARINE;   break;} // ANSI_ESC_AQUAMARINE
+                if(strncmp(str + idx, "\033[38;5;189m", 11) == 0)           {idx += 11; colorArr[chLen] = TFT_LAVENDER;     break;} // ANSI_ESC_LAVENDER
+                if(strncmp(str + idx, "\033[38;2;210;180;140m", 19) == 0)   {idx += 19; colorArr[chLen] = TFT_LIGHTBROWN;   break;} // ANSI_ESC_LIGHTBROWN
+                if(strncmp(str + idx, "\033[0m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_RESET       unused
+                if(strncmp(str + idx, "\033[1m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_BOLD        unused
+                if(strncmp(str + idx, "\033[2m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_FAINT       unused
+                if(strncmp(str + idx, "\033[3m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_ITALIC      unused
+                if(strncmp(str + idx, "\033[4m", 4) == 0)                   {idx += 4;                                      break;} // ANSI_ESC_UNDERLINE   unused
+                {if(tft_info) tft_info("unknown ANSI ESC SEQUENCE");         idx += 4;                                      break;} // unknown
                 break;
+
             case 0x20 ... 0x7F:                   // is ASCII
                 chArr[chLen] = (uint8_t)str[idx]; // codepoint
                 idx += 1;
@@ -1536,13 +1540,38 @@ uint16_t TFT_SPI::validCharsInString(const char* str, uint16_t* chArr, int8_t* a
                     codePoint = 0xA4;
                     chLen += 1;
                 } // special sign 0xe28099 (general punctuation)
-                else log_w("character %02X%02X  is not in table", str[idx], str[idx + 1]);
+                else log_w("character 0x%02X%02X  is not in table", str[idx], str[idx + 1]);
                 idx += 3;
                 break;
             case 0xE1 ... 0xEF: idx += 3; break;
-            case 0xF0 ... 0xFF: idx += 4; break;
-            case 0x0A: idx+=1; break; // is '/n'
-            default: log_w("char is not printable 0x%02X", (uint8_t)str[idx]); idx += 1;
+            case 0xF0 ... 0xFF:
+                codePoint = -1;
+                if(!strncmp(str + idx, "🟢", 4)) {codePoint = 0xF9A2;}
+                if(!strncmp(str + idx, "🟡", 4)) {codePoint = 0xF9A1;}
+                if(!strncmp(str + idx, "🔴", 4)) {codePoint = 0xF9B4;}
+                if(!strncmp(str + idx, "🔵", 4)) {codePoint = 0xF9B5;}
+                if(!strncmp(str + idx, "🟠", 4)) {codePoint = 0xF9A0;}
+                if(!strncmp(str + idx, "🟣", 4)) {codePoint = 0xF9A3;}
+                if(!strncmp(str + idx, "🟤", 4)) {codePoint = 0xF9A4;}
+                if(!strncmp(str + idx, "🟩", 4)) {codePoint = 0xF9A9;}
+                if(!strncmp(str + idx, "🟨", 4)) {codePoint = 0xF9A8;}
+                if(!strncmp(str + idx, "🟥", 4)) {codePoint = 0xF9A5;}
+                if(!strncmp(str + idx, "🟦", 4)) {codePoint = 0xF9A6;}
+                if(!strncmp(str + idx, "🟧", 4)) {codePoint = 0xF9A7;}
+                if(!strncmp(str + idx, "🟪", 4)) {codePoint = 0xF9AA;}
+                if(!strncmp(str + idx, "🟫", 4)) {codePoint = 0xF9AB;}
+                if(codePoint != -1) {
+                    chArr[chLen] = codePoint;
+                    chLen += 1;
+                    idx += 4;
+                    break;
+                }
+                else{
+                    log_w("character 0x%02X%02X%02X%02X  is not in table", str[idx], str[idx + 1], str[idx + 2], str[idx + 3]);
+                    idx += 4;
+                }
+                break;
+            default:  break;
         }
     }
     return chLen;
@@ -1552,15 +1581,39 @@ uint16_t TFT_SPI::getLineLength(const char* txt, bool narrow){
     // returns the length of the string in pixels
     uint16_t pxLength = 0;
     uint16_t idx = 0;
+    bool     isEmoji = false;
     while((uint8_t)txt[idx] != 0) {
+        isEmoji = false;
+        if(txt[idx] == 0xF0) { // UTF8
+            if(!strncmp(txt + idx, "🟢", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟡", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🔴", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🔵", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟠", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟣", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟤", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟩", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟨", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟥", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟦", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟧", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟪", 4)) {isEmoji = true;}
+            if(!strncmp(txt + idx, "🟫", 4)) {isEmoji = true;}
+            if(isEmoji){
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3; // high as wide - 1/3
+                idx += 4;
+                continue;
+            }
+        }
         uint16_t glyphPos = m_current_font.lookup_table[(uint8_t)txt[idx]];
         pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
         int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
         if(ofsX < 0) ofsX = 0;
         if(!narrow) pxLength += ofsX;
         idx++;
-    }
-    return pxLength;
+  }
+  return pxLength;
 }
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 uint16_t TFT_SPI::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap){
@@ -1574,17 +1627,41 @@ uint16_t TFT_SPI::fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, 
     uint16_t drawableChars = 0;
     uint16_t lastUsedPxLength = 0;
     uint16_t glyphPos = 0;
+    bool     isEmoji = false;
     while(cpArr[idx] != 0) {
         *usedPxLength = pxLength;
         if(cpArr[idx] == 0x20 || cpArr[idx - 1] == '-') {
             lastSpacePos = drawableChars;
             lastUsedPxLength = pxLength;
         }
-        glyphPos = m_current_font.lookup_table[cpArr[idx]];
-        pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
-        int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
-        if(ofsX < 0) ofsX = 0;
-        if(!narrow) pxLength += ofsX;
+        isEmoji = false;
+        if((cpArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
+            if(cpArr[idx] == 0xF9A2) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A1) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9B4) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9B5) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A0) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A3) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A4) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A9) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A8) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A5) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A6) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9A7) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9AA) {isEmoji = true;}
+            if(cpArr[idx] == 0xF9AB) {isEmoji = true;}
+            if(isEmoji){
+                uint16_t fh = m_current_font.font_height;
+                pxLength += fh - fh / 3; // high as wide - 1/3
+            }
+        }
+        else{ // This is a valid character, get the width from the fonts table
+            glyphPos = m_current_font.lookup_table[cpArr[idx]];
+            pxLength += m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+            int ofsX = m_current_font.glyph_dsc[glyphPos].ofs_x;
+            if(ofsX < 0) ofsX = 0;
+            if(!narrow) pxLength += ofsX;
+        }
         if(pxLength > win_W || cpArr[idx] == '\n') { // force wrap
             if(noWrap) { return drawableChars; }
             if(lastSpacePos) {
@@ -1644,10 +1721,60 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     // autoSize choose the biggest possible font
     uint16_t idx = 0;
     uint16_t utfPosArr[strlen(str) + 1] = {0};
-    int8_t   ansiArr[strlen(str) + 1] = {0};
+    uint16_t colorArr[strlen(str) + 1] = {0};
     uint16_t strChLength = 0; // nr. of chars
     uint8_t  nrOfLines = 1;
+    bool     isEmoji = false;
 
+    //-------------------------------------------------------------------------------------------------------------------
+    auto drawEmoji= [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
+        uint8_t emoji = (utfPosArr[idx] & 0x00FF);
+        uint16_t color = 0;
+        char shape = 'x';
+        switch(emoji){
+            case 0xA2: color = TFT_GREEN;    shape = 'c'; break;     // UTF-8: "🟢"
+            case 0xA1: color = TFT_YELLOW;   shape = 'c'; break;     // UTF-8: "🟡"
+            case 0xB4: color = TFT_RED;      shape = 'c'; break;     // UTF-8: "🔴"
+            case 0xB5: color = TFT_BLUE;     shape = 'c'; break;     // UTF-8: "🔵"
+            case 0xA0: color = TFT_ORANGE;   shape = 'c'; break;     // UTF-8: "🟠"
+            case 0xA3: color = TFT_VIOLET;   shape = 'c'; break;     // UTF-8: "🟣"
+            case 0xA4: color = TFT_BROWN;    shape = 'c'; break;     // UTF-8: "🟤"
+            case 0xA9: color = TFT_GREEN;    shape = 's'; break;     // UTF-8: "🟩"
+            case 0xA8: color = TFT_YELLOW;   shape = 's'; break;     // UTF-8: "🟨"
+            case 0xA5: color = TFT_RED;      shape = 's'; break;     // UTF-8: "🟥"
+            case 0xA6: color = TFT_BLUE;     shape = 's'; break;     // UTF-8: "🟦"
+            case 0xA7: color = TFT_ORANGE;   shape = 's'; break;     // UTF-8: "🟧"
+            case 0xAA: color = TFT_VIOLET;   shape = 's'; break;     // UTF-8: "🟪"
+            case 0xAB: color = TFT_BROWN;    shape = 's'; break;     // UTF-8: "🟫
+        }
+        if(shape == 'c') {
+            uint16_t fh = m_current_font.font_height; // font height
+            uint16_t fw = fh - fh / 3; // y : x =  3/3 : 2/3
+            uint16_t p = fh / 5; // padding
+            uint16_t r = (fh - 2 * p) / 2; // radius
+            uint16_t corr = fw / 10;
+            uint16_t cx = x + fw / 2;
+            uint16_t cy = y +  fh / 2 + corr;
+            fillCircle(cx, cy, r, color);
+            return fw;
+        }
+        else if(shape == 's') {
+            uint16_t fh = m_current_font.font_height; // font height
+            uint16_t fw = fh - fh / 3; // font height - 1/3
+            uint16_t p = fh / 5; // padding
+            uint16_t a = (fh - 2 * p); // side length
+            uint16_t corr = fw / 10;
+            uint16_t sx = x + fw / 2;
+            uint16_t sy = y + fh / 2 + corr;
+            fillRect(sx - a / 2, sy - a / 2, a, a, color);
+            return fw;
+        }
+        else {
+            log_w("unknown shape %c", shape);
+            return (uint16_t)0;
+        }
+        return m_current_font.font_height;
+    };
     //-------------------------------------------------------------------------------------------------------------------
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
         uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idx]];
@@ -1661,12 +1788,11 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
         writeInAddrWindow(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
-        if(!narrow) {adv_w += ofs_x;}
+        if(!narrow) adv_w += ofs_x;
         return adv_w;
     };
     //-------------------------------------------------------------------------------------------------------------------
-
-    strChLength = validCharsInString(str, utfPosArr, ansiArr); // fill utfPosArr,
+    strChLength =  analyzeText(str, utfPosArr, colorArr, _textColor); // fill utfPosArr, colorArr, ansiArr
     if(autoSize) {nrOfLines = fitInAddrWindow(utfPosArr, strChLength, win_W, win_H, narrow, noWrap);}  // choose perfect fontsize
     if(!strChLength) return 0;
     //----------------------------------------------------------------------
@@ -1705,48 +1831,39 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         if(h_align == TFT_ALIGN_CENTER) { pX += (win_W - usedPxLength) / 2; }
         uint16_t cnt = 0;
         while(true) {               // inner while
-            if(ansiArr[idx] != 0) { //
-                if(ansiArr[idx] ==  1) setTextColor(TFT_BLACK);
-                if(ansiArr[idx] ==  2) setTextColor(TFT_RED);
-                if(ansiArr[idx] ==  3) setTextColor(TFT_GREEN);
-                if(ansiArr[idx] ==  4) setTextColor(TFT_YELLOW);
-                if(ansiArr[idx] ==  5) setTextColor(TFT_BLUE);
-                if(ansiArr[idx] ==  6) setTextColor(TFT_MAGENTA);
-                if(ansiArr[idx] ==  7) setTextColor(TFT_CYAN);
-                if(ansiArr[idx] ==  8) setTextColor(TFT_WHITE);
-                if(ansiArr[idx] ==  9) setTextColor(TFT_BROWN);
-                if(ansiArr[idx] == 10) setTextColor(TFT_ORANGE);
-                if(ansiArr[idx] == 11) setTextColor(TFT_GREY);
-                if(ansiArr[idx] == 12) setTextColor(TFT_LIGHTRED);
-                if(ansiArr[idx] == 13) setTextColor(TFT_LIGHTGREEN);
-                if(ansiArr[idx] == 14) setTextColor(TFT_LIGHTYELLOW);
-                if(ansiArr[idx] == 15) setTextColor(TFT_LIGHTBLUE);
-                if(ansiArr[idx] == 16) setTextColor(TFT_LIGHTMAGENTA);
-                if(ansiArr[idx] == 17) setTextColor(TFT_LIGHTCYAN);
-                if(ansiArr[idx] == 18) setTextColor(TFT_LIGHTGREY);
-                if(ansiArr[idx] == 19) setTextColor(TFT_DARKRED);
-                if(ansiArr[idx] == 20) setTextColor(TFT_DARKGREEN);
-                if(ansiArr[idx] == 21) setTextColor(TFT_DARKYELLOW);
-                if(ansiArr[idx] == 22) setTextColor(TFT_DARKBLUE);
-                if(ansiArr[idx] == 23) setTextColor(TFT_DARKMAGENTA);
-                if(ansiArr[idx] == 24) setTextColor(TFT_DARKCYAN);
-                if(ansiArr[idx] == 25) setTextColor(TFT_DARKGREY);
-                if(ansiArr[idx] == 26) setTextColor(TFT_DARKORANGE);
-                if(ansiArr[idx] == 27) setTextColor(TFT_LIGHTORANGE);
-                if(ansiArr[idx] == 28) setTextColor(TFT_PURPLE);
-                if(ansiArr[idx] == 29) setTextColor(TFT_PINK);
-                if(ansiArr[idx] == 30) setTextColor(TFT_LIME);
-                if(ansiArr[idx] == 31) setTextColor(TFT_NAVY);
-                if(ansiArr[idx] == 32) setTextColor(TFT_AQUAMARINE);
-                if(ansiArr[idx] == 33) setTextColor(TFT_LAVENDER);
-                if(ansiArr[idx] == 34) setTextColor(TFT_LIGHTBROWN);
-            }
+            isEmoji = false;
+            setTextColor(colorArr[idx]);
             if(cnt == 0 && utfPosArr[idx] == 0x20) {
                 idx++;
                 charsDrawn++;
                 continue;
             } // skip leading spaces
-            uint16_t res = drawChar(idx, pX, pY);
+            if((utfPosArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
+                if(utfPosArr[idx] == 0xF9A2) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A1) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9B4) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9B5) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A0) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A3) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A4) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A9) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A8) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A5) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A6) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9A7) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9AA) {isEmoji = true;}
+                if(utfPosArr[idx] == 0xF9AB) {isEmoji = true;}
+            }
+            else{
+                ;
+            }
+            uint16_t res = 0;
+            if(isEmoji) {
+                res = drawEmoji(idx, pX, pY);
+            }
+            else {
+                res = drawChar(idx, pX, pY);
+            }
             pX += res;
             pW -= res;
             idx++;

@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Apr 15 2025
+// updated on Apr 19 2025
 
 
 #pragma once
@@ -282,7 +282,7 @@ class TFT_SPI {
     bool     drawGifFile(fs::FS& fs, const char* path, uint16_t x, uint16_t y, uint8_t repeat);
     bool     drawJpgFile(fs::FS& fs, const char* path, uint16_t x = 0, uint16_t y = 0, uint16_t maxWidth = 0, uint16_t maxHeight = 0);
     void     writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t poxY, uint16_t width, uint16_t height);
-    uint16_t validCharsInString(const char* str, uint16_t* chArr, int8_t* ansiArr);
+    uint16_t analyzeText(const char* str, uint16_t* chArr, uint16_t* colorArr, uint16_t startColor);
     uint16_t fitinline(uint16_t* cpArr, uint16_t chLength, uint16_t begin, int16_t win_W, uint16_t* usedPxLength, bool narrow, bool noWrap);
     uint16_t getLineLength(const char* txt, bool narrow);
     uint8_t  fitInAddrWindow(uint16_t* cpArr, uint16_t chLength, int16_t win_W, int16_t win_H, bool narrow, bool noWrap);
