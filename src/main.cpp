@@ -1272,7 +1272,7 @@ bool connectToWiFi() {
         line[pos] = '\0';                 // terminate ssid
         char* ssid = line;                // ssid is the first part
         char* pw = line + pos + 1;        // password is the second part
-
+        WiFi.mode(WIFI_STA);
         wifiMulti.addAP(ssid, pw); // SSID and PW in code"
         size_t offset = 0;
         size_t pwlen = strlen(pw);
@@ -1697,7 +1697,6 @@ void setup() {
         BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
         BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
     }
-    bt_emitter.begin();
     ticker100ms.attach(0.1, timer100ms);
     #if TFT_CONTROLLER == 7
         tft.clearVsyncCounter(); // clear the vsync counter and start them
@@ -1720,6 +1719,7 @@ void setup() {
     _state = NONE;
     if(_f_WiFiConnected) changeState(RADIO);
     else changeState(WIFI_SETTINGS);
+    bt_emitter.begin();
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -3288,6 +3288,10 @@ endbrightness:
                 i++;
             }
         }
+        if(r.startsWith("btstr")){ // bluetooth string, send to bt emitter e.g. btstr:AT+
+            bt_emitter.userCommand(r.substring(6, r.length() -1).c_str());
+            log_w("btstr: %s", r.substring(6, r.length() -1).c_str());
+        }
         if(r.startsWith("tsp")){
             _f_timeSpeech = true;
         }
@@ -4527,9 +4531,9 @@ void kcx_bt_info(const char* info, const char* val) {
             pic_BT_mode.setPicturePath("/common/BTnc.png");
             pic_BT_mode.show(true, false);
         }
-        return;
     }
-    if(_f_BTcurPowerState) SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
+    // log_w("BT-Emitter:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " %s", info, val);
+    SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
 }
 
 void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
