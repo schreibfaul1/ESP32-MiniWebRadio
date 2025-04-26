@@ -1,5 +1,5 @@
 // first release on 09/2019
-// updated on Apr 19 2025
+// updated on Apr 26 2025
 
 #include "tft_spi.h"
 #include "Arduino.h"
@@ -1571,7 +1571,7 @@ uint16_t TFT_SPI::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorA
                     idx += 4;
                 }
                 break;
-            default:  break;
+            default: idx++; break;
         }
     }
     return chLen;

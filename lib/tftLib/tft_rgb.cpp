@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Apr 19 2025
+// updated on Apr 26 2025
 
 
 #include "Arduino.h"
@@ -1494,9 +1494,8 @@ uint16_t TFT_RGB::analyzeText(const char* str, uint16_t* chArr, uint16_t* colorA
                     idx += 4;
                 }
                 break;
-            default:  break;
+            default: idx++; break;
         }
-
     }
     return chLen;
 }
