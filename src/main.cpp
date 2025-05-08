@@ -3031,7 +3031,7 @@ void loop() {
         }
 
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
-        if(!_f_sleeping) {
+        if(!_f_sleeping || _state == RINGING) {
             dispHeader.updateTime(_time_s, false);
             dispHeader.updateRSSI(WiFi.RSSI());
 
