@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Apr 18/2025                                                                                                               ";
+    Version 4.0-rc2   - May 08/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -28,14 +28,14 @@ SET_LOOP_TASK_STACK_SIZE(10 * 1024);
 
 // global variables
 
-char _hl_item[18][40]{  "",                 // none
-                        "Internet Radio",   // "* интернет-радио *"  "ραδιόφωνο Internet"
-                        "Audio Player",     // "** цифрово́й плеер **
-                        "DLNA",             // Digital Living Network Alliance
-                        "Clock",            // Clock "** часы́ **"  "** ρολόι **"
-                        "Brightness",       // Brightness яркость λάμψη
-                        "Alarm (hh:mm)",    // Alarm
-                        "Off Timer (h:mm)", // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
+char _hl_item[18][40]{  "",                     // none
+                        "Internet Radio",       // "* интернет-радио *"  "ραδιόφωνο Internet"
+                        "Audio Player",         // "** цифрово́й плеер **
+                        "DLNA",                 // Digital Living Network Alliance
+                        "Clock",                // Clock "** часы́ **"  "** ρολόι **"
+                        "Brightness",           // Brightness яркость λάμψη
+                        "Alarm Clock (hh:mm)",  // AlarmClock "будильник" "ξύπνημα"
+                        "Off Timer (h:mm)",     // "Sleeptimer" "Χρονομετρητής" "Таймер сна"
                         "Stations List",
                         "Audio Files",
                         "DLNA List",
@@ -43,7 +43,7 @@ char _hl_item[18][40]{  "",                 // none
                         "Equalizer",
                         "Settings",
                         "IR Settings",
-                        "",
+                        "Alarm",
                         "WiFi Settings",     //
                         ""};
 
@@ -434,81 +434,84 @@ const char _tftSize[2] = "l";
 #endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
 
 // ALL STATE
-displayHeader dispHeader("dispHeader", _headerFontSize); // 0 -> autoSize
-displayFooter dispFooter("dispFooter", _footerFontSize); // 0 -> autoSize
-numbersBox    volBox("volBox");
-uniList       myList("myList");
+displayHeader   dispHeader("dispHeader", _headerFontSize); // 0 -> autoSize
+displayFooter   dispFooter("dispFooter", _footerFontSize); // 0 -> autoSize
+numbersBox      volBox("volBox");
+uniList         myList("myList");
 // RADIO
-button2state  btn_RA_mute("btn_RA_mute");
-button1state  btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
-button1state  btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
-button1state  btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
-button1state  btn_RA_off("btn_RA_off"), btn_RA_settings("btn_RA_settings");
-pictureBox    pic_RA_logo("pic_RA_logo");
-textbox       txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
-vuMeter       VUmeter_RA("VUmeter_RA");
-slider        sdr_RA_volume("sdr_RA_volume");
+button2state    btn_RA_mute("btn_RA_mute");
+button1state    btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
+button1state    btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
+button1state    btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
+button1state    btn_RA_off("btn_RA_off"), btn_RA_settings("btn_RA_settings");
+pictureBox      pic_RA_logo("pic_RA_logo");
+textbox         txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
+vuMeter         VUmeter_RA("VUmeter_RA");
+slider          sdr_RA_volume("sdr_RA_volume");
 // STATIONSLIST
-stationsList  lst_RADIO("lst_RADIO");
+stationsList    lst_RADIO("lst_RADIO");
 // PLAYER
-button2state  btn_PL_mute("btn_PL_mute"), btn_PL_pause("btn_PL_pause");
-button1state  btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
-button1state  btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
-button1state  btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
-button1state  btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
-textbox       txt_PL_fName("txt_PL_fName");
-textbox       txt_PL_fNumber("txt_PL_fNumber");
-slider        sdr_PL_volume("sdr_PL_volume");
-pictureBox    pic_PL_logo("pic_PL_logo");
-progressbar   pgb_PL_progress("pgb_PL_progress");
+button2state    btn_PL_mute("btn_PL_mute"), btn_PL_pause("btn_PL_pause");
+button1state    btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
+button1state    btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
+button1state    btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
+button1state    btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
+textbox         txt_PL_fName("txt_PL_fName");
+textbox         txt_PL_fNumber("txt_PL_fNumber");
+slider          sdr_PL_volume("sdr_PL_volume");
+pictureBox      pic_PL_logo("pic_PL_logo");
+progressbar     pgb_PL_progress("pgb_PL_progress");
 // AUDIOFILESLIST
-fileList      lst_PLAYER("lst_PLAYER");
+fileList        lst_PLAYER("lst_PLAYER");
 // DLNA
-button2state  btn_DL_mute("btn_DL_mute"), btn_DL_pause("btn_DL_pause");
-button1state  btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
-textbox       txt_DL_fName("txt_DL_fName");
-slider        sdr_DL_volume("sdr_DL_volume");
-pictureBox    pic_DL_logo("pic_DL_logo");
-progressbar   pgb_DL_progress("pgb_DL_progress");
+button2state    btn_DL_mute("btn_DL_mute"), btn_DL_pause("btn_DL_pause");
+button1state    btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
+textbox         txt_DL_fName("txt_DL_fName");
+slider          sdr_DL_volume("sdr_DL_volume");
+pictureBox      pic_DL_logo("pic_DL_logo");
+progressbar     pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
-dlnaList      lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
+dlnaList        lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
-imgClock24    clk_CL_24("clk_CL_24");
-imgClock12    clk_CL_12("clk_CL_12");
-button2state  btn_CL_mute("btn_CL_mute");
-button1state  btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
-slider        sdr_CL_volume("sdr_CL_volume");
-// ALARM
-alarmClock    clk_AL_red("clk_AL_red");
-button1state  btn_AL_left("btn_AL_left"), btn_AL_right("btn_AL_right"), btn_AL_up("btn_AL_up"), btn_AL_down("btn_AL_down");
-button1state  btn_AL_ready("btn_AL_ready");
+imgClock24      clk_CL_24("clk_CL_24");
+imgClock12      clk_CL_12("clk_CL_12");
+button2state    btn_CL_mute("btn_CL_mute");
+button1state    btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
+slider          sdr_CL_volume("sdr_CL_volume");
+// ALARMCLOCK
+alarmClock      clk_AC_red("clk_AC_red");
+button1state    btn_AC_left("btn_AC_left"), btn_AC_right("btn_AC_right"), btn_AC_up("btn_AC_up"), btn_AC_down("btn_AC_down");
+button1state    btn_AC_ready("btn_AC_ready");
+// RINGING
+pictureBox      pic_RI_logo("pic_RI_logo");
+imgClock24small clk_RI_24small("clk_RI_24small");
 // SETTINGS
-pictureBox    pic_SE_logo("pic_SE_logo");
-button1state  btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
+pictureBox      pic_SE_logo("pic_SE_logo");
+button1state    btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
 // BRIGHTNESS
-button1state  btn_BR_ready("btn_BR_ready");
-pictureBox    pic_BR_logo("pic_BR_logo");
-slider        sdr_BR_value("sdr_BR_value");
-textbox       txt_BR_value("txt_BR_value");
+button1state    btn_BR_ready("btn_BR_ready");
+pictureBox      pic_BR_logo("pic_BR_logo");
+slider          sdr_BR_value("sdr_BR_value");
+textbox         txt_BR_value("txt_BR_value");
 // SLEEPTIMER
-button1state  btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
+button1state    btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
 // EQUALIZER
-slider        sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
-textbox       txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
-button1state  btn_EQ_lowPass("btn_E_LP");
-button1state  btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
-button1state  btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
-button2state  btn_EQ_mute("btn_EQ_mute");
+slider          sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
+textbox         txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
+button1state    btn_EQ_lowPass("btn_E_LP");
+button1state    btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
+button1state    btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
+button2state    btn_EQ_mute("btn_EQ_mute");
 // BLUETOOTH
-button2state  btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
-button1state  btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
-pictureBox    pic_BT_mode("pic_BT_mode");
-textbox       txt_BT_mode("txt_BT_mode");
-textbox       txt_BT_volume("txt_BT_volume");
+button2state    btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
+button1state    btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
+pictureBox      pic_BT_mode("pic_BT_mode");
+textbox         txt_BT_mode("txt_BT_mode");
+textbox         txt_BT_volume("txt_BT_volume");
 // IR_SETTINGS
-button1state  btn_IR_radio("btn_IR_radio");
+button1state    btn_IR_radio("btn_IR_radio");
 // WIFI_SETTINGS
-wifiSettings  cls_wifiSettings("wifiSettings", 2);
+wifiSettings    cls_wifiSettings("wifiSettings", 2);
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -915,6 +918,13 @@ void showFileLogo(uint8_t state) {
         pic_SE_logo.setPicturePath(logo.c_str());
         pic_SE_logo.setAlternativPicturePath("/common/unknown.png");
         pic_SE_logo.show(true, false);
+        return;
+    }
+    if(state == RINGING) {
+        logo = "/common/Alarm.png";
+        pic_RI_logo.setPicturePath(logo.c_str());
+        pic_RI_logo.setAlternativPicturePath("/common/unknown.png");
+        pic_RI_logo.show(true, false);
         return;
     }
 }
@@ -2304,23 +2314,26 @@ void placingGraphicObjects() { // and initialize them
                                                                                          btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
     sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, _volumeSteps); sdr_CL_volume.setValue(_cur_volume);
     // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_AL_red.begin(         _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);      clk_AL_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
-    btn_AL_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-                                                                                         btn_AL_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-                                                                                         btn_AL_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
-    btn_AL_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_right.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-                                                                                         btn_AL_right.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-                                                                                         btn_AL_right.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
-    btn_AL_up.begin(      2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
-                                                                                         btn_AL_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
-                                                                                         btn_AL_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
-    btn_AL_down.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
-                                                                                         btn_AL_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
-                                                                                         btn_AL_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
-    btn_AL_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                         btn_AL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                         btn_AL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    // SLEEPTIMER -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    clk_AC_red.begin(         _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);      clk_AC_red.setAlarmTimeAndDays(&_alarmdays, _alarmtime);
+    btn_AC_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
+                                                                                         btn_AC_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
+                                                                                         btn_AC_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
+    btn_AC_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_right.setDefaultPicturePath("/btn/Button_Right_Blue.png");
+                                                                                         btn_AC_right.setClickedPicturePath("/btn/Button_Right_Yellow.png");
+                                                                                         btn_AC_right.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
+    btn_AC_up.begin(      2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
+                                                                                         btn_AC_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
+                                                                                         btn_AC_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
+    btn_AC_down.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
+                                                                                         btn_AC_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
+                                                                                         btn_AC_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
+    btn_AC_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
+                                                                                         btn_AC_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
+                                                                                         btn_AC_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
+    // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    pic_RI_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
+    clk_RI_24small.begin(     _winName.x,   _winName.y,   _winName.w,   _winName.h);
+    // SLEEPTIMER --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     btn_SL_up.begin(      0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
                                                                                          btn_SL_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
                                                                                          btn_SL_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
@@ -2612,18 +2625,18 @@ void changeState(int32_t state){
             }
             break;
         }
-        case ALARM:{
+        case ALARMCLOCK:{
             dispHeader.show(false);
             dispFooter.show(false);
-            if(_state != ALARM) bgColorWithOutHeaderFooter();
+            if(_state != ALARMCLOCK) bgColorWithOutHeaderFooter();
             if(_alarmSubMenue == 0){
-                btn_AL_left.show(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
-                clk_AL_red.show();
+                btn_AC_left.show(); btn_AC_right.show(); btn_AC_up.show(); btn_AC_down.show(); btn_AC_ready.show();
+                clk_AC_red.show();
             }
             if(_alarmSubMenue == 1){ // same as _alarmSubMenue for IR
                 setTimeCounter(2);
-                btn_AL_left.showAlternativePic(); btn_AL_right.show(); btn_AL_up.show(); btn_AL_down.show(); btn_AL_ready.show();
-                clk_AL_red.show();
+                btn_AC_left.showAlternativePic(); btn_AC_right.show(); btn_AC_up.show(); btn_AC_down.show(); btn_AC_ready.show();
+                clk_AC_red.show();
             }
             break;
         }
@@ -2714,6 +2727,26 @@ void changeState(int32_t state){
             dispFooter.show(true);
             clearWithOutHeaderFooter();
             btn_IR_radio.show();
+            break;
+
+        case RINGING:
+            dispHeader.show(true);
+            dispFooter.show(true);
+            clearWithOutHeaderFooter();
+            if(_ringVolume > 0){ // alarm with bell
+                pic_RI_logo.enable();
+                showFileLogo(RINGING);
+                setTFTbrightness(_brightness);
+                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
+                setVolume(_ringVolume);
+                audio.setVolume(_ringVolume, _volumeCurve);
+                muteChanged(false);
+                connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
+                clk_RI_24small.show();
+            }
+            else{ // alarm without bell
+                _f_eof_alarm = true;
+            }
             break;
 
         case WIFI_SETTINGS:
@@ -2915,8 +2948,8 @@ void loop() {
                     else if(_state == CLOCK){
                                             _clockSubMenue = 0;      changeState(CLOCK);
                     }
-                    else if(_state == ALARM){
-                                            _alarmSubMenue = 0;      changeState(ALARM);
+                    else if(_state == ALARMCLOCK){
+                                            _alarmSubMenue = 0;      changeState(ALARMCLOCK);
                     }
                     else if(_state == SETTINGS){
                                             _settingsSubMenue = 0;   changeState(SETTINGS);
@@ -2970,6 +3003,7 @@ void loop() {
         uint8_t  weekDay = rtc.getweekday();
         if(_timeFormat == 24) clk_CL_24.updateTime(minuteOfTheDay, weekDay);
         else                  clk_CL_12.updateTime(minuteOfTheDay, weekDay);
+        if(_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if(!semaphore) {_f_alarm = isAlarm(weekDay, _alarmdays, minuteOfTheDay, _alarmtime) && _f_rtc;} // alarm if rtc and CL green
         if(_f_alarm)        {semaphore++;}
@@ -2979,24 +3013,7 @@ void loop() {
         //------------------------------------------ALARM MANAGEMENT----------------------------------------------------------------------------------
         if(_f_alarm) {
             _f_alarm = false;
-            clearAll();
-            dispHeader.updateItem("ALARM");
-            dispHeader.updateTime(_time_s);
-            dispFooter.show(true);
-            if(_ringVolume > 0){ // alarm with bell
-                showFileName("ALARM");
-                drawImage("/common/Alarm.png", _winLogo.x, _winLogo.y);
-                setTFTbrightness(_brightness);
-                SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                setVolume(_ringVolume);
-                audio.setVolume(_ringVolume, _volumeCurve);
-                muteChanged(false);
-                connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
-            }
-            else{ // alarm without bell
-                _f_eof_alarm = true;
-                return;
-            }
+            changeState(RINGING);
         }
         if(_f_eof_alarm) { // AFTER RINGING
             _f_eof_alarm = false;
@@ -3578,13 +3595,13 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
-                    if(_state == ALARM){
+                    if(_state == ALARMCLOCK){
                         if(_alarmSubMenue == 1){ // scroll forward (left, right, up, down, ready)
                             if(btnNr < 4) btnNr++;
-                            if(btnNr == 1){btn_AL_left.show(); btn_AL_right.showAlternativePic();}
-                            if(btnNr == 2){btn_AL_right.show(); btn_AL_up.showAlternativePic();}
-                            if(btnNr == 3){btn_AL_up.show(); btn_AL_down.showAlternativePic();}
-                            if(btnNr == 4){btn_AL_down.show(); btn_AL_ready.showAlternativePic();}
+                            if(btnNr == 1){btn_AC_left.show(); btn_AC_right.showAlternativePic();}
+                            if(btnNr == 2){btn_AC_right.show(); btn_AC_up.showAlternativePic();}
+                            if(btnNr == 3){btn_AC_up.show(); btn_AC_down.showAlternativePic();}
+                            if(btnNr == 4){btn_AC_down.show(); btn_AC_ready.showAlternativePic();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3710,13 +3727,13 @@ void ir_short_key(uint8_t key) {
                             return;
                         }
                     }
-                    if(_state == ALARM){
+                    if(_state == ALARMCLOCK){
                         if(_alarmSubMenue == 1){ // scroll backward (left, right, up, down, ready)
                             if(btnNr > 0) btnNr--;
-                            if(btnNr == 0){btn_AL_left.showAlternativePic(); btn_AL_right.show();}
-                            if(btnNr == 1){btn_AL_right.showAlternativePic(); btn_AL_up.show();}
-                            if(btnNr == 2){btn_AL_up.showAlternativePic(); btn_AL_down.show();}
-                            if(btnNr == 3){btn_AL_down.showAlternativePic(); btn_AL_ready.show();}
+                            if(btnNr == 0){btn_AC_left.showAlternativePic(); btn_AC_right.show();}
+                            if(btnNr == 1){btn_AC_right.showAlternativePic(); btn_AC_up.show();}
+                            if(btnNr == 2){btn_AC_up.showAlternativePic(); btn_AC_down.show();}
+                            if(btnNr == 3){btn_AC_down.showAlternativePic(); btn_AC_ready.show();}
                             setTimeCounter(2);
                             return;
                         }
@@ -3902,7 +3919,7 @@ void ir_short_key(uint8_t key) {
                         if(_clockSubMenue == 0) { _clockSubMenue = 2; btnNr = 0; changeState(CLOCK); setTimeCounter(2); break;}
                         if(_clockSubMenue == 2){
                             if(btnNr == 0){ // Alarm
-                                            _alarmSubMenue = 1; btnNr = 0; btn_CL_alarm.showClickedPic(); vTaskDelay(100); changeState(ALARM); return;}
+                                            _alarmSubMenue = 1; btnNr = 0; btn_CL_alarm.showClickedPic(); vTaskDelay(100); changeState(ALARMCLOCK); return;}
                             if(btnNr == 1){ // Radio
                                             btn_CL_radio.showClickedPic(); vTaskDelay(100); setStation(_cur_station);_playerSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
                             if(btnNr == 2){ // Mute
@@ -3911,19 +3928,19 @@ void ir_short_key(uint8_t key) {
                                             btn_CL_off.showClickedPic(); vTaskDelay(100); fall_asleep(); return;}
                         }
                     }
-                    if(_state == ALARM){
-                        if(_alarmSubMenue == 0) { _alarmSubMenue = 1; btnNr = 0; changeState(ALARM); setTimeCounter(2); return;}
+                    if(_state == ALARMCLOCK){
+                        if(_alarmSubMenue == 0) { _alarmSubMenue = 1; btnNr = 0; changeState(ALARMCLOCK); setTimeCounter(2); return;}
                         if(_alarmSubMenue == 1){
                             if(btnNr == 0){ // pos left
-                                btn_AL_left.showClickedPic(); clk_AL_red.shiftLeft(); btn_AL_left.showAlternativePic(); setTimeCounter(2); return;}
+                                btn_AC_left.showClickedPic(); clk_AC_red.shiftLeft(); btn_AC_left.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 1){ // pos right
-                                btn_AL_right.showClickedPic(); clk_AL_red.shiftRight(); btn_AL_right.showAlternativePic(); setTimeCounter(2); return;}
+                                btn_AC_right.showClickedPic(); clk_AC_red.shiftRight(); btn_AC_right.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 2){ // pos +1
-                                btn_AL_up.showClickedPic(); clk_AL_red.digitUp(); btn_AL_up.showAlternativePic(); setTimeCounter(2); return;}
+                                btn_AC_up.showClickedPic(); clk_AC_red.digitUp(); btn_AC_up.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 3){ // pos -1
-                                btn_AL_down.showClickedPic(); clk_AL_red.digitDown(); btn_AL_down.showAlternativePic(); setTimeCounter(2); return;}
+                                btn_AC_down.showClickedPic(); clk_AC_red.digitDown(); btn_AC_down.showAlternativePic(); setTimeCounter(2); return;}
                             if(btnNr == 4){ // ready
-                                btn_AL_ready.showClickedPic(); vTaskDelay(100); updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
+                                btn_AC_ready.showClickedPic(); vTaskDelay(100); updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
                         }
                     }
                     if(_state == SLEEPTIMER) {
@@ -4079,8 +4096,8 @@ void tp_released(uint16_t x, uint16_t y){
         case CLOCK:
             btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
-        case ALARM:
-            clk_AL_red.released(); btn_AL_left.released(); btn_AL_right.released(); btn_AL_up.released(); btn_AL_down.released(); btn_AL_ready.released();
+        case ALARMCLOCK:
+            clk_AC_red.released(); btn_AC_left.released(); btn_AC_right.released(); btn_AC_up.released(); btn_AC_down.released(); btn_AC_ready.released();
             break;
         case SLEEPTIMER:
             btn_SL_up.released(); btn_SL_down.released(); btn_SL_ready.released(); btn_SL_cancel.released();
@@ -4648,13 +4665,13 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && !strcmp(name, "clk_CL_24"))       {return;}
         if( val && !strcmp(name, "btn_CL_off"))      {return;}
     }
-    if(_state == ALARM) {
-        if( val && !strcmp(name, "clk_AL_red"))      {return;}
-        if( val && !strcmp(name, "btn_AL_left"))     {return;}
-        if( val && !strcmp(name, "btn_AL_right"))    {return;}
-        if( val && !strcmp(name, "btn_AL_up"))       {return;}
-        if( val && !strcmp(name, "btn_AL_down"))     {return;}
-        if( val && !strcmp(name, "btn_AL_ready"))    {return;}
+    if(_state == ALARMCLOCK) {
+        if( val && !strcmp(name, "clk_AC_red"))      {return;}
+        if( val && !strcmp(name, "btn_AC_left"))     {return;}
+        if( val && !strcmp(name, "btn_AC_right"))    {return;}
+        if( val && !strcmp(name, "btn_AC_up"))       {return;}
+        if( val && !strcmp(name, "btn_AC_down"))     {return;}
+        if( val && !strcmp(name, "btn_AC_ready"))    {return;}
     }
     if(_state == SLEEPTIMER) {
         if( val && !strcmp(name, "btn_SL_up"))       {return;}
@@ -4759,20 +4776,20 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     }
     if(_state == CLOCK) {
         if(!strcmp(name, "btn_CL_mute"))     {muteChanged(btn_CL_mute.getValue()); return;}
-        if(!strcmp(name, "btn_CL_alarm"))    {changeState(ALARM); return;}
+        if(!strcmp(name, "btn_CL_alarm"))    {changeState(ALARMCLOCK); return;}
         if(!strcmp(name, "btn_CL_radio"))    {_clockSubMenue = 0; _radioSubMenue = 0; changeState(RADIO); return;}
         if(!strcmp(name, "clk_CL_12"))       {_clockSubMenue = 1; changeState(CLOCK); return;}
         if(!strcmp(name, "clk_CL_24"))       {_clockSubMenue = 1; changeState(CLOCK); return;}
         if(!strcmp(name, "btn_CL_off"))      {fall_asleep(); return;}
         if(!strcmp(name, "sdr_CL_volume"))   {return;}
     }
-    if(_state == ALARM) {
-        if(!strcmp(name, "clk_AL_red"))      {return;}
-        if(!strcmp(name, "btn_AL_left"))     {clk_AL_red.shiftLeft(); return;}
-        if(!strcmp(name, "btn_AL_right"))    {clk_AL_red.shiftRight(); return;}
-        if(!strcmp(name, "btn_AL_up"))       {clk_AL_red.digitUp(); return;}
-        if(!strcmp(name, "btn_AL_down"))     {clk_AL_red.digitDown(); return;}
-        if(!strcmp(name, "btn_AL_ready"))    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
+    if(_state == ALARMCLOCK) {
+        if(!strcmp(name, "clk_AC_red"))      {return;}
+        if(!strcmp(name, "btn_AC_left"))     {clk_AC_red.shiftLeft(); return;}
+        if(!strcmp(name, "btn_AC_right"))    {clk_AC_red.shiftRight(); return;}
+        if(!strcmp(name, "btn_AC_up"))       {clk_AC_red.digitUp(); return;}
+        if(!strcmp(name, "btn_AC_down"))     {clk_AC_red.digitDown(); return;}
+        if(!strcmp(name, "btn_AC_ready"))    {updateSettings(); _clockSubMenue = 0; changeState(CLOCK); logAlarmItems(); return;}
     }
     if(_state == SLEEPTIMER) {
         if(!strcmp(name, "btn_SL_up"))       {display_sleeptime(1); return;}
