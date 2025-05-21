@@ -53,7 +53,7 @@ void TFT_RGB::begin(const Pins& newPins, const Timing& newTiming) {
 
     esp_lcd_rgb_panel_config_t panel_config;
     memset(&panel_config, 0, sizeof(panel_config));
-    panel_config.clk_src = LCD_CLK_SRC_PLL240M;
+    panel_config.clk_src = LCD_CLK_SRC_PLL160M;
 
     panel_config.timings.pclk_hz = m_timing.pixel_clock_hz;
     panel_config.timings.h_res = m_timing.h_res;

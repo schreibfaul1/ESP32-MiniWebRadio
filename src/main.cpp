@@ -229,7 +229,7 @@ stationManagement   staMgnt(&_cur_station);
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // ⏹⏹⏹⏹
-// clang-format off 
+// clang-format off
 //
 //  Display 320x240
 //  +-------------------------------------------+ _yHeader=0
@@ -2868,6 +2868,7 @@ bool setWiFiPW(const char* ssid, const char* password){
 void loop() {
     if(!_f_ESPfound)    {vTaskDelay(10);return;}    // Guard:  wrong chip?
     if(!_f_SD_MMCfound) {vTaskDelay(10); return;}   // Guard:  SD_MMC could not be initialisized
+
     vTaskDelay(1);
     audio.loop();
     webSrv.loop();
@@ -3256,7 +3257,8 @@ endbrightness:
             x_ps_free(&timeStatsBuffer);
         }
         if(r.startsWith("cts")) {
-            audio.connecttospeech("Hallo, wie geht es dir?", "de");
+            audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch Hier gibt es nur gutes Wetter.", "de");
+        //    audio.connecttospeech("Hallo", "de");
         }
 
         if(r.toInt() != 0) { // is integer?
@@ -3283,12 +3285,25 @@ endbrightness:
         }
         if(r.startsWith("ais")){ // openAIspeech
             log_w("openAI speech");
-            audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
+        //    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
         }
         // if(r.startsWith("ctfs")){ // connecttoFS
         //     log_w("SPIFFS");
         //     connecttoFS("SPIFFS", "/Collide.ogg");
         // }
+
+        if(r.startsWith("sfp")){ // setFilePosition
+            uint32_t pos = r.substring(4, r.length() -1).toInt();
+            log_w("setFilePosition %lu", pos);
+            audio.setFilePos(pos);
+        }
+
+        if(r.startsWith("sapp")){ // setAudioPlayPosition
+            uint32_t pos = r.substring(4, r.length() -1).toInt();
+            log_w("setAudioPlayPosition %lu", pos);
+            audio.setAudioPlayPosition(pos);
+        }
+
         if(r.startsWith("grn")){ // list of all self registered objects
             get_registered_names();
         }
@@ -3318,6 +3333,10 @@ endbrightness:
         if(r.startsWith("gif")){ // draw gif image
             log_w("gif");
             drawImage("/common/Tom_Jerry.gif", 100, 100);
+        }
+        if(r.startsWith("bfi")){ // buffer filled
+            log_w("inBuffer  :  filled %lu bytes", (long unsigned)audio.inBufferFilled());
+            log_w("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
         }
     }
 }

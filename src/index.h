@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 11.04.2025
+ *  Updated on: 21.05.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -1434,7 +1434,6 @@ function updateStationlist () { // select in tab Radio
 }
 
 function saveStations_json(){
-    if(loadStations == false) return
     // Create a blob with the content
     const blob = new Blob([JSON.stringify(tableData, 0, 2)], { type: 'application/json' });
 

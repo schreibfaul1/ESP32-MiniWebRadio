@@ -150,8 +150,8 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define TFT_BL              2  // same as RGB_PINS.bl
 #define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
 
-#define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
-#define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used)
+#define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
+#define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
 
 
 
@@ -507,7 +507,7 @@ inline int replacestr(char* line, const char* search, const char* replace) { /* 
 inline char* x_ps_malloc(uint16_t len) {
     char* ps_str = NULL;
     if(psramFound()){ps_str = (char*) ps_malloc(len);}
-    else             {ps_str = (char*)    malloc(len);}
+    if(!ps_str)     {ps_str = (char*)   malloc(len);}
     if(!ps_str){log_e("oom");}
     return ps_str;
 }
@@ -516,7 +516,7 @@ inline char* x_ps_malloc(uint16_t len) {
 inline char* x_ps_calloc(uint16_t len, uint8_t size) {
     char* ps_str = NULL;
     if(psramFound()){ps_str = (char*) ps_calloc(len, size);}
-    else             {ps_str = (char*)    calloc(len, size);}
+    if(!ps_str)     {ps_str = (char*)    calloc(len, size);}
     if(!ps_str){log_e("oom");}
     return ps_str;
 }
@@ -526,8 +526,8 @@ inline char* x_ps_strdup(const char* str) {
     if(!str){log_e("str is NULL"); return NULL;}
     char* ps_str = NULL;
     if(psramFound()) { ps_str = (char*)ps_malloc(strlen(str) + 1); }
-    else { ps_str = (char*)malloc(strlen(str) + 1); }
-    if(!ps_str){log_e("oom"); return NULL;}
+    if(!ps_str) { ps_str = (char*)malloc(strlen(str) + 1); }
+    if(!ps_str) {log_e("oom"); return NULL;}
     strcpy(ps_str, str);
     return ps_str;
 }
@@ -537,7 +537,7 @@ inline char* x_ps_strndup(const char* str, uint16_t n) { // with '\0' terminatio
     if(!str){log_e("str is NULL"); return NULL;}
     char* ps_str = NULL;
     if(psramFound()) { ps_str = (char*)ps_malloc(n + 1); }
-    else { ps_str = (char*)malloc(n + 1); }
+    if(!ps_str){ ps_str = (char*)malloc(n + 1); }
     if(!ps_str){log_e("oom"); return NULL;}
     strncpy(ps_str, str, n);
     ps_str[n] = '\0';
@@ -6398,7 +6398,12 @@ inline void GetRunTimeStats( char *pcWriteBuffer ){
         #if TFT_CONTROLLER == 7
             extern uint64_t _totalRuntime;
             tmpBuff = x_ps_malloc(130);
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            if(_totalRuntime > 0) {
+                sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+            }
+            else{
+                sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, _totalRuntime, tft.getVsyncCounter());
+            }
             strcat(tmpBuff, "                                   ");
             tmpBuff[90] = '\0';
             strcat(tmpBuff, ANSI_ESC_YELLOW "|\n");
