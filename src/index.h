@@ -433,10 +433,10 @@ const char index_html[] PROGMEM = R"=====(
 
 // global variables and functions
 /* eslint-disable no-unused-vars, no-undef */
-var I2S_eq_DB = ['-40', '-37', '-34', '-31', '-28', '-25', '-22', '-19',
-  '-16', '-13', '-10', ' -7', ' -4', '  0', ' +3', ' +6']
+var I2S_eq_DB = ['-14', '-12', '-10', '-8', '-6', '-4', '-2', '0',
+  '+2', '+4', '+6', ' +8', ' +10', ' +12', ' +14', ' +16']
 
-var I2S_eq_Val = [-40, -37, -34, -31, -28, -25, -22, -19, -16, -13, -10, -7, -4, 0, +3, +6]
+var I2S_eq_Val = [-14, -12, -10, -8, -6, -4, -2, 0, +2, +4, +6, +8, +10, +12, +14, +16]
 
 var tft_size = 0        // (0)320x240, (1)480x320
 var ir_buttons
@@ -1079,9 +1079,9 @@ function setstation () { // Radio: button play - Enter a streamURL here....
 
 function setSlider (elmnt, value) {
     console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_LP_set(v); }
-    if (elmnt === 'BandPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_BP_set(v); }
-    if (elmnt === 'HighPass') { v = Math.trunc((40 + parseInt(value, 10)) /3); slider_HP_set(v); }
+    if (elmnt === 'LowPass' ) { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_LP_set(v); }
+    if (elmnt === 'BandPass') { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_BP_set(v); }
+    if (elmnt === 'HighPass') { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_HP_set(v); }
     if (elmnt === 'Balance')  slider_BAL_set(value)
 }
 
