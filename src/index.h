@@ -717,15 +717,15 @@ document.addEventListener('readystatechange', event => {
         audioPlayer_buildFileSystemTree("/")
         dlnaPlayer_buildFileSystemTree("/")
         // Ereignis vor dem Schließen der Webseite hinzufügen
-        window.addEventListener('beforeunload', (e) => {
-            console.log('Seite wird geschlossen. Ressourcen aufräumen...');
-            if (typeof disconnect === 'function') {
-                disconnect(); // Optional: WebSocket-Verbindung sauber schließen
-            }
-            // Optional: Warnmeldung anzeigen
-            e.preventDefault(); // Standardverhalten blockieren (für ältere Browser)
-            e.returnValue = ''; // Einige Browser benötigen dies
-        });
+        // window.addEventListener('beforeunload', (e) => {
+        //     console.log('Seite wird geschlossen. Ressourcen aufräumen...');
+        //     if (typeof disconnect === 'function') {
+        //         disconnect(); // Optional: WebSocket-Verbindung sauber schließen
+        //     }
+        //     // Optional: Warnmeldung anzeigen
+        //     e.preventDefault(); // Standardverhalten blockieren (für ältere Browser)
+        //     e.returnValue = ''; // Einige Browser benötigen dies
+        // });
     }
 })
 

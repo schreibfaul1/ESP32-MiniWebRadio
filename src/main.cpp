@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - May 08/2025                                                                                                               ";
+    Version 4.0-rc2   - Jun 06/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -3463,7 +3463,7 @@ void audio_eof_speech(const char*) {
     ;  // not used yet
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, uint8_t bitsPerSample, uint8_t channels, bool *continueI2S){
+void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool *continueI2S){
 
     // int16_t sineWaveTable[44] = {
     //      0,   3743,   7377,  10793,  14082,  17136,  19848,  22113,  23825,  24908,
