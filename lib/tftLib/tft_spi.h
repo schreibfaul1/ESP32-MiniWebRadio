@@ -309,7 +309,7 @@ class TFT_SPI {
     uint16_t    m_v_res = 0;
     uint16_t*   m_framebuffer[3];
     bool        m_framebuffer_index = 0;
-    uint8_t fontSizes[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+    uint8_t fontSizes[8] = {15, 16, 18, 21, 25, 27, 34, 38};
 
     typedef struct {
         const uint8_t*                     glyph_bitmap;
