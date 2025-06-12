@@ -88,9 +88,9 @@ uint8_t                 _itemListPos = 0; // DLNA items
 uint16_t                _dlnaItemNr = 0;
 uint8_t                 _dlnaLevel = 0;
 int16_t                 _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
-int16_t                 _toneLP = 0;          //  ... +6 (dB)        audioI2S
-int16_t                 _toneBP = 0;          //  ... +6 (dB)        audioI2S
-int16_t                 _toneHP = 0;          //  ... +6 (dB)        audioI2S
+int16_t                 _toneLP = 0;          //  -14...+16 (dB)        audioI2S
+int16_t                 _toneBP = 0;          //  -14...+16 (dB)        audioI2S
+int16_t                 _toneHP = 0;          //  -14...+16 (dB)        audioI2S
 int16_t                 _toneBAL = 0;         // -16...0....+16         audioI2S
 uint16_t                _icyBitRate = 0;      // from http response header via event
 uint32_t                _decoderBitRate = 0;  // from decoder via getBitRate(false)
