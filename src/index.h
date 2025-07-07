@@ -433,10 +433,13 @@ const char index_html[] PROGMEM = R"=====(
 
 // global variables and functions
 /* eslint-disable no-unused-vars, no-undef */
-var I2S_eq_DB = ['-14', '-12', '-10', '-8', '-6', '-4', '-2', '0',
-  '+2', '+4', '+6', ' +8', ' +10', ' +12', ' +14', ' +16']
+var I2S_eq_DB = [];
+var I2S_eq_Val = [];
 
-var I2S_eq_Val = [-14, -12, -10, -8, -6, -4, -2, 0, +2, +4, +6, +8, +10, +12, +14, +16]
+for (let i = -16; i <= 16; i++) {
+  I2S_eq_Val.push(i);
+  I2S_eq_DB.push((i >= 0 ? '+' : '') + i.toString());
+}
 
 var tft_size = 0        // (0)320x240, (1)480x320
 var ir_buttons
@@ -471,8 +474,8 @@ function ping() {
         // Wenn der tm Timer läuft, ist es gut. Wenn er abläuft, bedeutet es, dass kein Pong kam.
         clearTimeout(tm); // Lösche den alten Timeout, falls vorhanden
         tm = setTimeout(function () {
-            console.warn('Ping/Pong Timeout: No pong received. Connection likely interrupted.');
-            toastr.warning('The connection to the MiniWebRadio is interrupted! Please reload the page!');
+            console.warn('Limit czasu Ping/Pong: nie otrzymano odpowiedzi pong. Połączenie prawdopodobnie zostało przerwane.');
+            toastr.warning('Połączenie z MiniWebRadio zostało przerwane! Proszę odświeżyć stronę!');
             // Hier sollte man nicht direkt reconnecten, sondern den onclose-Handler die Arbeit machen lassen.
             // Der Browser wird wahrscheinlich die Verbindung beenden, wenn Pongs ausbleiben, was onclose triggert.
         }, 8000); // Setze den Ping/Pong Timeout etwas länger als das Ping-Intervall, z.B. 8 Sekunden (20s Ping-Intervall + Puffer)
@@ -492,20 +495,20 @@ function connect() {
     }
 
     if (reconnectAttempts >= maxReconnectAttempts) {
-        console.error("Maximale Wiederverbindungsversuche erreicht. Keine weiteren Versuche.");
-        toastr.error("Maximale Wiederverbindungsversuche erreicht. Bitte Seite neu laden.");
+        console.error("Osiągnięto maksymalną liczbę prób ponownego połączenia. Brak dalszych prób.");
+        toastr.error("Osiągnięto maksymalną liczbę prób ponownego połączenia. Proszę odświeżyć stronę.");
         return;
     }
 
     console.log(`Connecting to WebSocket at ws://${window.location.hostname}:81/ (Attempt ${reconnectAttempts + 1}/${maxReconnectAttempts})...`);
-    toastr.info("Versuche Verbindung zum MiniWebRadio herzustellen...", "", {timeOut: 0, extendedTimeOut: 0, closeButton: false, tapToDismiss: false}); // Info über Verbindungsversuch
+    toastr.info("Próba nawiązania połączenia z MiniWebRadio...", "", {timeOut: 0, extendedTimeOut: 0, closeButton: false, tapToDismiss: false}); // Info über Verbindungsversuch
 
     socket = new WebSocket('ws://'+window.location.hostname+':81/');
 
     socket.onopen = function () {
-        console.log("Websocket connected");
+        console.log("WebSocket połączony");
         toastr.clear(); // Alle Toastr-Nachrichten löschen
-        toastr.success("Verbindung hergestellt!"); // Bestätigung
+        toastr.success("Połączenie nawiązane!"); // Bestätigung
         currentReconnectDelay = 1000; // Reset delay on successful connection
         reconnectAttempts = 0; // Reset attempts on successful connection
 
@@ -544,7 +547,7 @@ function connect() {
 
     socket.onclose = function (e) {
         console.log('WebSocket getrennt. Code:', e.code, 'Reason:', e.reason);
-        toastr.error('Verbindung zum MiniWebRadio getrennt. Versuche Wiederherstellung...'); // Informiere den Benutzer
+        toastr.error('Połączenie z MiniWebRadio zostało przerwane. Próba przywrócenia...'); // Informiere den Benutzer
         clearTimeout(tm); // Lösche den Ping-Timeout, da die Verbindung geschlossen ist
         if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
              clearInterval(pingIntervalId); // Stoppe das Ping-Intervall
@@ -562,19 +565,19 @@ function connect() {
             currentReconnectDelay = Math.min(currentReconnectDelay * 2, maxReconnectDelay);
             console.log(`Wiederverbindungsversuch in ${currentReconnectDelay / 1000}s... (Versuch ${reconnectAttempts}/${maxReconnectAttempts})`);
         } else {
-            console.error("Maximale Wiederverbindungsversuche erreicht. Bitte Seite neu laden.");
-            toastr.error("Verbindung konnte nicht wiederhergestellt werden. Bitte Seite neu laden.");
+            console.error("Osiągnięto maksymalną liczbę prób ponownego połączenia. Proszę odświeżyć stronę.");
+            toastr.error("Połączenie nie mogło zostać przywrócone. Proszę odświeżyć stronę.");
         }
     };
 
     socket.onerror = function (err) {
-        console.error("WebSocket Fehler:", err);
+        console.error("Błąd WebSocket:", err);
         // `onerror` wird oft vor `onclose` ausgelöst.
         // `socket.close()` hier wird `onclose` triggern, was die Wiederverbindungslogik handhabt.
         if (socket && socket.readyState !== WebSocket.CLOSED) { // Nur schließen, wenn nicht bereits geschlossen
             socket.close();
         }
-        toastr.error("WebSocket Fehler aufgetreten!");
+        toastr.error("Wystąpił błąd WebSocket!");
     };
 
     socket.onmessage = function(event) {
@@ -1136,12 +1139,14 @@ function setstation () { // Radio: button play - Enter a streamURL here....
     socket.send("stationURL=" + theUrl)
 }
 
-function setSlider (elmnt, value) {
-    console.log("setSlider", elmnt, value)
-    if (elmnt === 'LowPass' ) { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_LP_set(v); }
-    if (elmnt === 'BandPass') { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_BP_set(v); }
-    if (elmnt === 'HighPass') { v = Math.trunc((14 + parseInt(value, 10)) /2); slider_HP_set(v); }
-    if (elmnt === 'Balance')  slider_BAL_set(value)
+function setSlider(elmnt, value) {
+    console.log("setSlider", elmnt, value);
+    let v = 16 + parseInt(value, 10); // przesuwamy zakres [-16..16] -> [0..32]
+
+    if (elmnt === 'LowPass')  slider_LP_set(v);
+    if (elmnt === 'BandPass') slider_BP_set(v);
+    if (elmnt === 'HighPass') slider_HP_set(v);
+    if (elmnt === 'Balance')  slider_BAL_set(value);
 }
 
 function slider_LP_mouseUp () { // Slider LowPass mouseupevent
@@ -2539,7 +2544,7 @@ function clear_BT_memItems(){
 
                     <label class="sdr_lbl_left">High:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="HighPass"
+                        <input type="range" min="0" max="32" step="1" value="16" id="HighPass"
                         onmouseup="slider_HP_mouseUp()"
                         ontouchend="slider_HP_mouseUp()"
                         oninput="slider_HP_change()">
@@ -2549,7 +2554,7 @@ function clear_BT_memItems(){
 
                     <label class="sdr_lbl_left">Band:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="BandPass"
+                        <input type="range" min="0" max="32" step="1" value="16" id="BandPass"
                         onmouseup="slider_BP_mouseUp()"
                         ontouchend="slider_BP_mouseUp()"
                         oninput="slider_BP_change()">
@@ -2559,7 +2564,7 @@ function clear_BT_memItems(){
 
                     <label class="sdr_lbl_left">Low:</label>
                     <div class="slidecontainer" style="float: left; width: 180px; height: 40px;">
-                        <input type="range" min="0" max="15" value="13" id="LowPass"
+                        <input type="range" min="0" max="32" step="1" value="16" id="LowPass"
                         onmouseup="slider_LP_mouseUp()"
                         ontouchend="slider_LP_mouseUp()"
                         oninput="slider_LP_change()">
