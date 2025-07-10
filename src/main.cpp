@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Jun 06/2025                                                                                                               ";
+    Version 4.0-rc2   - Jul 10/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1796,8 +1796,8 @@ uint8_t upvolume() {
 
 void setStation(uint16_t sta) {
     static uint16_t old_cur_station = 0;
-    // SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
-    if(sta == 0) return;
+    SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
+    if(sta == 0) {return;}
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
     x_ps_free(&_stationURL);
     _stationURL = x_ps_strdup(staMgnt.getStationUrl(sta));
@@ -3257,7 +3257,7 @@ endbrightness:
             x_ps_free(&timeStatsBuffer);
         }
         if(r.startsWith("cts")) {
-            audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch Hier gibt es nur gutes Wetter.", "de");
+           audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch Hier gibt es nur gutes Wetter.", "de");
         //    audio.connecttospeech("Hallo", "de");
         }
 
