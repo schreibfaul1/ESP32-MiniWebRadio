@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Jul 10/2025                                                                                                               ";
+    Version 4.0-rc2   - Jul 11/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1434,7 +1434,7 @@ void connecttohost(const char* host) {
             url = strndup(host, idx1); // extract url
             user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
             pwd = strdup(host + idx2 + 1);
-            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd) _f_isWebConnected = audio.connecttohost(url, user, pwd);
+            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd); _f_isWebConnected = audio.connecttohost(url, user, pwd);
             _f_isFSConnected = false;
             x_ps_free(&url);
             x_ps_free(&user);
@@ -1488,6 +1488,8 @@ void stopSong() {
  *                                                                    S E T U P                                                                      *
  *****************************************************************************************************************************************************/
 void setup() {
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
+    esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
     Serial.print("\n\n");
     const char* chipModel = ESP.getChipModel();
@@ -1506,6 +1508,8 @@ void setup() {
     Serial.printf("CPU speed %lu MHz\n", (long unsigned)ESP.getCpuFreqMHz());
     Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
     Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
+
+
     if(!psramInit()) { Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE); }
     else {
         _f_PSRAMfound = true;
@@ -1633,7 +1637,7 @@ void setup() {
         strcpy(_myIP, WiFi.localIP().toString().c_str());
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
                                                     ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
-                                                    ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI())
+                                                    ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI());
 
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
@@ -1754,7 +1758,7 @@ const char* scaleImage(const char* path) {
 
 void setVolume(uint8_t vol) {
     static int16_t oldVol = -1;
-    log_i("vol %i   oldVol %i", vol, oldVol);
+    log_i("volume old: %i. new: %i", oldVol, vol);
     if(vol == oldVol) return;
     _cur_volume = vol;
     oldVol = vol;
@@ -3058,7 +3062,7 @@ void loop() {
                 _f_eof = false;
                 if(_timeFormat == 12) {if(hour > 12) hour -= 12;}
                 sprintf(_chbuf, "/voice_time/%s/%d_00.mp3", _timeSpeechLang, hour);
-                SerialPrintfln("Time: ...... play Audiofile %s", _chbuf) connecttoFS("SD_MMC", _chbuf);
+                SerialPrintfln("Time: ...... play Audiofile %s", _chbuf); connecttoFS("SD_MMC", _chbuf);
                 return;
             }
             else { SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour); }
@@ -3311,7 +3315,7 @@ endbrightness:
             static bool f_mono = false;
             f_mono = !f_mono;
             audio.forceMono(f_mono);
-            f_mono? log_w("mono"): log_w("stereo");
+            if(f_mono) log_w("mono"); else log_w("stereo");
         }
         if(r.startsWith("btp")){ // bluetooth RX/TX protocol
             uint16_t i = 0;
@@ -4191,7 +4195,7 @@ void tp_moved(uint16_t x, uint16_t y){
 //Events from websrv
 void WEBSRV_onCommand(const String cmd, const String param, const String arg){  // called from html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"",
                                                         cmd.c_str(),param.c_str(), arg.c_str());
     }

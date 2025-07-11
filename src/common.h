@@ -25,6 +25,7 @@
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 #include <Arduino.h>
+#include "esp_log.h"
 #include <ArduinoOTA.h>
 #include <Preferences.h>
 #include <Ticker.h>
@@ -55,6 +56,7 @@
 #include "BH1750.h"
 #include <mbedtls/aes.h>
 #include <mbedtls/base64.h>
+#include "psram_unique_ptr.hpp"
 
 #if TFT_CONTROLLER < 7
     // Digital I/O used
@@ -252,21 +254,61 @@ static bool _newLine = false;
 extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
 
-#define SerialPrintfln(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
- /* line feed */            if(_newLine){_newLine = false; Serial.println("");} \
-                            rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
-                            Serial.printf(__VA_ARGS__); \
-                            Serial.printf("\033[0m"); \
-                            Serial.println(""); \
-                            xSemaphoreGive(mutex_rtc);}
+extern WebSrv webSrv;
+void SerialPrintfln(const char* fmt, ...){
+    ps_ptr<char>myLog;
+    if(_newLine){_newLine = false; myLog.assign("\n");} else{myLog.assign("");}
+    rtc.hasValidTime()? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
+    myLog.append(" ");
+    va_list args;
+    va_start(args, fmt);
+    myLog.appendf_va(fmt, args);
+    va_end(args);
+    myLog.append("\033[0m\n");
+    Serial.printf(myLog.c_get());
+    webSrv.send("serTerminal=", myLog.c_get());
+}
 
-#define SerialPrintfcr(...) {xSemaphoreTake(mutex_rtc, portMAX_DELAY); \
- /* carriage return */      rtc.hasValidTime()? Serial.printf("%s ", rtc.gettime_s()) : Serial.printf("00:00:00 "); \
-                            Serial.printf(__VA_ARGS__); \
-                            Serial.printf("\033[0m"); \
-                            Serial.print("  \r"); \
-                            _newLine = true; \
-                            xSemaphoreGive(mutex_rtc);}
+void SerialPrintfcr(const char* fmt, ...){
+    ps_ptr<char>myLog;
+    rtc.hasValidTime()? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
+    myLog.append(" ");
+    va_list args;
+    va_start(args, fmt);
+    myLog.appendf_va(fmt, args);
+    va_end(args);
+    myLog.append("\033[0m\r");
+    Serial.printf(myLog.c_get());
+    webSrv.send("serTerminal=", myLog.c_get());
+    _newLine = true;
+}
+
+int log_redirect_handler(const char *format, va_list args) {
+    int len = vsnprintf(nullptr, 0, format, args) + 1;
+    // Puffer für die formatierte Nachricht
+    ps_ptr<char>log_buffer;
+    log_buffer.alloc(len);
+    vsnprintf(log_buffer.get(), len, format, args);
+    if (len > 0) {
+        int idx = log_buffer.index_of("ARDUINO:");
+        if(idx > 0){
+            char c = log_buffer[7];
+            log_buffer.remove_before(idx, true);
+            log_buffer.insert("    ", 8);
+            if(c == 'E') log_buffer.insert(ANSI_ESC_RED, 10);
+            if(c == 'W') log_buffer.insert(ANSI_ESC_YELLOW, 10);
+            if(c == 'I') log_buffer.insert(ANSI_ESC_GREEN, 10);
+            if(c == 'D') log_buffer.insert(ANSI_ESC_CYAN, 10);
+            if(c == 'V') log_buffer.insert(ANSI_ESC_GREY, 10);
+            log_buffer.truncate_at(log_buffer.strlen() -1); // remove '\n'
+            SerialPrintfln("%s", log_buffer.c_get());
+        }
+        else{
+            SerialPrintfln("%s", log_buffer.c_get());
+        }
+    }return 0;
+}
+
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct dlnaHistory {
     char*    objId = NULL;
