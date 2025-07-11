@@ -760,6 +760,8 @@ function connect() {
             case "timezones":           console.log(msg, val)
                                         fillTimeZoneSelect(val)
                                         break;
+            case "serTerminal":         console.log(msg, val)
+                                        break;
             default:                    console.log('unknown message', msg, val)
         }
     }
