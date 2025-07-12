@@ -2441,17 +2441,25 @@ function clear_BT_memItems(){
 // ---------------------------------------------------------------- TAB About ------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 let lineBuffer = [];
+let autoScrollEnabled = true;
 
 window.onload = function () {
     const terminal = document.getElementById("terminal");
     const imageContainer = document.getElementById("imageContainer");
     const toggle = document.getElementById("toggleTerminal");
 
+    // Scroll-Verhalten
+    terminal.addEventListener('scroll', function () {
+        const atBottom = terminal.scrollTop + terminal.clientHeight >= terminal.scrollHeight - 10;
+        autoScrollEnabled = atBottom;
+    });
+
+    // Terminal anzeigen/verstecken
     window.toggleTerminalChanged = function (checkbox) {
-      const showTerminal = checkbox.checked;
-      console.log("Terminal anzeigen:", showTerminal);
-      terminal.style.display = showTerminal ? "block" : "none";
-      imageContainer.style.display = showTerminal ? "none" : "block";
+        const showTerminal = checkbox.checked;
+        console.log("Terminal anzeigen:", showTerminal);
+        terminal.style.display = showTerminal ? "block" : "none";
+        imageContainer.style.display = showTerminal ? "none" : "block";
     };
 };
 
@@ -2483,7 +2491,10 @@ function appendToTerminal(text) {
 
     // Update output
     terminal.innerHTML = lineBuffer.join("<br>");
-    terminal.scrollTop = terminal.scrollHeight;
+    //terminal.scrollTop = terminal.scrollHeight;
+    if (autoScrollEnabled) {
+        terminal.scrollTop = terminal.scrollHeight;
+    }
 }
 
 </script>
