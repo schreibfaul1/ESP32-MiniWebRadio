@@ -1513,7 +1513,18 @@ public:
         return alloc_internal(m_dim1, m_dim2);
     }
 
-    // Klammer-Operator für den Zugriff auf einzelne Elemente (Bounds-Check inklusive)
+    void clear() {
+        if (!is_allocated()) {
+            // nothing to do if there is no memory assigned
+            return;
+        }
+        // calculate the total number of elements
+        const size_t total_elements = m_dim1 * m_dim2;
+        // set the entire memory block to zero
+        std::memset(m_data.get(), 0, total_elements * sizeof(T));
+    }
+
+    // brace operator for access to individual elements (Bounds check included)
     T &operator()(size_t i, size_t j)
     {
         if (!m_data.valid()) {
@@ -1662,6 +1673,18 @@ public:
         }
         reset();
         return alloc_internal(m_dim1, m_dim2, m_dim3);
+    }
+
+    void clear(){
+        if (!is_allocated()) {
+            // Nichts zu tun, wenn kein Speicher zugewiesen ist
+            return;
+        }
+        // Berechne die Gesamtanzahl der Elemente
+        const size_t total_elements = m_dim1 * m_dim2 * m_dim3;
+
+        // Setze den gesamten Speicherblock auf null
+        std::memset(m_data.get(), 0, total_elements * sizeof(T));
     }
 
     // Klammer-Operator für den Zugriff auf einzelne Elemente

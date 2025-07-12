@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 27.05.2025
+ *  Updated on: 12.06.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -203,6 +203,27 @@ const char index_html[] PROGMEM = R"=====(
             height : 320px;
             margin-top: 5px;
         }
+        #terminal {
+            height: 480px;           /* Feste maximale Höhe */
+            overflow-y: auto;        /* Scrollbalken bei Bedarf */
+            background: black;
+            color: white;
+            font-family: monospace;
+            padding: 10px;
+            border: 1px solid #444;
+            box-sizing: border-box;
+            white-space: pre-wrap;
+        }
+        .ansi-black   { color: black; }
+        .ansi-red     { color: red; }
+        .ansi-green   { color: green; }
+        .ansi-yellow  { color: yellow; }
+        .ansi-blue    { color: blue; }
+        .ansi-magenta { color: magenta; }
+        .ansi-cyan    { color: cyan; }
+        .ansi-white   { color: white; }
+        .ansi-brown  { color: #af5f00; }   /* 38;5;130 */
+        .ansi-orange { color: #ffaf00; }   /* 38;5;214 */
         canvas {
             left : 0;
             margin-left : 0;
@@ -760,7 +781,8 @@ function connect() {
             case "timezones":           console.log(msg, val)
                                         fillTimeZoneSelect(val)
                                         break;
-            case "serTerminal":         console.log(msg, val)
+            case "serTerminal":         appendToTerminal(val);
+                                        console.log(msg, val)
                                         break;
             default:                    console.log('unknown message', msg, val)
         }
@@ -2420,6 +2442,65 @@ function clear_BT_memItems(){
     }
     socket.send('KCX_BT_clearItems')
 }
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+// ---------------------------------------------------------------- TAB About ------------------------------------------------------------------------
+//----------------------------------------------------------------------------------------------------------------------------------------------------
+let lineBuffer = [];
+let autoScrollEnabled = true;
+
+window.onload = function () {
+    const terminal = document.getElementById("terminal");
+    const imageContainer = document.getElementById("imageContainer");
+    const toggle = document.getElementById("toggleTerminal");
+
+    // Scroll-Verhalten
+    terminal.addEventListener('scroll', function () {
+        const atBottom = terminal.scrollTop + terminal.clientHeight >= terminal.scrollHeight - 10;
+        autoScrollEnabled = atBottom;
+    });
+
+    // Terminal anzeigen/verstecken
+    window.toggleTerminalChanged = function (checkbox) {
+        const showTerminal = checkbox.checked;
+        console.log("Terminal anzeigen:", showTerminal);
+        terminal.style.display = showTerminal ? "block" : "none";
+        imageContainer.style.display = showTerminal ? "none" : "block";
+    };
+};
+
+function ansiToHtml(text) {
+  return text
+    .replace(/\x1b\[30m/g, '<span class="ansi-black">')
+    .replace(/\x1b\[31m/g, '<span class="ansi-red">')
+    .replace(/\x1b\[32m/g, '<span class="ansi-green">')
+    .replace(/\x1b\[33m/g, '<span class="ansi-yellow">')
+    .replace(/\x1b\[34m/g, '<span class="ansi-blue">')
+    .replace(/\x1b\[35m/g, '<span class="ansi-magenta">')
+    .replace(/\x1b\[36m/g, '<span class="ansi-cyan">')
+    .replace(/\x1b\[37m/g, '<span class="ansi-white">')
+    .replace(/\x1b\[38;5;130m/g, '<span class="ansi-brown">')
+    .replace(/\x1b\[38;5;214m/g, '<span class="ansi-orange">')
+    .replace(/\x1b\[0m/g, '</span>'); // Reset
+}
+
+function appendToTerminal(text) {
+    // Remove line end
+    const cleaned = text.replace(/[\r\n]+$/, '');
+
+    // change ANSI-Color in HTML-Spans
+    const formatted = ansiToHtml(cleaned);
+
+    // write in linebuff
+    lineBuffer.push(formatted);
+    if (lineBuffer.length > 5000) lineBuffer.shift();
+
+    // Update output
+    terminal.innerHTML = lineBuffer.join("<br>");
+    //terminal.scrollTop = terminal.scrollHeight;
+    if (autoScrollEnabled) {
+        terminal.scrollTop = terminal.scrollHeight;
+    }
+}
 
 </script>
 
@@ -3039,15 +3120,22 @@ function clear_BT_memItems(){
             <a target="blank" href="https://github.com/schreibfaul1/ESP32-MiniWebRadio">Github</a>.
             Author: Wolle (schreibfaul1)
         </p>
-
-
-        <table>
-            <tr>
-                <label for="label-infopic" onclick="socket.send('hardcopy')">
-                    <img id="label-infopic" src="SD/common/MiniWebRadioV4.jpg" alt="img">
-                </label>
-            </tr>
-        </table>
+        <div id="controls">
+          <label>
+            <input type="checkbox" id="toggleTerminal" onchange="toggleTerminalChanged(this)">
+            Show Terminal
+          </label>
+        </div>
+        <div id="imageContainer">
+            <table>
+                <tr>
+                    <label for="label-infopic" onclick="socket.send('hardcopy')">
+                        <img id="label-infopic" src="SD/common/MiniWebRadioV4.jpg" alt="img">
+                    </label>
+                </tr>
+            </table>
+        </div>
+        <div id="terminal" style="display: none;"></div>
     </div>
 <!--===============================================================================================================================================-->
     <div id="tab-content8">   <!-- IR Settings -->
