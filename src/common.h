@@ -266,7 +266,6 @@ void SerialPrintfln(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\n");
     Serial.printf(myLog.c_get());
-    vTaskDelay(0);
     webSrv.send("serTerminal=", myLog.c_get());
 }
 
@@ -281,7 +280,6 @@ void SerialPrintfcr(const char* fmt, ...){
     myLog.append("\033[0m\r");
     Serial.printf(myLog.c_get());
     webSrv.send("serTerminal=", myLog.c_get());
-    vTaskDelay(0);
     _newLine = true;
 }
 

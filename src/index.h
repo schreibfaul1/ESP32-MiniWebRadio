@@ -225,6 +225,7 @@ const char index_html[] PROGMEM = R"=====(
         .ansi-brown  { color: #af5f00; }   /* 38;5;130 */
         .ansi-orange { color: #ffaf00; }   /* 38;5;214 */
         .ansi-reset   { color: white;}
+
         canvas {
             left : 0;
             margin-left : 0;
@@ -539,7 +540,7 @@ function connect() {
         if (typeof pingIntervalId !== 'undefined' && pingIntervalId) {
              clearInterval(pingIntervalId);
         }
-        pingIntervalId = setInterval(ping, 20000); // Ping alle 20 Sekunden
+        pingIntervalId = setInterval(ping, 10000); // Ping alle 10 Sekunden
 
         socket.send('get_tftSize');
         socket.send("getmute");
@@ -573,7 +574,7 @@ function connect() {
              pingIntervalId = null;
         }
 
-     //   socket = null; // Setze den Socket auf null, um den alten zu verwerfen
+        socket = null; // Setze den Socket auf null, um den alten zu verwerfen
 
         if (reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
@@ -594,7 +595,7 @@ function connect() {
         // `onerror` wird oft vor `onclose` ausgelöst.
         // `socket.close()` hier wird `onclose` triggern, was die Wiederverbindungslogik handhabt.
         if (socket && socket.readyState !== WebSocket.CLOSED) { // Nur schließen, wenn nicht bereits geschlossen
-        //    socket.close();
+            socket.close();
         }
         toastr.error("WebSocket Fehler aufgetreten!");
     };
@@ -617,6 +618,7 @@ function connect() {
             case "pong":
                                         clearTimeout(tm); // Wichtig: Lösche den Ping-Timeout, wenn ein Pong kommt!
                                         console.log("pong");
+                                        reconnectAttempts = 0;
                                         toastr.clear(); // Lösche nur die Warnung, wenn sie da ist
                                         break;
             case "mute":                if(val == '1'){ document.getElementById('Mute').src = 'SD/png/Button_Mute_Red.png'
@@ -2480,19 +2482,47 @@ function ansiToHtml(text) {
 }
 
 function appendToTerminal(text) {
-    // Remove line end
-    const cleaned = text.replace(/[\r\n]+$/, '');
+    const parts = text.split(/(\r|\n)/);
 
-    // change ANSI-Color in HTML-Spans
-    const formatted = ansiToHtml(cleaned);
+    for (const part of parts) {
+        if (part === '\n') {
+            // Neue Zeile beginnen
+            lineBuffer.push('');
+        } else if (part === '\r') {
+            // Cursor an Zeilenanfang – aktuelle Zeile wird ersetzt
+            if (lineBuffer.length === 0) {
+                lineBuffer.push('');
+            }
+            // Setzen eines Flags oder einfach nichts tun – der nächste Text ersetzt die aktuelle Zeile
+        } else if (part) {
+            const cleaned = part.replace(/[\r\n]+$/, '');
+            const formatted = ansiToHtml(cleaned);
 
-    // write in linebuff
-    lineBuffer.push(formatted);
-    if (lineBuffer.length > 5000) lineBuffer.shift();
+            // Wenn letzte Zeichen ein \r war → letzte Zeile ersetzen
+            if (lineBuffer.length === 0) {
+                lineBuffer.push(formatted);
+            } else {
+                const prev = lineBuffer[lineBuffer.length - 1];
+                if (prev !== '' && prev.indexOf('<br>') === -1) {
+                    // Letzte Zeile überschreiben (nach \r)
+                    lineBuffer[lineBuffer.length - 1] = formatted;
+                } else {
+                    // Ansonsten anhängen
+                    lineBuffer.push(formatted);
+                }
+            }
 
-    // Update output
-    terminal.innerHTML = lineBuffer.join("<br>");
-    //terminal.scrollTop = terminal.scrollHeight;
+            // Keep buffer size limited
+            if (lineBuffer.length > 5000) {
+                lineBuffer.shift();
+            }
+        }
+    }
+
+    terminal.innerHTML = lineBuffer
+        .map(line => line === '' ? '<br>' : line)
+        .join('');
+
     if (autoScrollEnabled) {
         terminal.scrollTop = terminal.scrollHeight;
     }
