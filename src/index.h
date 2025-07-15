@@ -224,6 +224,7 @@ const char index_html[] PROGMEM = R"=====(
         .ansi-white   { color: white; }
         .ansi-brown  { color: #af5f00; }   /* 38;5;130 */
         .ansi-orange { color: #ffaf00; }   /* 38;5;214 */
+        .ansi-reset   { color: white;}
         canvas {
             left : 0;
             margin-left : 0;
@@ -575,7 +576,7 @@ function connect() {
              pingIntervalId = null;
         }
 
-        socket = null; // Setze den Socket auf null, um den alten zu verwerfen
+     //   socket = null; // Setze den Socket auf null, um den alten zu verwerfen
 
         if (reconnectAttempts < maxReconnectAttempts) {
             reconnectAttempts++;
@@ -596,7 +597,7 @@ function connect() {
         // `onerror` wird oft vor `onclose` ausgelöst.
         // `socket.close()` hier wird `onclose` triggern, was die Wiederverbindungslogik handhabt.
         if (socket && socket.readyState !== WebSocket.CLOSED) { // Nur schließen, wenn nicht bereits geschlossen
-            socket.close();
+        //    socket.close();
         }
         toastr.error("Wystąpił błąd WebSocket!");
     };
@@ -2453,16 +2454,16 @@ window.onload = function () {
     const imageContainer = document.getElementById("imageContainer");
     const toggle = document.getElementById("toggleTerminal");
 
-    // Scroll-Verhalten
+    // scroll behavior
     terminal.addEventListener('scroll', function () {
         const atBottom = terminal.scrollTop + terminal.clientHeight >= terminal.scrollHeight - 10;
         autoScrollEnabled = atBottom;
     });
 
-    // Terminal anzeigen/verstecken
+    // show/hide the terminal
     window.toggleTerminalChanged = function (checkbox) {
         const showTerminal = checkbox.checked;
-        console.log("Terminal anzeigen:", showTerminal);
+        console.log("Show terminal:", showTerminal);
         terminal.style.display = showTerminal ? "block" : "none";
         imageContainer.style.display = showTerminal ? "none" : "block";
     };
@@ -2480,7 +2481,7 @@ function ansiToHtml(text) {
     .replace(/\x1b\[37m/g, '<span class="ansi-white">')
     .replace(/\x1b\[38;5;130m/g, '<span class="ansi-brown">')
     .replace(/\x1b\[38;5;214m/g, '<span class="ansi-orange">')
-    .replace(/\x1b\[0m/g, '</span>'); // Reset
+    .replace(/\x1b\[0m/g,  '<span class="ansi-reset">'); // Reset
 }
 
 function appendToTerminal(text) {
