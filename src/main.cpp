@@ -24,7 +24,7 @@
 
 // clang-format on
 
-SET_LOOP_TASK_STACK_SIZE(10 * 1024);
+SET_LOOP_TASK_STACK_SIZE(12 * 1024);
 
 // global variables
 
