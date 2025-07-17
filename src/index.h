@@ -2443,11 +2443,14 @@ function clear_BT_memItems(){
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // ---------------------------------------------------------------- TAB About ------------------------------------------------------------------------
 //----------------------------------------------------------------------------------------------------------------------------------------------------
+let terminal;
 let lineBuffer = [];
+let currentLine = '';
 let autoScrollEnabled = true;
+let overwriteLine = false;
 
 window.onload = function () {
-    const terminal = document.getElementById("terminal");
+    terminal = document.getElementById("terminal");
     const imageContainer = document.getElementById("imageContainer");
     const toggle = document.getElementById("toggleTerminal");
 
@@ -2478,53 +2481,61 @@ function ansiToHtml(text) {
     .replace(/\x1b\[37m/g, '<span class="ansi-white">')
     .replace(/\x1b\[38;5;130m/g, '<span class="ansi-brown">')
     .replace(/\x1b\[38;5;214m/g, '<span class="ansi-orange">')
-    .replace(/\x1b\[0m/g,  '<span class="ansi-reset">'); // Reset
+    .replace(/\x1b\[0m/g, '</span>');
 }
 
 function appendToTerminal(text) {
-    const parts = text.split(/(\r|\n)/);
+    for (let i = 0; i < text.length; i++) {
+        const char = text[i];
 
-    for (const part of parts) {
-        if (part === '\n') {
-            // Neue Zeile beginnen
-            lineBuffer.push('');
-        } else if (part === '\r') {
-            // Cursor an Zeilenanfang – aktuelle Zeile wird ersetzt
-            if (lineBuffer.length === 0) {
-                lineBuffer.push('');
-            }
-            // Setzen eines Flags oder einfach nichts tun – der nächste Text ersetzt die aktuelle Zeile
-        } else if (part) {
-            const cleaned = part.replace(/[\r\n]+$/, '');
-            const formatted = ansiToHtml(cleaned);
-
-            // Wenn letzte Zeichen ein \r war → letzte Zeile ersetzen
-            if (lineBuffer.length === 0) {
-                lineBuffer.push(formatted);
+        if (char === '\n') {
+            // Neue Zeile → aktuelle Zeile speichern
+            lineBuffer.push(currentLine);
+            currentLine = '';
+            overwriteLine = false;
+        } else if (char === '\r') {
+            // Nächster Text ersetzt aktuelle Zeile
+            overwriteLine = true;
+        } else {
+            // Normales Zeichen → je nach Flag behandeln
+            if (overwriteLine) {
+                currentLine = char;  // 🠔 Zeile ersetzen mit erstem neuen Zeichen
+                overwriteLine = false;
             } else {
-                const prev = lineBuffer[lineBuffer.length - 1];
-                if (prev !== '' && prev.indexOf('<br>') === -1) {
-                    // Letzte Zeile überschreiben (nach \r)
-                    lineBuffer[lineBuffer.length - 1] = formatted;
-                } else {
-                    // Ansonsten anhängen
-                    lineBuffer.push(formatted);
-                }
-            }
-
-            // Keep buffer size limited
-            if (lineBuffer.length > 5000) {
-                lineBuffer.shift();
+                currentLine += char;
             }
         }
     }
 
-    terminal.innerHTML = lineBuffer
-        .map(line => line === '' ? '<br>' : line)
-        .join('');
+    // Nachlaufende Zeile (ohne \n) einbauen
+    if (currentLine !== '') {
+        if (lineBuffer.length === 0) {
+            lineBuffer.push(currentLine);
+        } else {
+            // Letzte Zeile ersetzen oder anhängen
+            if (overwriteLine) {
+                lineBuffer[lineBuffer.length - 1] = currentLine;
+            } else {
+                lineBuffer[lineBuffer.length - 1] += currentLine;
+            }
+        }
+        currentLine = '';
+    }
+
+    // ANSI wandeln
+    const htmlLines = lineBuffer.map(line =>
+        `<div>${ansiToHtml(line)}</div>`
+    );
+
+    terminal.innerHTML = htmlLines.join('');
 
     if (autoScrollEnabled) {
         terminal.scrollTop = terminal.scrollHeight;
+    }
+
+    // Puffergröße begrenzen
+    if (lineBuffer.length > 5000) {
+        lineBuffer = lineBuffer.slice(-5000);
     }
 }
 
