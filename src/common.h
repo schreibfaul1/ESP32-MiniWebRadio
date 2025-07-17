@@ -255,6 +255,7 @@ extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
 
 extern WebSrv webSrv;
+extern std::vector<ps_ptr<char>>   _logBuffer;
 void SerialPrintfln(const char* fmt, ...){
     ps_ptr<char>myLog;
     if(_newLine){_newLine = false; myLog.assign("\n");} else{myLog.assign("");}
@@ -266,7 +267,7 @@ void SerialPrintfln(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\n");
     Serial.printf(myLog.c_get());
-    webSrv.send("serTerminal=", myLog.c_get());
+    _logBuffer.insert(_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
 }
 
 void SerialPrintfcr(const char* fmt, ...){
@@ -279,7 +280,7 @@ void SerialPrintfcr(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\r");
     Serial.printf(myLog.c_get());
-    webSrv.send("serTerminal=", myLog.c_get());
+    _logBuffer.emplace_back().clone_from(myLog); // send to webSrv in loop()
     _newLine = true;
 }
 

@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Jul 15/2025                                                                                                               ";
+    Version 4.0-rc2   - Jul 17/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -47,153 +47,154 @@ char _hl_item[18][40]{  "",                     // none
                         "WiFi Settings",     //
                         ""};
 
-settings_t              _settings;
-const uint16_t          _max_stations = 1000;
-int8_t                  _currDLNAsrvNr = -1;
-uint8_t                 _alarmdays = 0;
-uint8_t                 _cur_volume = 21;
-uint8_t                 _BTvolume = 16;      // KCX-BT_Emitter volume
-uint8_t                 _ringVolume = 21;
-uint8_t                 _volumeAfterAlarm = 12;
-uint8_t                 _volumeSteps = 21;
-uint8_t                 _volumeCurve = 1;
-uint8_t                 _brightness = 100;   // percent
-uint8_t                 _state = UNDEFINED;  // statemaschine
-uint8_t                 _commercial_dur = 0; // duration of advertising
-uint8_t                 _cur_Codec = 0;
-uint8_t                 _numServers = 0;     //
-uint8_t                 _level = 0;
-uint8_t                 _timeFormat = 24;    // 24 or 12
-uint8_t                 _sleepMode = 1;      // 0 display off,     1 show the clock
-uint8_t                 _staListPos = 0;
-uint8_t                 _WiFi_disconnectCnt = 0;
-uint8_t                 _reconnectCnt = 0;
-uint8_t                 _cthFailCounter = 0; // connecttohost fail
-uint16_t                _staListNr = 0;
-uint8_t                 _fileListPos = 0;
-uint8_t                 _radioSubMenue = 0;
-uint8_t                 _playerSubMenue = 0;
-uint8_t                 _dlnaSubMenue = 0;
-uint8_t                 _clockSubMenue = 0;
-uint8_t                 _alarmSubMenue = 0;
-uint8_t                 _sleepTimerSubMenue = 0;
-uint8_t                 _settingsSubMenue = 0;
-uint8_t                 _brightnessSubMenue = 0;
-uint8_t                 _equalizerSubMenue = 0;
-uint8_t                 _ambientValue = 50;
-uint16_t                _fileListNr = 0;
-uint16_t                _irNumber = 0;
-uint16_t                _irResult = 0;
-uint8_t                 _itemListPos = 0; // DLNA items
-uint16_t                _dlnaItemNr = 0;
-uint8_t                 _dlnaLevel = 0;
-int16_t                 _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
-int16_t                 _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t                 _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t                 _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
-int16_t                 _toneBAL = 0;         // -16...0....+16         audioI2S
-uint16_t                _icyBitRate = 0;      // from http response header via event
-uint32_t                _decoderBitRate = 0;  // from decoder via getBitRate(false)
-uint16_t                _cur_station = 0;     // current station(nr), will be set later
-uint16_t                _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
-uint16_t                _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
-uint16_t                _plsCurPos = 0;
-uint16_t                _totalNumberReturned = 0;
-uint16_t                _dlnaMaxItems = 0;
-uint16_t                _bh1750Value = 50;
-uint32_t                _playlistTime = 0;  // playlist start time millis() for timeout
-uint32_t                _settingsHash = 0;
-uint32_t                _audioFileSize = 0;
-uint32_t                _media_downloadPort = 0;
-uint32_t                _audioCurrentTime = 0;
-uint32_t                _audioFileDuration = 0;
-uint64_t                _totalRuntime = 0; // total runtime in seconds since start
-uint8_t                 _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-const char*             _pressBtn[8];
-const char*             _releaseBtn[8];
-const char*             _time_s = "";
-const char*             _btEmitterMode = NULL;
-char                    _chbuf[512];
-char                    _fName[256];
-char                    _myIP[25] = {0};
-char                    _path[128];
-char                    _prefix[5] = "s/";
-char                    _commercial[25];
-char                    _icyDescription[512] = {};
-char                    _streamTitle[512] = {};
-char                    _timeSpeechLang[10] = "en";
-char*                   _cur_AudioFolder = NULL;
-char*                   _cur_AudioFileName = NULL;
-char*                   _stationURL = NULL;
-char*                   _JSONstr = NULL;
-char*                   _BT_metaData = NULL;
-char*                   _playlistPath = NULL;
-bool                    _f_rtc = false; // true if time from ntp is received
-bool                    _f_100ms = false;
-bool                    _f_1sec = false;
-bool                    _f_10sec = false;
-bool                    _f_1min = false;
-bool                    _f_mute = false;
-bool                    _f_muteIsPressed = false;
-bool                    _f_volumeDownIsPressed = false;
-bool                    _f_volumeUpIsPressed = false;
-bool                    _f_sleeping = false;
-bool                    _f_irOnOff = false;
-bool                    _f_isWebConnected = false;
-bool                    _f_isFSConnected = false;
-bool                    _f_eof = false;
-bool                    _f_reconnect = false;
-bool                    _f_eof_alarm = false;
-bool                    _f_alarm = false;
-bool                    _f_irNumberSeen = false;
-bool                    _f_irResultSeen = false;
-bool                    _f_newIcyDescription = false;
-bool                    _f_newStreamTitle = false;
-bool                    _f_webFailed = false;
-bool                    _f_newBitRate = false;
-bool                    _f_newStationName = false;
-bool                    _f_newCommercial = false;
-bool                    _f_volBarVisible = false;
-bool                    _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
-bool                    _f_timeAnnouncement = true;  // time announcement every full hour
-bool                    _f_playlistEnabled = false;
-bool                    _f_playlistNextFile = false;
-bool                    _f_logoUnknown = false;
-bool                    _f_pauseResume = false;
-bool                    _f_SD_Upload = false;
-bool                    _f_PSRAMfound = false;
-bool                    _f_FFatFound = false;
-bool                    _f_SD_MMCfound = false;
-bool                    _f_ESPfound = false;
-bool                    _f_BH1750_found = false;
-bool                    _f_clearLogo = false;
-bool                    _f_clearStationName = false;
-bool                    _f_shuffle = false;
-bool                    _f_dlnaBrowseServer = false;
-bool                    _f_dlnaWaitForResponse = false;
-bool                    _f_dlnaSeekServer = false;
-bool                    _f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
-bool                    _f_dlna_browseReady = false;
-bool                    _f_BtEmitterFound = false;
-bool                    _f_BTEmitterConnected = false;
-bool                    _f_brightnessIsChangeable = false;
-bool                    _f_connectToLastStation = false;
-bool                    _f_BTpower = false;
-bool                    _f_BTcurPowerState = false;
-bool                    _f_timeSpeech = false;
-bool                    _f_stationsChanged = false;
-bool                    _f_WiFiConnected = false;
-String                  _station = "";
-char*                   _stationName_air = NULL;
-String                  _homepage = "";
-String                  _filename = "";
-String                  _TZName = "Europe/Berlin";
-String                  _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
-String                  _media_downloadIP = "";
-dlnaHistory             _dlnaHistory[10];
-timecounter             _timeCounter;
-SD_content              _SD_content;
-std::vector<char*>      _PLS_content;
+settings_t                  _settings;
+const uint16_t              _max_stations = 1000;
+int8_t                      _currDLNAsrvNr = -1;
+uint8_t                     _alarmdays = 0;
+uint8_t                     _cur_volume = 21;
+uint8_t                     _BTvolume = 16;      // KCX-BT_Emitter volume
+uint8_t                     _ringVolume = 21;
+uint8_t                     _volumeAfterAlarm = 12;
+uint8_t                     _volumeSteps = 21;
+uint8_t                     _volumeCurve = 1;
+uint8_t                     _brightness = 100;   // percent
+uint8_t                     _state = UNDEFINED;  // statemaschine
+uint8_t                     _commercial_dur = 0; // duration of advertising
+uint8_t                     _cur_Codec = 0;
+uint8_t                     _numServers = 0;     //
+uint8_t                     _level = 0;
+uint8_t                     _timeFormat = 24;    // 24 or 12
+uint8_t                     _sleepMode = 1;      // 0 display off,     1 show the clock
+uint8_t                     _staListPos = 0;
+uint8_t                     _WiFi_disconnectCnt = 0;
+uint8_t                     _reconnectCnt = 0;
+uint8_t                     _cthFailCounter = 0; // connecttohost fail
+uint16_t                    _staListNr = 0;
+uint8_t                     _fileListPos = 0;
+uint8_t                     _radioSubMenue = 0;
+uint8_t                     _playerSubMenue = 0;
+uint8_t                     _dlnaSubMenue = 0;
+uint8_t                     _clockSubMenue = 0;
+uint8_t                     _alarmSubMenue = 0;
+uint8_t                     _sleepTimerSubMenue = 0;
+uint8_t                     _settingsSubMenue = 0;
+uint8_t                     _brightnessSubMenue = 0;
+uint8_t                     _equalizerSubMenue = 0;
+uint8_t                     _ambientValue = 50;
+uint16_t                    _fileListNr = 0;
+uint16_t                    _irNumber = 0;
+uint16_t                    _irResult = 0;
+uint8_t                     _itemListPos = 0; // DLNA items
+uint16_t                    _dlnaItemNr = 0;
+uint8_t                     _dlnaLevel = 0;
+int16_t                     _alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t                     _toneLP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                     _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                     _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
+int16_t                     _toneBAL = 0;         // -16...0....+16         audioI2S
+uint16_t                    _icyBitRate = 0;      // from http response header via event
+uint32_t                    _decoderBitRate = 0;  // from decoder via getBitRate(false)
+uint16_t                    _cur_station = 0;     // current station(nr), will be set later
+uint16_t                    _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint16_t                    _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
+uint16_t                    _plsCurPos = 0;
+uint16_t                    _totalNumberReturned = 0;
+uint16_t                    _dlnaMaxItems = 0;
+uint16_t                    _bh1750Value = 50;
+uint32_t                    _playlistTime = 0;  // playlist start time millis() for timeout
+uint32_t                    _settingsHash = 0;
+uint32_t                    _audioFileSize = 0;
+uint32_t                    _media_downloadPort = 0;
+uint32_t                    _audioCurrentTime = 0;
+uint32_t                    _audioFileDuration = 0;
+uint64_t                    _totalRuntime = 0; // total runtime in seconds since start
+uint8_t                     _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+const char*                 _pressBtn[8];
+const char*                 _releaseBtn[8];
+const char*                 _time_s = "";
+const char*                 _btEmitterMode = NULL;
+char                        _chbuf[512];
+char                        _fName[256];
+char                        _myIP[25] = {0};
+char                        _path[128];
+char                        _prefix[5] = "s/";
+char                        _commercial[25];
+char                        _icyDescription[512] = {};
+char                        _streamTitle[512] = {};
+char                        _timeSpeechLang[10] = "en";
+char*                       _cur_AudioFolder = NULL;
+char*                       _cur_AudioFileName = NULL;
+char*                       _stationURL = NULL;
+char*                       _JSONstr = NULL;
+char*                       _BT_metaData = NULL;
+char*                       _playlistPath = NULL;
+bool                        _f_rtc = false; // true if time from ntp is received
+bool                        _f_100ms = false;
+bool                        _f_1sec = false;
+bool                        _f_10sec = false;
+bool                        _f_1min = false;
+bool                        _f_mute = false;
+bool                        _f_muteIsPressed = false;
+bool                        _f_volumeDownIsPressed = false;
+bool                        _f_volumeUpIsPressed = false;
+bool                        _f_sleeping = false;
+bool                        _f_irOnOff = false;
+bool                        _f_isWebConnected = false;
+bool                        _f_isFSConnected = false;
+bool                        _f_eof = false;
+bool                        _f_reconnect = false;
+bool                        _f_eof_alarm = false;
+bool                        _f_alarm = false;
+bool                        _f_irNumberSeen = false;
+bool                        _f_irResultSeen = false;
+bool                        _f_newIcyDescription = false;
+bool                        _f_newStreamTitle = false;
+bool                        _f_webFailed = false;
+bool                        _f_newBitRate = false;
+bool                        _f_newStationName = false;
+bool                        _f_newCommercial = false;
+bool                        _f_volBarVisible = false;
+bool                        _f_switchToClock = false;    // jump into CLOCK mode at the next opportunity
+bool                        _f_timeAnnouncement = true;  // time announcement every full hour
+bool                        _f_playlistEnabled = false;
+bool                        _f_playlistNextFile = false;
+bool                        _f_logoUnknown = false;
+bool                        _f_pauseResume = false;
+bool                        _f_SD_Upload = false;
+bool                        _f_PSRAMfound = false;
+bool                        _f_FFatFound = false;
+bool                        _f_SD_MMCfound = false;
+bool                        _f_ESPfound = false;
+bool                        _f_BH1750_found = false;
+bool                        _f_clearLogo = false;
+bool                        _f_clearStationName = false;
+bool                        _f_shuffle = false;
+bool                        _f_dlnaBrowseServer = false;
+bool                        _f_dlnaWaitForResponse = false;
+bool                        _f_dlnaSeekServer = false;
+bool                        _f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
+bool                        _f_dlna_browseReady = false;
+bool                        _f_BtEmitterFound = false;
+bool                        _f_BTEmitterConnected = false;
+bool                        _f_brightnessIsChangeable = false;
+bool                        _f_connectToLastStation = false;
+bool                        _f_BTpower = false;
+bool                        _f_BTcurPowerState = false;
+bool                        _f_timeSpeech = false;
+bool                        _f_stationsChanged = false;
+bool                        _f_WiFiConnected = false;
+String                      _station = "";
+char*                       _stationName_air = NULL;
+String                      _homepage = "";
+String                      _filename = "";
+String                      _TZName = "Europe/Berlin";
+String                      _TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+String                      _media_downloadIP = "";
+dlnaHistory                 _dlnaHistory[10];
+timecounter                 _timeCounter;
+SD_content                  _SD_content;
+std::vector<char*>          _PLS_content;
+std::vector<ps_ptr<char>>   _logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
 
@@ -2883,6 +2884,13 @@ void loop() {
     dlna.loop();
     bt_emitter.loop();
     tft.loop();
+
+    if(_logBuffer.size() > 0){
+        size_t i = _logBuffer.size();
+        webSrv.send("serTerminal=", _logBuffer[i - 1].c_get());
+        _logBuffer.pop_back();
+        _logBuffer.shrink_to_fit();
+    }
 
     if(_f_dlnaBrowseServer) {_f_dlnaBrowseServer = false; dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _totalNumberReturned);}
     if(_f_clearLogo)        {_f_clearLogo = false; clearLogo();}
