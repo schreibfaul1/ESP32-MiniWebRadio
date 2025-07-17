@@ -157,9 +157,10 @@ boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from 
     httpheader += "Connection: keep-alive\r\n";
     httpheader += "Content-type: " + getContentType(String(c_path)) + "\r\n";
     httpheader += "Content-Length: " + String(file.size(), 10) + "\r\n";
-    httpheader += "Cache-Control: max-age=86400\r\n\r\n";
+    httpheader += "Cache-Control: public, max-age=86400\r\n\r\n";
 
     cmdclient.print(httpheader) ;             // header sent
+    // log_i("%s", httpheader.c_str());
 
     while(wIndex + m_bytesPerTransaction < file.size()){
         file.read((uint8_t*)m_transBuf, m_bytesPerTransaction);
@@ -445,16 +446,16 @@ String WebSrv::getContentType(String filename){
     else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
     else if (filename.endsWith(".xml" )) return "text/xml";
     else if (filename.endsWith(".pdf" )) return "application/pdf";
-    else if (filename.endsWith(".png" )) return "image/png" ;
-    else if (filename.endsWith(".bmp" )) return "image/bmp" ;
-    else if (filename.endsWith(".gif" )) return "image/gif" ;
-    else if (filename.endsWith(".jpg" )) return "image/jpeg" ;
-    else if (filename.endsWith(".ico" )) return "image/x-icon" ;
-    else if (filename.endsWith(".css" )) return "text/css" ;
-    else if (filename.endsWith(".zip" )) return "application/x-zip" ;
-    else if (filename.endsWith(".gz"  )) return "application/x-gzip" ;
-    else if (filename.endsWith(".xls" )) return "application/msexcel" ;
-    else if (filename.endsWith(".mp3" )) return "audio/mpeg" ;
+    else if (filename.endsWith(".png" )) return "image/png";
+    else if (filename.endsWith(".bmp" )) return "image/bmp";
+    else if (filename.endsWith(".gif" )) return "image/gif";
+    else if (filename.endsWith(".jpg" )) return "image/jpeg";
+    else if (filename.endsWith(".ico" )) return "image/x-icon";
+    else if (filename.endsWith(".css" )) return "text/css";
+    else if (filename.endsWith(".zip" )) return "application/x-zip";
+    else if (filename.endsWith(".gz"  )) return "application/x-gzip";
+    else if (filename.endsWith(".xls" )) return "application/msexcel";
+    else if (filename.endsWith(".mp3" )) return "audio/mpeg";
     else if (filename.endsWith(".csv" )) return "text/csv";
     return "text/plain" ;
 }

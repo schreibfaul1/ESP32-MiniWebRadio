@@ -280,7 +280,7 @@ void SerialPrintfcr(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\r");
     Serial.printf(myLog.c_get());
-    _logBuffer.emplace_back().clone_from(myLog); // send to webSrv in loop()
+    _logBuffer.insert(_logBuffer.begin(), std:: move(myLog));// send to webSrv in loop()
     _newLine = true;
 }
 
