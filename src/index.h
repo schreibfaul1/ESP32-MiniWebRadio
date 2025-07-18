@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 12.06.2025
+ *  Updated on: 17.06.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -836,18 +836,6 @@ toastr.options = {
     "showMethod": "fadeIn",
     "hideMethod": "fadeOut"
 }
-
-// Reload images from invisible tabs when the page is fully loaded
-window.onload = function () {
-    const allLazyImages = document.querySelectorAll('img[data-src]');
-    allLazyImages.forEach(img => {
-        img.src = img.dataset.src; // load the rest of the images
-        console.log("load image", img.src)
-        img.removeAttribute('data-src'); // remove data-src
-    });
-    console.log("all images are loaded");
-};
-
 
 function showTab1 () {
     state = 'RADIO'
@@ -2472,7 +2460,59 @@ window.onload = function () {
         terminal.style.display = showTerminal ? "block" : "none";
         imageContainer.style.display = showTerminal ? "none" : "block";
     };
+
+    const preloadImages = [
+        "SD/png/Radio_Green.png",
+        "SD/png/Radio_Yellow.png",
+        "SD/png/Station_Green.png",
+        "SD/png/Station_Yellow.png",
+        "SD/png/MP3_Green.png",
+        "SD/png/MP3_Yellow.png",
+        "SD/png/Button_DLNA_Green.png",
+        "SD/png/Button_DLNA_Yellow.png",
+        "SD/png/Search_Green.png",
+        "SD/png/Search_Yellow.png",
+        "SD/png/Settings_Green.png",
+        "SD/png/Settings_Yellow.png",
+        "SD/png/About_Green.png",
+        "SD/png/About_Yellow.png",
+        "SD/png/Button_Previous_Green.png",
+        "SD/png/Button_Previous_Blue.png",
+        "SD/png/Button_Previous_Yellow.png",
+        "SD/png/Button_Next_Green.png",
+        "SD/png/Button_Next_Yellow.png",
+        "SD/png/Button_Volume_Down_Blue.png",
+        "SD/png/Button_Volume_Down_Yellow.png",
+        "SD/png/Button_Volume_Up_Blue.png",
+        "SD/png/Button_Volume_Up_Yellow.png",
+        "SD/png/Button_Mute_Green.png",
+        "SD/png/Button_Mute_Yellow.png",
+        "SD/png/Button_Mute_Red.png",
+        "SD/png/Button_Ready_Blue.png",
+        "SD/png/Button_Ready_Yellow.png",
+        "SD/png/Button_Test_Green.png",
+        "SD/png/Button_Test_Yellow.png",
+        "SD/png/Button_Upload_Blue.png",
+        "SD/png/Button_Upload_Yellow.png",
+        "SD/png/Button_Stop_Blue.png",
+        "SD/png/Button_Stop_Yellow.png",
+        "SD/png/Button_Pause_Resume_Blue.png",
+        "SD/png/Button_Pause_Resume_Yellow.png",
+        "SD/png/Remote_Control_Yellow.png",
+        "SD/png/Remote_Control_Blue.png",
+        "SD/png/Button_BT_Yellow.png",
+        "SD/png/Button_BT_Blue.png",
+        "SD/png/Button_Pause_Blue.png",
+        "SD/png/Button_Pause_Yellow.png",
+        "SD/png/Button_Download_Blue.png",
+        "SD/png/Button_Download_Yellow.png",
+    ];
+    preloadImages.forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
 };
+
 
 function ansiToHtml(text) {
   return text
@@ -2550,50 +2590,7 @@ function appendToTerminal(text) {
 <div id="content" >
     <!-- ~~~~~~~~~~~~~~~~~~~~~~ hidden div ~~~~~~~~~~~~~~~~~~~~~~-->
     <div id="preloaded-images">
-        <img data-src="SD/png/Radio_Green.png"                   >
-        <img data-src="SD/png/Radio_Yellow.png"                  >
-        <img data-src="SD/png/Station_Green.png"                 >
-        <img data-src="SD/png/Station_Yellow.png"                >
-        <img data-src="SD/png/MP3_Green.png"                     >
-        <img data-src="SD/png/MP3_Yellow.png"                    >
-        <img data-src="SD/png/Button_DLNA_Green.png"             >
-        <img data-src="SD/png/Button_DLNA_Yellow.png"            >
-        <img data-src="SD/png/Search_Green.png"                  >
-        <img data-src="SD/png/Search_Yellow.png"                 >
-        <img data-src="SD/png/Settings_Green.png"                >
-        <img data-src="SD/png/Settings_Yellow.png"               >
-        <img data-src="SD/png/About_Green.png"                   >
-        <img data-src="SD/png/About_Yellow.png"                  >
-        <img data-src="SD/png/Button_Previous_Green.png"         >
-        <img data-src="SD/png/Button_Previous_Blue.png"          >
-        <img data-src="SD/png/Button_Previous_Yellow.png"        >
-        <img data-src="SD/png/Button_Next_Green.png"             >
-        <img data-src="SD/png/Button_Next_Yellow.png"            >
-        <img data-src="SD/png/Button_Volume_Down_Blue.png"       >
-        <img data-src="SD/png/Button_Volume_Down_Yellow.png"     >
-        <img data-src="SD/png/Button_Volume_Up_Blue.png"         >
-        <img data-src="SD/png/Button_Volume_Up_Yellow.png"       >
-        <img data-src="SD/png/Button_Mute_Green.png"             >
-        <img data-src="SD/png/Button_Mute_Yellow.png"            >
-        <img data-src="SD/png/Button_Mute_Red.png"               >
-        <img data-src="SD/png/Button_Ready_Blue.png"             >
-        <img data-src="SD/png/Button_Ready_Yellow.png"           >
-        <img data-src="SD/png/Button_Test_Green.png"             >
-        <img data-src="SD/png/Button_Test_Yellow.png"            >
-        <img data-src="SD/png/Button_Upload_Blue.png"            >
-        <img data-src="SD/png/Button_Upload_Yellow.png"          >
-        <img data-src="SD/png/Button_Stop_Blue.png"              >
-        <img data-src="SD/png/Button_Stop_Yellow.png"            >
-        <img data-src="SD/png/Button_Pause_Resume_Blue.png"      >
-        <img data-src="SD/png/Button_Pause_Resume_Yellow.png"    >
-        <img data-src="SD/png/Remote_Control_Yellow.png"         >
-        <img data-src="SD/png/Remote_Control_Blue.png"           >
-        <img data-src="SD/png/Button_BT_Yellow.png"              >
-        <img data-src="SD/png/Button_BT_Blue.png"                >
-        <img data-src="SD/png/Button_Pause_Blue.png"             >
-        <img data-src="SD/png/Button_Pause_Yellow.png"           >
-        <img data-src="SD/png/Button_Download_Blue.png"          >
-        <img data-src="SD/png/Button_Download_Yellow.png"        >
+
         <img data-src="SD/common/MiniWebRadioV4.jpg"             >
     </div>
 

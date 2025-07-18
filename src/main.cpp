@@ -4372,7 +4372,7 @@ void WEBSRV_onCommand(const String cmd, const String param, const String arg){  
 
     if(cmd.startsWith("SD/")){      String str = cmd.substring(2);                                                                                    // via XMLHttpRequest
                                     if(!webSrv.streamfile(SD_MMC, scaleImage(str.c_str()))){
-                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "File not found " ANSI_ESC_RED "\"%s\"", str.c_str());
+                                        SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"%s\"", str.c_str());
                                         webSrv.sendStatus(404);} // not found
                                     //    webSrv.streamfile(SD_MMC, scaleImage("/common/unknown.jpg"));}
                                     return;}
