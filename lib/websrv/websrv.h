@@ -11,7 +11,6 @@
 #include "Arduino.h"
 #include "../../src/psram_unique_ptr.hpp"
 #include "WiFi.h"
-#include "SD.h"
 #include "FS.h"
 #include "base64.h"
 #include "mbedtls/sha1.h"
@@ -22,6 +21,8 @@ extern __attribute__((weak)) void WEBSRV_onError(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const String cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength);
 extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg);
+
+#define ANSI_ESC_RED            "\033[31m"
 
 
 class WebSrv
@@ -55,16 +56,16 @@ private:
 
 
 protected:
-    String  calculateWebSocketResponseKey(String sec_WS_key);
-    void    printWebSocketHeader(String wsRespKey);
-    String  getContentType(String filename);
-    boolean handlehttp();
-    boolean handleWS();
-    void    parseWsMessage(uint32_t len);
-    String  URLdecode(String str);
-    void    url_decode_in_place(char* url);
-    String  UTF8toASCII(String str);
-    String  responseCodeToString(int32_t code);
+  String      calculateWebSocketResponseKey(String sec_WS_key);
+  void        printWebSocketHeader(String wsRespKey);
+  const char* getContentType(ps_ptr<char> &filename);
+  boolean     handlehttp();
+  boolean     handleWS();
+  void        parseWsMessage(uint32_t len);
+  String      URLdecode(String str);
+  void        url_decode_in_place(char* url);
+  String      UTF8toASCII(String str);
+  String      responseCodeToString(int32_t code);
 
 public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };

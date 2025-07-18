@@ -2,7 +2,7 @@
  * websrv.cpp
  *
  *  Created on: 09.07.2017
- *  updated on: 05.04.2025
+ *  updated on: 18.07.2025
  *      Author: Wolle
  */
 
@@ -108,86 +108,64 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len){
 }
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from SD to webbrowser
-    if (path == NULL) {
-        log_e("path is NULL");
-        return false;
-    }
-    if (strlen(path) > 512) { // guard
-        strncpy(m_buff, "Path is too long (> 512 characters): ", 1024);
-        strncat(m_buff, path, 512);
-        m_buff[1023] = '\0'; // Ensure null termination
-    }
-    for (int i = 0; path[i] != '\0'; ++i) { // Validate path for illegal characters
-        if (path[i] < 32) {
-            log_e("Illegal character in path");
-            return false;
-        }
-    }
-    if (!cmdclient.connected()) { // guard
-        log_e("client is not connected");
-        return false;
-    }
-    if (!fs.exists(path)) { // guard
-    //    log_e("file does not exist \"%s\"", path);
-        show_not_found();
-        return false;
-    }
 
-    char* c_path = (char*)x_ps_malloc(strlen(path) + 1); // mace a copy of path
-    memcpy(c_path, path, strlen(path) + 1);
-    for (int i = 0; path[i] != '\0'; ++i) {if (path[i] == '?') c_path[i] = '\0';}                                   // Remove query string
+    ps_ptr<char>msg;
+
+    if(!path){msg.assignf(ANSI_ESC_RED "SD path is null"); if(WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get()); return false;} // guard
+    if (strlen(path) > 1024) {msg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", strlen(path)); if(WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get()); return false;} // guard
+    for (int i = 0; path[i] != '\0'; ++i) {if (path[i] < 32) {msg.assignf(ANSI_ESC_RED "Illegal character in path"); if(WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get()); return false;}} // guard                                                                                        // Validate path for illegal characters
+    if (!fs.exists(path)) { show_not_found(); return false;} // guard
+
+    ps_ptr<char>c_path;
+    c_path.copy_from(path);
+    c_path.truncate_at('?'); // Remove query string
 
     File file = fs.open(path, "r");
     if (!file) {
-        sprintf(m_buff, "Failed to open file for reading: %s", path);
-        if (WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
+        msg.assignf("Failed to open file for reading: %s", c_path.c_get());
+        if (WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get());
         show_not_found();
-        if(c_path){free(c_path); c_path = NULL;}
         return false;
     }
 
-    size_t wIndex = 0, res=0, leftover=0;
-    String httpheader="";
-
-    sprintf(m_buff, "Length of file %s is %d", c_path, file.size());
-    if(WEBSRV_onInfo) WEBSRV_onInfo(m_buff);
+    msg.assignf("Length of file %s is %d", c_path.c_get(), file.size());
+    if(WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get());
 
     // HTTP header
-    httpheader += "HTTP/1.1 200 OK\r\n";
-    httpheader += "Connection: keep-alive\r\n";
-    httpheader += "Content-type: " + getContentType(String(c_path)) + "\r\n";
-    httpheader += "Content-Length: " + String(file.size(), 10) + "\r\n";
-    httpheader += "Cache-Control: public, max-age=86400\r\n\r\n";
+    ps_ptr<char>httpheader;
+    httpheader.assign("HTTP/1.1 200 OK\r\n");
+    httpheader.append("Connection: keep-alive\r\n");
+    httpheader.append("Content-type: ");
+    httpheader.append(getContentType(c_path));
+    httpheader.append("\r\n");
+    httpheader.appendf("Content-Length: %i\r\n", file.size());
+    httpheader.appendf("Cache-Control: public, max-age=86400\r\n\r\n");
 
-    cmdclient.print(httpheader) ;             // header sent
-    // log_i("%s", httpheader.c_str());
+    cmdclient.print(httpheader.c_get()) ;             // header sent
+    //log_i("%s", httpheader.c_get());
 
-    while(wIndex + m_bytesPerTransaction < file.size()){
-        file.read((uint8_t*)m_transBuf, m_bytesPerTransaction);
-        res=cmdclient.write(m_transBuf, m_bytesPerTransaction);
-        wIndex+=res;
-        if(res!=m_bytesPerTransaction){
-            log_i("write error %s", c_path);
-            cmdclient.clearWriteError();
-            goto error;
+    size_t wIndex = 0, res=0, leftover=0, bytesTransmitted = 0, bytesInBuff = 0, bytesToSend = file.size();
+    ps_ptr<uint8_t>transBuff; transBuff.alloc(INT16_MAX);
+
+    while(bytesTransmitted < file.size()){
+        bytesInBuff = file.read(transBuff.get(), INT16_MAX);
+        int16_t bytesWritten = 0, buffPtr = 0;
+        while(bytesWritten < bytesInBuff){
+            bytesWritten = cmdclient.write(transBuff.get() + buffPtr, bytesInBuff);
+            if(bytesWritten <= 0){
+                goto error; // reset by peer while sending
+            }
+            bytesTransmitted += bytesWritten;
+            buffPtr += bytesWritten;
+            bytesToSend -= bytesWritten;
+            bytesInBuff -= bytesWritten;
         }
     }
-    leftover = file.size() - wIndex;
-    file.read((uint8_t*)m_transBuf, leftover);
-    res = cmdclient.write(m_transBuf, leftover);
-    wIndex += res;
-    if(res!=leftover){
-        log_i("write error %s", c_path);
-        cmdclient.clearWriteError();
-        goto error;
-    }
-    if(wIndex != file.size()) {log_e("file %s was not correct sent", c_path); goto error;}
-    if(c_path){free(c_path); c_path = NULL;}
+
     file.close();
     return true;
 
 error:
-    if(c_path){free(c_path); c_path = NULL;}
     file.close();
     return false;
 }
@@ -434,29 +412,29 @@ void WebSrv::stop() {
     webSocketClient.stop();
 }
 //--------------------------------------------------------------------------------------------------------------
-String WebSrv::getContentType(String filename){
-    if      (filename.endsWith(".html")) return "text/html" ;
-    else if (filename.endsWith(".htm" )) return "text/html";
-    else if (filename.endsWith(".css" )) return "text/css";
-    else if (filename.endsWith(".txt" )) return "text/plain";
-    else if (filename.endsWith(".js"  )) return "application/javascript";
-    else if (filename.endsWith(".json")) return "application/json";
-    else if (filename.endsWith(".svg" )) return "image/svg+xml";
-    else if (filename.endsWith(".ttf" )) return "application/x-font-ttf";
-    else if (filename.endsWith(".otf" )) return "application/x-font-opentype";
-    else if (filename.endsWith(".xml" )) return "text/xml";
-    else if (filename.endsWith(".pdf" )) return "application/pdf";
-    else if (filename.endsWith(".png" )) return "image/png";
-    else if (filename.endsWith(".bmp" )) return "image/bmp";
-    else if (filename.endsWith(".gif" )) return "image/gif";
-    else if (filename.endsWith(".jpg" )) return "image/jpeg";
-    else if (filename.endsWith(".ico" )) return "image/x-icon";
-    else if (filename.endsWith(".css" )) return "text/css";
-    else if (filename.endsWith(".zip" )) return "application/x-zip";
-    else if (filename.endsWith(".gz"  )) return "application/x-gzip";
-    else if (filename.endsWith(".xls" )) return "application/msexcel";
-    else if (filename.endsWith(".mp3" )) return "audio/mpeg";
-    else if (filename.endsWith(".csv" )) return "text/csv";
+const char* WebSrv::getContentType(ps_ptr<char>&filename){
+    if      (filename.ends_with(".html")) return "text/html" ;
+    else if (filename.ends_with(".htm" )) return "text/html";
+    else if (filename.ends_with(".css" )) return "text/css";
+    else if (filename.ends_with(".txt" )) return "text/plain";
+    else if (filename.ends_with(".js"  )) return "application/javascript";
+    else if (filename.ends_with(".json")) return "application/json";
+    else if (filename.ends_with(".svg" )) return "image/svg+xml";
+    else if (filename.ends_with(".ttf" )) return "application/x-font-ttf";
+    else if (filename.ends_with(".otf" )) return "application/x-font-opentype";
+    else if (filename.ends_with(".xml" )) return "text/xml";
+    else if (filename.ends_with(".pdf" )) return "application/pdf";
+    else if (filename.ends_with(".png" )) return "image/png";
+    else if (filename.ends_with(".bmp" )) return "image/bmp";
+    else if (filename.ends_with(".gif" )) return "image/gif";
+    else if (filename.ends_with(".jpg" )) return "image/jpeg";
+    else if (filename.ends_with(".ico" )) return "image/x-icon";
+    else if (filename.ends_with(".css" )) return "text/css";
+    else if (filename.ends_with(".zip" )) return "application/x-zip";
+    else if (filename.ends_with(".gz"  )) return "application/x-gzip";
+    else if (filename.ends_with(".xls" )) return "application/msexcel";
+    else if (filename.ends_with(".mp3" )) return "audio/mpeg";
+    else if (filename.ends_with(".csv" )) return "text/csv";
     return "text/plain" ;
 }
 //--------------------------------------------------------------------------------------------------------------

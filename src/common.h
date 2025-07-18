@@ -54,7 +54,9 @@
 #include "DLNAClient.h"
 #include "KCX_BT_Emitter.h"
 #include "BH1750.h"
+#include "base64.h"
 #include <mbedtls/aes.h>
+#include "mbedtls/sha1.h"
 #include <mbedtls/base64.h>
 #include "psram_unique_ptr.hpp"
 
