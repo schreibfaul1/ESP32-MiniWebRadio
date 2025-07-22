@@ -2,7 +2,7 @@
  *  index.h
  *
  *  Created on: 04.10.2018
- *  Updated on: 17.06.2025
+ *  Updated on: 22.07.2025
  *      Author: Wolle
  *
  *  successfully tested with Chrome and Firefox
@@ -2534,17 +2534,20 @@ function appendToTerminal(text) {
         const char = text[i];
 
         if (char === '\n') {
-            // Neue Zeile → aktuelle Zeile speichern
-            lineBuffer.push(currentLine);
-            currentLine = '';
+            // new line → Save the current line and add empty line
+            if (currentLine !== '') {
+                lineBuffer.push(currentLine);
+                currentLine = '';
+            }
+            lineBuffer.push(''); // new empty line to \ n
             overwriteLine = false;
         } else if (char === '\r') {
-            // Nächster Text ersetzt aktuelle Zeile
+            // next text replaces current line
             overwriteLine = true;
         } else {
-            // Normales Zeichen → je nach Flag behandeln
+            // normal caracter → treat depending on the flag
             if (overwriteLine) {
-                currentLine = char;  // 🠔 Zeile ersetzen mit erstem neuen Zeichen
+                currentLine = char; // replace line with the first new sign
                 overwriteLine = false;
             } else {
                 currentLine += char;
@@ -2552,7 +2555,7 @@ function appendToTerminal(text) {
         }
     }
 
-    // Nachlaufende Zeile (ohne \n) einbauen
+    // following line (without \ n)
     if (currentLine !== '') {
         if (lineBuffer.length === 0) {
             lineBuffer.push(currentLine);
@@ -2567,7 +2570,7 @@ function appendToTerminal(text) {
         currentLine = '';
     }
 
-    // ANSI wandeln
+    // ANSI
     const htmlLines = lineBuffer.map(line =>
         `<div>${ansiToHtml(line)}</div>`
     );
@@ -2578,7 +2581,7 @@ function appendToTerminal(text) {
         terminal.scrollTop = terminal.scrollHeight;
     }
 
-    // Puffergröße begrenzen
+    // limit buffer size
     if (lineBuffer.length > 5000) {
         lineBuffer = lineBuffer.slice(-5000);
     }
