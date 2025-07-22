@@ -268,7 +268,7 @@ void SerialPrintfln(const char* fmt, ...){
     myLog.appendf_va(fmt, args);
     va_end(args);
     myLog.append("\033[0m\n");
-    Serial.printf(myLog.c_get());
+    Serial.printf("%s", myLog.c_get());
     _logBuffer.insert(_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
 }
 
@@ -281,7 +281,7 @@ void SerialPrintfcr(const char* fmt, ...){
     myLog.appendf_va(fmt, args);
     va_end(args);
     myLog.append("\033[0m\r");
-    Serial.printf(myLog.c_get());
+    Serial.printf("%s", myLog.c_get());
     _logBuffer.insert(_logBuffer.begin(), std:: move(myLog));// send to webSrv in loop()
     _newLine = true;
 }

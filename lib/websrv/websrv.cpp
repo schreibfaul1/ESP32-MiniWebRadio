@@ -144,7 +144,7 @@ boolean WebSrv::streamfile(fs::FS &fs, const char* path){ // transfer file from 
     cmdclient.print(httpheader.c_get()) ;             // header sent
     //log_i("%s", httpheader.c_get());
 
-    size_t wIndex = 0, res=0, leftover=0, bytesTransmitted = 0, bytesInBuff = 0, bytesToSend = file.size();
+    size_t bytesTransmitted = 0, bytesInBuff = 0, bytesToSend = file.size();
     ps_ptr<uint8_t>transBuff; transBuff.alloc(INT16_MAX);
 
     while(bytesTransmitted < file.size()){
