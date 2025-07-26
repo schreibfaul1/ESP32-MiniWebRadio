@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Jul 19/2025                                                                                                               ";
+    Version 4.0-rc2   - Jul 26/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -3477,7 +3477,8 @@ void audio_eof_speech(const char*) {
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3lyrics(const char* text){
     SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "%s", text);
-    showFileName(text);
+    if(_state == RADIO) showStreamTitle(text); // web file
+    if(_state == PLAYER) showFileName(text);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool *continueI2S){
