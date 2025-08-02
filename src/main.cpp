@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Jul 28/2025                                                                                                               ";
+    Version 4.0-rc2   - Aug 02/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -108,7 +108,7 @@ uint32_t                    _media_downloadPort = 0;
 uint32_t                    _audioCurrentTime = 0;
 uint32_t                    _audioFileDuration = 0;
 uint64_t                    _totalRuntime = 0; // total runtime in seconds since start
-uint8_t                     _resetResaon = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+uint8_t                     _resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*                 _pressBtn[8];
 const char*                 _releaseBtn[8];
 const char*                 _time_s = "";
@@ -1489,7 +1489,7 @@ void stopSong() {
  *                                                                    S E T U P                                                                      *
  *****************************************************************************************************************************************************/
 void setup() {
-    esp_log_level_set("*", ESP_LOG_VERBOSE);
+    esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
     Serial.print("\n\n");
@@ -1526,8 +1526,8 @@ void setup() {
         }
     }
     const char* rr = NULL;
-    _resetResaon = esp_reset_reason();
-    switch(_resetResaon) {
+    _resetReason = esp_reset_reason();
+    switch(_resetReason) {
         case ESP_RST_UNKNOWN: rr = "Reset reason can not be determined"; break;
         case ESP_RST_POWERON: rr = "Reset due to power-on event"; break;
         case ESP_RST_EXT: rr = "Reset by external pin (not applicable for ESP32)"; break;
@@ -1537,7 +1537,7 @@ void setup() {
         case ESP_RST_TASK_WDT: rr = "Reset due to task watchdog"; break;
         case ESP_RST_WDT:
             rr = "Reset due to other watchdogs";
-            _resetResaon = 1;
+            _resetReason = 1;
             break;
         case ESP_RST_DEEPSLEEP: rr = "Reset after exiting deep sleep mode"; break;
         case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
@@ -1690,10 +1690,10 @@ void setup() {
     _dlnaHistory[1].objId = strdup("0");
     _f_dlnaSeekServer = true;
 
-    if( _resetResaon == ESP_RST_POWERON ||   // Simply switch on the operating voltage
-        _resetResaon == ESP_RST_SW ||        // ESP.restart()
-        _resetResaon == ESP_RST_SDIO ||      // The boot button was pressed
-        _resetResaon == ESP_RST_DEEPSLEEP) { // Wake up
+    if( _resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
+        _resetReason == ESP_RST_SW ||        // ESP.restart()
+        _resetReason == ESP_RST_SDIO ||      // The boot button was pressed
+        _resetReason == ESP_RST_DEEPSLEEP) { // Wake up
         if(WiFi.isConnected()){
             if(_cur_station > 0) setStation(_cur_station);
             else { setStationViaURL(_settings.lastconnectedhost, ""); }
@@ -4125,7 +4125,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_PLAYER.released(x, y);
             break;
         case DLNA:
-            sdr_DL_volume.released(); btn_DL_mute.released(); btn_DL_pause.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released();
+            sdr_DL_volume.released(); btn_DL_mute.released(); btn_DL_pause.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released(); pgb_DL_progress.released();
             break;
         case DLNAITEMSLIST:
             lst_DLNA.released(x, y);
@@ -4682,6 +4682,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && !strcmp(name, "btn_DL_radio"))    {return;}
         if( val && !strcmp(name, "btn_DL_fileList")) {return;}
         if( val && !strcmp(name, "btn_DL_cancel"))   {clearStationName(); btn_DL_pause.setActive(false); return;}
+        if( val && !strcmp(name, "pgb_DL_progress")) {return;}
     }
     if(_state == DLNAITEMSLIST) {
         if( val && !strcmp(name, "lst_DLNA"))        {setTimeCounter(15); _f_dlnaWaitForResponse = true; return;}
@@ -4797,6 +4798,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
         if(!strcmp(name, "btn_DL_fileList")) {changeState(DLNAITEMSLIST); txt_DL_fName.setText(""); return;}
         if(!strcmp(name, "btn_DL_cancel"))   {stopSong(); txt_DL_fName.setText(""); txt_DL_fName.show(true, false); pgb_DL_progress.reset(); btn_DL_pause.setActive(false); btn_DL_pause.show(); return;}
         if(!strcmp(name, "sdr_DL_volume"))   {return;}
+        if(!strcmp(name, "pgb_DL_progress")) {audio.setTimeOffset(ra.val2); return;}
     }
     if(_state == DLNAITEMSLIST) {
         if(!strcmp(name, "lst_DLNA"))        {if(ra.val1 == 1){txt_DL_fName.setTextColor(TFT_CYAN); txt_DL_fName.setText(ra.arg2); connecttohost(ra.arg1); _dlnaSubMenue = 0; changeState(DLNA);} // play a file
