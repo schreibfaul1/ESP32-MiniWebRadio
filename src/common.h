@@ -619,7 +619,7 @@ inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, a
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
     const int32_t run = in_max - in_min;
     if(run == 0) {
-        log_e("map(): Invalid input range, %i == %i (min == max)", in_min, in_max);
+        log_e("map(): Invalid input range, %li == %li (min == max)", in_min, in_max);
         return -1; // AVR returns -1, SAM returns 0
     }
     const int32_t rise = out_max - out_min;
@@ -1551,7 +1551,7 @@ private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if(run == 0) {
-            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
+            log_e("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
@@ -1706,7 +1706,7 @@ private:
     int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
         const int32_t run = in_max - in_min;
         if(run == 0) {
-            log_e("map(): Invalid input range, %i == %i (min == max) in %s", in_min, in_max, m_name);
+            log_e("map(): Invalid input range, %li == %li (min == max) in %s", in_min, in_max, m_name);
             return -1;
         }
         const int32_t rise = out_max - out_min;
