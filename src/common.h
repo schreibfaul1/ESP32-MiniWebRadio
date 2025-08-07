@@ -257,9 +257,9 @@ extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
 
 extern WebSrv webSrv;
-extern std::vector<ps_ptr<char>>   _logBuffer;
+extern std::vector<ps_ptr<char>> _logBuffer;
 void SerialPrintfln(const char* fmt, ...){
-    ps_ptr<char>myLog;
+    ps_ptr<char>myLog("myLog");
     if(_newLine){_newLine = false; myLog.assign("\n");} else{myLog.assign("");}
     rtc.hasValidTime()? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");
@@ -270,10 +270,11 @@ void SerialPrintfln(const char* fmt, ...){
     myLog.append("\033[0m\n");
     Serial.printf("%s", myLog.c_get());
     _logBuffer.insert(_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
+    myLog.reset();
 }
 
 void SerialPrintfcr(const char* fmt, ...){
-    ps_ptr<char>myLog;
+    ps_ptr<char>myLog("myLog");
     rtc.hasValidTime()? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
     myLog.append(" ");
     va_list args;
@@ -283,13 +284,14 @@ void SerialPrintfcr(const char* fmt, ...){
     myLog.append("\033[0m\r");
     Serial.printf("%s", myLog.c_get());
     _logBuffer.insert(_logBuffer.begin(), std:: move(myLog));// send to webSrv in loop()
+    myLog.reset();
     _newLine = true;
 }
 
 int log_redirect_handler(const char *format, va_list args) {
     int len = vsnprintf(nullptr, 0, format, args) + 1;
     // Puffer für die formatierte Nachricht
-    ps_ptr<char>log_buffer;
+    ps_ptr<char>log_buffer("log_buffer");
     log_buffer.alloc(len);
     vsnprintf(log_buffer.get(), len, format, args);
     if (len > 0) {
