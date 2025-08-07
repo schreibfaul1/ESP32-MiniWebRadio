@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Aug 02/2025                                                                                                               ";
+    Version 4.0-rc2   - Aug 07/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -2889,8 +2889,10 @@ void loop() {
         size_t i = _logBuffer.size();
         webSrv.send("serTerminal=", _logBuffer[i - 1].c_get());
         _logBuffer.pop_back();
-        _logBuffer.shrink_to_fit();
+        if(_logBuffer.size() == 0) _logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
+        return;
     }
+
 
     if(_f_dlnaBrowseServer) {_f_dlnaBrowseServer = false; dlna.browseServer(_currDLNAsrvNr, _dlnaHistory[_dlnaLevel].objId, _totalNumberReturned);}
     if(_f_clearLogo)        {_f_clearLogo = false; clearLogo();}
@@ -3384,46 +3386,22 @@ void audio_showstreamtitle(const char* info) {
     SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void show_ST_commercial(const char* info) {
-    _commercial_dur = atoi(info) / 1000; // info is the duration of advertising in ms
-    char cdur[10];
-    itoa(_commercial_dur, cdur, 10);
-    if(_f_newCommercial) return;
-    strcpy(_commercial, "Advertising: ");
-    strcat(_commercial, cdur);
-    strcat(_commercial, "s");
-    _f_newCommercial = true;
-    SerialPrintfln("StreamTitle: %s", info);
-}
-void audio_commercial(const char* info) { show_ST_commercial(info); }
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_eof_mp3(const char* info) { // end of mp3 file (filename)
-    _f_pauseResume = false;
+void audio_eof(const char* info) {
+    _f_isWebConnected = false;
     _f_eof = true;
     _f_isFSConnected = false;
-    if(startsWith(info, "alarm")) _f_eof_alarm = true;
     SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
     if(_state == PLAYER) {
+        webSrv.send("SD_playFile=", "end of audiofile");
         if(!_f_playlistEnabled) {
+            _f_clearLogo = true;
+            _f_clearStationName = true;
             _playerSubMenue = 0;
             changeState(PLAYER);
         }
     }
-    webSrv.send("SD_playFile=", "end of audiofile");
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_eof_stream(const char* info) {
-    _f_isWebConnected = false;
-    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER) {
-        if(!_f_playlistEnabled) {
-            _f_clearLogo = true;
-            _f_clearStationName = true;
-        }
-    }
     if(_state == RADIO)  { clearWithOutHeaderFooter(); }
     if(_state == DLNA)   { txt_DL_fName.setText(""); txt_DL_fName.show(true, false); btn_DL_pause.setActive(false); btn_DL_pause.show();}
-    if(_state == PLAYER) { txt_PL_fName.setText(""); txt_PL_fName.show(true, false); }
     _f_eof = true;
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -3469,10 +3447,6 @@ void audio_bitrate(const char* info) {
     _icyBitRate = str2int(info) / 1000;
     _f_newBitRate = true;
     SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_eof_speech(const char*) {
-    ;  // not used yet
 }
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_id3lyrics(const char* text){
