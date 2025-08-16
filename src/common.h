@@ -267,7 +267,7 @@ void SerialPrintfln(const char* fmt, ...){
     va_start(args, fmt);
     myLog.appendf_va(fmt, args);
     va_end(args);
-    myLog.append("\033[0m\n");
+    myLog.append("\033[0m\r\n");
     Serial.printf("%s", myLog.c_get());
     _logBuffer.insert(_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
     myLog.reset();
