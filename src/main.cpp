@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Aug 07/2025                                                                                                               ";
+    Version 4.0-rc2   - Aug 16/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1297,13 +1297,8 @@ bool connectToWiFi() {
     wifiMulti.setStrictMode(true);
     WiFi.mode(WIFI_STA);
     wifiMulti.run();
+    SerialPrintfln("WiFI_info:   Connecting WiFi...");
     if(WiFi.isConnected()) {
-        SerialPrintfln("WiFI_info:   Connecting WiFi...");
-        if(!MDNS.begin("MiniWebRadio")) { SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS"); }
-        else {
-           MDNS.addService("esp32", "tcp", 80);
-           SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
-        }
         WiFi.setAutoReconnect(true);
         if(WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
         return true;
@@ -1639,6 +1634,11 @@ void setup() {
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s"
                                                     ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN "%i"
                                                     ANSI_ESC_WHITE " dB", WiFi.SSID().c_str(), _myIP, WiFi.RSSI());
+
+        if(!MDNS.begin("MiniWebRadio")) { SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS"); }
+        else(SerialPrintfln("WiFI_info:   mDNS started"));
+        MDNS.addService("esp32", "tcp", 80);
+        SerialPrintfln("WiFI_info:   mDNS name: " ANSI_ESC_CYAN "MiniWebRadio");
 
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
