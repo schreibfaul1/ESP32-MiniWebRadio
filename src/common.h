@@ -6327,10 +6327,10 @@ public:
     }
 
     void updateBitRate(uint32_t bitRate){
-        m_bitRate = bitRate;
+        m_bitRate = bitRate / 1000; // KBit/s
         if(!m_enabled) return;
         char sbr[10];
-        itoa(bitRate, sbr, 10);
+        itoa(m_bitRate, sbr, 10);
         if(m_bitRate < 1000) { strcat(sbr, "K"); }
         else {
             sbr[2] = sbr[1];
