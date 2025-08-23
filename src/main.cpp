@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3   - Aug 23/2025                                                                                                               ";
+    Version 4.0-rc3a   - Aug 23/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -92,7 +92,7 @@ int16_t                     _toneLP = 0;          // -40 ... +6 (dB)        audi
 int16_t                     _toneBP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t                     _toneHP = 0;          // -40 ... +6 (dB)        audioI2S
 int16_t                     _toneBAL = 0;         // -16...0....+16         audioI2S
-uint16_t                    _icyBitRate = 0;      // from http response header via event
+uint32_t                    _icyBitRate = 0;      // from http response header via event
 uint32_t                    _decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t                    _cur_station = 0;     // current station(nr), will be set later
 uint16_t                    _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
@@ -3366,7 +3366,7 @@ void my_audio_info(Audio::msg_t m) {
             if(startsWith(m.msg, "StreamTitle="))            {return;}
             if(startsWith(m.msg, "HTTP/") && m.msg[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED,    m.msg); return;}
             if(startsWith(m.msg, "ERROR:"))                  {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED,    m.msg); return;}
-            if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN,  m.msg); return;} // all other
+            if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)   {SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", m.msg); return;} // all other
             break;
 
         case Audio::evt_name:
