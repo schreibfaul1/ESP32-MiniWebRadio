@@ -404,6 +404,7 @@ void           BTpowerChanged(int8_t newState); // true -> power on, false -> po
 void           setTimeCounter(uint8_t sec);
 const char*    getWiFiPW(const char* ssid);
 bool           setWiFiPW(const char* ssid, const char* password);
+void           my_audio_info(Audio::msg_t m);
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

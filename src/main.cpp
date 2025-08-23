@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc2   - Aug 16/2025                                                                                                               ";
+    Version 4.0-rc3   - Aug 23/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1483,7 +1483,9 @@ void stopSong() {
 /*****************************************************************************************************************************************************
  *                                                                    S E T U P                                                                      *
  *****************************************************************************************************************************************************/
+
 void setup() {
+    Audio::audio_info_callback = my_audio_info;
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
@@ -1801,7 +1803,6 @@ uint8_t upvolume() {
 
 void setStation(uint16_t sta) {
     static uint16_t old_cur_station = 0;
-    SerialPrintfln("sta %d, _cur_station %d", sta, _cur_station );
     if(sta == 0) {return;}
     if(sta > staMgnt.getSumStations()) sta = _cur_station;
     x_ps_free(&_stationURL);
@@ -3306,12 +3307,6 @@ endbrightness:
         //     connecttoFS("SPIFFS", "/Collide.ogg");
         // }
 
-        if(r.startsWith("sfp")){ // setFilePosition
-            uint32_t pos = r.substring(4, r.length() -1).toInt();
-            log_w("setFilePosition %lu", pos);
-            audio.setFilePos(pos);
-        }
-
         if(r.startsWith("sapp")){ // setAudioPlayPosition
             uint32_t pos = r.substring(4, r.length() -1).toInt();
             log_w("setAudioPlayPosition %lu", pos);
@@ -3360,100 +3355,109 @@ endbrightness:
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 // Events from audioI2S library
-void audio_info(const char* info) {
-    if(endsWith(  info, "failed!"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", info);
-                                                    _f_newStreamTitle = true; _f_webFailed = true; return;}
-    if(startsWith(info, "FLAC"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
-    if(endsWith(  info, "Stream lost"))            {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, info); return;}
-    if(startsWith(info, "authent"))                {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN, info); return;}
-    if(startsWith(info, "StreamTitle="))           {return;}
-    if(startsWith(info, "HTTP/") && info[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
-    if(startsWith(info, "ERROR:"))                 {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED, info); return;}
-    if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN) {{SerialPrintfln("AUDIO_info:  " ANSI_ESC_GREEN "%s", info);} return;} // all other
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_showstation(const char* info) {
-    if(!info) return;
-    x_ps_free(&_stationName_air);
-    _stationName_air = x_ps_strndup(info, 200); // set max length
-    SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", info);
-    _f_newStationName = true;
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_showstreamtitle(const char* info) {
-    strcpy(_streamTitle, info);
-    if(!_f_irNumberSeen) _f_newStreamTitle = true;
-    SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", info);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_eof(const char* info) {
-    _f_isWebConnected = false;
-    _f_eof = true;
-    _f_isFSConnected = false;
-    SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, info);
-    if(_state == PLAYER) {
-        webSrv.send("SD_playFile=", "end of audiofile");
-        if(!_f_playlistEnabled) {
-            _f_clearLogo = true;
-            _f_clearStationName = true;
-            _playerSubMenue = 0;
-            changeState(PLAYER);
-        }
+void my_audio_info(Audio::msg_t m) {
+    switch(m.e){
+        case Audio::evt_info:
+            if(endsWith(m.msg, "failed!"))                   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, m.msg); sprintf(_streamTitle, "" ANSI_ESC_ORANGE "%s", m.msg);
+                                                                                                                     _f_newStreamTitle = true; _f_webFailed = true; return;}
+            if(startsWith(m.msg, "FLAC"))                    {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN,  m.msg); return;}
+            if(endsWith(  m.msg, "Stream lost"))             {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, m.msg); return;}
+            if(startsWith(m.msg, "authent"))                 {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN,  m.msg); return;}
+            if(startsWith(m.msg, "StreamTitle="))            {return;}
+            if(startsWith(m.msg, "HTTP/") && m.msg[9] > '3') {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED,    m.msg); return;}
+            if(startsWith(m.msg, "ERROR:"))                  {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_RED,    m.msg); return;}
+            if(CORE_DEBUG_LEVEL >= ARDUHAL_LOG_LEVEL_WARN)   {SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_GREEN,  m.msg); return;} // all other
+            break;
+
+        case Audio::evt_name:
+            x_ps_free(&_stationName_air);
+            _stationName_air = x_ps_strndup(m.msg, 200); // set max length
+            SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", m.msg);
+            _f_newStationName = true;
+            break;
+
+        case Audio::evt_streamtitle:
+            strcpy(_streamTitle, m.msg);
+            if(!_f_irNumberSeen) _f_newStreamTitle = true;
+            SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", m.msg);
+            break;
+
+        case Audio::evt_eof:
+            _f_isWebConnected = false;
+            _f_eof = true;
+            _f_isFSConnected = false;
+            SerialPrintflnCut("end of file: ", ANSI_ESC_YELLOW, m.msg);
+            if(_state == PLAYER) {
+                webSrv.send("SD_playFile=", "end of audiofile");
+                if(!_f_playlistEnabled) {
+                    _f_clearLogo = true;
+                    _f_clearStationName = true;
+                    _playerSubMenue = 0;
+                    changeState(PLAYER);
+                }
+            }
+            if(_state == RADIO)  { clearWithOutHeaderFooter(); }
+            if(_state == DLNA)   { txt_DL_fName.setText(""); txt_DL_fName.show(true, false); btn_DL_pause.setActive(false); btn_DL_pause.show();}
+            _f_eof = true;
+            break;
+
+        case Audio::evt_lasthost:
+            if(_f_playlistEnabled) return;
+            x_ps_free(&_settings.lastconnectedhost);
+            _settings.lastconnectedhost = x_ps_strdup(m.msg);
+            SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _settings.lastconnectedhost);
+            webSrv.send("stationURL=", _settings.lastconnectedhost);
+            break;
+
+        case Audio::evt_icyurl:
+            if(strlen(m.msg) > 5) {
+                SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, m.msg);
+                _homepage = String(m.msg);
+                if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
+            }
+            break;
+
+        case Audio::evt_icylogo:
+            if(strlen(m.msg) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, m.msg); }
+            break;
+
+        case Audio::evt_id3data:
+            SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", m.msg);
+            break;
+
+        case Audio::evt_image:
+            for(int i = 0; i < m.vec.size(); i += 2){
+                SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "segment %02i, pos %08i, len %08i", i / 2, m.vec[i], m.vec[i + 1]);}
+             break;
+
+        case Audio::evt_icydescription:
+            strcpy(_icyDescription, m.msg);
+            _f_newIcyDescription = true;
+            if(strlen(m.msg)) SerialPrintfln("icy-descr:   %s", m.msg);
+            break;
+
+        case Audio::evt_bitrate:
+            if(!strlen(m.msg)) return; // guard
+            _icyBitRate = str2int(m.msg);
+            _f_newBitRate = true;
+            SerialPrintfln("bitRate:     " ANSI_ESC_GREEN "%i", _icyBitRate);
+            break;
+
+        case Audio::evt_lyrics:
+            SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "%s", m.msg);
+            if(_state == RADIO) showStreamTitle(m.msg); // web file
+            if(_state == PLAYER) showFileName(m.msg);
+            break;
+
+        case Audio::evt_log:
+            SerialPrintfln("%s      :   %s", m.s, m.msg);
+            break;
+
+        default: SerialPrintfln("message:...  %s", m.msg); break;
     }
-    if(_state == RADIO)  { clearWithOutHeaderFooter(); }
-    if(_state == DLNA)   { txt_DL_fName.setText(""); txt_DL_fName.show(true, false); btn_DL_pause.setActive(false); btn_DL_pause.show();}
-    _f_eof = true;
 }
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_lasthost(const char* info) { // really connected URL
-    if(_f_playlistEnabled) return;
-    x_ps_free(&_settings.lastconnectedhost);
-    _settings.lastconnectedhost = x_ps_strdup(info);
-    SerialPrintflnCut("lastURL: ..  ", ANSI_ESC_WHITE, _settings.lastconnectedhost);
-    webSrv.send("stationURL=", _settings.lastconnectedhost);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_icyurl(const char* info) { // if the Radio has a homepage, this event is calling
-    if(strlen(info) > 5) {
-        SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, info);
-        _homepage = String(info);
-        if(!_homepage.startsWith("http")) _homepage = "http://" + _homepage;
-    }
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_icylogo(const char* info) { // if the Radio has a homepage, this event is calling
-    if(strlen(info) > 5) { SerialPrintflnCut("icy-logo:    ", ANSI_ESC_WHITE, info); }
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_id3data(const char* info) { SerialPrintfln("id3data: ..  " ANSI_ESC_GREEN "%s", info); }
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_id3image(File& audiofile, const size_t APIC_pos, const size_t APIC_size) { SerialPrintfln("CoverImage:  " ANSI_ESC_GREEN "Position %i, Size %i bytes", APIC_pos, APIC_size); }
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_oggimage(File& audiofile, std::vector<uint32_t> vec) { // OGG blockpicture
-    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
-    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "ogg metadata blockpicture found:");
-    for(int i = 0; i < vec.size(); i += 2) { SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "segment %02i, pos %07ld, len %05ld", i / 2, (long unsigned int)vec[i], (long unsigned int)vec[i + 1]); }
-    SerialPrintfln("oggimage:..  " ANSI_ESC_GREEN "---------------------------------------------------------------------------");
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_icydescription(const char* info) {
-    strcpy(_icyDescription, info);
-    _f_newIcyDescription = true;
-    if(strlen(info)) SerialPrintfln("icy-descr:   %s", info);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_bitrate(const char* info) {
-    if(!strlen(info)) return; // guard
-    _icyBitRate = str2int(info) / 1000;
-    _f_newBitRate = true;
-    SerialPrintfln("bitRate:     " ANSI_ESC_CYAN "%iKbit/s", _icyBitRate);
-}
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void audio_id3lyrics(const char* text){
-    SerialPrintfln("sync lyrics: " ANSI_ESC_CYAN "%s", text);
-    if(_state == RADIO) showStreamTitle(text); // web file
-    if(_state == PLAYER) showFileName(text);
-}
+
+
 //————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool *continueI2S){
 
@@ -4276,7 +4280,10 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
 
     CMD_EQUALS("set_station"){          setStationByNumber(param.toInt()); return;}                                                                          // via websocket
 
-    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_str(), arg.c_str()); audio_showstation(param.c_str()); return;}                                                                         // via websocket
+    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_str(), arg.c_str()); x_ps_free(&_stationName_air);                                          // via websocket
+                                        _stationName_air = x_ps_strndup(param.c_str(), 200); // set max length
+                                        SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", param.c_str());
+                                        _f_newStationName = true; return;}
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_str())? _playerSubMenue = 1 : _playerSubMenue = 0; changeState(PLAYER); return;}          // via websocket
 
