@@ -395,7 +395,7 @@ void           sortPlayListRandom();
 void           processPlaylist(boolean first = false);
 void           changeState(int32_t state);
 void           connecttohost(const char* host);
-void           connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos = 0);
+void           connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
 void           stopSong();
 void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
