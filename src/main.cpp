@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3b   - Aug 23/2025                                                                                                               ";
+    Version 4.0-rc3c   - Aug 30/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1443,14 +1443,14 @@ void connecttohost(const char* host) {
         _settings.lastconnectedhost = strdup("");
     }
 }
-void connecttoFS(const char* FS, const char* filename, uint32_t resumeFilePos) {
+void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
     if(!filename) return;
     dispFooter.updateBitRate(0);
     _icyBitRate = 0;
     _decoderBitRate = 0;
     _cur_Codec = 0;
     _f_webFailed = false;
-    _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, resumeFilePos);
+    _f_isFSConnected = audio.connecttoFS(SD_MMC, filename, fileStartTime);
     _f_isWebConnected = false;
     if(!startsWith(filename, "/audiofiles/")) {return;}
     if(_f_isFSConnected && isAudio(filename)) {
@@ -1961,9 +1961,9 @@ void SD_playFile(const char* pathWoFileName, const char* fileName) { // pathWith
     SD_playFile(_chbuf, 0, true);
 }
 
-void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
+void SD_playFile(const char* path, uint32_t fileStartTime, bool showFN) {
     if(!path) return;                            // avoid a possible crash
-    if(endsWith(path, "ogg")) resumeFilePos = 0; // resume only mp3, m4a, flac and wav
+    if(endsWith(path, "ogg")) fileStartTime = 0; // resume only mp3, m4a, flac and wav
     if(endsWith(path, "m3u")) {
         if(SD_MMC.exists(path)) {
             preparePlaylistFromFile(path);
@@ -1984,7 +1984,7 @@ void SD_playFile(const char* path, uint32_t resumeFilePos, bool showFN) {
     }
 
     SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path + idx + 1);
-    connecttoFS("SD_MMC", (const char*)path, resumeFilePos);
+    connecttoFS("SD_MMC", (const char*)path, fileStartTime);
     if(_f_playlistEnabled) showPlsFileNumber();
     if(_f_isFSConnected) {
         x_ps_free(&_settings.lastconnectedfile);
@@ -3093,7 +3093,7 @@ void loop() {
                 if(_state == PLAYER && _audioFileDuration){pgb_PL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_PL_progress.setValue(_audioCurrentTime);}
                 if(_state == DLNA &&   _audioFileDuration){pgb_DL_progress.setNewMinMaxVal(0, _audioFileDuration); pgb_DL_progress.setValue(_audioCurrentTime);}
                 if(_audioFileDuration) {
-                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis",
+                    SerialPrintfcr("AUDIO_FILE:  " ANSI_ESC_GREEN "AudioCurrentTime " ANSI_ESC_GREEN "%li:%02lis, " ANSI_ESC_GREEN "AudioFileDuration " ANSI_ESC_GREEN "%li:%02lis      ",
                                    (long int)_audioCurrentTime / 60, (long int)_audioCurrentTime % 60, (long int)_audioFileDuration / 60, (long int)_audioFileDuration % 60);
                 }
             }
@@ -3307,10 +3307,10 @@ endbrightness:
         //     connecttoFS("SPIFFS", "/Collide.ogg");
         // }
 
-        if(r.startsWith("sapp")){ // setAudioPlayPosition
-            uint32_t pos = r.substring(4, r.length() -1).toInt();
-            log_w("setAudioPlayPosition %lu", pos);
-            audio.setAudioPlayPosition(pos);
+        if(r.startsWith("sapt")){ // setAudioPlayTime
+            uint32_t t = r.substring(4, r.length() -1).toInt();
+            log_w("setAudioPlayTime %lu", t);
+            audio.setAudioPlayTime(t);
         }
 
         if(r.startsWith("grn")){ // list of all self registered objects
@@ -3343,9 +3343,15 @@ endbrightness:
             log_w("gif");
             drawImage("/common/Tom_Jerry.gif", 100, 100);
         }
-        if(r.startsWith("bfi")){ // buffer filled
-            log_w("inBuffer  :  filled %lu bytes", (long unsigned)audio.inBufferFilled());
-            log_w("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
+        static uint32_t time = 0;
+        if(r.startsWith("stops")) { // stop song
+            time =audio.stopSong();
+            log_w("file %s stopped at time %u", _cur_AudioFileName, time);
+        }
+        if(r.startsWith("starts")) { // start song
+            String path = "/audiofiles/" + (String)_cur_AudioFileName;
+            audio.connecttoFS(SD_MMC, path.c_str(), time);
+            log_w("file %s started at time %u", _cur_AudioFileName, time);
         }
     }
 }
@@ -3450,7 +3456,7 @@ void my_audio_info(Audio::msg_t m) {
             break;
 
         case Audio::evt_log:
-            SerialPrintfln("%s      :   %s", m.s, m.msg);
+            SerialPrintfln("%s: .....  %s", m.s, m.msg);
             break;
 
         default: SerialPrintfln("message:...  %s", m.msg); break;
