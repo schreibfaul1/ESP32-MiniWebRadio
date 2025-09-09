@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3c   - Aug 30/2025                                                                                                               ";
+    Version 4.0-rc3d   - Sep 09/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -3226,14 +3226,14 @@ endbrightness:
 
     if(_f_10sec == true) { // calls every 10 seconds
         _f_10sec = false;
-        if(_state == RADIO && !_icyBitRate && !_f_sleeping) {
-            _decoderBitRate = audio.getBitRate();
-            static uint32_t oldBr = 0;
-            if(_decoderBitRate != oldBr){
-                oldBr = _decoderBitRate;
-                dispFooter.updateBitRate(_decoderBitRate);
-            }
-        }
+        // if(_state == RADIO && !_icyBitRate && !_f_sleeping) {
+        //     _decoderBitRate = audio.getBitRate();
+        //     static uint32_t oldBr = 0;
+        //     if(_decoderBitRate != oldBr){
+        //         oldBr = _decoderBitRate;
+        //         dispFooter.updateBitRate(_decoderBitRate);
+        //     }
+        // }
         updateSettings();
     }
 
@@ -3265,21 +3265,17 @@ endbrightness:
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
             hardcopy();
         }
-        if(r.startsWith("rts")) {
+        if(r.startsWith("rts")) { // run time stats
             char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
             GetRunTimeStats(timeStatsBuffer);
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "task statistics\n\n%s", timeStatsBuffer); }
             x_ps_free(&timeStatsBuffer);
         }
-        if(r.startsWith("cts")) {
+        if(r.startsWith("cts")) { // connect to speech
            audio.connecttospeech("Hallo, wie geht es dir? Morgen scheint die Sonne und übermorgen regnet es.Aber wir nehmen den Regenschirm mit. Und auch den Rucksack. Dann lesen wir aus dem Buch Hier gibt es nur gutes Wetter.", "de");
         //    audio.connecttospeech("Hallo", "de");
         }
 
-        if(r.toInt() != 0) { // is integer?
-            if(audio.setTimeOffset(r.toInt())) { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset %li", r.toInt()); }
-            else { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "TimeOffset not possible"); }
-        }
         if(r.startsWith("bfi")){ // buffer filled
             SerialPrintfln("inBuffer  :  filled %lu bytes", (long unsigned)audio.inBufferFilled());
             SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
@@ -3306,12 +3302,29 @@ endbrightness:
         //     log_w("SPIFFS");
         //     connecttoFS("SPIFFS", "/Collide.ogg");
         // }
+        if(r.startsWith("sto")){ // setTimeOffset
+            int32_t t = r.substring(3, r.length() -1).toInt();
+            log_w("setTimeOffset %li", t);
+            audio.setTimeOffset(t);
+        }
 
         if(r.startsWith("sapt")){ // setAudioPlayTime
             uint32_t t = r.substring(4, r.length() -1).toInt();
             log_w("setAudioPlayTime %lu", t);
             audio.setAudioPlayTime(t);
         }
+
+        if(r.startsWith("gafp")){ // getAudioFilePosition
+            log_w("getAudioFilePosition %lu", audio.getAudioFilePosition());
+
+        }
+
+        if(r.startsWith("safp")){ // setAudioFilePosition
+            uint32_t t = r.substring(4, r.length() -1).toInt();
+            log_w("setAudioFilePosition %lu", t);
+            audio.setAudioFilePosition(t);
+        }
+
 
         if(r.startsWith("grn")){ // list of all self registered objects
             get_registered_names();
@@ -3346,13 +3359,19 @@ endbrightness:
         static uint32_t time = 0;
         if(r.startsWith("stops")) { // stop song
             time =audio.stopSong();
-            log_w("file %s stopped at time %u", _cur_AudioFileName, time);
+            log_w("file %s stopped at time %lu", _cur_AudioFileName, time);
         }
         if(r.startsWith("starts")) { // start song
             String path = "/audiofiles/" + (String)_cur_AudioFileName;
             audio.connecttoFS(SD_MMC, path.c_str(), time);
-            log_w("file %s started at time %u", _cur_AudioFileName, time);
+            log_w("file %s started at time %lu", _cur_AudioFileName, time);
         }
+
+        if(r.startsWith("gbr")) { // get bitrate
+            uint32_t br = audio.getBitRate();
+            log_w("bitrate: %lu", br);
+        }
+
     }
 }
 
