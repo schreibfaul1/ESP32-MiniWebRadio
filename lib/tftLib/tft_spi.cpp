@@ -4615,7 +4615,7 @@ void TFT_SPI::unfilter_scanline(char* recon, const char* scanline, const char* p
             }
             break;
         default:
-        log_e("recon: %s, scanline: %s, precon: %s, bytewidth: %d, length: %d, filterType: %d", recon, scanline, precon, bytewidth, length, filterType);
+        log_e("recon: %s, scanline: %s, precon: %s, bytewidth: %lu, length: %lu, filterType: %d", recon, scanline, precon, bytewidth, length, filterType);
             png_error = PNG_EMALFORMED;
             break;
     }
