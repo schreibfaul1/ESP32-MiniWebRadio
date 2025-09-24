@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3d   - Sep 09/2025                                                                                                               ";
+    Version 4.0-rc3e   - Sep 24/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -3045,12 +3045,10 @@ void loop() {
             _f_stationsChanged = false;
             staMgnt.updateStationsList();
         }
-
+        dispHeader.updateRSSI(WiFi.RSSI());
         //------------------------------------------UPDATE DISPLAY------------------------------------------------------------------------------------
         if(!_f_sleeping || _state == RINGING) {
             dispHeader.updateTime(_time_s, false);
-            dispHeader.updateRSSI(WiFi.RSSI());
-
             if(_f_newBitRate) {
                _f_newBitRate = false;
                dispFooter.updateBitRate(_icyBitRate);

@@ -9,7 +9,7 @@
 #ifndef WEBSRV_H_
 #define WEBSRV_H_
 #include "Arduino.h"
-#include "../../src/psram_unique_ptr.hpp"
+#include "Audio.h"
 #include "WiFi.h"
 #include "FS.h"
 #include "base64.h"
