@@ -41,7 +41,7 @@ SortUsingDeclarations: true
 BraceWrapping:
   AfterCaseLabel:  false
   AfterClass:      false
-  AfterControlStatement: false
+  AfterControlStatement: true
   AfterEnum:       false
   AfterFunction:   false
   AfterNamespace:  false
@@ -50,7 +50,7 @@ BraceWrapping:
   AfterUnion:      false
   AfterExternBlock: false
   BeforeCatch:     false
-  BeforeElse:      false
+  BeforeElse:      true
   IndentBraces:    false
   SplitEmptyFunction: false
   SplitEmptyRecord: false

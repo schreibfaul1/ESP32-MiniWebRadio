@@ -274,6 +274,7 @@ void SerialPrintfln(const char* fmt, ...){
 }
 
 void SerialPrintfcr(const char* fmt, ...){
+    if(_logBuffer.size() == 1024) _logBuffer.pop_back();
     ps_ptr<char>myLog("myLog");
     rtc.hasValidTime()? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
     myLog.append(" ");
