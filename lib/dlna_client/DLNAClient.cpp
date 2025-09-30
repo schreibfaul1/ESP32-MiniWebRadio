@@ -182,16 +182,17 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 bool DLNA_Client::readHttpHeader() {
-
-    bool ct_seen = false;
+    ps_ptr<char> chbuff("chbuff, readHttpHeader");
+    ps_ptr<char> rhl("rhl, readHttpHeader");
+    bool         ct_seen = false;
     m_timeStamp = millis();
     uint16_t rhlSize = 1024;
-    char*    rhl = x_ps_malloc(rhlSize); // response header line
-    while (true) {                       // outer while
+    rhl.alloc(rhlSize, "rhl"); // response header line
+    while (true) {             // outer while
         uint16_t pos = 0;
         if ((m_timeStamp + READ_TIMEOUT) < millis()) {
-            sprintf(m_chbuf, "timeout in readHttpHeader [%s:%d]", __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(m_chbuf);
+            chbuff.assignf("timeout in readHttpHeader [%s:%d]", __FILENAME__, __LINE__);
+            if (dlna_info) dlna_info(chbuff.c_get());
             goto error;
         }
         while (m_client.available()) {
@@ -212,56 +213,42 @@ bool DLNA_Client::readHttpHeader() {
             }
             if (pos == rhlSize - 2) {
                 rhl[pos] = '\0';
-                sprintf(m_chbuf, "responseHeaderline overflow, response was: %s", rhl);
-                if (dlna_info) dlna_info(m_chbuf);
+                chbuff.assignf("responseHeaderline overflow, response was: %s", rhl.get());
+                if (dlna_info) dlna_info(chbuff.c_get());
             }
         } // inner while
-        DLNA_LOG_DEBUG("%s", rhl);
-        int16_t posColon = indexOf(rhl, ":", 0); // lowercase all letters up to the colon
-        if (posColon >= 0) {
-            for (int i = 0; i < posColon; i++) { rhl[i] = toLowerCase(rhl[i]); }
-        }
-        if (startsWith(rhl, "content-length:")) {
-            const char* c_cl = (rhl + 15);
-            int32_t     i_cl = atoi(c_cl);
-            m_contentlength = i_cl;
-            //    log_i("content-length: %lu", (long unsigned int)m_contentlength);
-        } else if (startsWith(rhl, "content-type:")) { // content-type: text/html; charset=UTF-8
-            int idx = indexOf(rhl + 13, ";", 0);
+        DLNA_LOG_DEBUG("%s", rhl.get());
+        if (rhl.starts_with_icase("content-length:")) {
+            rhl.remove_before(':', false);
+            m_contentlength = rhl.to_uint32();
+            DLNA_LOG_ERROR("content-length: %lu", (long unsigned int)m_contentlength);
+        } else if (rhl.starts_with_icase("content-type:")) { // content-type: text/html; charset=UTF-8
+            int idx = indexOf(rhl.get() + 13, ";", 0);
             if (idx > 0) rhl[13 + idx] = '\0';
-            if (indexOf(rhl + 13, "text/xml", 0) > 0)
+            if (indexOf(rhl.get() + 13, "text/xml", 0) > 0)
                 ct_seen = true;
-            else if (indexOf(rhl + 13, "text/html", 0) > 0)
+            else if (indexOf(rhl.get() + 13, "text/html", 0) > 0)
                 ct_seen = true;
             else {
-                sprintf(m_chbuf, "content type expected: text/xml or text/html, got %s", rhl + 13);
-                if (dlna_info) dlna_info(m_chbuf);
+                chbuff.assignf("content type expected: text/xml or text/html, got %s", rhl.get() + 13);
+                if (dlna_info) dlna_info(chbuff.c_get());
                 goto exit; // wrong content type
             }
-        } else if ((startsWith(rhl, "transfer-encoding:"))) {
-            if (endsWith(rhl, "chunked") || endsWith(rhl, "Chunked")) { // Station provides chunked transfer
+        } else if ((rhl.starts_with_icase("transfer-encoding:"))) {
+            if (rhl.ends_with("chunked") || rhl.ends_with("Chunked")) { // Station provides chunked transfer
                 m_chunked = true;
             }
         } else {
             ;
         }
-        //    log_w("%s", rhl);
     } // outer while
 
 exit:
-    if (rhl) {
-        free(rhl);
-        rhl = NULL;
-    }
     if (!m_contentlength) DLNA_LOG_ERROR("contentlength is not given");
     if (!ct_seen) DLNA_LOG_ERROR("content type not found");
     return true;
 
 error:
-    if (rhl) {
-        free(rhl);
-        rhl = NULL;
-    }
     return false;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -748,7 +735,7 @@ const char* DLNA_Client::stringifyServer() {
     }
     int posLastComma = m_JSONstr.last_index_of(',');
     m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
-    DLNA_LOG_INFO("%s", m_JSONstr.c_get());
+    DLNA_LOG_DEBUG("%s", m_JSONstr.c_get());
     return m_JSONstr.c_get();
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -792,7 +779,7 @@ const char* DLNA_Client::stringifyContent() {
     }
     int posLastComma = m_JSONstr.last_index_of(',');
     m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
-    DLNA_LOG_INFO("%s", m_JSONstr.c_get());
+    DLNA_LOG_DEBUG("%s", m_JSONstr.c_get());
     return m_JSONstr.c_get();
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
