@@ -1,7 +1,7 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 01.08.2025
+// Updated on: 30.09.2025
 /*
 //example
 DLNA dlna;
@@ -20,13 +20,14 @@ DLNA_Client::DLNA_Client() {
     m_state = IDLE;
     m_chunked = false;
     m_PSRAMfound = psramInit();
-    m_chbuf = (char*)malloc(512);
+    m_chbuf = (char*)malloc(5512);
     m_chbufSize = 512;
 }
 
 DLNA_Client::~DLNA_Client() {
+    m_dlnaServer.clear();
     srvContent_clear_and_shrink();
-    vector_clear_and_shrink(m_content);
+    m_content.clear();
     if (m_chbuf) {
         free(m_chbuf);
         m_chbuf = NULL;
@@ -145,36 +146,38 @@ void DLNA_Client::parseDlnaServer(uint16_t len) {
 
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 bool DLNA_Client::srvGet(uint8_t srvNr) {
-    bool ret = false;
+    ps_ptr<char> out_msg;
+    ps_ptr<char> buff;
+    bool         ret = false;
     m_client.stop();
     m_client.setTimeout(CONNECT_TIMEOUT);
     uint32_t t = millis();
     ret = m_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
     if (!ret) {
         m_client.stop();
-        sprintf(m_chbuf, "The server %s:%d did not answer within %lums [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t, __FILENAME__, __LINE__);
-        if (dlna_info) dlna_info(m_chbuf);
+        out_msg.assignf("The server %s:%d did not answer within %lums [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t, __FILENAME__, __LINE__);
+        if (dlna_info) dlna_info(out_msg.c_get());
         return false;
     }
     t = millis() + 250;
     while (true) {
         if (m_client.connected()) break;
         if (t < millis()) {
-            sprintf(m_chbuf, "The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(m_chbuf);
+            out_msg.assignf("The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
+            if (dlna_info) dlna_info(out_msg.c_get());
             return false;
         }
     }
     // assemble HTTP header
-    sprintf(m_chbuf, "GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
-            m_dlnaServer[srvNr].port);
-    m_client.print(m_chbuf);
+    buff.assignf("GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
+                 m_dlnaServer[srvNr].port);
+    m_client.print(buff.get());
     t = millis() + AVAIL_TIMEOUT;
     while (true) {
         if (m_client.available()) break;
         if (t < millis()) {
-            sprintf(m_chbuf, "The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(m_chbuf);
+            out_msg.assignf("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
+            if (dlna_info) dlna_info(out_msg.c_get());
             return false;
         }
     }
@@ -221,7 +224,7 @@ bool DLNA_Client::readHttpHeader() {
         if (rhl.starts_with_icase("content-length:")) {
             rhl.remove_before(':', false);
             m_contentlength = rhl.to_uint32();
-            DLNA_LOG_ERROR("content-length: %lu", (long unsigned int)m_contentlength);
+            DLNA_LOG_DEBUG("content-length: %lu", (long unsigned int)m_contentlength);
         } else if (rhl.starts_with_icase("content-type:")) { // content-type: text/html; charset=UTF-8
             int idx = indexOf(rhl.get() + 13, ";", 0);
             if (idx > 0) rhl[13 + idx] = '\0';
@@ -262,8 +265,8 @@ bool DLNA_Client::readContent() {
     vector_clear_and_shrink(m_content);
 
     while (true) { // outer while
-        uint16_t pos = 0;
-        uint8_t  cnt = 0;
+    uint16_t pos = 0;
+    uint8_t  cnt = 0;
         if ((m_timeStamp + READ_TIMEOUT) < millis()) {
             sprintf(m_chbuf, "timeout in readContent [%s:%d]", __FILENAME__, __LINE__);
             if (dlna_info) dlna_info(m_chbuf);
@@ -274,7 +277,7 @@ bool DLNA_Client::readContent() {
                 b = lastChar;
                 lastChar = 0;
             } else {
-                b = m_client.read();
+            b = m_client.read();
                 idx++;
             }
             if (b == '\n') {
@@ -301,14 +304,14 @@ bool DLNA_Client::readContent() {
                 continue;
             }
             while (!m_client.available()) {
-                vTaskDelay(10);
-                cnt++;
-                if (cnt == 100) {
+            vTaskDelay(10);
+            cnt++;
+            if (cnt == 100) {
                     sprintf(m_chbuf, "timeout in readContent [%s:%d]", __FILENAME__, __LINE__);
-                    break;
-                }
+                break;
             }
         }
+    }
         if (f_overflow) DLNA_LOG_ERROR("line overflow");
 
         DLNA_LOG_DEBUG("%s", m_chbuf);
