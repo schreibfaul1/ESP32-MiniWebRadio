@@ -725,19 +725,7 @@ int8_t DLNA_Client::browseServer(uint8_t srvNr, const char* objectId, const uint
 const char* DLNA_Client::stringifyServer() {
     if (m_dlnaServer.size() == 0) return "[]"; // guard
 
-    uint16_t JSONstrLength = 0;
-    if (m_JSONstr) {
-        free(m_JSONstr);
-        m_JSONstr = NULL;
-    }
-    if (m_dlnaServer.size() == 0) return "[]"; // no content found
-    if (m_PSRAMfound) {
-        m_JSONstr = (char*)ps_malloc(2);
-    } else {
-        m_JSONstr = (char*)malloc(2);
-    }
-    JSONstrLength += 2;
-    memcpy(m_JSONstr, "[\0", 2);
+    m_JSONstr.assign("[");
 
     char id[5];
     char port[6];
@@ -745,48 +733,30 @@ const char* DLNA_Client::stringifyServer() {
     for (int i = 0; i < m_dlnaServer.size(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":false}]
         itoa(i, id, 10);
         itoa(m_dlnaServer[i].port, port, 10);
-        JSONstrLength = strlen(id) + strlen(port) + strlen(m_dlnaServer[i].friendlyName.c_get()) + strlen(m_dlnaServer[i].ip.c_get());
+
         //  [{"srvId":"1","friendlyName":"minidlna","ip":"192.168.178.1","port":"49000""}]
-        //  {"srvId":"","friendlyName":"","ip":"","port":""},   --> 49 chars
-        JSONstrLength += strlen(m_JSONstr) + 49 + 2;
 
-        if (m_PSRAMfound) {
-            m_JSONstr = (char*)ps_realloc(m_JSONstr, JSONstrLength);
-        } else {
-            m_JSONstr = (char*)realloc(m_JSONstr, JSONstrLength);
-        }
-
-        strcat(m_JSONstr, "{\"srvId\":\"");
-        strcat(m_JSONstr, id);
-        strcat(m_JSONstr, "\",\"friendlyName\":\"");
-        strcat(m_JSONstr, m_dlnaServer[i].friendlyName.c_get());
-        strcat(m_JSONstr, "\",\"ip\":\"");
-        strcat(m_JSONstr, m_dlnaServer[i].ip.c_get());
-        strcat(m_JSONstr, "\",\"port\":\"");
-        strcat(m_JSONstr, port);
-        strcat(m_JSONstr, "\"},");
+        m_JSONstr.append("{\"srvId\":\"");
+        m_JSONstr.append(id);
+        m_JSONstr.append("\",\"friendlyName\":\"");
+        m_JSONstr.append(m_dlnaServer[i].friendlyName.c_get());
+        m_JSONstr.append("\",\"ip\":\"");
+        m_JSONstr.append(m_dlnaServer[i].ip.c_get());
+        m_JSONstr.append("\",\"port\":\"");
+        m_JSONstr.append(port);
+        m_JSONstr.append("\"},");
     }
-    m_JSONstr[JSONstrLength - 3] = ']';  // replace comma by square bracket close
-    m_JSONstr[JSONstrLength - 2] = '\0'; // and terminate
-    return m_JSONstr;
+    int posLastComma = m_JSONstr.last_index_of(',');
+    m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
+    DLNA_LOG_INFO("%s", m_JSONstr.c_get());
+    return m_JSONstr.c_get();
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 const char* DLNA_Client::stringifyContent() {
-    if (m_srvContent.size == 0) return "[]"; // guard
 
-    uint16_t JSONstrLength = 0;
-    if (m_JSONstr) {
-        free(m_JSONstr);
-        m_JSONstr = NULL;
-    }
     if (m_srvContent.size == 0) return "[]"; // no content found
-    if (m_PSRAMfound) {
-        m_JSONstr = (char*)ps_malloc(2);
-    } else {
-        m_JSONstr = (char*)malloc(2);
-    }
-    JSONstrLength += 2;
-    memcpy(m_JSONstr, "[\0", 2);
+
+    m_JSONstr.assign("[");
 
     char childCount[5];
     char isAudio[6];
@@ -799,40 +769,31 @@ const char* DLNA_Client::stringifyContent() {
         else
             strcpy(isAudio, "false");
         ltoa(m_srvContent.itemSize[i], itemSize, 10);
-        JSONstrLength = strlen(childCount) + strlen(isAudio) + strlen(itemSize) + strlen(m_srvContent.itemURL[i]) + strlen(m_srvContent.objectId[i]) + strlen(m_srvContent.parentId[i]) +
-                        strlen(m_srvContent.title[i]) + strlen(m_srvContent.duration[i]);
 
-        //  [{"objectId":"1$4","parentId":"1","childCount":"5","title":"Bilder","isAudio":"false","itemSize":"342345","itemURL":"http://myPC/Pictues/myPicture.jpg"},{"objectId ...."}]
-        //  {"objectId":"","parentId":"","childCount":"","title":"","isAudio":"","itemSize":"","dur:"","itemURL":""},   --> 105 chars
-        JSONstrLength += strlen(m_JSONstr) + 105 + 2;
+        // [{"objectId":"1$4","parentId":"1","childCount":"5","title":"Bilder","isAudio":"false","itemSize":"342345","itemURL":"http://myPC/Pictues/myPicture.jpg"},{"objectId ...."}]
 
-        if (m_PSRAMfound) {
-            m_JSONstr = (char*)ps_realloc(m_JSONstr, JSONstrLength);
-        } else {
-            m_JSONstr = (char*)realloc(m_JSONstr, JSONstrLength);
-        }
-
-        strcat(m_JSONstr, "{\"objectId\":\"");
-        strcat(m_JSONstr, m_srvContent.objectId[i]);
-        strcat(m_JSONstr, "\",\"parentId\":\"");
-        strcat(m_JSONstr, m_srvContent.parentId[i]);
-        strcat(m_JSONstr, "\",\"childCount\":\"");
-        strcat(m_JSONstr, childCount);
-        strcat(m_JSONstr, "\",\"title\":\"");
-        strcat(m_JSONstr, m_srvContent.title[i]);
-        strcat(m_JSONstr, "\",\"isAudio\":\"");
-        strcat(m_JSONstr, isAudio);
-        strcat(m_JSONstr, "\",\"itemSize\":\"");
-        strcat(m_JSONstr, itemSize);
-        strcat(m_JSONstr, "\",\"dur\":\"");
-        strcat(m_JSONstr, m_srvContent.duration[i]);
-        strcat(m_JSONstr, "\",\"itemURL\":\"");
-        strcat(m_JSONstr, m_srvContent.itemURL[i]);
-        strcat(m_JSONstr, "\"},");
+        m_JSONstr.append("{\"objectId\":\"");
+        m_JSONstr.append(m_srvContent.objectId[i]);
+        m_JSONstr.append("\",\"parentId\":\"");
+        m_JSONstr.append(m_srvContent.parentId[i]);
+        m_JSONstr.append("\",\"childCount\":\"");
+        m_JSONstr.append(childCount);
+        m_JSONstr.append("\",\"title\":\"");
+        m_JSONstr.append(m_srvContent.title[i]);
+        m_JSONstr.append("\",\"isAudio\":\"");
+        m_JSONstr.append(isAudio);
+        m_JSONstr.append("\",\"itemSize\":\"");
+        m_JSONstr.append(itemSize);
+        m_JSONstr.append("\",\"dur\":\"");
+        m_JSONstr.append(m_srvContent.duration[i]);
+        m_JSONstr.append("\",\"itemURL\":\"");
+        m_JSONstr.append(m_srvContent.itemURL[i]);
+        m_JSONstr.append("\"},");
     }
-    m_JSONstr[JSONstrLength - 2] = ']';  // replace comma by square bracket close
-    m_JSONstr[JSONstrLength - 1] = '\0'; // and terminate
-    return m_JSONstr;
+    int posLastComma = m_JSONstr.last_index_of(',');
+    m_JSONstr[posLastComma] = ']'; // replace comma by square bracket close
+    DLNA_LOG_INFO("%s", m_JSONstr.c_get());
+    return m_JSONstr.c_get();
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 uint8_t DLNA_Client::getState() {

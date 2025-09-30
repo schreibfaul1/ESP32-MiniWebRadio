@@ -59,7 +59,7 @@ class DLNA_Client {
     uint32_t      m_timeStamp = 0;
     uint16_t      m_numberReturned = 0;
     uint16_t      m_totalMatches = 0;
-    char*         m_JSONstr = NULL;
+    ps_ptr<char>  m_JSONstr;
 
     std::vector<char*> m_content;
 
