@@ -4,7 +4,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3e   - Sep 24/2025                                                                                                               ";
+    Version 4.0-rc3f   - Sep 30/2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -2886,12 +2886,11 @@ void loop() {
     bt_emitter.loop();
     tft.loop();
 
-    if(_logBuffer.size() > 0){
+    while(_logBuffer.size() > 0){
         size_t i = _logBuffer.size();
         webSrv.send("serTerminal=", _logBuffer[i - 1].c_get());
         _logBuffer.pop_back();
         if(_logBuffer.size() == 0) _logBuffer.clear(); // Löscht alle Elemente und gibt den Speicher frei
-        return;
     }
 
 
