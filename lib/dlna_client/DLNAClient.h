@@ -20,7 +20,6 @@ extern __attribute__((weak)) void dlna_browseResult(const char* objectId, const 
                                                     const char* itemURL);
 extern __attribute__((weak)) void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches);
 
-
 class DLNA_Client {
 
   public:
@@ -33,24 +32,33 @@ class DLNA_Client {
         uint16_t     presentationPort{};
         ps_ptr<char> presentationURL{};
     };
+
   private:
     std::vector<dlnaServer> m_dlnaServer;
 
   public:
-    typedef struct srvContent {
-        uint16_t             size = 0;
-        std::vector<char*>   objectId;
-        std::vector<char*>   parentId;
-        std::vector<uint8_t> isAudio;
-        std::vector<char*>   itemURL;
-        std::vector<int32_t> itemSize;
-        std::vector<char*>   duration;
-        std::vector<char*>   title;
-        std::vector<int16_t> childCount;
-    } srvContent_t;
+    struct srvItem {
+        ps_ptr<char> objectId;
+        ps_ptr<char> parentId;
+        bool         isAudio;
+        ps_ptr<char> itemURL;
+        int32_t      itemSize;
+        ps_ptr<char> duration;
+        ps_ptr<char> title;
+        int16_t      childCount;
+    };
 
   private:
-    srvContent_t m_srvContent = {};
+    std::vector<srvItem> m_srv_items;
+
+  public:
+    struct browseReady_s {
+        uint16_t numberReturned;
+        uint16_t totalMatches;
+    };
+
+  private:
+    browseReady_s m_browseReady;
 
   private:
     NetworkClient m_client;
@@ -61,20 +69,20 @@ class DLNA_Client {
     uint16_t      m_totalMatches = 0;
     ps_ptr<char>  m_JSONstr;
 
-    std::vector<char*> m_content;
+    std::deque<ps_ptr<char>> m_content;
 
   public:
     DLNA_Client();
     ~DLNA_Client();
-    bool                                 seekServer();
-    int8_t                               listServer();
-    const std::vector<dlnaServer>&       getServer() const;
-    srvContent_t                         getBrowseResult();
-    int8_t                               browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
-    const char*                          stringifyContent();
-    const char*                          stringifyServer();
-    uint8_t                              getState();
-    int16_t                              getTotalMatches() {
+    bool                           seekServer();
+    int8_t                         listServer();
+    const std::vector<dlnaServer>& getServer() const;
+    const std::vector<srvItem>&    getBrowseResult() const;
+    int8_t                         browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
+    const char*                    stringifyContent();
+    const char*                    stringifyServer();
+    uint8_t                        getState();
+    int16_t                        getTotalMatches() {
         if (m_state == IDLE)
             return m_totalMatches;
         else
@@ -125,18 +133,18 @@ class DLNA_Client {
     // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     void srvContent_clear_and_shrink() {
-        m_srvContent.size = 0;
-        vector_clear_and_shrink(m_srvContent.objectId);
-        vector_clear_and_shrink(m_srvContent.parentId);
-        m_srvContent.isAudio.clear();
-        m_srvContent.isAudio.shrink_to_fit();
-        vector_clear_and_shrink(m_srvContent.itemURL);
-        m_srvContent.itemSize.clear();
-        m_srvContent.itemSize.shrink_to_fit();
-        vector_clear_and_shrink(m_srvContent.duration);
-        vector_clear_and_shrink(m_srvContent.title);
-        m_srvContent.childCount.clear();
-        m_srvContent.childCount.shrink_to_fit();
+        // m_srvContent.size = 0;
+        // vector_clear_and_shrink(m_srvContent.objectId);
+        // vector_clear_and_shrink(m_srvContent.parentId);
+        // m_srvContent.isAudio.clear();
+        // m_srvContent.isAudio.shrink_to_fit();
+        // vector_clear_and_shrink(m_srvContent.itemURL);
+        // m_srvContent.itemSize.clear();
+        // m_srvContent.itemSize.shrink_to_fit();
+        // vector_clear_and_shrink(m_srvContent.duration);
+        // vector_clear_and_shrink(m_srvContent.title);
+        // m_srvContent.childCount.clear();
+        // m_srvContent.childCount.shrink_to_fit();
     }
     // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
@@ -244,12 +252,12 @@ class DLNA_Client {
         strlcpy(ps_str, str, len + 1); // len+1 guarantees zero termination (ps_str + '\0')
         return ps_str;
     }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    // Macro for comfortable calls
-    #define DLNA_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-    #define DLNA_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-    #define DLNA_LOG_INFO(fmt, ...)    Audio::AUDIO_LOG_IMPL(3, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-    #define DLNA_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
-    #define DLNA_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// Macro for comfortable calls
+#define DLNA_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define DLNA_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define DLNA_LOG_INFO(fmt, ...)    Audio::AUDIO_LOG_IMPL(3, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define DLNA_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define DLNA_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
