@@ -22,10 +22,13 @@ DLNA_Client::DLNA_Client() {
     m_PSRAMfound = psramInit();
     m_chbuf = (char*)malloc(5512);
     m_chbufSize = 512;
+    m_srv_items.get_allocator();
 }
 
 DLNA_Client::~DLNA_Client() {
     m_dlnaServer.clear();
+    m_srv_items.clear();
+
     srvContent_clear_and_shrink();
     m_content.clear();
     if (m_chbuf) {
@@ -96,11 +99,11 @@ int8_t DLNA_Client::listServer() {
     return m_dlnaServer.size();
 }
 
-const std::vector<DLNA_Client::dlnaServer>& DLNA_Client::getServer() const {
+const std::deque<DLNA_Client::dlnaServer>& DLNA_Client::getServer() const {
     return m_dlnaServer;
 }
 
-const std::vector<DLNA_Client::srvItem>& DLNA_Client::getBrowseResult() const {
+const std::deque<DLNA_Client::srvItem>& DLNA_Client::getBrowseResult() const {
     return m_srv_items;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

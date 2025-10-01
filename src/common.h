@@ -60,6 +60,9 @@
 #include <mbedtls/base64.h>
 #include "psram_unique_ptr.hpp"
 
+
+
+
 #if TFT_CONTROLLER < 7
     // Digital I/O used
         #define TFT_CS              8
@@ -984,7 +987,7 @@ class SD_content {
         ~FileInfo() {
             x_ps_free(&fileName);
             x_ps_free(&filePath);
-        }                                                                                                                                           // destructor
+        } // destructor
         FileInfo(const FileInfo& other) : fileSize(other.fileSize), fileName(x_ps_strdup(other.fileName)), filePath(x_ps_strdup(other.filePath)) {} // copy constructor
         FileInfo& operator=(const FileInfo& other) {                                                                                                // copy assignment
             if (this != &other) {
@@ -5549,515 +5552,520 @@ extern uniList myList;
 */
 
 class dlnaList : public RegisterTable {
+
   private:
-    int16_t                                     m_x = 0;
-    int16_t                                     m_y = 0;
-    int16_t                                     m_w = 0;
-    int16_t                                     m_h = 0;
-    int16_t                                     m_oldX = 0;
-    int16_t                                     m_oldY = 0;
-    uint8_t*                                    m_dlnaLevel;
-    uint8_t                                     m_fontSize = 0;
-    uint8_t                                     m_lineHight = 0;
-    uint8_t                                     m_browseOnRelease = 0;
-    uint8_t                                     m_itemListPos = 0;
-    int8_t                                      m_currDLNAsrvNr = -1;
-    int16_t                                     m_currItemNr[10] = {0};
-    int16_t                                     m_viewPoint = 0;
-//     uint16_t                                    m_dlnaMaxItems = 0;
-//     uint32_t                                    m_bgColor = 0;
-//     bool                                        m_enabled = false;
-//     bool                                        m_clicked = false;
-//     bool                                        m_state = false;
-//     bool                                        m_isAudio = false;
-//     bool                                        m_isURL = false;
-//     char*                                       m_name = NULL;
-//     char*                                       m_pathBuff = NULL;
-//     const char*                                 m_chptr = NULL;
-//     char*                                       m_buff = NULL;
-//     const char*                                 m_tftSize = NULL;
-//     const std::vector<DLNA_Client::dlnaServer>* m_dlnaServer;
-//     DLNA_Client::srvContent_t                   m_srvContent;
-//     DLNA_Client*                                m_dlna;
-//     dlnaHistory*                                m_dlnaHistory = NULL;
-//     releasedArg                                 m_ra;
+    int16_t                                    m_x = 0;
+    int16_t                                    m_y = 0;
+    int16_t                                    m_w = 0;
+    int16_t                                    m_h = 0;
+    int16_t                                    m_oldX = 0;
+    int16_t                                    m_oldY = 0;
+    uint8_t*                                   m_dlnaLevel;
+    uint8_t                                    m_fontSize = 0;
+    uint8_t                                    m_lineHight = 0;
+    uint8_t                                    m_browseOnRelease = 0;
+    uint8_t                                    m_itemListPos = 0;
+    int8_t                                     m_currDLNAsrvNr = -1;
+    int16_t                                    m_currItemNr[10] = {0};
+    int16_t                                    m_viewPoint = 0;
+    uint16_t                                   m_dlnaMaxItems = 0;
+    uint32_t                                   m_bgColor = 0;
+    bool                                       m_enabled = false;
+    bool                                       m_clicked = false;
+    bool                                       m_state = false;
+    bool                                       m_isAudio = false;
+    bool                                       m_isURL = false;
+    char*                                      m_name = NULL;
+    char*                                      m_pathBuff = NULL;
+    const char*                                m_chptr = NULL;
+    char*                                      m_buff = NULL;
+    const char*                                m_tftSize = NULL;
+    const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
+    const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
+    DLNA_Client*                               m_dlna;
+    dlnaHistory*                               m_dlnaHistory = NULL;
+    releasedArg                                m_ra;
 
-//   public:
-//     dlnaList(const char* name, DLNA_Client* dlna, dlnaHistory* dh, uint8_t dhSize) {
-//         register_object(this);
-//         if (name)
-//             m_name = x_ps_strdup(name);
-//         else
-//             m_name = x_ps_strdup("dlnaList");
-//         m_buff = x_ps_malloc(512);
-//         m_dlna = dlna;
-//         m_bgColor = TFT_BLACK;
-//         m_enabled = false;
-//         m_clicked = false;
-//         m_state = false;
-//         m_pathBuff = x_ps_malloc(50);
-//         m_ra.arg1 = NULL;
-//         m_ra.arg2 = NULL;
-//         m_ra.val1 = 0;
-//         m_ra.val2 = 0;
-//         m_dlnaHistory = dh;
-//         for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
-//     }
-//     ~dlnaList() {
-//         x_ps_free(&m_name);
-//         x_ps_free(&m_buff);
-//     }
-//     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
-//         m_x = x; // x pos
-//         m_y = y; // y pos
-//         m_w = w; // width
-//         m_h = h; // high
-//         m_fontSize = fontSize;
-//         m_enabled = false;
-//         m_lineHight = m_h / 10;
-//         m_tftSize = tftSize;
-//     }
-//     const char* getName() { return m_name; }
-//     bool        isEnabled() { return m_enabled; }
-//     void        show(int8_t number, const std::vector<DLNA_Client::dlnaServer>& dlnaServer, DLNA_Client::srvContent_t srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
-//         m_browseOnRelease = 0;
-//         m_dlnaServer = &dlnaServer;
-//         m_srvContent = srvContent;
-//         m_dlnaLevel = dlnaLevel;
-//         if (m_dlnaLevel == 0) m_currDLNAsrvNr = number;
-//         m_clicked = false;
-//         m_enabled = true;
-//         m_dlnaMaxItems = maxItems;
-//         m_dlnaHistory[0].maxItems = m_dlna->getNrOfServers();
-//         dlnaItemsList();
-//     }
-//     void hide() {
-//         m_enabled = false;
-//         tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
-//     }
-//     void disable() { m_enabled = false; }
-//     bool positionXY(uint16_t x, uint16_t y) { // called every tine if x or y has changed
-//         if (x < m_x) return false;
-//         if (y < m_y) return false;
-//         if (x > m_x + m_w) return false;
-//         if (y > m_y + m_h) return false;
-//         if (m_clicked == false) {
-//             m_oldX = x;
-//             m_oldY = y;
-//         }
-//         if (m_enabled) m_clicked = true;
-//         if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
-//         if (!m_enabled) return false;
-//         return true;
-//     }
-//     bool released(uint16_t x, uint16_t y) {
-//         if (!m_enabled) return false;
-//         if (!m_clicked) return false;
-//         hasReleased(x - m_x, y - m_y);
-//         m_clicked = false;
+  public:
+    dlnaList(const char* name, DLNA_Client* dlna, dlnaHistory* dh, uint8_t dhSize) {
+        register_object(this);
+        if (name)
+            m_name = x_ps_strdup(name);
+        else
+            m_name = x_ps_strdup("dlnaList");
+        m_buff = x_ps_malloc(512);
+        m_dlna = dlna;
+        m_bgColor = TFT_BLACK;
+        m_enabled = false;
+        m_clicked = false;
+        m_state = false;
+        m_pathBuff = x_ps_malloc(50);
+        m_ra.arg1 = NULL;
+        m_ra.arg2 = NULL;
+        m_ra.val1 = 0;
+        m_ra.val2 = 0;
+        m_dlnaHistory = dh;
+        for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
+    }
+    ~dlnaList() {
+        x_ps_free(&m_name);
+        x_ps_free(&m_buff);
+    }
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+        m_x = x; // x pos
+        m_y = y; // y pos
+        m_w = w; // width
+        m_h = h; // high
+        m_fontSize = fontSize;
+        m_enabled = false;
+        m_lineHight = m_h / 10;
+        m_tftSize = tftSize;
+    }
+    const char* getName() { return m_name; }
+    bool        isEnabled() { return m_enabled; }
+    void        show(int8_t number, const std::deque<DLNA_Client::dlnaServer>& dlnaServer, const std::deque<DLNA_Client::srvItem>& srvContent, uint8_t* dlnaLevel, uint16_t maxItems) {
+        m_browseOnRelease = 0;
+        m_dlnaServer = &dlnaServer;
+        m_srvContent = &srvContent;
+        m_dlnaLevel = dlnaLevel;
+        if (m_dlnaLevel == 0) m_currDLNAsrvNr = number;
+        m_clicked = false;
+        m_enabled = true;
+        m_dlnaMaxItems = maxItems;
+        m_dlnaHistory[0].maxItems = m_dlna->getNrOfServers();
+        dlnaItemsList();
+    }
+    void hide() {
+        m_enabled = false;
+        tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+    }
+    void disable() { m_enabled = false; }
+    bool positionXY(uint16_t x, uint16_t y) { // called every tine if x or y has changed
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_clicked == false) {
+            m_oldX = x;
+            m_oldY = y;
+        }
+        if (m_enabled) m_clicked = true;
+        if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if (!m_enabled) return false;
+        return true;
+    }
+    bool released(uint16_t x, uint16_t y) {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        hasReleased(x - m_x, y - m_y);
+        m_clicked = false;
 
-//         if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
-//             drawItem(m_itemListPos, true);
-//             m_chptr = NULL;
-//             vTaskDelay(300);
-//         }
+        if (m_chptr || (m_itemListPos == 0 && (*m_dlnaLevel) > 0)) {
+            drawItem(m_itemListPos, true);
+            m_chptr = NULL;
+            vTaskDelay(300);
+        }
 
-//         if (m_browseOnRelease == 0) { ; } // file
-//         if (m_browseOnRelease == 1) {
-//             (*m_dlnaLevel)++;
-//             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
-//         } // get serverlist
-//         if (m_browseOnRelease == 2) {
-//             (*m_dlnaLevel)--;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
-//         } // previous level
-//         if (m_browseOnRelease == 3) {
-//             (*m_dlnaLevel)++;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
-//         }                                                                                                                         // folder, next level
-//         if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9); } // scroll up / down
+        if (m_browseOnRelease == 0) { ; } // file
+        if (m_browseOnRelease == 1) {
+            (*m_dlnaLevel)++;
+            m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
+        } // get serverlist
+        if (m_browseOnRelease == 2) {
+            (*m_dlnaLevel)--;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+        } // previous level
+        if (m_browseOnRelease == 3) {
+            (*m_dlnaLevel)++;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+        } // folder, next level
+        if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9); } // scroll up / down
 
-//         m_browseOnRelease = 0;
-//         m_oldX = 0;
-//         m_oldY = 0;
-//         if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
-//         m_ra.val1 = 0;
-//         return true;
-//     }
+        m_browseOnRelease = 0;
+        m_oldX = 0;
+        m_oldY = 0;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+        m_ra.val1 = 0;
+        return true;
+    }
 
-//   private:
-//     void dlnaItemsList() {
-//         uint8_t pos = 0;
-//         myList.setMode(DLNA, m_tftSize, m_fontSize);
-//         myList.clearList();
-//         myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
-//         tft.setTextColor(TFT_WHITE);
-//         for (pos = 1; pos < 10; pos++) {
-//             if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
-//             if (pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown(); }
-//             if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
-//                 break;
-//             }                                                  // guard
-//             if (*m_dlnaLevel > 0 && pos > m_srvContent.size) { /* log_e("pos too high %i", pos);*/
-//                 break;
-//             } // guard
-//             drawItem(pos);
-//         }
-//         sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
-//         tft.setTextColor(TFT_ORANGE);
-//         tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
+  private:
+    void dlnaItemsList() {
+        uint8_t pos = 0;
+        myList.setMode(DLNA, m_tftSize, m_fontSize);
+        myList.clearList();
+        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
+        tft.setTextColor(TFT_WHITE);
+        for (pos = 1; pos < 10; pos++) {
+            if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
+            if (pos == 9 && m_viewPoint + 9 < m_dlnaMaxItems - 1) { myList.drawTriangeDown(); }
+            if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+                break;
+            } // guard
+            if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+                break;
+            } // guard
+            drawItem(pos);
+        }
+        sprintf(m_buff, "%i-%i/%i", m_viewPoint + 1, m_viewPoint + (pos - 1), m_dlnaMaxItems); // shows the current items pos e.g. "30-39/210"
+        tft.setTextColor(TFT_ORANGE);
+        tft.writeText(m_buff, 10, m_y, m_w - 10, m_lineHight, TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER, true, true);
 
-//         return;
-//     }
+        return;
+    }
 
-//     void drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
-//         if (pos < 0 || pos > 9) {
-//             log_e("pos oor %i", pos);
-//             return;
-//         }                                                      // guard
-//         if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
-//             return;
-//         }                                                  // guard
-//         if (*m_dlnaLevel > 0 && pos > m_srvContent.size) { /* log_e("pos too high %i", pos);*/
-//             return;
-//         } // guard
-//         char        extension[15] = {0};
-//         char        dummy[] = "";
-//         bool        isAudio = false;
-//         bool        isURL = false;
-//         const char *item = dummy, *duration = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE;
-//         (void)itemURL;
-//         int32_t itemSize = 0;
-//         int16_t childCount = 0;
-//         if (pos == 0) {
-//             if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1)
-//                 color = ANSI_ESC_MAGENTA;
-//             else
-//                 color = ANSI_ESC_ORANGE;
-//             if (selectedLine) color = ANSI_ESC_CYAN;
-//             myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
-//             return;
-//         }
-//         if (*m_dlnaLevel == 0) {
-//             if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
-//         } else {
-//             if (m_srvContent.title[pos - 1]) item = m_srvContent.title[pos - 1];
-//             itemSize = m_srvContent.itemSize[pos - 1];
-//             childCount = m_srvContent.childCount[pos - 1];
-//             if (m_srvContent.duration[pos - 1]) duration = m_srvContent.duration[pos - 1];
-//             isAudio = m_srvContent.isAudio[pos - 1];
-//             if (startsWith(m_srvContent.itemURL[pos - 1], "http")) {
-//                 isURL = true;
-//                 itemURL = m_srvContent.itemURL[pos - 1];
-//             }
-//         }
+    void drawItem(int8_t pos, bool selectedLine = false) { // pos 0 is parent, pos 1...9 are itens, selectedLine means released (ok)
+        if (pos < 0 || pos > 9) {
+            log_e("pos oor %i", pos);
+            return;
+        } // guard
+        if (*m_dlnaLevel == 0 && pos > m_dlnaServer->size()) { /* log_e("pos too high %i", pos);*/
+            return;
+        } // guard
+        if (*m_dlnaLevel > 0 && pos > m_srvContent->size()) { /* log_e("pos too high %i", pos);*/
+            return;
+        } // guard
+        char        extension[15] = {0};
+        char        dummy[] = "";
+        bool        isAudio = false;
+        bool        isURL = false;
+        const char *item = dummy, *duration = dummy, *itemURL = dummy, *color = ANSI_ESC_WHITE;
+        (void)itemURL;
+        int32_t itemSize = 0;
+        int16_t childCount = 0;
+        if (pos == 0) {
+            if (pos + m_viewPoint == m_currItemNr[*m_dlnaLevel] + 1)
+                color = ANSI_ESC_MAGENTA;
+            else
+                color = ANSI_ESC_ORANGE;
+            if (selectedLine) color = ANSI_ESC_CYAN;
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
+            return;
+        }
+        if (*m_dlnaLevel == 0) {
+            if (m_dlnaServer->at(pos - 1).friendlyName.c_get()) item = m_dlnaServer->at(pos - 1).friendlyName.c_get();
+        } else {
+            if (m_srvContent->at(pos - 1).title.c_get()) item = m_srvContent->at(pos - 1).title.c_get();
+            itemSize = m_srvContent->at(pos - 1).itemSize;
+            childCount = m_srvContent->at(pos - 1).childCount;
+            if (m_srvContent->at(pos - 1).duration.c_get()) duration = m_srvContent->at(pos - 1).duration.c_get();
+            isAudio = m_srvContent->at(pos - 1).isAudio;
+            if (startsWith(m_srvContent->at(pos - 1).itemURL.c_get(), "http")) {
+                isURL = true;
+                itemURL = m_srvContent->at(pos - 1).itemURL.c_get();
+            }
+        }
 
-//         if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {
-//             color = ANSI_ESC_MAGENTA;
-//         } else if (isURL && isAudio) {
-//             color = ANSI_ESC_YELLOW;
-//         } else {
-//             color = ANSI_ESC_WHITE;
-//         }
-//         if (selectedLine) { color = ANSI_ESC_CYAN; }
+        if ((pos - 1) + m_viewPoint == m_currItemNr[*m_dlnaLevel]) {
+            color = ANSI_ESC_MAGENTA;
+        } else if (isURL && isAudio) {
+            color = ANSI_ESC_YELLOW;
+        } else {
+            color = ANSI_ESC_WHITE;
+        }
+        if (selectedLine) { color = ANSI_ESC_CYAN; }
 
-//         if (childCount) { sprintf(extension, "%i", childCount); }
-//         if (itemSize) { sprintf(extension, "%li", itemSize); }
-//         if (duration[0] != '?') {
-//             if (strcmp(duration, "0:00:00") != 0) sprintf(extension, "%s", duration);
-//         }
-//         myList.drawLine(pos, item, extension, itemURL, color, 1);
-//     }
+        if (childCount) { sprintf(extension, "%i", childCount); }
+        if (itemSize) { sprintf(extension, "%li", itemSize); }
+        if (duration[0] != '?') {
+            if (strcmp(duration, "0:00:00") != 0) sprintf(extension, "%s", duration);
+        }
+        myList.drawLine(pos, item, extension, itemURL, color, 1);
+    }
 
-//     void hasReleased(uint16_t x, uint16_t y) {
+    void hasReleased(uint16_t x, uint16_t y) {
+        m_itemListPos = y / (m_h / 10);
+        bool     guard1 = false;
+        bool     guard2 = false;
+        uint16_t itemURLsize = 0;
+        uint16_t titleSize = 0;
+        for (int i = 0; i < m_srvContent->size(); i++) {
+            if (strcmp(m_srvContent->at(i).itemURL.c_get(), "?") != 0) itemURLsize++;
+            if (strcmp(m_srvContent->at(i).title.c_get(), "?") != 0) titleSize++;
+        }
+        if (itemURLsize > (m_itemListPos - 1)) guard2 = true;
+        bool guard3 = false;
+        if (titleSize > (m_itemListPos - 1)) guard3 = true;
+        DLNA_LOG_ERROR("rel");
+        uint16_t friendlyName = 0;
+        for (int i = 0; i < m_dlnaServer->size(); i++) {
+            if (strcmp(m_dlnaServer->at(i).friendlyName.c_get(), "?") != 0) friendlyName++;
+        }
+        if (friendlyName > (m_itemListPos - 1)) guard1 = true;
 
-//         m_itemListPos = y / (m_h / 10);
-//         bool guard1 = false;
-//         bool guard2 = false;
-//         if (m_srvContent.itemURL.size() > (m_itemListPos - 1)) guard2 = true;
-//         bool guard3 = false;
-//         if (m_srvContent.title.size() > (m_itemListPos - 1)) guard3 = true;
-//         DLNA_LOG_ERROR("rel");
-//         uint16_t friendlyName = 0;
-//         for (int i = 0; i < m_dlnaServer->size(); i++) {
-//             DLNA_LOG_ERROR("%s", m_dlnaServer->at(i).friendlyName.c_get());
-//             if (strcmp(m_dlnaServer->at(i).friendlyName.c_get(), "?") != 0) friendlyName++;
-//         }
-//         if (friendlyName > (m_itemListPos - 1)) guard1 = true;
+        if (m_oldY && (m_oldY + 7 * m_lineHight < y)) { // fast wipe down
+            m_ra.val1 = 0;
+            if (m_viewPoint == 0) goto exit;
+            if (m_viewPoint > 36)
+                m_viewPoint -= 36;
+            else
+                m_viewPoint = 0;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
 
-//         if (m_oldY && (m_oldY + 7 * m_lineHight < y)) { // fast wipe down
-//             m_ra.val1 = 0;
-//             if (m_viewPoint == 0) goto exit;
-//             if (m_viewPoint > 36)
-//                 m_viewPoint -= 36;
-//             else
-//                 m_viewPoint = 0;
-//             m_browseOnRelease = 4;
-//             m_chptr = NULL;
-//             goto exit;
-//         }
+        if (m_oldY && (m_oldY + 1 * m_lineHight < y)) { // normal wipe down
+            m_ra.val1 = 0;
+            if (m_viewPoint == 0) goto exit;
+            if (m_viewPoint > 9)
+                m_viewPoint -= 9;
+            else
+                m_viewPoint = 0;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
 
-//         if (m_oldY && (m_oldY + 1 * m_lineHight < y)) { // normal wipe down
-//             m_ra.val1 = 0;
-//             if (m_viewPoint == 0) goto exit;
-//             if (m_viewPoint > 9)
-//                 m_viewPoint -= 9;
-//             else
-//                 m_viewPoint = 0;
-//             m_browseOnRelease = 4;
-//             m_chptr = NULL;
-//             goto exit;
-//         }
+        if (m_oldY && (m_oldY - 8 * m_lineHight > y)) { // fast wipe up
+            m_ra.val1 = 0;
+            if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
+            int16_t diff = (m_dlnaMaxItems - 1) - (m_viewPoint + 9);
+            if (diff >= 36)
+                m_viewPoint += 36;
+            else
+                m_viewPoint += diff;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
 
-//         if (m_oldY && (m_oldY - 8 * m_lineHight > y)) { // fast wipe up
-//             m_ra.val1 = 0;
-//             if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
-//             int16_t diff = (m_dlnaMaxItems - 1) - (m_viewPoint + 9);
-//             if (diff >= 36)
-//                 m_viewPoint += 36;
-//             else
-//                 m_viewPoint += diff;
-//             m_browseOnRelease = 4;
-//             m_chptr = NULL;
-//             goto exit;
-//         }
+        if (m_oldY && (m_oldY - 2 * m_lineHight > y)) { // normal wipe up
+            m_ra.val1 = 0;
+            if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
+            m_viewPoint += 9;
+            m_browseOnRelease = 4;
+            m_chptr = NULL;
+            goto exit;
+        }
 
-//         if (m_oldY && (m_oldY - 2 * m_lineHight > y)) { // normal wipe up
-//             m_ra.val1 = 0;
-//             if (m_viewPoint + 9 >= m_dlnaMaxItems - 1) goto exit;
-//             m_viewPoint += 9;
-//             m_browseOnRelease = 4;
-//             m_chptr = NULL;
-//             goto exit;
-//         }
+        if (m_itemListPos == 0) { // previous level, content list
+            if (*m_dlnaLevel == 0) { goto exit; }
+            m_viewPoint = 0;
+            m_browseOnRelease = 2;
+            goto exit;
+        }
 
-//         if (m_itemListPos == 0) { // previous level, content list
-//             if (*m_dlnaLevel == 0) { goto exit; }
-//             m_viewPoint = 0;
-//             m_browseOnRelease = 2;
-//             goto exit;
-//         }
+        if (guard1) { // server list
+            if (*m_dlnaLevel == 0) {
+                m_chptr = m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get();
+                m_currDLNAsrvNr = m_itemListPos - 1;
+                m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
+                x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
+                if (m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get() == NULL) {
+                    log_e("invalid pointer in dlna history");
+                    m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
+                    goto exit;
+                }
+                m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get());
+                m_browseOnRelease = 1;
+                goto exit;
+            }
+        }
 
-//         if (guard1) { // server list
-//             if (*m_dlnaLevel == 0) {
-//                 m_chptr = m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get();
-//                 m_currDLNAsrvNr = m_itemListPos - 1;
-//                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-//                 x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
-//                 if (m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get() == NULL) {
-//                     log_e("invalid pointer in dlna history");
-//                     m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
-//                     goto exit;
-//                 }
-//                 m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get());
-//                 m_browseOnRelease = 1;
-//                 goto exit;
-//             }
-//         }
+        if (guard2) { // is file
+            if (startsWith(m_srvContent->at(m_itemListPos - 1).itemURL.c_get(), "http")) {
+                m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
+                if (m_srvContent->at(m_itemListPos - 1).isAudio) {
+                    sprintf(m_buff, "%s", m_srvContent->at(m_itemListPos - 1).title.c_get());
+                    m_chptr = m_buff;
+                    m_ra.arg1 = m_srvContent->at(m_itemListPos - 1).itemURL.get(); // url --> connecttohost()
+                    m_ra.arg2 = m_srvContent->at(m_itemListPos - 1).title.get();   // filename --> showFileName()
+                    if (m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
+                    m_browseOnRelease = 0;
+                    goto exit;
+                }
+            }
+        }
 
-//         if (guard2) { // is file
-//             if (startsWith(m_srvContent.itemURL[m_itemListPos - 1], "http")) {
-//                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-//                 if (m_srvContent.isAudio[m_itemListPos - 1]) {
-//                     sprintf(m_buff, "%s", m_srvContent.title[m_itemListPos - 1]);
-//                     m_chptr = m_buff;
-//                     m_ra.arg1 = m_srvContent.itemURL[m_itemListPos - 1]; // url --> connecttohost()
-//                     m_ra.arg2 = m_srvContent.title[m_itemListPos - 1];   // filename --> showFileName()
-//                     if (m_ra.arg1 && m_ra.arg2) m_ra.val1 = 1;
-//                     m_browseOnRelease = 0;
-//                     goto exit;
-//                 }
-//             }
-//         }
+        if (guard3) { // is folder
+            m_viewPoint = 0;
+            sprintf(m_buff, "%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
+            m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
+            m_chptr = m_buff;
+            x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].objId);
+            m_dlnaHistory[(*m_dlnaLevel) + 1].objId = strdup(m_srvContent->at(m_itemListPos - 1).objectId.c_get());
+            x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
+            m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_srvContent->at(m_itemListPos - 1).title.c_get());
+            m_browseOnRelease = 3;
+            goto exit;
+        }
+        // log_i("at this position is nothing to do");
+    exit:
+        return;
+    }
 
-//         if (guard3) { // is folder
-//             m_viewPoint = 0;
-//             sprintf(m_buff, "%s (%d)", m_srvContent.title[m_itemListPos - 1], m_srvContent.childCount[m_itemListPos - 1]);
-//             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-//             m_chptr = m_buff;
-//             x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].objId);
-//             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = strdup(m_srvContent.objectId[m_itemListPos - 1]);
-//             x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
-//             m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_srvContent.title[m_itemListPos - 1]);
-//             m_browseOnRelease = 3;
-//             goto exit;
-//         }
-//         // log_i("at this position is nothing to do");
-//     exit:
-//         return;
-//     }
-
-//   public:
-//     void prevPage() { // from IR control
-//         if (m_viewPoint == 0) return;
-//         if (m_viewPoint > 9)
-//             m_viewPoint -= 9;
-//         else
-//             m_viewPoint = 0;
-//         if (m_currItemNr[*m_dlnaLevel] > 9) {
-//             m_currItemNr[*m_dlnaLevel] -= 9;
-//         } else {
-//             m_currItemNr[*m_dlnaLevel] = 0;
-//         }
-//         m_chptr = NULL;
-//         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
-//         m_dlna->loop();
-//         while (m_dlna->getState() != m_dlna->IDLE) {
-//             m_dlna->loop();
-//             vTaskDelay(10);
-//         } // wait of browse rady
-//         m_srvContent = m_dlna->getBrowseResult();
-//         dlnaItemsList();
-//         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-//         return;
-//     }
-//     void nextPage() { // from IR control
-//         if (m_dlnaMaxItems <= m_viewPoint + 9) return;
-//         if (m_dlnaMaxItems - 9 > m_viewPoint) {
-//             m_viewPoint += 9;
-//         } else {
-//             m_viewPoint = m_dlnaMaxItems - 9;
-//         }
-//         if (m_dlnaMaxItems - 9 > m_currItemNr[*m_dlnaLevel]) {
-//             m_currItemNr[*m_dlnaLevel] += 9;
-//         } else {
-//             m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;
-//         }
-//         m_chptr = NULL;
-//         m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
-//         m_dlna->loop();
-//         while (m_dlna->getState() != m_dlna->IDLE) {
-//             m_dlna->loop();
-//             vTaskDelay(10);
-//         } // wait of browse rady
-//         m_srvContent = m_dlna->getBrowseResult();
-//         dlnaItemsList();
-//         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-//         return;
-//     }
-//     void prevItem() { // from IR control
-//         if (*m_dlnaLevel == 0 && m_currItemNr[*m_dlnaLevel] == 0) return;
-//         if (m_currItemNr[*m_dlnaLevel] < 0) return;
-//         if (m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
-//             m_viewPoint -= 9;
-//             if (m_viewPoint < 0) m_viewPoint = 0;
-//             m_chptr = NULL;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
-//             m_dlna->loop();
-//             while (m_dlna->getState() != m_dlna->IDLE) {
-//                 m_dlna->loop();
-//                 vTaskDelay(10);
-//             } // wait of browse ready
-//             m_srvContent = m_dlna->getBrowseResult();
-//             dlnaItemsList();
-//             return;
-//         }
-//         m_currItemNr[*m_dlnaLevel]--;
-//         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-//         drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1); // std colour
-//     }
-//     void nextItem() { // from IR control
-//         if (m_dlnaMaxItems == m_currItemNr[*m_dlnaLevel] - 1) return;
-//         if (m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
-//         m_currItemNr[*m_dlnaLevel]++;
-//         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
-//             m_viewPoint += 9;
-//             m_chptr = NULL;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
-//             m_dlna->loop();
-//             while (m_dlna->getState() != m_dlna->IDLE) {
-//                 m_dlna->loop();
-//                 vTaskDelay(10);
-//             } // wait of browse rady
-//             m_srvContent = m_dlna->getBrowseResult();
-//             dlnaItemsList();
-//             return;
-//         }
-//         drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-//         drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std colour
-//     }
-//     const char* getSelectedURL() { // ok from IR
-//         if (*m_dlnaLevel == 0) {   //------------------------------------------------------------------------------------------------------- choose server
-//             // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
-//             m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
-//             m_currDLNAsrvNr = m_currItemNr[0];
-//             m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
-//             drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true); // make cyan
-//             vTaskDelay(300);
-//             (*m_dlnaLevel)++;
-//             x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
-//             if (m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get() == NULL) {
-//                 log_e("invalid pointer in dlna history");
-//                 m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
-//                 return NULL;
-//             }
-//             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get());
-//             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
-//             m_dlna->loop();
-//             while (m_dlna->getState() != m_dlna->IDLE) {
-//                 m_dlna->loop();
-//                 vTaskDelay(10);
-//             } // wait of browse rady
-//             m_srvContent = m_dlna->getBrowseResult();
-//             m_dlnaMaxItems = m_dlna->getTotalMatches();
-//             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
-//             // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
-//             dlnaItemsList();
-//             return NULL;
-//         }
-//         if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
-//             // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
-//             drawItem(0, true); // make cyan
-//             vTaskDelay(300);
-//             (*m_dlnaLevel)--;
-//             m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
-//             m_viewPoint = 0;
-//             m_currItemNr[*m_dlnaLevel] = 0;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
-//             m_dlna->loop();
-//             while (m_dlna->getState() != m_dlna->IDLE) {
-//                 m_dlna->loop();
-//                 vTaskDelay(10);
-//             } // wait of browse rady
-//             m_srvContent = m_dlna->getBrowseResult();
-//             dlnaItemsList();
-//             return NULL;
-//         }
-//         if (strcmp(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "?") == 0) { // --------------------------------------- choose folder
-//             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                       // make cyan
-//             vTaskDelay(300);
-//             (*m_dlnaLevel)++;
-//             m_currItemNr[*m_dlnaLevel] = 0;
-//             x_ps_free(&m_dlnaHistory[*m_dlnaLevel].objId);
-//             m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent.objectId[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
-//             x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
-//             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent.title[m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint]);
-//             m_viewPoint = 0;
-//             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
-//             m_dlna->loop();
-//             while (m_dlna->getState() != m_dlna->IDLE) {
-//                 m_dlna->loop();
-//                 vTaskDelay(10);
-//             } // wait of browse rady
-//             m_srvContent = m_dlna->getBrowseResult();
-//             m_dlnaMaxItems = m_dlna->getTotalMatches();
-//             m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
-//             // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
-//             dlnaItemsList();
-//             if (!m_dlnaMaxItems) { // folder is empty
-//                 m_currItemNr[*m_dlnaLevel]--;
-//                 drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
-//             }
-//             return NULL;
-//         }
-//         if (startsWith(m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint], "http") != 0) { // ---------------------------------- choose file
-//             drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                              // make cyan
-//             vTaskDelay(300);
-//             return m_srvContent.itemURL[m_currItemNr[*m_dlnaLevel] - m_viewPoint];
-//         }
-//         return NULL;
-//     }
-//     const char* getSelectedTitle() { return m_srvContent.title[m_currItemNr[*m_dlnaLevel] - m_viewPoint]; }
+  public:
+    void prevPage() { // from IR control
+        if (m_viewPoint == 0) return;
+        if (m_viewPoint > 9)
+            m_viewPoint -= 9;
+        else
+            m_viewPoint = 0;
+        if (m_currItemNr[*m_dlnaLevel] > 9) {
+            m_currItemNr[*m_dlnaLevel] -= 9;
+        } else {
+            m_currItemNr[*m_dlnaLevel] = 0;
+        }
+        m_chptr = NULL;
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->loop();
+        while (m_dlna->getState() != m_dlna->IDLE) {
+            m_dlna->loop();
+            vTaskDelay(10);
+        } // wait of browse rady
+        m_srvContent = &m_dlna->getBrowseResult();
+        dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
+        return;
+    }
+    void nextPage() { // from IR control
+        if (m_dlnaMaxItems <= m_viewPoint + 9) return;
+        if (m_dlnaMaxItems - 9 > m_viewPoint) {
+            m_viewPoint += 9;
+        } else {
+            m_viewPoint = m_dlnaMaxItems - 9;
+        }
+        if (m_dlnaMaxItems - 9 > m_currItemNr[*m_dlnaLevel]) {
+            m_currItemNr[*m_dlnaLevel] += 9;
+        } else {
+            m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;
+        }
+        m_chptr = NULL;
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->loop();
+        while (m_dlna->getState() != m_dlna->IDLE) {
+            m_dlna->loop();
+            vTaskDelay(10);
+        } // wait of browse rady
+        m_srvContent = &m_dlna->getBrowseResult();
+        dlnaItemsList();
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
+        return;
+    }
+    void prevItem() { // from IR control
+        if (*m_dlnaLevel == 0 && m_currItemNr[*m_dlnaLevel] == 0) return;
+        if (m_currItemNr[*m_dlnaLevel] < 0) return;
+        if (m_currItemNr[*m_dlnaLevel] < m_viewPoint) {
+            m_viewPoint -= 9;
+            if (m_viewPoint < 0) m_viewPoint = 0;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while (m_dlna->getState() != m_dlna->IDLE) {
+                m_dlna->loop();
+                vTaskDelay(10);
+            } // wait of browse ready
+            m_srvContent = &m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        m_currItemNr[*m_dlnaLevel]--;
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] + 1 - m_viewPoint + 1); // std colour
+    }
+    void nextItem() { // from IR control
+        if (m_dlnaMaxItems == m_currItemNr[*m_dlnaLevel] - 1) return;
+        if (m_currItemNr[*m_dlnaLevel] == m_dlnaMaxItems - 1) return;
+        m_currItemNr[*m_dlnaLevel]++;
+        if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
+            m_viewPoint += 9;
+            m_chptr = NULL;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while (m_dlna->getState() != m_dlna->IDLE) {
+                m_dlna->loop();
+                vTaskDelay(10);
+            } // wait of browse rady
+            m_srvContent = &m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return;
+        }
+        drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
+        drawItem(m_currItemNr[*m_dlnaLevel] - 1 - m_viewPoint + 1); // std colour
+    }
+    const char* getSelectedURL() { // ok from IR
+        if (*m_dlnaLevel == 0) {   //------------------------------------------------------------------------------------------------------- choose server
+            // log_e("server %s", m_dlnaServer.friendlyName[m_currItemNr[0]]);
+            m_chptr = m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get();
+            m_currDLNAsrvNr = m_currItemNr[0];
+            m_currItemNr[*m_dlnaLevel] = m_currItemNr[0];
+            drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true); // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel)++;
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
+            if (m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get() == NULL) {
+                log_e("invalid pointer in dlna history");
+                m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                return NULL;
+            }
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get());
+            m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
+            m_dlna->loop();
+            while (m_dlna->getState() != m_dlna->IDLE) {
+                m_dlna->loop();
+                vTaskDelay(10);
+            } // wait of browse rady
+            m_srvContent = &m_dlna->getBrowseResult();
+            m_dlnaMaxItems = m_dlna->getTotalMatches();
+            m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems; // level 1
+            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel));
+            dlnaItemsList();
+            return NULL;
+        }
+        if (m_currItemNr[*m_dlnaLevel] + 1 == m_viewPoint) { // DLNA history, parent item ---------------------------------------------- back to parent
+            // log_e("%s", m_dlnaHistory[*m_dlnaLevel].name);
+            drawItem(0, true); // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel)--;
+            m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
+            m_viewPoint = 0;
+            m_currItemNr[*m_dlnaLevel] = 0;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->loop();
+            while (m_dlna->getState() != m_dlna->IDLE) {
+                m_dlna->loop();
+                vTaskDelay(10);
+            } // wait of browse rady
+            m_srvContent = &m_dlna->getBrowseResult();
+            dlnaItemsList();
+            return NULL;
+        }
+        if (strcmp(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "?") == 0) { // --------------------------------------- choose folder
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                   // make cyan
+            vTaskDelay(300);
+            (*m_dlnaLevel)++;
+            m_currItemNr[*m_dlnaLevel] = 0;
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].objId);
+            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).objectId.c_get());
+            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
+            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title.c_get());
+            m_viewPoint = 0;
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+            m_dlna->loop();
+            while (m_dlna->getState() != m_dlna->IDLE) {
+                m_dlna->loop();
+                vTaskDelay(10);
+            } // wait of browse rady
+            m_srvContent = &m_dlna->getBrowseResult();
+            m_dlnaMaxItems = m_dlna->getTotalMatches();
+            m_dlnaHistory[*m_dlnaLevel].maxItems = m_dlnaMaxItems;
+            // log_e("m_dlnaMaxItems %i, level %i", m_dlnaMaxItems, (*m_dlnaLevel)); // level 2, 3, 4...
+            dlnaItemsList();
+            if (!m_dlnaMaxItems) { // folder is empty
+                m_currItemNr[*m_dlnaLevel]--;
+                drawItem(m_currItemNr[*m_dlnaLevel] + 0 - m_viewPoint + 1); // make magenta
+            }
+            return NULL;
+        }
+        if (startsWith(m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get(), "http") != 0) { // ---------------------------------- choose file
+            drawItem(m_currItemNr[*m_dlnaLevel] - m_viewPoint + 1, true);                                          // make cyan
+            vTaskDelay(300);
+            return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).itemURL.c_get();
+        }
+        return NULL;
+    }
+    const char* getSelectedTitle() { return m_srvContent->at(m_currItemNr[*m_dlnaLevel] - m_viewPoint).title.c_get(); }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 /*

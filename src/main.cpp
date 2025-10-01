@@ -472,7 +472,7 @@ slider          sdr_DL_volume("sdr_DL_volume");
 pictureBox      pic_DL_logo("pic_DL_logo");
 progressbar     pgb_DL_progress("pgb_DL_progress");
 // DLNAITEMSLIST
-//dlnaList        lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
+dlnaList        lst_DLNA("lst_DLNA", &dlna, &_dlnaHistory[0], 10);
 // CLOCK
 imgClock24      clk_CL_24("clk_CL_24");
 imgClock12      clk_CL_12("clk_CL_12");
@@ -1117,24 +1117,24 @@ bool preparePlaylistFromSDFolder(const char* path) { // all files within a SD fo
     return true;
 }
 //____________________________________________________________________________________________________________________________________________________
-bool preparePlaylistFromDLNAFolder(){
+bool preparePlaylistFromDLNAFolder() {
     vector_clear_and_shrink(_PLS_content); // clear _PLS_content first
-    // DLNA_Client::srvContent_t foldercontent = dlna.getBrowseResult();
-    // for ( int i=0; i<foldercontent.size; i++) {
-    //     // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
-    //     if(!foldercontent.isAudio[i]) continue;
-    //     uint16_t len = strlen((const char*)foldercontent.itemURL[i]) + strlen((const char*)foldercontent.title[i]) + strlen((const char*)foldercontent.duration[i]) + 3;
-    //     // log_i("malloc with size %d %d %d %d",len, strlen((const char*)foldercontent.itemURL[i]), strlen((const char*)foldercontent.title[i]), strlen((const char*)foldercontent.duration[i]));
-    //     char* itstr = x_ps_malloc( len );
-    //     strcpy( itstr, (const char*)foldercontent.itemURL[i]);
-    //     strcat( itstr, "\n");
-    //     strcat( itstr, (const char*)foldercontent.duration[i]);
-    //     strcat( itstr, ",");
-    //     strcat( itstr, (const char*)foldercontent.title[i]);
-    //     log_i("pushing to playlist : %s",itstr);
-    //     _PLS_content.push_back(itstr);
-    // }
-    if(!_PLS_content.size()) return false;
+    const std::deque<DLNA_Client::srvItem>* foldercontent = &dlna.getBrowseResult();
+    for (int i = 0; i < foldercontent->size(); i++) {
+        // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
+        if (!foldercontent->at(i).isAudio) continue;
+        uint16_t len =
+            strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
+        char* itstr = x_ps_malloc(len);
+        strcpy(itstr, (const char*)foldercontent->at(i).itemURL.c_get());
+        strcat(itstr, "\n");
+        strcat(itstr, (const char*)foldercontent->at(i).duration.c_get());
+        strcat(itstr, ",");
+        strcat(itstr, (const char*)foldercontent->at(i).title.c_get());
+        log_i("pushing to playlist : %s", itstr);
+        _PLS_content.push_back(itstr);
+    }
+    if (!_PLS_content.size()) return false;
     log_i("pls length %i", _PLS_content.size());
     return true;
 }
@@ -2297,7 +2297,7 @@ void placingGraphicObjects() { // and initialize them
     pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb);
     pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_DL_progress.setValue(0);
     // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//    lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
+    lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_CL_24.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
     clk_CL_12.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
@@ -2607,7 +2607,7 @@ void changeState(int32_t state){
         case DLNAITEMSLIST:{
             dispHeader.show(false);
             dispFooter.show(false);
-        //    lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
+            lst_DLNA.show(_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
             setTimeCounter(LIST_TIMER);
             break;
         }
@@ -4127,7 +4127,7 @@ void tp_released(uint16_t x, uint16_t y){
             sdr_DL_volume.released(); btn_DL_mute.released(); btn_DL_pause.released(); btn_DL_radio.released(); btn_DL_fileList.released(); btn_DL_cancel.released(); pgb_DL_progress.released();
             break;
         case DLNAITEMSLIST:
- //           lst_DLNA.released(x, y);
+            lst_DLNA.released(x, y);
             break;
         case CLOCK:
             btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
@@ -4189,7 +4189,7 @@ void tp_moved(uint16_t x, uint16_t y){
         if(sdr_CL_volume.positionXY(x, y)) return;
     }
     if(_state == DLNAITEMSLIST){
-//        if(lst_DLNA.positionXY(x, y)) return;
+        if(lst_DLNA.positionXY(x, y)) return;
     }
     if(_state == BRIGHTNESS){
         if(sdr_BR_value.positionXY(x, y)) return;
@@ -4507,7 +4507,7 @@ void dlna_info(const char* info) {
     if(endsWith(info, "is not responding after request")) { // timeout
         _f_dlnaBrowseServer = false;
         if(_dlnaLevel > 0) _dlnaLevel--;
-    //    lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         setTimeCounter(LIST_TIMER);
     }
     SerialPrintfln("DLNA_info:   %s", info);
@@ -4532,7 +4532,7 @@ void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
     }
     if(_f_dlnaWaitForResponse) {
         _f_dlnaWaitForResponse = false;
-    //    lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
+        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
         setTimeCounter(LIST_TIMER);
     }
     else { webSrv.send("dlnaContent=", dlna.stringifyContent()); }

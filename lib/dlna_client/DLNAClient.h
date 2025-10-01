@@ -34,28 +34,32 @@ class DLNA_Client {
     };
 
   private:
-    std::vector<dlnaServer> m_dlnaServer;
+    std::deque<dlnaServer> m_dlnaServer;
 
   public:
     struct srvItem {
-        ps_ptr<char> objectId;
-        ps_ptr<char> parentId;
-        bool         isAudio;
-        ps_ptr<char> itemURL;
-        int32_t      itemSize;
-        ps_ptr<char> duration;
-        ps_ptr<char> title;
-        int16_t      childCount;
+        ps_ptr<char> objectId{};
+        ps_ptr<char> parentId{};
+        bool         isAudio{};
+        ps_ptr<char> itemURL{};
+        int32_t      itemSize{};
+        ps_ptr<char> duration{};
+        ps_ptr<char> title{};
+        int16_t      childCount{};
     };
 
   private:
-    std::vector<srvItem> m_srv_items;
+    std::deque<srvItem> m_srv_items;
 
   public:
     struct browseReady_s {
         uint16_t numberReturned;
         uint16_t totalMatches;
     };
+
+  public:
+    DLNA_Client();
+    ~DLNA_Client();
 
   private:
     browseReady_s m_browseReady;
@@ -72,17 +76,15 @@ class DLNA_Client {
     std::deque<ps_ptr<char>> m_content;
 
   public:
-    DLNA_Client();
-    ~DLNA_Client();
-    bool                           seekServer();
-    int8_t                         listServer();
-    const std::vector<dlnaServer>& getServer() const;
-    const std::vector<srvItem>&    getBrowseResult() const;
-    int8_t                         browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
-    const char*                    stringifyContent();
-    const char*                    stringifyServer();
-    uint8_t                        getState();
-    int16_t                        getTotalMatches() {
+    bool                          seekServer();
+    int8_t                        listServer();
+    const std::deque<dlnaServer>& getServer() const;
+    const std::deque<srvItem>&    getBrowseResult() const;
+    int8_t                        browseServer(uint8_t srvNr, const char* objectId, const uint16_t startingIndex = 0, const uint16_t maxCount = 50);
+    const char*                   stringifyContent();
+    const char*                   stringifyServer();
+    uint8_t                       getState();
+    int16_t                       getTotalMatches() {
         if (m_state == IDLE)
             return m_totalMatches;
         else
