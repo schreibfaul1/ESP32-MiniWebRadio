@@ -65,8 +65,8 @@ class DLNA_Client {
     browseReady_s m_browseReady;
 
   private:
-    NetworkClient m_client;
-    WiFiUDP       m_udp;
+    NetworkClient m_tcp_client;
+    WiFiUDP       m_udp_client;
     uint8_t       m_state = IDLE;
     uint32_t      m_timeStamp = 0;
     uint16_t      m_numberReturned = 0;
@@ -110,44 +110,12 @@ class DLNA_Client {
     bool srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount);
 
   private:
-    bool     m_PSRAMfound = false;
     bool     m_chunked = false;
-    char*    m_chbuf = NULL;
     char     m_objectId[60];
     uint8_t  m_srvNr = 0;
-    uint16_t m_chbufSize = 0;
     uint32_t m_contentlength = 0;
     uint16_t m_startingIndex = 0;
     uint16_t m_maxCount = 100;
-
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    void vector_clear_and_shrink(std::vector<char*>& vec) {
-        uint size = vec.size();
-        for (int32_t i = 0; i < size; i++) {
-            if (vec[i]) {
-                free(vec[i]);
-                vec[i] = NULL;
-            }
-        }
-        vec.clear();
-        vec.shrink_to_fit();
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    void srvContent_clear_and_shrink() {
-        // m_srvContent.size = 0;
-        // vector_clear_and_shrink(m_srvContent.objectId);
-        // vector_clear_and_shrink(m_srvContent.parentId);
-        // m_srvContent.isAudio.clear();
-        // m_srvContent.isAudio.shrink_to_fit();
-        // vector_clear_and_shrink(m_srvContent.itemURL);
-        // m_srvContent.itemSize.clear();
-        // m_srvContent.itemSize.shrink_to_fit();
-        // vector_clear_and_shrink(m_srvContent.duration);
-        // vector_clear_and_shrink(m_srvContent.title);
-        // m_srvContent.childCount.clear();
-        // m_srvContent.childCount.shrink_to_fit();
-    }
     // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
     int32_t indexOf(const char* haystack, const char* needle, int32_t startIndex) {
         const char* p = haystack;
@@ -157,104 +125,7 @@ class DLNA_Client {
         if (pos == nullptr) return -1;
         return pos - haystack;
     }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    bool startsWith(const char* base, const char* searchString) {
-        char c;
-        while ((c = *searchString++) != '\0')
-            if (c != *base++) return false;
-        return true;
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    bool endsWith(const char* base, const char* searchString) {
-        int32_t slen = strlen(searchString);
-        if (slen == 0) return false;
-        const char* p = base + strlen(base);
-        p -= slen;
-        if (p < base) return false;
-        return (strncmp(p, searchString, slen) == 0);
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
-        int   count;
-        char* sp; // start of pattern
-        // printf("replacestr(%s, %s, %s)\n", line, search, replace);
-        if ((sp = strstr(line, search)) == NULL) { return (0); }
-        count = 1;
-        int sLen = strlen(search);
-        int rLen = strlen(replace);
-        if (sLen > rLen) {
-            // move from right to left
-            char* src = sp + sLen;
-            char* dst = sp + rLen;
-            while ((*dst = *src) != '\0') {
-                dst++;
-                src++;
-            }
-        } else if (sLen < rLen) {
-            // move from left to right
-            int   tLen = strlen(sp) - sLen;
-            char* stop = sp + rLen;
-            char* src = sp + sLen + tLen;
-            char* dst = sp + rLen + tLen;
-            while (dst >= stop) {
-                *dst = *src;
-                dst--;
-                src--;
-            }
-        }
-        memcpy(sp, replace, rLen);
-        count += replacestr(sp + rLen, search, replace);
-        return (count);
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    inline char* x_ps_malloc(uint16_t len) {
-        char* ps_str = NULL;
-        if (psramFound()) {
-            ps_str = (char*)ps_malloc(len);
-        } else {
-            ps_str = (char*)malloc(len);
-        }
-        if (!ps_str) { log_e("oom"); }
-        ps_str[0] = '\0';
-        return ps_str;
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    char* x_ps_strdup(const char* str) {
-        if (!str) { log_e("given str is NULL"); }
-        char*    ps_str = NULL;
-        uint16_t len = strlen(str);
-        if (m_PSRAMfound) {
-            ps_str = (char*)ps_malloc(len + 1);
-        } else {
-            ps_str = (char*)malloc(len + 1);
-        }
-        if (!ps_str) { log_e("oom"); }
-        strcpy(ps_str, str);
-        ps_str[len] = '\0';
-        return ps_str;
-    }
-    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-    char* x_ps_strndup(const char* str, uint16_t len) {
-        if (!str) {
-            log_e("given str is NULL");
-            return NULL;
-        }
-        size_t str_len = strlen(str);
-        if (len > str_len) len = str_len;
-        char* ps_str = NULL;
-        if (m_PSRAMfound) {
-            ps_str = (char*)ps_malloc(len + 1);
-        } else {
-            ps_str = (char*)malloc(len + 1);
-        }
-        if (!ps_str) {
-            log_e("oom");
-            return NULL;
-        }
-        strlcpy(ps_str, str, len + 1); // len+1 guarantees zero termination (ps_str + '\0')
-        return ps_str;
-    }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+ // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls
 #define DLNA_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define DLNA_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, fmt, ##__VA_ARGS__)

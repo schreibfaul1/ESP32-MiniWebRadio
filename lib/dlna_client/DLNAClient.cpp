@@ -1,42 +1,21 @@
 #include "DLNAClient.h"
 
 // Created on: 30.11.2023
-// Updated on: 30.09.2025
+// Updated on: 02.10.2025
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
     m_chunked = false;
-    m_PSRAMfound = psramInit();
-    m_chbuf = (char*)malloc(5512);
-    m_chbufSize = 512;
 }
 
 DLNA_Client::~DLNA_Client() {
     m_dlnaServer.clear();
     m_srv_items.clear();
-
-    srvContent_clear_and_shrink();
     m_content.clear();
-    if (m_chbuf) {
-        free(m_chbuf);
-        m_chbuf = NULL;
-    }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::seekServer() {
     if (WiFi.status() != WL_CONNECTED) return false; // guard
-
-    if (m_chbuf) {
-        free(m_chbuf);
-        m_chbuf = NULL;
-    }
-    if (m_PSRAMfound == false) {
-        m_chbuf = (char*)malloc(512);
-        m_chbufSize = 512;
-    } else {
-        m_chbuf = (char*)ps_malloc(4 * 4096);
-        m_chbufSize = 4 * 4096;
-    }
 
     uint8_t    ret = 0;
     const char searchTX[] = "M-SEARCH * HTTP/1.1\r\n"
@@ -46,24 +25,24 @@ bool DLNA_Client::seekServer() {
                             "ST: urn:schemas-upnp-org:device:MediaServer:1\r\n\r\n";
 
     {
-        ret = m_udp.beginMulticast(IPAddress(SSDP_MULTICAST_IP), SSDP_LOCAL_PORT);
+        ret = m_udp_client.beginMulticast(IPAddress(SSDP_MULTICAST_IP), SSDP_LOCAL_PORT);
         if (!ret) {
-            m_udp.stop();
+            m_udp_client.stop();
             DLNA_LOG_ERROR("error sending SSDP multicast packets");
             return false;
         }
         for (int i = 0; i < 3; i++) {
-            ret = m_udp.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT);
+            ret = m_udp_client.beginPacket(IPAddress(SSDP_MULTICAST_IP), SSDP_MULTICAST_PORT);
             if (!ret) {
                 DLNA_LOG_ERROR("udp beginPacket error");
                 return false;
             }
-            ret = m_udp.write((const uint8_t*)searchTX, strlen(searchTX));
+            ret = m_udp_client.write((const uint8_t*)searchTX, strlen(searchTX));
             if (!ret) {
                 DLNA_LOG_ERROR("udp write error");
                 return false;
             }
-            ret = m_udp.endPacket();
+            ret = m_udp_client.endPacket();
             if (!ret) {
                 DLNA_LOG_ERROR("endPacket error");
                 return false;
@@ -99,7 +78,7 @@ void DLNA_Client::parseDlnaServer(uint16_t len) {
     buff.calloc(len + 1);
 
     vTaskDelay(200);
-    m_udp.read((uint8_t*)buff.get(), len); // read packet into the buffer
+    m_udp_client.read((uint8_t*)buff.get(), len); // read packet into the buffer
     char* p = strcasestr(buff.get(), "Location: http");
     if (!p) return;
     int idx1 = indexOf(p, "://", 0) + 3; // pos IP
@@ -137,19 +116,19 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     ps_ptr<char> out_msg;
     ps_ptr<char> buff;
     bool         ret = false;
-    m_client.stop();
-    m_client.setTimeout(CONNECT_TIMEOUT);
+    m_tcp_client.stop();
+    m_tcp_client.setTimeout(CONNECT_TIMEOUT);
     uint32_t t = millis();
-    ret = m_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
+    ret = m_tcp_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
     if (!ret) {
-        m_client.stop();
+        m_tcp_client.stop();
         out_msg.assignf("The server %s:%d did not answer within %lums [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t, __FILENAME__, __LINE__);
         if (dlna_info) dlna_info(out_msg.c_get());
         return false;
     }
     t = millis() + 250;
     while (true) {
-        if (m_client.connected()) break;
+        if (m_tcp_client.connected()) break;
         if (t < millis()) {
             out_msg.assignf("The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
             if (dlna_info) dlna_info(out_msg.c_get());
@@ -159,11 +138,11 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     // assemble HTTP header
     buff.assignf("GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
                  m_dlnaServer[srvNr].port);
-    m_client.clear();
-    m_client.print(buff.get());
+    m_tcp_client.clear();
+    m_tcp_client.print(buff.get());
     t = millis() + AVAIL_TIMEOUT;
     while (true) {
-        if (m_client.available()) break;
+        if (m_tcp_client.available()) break;
         if (t < millis()) {
             out_msg.assignf("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
             if (dlna_info) dlna_info(out_msg.c_get());
@@ -181,7 +160,7 @@ bool DLNA_Client::readHttpHeader() {
     uint16_t timeout = 4500; // ms
     bool     f_time = false;
 
-    if (m_client.available() == 0) {
+    if (m_tcp_client.available() == 0) {
         if (!f_time) {
             stime = millis();
             f_time = true;
@@ -205,14 +184,14 @@ bool DLNA_Client::readHttpHeader() {
             DLNA_LOG_ERROR("timeout");
             goto exit;
         }
-        while (m_client.available()) {
-            uint8_t b = m_client.read();
+        while (m_tcp_client.available()) {
+            uint8_t b = m_tcp_client.read();
             if (b == '\n') {
                 if (!pos) { // empty line received, is the last line of this responseHeader
                     if (ct_seen)
                         goto lastToDo;
                     else {
-                        if (!m_client.available()) {
+                        if (!m_tcp_client.available()) {
                             vTaskDelay(10);
                             goto exit;
                         }
@@ -303,9 +282,9 @@ bool DLNA_Client::readContent() {
 
     while (pos < m_contentlength) { // outer while
 
-        if (m_client.available()) {
+        if (m_tcp_client.available()) {
             cnt = 0;
-            b = m_client.read();
+            b = m_tcp_client.read();
             buff[pos] = b;
             pos++;
         } else {
@@ -391,17 +370,15 @@ bool DLNA_Client::getServerItems(uint8_t srvNr) {
     }
 
     // we finally got all infos we need
-    uint16_t idx = 0;
-    if (m_dlnaServer[srvNr].location && endsWith(m_dlnaServer[srvNr].location.c_get(), "/")) {
+    if (m_dlnaServer[srvNr].location && m_dlnaServer[srvNr].location.ends_with("/")) {
         char* tmp = (char*)malloc(strlen(m_dlnaServer[srvNr].location.c_get()) + strlen(m_dlnaServer[srvNr].controlURL.c_get()) + 1);
         strcpy(tmp, m_dlnaServer[srvNr].location.c_get()); // location string becomes first part of controlURL
         strcat(tmp, m_dlnaServer[srvNr].controlURL.c_get());
         m_dlnaServer[srvNr].controlURL.assign(tmp);
         free(tmp);
     }
-    if (m_dlnaServer[srvNr].controlURL.c_get() && startsWith(m_dlnaServer[srvNr].controlURL.c_get(), "http://")) { // remove "http://ip:port/" from begin of string
-        idx = m_dlnaServer[srvNr].controlURL.index_of('/');
-        m_dlnaServer[srvNr].controlURL.remove_before(idx, false);
+    if (m_dlnaServer[srvNr].controlURL.c_get() && m_dlnaServer[srvNr].controlURL.starts_with("http://")) { // remove "http://ip:port/" from begin of string
+        m_dlnaServer[srvNr].controlURL.remove_before('/', false);
     }
     if (strcmp(m_dlnaServer[srvNr].friendlyName.c_get(), "?") == 0) {
         DLNA_LOG_ERROR("friendlyName %s, [%i]", m_dlnaServer[srvNr].friendlyName.c_get(), srvNr);
@@ -518,7 +495,6 @@ bool DLNA_Client::browseResult() {
                 std::string res = m_content[i].get();                // <res size="7365" duration="0:00:00.287" bitrate="127706" sampleFrequency="44100" nrAudioChannels="2 ... >http://..."
                 auto        itemSize = extractAttr(res, "size");     // "7365"
                 auto        duration = extractAttr(res, "duration"); // "0:00:00.287"
-                DLNA_LOG_ERROR("%s", duration.c_get());
                 if (itemSize.valid()) {
                     itemSize.replace(";", "");
                     m_srv_items[cNr].itemSize = itemSize.to_uint32();
@@ -560,73 +536,75 @@ bool DLNA_Client::browseResult() {
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount) {
-    if (m_dlnaServer.size() == 0) return false;
-    bool    ret;
-    uint8_t cnt = 0;
 
-    m_client.stop();
+    bool         ret;
+    uint8_t      cnt = 0;
+    ps_ptr<char> chbuff("chbuff, srvPost");
+    ps_ptr<char> message("message");
+    m_tcp_client.stop();
     uint32_t t = millis();
-    m_client.setTimeout(CONNECT_TIMEOUT);
-    ret = m_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
+    m_tcp_client.setTimeout(CONNECT_TIMEOUT);
+    ret = m_tcp_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
 
     if (!ret) {
-        m_client.stop();
-        sprintf(m_chbuf, "The server %s:%d is not responding after %lums [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t, __FILENAME__, __LINE__);
-        if (dlna_info) dlna_info(m_chbuf);
+        m_tcp_client.stop();
+        DLNA_LOG_ERROR("The server %s:%d is not responding after %lums", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
+        if (dlna_info) dlna_info(chbuff.c_get());
         return false;
     }
     while (true) {
-        if (m_client.connected()) break;
+        if (m_tcp_client.connected()) break;
         delay(100);
         cnt++;
         if (cnt == 10) {
-            sprintf(m_chbuf, "The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(m_chbuf);
+            DLNA_LOG_ERROR("The server %s:%d refuses the connection", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
+            if (dlna_info) dlna_info(chbuff.c_get());
             return false;
         }
     }
 
-    sprintf(m_chbuf,
-            "POST /%s HTTP/1.1\r\n"
-            "Host: %s:%d\r\n"
-            "CACHE-CONTROL: no-cache\r\nPRAGMA: no-cache\r\n"
-            "Connection: close\r\n"
-            "Content-Length: 000\r\n" /* dummy length, determine later*/
-            "Content-Type: text/xml; charset=\"utf-8\"\r\n"
-            "SOAPAction: \"urn:schemas-upnp-org:service:ContentDirectory:1#Browse\"\r\n"
-            "User-Agent: ESP32/Player/UPNP1.0\r\n"
-            "\r\n" /*end header, begin message */
-            "<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
-            "<s:Body>"
-            "<u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">\r\n"
-            "<ObjectID>%s</ObjectID>\r\n"
-            "<BrowseFlag>BrowseDirectChildren</BrowseFlag>\r\n"
-            "<Filter>*</Filter>\r\n"
-            "<StartingIndex>%i</StartingIndex>\r\n"   /* startingIndex */
-            "<RequestedCount>%i</RequestedCount>\r\n" /* max count*/
-            "<SortCriteria></SortCriteria>\r\n"
-            "</u:Browse>\r\n"
-            "</s:Body>\r\n"
-            "</s:Envelope>\r\n\r\n",
-            m_dlnaServer[srvNr].controlURL.c_get(), m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, objectId, startingIndex, maxCount);
+    chbuff.assignf("POST /%s HTTP/1.1\r\n"
+                   "Host: %s:%d\r\n"
+                   "CACHE-CONTROL: no-cache\r\nPRAGMA: no-cache\r\n"
+                   "Connection: close\r\n"
+                   "Content-Length: 000\r\n" /* dummy length, determine later*/
+                   "Content-Type: text/xml; charset=\"utf-8\"\r\n"
+                   "SOAPAction: \"urn:schemas-upnp-org:service:ContentDirectory:1#Browse\"\r\n"
+                   "User-Agent: ESP32/Player/UPNP1.0\r\n"
+                   "\r\n", /*end header*/
+                   m_dlnaServer[srvNr].controlURL.get(), m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
 
-    uint16_t msgBegin = indexOf(m_chbuf, "\r\n\r\n", 0);
-    uint16_t msgLength = strlen(m_chbuf) - (msgBegin + 4);
-    uint16_t insertIdx = indexOf(m_chbuf, "Content-Length:", 0) + 16;
+    message.assignf("<s:Envelope xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\r\n"
+                    "<s:Body>"
+                    "<u:Browse xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">\r\n"
+                    "<ObjectID>%s</ObjectID>\r\n"
+                    "<BrowseFlag>BrowseDirectChildren</BrowseFlag>\r\n"
+                    "<Filter>*</Filter>\r\n"
+                    "<StartingIndex>%i</StartingIndex>\r\n"   /* startingIndex */
+                    "<RequestedCount>%i</RequestedCount>\r\n" /* max count*/
+                    "<SortCriteria></SortCriteria>\r\n"
+                    "</u:Browse>\r\n"
+                    "</s:Body>\r\n"
+                    "</s:Envelope>\r\n"
+                    "\r\n", /* end message */
+                    objectId, startingIndex, maxCount);
+
+    uint16_t msgLength = message.size();
     char     tmp[10];
     itoa(msgLength, tmp, 10);
-    memcpy(m_chbuf + insertIdx, tmp, 3);
-    m_chbuf[strlen(m_chbuf) + 1] = '\0';
-    DLNA_LOG_DEBUG("%s", m_chbuf);
-    m_client.clear();
-    m_client.print(m_chbuf);
+    chbuff.replace("000", tmp);
+    chbuff.append(message.get());
+
+    // DLNA_LOG_DRBUG("%s", chbuff.get());
+
+    m_tcp_client.print(chbuff.get());
 
     t = millis() + AVAIL_TIMEOUT;
     while (true) {
-        if (m_client.available()) break;
+        if (m_tcp_client.available()) break;
         if (t < millis()) {
-            sprintf(m_chbuf, "The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(m_chbuf);
+            chbuff.assignf("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
+            if (dlna_info) dlna_info(chbuff.c_get());
             return false;
         }
     }
@@ -748,14 +726,14 @@ void DLNA_Client::loop() {
         case IDLE: break;
         case SEEK_SERVER:
             if (m_timeStamp + SEEK_TIMEOUT > millis()) {
-                int len = m_udp.parsePacket();
+                int len = m_udp_client.parsePacket();
                 if (len > 0) {
                     parseDlnaServer(len); // registers all media servers that respond within the time until the timeout
                 }
                 cnt = 0;
                 fail = 0;
             } else {
-                m_udp.stop();
+                m_udp_client.stop();
                 m_state = GET_SERVER_ITEMS;
             }
             break;
