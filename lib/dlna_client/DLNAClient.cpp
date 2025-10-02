@@ -2,19 +2,6 @@
 
 // Created on: 30.11.2023
 // Updated on: 30.09.2025
-/*
-//example
-DLNA dlna;
-
-void setup(){
-    dlna.seekServer(); // send a multicast around the local network
-}
-
-void loop(){
-    dlna.loop();
-}
-
-*/
 
 DLNA_Client::DLNA_Client() {
     m_state = IDLE;
@@ -22,7 +9,6 @@ DLNA_Client::DLNA_Client() {
     m_PSRAMfound = psramInit();
     m_chbuf = (char*)malloc(5512);
     m_chbufSize = 512;
-    m_srv_items.get_allocator();
 }
 
 DLNA_Client::~DLNA_Client() {
@@ -187,24 +173,46 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::readHttpHeader() {
-    ps_ptr<char> chbuff("chbuff, readHttpHeader");
-    ps_ptr<char> rhl("rhl, readHttpHeader");
-    bool         ct_seen = false;
+
     m_timeStamp = millis();
-    uint16_t rhlSize = 1024;
-    rhl.alloc(rhlSize, "rhl"); // response header line
-    while (true) {             // outer while
+    uint32_t ctime = millis();
+    uint32_t stime = millis();
+    uint16_t timeout = 4500; // ms
+    bool     f_time = false;
+
+    if (m_client.available() == 0) {
+        if (!f_time) {
+            stime = millis();
+            f_time = true;
+        }
+        if ((millis() - stime) > timeout) {
+            DLNA_LOG_ERROR("timeout");
+            f_time = false;
+            return false;
+        }
+    }
+    f_time = false;
+
+    ps_ptr<char> rhl;
+    rhl.alloc(1024, "rhl"); // responseHeaderline
+    rhl.clear();
+    bool ct_seen = false;
+
+    while (true) { // outer while
         uint16_t pos = 0;
-        if ((m_timeStamp + READ_TIMEOUT) < millis()) {
-            chbuff.assignf("timeout in readHttpHeader [%s:%d]", __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(chbuff.c_get());
-            goto error;
+        if ((millis() - ctime) > timeout) {
+            DLNA_LOG_ERROR("timeout");
+            goto exit;
         }
         while (m_client.available()) {
             uint8_t b = m_client.read();
             if (b == '\n') {
                 if (!pos) { // empty line received, is the last line of this responseHeader
-                    goto exit;
+                    if (ct_seen)
+                        goto lastToDo;
+                    else {
+                        if (!m_client.available()) goto exit;
+                    }
                 }
                 break;
             }
@@ -212,16 +220,20 @@ bool DLNA_Client::readHttpHeader() {
             if (b < 0x20) continue;
             rhl[pos] = b;
             pos++;
-            if (pos == rhlSize - 1) {
-                pos--;
+            if (pos == 1023) {
+                pos = 1022;
                 continue;
             }
-            if (pos == rhlSize - 2) {
+            if (pos == 1022) {
                 rhl[pos] = '\0';
-                chbuff.assignf("responseHeaderline overflow, response was: %s", rhl.get());
-                if (dlna_info) dlna_info(chbuff.c_get());
+                DLNA_LOG_WARN("responseHeaderline overflow");
             }
         } // inner while
+        if (!pos) {
+            vTaskDelay(5);
+            continue;
+        }
+
         DLNA_LOG_DEBUG("%s", rhl.get());
         if (rhl.starts_with_icase("content-length:")) {
             rhl.remove_before(':', false);
@@ -235,8 +247,7 @@ bool DLNA_Client::readHttpHeader() {
             else if (indexOf(rhl.get() + 13, "text/html", 0) > 0)
                 ct_seen = true;
             else {
-                chbuff.assignf("content type expected: text/xml or text/html, got %s", rhl.get() + 13);
-                if (dlna_info) dlna_info(chbuff.c_get());
+                DLNA_LOG_ERROR("content type expected: text/xml or text/html, got %s", rhl.get() + 13);
                 goto exit; // wrong content type
             }
         } else if ((rhl.starts_with_icase("transfer-encoding:"))) {
@@ -253,8 +264,8 @@ exit:
     if (!ct_seen) DLNA_LOG_ERROR("content type not found");
     return true;
 
-error:
-    return false;
+lastToDo:
+    return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::readContent() {
@@ -280,12 +291,13 @@ bool DLNA_Client::readContent() {
     }
 
     ps_ptr<char> buff("chbuff, readContent");
-    buff.calloc(m_contentlength);
+    buff.calloc(m_contentlength + 4);
     m_timeStamp = millis();
     uint8_t  b = 0;
     uint16_t pos = 0;
     uint8_t  cnt = 0;
-    while (pos < m_contentlength) { // outer while
+
+    while (true) { // outer while
 
         if (m_client.available()) {
             cnt = 0;
@@ -294,32 +306,38 @@ bool DLNA_Client::readContent() {
             pos++;
         } else {
             vTaskDelay(10);
+            if (pos == m_contentlength) break;
+            DLNA_LOG_DEBUG("%i, %i", m_contentlength, pos);
+            if (buff.ends_with("\r\n")) break;
             cnt++;
             if (cnt == 100) {
+                // buff.hex_dump(m_contentlength));
                 DLNA_LOG_ERROR("timeout in readContent");
                 goto error;
                 break;
             }
         }
     }
-    buff.replace("</", "\n</");     // also new line
-    buff.replace("\r", "");         // remove '\r'
-    buff.replace("\n\n", "\n");     // remove emtpy lines
-    buff.replace("&lt;", "<");      // lower than
-    buff.replace("&gt;", ">");      // greater than
-    buff.replace("><", ">\n<");     // new line
-    buff.replace("</", "\n</");     // also new line
-    buff.replace("&quot", "\"");    // quota sign
-    buff.replace("&ampamp", "&");   // ampersand
-    buff.replace("&ampapos", "'");  // apostrophe
-    buff.replace("&ampquot", "\""); // quotation
+    buff.replace("</", "\n</");      // also new line
+    buff.replace("\r", "");          // remove '\r'
+    buff.replace("\n\n", "\n");      // remove emtpy lines
+    buff.replace("&lt;", "<");       // lower than
+    buff.replace("&gt;", ">");       // greater than
+    buff.replace("><", ">\n<");      // new line
+    buff.replace("</", "\n</");      // also new line
+    buff.replace("&quot", "\"");     // quota sign
+    buff.replace("&ampamp", "&");    // ampersand
+    buff.replace("&ampapos", "'");   // apostrophe
+    buff.replace("&ampquot", "\"");  // quotation
+    buff.replace("\";", "\"");       // <container id=";4:cont2:120:0:0:" -> <container id="4:cont2:120:0:0:"
+    buff.replace(":cont", "\"cont"); // <container id=";4:cont2:120:0:0:" -> <container id="4"cont2:120:0:0:"
     DLNA_LOG_DEBUG("%s", buff.get());
 
     m_content.clear(); // Delete all old entries
     m_content = split_lines(buff);
 
     // for (size_t i = 0; i < m_content.size(); i++) {
-    //     DLNA_LOG_INFO( m_content[i].get());;
+    //     DLNA_LOG_INFO(m_content[i].get());
     // }
 
     return true;
@@ -447,7 +465,7 @@ bool DLNA_Client::browseResult() {
     m_srv_items.clear();
 
     for (int i = 0; i < m_content.size(); i++) {
-        DLNA_LOG_INFO("%s", m_content[i].get());
+        DLNA_LOG_DEBUG("%s", m_content[i].get());
         m_content[i].trim();
         /*------C O N T A I N E R -------*/
 
@@ -464,9 +482,9 @@ bool DLNA_Client::browseResult() {
                 auto        parentStr = extractAttr(line, "parentID");     // "0"
                 auto        childCountS = extractAttr(line, "childCount"); // 5
 
-                m_srv_items[cNr].objectId.copy_from(idStr.c_str());     // Container-ID als String
-                m_srv_items[cNr].parentId.copy_from(parentStr.c_str()); // Parent-ID als String
-                m_srv_items[cNr].childCount = static_cast<int16_t>(std::stoi(childCountS));
+                if (idStr.length() > 0) m_srv_items[cNr].objectId.copy_from(idStr.c_str());         // Container-ID als String
+                if (parentStr.length() > 0) m_srv_items[cNr].parentId.copy_from(parentStr.c_str()); // Parent-ID als String
+                if (childCountS.length() > 0) m_srv_items[cNr].childCount = static_cast<int16_t>(std::stoi(childCountS));
             }
             if (m_content[i].starts_with("<dc:title>")) {
                 std::string line = m_content[i].get(); // <dc:title>Bilder
@@ -498,12 +516,12 @@ bool DLNA_Client::browseResult() {
             if (m_content[i].starts_with("<upnp:class")) {
                 if (m_content[i].index_of("audioItem")) m_srv_items[cNr].isAudio = true; // <upnp:class>object.item.audioItem.musicTrack
             }
-            if (m_content[i].starts_with("<res")) {
-                std::string res = m_content[i].get();                 // <res size="7365" duration="0:00:00.287" bitrate="127706" sampleFrequency="44100" nrAudioChannels="2 ... >http://..."
+            if (m_content[i].starts_with("<res") && m_content[i].contains("audio/")) { // maybe items contains more than one <res>
+                std::string res = m_content[i].get();                // <res size="7365" duration="0:00:00.287" bitrate="127706" sampleFrequency="44100" nrAudioChannels="2 ... >http://..."
                 auto        itemSize = extractAttr(res, "size");     // "7365"
                 auto        duration = extractAttr(res, "duration"); // "0:00:00.287"
                 if (itemSize.length() > 0) m_srv_items[cNr].itemSize = static_cast<int32_t>(std::stoi(itemSize)); // size as int
-                if (duration.length() > 0) m_srv_items[cNr].duration.copy_from(duration.c_str()); // Duration as String
+                if (duration.length() > 0) m_srv_items[cNr].duration.copy_from(duration.c_str());                 // Duration as String
 
                 int s = m_content[i].index_of("http:");
                 if (s > 0) m_srv_items[cNr].itemURL.copy_from(m_content[i].get() + s);
@@ -632,7 +650,11 @@ int8_t DLNA_Client::browseServer(uint8_t srvNr, const char* objectId, const uint
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* DLNA_Client::stringifyServer() {
-    if (m_dlnaServer.size() == 0) return "[]"; // guard
+
+    if (m_dlnaServer.size() == 0) {
+        m_JSONstr.assign("[]");
+        return m_JSONstr.c_get(); // send dummy
+    }
 
     m_JSONstr.assign("[");
 
@@ -663,7 +685,10 @@ const char* DLNA_Client::stringifyServer() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* DLNA_Client::stringifyContent() {
 
-    // if (m_srvContent.      size == 0) return "[]"; // no content found
+    if (m_srv_items.size() == 0) {
+        m_JSONstr.assign("[]");
+        return m_JSONstr.c_get();
+    }
 
     m_JSONstr.assign("[");
 
