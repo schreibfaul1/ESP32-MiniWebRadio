@@ -128,7 +128,7 @@ void DLNA_Client::parseDlnaServer(uint16_t len) {
     item.controlURL.assign("?");
     item.friendlyName.assign("?");
     item.presentationPort = 0;
-    item.presentationURL.assign("`?");
+    item.presentationURL.assign("?");
     m_dlnaServer.push_back(std::move(item));
 }
 
@@ -159,6 +159,7 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     // assemble HTTP header
     buff.assignf("GET /%s HTTP/1.1\r\nHost: %s:%d\r\nConnection: close\r\nUser-Agent: ESP32/Player/UPNP1.0\r\n\r\n", m_dlnaServer[srvNr].location.c_get(), m_dlnaServer[srvNr].ip.c_get(),
                  m_dlnaServer[srvNr].port);
+    m_client.clear();
     m_client.print(buff.get());
     t = millis() + AVAIL_TIMEOUT;
     while (true) {
@@ -211,7 +212,10 @@ bool DLNA_Client::readHttpHeader() {
                     if (ct_seen)
                         goto lastToDo;
                     else {
-                        if (!m_client.available()) goto exit;
+                        if (!m_client.available()) {
+                            vTaskDelay(10);
+                            goto exit;
+                        }
                     }
                 }
                 break;
@@ -297,7 +301,7 @@ bool DLNA_Client::readContent() {
     uint16_t pos = 0;
     uint8_t  cnt = 0;
 
-    while (true) { // outer while
+    while (pos < m_contentlength) { // outer while
 
         if (m_client.available()) {
             cnt = 0;
@@ -318,27 +322,25 @@ bool DLNA_Client::readContent() {
             }
         }
     }
-    buff.replace("</", "\n</");      // also new line
-    buff.replace("\r", "");          // remove '\r'
-    buff.replace("\n\n", "\n");      // remove emtpy lines
-    buff.replace("&lt;", "<");       // lower than
-    buff.replace("&gt;", ">");       // greater than
-    buff.replace("><", ">\n<");      // new line
-    buff.replace("</", "\n</");      // also new line
-    buff.replace("&quot", "\"");     // quota sign
-    buff.replace("&ampamp", "&");    // ampersand
-    buff.replace("&ampapos", "'");   // apostrophe
-    buff.replace("&ampquot", "\"");  // quotation
-    buff.replace("\";", "\"");       // <container id=";4:cont2:120:0:0:" -> <container id="4:cont2:120:0:0:"
-    buff.replace(":cont", "\"cont"); // <container id=";4:cont2:120:0:0:" -> <container id="4"cont2:120:0:0:"
+    buff.replace("</", "\n</");     // also new line
+    buff.replace("\r", "");         // remove '\r'
+    buff.replace("\n\n", "\n");     // remove emtpy lines
+    buff.replace("&lt;", "<");      // lower than
+    buff.replace("&gt;", ">");      // greater than
+    buff.replace("> ", ">\n");      // new line
+    buff.replace("</", "\n</");     // new line
+    buff.replace("><", ">\n<");     // also new line
+    buff.replace("&quot", "\"");    // quota sign
+    buff.replace("&ampamp", "&");   // ampersand
+    buff.replace("&ampapos", "'");  // apostrophe
+    buff.replace("&ampquot", "\""); // quotation
+    buff.trim();
     DLNA_LOG_DEBUG("%s", buff.get());
 
     m_content.clear(); // Delete all old entries
     m_content = split_lines(buff);
 
-    // for (size_t i = 0; i < m_content.size(); i++) {
-    //     DLNA_LOG_INFO(m_content[i].get());
-    // }
+    // for (size_t i = 0; i < m_content.size(); i++) { DLNA_LOG_INFO(m_content[i].get()); }
 
     return true;
 
@@ -354,52 +356,36 @@ bool DLNA_Client::getServerItems(uint8_t srvNr) {
     bool URNschemaFound = false;
 
     for (int i = 0; i < m_content.size(); i++) {
-        uint16_t idx = 0;
-        while (*(m_content[i].get() + idx) == 0x20) idx++; // same as trim left
-        char* content = m_content[i].get() + idx;
+        m_content[i].trim();
         if (!gotFriendlyName) {
-            if (startsWith(content, "<friendlyName>")) {
-                uint16_t pos = indexOf(content, "<", 14);
-                *(content + pos) = '\0';
-                if (strlen(content) == 0) {
-                    m_dlnaServer[srvNr].friendlyName.assign("Server name not provided");
-                } else {
-                    m_dlnaServer[srvNr].friendlyName.assign(content + 14);
-                }
+            if (m_content[i].starts_with("<friendlyName>")) {
+                m_dlnaServer[srvNr].friendlyName.assign(m_content[i].get() + 14);
                 gotFriendlyName = true;
             }
         }
         if (!gotServiceType) {
-            if (indexOf(content, "urn:schemas-upnp-org:service:ContentDirectory:1", 0) > 0) {
+            if (m_content[i].contains("urn:schemas-upnp-org:service:ContentDirectory:1")) {
                 URNschemaFound = true;
                 continue;
             }
             if (URNschemaFound) {
-                if (startsWith(content, "<controlURL>")) {
-                    uint16_t pos = indexOf(content, "<", 12);
-                    *(content + pos) = '\0';
-                    m_dlnaServer[srvNr].controlURL.assign(content + 13);
+                if (m_content[i].starts_with("<controlURL>")) {
+                    m_dlnaServer[srvNr].controlURL.assign(m_content[i].get() + 13);
                     gotServiceType = true;
                 }
             }
         }
-        if (startsWith(content, "<presentationURL>")) {
-            uint16_t pos = indexOf(content, "<", 17);
-            *(content + pos) = '\0';
-            char* presentationURL = x_ps_strdup(content + 17);
-            if (!startsWith(presentationURL, "http://")) continue;
-            int8_t posColon = (indexOf(presentationURL, ":", 8));
+        if (m_content[i].starts_with("<presentationURL>")) {
+            m_content[i].remove_before('>', false);
+            if (!m_content[i].starts_with("http://")) continue;
+            int8_t posColon = (m_content[i].last_index_of(':'));
             if (posColon > 0) { // we have ip and port
-                presentationURL[posColon] = '\0';
-                m_dlnaServer[srvNr].presentationURL.assign(presentationURL + 7); // add presentationURL(IP)
-                m_dlnaServer[srvNr].presentationPort = atoi(presentationURL + posColon + 1);
+                m_content[i][posColon] = '\0';
+                m_dlnaServer[srvNr].presentationURL.assign(m_content[i].get() + 7); // add presentationURL(IP)
+                m_dlnaServer[srvNr].presentationPort = atoi(m_content[i].get() + posColon + 1);
             } // only ip is given
             else {
-                m_dlnaServer[srvNr].presentationURL.assign(presentationURL + 7);
-            }
-            if (presentationURL) {
-                free(presentationURL);
-                presentationURL = NULL;
+                m_dlnaServer[srvNr].presentationURL.assign(m_content[i].get());
             }
         }
     }
@@ -434,7 +420,7 @@ bool DLNA_Client::browseResult() {
 
     auto makeContentPushBack = [&]() { // lambda, inner function
         srvItem item;
-        item.objectId.assign("`?");
+        item.objectId.assign("?");
         item.parentId.assign("?");
         item.isAudio = false;
         item.itemURL.assign("?");
@@ -446,14 +432,16 @@ bool DLNA_Client::browseResult() {
         m_srv_items.push_back(std::move(item));
     };
     //-----------------------------------------------------------------------------------------
-    auto extractAttr = [&](const std::string& line, const std::string& attr) -> std::string {
-        std::string key = attr + "=\"";
-        auto        start = line.find(key);
-        if (start == std::string::npos) return "";
+    auto extractAttr = [&](const std::string& line, const std::string& attr) -> ps_ptr<char> {
+        ps_ptr<char> res;
+        std::string  key = attr + "=\"";
+        auto         start = line.find(key);
+        if (start == std::string::npos) return res;
         start += key.size();
         auto end = line.find('"', start);
-        if (end == std::string::npos) return "";
-        return line.substr(start, end - start);
+        if (end == std::string::npos) return res;
+        res.copy_from(line.substr(start, end - start).c_str());
+        return res;
     };
     //-----------------------------------------------------------------------------------------
 
@@ -465,6 +453,7 @@ bool DLNA_Client::browseResult() {
     m_srv_items.clear();
 
     for (int i = 0; i < m_content.size(); i++) {
+        m_content[i].trim();
         DLNA_LOG_DEBUG("%s", m_content[i].get());
         m_content[i].trim();
         /*------C O N T A I N E R -------*/
@@ -482,9 +471,15 @@ bool DLNA_Client::browseResult() {
                 auto        parentStr = extractAttr(line, "parentID");     // "0"
                 auto        childCountS = extractAttr(line, "childCount"); // 5
 
-                if (idStr.length() > 0) m_srv_items[cNr].objectId.copy_from(idStr.c_str());         // Container-ID als String
-                if (parentStr.length() > 0) m_srv_items[cNr].parentId.copy_from(parentStr.c_str()); // Parent-ID als String
-                if (childCountS.length() > 0) m_srv_items[cNr].childCount = static_cast<int16_t>(std::stoi(childCountS));
+                if (idStr.valid()) {
+                    idStr.replace(";", "");
+                    m_srv_items[cNr].objectId.clone_from(idStr);
+                } // Container-ID als String
+                if (parentStr.valid()) m_srv_items[cNr].parentId.clone_from(parentStr); // Parent-ID als String
+                if (childCountS.valid()) {
+                    childCountS.replace(";", "");
+                    m_srv_items[cNr].childCount = childCountS.to_uint32();
+                }
             }
             if (m_content[i].starts_with("<dc:title>")) {
                 std::string line = m_content[i].get(); // <dc:title>Bilder
@@ -502,11 +497,14 @@ bool DLNA_Client::browseResult() {
         }
         if (item2) {
             if (m_content[i].starts_with("</item")) { item2 = false; }
-            std::string item = m_content[i].get();                  // <item id="1$5$2C$1$0" parentID="1$5$2C$1" restricted="1" refID="64$1$38">
-            auto        idStr = extractAttr(item, "id");            // "1$5$2C$1$0"
-            auto        parentStr = extractAttr(item, "parentID");  // "1$5$2C$1"
-            m_srv_items[cNr].objectId.copy_from(idStr.c_str());     // Container-ID als String
-            m_srv_items[cNr].parentId.copy_from(parentStr.c_str()); // Parent-ID als String
+            std::string item = m_content[i].get();                 // <item id="1$5$2C$1$0" parentID="1$5$2C$1" restricted="1" refID="64$1$38">
+            auto        idStr = extractAttr(item, "id");           // "1$5$2C$1$0"
+            auto        parentStr = extractAttr(item, "parentID"); // "1$5$2C$1"
+            if (idStr.valid()) {
+                idStr.replace(";", ""); // <ObjectID>;4:cont1:20:0:0:</ObjectID>
+                m_srv_items[cNr].objectId.clone_from(idStr);
+            }
+            if (parentStr.valid()) m_srv_items[cNr].parentId.clone_from(idStr);
 
             if (m_content[i].starts_with("<dc:title>")) {
                 std::string line = m_content[i].get(); // <dc:title>Bilder
@@ -520,11 +518,18 @@ bool DLNA_Client::browseResult() {
                 std::string res = m_content[i].get();                // <res size="7365" duration="0:00:00.287" bitrate="127706" sampleFrequency="44100" nrAudioChannels="2 ... >http://..."
                 auto        itemSize = extractAttr(res, "size");     // "7365"
                 auto        duration = extractAttr(res, "duration"); // "0:00:00.287"
-                if (itemSize.length() > 0) m_srv_items[cNr].itemSize = static_cast<int32_t>(std::stoi(itemSize)); // size as int
-                if (duration.length() > 0) m_srv_items[cNr].duration.copy_from(duration.c_str());                 // Duration as String
+                DLNA_LOG_ERROR("%s", duration.c_get());
+                if (itemSize.valid()) {
+                    itemSize.replace(";", "");
+                    m_srv_items[cNr].itemSize = itemSize.to_uint32();
+                } // size as int
+                if (duration.valid()) {
+                    duration.replace(";", "");
+                    m_srv_items[cNr].duration.clone_from(duration); // Duration as String
 
-                int s = m_content[i].index_of("http:");
-                if (s > 0) m_srv_items[cNr].itemURL.copy_from(m_content[i].get() + s);
+                    int s = m_content[i].index_of("http:");
+                    if (s > 0) m_srv_items[cNr].itemURL.copy_from(m_content[i].get() + s);
+                }
             }
         }
 
@@ -612,7 +617,8 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
     itoa(msgLength, tmp, 10);
     memcpy(m_chbuf + insertIdx, tmp, 3);
     m_chbuf[strlen(m_chbuf) + 1] = '\0';
-
+    DLNA_LOG_DEBUG("%s", m_chbuf);
+    m_client.clear();
     m_client.print(m_chbuf);
 
     t = millis() + AVAIL_TIMEOUT;

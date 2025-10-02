@@ -5786,7 +5786,6 @@ class dlnaList : public RegisterTable {
         if (itemURLsize > (m_itemListPos - 1)) guard2 = true;
         bool guard3 = false;
         if (titleSize > (m_itemListPos - 1)) guard3 = true;
-        DLNA_LOG_ERROR("rel");
         uint16_t friendlyName = 0;
         for (int i = 0; i < m_dlnaServer->size(); i++) {
             if (strcmp(m_dlnaServer->at(i).friendlyName.c_get(), "?") != 0) friendlyName++;
