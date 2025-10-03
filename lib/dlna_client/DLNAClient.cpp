@@ -58,12 +58,14 @@ bool DLNA_Client::seekServer() {
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int8_t DLNA_Client::listServer() {
     if (m_state == SEEK_SERVER) return -1; // seek in progress
-    for (uint8_t i = 0; i < m_dlnaServer.size(); i++) {
-        if (dlna_server) dlna_server(i, m_dlnaServer[i].ip.c_get(), m_dlnaServer[i].port, m_dlnaServer[i].friendlyName.c_get(), m_dlnaServer[i].controlURL.c_get());
-    }
+DLNA_LOG_ERROR("listServer");
+    msg_s msg;
+    msg.e = evt_server;
+    msg.server = &m_dlnaServer;
+    if (m_dlna_callback) { m_dlna_callback(msg); }
     return m_dlnaServer.size();
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const std::deque<DLNA_Client::dlnaServer>& DLNA_Client::getServer() const {
     return m_dlnaServer;
 }
@@ -122,16 +124,14 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     ret = m_tcp_client.connect(m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
     if (!ret) {
         m_tcp_client.stop();
-        out_msg.assignf("The server %s:%d did not answer within %lums [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t, __FILENAME__, __LINE__);
-        if (dlna_info) dlna_info(out_msg.c_get());
+        DLNA_LOG_ERROR("The server %s:%d did not answer within %lums", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
         return false;
     }
     t = millis() + 250;
     while (true) {
         if (m_tcp_client.connected()) break;
         if (t < millis()) {
-            out_msg.assignf("The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(out_msg.c_get());
+            DLNA_LOG_ERROR("The server %s:%d refuses the connection [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
             return false;
         }
     }
@@ -144,8 +144,7 @@ bool DLNA_Client::srvGet(uint8_t srvNr) {
     while (true) {
         if (m_tcp_client.available()) break;
         if (t < millis()) {
-            out_msg.assignf("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(out_msg.c_get());
+            DLNA_LOG_ERROR("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
             return false;
         }
     }
@@ -450,7 +449,6 @@ bool DLNA_Client::getServerItems(uint8_t srvNr) {
         DLNA_LOG_ERROR("controlURL %s, [%i]", m_dlnaServer[srvNr].controlURL.c_get(), srvNr);
         return false;
     }
-    if (dlna_server) dlna_server(srvNr, m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, m_dlnaServer[srvNr].friendlyName.c_get(), m_dlnaServer[srvNr].controlURL.c_get());
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -585,8 +583,10 @@ bool DLNA_Client::browseResult() {
     msg_s msg;
     if (m_srv_items.size()) {
         msg.e = evt_content;
-        if(m_numberReturned == -1) msg.numberReturned = m_srv_items.size();
-        else msg.numberReturned = m_numberReturned;
+        if (m_numberReturned == -1)
+            msg.numberReturned = m_srv_items.size();
+        else
+            msg.numberReturned = m_numberReturned;
         msg.totalMatches = m_totalMatches;
         msg.items = &m_srv_items;
 
@@ -610,7 +610,6 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
     if (!ret) {
         m_tcp_client.stop();
         DLNA_LOG_ERROR("The server %s:%d is not responding after %lums", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, millis() - t);
-        if (dlna_info) dlna_info(chbuff.c_get());
         return false;
     }
     while (true) {
@@ -619,7 +618,6 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
         cnt++;
         if (cnt == 10) {
             DLNA_LOG_ERROR("The server %s:%d refuses the connection", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
-            if (dlna_info) dlna_info(chbuff.c_get());
             return false;
         }
     }
@@ -664,8 +662,7 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
     while (true) {
         if (m_tcp_client.available()) break;
         if (t < millis()) {
-            chbuff.assignf("The server %s:%d is not responding after request [%s:%d]", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port, __FILENAME__, __LINE__);
-            if (dlna_info) dlna_info(chbuff.c_get());
+            DLNA_LOG_DEBUG("The server %s:%d is not responding after request", m_dlnaServer[srvNr].ip.c_get(), m_dlnaServer[srvNr].port);
             return false;
         }
     }
@@ -838,7 +835,7 @@ void DLNA_Client::loop() {
                 break;
             }
             cnt = 0;
-            dlna_seekReady(m_dlnaServer.size());
+            listServer();
             m_state = IDLE;
             break;
         case BROWSE_SERVER:
@@ -868,3 +865,4 @@ void DLNA_Client::loop() {
         default: break;
     }
 }
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

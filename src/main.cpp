@@ -5874,24 +5874,6 @@ void WEBSRV_onError(const char* info) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
-void dlna_info(const char* info) {
-    if (endsWith(info, "is not responding after request")) { // timeout
-        _f_dlnaBrowseServer = false;
-        if (_dlnaLevel > 0) _dlnaLevel--;
-        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
-        setTimeCounter(LIST_TIMER);
-    }
-    SerialPrintfln("DLNA_info:   %s", info);
-}
-
-void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL) {
-    SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s", serverId, IP_addr, port, friendlyName);
-}
-
-void dlna_seekReady(uint8_t numberOfServer) {
-    SerialPrintfln("DLNA_server: %i media server found", numberOfServer);
-}
-
 void on_dlna_client(const DLNA_Client::msg_s& msg) {
     if (msg.e == DLNA_Client::evt_content) {
         if (!msg.items) return; // security check
@@ -5931,6 +5913,13 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
             _totalNumberReturned = 0;
             _f_dlna_browseReady = true; // last item received
         }
+    }
+    if (msg.e == DLNA_Client::evt_server) {
+        for (size_t i = 0; i < msg.server->size(); i++) {
+            const auto& server = msg.server->at(i);
+            SerialPrintfln("DLNA_server: [%d] " ANSI_ESC_CYAN "%s:%d " ANSI_ESC_YELLOW " %s", i, server.ip.c_get(), server.port, server.friendlyName.c_get());
+        }
+        SerialPrintfln("DLNA_server: %i media server found", msg.server->size());
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

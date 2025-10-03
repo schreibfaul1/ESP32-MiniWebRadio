@@ -46,14 +46,17 @@ class DLNA_Client {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_content = 0, evt_info = 1 } event_t;
+    typedef enum { evt_content = 0, evt_server = 1 } event_t;
     struct msg_s { // used in info(audio_info_callback());
-        const char*          msg = nullptr;
-        const char*          s = nullptr;
-        event_t              e = (event_t)0; // event type
-        std::deque<srvItem>* items = nullptr;
-        int16_t              numberReturned = 0;
-        int16_t              totalMatches = 0;
+        const char*             msg = nullptr;
+        const char*             s = nullptr;
+        event_t                 e = (event_t)0; // event type
+        std::deque<srvItem>*    items = nullptr;
+        std::deque<dlnaServer>* server = nullptr;
+        int16_t                 numberReturned = 0;
+        int16_t                 totalMatches = 0;
+        const char*             IP_addr = "";
+        const char*             friendlyName = "";
     };
     using BrowseCallback = std::function<void(const msg_s&)>;
     void dlna_client_callbak(BrowseCallback cb) { m_dlna_callback = std::move(cb); }
@@ -138,7 +141,4 @@ class DLNA_Client {
 #define DLNA_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-extern __attribute__((weak)) void dlna_info(const char*);
-extern __attribute__((weak)) void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL);
-extern __attribute__((weak)) void dlna_seekReady(uint8_t numberOfServer);
-// extern __attribute__((weak)) void dlna_browseResult(const DLNA_Client::msg_s& m_msg);
+
