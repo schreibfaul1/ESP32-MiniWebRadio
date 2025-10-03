@@ -58,7 +58,7 @@
 #include <mbedtls/aes.h>
 #include "mbedtls/sha1.h"
 #include <mbedtls/base64.h>
-#include "psram_unique_ptr.hpp"
+
 
 
 
@@ -342,8 +342,8 @@ struct irButtons {
 typedef struct __settings{
     irButtons irbuttons[45];
     uint8_t numOfIrButtons = 0;
-    char*   lastconnectedhost = NULL;
-    char*   lastconnectedfile = NULL;
+    ps_ptr<char>lastconnectedhost = {};
+    ps_ptr<char>lastconnectedfile = {};
 } settings_t;
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -1258,7 +1258,7 @@ class SD_content {
         strcpy(m_lastConnectedFile, m_lastConnectedFolder);
         strcat(m_lastConnectedFile, m_lastConnectedFileName);
         // log_e("lastconnectedItem %s", lastconnectedItem);
-        // log_e("lastConnectedFile %s", m_lastConnectedFile);
+        // log_e("lastConnectedFile %s", m_lastConnectedFile.c_get());
         // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
         // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
         listFilesInDir(m_lastConnectedFolder, true, false);
