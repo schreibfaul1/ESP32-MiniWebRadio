@@ -160,6 +160,9 @@ bool DLNA_Client::readHttpHeader() {
     uint16_t timeout = 4500; // ms
     bool     f_time = false;
 
+    m_chunked = false;
+    m_contentlength = 0;
+
     if (m_tcp_client.available() == 0) {
         if (!f_time) {
             stime = millis();
@@ -234,7 +237,7 @@ bool DLNA_Client::readHttpHeader() {
                 goto exit; // wrong content type
             }
         } else if ((rhl.starts_with_icase("transfer-encoding:"))) {
-            if (rhl.ends_with("chunked") || rhl.ends_with("Chunked")) { // Station provides chunked transfer
+            if (rhl.ends_with_icase("chunked")) { // Station provides chunked transfer
                 m_chunked = true;
             }
         } else {
@@ -251,7 +254,71 @@ lastToDo:
     return true;
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+int32_t DLNA_Client::getChunkSize(uint16_t* readedBytes) {
+    std::string chunkLine;
+    uint32_t    timeout = 2000; // ms
+    uint32_t    ctime = millis();
+    int32_t     transportLimit = 0;
+
+    while (true) {
+        if ((millis() - ctime) > timeout) {
+            DLNA_LOG_ERROR("chunkedDataTransfer: timeout");
+            return 0;
+        }
+        if (!m_tcp_client.available()) continue;
+        int b = m_tcp_client.read();
+        if (b < 0) continue;
+
+        (*readedBytes)++;
+
+        if (b == '\n') break; // End of the line
+        if (b == '\r') continue;
+
+        chunkLine += static_cast<char>(b);
+
+        // Detection: if signs are not hexadecimal and not ';'→ No http chunk
+        if (!isxdigit(b) && b != ';') {
+            // We have no valid HTTP chunk line → assume transport chunking
+            m_chunked = false;
+            // determine limit from the current data volume + already read bytes
+            transportLimit = m_tcp_client.available() + *readedBytes;
+            DLNA_LOG_INFO("No http chunked recognized-switch to transport chunking with limit %u", (unsigned)transportLimit);
+            return transportLimit;
+        }
+    }
+
+    // Extract the hex number (before possibly ';')
+    size_t      semicolonPos = chunkLine.find(';');
+    std::string hexSize = (semicolonPos != std::string::npos) ? chunkLine.substr(0, semicolonPos) : chunkLine;
+
+    size_t chunksize = strtoul(hexSize.c_str(), nullptr, 16);
+
+    if (chunksize > 0) {
+        m_skipCRLF = true; // skip next CRLF after data
+    } else {
+        // last chunk: read the final CRLF
+        uint8_t idx = 0;
+        ctime = millis();
+        while (idx < 2 && (millis() - ctime) < timeout) {
+            int ch = m_tcp_client.read();
+            if (ch < 0) continue;
+            idx++;
+        }
+    }
+    return chunksize;
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::readContent() {
+
+    if (!m_contentlength && !m_chunked) {
+        DLNA_LOG_ERROR("content_length not given");
+        return false;
+    }
+
+    uint16_t readedBytes = 0;
+    if (m_chunked) { m_contentlength = getChunkSize(&readedBytes); }
+
+    //-------------------------------------------------------------------------------------------------
     auto split_lines = [&](const ps_ptr<char>& buff) -> std::deque<ps_ptr<char>> {
         std::deque<ps_ptr<char>> result;
         const char*              text = buff.get();
@@ -267,11 +334,7 @@ bool DLNA_Client::readContent() {
         }
         return result;
     };
-
-    if (!m_contentlength) {
-        DLNA_LOG_ERROR("content_length not given");
-        return false;
-    }
+    //-------------------------------------------------------------------------------------------------
 
     ps_ptr<char> buff("chbuff, readContent");
     buff.calloc(m_contentlength + 4);
@@ -290,8 +353,6 @@ bool DLNA_Client::readContent() {
         } else {
             vTaskDelay(10);
             if (pos == m_contentlength) break;
-            DLNA_LOG_DEBUG("%i, %i", m_contentlength, pos);
-            if (buff.ends_with("\r\n")) break;
             cnt++;
             if (cnt == 100) {
                 // buff.hex_dump(m_contentlength));
@@ -301,6 +362,7 @@ bool DLNA_Client::readContent() {
             }
         }
     }
+
     buff.replace("</", "\n</");     // also new line
     buff.replace("\r", "");         // remove '\r'
     buff.replace("\n\n", "\n");     // remove emtpy lines
@@ -318,6 +380,7 @@ bool DLNA_Client::readContent() {
 
     m_content.clear(); // Delete all old entries
     m_content = split_lines(buff);
+
 
     // for (size_t i = 0; i < m_content.size(); i++) { DLNA_LOG_INFO(m_content[i].get()); }
 

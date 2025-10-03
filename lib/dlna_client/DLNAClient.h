@@ -106,11 +106,13 @@ class DLNA_Client {
     bool browseResult();
     bool srvGet(uint8_t srvNr);
     bool readHttpHeader();
+    int32_t getChunkSize(uint16_t* readedBytes);
     bool readContent();
     bool srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount);
 
   private:
     bool     m_chunked = false;
+    bool     m_skipCRLF = false;
     char     m_objectId[60];
     uint8_t  m_srvNr = 0;
     uint32_t m_contentlength = 0;
