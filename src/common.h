@@ -409,7 +409,7 @@ void           setTimeCounter(uint8_t sec);
 const char*    getWiFiPW(const char* ssid);
 bool           setWiFiPW(const char* ssid, const char* password);
 void           my_audio_info(Audio::msg_t m);
-void           onBrowseResult(const DLNA_Client::msg_s& msg);
+void           on_dlna_client(const DLNA_Client::msg_s& msg);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 

@@ -98,8 +98,8 @@ uint16_t                  _cur_station = 0;     // current station(nr), will be 
 uint16_t                  _cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t                  _sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t                  _plsCurPos = 0;
-uint16_t                  _totalNumberReturned = 0;
-uint16_t                  _dlnaMaxItems = 0;
+int16_t                   _totalNumberReturned = -1;
+int16_t                   _dlnaMaxItems = -1;
 uint16_t                  _bh1750Value = 50;
 uint32_t                  _playlistTime = 0; // playlist start time millis() for timeout
 uint32_t                  _settingsHash = 0;
@@ -1613,7 +1613,7 @@ void stopSong() {
 
 void setup() {
     Audio::audio_info_callback = my_audio_info;
-    dlna.setBrowseCallback(onBrowseResult);
+    dlna.dlna_client_callbak(on_dlna_client);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
@@ -5892,43 +5892,45 @@ void dlna_seekReady(uint8_t numberOfServer) {
     SerialPrintfln("DLNA_server: %i media server found", numberOfServer);
 }
 
-void onBrowseResult(const DLNA_Client::msg_s& msg) {
-    if (!msg.m_srv_items) return; // security check
-    for (size_t i = 0; i < msg.m_srv_items->size(); i++) {
-        const auto& item = msg.m_srv_items->at(i);
-        if (item.isAudio) {
-            if (item.duration.equals("?") != 0) { // no duration given
-                if (item.itemSize) {
-                    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, itemSize %ld", item.title.c_get(), (long unsigned int)item.itemSize);
+void on_dlna_client(const DLNA_Client::msg_s& msg) {
+    if (msg.e == DLNA_Client::evt_content) {
+        if (!msg.items) return; // security check
+        for (size_t i = 0; i < msg.items->size(); i++) {
+            const auto& item = msg.items->at(i);
+            if (item.isAudio) {
+                if (item.duration.equals("?") != 0) { // no duration given
+                    if (item.itemSize) {
+                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW " %s, itemSize %ld", item.title.c_get(), (long unsigned int)item.itemSize);
+                    } else {
+                        SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s", item.title.c_get());
+                    }
                 } else {
-                    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s", item.title.c_get());
+                    SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, duration %s", item.title.c_get(), item.duration.c_get());
                 }
+            }
+            if (item.childCount) {
+                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, childCount %i", item.title.c_get(), item.childCount);
             } else {
-                SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, duration %s", item.title.c_get(), item.duration.c_get());
+                SerialPrintfln("DLNA_server: " ANSI_ESC_CYAN "title " ANSI_ESC_YELLOW "%s, childCount 0", item.title.c_get());
             }
         }
-        if (item.childCount) {
-            SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i", item.title.c_get(), item.childCount);
-        } else {
-            SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount 0", item.title.c_get());
+        if (msg.totalMatches >= 0) SerialPrintfln("DLNA_server: returned %i from %i", msg.numberReturned, msg.totalMatches);
+        _dlnaMaxItems = msg.totalMatches;
+        _totalNumberReturned += msg.numberReturned;
+        if (msg.numberReturned == 50 && !_f_dlnaMakePlaylistOTF) { // next round
+            if (_totalNumberReturned < msg.totalMatches && _totalNumberReturned < 500) { _f_dlnaBrowseServer = true; }
         }
-    }
-    SerialPrintfln("DLNA_server: returned %i from %i", msg.numberReturned, msg.totalMatches);
-    _dlnaMaxItems = msg.totalMatches;
-    _totalNumberReturned += msg.numberReturned;
-    if (msg.numberReturned == 50 && !_f_dlnaMakePlaylistOTF) { // next round
-        if (_totalNumberReturned < msg.totalMatches && _totalNumberReturned < 500) { _f_dlnaBrowseServer = true; }
-    }
-    if (_f_dlnaWaitForResponse) {
-        _f_dlnaWaitForResponse = false;
-        lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
-        setTimeCounter(LIST_TIMER);
-    } else {
-        webSrv.send("dlnaContent=", dlna.stringifyContent());
-    }
-    if (_totalNumberReturned == msg.totalMatches || _totalNumberReturned == 500 || _f_dlnaMakePlaylistOTF) {
-        _totalNumberReturned = 0;
-        _f_dlna_browseReady = true; // last item received
+        if (_f_dlnaWaitForResponse) {
+            _f_dlnaWaitForResponse = false;
+            lst_DLNA.show(_dlnaItemNr, dlna.getServer(), dlna.getBrowseResult(), &_dlnaLevel, _dlnaMaxItems);
+            setTimeCounter(LIST_TIMER);
+        } else {
+            webSrv.send("dlnaContent=", dlna.stringifyContent());
+        }
+        if (_totalNumberReturned == msg.totalMatches || _totalNumberReturned == 500 || _f_dlnaMakePlaylistOTF) {
+            _totalNumberReturned = 0;
+            _f_dlna_browseReady = true; // last item received
+        }
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -44,28 +44,22 @@ class DLNA_Client {
   private:
     std::deque<srvItem> m_srv_items;
 
-  public:
-    struct browseReady_s {
-        uint16_t numberReturned;
-        uint16_t totalMatches;
-    };
-
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_browse_ready = 1 } event_t;
+    typedef enum { evt_content = 0, evt_info = 1 } event_t;
     struct msg_s { // used in info(audio_info_callback());
-        const char*         msg = nullptr;
-        const char*         s = nullptr;
-        event_t             e = (event_t)0; // event type
-        std::deque<srvItem>* m_srv_items = nullptr;
-        uint16_t            numberReturned = 0;
-        uint16_t            totalMatches = 0;
+        const char*          msg = nullptr;
+        const char*          s = nullptr;
+        event_t              e = (event_t)0; // event type
+        std::deque<srvItem>* items = nullptr;
+        int16_t              numberReturned = 0;
+        int16_t              totalMatches = 0;
     };
     using BrowseCallback = std::function<void(const msg_s&)>;
-    void setBrowseCallback(BrowseCallback cb) { m_browseCallback = std::move(cb); }
+    void dlna_client_callbak(BrowseCallback cb) { m_dlna_callback = std::move(cb); }
 
   private:
-    BrowseCallback m_browseCallback;
+    BrowseCallback m_dlna_callback;
     // -------------------------------------------------------------------
 
   public:
@@ -73,15 +67,12 @@ class DLNA_Client {
     ~DLNA_Client();
 
   private:
-    browseReady_s m_browseReady;
-
-  private:
     NetworkClient m_tcp_client;
     WiFiUDP       m_udp_client;
     uint8_t       m_state = IDLE;
     uint32_t      m_timeStamp = 0;
-    uint16_t      m_numberReturned = 0;
-    uint16_t      m_totalMatches = 0;
+    int16_t       m_numberReturned = -1;
+    int16_t       m_totalMatches = -1;
     ps_ptr<char>  m_JSONstr;
 
     std::deque<ps_ptr<char>> m_content;

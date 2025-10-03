@@ -484,8 +484,8 @@ bool DLNA_Client::browseResult() {
     };
     //-----------------------------------------------------------------------------------------
 
-    m_browseReady.numberReturned = 0;
-    m_browseReady.totalMatches = 0;
+    m_numberReturned = -1;
+    m_totalMatches = 0;
     bool     item1 = false;
     bool     item2 = false;
     uint16_t cNr = 0;
@@ -563,7 +563,7 @@ bool DLNA_Client::browseResult() {
                 } // size as int
                 if (duration.valid()) {
                     duration.replace(";", "");
-                    if (!duration.equals("0:00:00.000")) m_srv_items[cNr].duration.clone_from(duration); // Duration as String
+                    if (!duration.equals("?")) m_srv_items[cNr].duration.clone_from(duration); // Duration as String
 
                     int s = m_content[i].index_of("http:");
                     if (s > 0) m_srv_items[cNr].itemURL.copy_from(m_content[i].get() + s);
@@ -574,21 +574,23 @@ bool DLNA_Client::browseResult() {
         if (m_content[i].starts_with("<NumberReturned>")) {
             std::string line = m_content[i].get(); // <NumberReturned>4
             auto        nr_returned = line.substr(16);
-            m_browseReady.numberReturned = static_cast<int16_t>(std::stoi(nr_returned));
+            m_numberReturned = static_cast<int16_t>(std::stoi(nr_returned));
         }
         if (m_content[i].starts_with("<TotalMatches>")) {
             std::string line = m_content[i].get(); // <TotalMatches>4
             auto        total_matches = line.substr(14);
-            m_browseReady.totalMatches = static_cast<int16_t>(std::stoi(total_matches));
+            m_totalMatches = static_cast<int16_t>(std::stoi(total_matches));
         }
     }
     msg_s msg;
     if (m_srv_items.size()) {
-        msg.numberReturned = m_browseReady.numberReturned;
-        msg.totalMatches = m_browseReady.totalMatches;
-        msg.m_srv_items = &m_srv_items;
+        msg.e = evt_content;
+        if(m_numberReturned == -1) msg.numberReturned = m_srv_items.size();
+        else msg.numberReturned = m_numberReturned;
+        msg.totalMatches = m_totalMatches;
+        msg.items = &m_srv_items;
 
-        if (m_browseCallback) { m_browseCallback(msg); }
+        if (m_dlna_callback) { m_dlna_callback(msg); }
     }
     return true;
 }
