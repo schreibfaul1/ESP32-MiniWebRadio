@@ -260,7 +260,7 @@ extern SemaphoreHandle_t mutex_rtc;
 extern RTIME rtc;
 
 extern WebSrv webSrv;
-extern std::vector<ps_ptr<char>> _logBuffer;
+extern std::deque<ps_ptr<char>> s_logBuffer;
 void SerialPrintfln(const char* fmt, ...){
     ps_ptr<char>myLog("myLog");
     if(_newLine){_newLine = false; myLog.assign("\n");} else{myLog.assign("");}
@@ -272,12 +272,12 @@ void SerialPrintfln(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\r\n");
     Serial.printf("%s", myLog.c_get());
-    _logBuffer.insert(_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
+    s_logBuffer.insert(s_logBuffer.begin(), std:: move(myLog)); // send to webSrv in loop()
     myLog.reset();
 }
 
 void SerialPrintfcr(const char* fmt, ...){
-    if(_logBuffer.size() == 1024) _logBuffer.pop_back();
+    if(s_logBuffer.size() == 1024) s_logBuffer.pop_back();
     ps_ptr<char>myLog("myLog");
     rtc.hasValidTime()? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
     myLog.append(" ");
@@ -287,7 +287,7 @@ void SerialPrintfcr(const char* fmt, ...){
     va_end(args);
     myLog.append("\033[0m\r");
     Serial.printf("%s", myLog.c_get());
-    _logBuffer.insert(_logBuffer.begin(), std:: move(myLog));// send to webSrv in loop()
+    s_logBuffer.insert(s_logBuffer.begin(), std:: move(myLog));// send to webSrv in loop()
     myLog.reset();
     _newLine = true;
 }
@@ -1460,7 +1460,7 @@ extern __attribute__((weak)) void graphicObjects_OnClick(const char* name, uint8
 extern __attribute__((weak)) void graphicObjects_OnRelease(const char* name, releasedArg ra);
 
 extern SemaphoreHandle_t mutex_display;
-extern SD_content        _SD_content;
+extern SD_content        s_SD_content;
 class slider : public RegisterTable {
   private:
     int16_t     m_x = 0;
@@ -6166,9 +6166,9 @@ class fileList : public RegisterTable {
         } else if (cur_AudioFolder != m_curAudioFolder)
             strcpy(m_curAudioFolder, cur_AudioFolder); // cur_AudioFolder can have the same address as m_curAudioFolder
         m_curAudioFileNr = curAudioFileNr;
-        _SD_content.listFilesInDir(m_curAudioFolder, true, false);
-        if (m_curAudioFileNr >= _SD_content.getSize()) m_curAudioFileNr = _SD_content.getSize(); // guard
-        m_viewPos = calculateDisplayStartPosition(_SD_content.getSize(), m_curAudioFileNr);      // calculate viewPos
+        s_SD_content.listFilesInDir(m_curAudioFolder, true, false);
+        if (m_curAudioFileNr >= s_SD_content.getSize()) m_curAudioFileNr = s_SD_content.getSize(); // guard
+        m_viewPos = calculateDisplayStartPosition(s_SD_content.getSize(), m_curAudioFileNr);      // calculate viewPos
         audioFileslist(m_viewPos);
     }
     void hide() {
@@ -6201,7 +6201,7 @@ class fileList : public RegisterTable {
         char* fileName = NULL;
 
         if (m_browseOnRelease == 1) {
-            if (m_viewPos + 9 >= _SD_content.getSize()) {
+            if (m_viewPos + 9 >= s_SD_content.getSize()) {
                 goto exit;
             } // wipe up
             else {
@@ -6232,7 +6232,7 @@ class fileList : public RegisterTable {
             log_e("m_curAudioFolder = %s", m_curAudioFolder);
             m_curAudioFileNr = 0;
             m_viewPos = 0;
-            _SD_content.listFilesInDir(m_curAudioFolder, true, false);
+            s_SD_content.listFilesInDir(m_curAudioFolder, true, false);
             m_ra.val1 = 2;
             m_ra.val2 = m_curAudioFileNr;
             m_ra.arg1 = m_curAudioFolder;
@@ -6240,11 +6240,11 @@ class fileList : public RegisterTable {
         if (m_browseOnRelease == 4) {
             m_viewPos += m_fileListPos; // next folder
             int16_t idx = m_viewPos - 1;
-            myList.drawLine(pos, _SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, 1);
-            strcpy(m_curAudioFolder, _SD_content.getFilePathByIndex(idx));
+            myList.drawLine(pos, s_SD_content.getColouredSStringByIndex(idx), "", "", ANSI_ESC_CYAN, 1);
+            strcpy(m_curAudioFolder, s_SD_content.getFilePathByIndex(idx));
             m_curAudioFileNr = 0;
             m_viewPos = 0;
-            _SD_content.listFilesInDir(m_curAudioFolder, true, false);
+            s_SD_content.listFilesInDir(m_curAudioFolder, true, false);
             m_ra.val1 = 2; // isfolder
             m_ra.val2 = m_viewPos;
             m_ra.arg1 = m_curAudioFolder;
@@ -6283,10 +6283,10 @@ class fileList : public RegisterTable {
         return;
     }
     void nextPage() { // from IR control
-        if (m_viewPos + 9 <= _SD_content.getSize() - 1) {
+        if (m_viewPos + 9 <= s_SD_content.getSize() - 1) {
             m_viewPos += 9;
             m_curAudioFileNr += 9;
-            if (m_curAudioFileNr > _SD_content.getSize() - 1) m_curAudioFileNr = _SD_content.getSize() - 1;
+            if (m_curAudioFileNr > s_SD_content.getSize() - 1) m_curAudioFileNr = s_SD_content.getSize() - 1;
             audioFileslist(m_viewPos);
             return;
         }
@@ -6305,18 +6305,18 @@ class fileList : public RegisterTable {
         }
         int         pos = m_curAudioFileNr - m_viewPos + 1;
         const char* color = m_fileColor;                                // assume is file
-        if (_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
+        if (s_SD_content.isDir(m_curAudioFileNr)) color = m_folderColor; // is folder
         myList.colourLine(pos, color);
         m_curAudioFileNr--;
         myList.colourLine(pos - 1, m_irColor);
     }
     void nextFile() { // from IR control
-        if (m_curAudioFileNr == _SD_content.getSize() - 1) return;
+        if (m_curAudioFileNr == s_SD_content.getSize() - 1) return;
         if (m_curAudioFileNr - m_viewPos == 8) {
-            if (m_viewPos + 9 < _SD_content.getSize())
+            if (m_viewPos + 9 < s_SD_content.getSize())
                 m_viewPos += 9;
             else
-                m_viewPos = _SD_content.getSize() - 1;
+                m_viewPos = s_SD_content.getSize() - 1;
             m_curAudioFileNr++;
             audioFileslist(m_viewPos);
             return;
@@ -6327,7 +6327,7 @@ class fileList : public RegisterTable {
             color = m_rootColor;
         } // is root dir
         else {
-            if (_SD_content.isDir(m_curAudioFileNr))
+            if (s_SD_content.isDir(m_curAudioFileNr))
                 color = m_folderColor; // is folder
             else
                 color = m_fileColor; // is file
@@ -6348,34 +6348,34 @@ class fileList : public RegisterTable {
             }
             m_curAudioFileNr = 0;
             m_viewPos = 0;
-            _SD_content.listFilesInDir(m_curAudioFolder, true, false);
+            s_SD_content.listFilesInDir(m_curAudioFolder, true, false);
             show(m_curAudioFolder, 0);
             return NULL;
         }
-        if (_SD_content.isDir(m_curAudioFileNr)) { // is child folder
+        if (s_SD_content.isDir(m_curAudioFileNr)) { // is child folder
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
-            strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(m_curAudioFileNr));
+            strcpy(m_curAudioPath, s_SD_content.getFilePathByIndex(m_curAudioFileNr));
             show(m_curAudioPath, 0);
             return NULL;
         }
         myList.colourLine(m_y, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
-        return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+        return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
-    const char* getSelectedFileName() { return _SD_content.getFileNameByIndex(m_curAudioFileNr); }
+    const char* getSelectedFileName() { return s_SD_content.getFileNameByIndex(m_curAudioFileNr); }
     const char* getSelectedFilePath() {
         myList.colourLine(m_curAudioFileNr - m_viewPos + 1, m_selectColor);
         vTaskDelay(300 / portTICK_PERIOD_MS);
-        return _SD_content.getFilePathByIndex(m_curAudioFileNr);
+        return s_SD_content.getFilePathByIndex(m_curAudioFileNr);
     }
     uint16_t getSelectedFileNr() { return m_curAudioFileNr; }
 
   private:
     void audioFileslist(uint16_t viewPos) {
         // guard -------------------------------------------------------------------------------------------------------------------------------------
-        if (_SD_content.getSize() == 0) { ; }                                          // folder empty
-        if (viewPos >= _SD_content.getSize()) { viewPos = _SD_content.getSize() - 1; } // viewPos too high
+        if (s_SD_content.getSize() == 0) { ; }                                          // folder empty
+        if (viewPos >= s_SD_content.getSize()) { viewPos = s_SD_content.getSize() - 1; } // viewPos too high
         //--------------------------------------------------------------------------------------------------------------------------------------------
 
         tft.setFont(m_fontSize);
@@ -6389,10 +6389,10 @@ class fileList : public RegisterTable {
         color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
             int idx = pos + viewPos - 1;
-            if (pos == 1 && viewPos > 0 && _SD_content.getSize()) { myList.drawTriangeUp(); }
-            if (pos == 9 && viewPos + 9 < _SD_content.getSize()) { myList.drawTriangeDown(); }
-            if (viewPos + pos > _SD_content.getSize()) break;
-            if (_SD_content.isDir(idx)) {
+            if (pos == 1 && viewPos > 0 && s_SD_content.getSize()) { myList.drawTriangeUp(); }
+            if (pos == 9 && viewPos + 9 < s_SD_content.getSize()) { myList.drawTriangeDown(); }
+            if (viewPos + pos > s_SD_content.getSize()) break;
+            if (s_SD_content.isDir(idx)) {
                 if (idx == m_curAudioFileNr) {
                     color = m_currentColor;
                 } // is current folder
@@ -6407,15 +6407,15 @@ class fileList : public RegisterTable {
                     color = m_fileColor;
                 } // is file
             }
-            if (_SD_content.isDir(idx))
-                myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, 0);
+            if (s_SD_content.isDir(idx))
+                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", "", color, 0);
             else
-                myList.drawLine(pos, _SD_content.getFileNameByIndex(idx), "", "", color, _SD_content.getFileSizeByIndex(idx));
+                myList.drawLine(pos, s_SD_content.getFileNameByIndex(idx), "", "", color, s_SD_content.getFileSizeByIndex(idx));
         }
         uint16_t firstVal = viewPos + 1;
         uint16_t secondVal = firstVal + 8;
-        if (secondVal > _SD_content.getSize()) secondVal = _SD_content.getSize();
-        myList.drawPosInfo(firstVal, secondVal, _SD_content.getSize(), ANSI_ESC_ORANGE); // shows the current items pos e.g. "30-39/210"
+        if (secondVal > s_SD_content.getSize()) secondVal = s_SD_content.getSize();
+        myList.drawPosInfo(firstVal, secondVal, s_SD_content.getSize(), ANSI_ESC_ORANGE); // shows the current items pos e.g. "30-39/210"
         return;
     }
 
@@ -6447,16 +6447,16 @@ class fileList : public RegisterTable {
                 m_browseOnRelease = 3;
             }
         } else {
-            if (m_fileListPos + m_viewPos > _SD_content.getSize()) goto exit; // ----------------- next folder
+            if (m_fileListPos + m_viewPos > s_SD_content.getSize()) goto exit; // ----------------- next folder
             int idx = m_viewPos + m_fileListPos - 1;
-            if (_SD_content.isDir(idx)) {
+            if (s_SD_content.isDir(idx)) {
                 strcpy(m_curAudioName, "");
-                strcpy(m_curAudioFolder, _SD_content.getFileFolderByIndex(idx));
+                strcpy(m_curAudioFolder, s_SD_content.getFileFolderByIndex(idx));
                 m_browseOnRelease = 4;
             } else { // -------------------------------------------------------------------------- playfile
-                strcpy(m_curAudioName, _SD_content.getFileNameByIndex(idx));
-                strcpy(m_curAudioFolder, _SD_content.getFileFolderByIndex(idx));
-                strcpy(m_curAudioPath, _SD_content.getFilePathByIndex(idx));
+                strcpy(m_curAudioName, s_SD_content.getFileNameByIndex(idx));
+                strcpy(m_curAudioFolder, s_SD_content.getFileFolderByIndex(idx));
+                strcpy(m_curAudioPath, s_SD_content.getFilePathByIndex(idx));
                 m_browseOnRelease = 5;
             }
         }
@@ -7633,12 +7633,12 @@ inline void GetRunTimeStats(char* pcWriteBuffer) {
         vPortFree(pxTaskStatusArray);
 
 #if TFT_CONTROLLER == 7
-        extern uint64_t _totalRuntime;
+        extern uint64_t s_totalRuntime;
         tmpBuff = x_ps_malloc(130);
-        if (_totalRuntime > 0) {
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, _totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / _totalRuntime);
+        if (s_totalRuntime > 0) {
+            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / s_totalRuntime);
         } else {
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, _totalRuntime, tft.getVsyncCounter());
+            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
         }
         strcat(tmpBuff, "                                   ");
         tmpBuff[90] = '\0';
