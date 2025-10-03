@@ -13,13 +13,6 @@
 #define CONNECT_TIMEOUT     6000
 #define AVAIL_TIMEOUT       2000
 
-extern __attribute__((weak)) void dlna_info(const char*);
-extern __attribute__((weak)) void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL);
-extern __attribute__((weak)) void dlna_seekReady(uint8_t numberOfServer);
-extern __attribute__((weak)) void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* duration,
-                                                    const char* itemURL);
-extern __attribute__((weak)) void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches);
-
 class DLNA_Client {
 
   public:
@@ -56,6 +49,24 @@ class DLNA_Client {
         uint16_t numberReturned;
         uint16_t totalMatches;
     };
+
+    // callbacks ---------------------------------------------------------
+  public:
+    typedef enum { evt_info = 0, evt_browse_ready = 1 } event_t;
+    struct msg_s { // used in info(audio_info_callback());
+        const char*         msg = nullptr;
+        const char*         s = nullptr;
+        event_t             e = (event_t)0; // event type
+        std::deque<srvItem>* m_srv_items = nullptr;
+        uint16_t            numberReturned = 0;
+        uint16_t            totalMatches = 0;
+    };
+    using BrowseCallback = std::function<void(const msg_s&)>;
+    void setBrowseCallback(BrowseCallback cb) { m_browseCallback = std::move(cb); }
+
+  private:
+    BrowseCallback m_browseCallback;
+    // -------------------------------------------------------------------
 
   public:
     DLNA_Client();
@@ -101,14 +112,14 @@ class DLNA_Client {
     enum { IDLE, SEEK_SERVER, GET_SERVER_ITEMS, READ_HTTP_HEADER, BROWSE_SERVER };
 
   private:
-    void parseDlnaServer(uint16_t len);
-    bool getServerItems(uint8_t srvNr);
-    bool browseResult();
-    bool srvGet(uint8_t srvNr);
-    bool readHttpHeader();
+    void    parseDlnaServer(uint16_t len);
+    bool    getServerItems(uint8_t srvNr);
+    bool    browseResult();
+    bool    srvGet(uint8_t srvNr);
+    bool    readHttpHeader();
     int32_t getChunkSize(uint16_t* readedBytes);
-    bool readContent();
-    bool srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount);
+    bool    readContent();
+    bool    srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount);
 
   private:
     bool     m_chunked = false;
@@ -127,7 +138,7 @@ class DLNA_Client {
         if (pos == nullptr) return -1;
         return pos - haystack;
     }
- // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+    // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls
 #define DLNA_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 #define DLNA_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -136,3 +147,7 @@ class DLNA_Client {
 #define DLNA_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+extern __attribute__((weak)) void dlna_info(const char*);
+extern __attribute__((weak)) void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const char* friendlyName, const char* controlURL);
+extern __attribute__((weak)) void dlna_seekReady(uint8_t numberOfServer);
+// extern __attribute__((weak)) void dlna_browseResult(const DLNA_Client::msg_s& m_msg);

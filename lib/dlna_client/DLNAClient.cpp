@@ -582,17 +582,14 @@ bool DLNA_Client::browseResult() {
             m_browseReady.totalMatches = static_cast<int16_t>(std::stoi(total_matches));
         }
     }
+    msg_s msg;
     if (m_srv_items.size()) {
-        for (int i = 0; i < m_srv_items.size(); i++) {
-            if (dlna_browseResult)
-                dlna_browseResult(m_srv_items[i].objectId.c_get(), m_srv_items[i].parentId.c_get(), m_srv_items[i].childCount, m_srv_items[i].title.c_get(), m_srv_items[i].isAudio,
-                                  m_srv_items[i].itemSize, m_srv_items[i].duration.c_get(), m_srv_items[i].itemURL.c_get());
-        }
-    }
-    if (dlna_browseReady) dlna_browseReady(m_browseReady.numberReturned, m_browseReady.totalMatches);
-    //    if (brCallback) { brCallback(m_browseReady); }
-    //    if (brCallback) brCallback(m_browseReady);
+        msg.numberReturned = m_browseReady.numberReturned;
+        msg.totalMatches = m_browseReady.totalMatches;
+        msg.m_srv_items = &m_srv_items;
 
+        if (m_browseCallback) { m_browseCallback(msg); }
+    }
     return true;
 }
 
