@@ -381,7 +381,6 @@ bool DLNA_Client::readContent() {
     m_content.clear(); // Delete all old entries
     m_content = split_lines(buff);
 
-
     // for (size_t i = 0; i < m_content.size(); i++) { DLNA_LOG_INFO(m_content[i].get()); }
 
     return true;
@@ -465,7 +464,7 @@ bool DLNA_Client::browseResult() {
         item.isAudio = false;
         item.itemURL.assign("?");
         item.itemSize = 0;
-        item.duration.assign("00:00:00");
+        item.duration.assign("?");
         item.title.assign("?");
         item.childCount = 0;
 
@@ -564,7 +563,7 @@ bool DLNA_Client::browseResult() {
                 } // size as int
                 if (duration.valid()) {
                     duration.replace(";", "");
-                    m_srv_items[cNr].duration.clone_from(duration); // Duration as String
+                    if (!duration.equals("0:00:00.000")) m_srv_items[cNr].duration.clone_from(duration); // Duration as String
 
                     int s = m_content[i].index_of("http:");
                     if (s > 0) m_srv_items[cNr].itemURL.copy_from(m_content[i].get() + s);

@@ -4520,7 +4520,15 @@ void dlna_server(uint8_t serverId, const char* IP_addr, uint16_t port, const cha
 void dlna_seekReady(uint8_t numberOfServer) { SerialPrintfln("DLNA_server: %i media server found", numberOfServer); }
 
 void dlna_browseResult(const char* objectId, const char* parentId, uint16_t childCount, const char* title, bool isAudio, uint32_t itemSize, const char* duration, const char* itemURL) {
-    SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %d, itemSize %ld, duration %s", title, childCount, (long unsigned int)itemSize, duration);
+    if(isAudio){
+        if(strcmp(duration, "?") != 0){ // no duration given
+            if(itemSize) {SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, itemSize %ld", title, (long unsigned int)itemSize); return;}
+            else {SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s", title); return;}
+        }
+        else{SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, duration %s", title, duration); return;}
+    }
+    if(childCount){SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount %i", title, childCount); return;}
+    else {SerialPrintfln("DLNA_server: " ANSI_ESC_YELLOW "title %s, childCount 0", title); return;}
 }
 
 void dlna_browseReady(uint16_t numberReturned, uint16_t totalMatches) {
