@@ -54,11 +54,10 @@ bool DLNA_Client::seekServer() {
     m_timeStamp = millis();
     return true;
 }
-
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 int8_t DLNA_Client::listServer() {
     if (m_state == SEEK_SERVER) return -1; // seek in progress
-DLNA_LOG_ERROR("listServer");
+
     msg_s msg;
     msg.e = evt_server;
     msg.server = &m_dlnaServer;
@@ -69,7 +68,7 @@ DLNA_LOG_ERROR("listServer");
 const std::deque<DLNA_Client::dlnaServer>& DLNA_Client::getServer() const {
     return m_dlnaServer;
 }
-
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const std::deque<DLNA_Client::srvItem>& DLNA_Client::getBrowseResult() const {
     return m_srv_items;
 }
@@ -112,7 +111,6 @@ void DLNA_Client::parseDlnaServer(uint16_t len) {
     item.presentationURL.assign("?");
     m_dlnaServer.push_back(std::move(item));
 }
-
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::srvGet(uint8_t srvNr) {
     ps_ptr<char> out_msg;
@@ -594,7 +592,6 @@ bool DLNA_Client::browseResult() {
     }
     return true;
 }
-
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t startingIndex, const uint16_t maxCount) {
 
