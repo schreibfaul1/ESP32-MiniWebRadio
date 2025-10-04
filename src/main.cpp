@@ -1,10 +1,14 @@
 #include "common.h"
+#include "mwr_src/function.hpp"
+#include "mwr_src/function.hpp"
+#include "mwr_src/index.h"
+#include "mwr_src/index.js.h"
 // clang-format off
 /*****************************************************************************************************************************************************
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0-rc3f   - Sep 30/2025                                                                                                               ";
+    Version 4.0 - 04.10.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or

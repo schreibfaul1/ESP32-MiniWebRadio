@@ -39,8 +39,6 @@
 #include <WiFiClientSecure.h>
 #include <WiFiMulti.h>
 #include <vector>
-#include "index.h"
-#include "index.js.h"
 #include "websrv.h"
 #include "rtime.h"
 #include "IR.h"
