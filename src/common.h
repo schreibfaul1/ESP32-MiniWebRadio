@@ -81,7 +81,6 @@
         #define I2S_LRC             1
         #define I2S_MCLK            0
 
-        #define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
         #define BT_EMITTER_RX      45  // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_TX      38  // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_LINK    19  // high if connected                     (-1 if not available)
@@ -154,7 +153,6 @@ const TFT_RGB::Timing RGB_TIMING = {
 #define BT_EMITTER_CONNECT -1  // must be -1, not enough pins
 
 #define TFT_BL              2  // same as RGB_PINS.bl
-#define AMP_ENABLED        -1  // control pin for extenal amplifier (if available)
 
 #define I2C_SDA            19  // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
 #define I2C_SCL            20  // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
@@ -399,7 +397,6 @@ void           changeState(int32_t state);
 void           connecttohost(const char* host);
 void           connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
 void           stopSong();
-void IRAM_ATTR headphoneDetect();
 void           placingGraphicObjects();
 void           muteChanged(bool m);
 void           BTpowerChanged(int8_t newState); // true -> power on, false -> power off

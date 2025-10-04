@@ -1760,11 +1760,6 @@ void setup() {
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
 
-    if (AMP_ENABLED >= 0) { // enable onboard amplifier
-        pinMode(AMP_ENABLED, OUTPUT);
-        digitalWrite(AMP_ENABLED, LOW);
-    }
-
     sdr_CL_volume.setNewMinMaxVal(0, s_volumeSteps);
     sdr_DL_volume.setNewMinMaxVal(0, s_volumeSteps);
     sdr_PL_volume.setNewMinMaxVal(0, s_volumeSteps);
@@ -3259,20 +3254,6 @@ void loop() {
         if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
 
         int16_t audioVol = audio.getVolume();
-        //------------------------------------------------------------------------
-        if (AMP_ENABLED >= 0) {         // An external amplifier can be switched, if a GPIO has been assigned.
-            static bool av = false;     // The amplifier switches off when the real volume (not s_cur_volume) reaches the value 0.
-            if ((audioVol > 0) != av) { // This is also the case in sleep mode.
-                av = (audioVol > 0);
-                digitalWrite(AMP_ENABLED, av);
-                if (av) {
-                    SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was activated");
-                } else {
-                    SerialPrintfln("Amplifier:   " ANSI_ESC_YELLOW "The external amplifier was deactivated");
-                }
-            }
-        }
-        //------------------------------------------------------------------------
         uint8_t currVol = s_cur_volume;
         if (s_f_mute) currVol = 0;
         uint8_t steps = s_volumeSteps / 7;
