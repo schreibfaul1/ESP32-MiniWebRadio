@@ -1,6 +1,6 @@
 #include "common.h"
 #include "mwr_src/function.hpp"
-#include "mwr_src/function.hpp"
+#include "mwr_src/graphical.hpp"
 #include "mwr_src/index.h"
 #include "mwr_src/index.js.h"
 // clang-format off
@@ -3570,9 +3570,9 @@ void loop() {
                 SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "Pause-Resume not possible");
             }
         }
-        if (r.startsWith("hc")) { // A hardcopy of the display is created and written to the SD card
+        if (r.startsWith("hc")) { // A make_hardcopy_on_sd of the display is created and written to the SD card
             { SerialPrintfln("Terminal   : " ANSI_ESC_YELLOW "create hardcopy"); }
-            hardcopy();
+            make_hardcopy_on_sd();
         }
         if (r.startsWith("rts")) { // run time stats
             char* timeStatsBuffer = x_ps_calloc(2000, sizeof(char));
@@ -5802,7 +5802,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_getPower"){      if(s_f_BTpower) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
     CMD_EQUALS("KCX_BT_power"){         s_f_BTpower = !s_f_BTcurPowerState; BTpowerChanged(!s_f_BTcurPowerState); return;}
 
-    CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); hardcopy(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
+    CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
 
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param.c_str());
     webSrv.sendStatus(400);
