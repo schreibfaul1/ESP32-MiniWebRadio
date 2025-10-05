@@ -125,7 +125,8 @@ void GetRunTimeStats(char* pcWriteBuffer) {
         extern uint64_t s_totalRuntime;
         tmpBuff = x_ps_malloc(130);
         if (s_totalRuntime > 0) {
-            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(), tft.getVsyncCounter() / s_totalRuntime);
+            sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: %llu", leftSpace, s_totalRuntime, tft.getVsyncCounter(),
+                    tft.getVsyncCounter() / s_totalRuntime);
         } else {
             sprintf(tmpBuff, "%s" ANSI_ESC_LIGHTGREEN " time since start: %llus, VSYNCS: %llu  ==> fps: <1", leftSpace, s_totalRuntime, tft.getVsyncCounter());
         }
@@ -921,26 +922,15 @@ class IR_buttons {
 class SD_content {
   private:
     struct FileInfo {
-        int32_t fileSize;
-        char*   fileName;
-        char*   filePath;
+        int32_t      fileSize;
+        ps_ptr<char> fileName;
+        ps_ptr<char> filePath;
 
-        FileInfo(int32_t fs, const char* fn, const char* fp) : fileSize(fs), fileName(x_ps_strdup(fn)), filePath(x_ps_strdup(fp)) {} // constructor
-        ~FileInfo() {
-            x_ps_free(&fileName);
-            x_ps_free(&filePath);
-        } // destructor
-        FileInfo(const FileInfo& other) : fileSize(other.fileSize), fileName(x_ps_strdup(other.fileName)), filePath(x_ps_strdup(other.filePath)) {} // copy constructor
-        FileInfo& operator=(const FileInfo& other) {                                                                                                // copy assignment
-            if (this != &other) {
-                fileSize = other.fileSize;
-                x_ps_free(&fileName);
-                x_ps_free(&filePath);
-                fileName = x_ps_strdup(other.fileName);
-                filePath = x_ps_strdup(other.filePath);
-            }
-            return *this;
-        }
+        FileInfo(int32_t fs, const char* fn, const char* fp) : fileSize(fs), fileName(fn), filePath(fp) {}
+
+        ~FileInfo() = default;
+        FileInfo(const FileInfo&) = default;
+        FileInfo& operator=(const FileInfo&) = default;
     };
     std::vector<FileInfo> m_files;
 
@@ -954,10 +944,10 @@ class SD_content {
   public:
     SD_content() {
         m_buff = x_ps_malloc(1024);
-        freeFilesVector();
+        m_files.clear();
     }
     ~SD_content() {
-        freeFilesVector();
+        m_files.clear();
         x_ps_free(&m_buff);
     }
     bool listFilesInDir(const char* path, boolean audioFilesOnly, boolean withoutDirs) {
@@ -965,7 +955,7 @@ class SD_content {
             log_e("oom");
             return false;
         }
-        freeFilesVector();
+        m_files.clear();
         if (m_masterFile) m_masterFile.close();
         if (!SD_MMC.exists(path)) {
             SerialPrintfln(ANSI_ESC_RED "SD_MMC/%s not exist", path);
@@ -1022,8 +1012,8 @@ class SD_content {
             log_w("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
-        if (isDir(idx)) return m_files[idx].fileName;
-        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName, m_files[idx].fileSize);
+        if (isDir(idx)) return m_files[idx].fileName.get();
+        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.get(), m_files[idx].fileSize);
         return m_buff;
     }
     const char* getFileNameByIndex(uint16_t idx) {
@@ -1035,7 +1025,7 @@ class SD_content {
             log_w("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
-        return m_files[idx].fileName;
+        return m_files[idx].fileName.get();
     }
 
     int32_t getFileSizeByIndex(uint16_t idx) {
@@ -1071,7 +1061,7 @@ class SD_content {
             getFilePathByIndex(3) returns "/dir_a/dir_b/file_b"
             getFilePathByIndex(5) returns "/dir_a/file_d"
         */
-        return m_files[idx].filePath;
+        return m_files[idx].filePath.c_get();
     }
 
     const char* getFileFolderByIndex(uint16_t idx) {
@@ -1095,9 +1085,9 @@ class SD_content {
             getFileFolderByIndex(1) returns "/dir_a/dir_b/"
             getFileFolderByIndex(5) returns "/dir_a/"
         */
-        if (isDir(idx)) return m_files[idx].filePath;
-        int lastSlashIndex = lastIndexOf(m_files[idx].filePath, '/');
-        strcpy(m_buff, m_files[idx].filePath);
+        if (isDir(idx)) return m_files[idx].filePath.c_get();
+        int lastSlashIndex = m_files[idx].filePath.last_index_of('/');
+        strcpy(m_buff, m_files[idx].filePath.get());
         m_buff[lastSlashIndex + 1] = '\0';
         return m_buff;
     }
@@ -1117,7 +1107,7 @@ class SD_content {
         */
         if (!path) return -1;
         for (int i = 0; i < m_files.size(); i++) {
-            if (strcmp((const char*)m_files[i].filePath, path) == 0) { return i; }
+            if (strcmp((const char*)m_files[i].filePath.get(), path) == 0) { return i; }
         }
         return -1;
     }
@@ -1130,7 +1120,7 @@ class SD_content {
             newIdx++;
             if (newIdx >= m_files.size()) newIdx = 0;
             if (newIdx == currIdx) break;                           // avoid an infinite loop
-            if (!endsWith(m_files[newIdx].fileName, ".m3u")) break; // skip m3u files
+            if (!m_files[newIdx].fileName.ends_with(".m3u")) break; // skip m3u files
         }
         return newIdx;
     }
@@ -1143,7 +1133,7 @@ class SD_content {
             newIdx--;
             if (newIdx == -1) newIdx = m_files.size() - 1;
             if (newIdx == currIdx) break;                           // avoid an infinite loop
-            if (!endsWith(m_files[newIdx].fileName, ".m3u")) break; // skip m3u files
+            if (!m_files[newIdx].fileName.ends_with(".m3u")) break; // skip m3u files
         }
         return newIdx;
     }
@@ -1210,14 +1200,12 @@ class SD_content {
     const char* getLastConnectedFileName() { return m_lastConnectedFileName; }
     int         getPosByFileName(const char* fileName) {
         for (int i = 0; i < m_files.size(); i++) {
-            if (!strcmp(m_files[i].fileName, fileName)) return i; // fileName e.g. "file.mp3"
+            if (!strcmp(m_files[i].fileName.get(), fileName)) return i; // fileName e.g. "file.mp3"
         }
         return 0;
     }
 
   private:
-    void freeFilesVector() { m_files.clear(); }
-
     void sort() {
         std::sort(m_files.begin(), m_files.end(), [](const FileInfo& a, const FileInfo& b) {
             // Zuerst nach Ordner vs. Datei sortieren
@@ -1228,7 +1216,7 @@ class SD_content {
                 return false; // a ist Datei, b ist Ordner
             }
             // Wenn beide entweder Ordner oder beide Dateien sind, alphabetisch sortieren
-            return strcmp(a.fileName, b.fileName) < 0;
+            return strcmp(a.fileName.get(), b.fileName.get()) < 0;
         });
     }
 };

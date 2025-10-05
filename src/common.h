@@ -6,7 +6,7 @@
 // clang-format off
 #define _SSID                   "mySSID"                        // Your WiFi credentials here
 #define _PW                     "myWiFiPassword"                // Or in textfile on SD-card
-#define TFT_CONTROLLER          7                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER          5                               // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION       0                               // only SPI displays, (0) off (1) on
 #define TFT_ROTATION            1                               // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY           40000000                        // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -258,7 +258,7 @@ extern RTIME rtc;
 extern WebSrv webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
 void SerialPrintfln(const char* fmt, ...){
-    ps_ptr<char>myLog("myLog");
+    ps_ptr<char>myLog;
     if(_newLine){_newLine = false; myLog.assign("\n");} else{myLog.assign("");}
     rtc.hasValidTime()? myLog.append(rtc.gettime_s()) : myLog.append("00:00:00");
     myLog.append(" ");
@@ -274,7 +274,7 @@ void SerialPrintfln(const char* fmt, ...){
 
 void SerialPrintfcr(const char* fmt, ...){
     if(s_logBuffer.size() == 1024) s_logBuffer.pop_back();
-    ps_ptr<char>myLog("myLog");
+    ps_ptr<char>myLog;
     rtc.hasValidTime()? myLog.assign(rtc.gettime_s()) : myLog.assign("00:00:00");
     myLog.append(" ");
     va_list args;
@@ -291,7 +291,7 @@ void SerialPrintfcr(const char* fmt, ...){
 int log_redirect_handler(const char *format, va_list args) {
     int len = vsnprintf(nullptr, 0, format, args) + 1;
     // Puffer für die formatierte Nachricht
-    ps_ptr<char>log_buffer("log_buffer");
+    ps_ptr<char>log_buffer;
     log_buffer.alloc(len);
     vsnprintf(log_buffer.get(), len, format, args);
     if (len > 0) {

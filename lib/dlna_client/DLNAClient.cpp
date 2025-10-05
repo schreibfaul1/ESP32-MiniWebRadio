@@ -333,7 +333,7 @@ bool DLNA_Client::readContent() {
     };
     //-------------------------------------------------------------------------------------------------
 
-    ps_ptr<char> buff("chbuff, readContent");
+    ps_ptr<char> buff;
     buff.calloc(m_contentlength + 4);
     m_timeStamp = millis();
     uint8_t  b = 0;
@@ -597,8 +597,8 @@ bool DLNA_Client::srvPost(uint8_t srvNr, const char* objectId, const uint16_t st
 
     bool         ret;
     uint8_t      cnt = 0;
-    ps_ptr<char> chbuff("chbuff, srvPost");
-    ps_ptr<char> message("message");
+    ps_ptr<char> chbuff;
+    ps_ptr<char> message;
     m_tcp_client.stop();
     uint32_t t = millis();
     m_tcp_client.setTimeout(CONNECT_TIMEOUT);
