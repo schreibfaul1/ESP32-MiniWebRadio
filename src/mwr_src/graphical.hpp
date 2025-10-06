@@ -56,7 +56,7 @@ class slider : public RegisterTable {
         m_spotColor = TFT_RED;
     }
     ~slider() { m_objectInit = false; }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom, int16_t minVal, int16_t maxVal) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -65,14 +65,16 @@ class slider : public RegisterTable {
         m_padding_right = paddig_right;
         m_padding_top = paddig_top;       // unused
         m_padding_bottom = paddig_bottom; // unused
-        m_minVal = minVal;
-        m_maxVal = maxVal;
         m_leftStop = m_x + m_padding_left + m_spotRadius + 10;                          // x pos left stop
         m_rightStop = m_x + m_w - m_padding_left - m_padding_right - m_spotRadius - 10; // x pos right stop
         m_enabled = false;
         m_middle_h = m_y + (m_h / 2);
         m_spotPos = (m_leftStop + m_rightStop) / 2; // in the middle
         m_objectInit = true;
+    }
+    void setMinMaxVal(int16_t minVal, int16_t maxVal){
+        m_minVal = minVal;
+        m_maxVal = maxVal;
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
@@ -107,10 +109,6 @@ class slider : public RegisterTable {
             m_spotPos = spotPos;
     }
     int16_t getValue() { return m_val; }
-    void    setNewMinMaxVal(int16_t minVal, int16_t maxVal) {
-        m_minVal = minVal;
-        m_maxVal = maxVal;
-    }
     void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
@@ -3722,7 +3720,7 @@ class alarmClock : public RegisterTable { // draw a clock in 12 or 24h format
         m_showAll = true;
         updateDigits();
     }
-    void setAlarmTimeAndDays(uint8_t* alarmDays, int16_t alarmTime[7]) {
+    void alarm_time_and_days(uint8_t* alarmDays, int16_t alarmTime[7]) {
         m_alarmTime = alarmTime;
         m_alarmDays = alarmDays;
     }
@@ -3931,14 +3929,14 @@ class uniList {
         m_lineHight = m_h / 10;
         m_buff = x_ps_malloc(1024);
     }
-    void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize) {
+    void setMode(uint8_t mode, char tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
         if (mode == DLNA) { m_mode = DLNA; }
         m_fontSize = fontSize;
-        if (strcmp(tftSize, "s") == 0) m_tftSize = 1;
-        if (strcmp(tftSize, "m") == 0) m_tftSize = 2;
-        if (strcmp(tftSize, "l") == 0) m_tftSize = 3;
+        if (tftSize == 's') m_tftSize = 1;
+        if (tftSize == 'm') m_tftSize = 2;
+        if (tftSize == 'l') m_tftSize = 3;
         switch (m_tftSize) {
             case 1:
                 if (m_mode == RADIO) {
@@ -4131,7 +4129,7 @@ class dlnaList : public RegisterTable {
     char*                                      m_pathBuff = NULL;
     const char*                                m_chptr = NULL;
     char*                                      m_buff = NULL;
-    const char*                                m_tftSize = NULL;
+    char                                       m_tftSize = ' ';
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
     DLNA_Client*                               m_dlna;
@@ -4139,14 +4137,13 @@ class dlnaList : public RegisterTable {
     releasedArg                                m_ra;
 
   public:
-    dlnaList(const char* name, DLNA_Client* dlna, dlnaHistory* dh, uint8_t dhSize) {
+    dlnaList(const char* name) {
         register_object(this);
         if (name)
             m_name = x_ps_strdup(name);
         else
             m_name = x_ps_strdup("dlnaList");
         m_buff = x_ps_malloc(512);
-        m_dlna = dlna;
         m_bgColor = TFT_BLACK;
         m_enabled = false;
         m_clicked = false;
@@ -4156,14 +4153,13 @@ class dlnaList : public RegisterTable {
         m_ra.arg2 = NULL;
         m_ra.val1 = 0;
         m_ra.val2 = 0;
-        m_dlnaHistory = dh;
         for (uint8_t i = 0; i < 10; i++) m_currItemNr[i] = 0;
     }
     ~dlnaList() {
         x_ps_free(&m_name);
         x_ps_free(&m_buff);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -4172,6 +4168,10 @@ class dlnaList : public RegisterTable {
         m_enabled = false;
         m_lineHight = m_h / 10;
         m_tftSize = tftSize;
+    }
+    void client_and_history(DLNA_Client* dlna, dlnaHistory* dh){
+        m_dlna = dlna;
+        m_dlnaHistory = dh;
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
@@ -4659,7 +4659,7 @@ class fileList : public RegisterTable {
     char*       m_curAudioPath = NULL;
     char*       m_curAudioName = NULL;
     char*       m_fileItemsPos = NULL;
-    const char* m_tftSize = NULL;
+    char        m_tftSize = ' ';
     const char* m_rootColor = ANSI_ESC_LIGHTBROWN;
     const char* m_folderColor = ANSI_ESC_ORANGE;
     const char* m_fileColor = ANSI_ESC_WHITE;
@@ -4695,7 +4695,7 @@ class fileList : public RegisterTable {
         x_ps_free(&m_curAudioName);   //   song.mp3
         x_ps_free(&m_curAudioPath);   //   /audiofiles/folder1/song.mp3
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -5057,7 +5057,7 @@ class stationsList : public RegisterTable {
     releasedArg m_ra;
     const char* m_colorToDraw = NULL;
     const char* m_staNameToDraw = NULL;
-    const char* m_tftSize = NULL;
+    char        m_tftSize = ' ';
     uint16_t    m_staNrToDraw = 0;
 
   public:
@@ -5081,16 +5081,18 @@ class stationsList : public RegisterTable {
         x_ps_free(&m_name);
         x_ps_free(&m_buff);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize, uint16_t* curStationNr) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
         m_lineHight = m_h / 10;
         m_fontSize = fontSize;
-        m_curSstationNr = curStationNr;
         m_enabled = false;
         m_tftSize = tftSize;
+    }
+    void currentStationNr(uint16_t* curStationNr){
+        m_curSstationNr = curStationNr;
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }

@@ -1,6 +1,7 @@
 #include "common.h"
 #include "mwr_src/function.hpp"
 #include "mwr_src/graphical.hpp"
+#include "mwr_src/layout.hpp"
 #include "mwr_src/index.h"
 #include "mwr_src/index.js.h"
 // clang-format off
@@ -232,290 +233,7 @@ SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
 
 
-#if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // ⏹⏹⏹⏹
-// clang-format off
-//
-//  Display 320x240
-//  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       _hHeader=20px
-//  +-------------------------------------------+ _yName=20
-//  |                                           |
-//  | Logo                   StationName        |       _hName=100px
-//  |                                           |
-//  +-------------------------------------------+ _yTitle=120
-//  |                                           |
-//  |              StreamTitle                  |       _hTitle=100px
-//  |                                           |
-//  +-------------------------------------------+ _yFooter=220
-//  | Footer                                    |       _hFooter=20px
-//  +-------------------------------------------+ 240
-//                                             320
 
-const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-const uint8_t _listFontSize = 16;
-const uint8_t _headerFontSize = 0; //16; // 0 -> autoSize
-const uint8_t _footerFontSize = 0; //16; // 0 -> autoSize
-const uint8_t _bigNumbersFontSize = 156;
-const uint8_t _fileNumberFontSize = 21;
-// ------------------------------------------------------------------------------------------padding-left, padding-right, padding-top, padding-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 320; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 100; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winLogo;
-struct w_n  {uint16_t x = 100; uint16_t y =  20; uint16_t w = 220; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 3; uint8_t pt = 0; uint8_t pb = 3;} const _winName;
-struct w_e  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 3; uint8_t pt = 0; uint8_t pb = 3;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 100; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;
-struct w_v  {uint16_t x = 138; uint16_t y =  34; uint16_t w = 144; uint16_t h =  72;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;   // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 160; uint16_t w = 320; uint16_t h =  11;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;
-struct w_t  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 320; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 3; uint8_t pt = 0; uint8_t pb = 3;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 120; uint16_t w = 296; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 3; uint8_t pt = 0; uint8_t pb = 3;} const _winSTitle;
-struct w_g  {uint16_t x = 296; uint16_t y = 120; uint16_t w =  24; uint16_t h = 100;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 220; uint16_t w = 320; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 220; uint16_t w =  60; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
-struct w_p  {uint16_t x =  60; uint16_t y = 220; uint16_t w =  65; uint16_t h =  20;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 150; uint16_t w = 320; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 180; uint16_t w =  40; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_y  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 160;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
-struct w_w  {uint16_t x =   0; uint16_t y =  20; uint16_t w = 320; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x =  80; uint16_t y =  30; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x =  80; uint16_t y =  64; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x =  80; uint16_t y =  98; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x =  80; uint16_t y = 132; uint16_t w = 150; uint16_t h =  34;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
-
-// derived structs
-struct w_b1 {uint16_t x = 10;                  uint16_t y = _sdrHP.y;  uint16_t w = _sdrHP.w;  uint16_t h = _sdrHP.h; } const _btnHP;
-struct w_b2 {uint16_t x = 10;                  uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
-struct w_b3 {uint16_t x = 10;                  uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
-struct w_b4 {uint16_t x = 10;                  uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
-struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 90;        uint16_t h = _sdrHP.h; } const _txtHP;
-struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 90;        uint16_t h = _sdrBP.h; } const _txtBP;
-struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 90;        uint16_t h = _sdrLP.h; } const _txtLP;
-struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 90;        uint16_t h = _sdrBAL.h;} const _txtBAL;
-
-uint16_t _sleeptimeXPos[5] = {5, 77, 129, 57}; // last is colon
-uint16_t _sleeptimeYPos = 48;
-uint16_t _dispWidth   = 320;
-uint16_t _dispHeight  = 240;
-uint8_t  _BrightnessMin = 5; // slider Brightness left value
-const char _tftSize[2] = "s";
-//
-// clang-format on
-#endif // TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1
-
-#if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6 // ⏹⏹⏹⏹⏫
-// clang-format off
-//
-//  Display 480x320
-//  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       _winHeader=30px
-//  +-------------------------------------------+ _yName=30
-//  |                                           |
-//  | Logo                   StationName        |       _winFName=130px
-//  |                                           |
-//  +-------------------------------------------+ _yTitle=160
-//  |                                           |
-//  |              StreamTitle                  |       _winTitle=130px
-//  |                                           |
-//  +-------------------------------------------+ _yFooter=290
-//  | Footer                                    |       _winFooter=30px
-//  +-------------------------------------------+ 320
-//                                             480
-
-const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-const uint8_t _listFontSize       = 21;
-const uint8_t _headerFontSize     = 0; //21; // 0 -> autoSize
-const uint8_t _footerFontSize     = 0; //21; // 0 -> autoSize
-const uint8_t _bigNumbersFontSize = 156;
-const uint8_t _fileNumberFontSize = 27;
-// -----------------------------------------------------------------------------------padding-left-right-top-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 130; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winLogo;
-struct w_n  {uint16_t x = 132; uint16_t y =  30; uint16_t w = 348; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt =  0; uint8_t pb =  3;} const _winName;     // station nane
-struct w_e  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 132;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt =  0; uint8_t pb =  3;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 164; uint16_t w = 130; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 1; uint8_t pt =  0; uint8_t pb =  1;} const _winFileNr;
-struct w_v  {uint16_t x = 200; uint16_t y =  48; uint16_t w = 256; uint16_t h =  96;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winVolBox;   // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 210; uint16_t w = 480; uint16_t h =  14;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winProgbar;  // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 480; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 5; uint8_t pt =  0; uint8_t pb =  3;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 162; uint16_t w = 448; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 4; uint8_t pt =  0; uint8_t pb =  3;} const _winSTitle;   // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 448; uint16_t y = 162; uint16_t w =  32; uint16_t h = 128;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 480; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  30;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 194; uint16_t w = 480; uint16_t h =  40;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _sdrOvBtns;   // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 234; uint16_t w =  56; uint16_t h =  56;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winButton;
-struct w_y  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 200;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winDigits;    // clock and alarm digits
-struct w_w  {uint16_t x =   0; uint16_t y =  30; uint16_t w = 480; uint16_t h = 260;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  0; uint8_t pb =  0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 140; uint16_t y =  30; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x = 140; uint16_t y =  80; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 140; uint16_t y = 130; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x = 140; uint16_t y = 180; uint16_t w = 200; uint16_t h =  50;  uint8_t pl = 0; uint8_t pr = 0; uint8_t pt =  8; uint8_t pb =  8;} const _sdrBAL;       // slider balance in equalizer
-
-// derived structs
-struct w_b1 {uint16_t x = 50;                  uint16_t y = _sdrHP.y;  uint16_t w = _sdrHP.w;  uint16_t h = _sdrHP.h; } const _btnHP;
-struct w_b2 {uint16_t x = 50;                  uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
-struct w_b3 {uint16_t x = 50;                  uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
-struct w_b4 {uint16_t x = 50;                  uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
-struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 140;       uint16_t h = _sdrHP.h; } const _txtHP;
-struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 140;       uint16_t h = _sdrBP.h; } const _txtBP;
-struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 140;       uint16_t h = _sdrLP.h; } const _txtLP;
-struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 140;       uint16_t h = _sdrBAL.h;} const _txtBAL;
-
-uint16_t _sleeptimeXPos[5] = {5, 107, 175, 73 };
-uint16_t _sleeptimeYPos = 48;
-uint16_t _dispWidth   = 480;
-uint16_t _dispHeight  = 320;
-uint8_t  _BrightnessMin = 5; // slider Brightness left value
-const char _tftSize[2] = "m";
-//
-// clang-format on
-#endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
-
-#if TFT_CONTROLLER >= 7 // ⏹⏹⏹⏹⏫
-// clang-format off
-//
-//  Display 800x480
-//  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       _winHeader=50px
-//  +-------------------------------------------+ _yName=50
-//  |                                           |
-//  | Logo                   StationName        |       _winFName=190px
-//  |                                           |
-//  +-------------------------------------------+ _yTitle=240
-//  |                                           |
-//  |              StreamTitle                  |       _winTitle=190px
-//  |                                           |
-//  +-------------------------------------------+ _yFooter=430
-//  | Footer                                    |       _winFooter=50px
-//  +-------------------------------------------+ 480
-//                                             800
-
-const uint8_t _fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
-const uint8_t _listFontSize = 27;
-const uint8_t _headerFontSize = 38;
-const uint8_t _footerFontSize = 38;
-const uint8_t _bigNumbersFontSize = 156;
-const uint8_t _fileNumberFontSize = 34;
-//----------------------------------------------------------------------------------------padding-left-right-top-bottom
-struct w_h  {uint16_t x =   0; uint16_t y =   0; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winHeader;
-struct w_l  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 190; uint16_t h = 190; uint8_t pl =  4; uint8_t pr =  4; uint8_t pt = 4; uint8_t pb = 4;} const _winLogo;
-struct w_n  {uint16_t x = 190; uint16_t y =  50; uint16_t w = 610; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winName;      // station name
-struct w_e  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 190; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winFName;
-struct w_j  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 190; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  4; uint8_t pt = 0; uint8_t pb = 0;} const _winFileNr;    // e.g. 020/066 in the middle of the logo
-struct w_v  {uint16_t x = 200; uint16_t y =  73; uint16_t w = 258; uint16_t h = 144; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVolBox;    // volumeBox
-struct w_a  {uint16_t x =   0; uint16_t y = 290; uint16_t w = 800; uint16_t h =  14; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _winProgbar;   // progressbar
-struct w_t  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 800; uint16_t h = 190; uint8_t pl = 15; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winTitle;
-struct w_c  {uint16_t x =   0; uint16_t y = 240; uint16_t w = 768; uint16_t h = 190; uint8_t pl = 10; uint8_t pr =  5; uint8_t pt = 2; uint8_t pb = 2;} const _winSTitle;    // streamTitle, space for VUmeter
-struct w_g  {uint16_t x = 768; uint16_t y = 280; uint16_t w =  32; uint16_t h = 150; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winVUmeter;
-struct w_f  {uint16_t x =   0; uint16_t y = 430; uint16_t w = 800; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winFooter;
-struct w_s  {uint16_t x =   0; uint16_t y = 290; uint16_t w =  85; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winStaNr;
-struct w_p  {uint16_t x =  85; uint16_t y = 290; uint16_t w =  87; uint16_t h =  50; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winSleep;
-struct w_b  {uint16_t x =   0; uint16_t y = 265; uint16_t w = 800; uint16_t h =  60; uint8_t pl =  5; uint8_t pr =  5; uint8_t pt = 0; uint8_t pb = 0;} const _sdrOvBtns;    // slider over buttons, max width
-struct w_o  {uint16_t x =   0; uint16_t y = 345; uint16_t w =  80; uint16_t h =  80; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winButton;
-struct w_y  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 295; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winDigits;    // clock and alarm digits
-struct w_w  {uint16_t x =   0; uint16_t y =  50; uint16_t w = 800; uint16_t h = 380; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _winWoHF;      // without Header and Footer
-struct w_s1 {uint16_t x = 200; uint16_t y =  53; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrHP;        // slider highpass in equalizer
-struct w_s2 {uint16_t x = 200; uint16_t y = 126; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBP;        // slider bandpass in equalizer
-struct w_s3 {uint16_t x = 200; uint16_t y = 199; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrLP;        // slider lowpass in equalizer
-struct w_s4 {uint16_t x = 200; uint16_t y = 272; uint16_t w = 300; uint16_t h =  73; uint8_t pl =  0; uint8_t pr =  0; uint8_t pt = 0; uint8_t pb = 0;} const _sdrBAL;       // slider balance in equalizer
-
-// derived structs
-struct w_b1 {uint16_t x = 100;                 uint16_t y = _sdrHP.y;  uint16_t w = _sdrHP.w;  uint16_t h = _sdrHP.h; } const _btnHP;
-struct w_b2 {uint16_t x = 100;                 uint16_t y = _sdrBP.y;  uint16_t w = _sdrBP.w;  uint16_t h = _sdrBP.h; } const _btnBP;
-struct w_b3 {uint16_t x = 100;                 uint16_t y = _sdrLP.y;  uint16_t w = _sdrLP.w;  uint16_t h = _sdrLP.h; } const _btnLP;
-struct w_b4 {uint16_t x = 100;                 uint16_t y = _sdrBAL.y; uint16_t w = _sdrBAL.w; uint16_t h = _sdrBAL.h;} const _btnBAL;
-struct w_t1 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrHP.y;  uint16_t w = 190;       uint16_t h = _sdrHP.h; } const _txtHP;
-struct w_t2 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBP.y;  uint16_t w = 190;       uint16_t h = _sdrBP.h; } const _txtBP;
-struct w_t3 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrLP.y;  uint16_t w = 190;       uint16_t h = _sdrLP.h; } const _txtLP;
-struct w_t4 {uint16_t x = _sdrHP.x + _sdrHP.w; uint16_t y = _sdrBAL.y; uint16_t w = 190;       uint16_t h = _sdrBAL.h;} const _txtBAL;
-
-
-uint16_t _sleeptimeXPos[5] = {20, 137, 223, 106};
-uint16_t _sleeptimeYPos = 112;
-uint16_t _dispWidth   = 800;
-uint16_t _dispHeight  = 480;
-uint8_t  _BrightnessMin = 25; // slider Brightness left value
-const char _tftSize[2] = "l";
-//
-// clang-format on
-#endif // #if TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5|| TFT_CONTROLLER == 6
-
-// ALL STATE
-displayHeader dispHeader("dispHeader", _headerFontSize); // 0 -> autoSize
-displayFooter dispFooter("dispFooter", _footerFontSize); // 0 -> autoSize
-numbersBox    volBox("volBox");
-uniList       myList("myList");
-// RADIO
-button2state btn_RA_mute("btn_RA_mute");
-button1state btn_RA_prevSta("btn_RA_prevSta"), btn_RA_nextSta("btn_RA_nextSta");
-button1state btn_RA_staList("btn_RA_staList"), btn_RA_player("btn_RA_player"), btn_RA_dlna("btn_RA_dlna"), btn_RA_clock("btn_RA_clock");
-button1state btn_RA_sleep("btn_RA_sleep"), btn_RA_bt("btn_RA_bt");
-button1state btn_RA_off("btn_RA_off"), btn_RA_settings("btn_RA_settings");
-pictureBox   pic_RA_logo("pic_RA_logo");
-textbox      txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
-vuMeter      VUmeter_RA("VUmeter_RA");
-slider       sdr_RA_volume("sdr_RA_volume");
-// STATIONSLIST
-stationsList lst_RADIO("lst_RADIO");
-// PLAYER
-button2state btn_PL_mute("btn_PL_mute"), btn_PL_pause("btn_PL_pause");
-button1state btn_PL_ready("btn_PL_ready"), btn_PL_shuffle("btn_PL_shuffle");
-button1state btn_PL_playAll("btn_PL_playAll"), btn_PL_fileList("btn_PL_fileList"), btn_PL_radio("btn_PL_radio"), btn_PL_cancel("btn_PL_cancel");
-button1state btn_PL_prevFile("btn_PL_prevFile"), btn_PL_nextFile("btn_PL_nextFile"), btn_PL_off("btn_PL_off");
-button1state btn_PL_playNext("btn_PL_playNext"), btn_PL_playPrev("btn_PL_playPrev");
-textbox      txt_PL_fName("txt_PL_fName");
-textbox      txt_PL_fNumber("txt_PL_fNumber");
-slider       sdr_PL_volume("sdr_PL_volume");
-pictureBox   pic_PL_logo("pic_PL_logo");
-progressbar  pgb_PL_progress("pgb_PL_progress");
-// AUDIOFILESLIST
-fileList lst_PLAYER("lst_PLAYER");
-// DLNA
-button2state btn_DL_mute("btn_DL_mute"), btn_DL_pause("btn_DL_pause");
-button1state btn_DL_radio("btn_DL_radio"), btn_DL_fileList("btn_DL_fileList"), btn_DL_cancel("btn_DL_cancel");
-textbox      txt_DL_fName("txt_DL_fName");
-slider       sdr_DL_volume("sdr_DL_volume");
-pictureBox   pic_DL_logo("pic_DL_logo");
-progressbar  pgb_DL_progress("pgb_DL_progress");
-// DLNAITEMSLIST
-dlnaList lst_DLNA("lst_DLNA", &dlna, &s_dlnaHistory[0], 10);
-// CLOCK
-imgClock24   clk_CL_24("clk_CL_24");
-imgClock12   clk_CL_12("clk_CL_12");
-button2state btn_CL_mute("btn_CL_mute");
-button1state btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
-slider       sdr_CL_volume("sdr_CL_volume");
-// ALARMCLOCK
-alarmClock   clk_AC_red("clk_AC_red");
-button1state btn_AC_left("btn_AC_left"), btn_AC_right("btn_AC_right"), btn_AC_up("btn_AC_up"), btn_AC_down("btn_AC_down");
-button1state btn_AC_ready("btn_AC_ready");
-// RINGING
-pictureBox      pic_RI_logo("pic_RI_logo");
-imgClock24small clk_RI_24small("clk_RI_24small");
-// SETTINGS
-pictureBox   pic_SE_logo("pic_SE_logo");
-button1state btn_SE_bright("btn_SE_bright"), btn_SE_equal("btn_SE_equal"), btn_SE_wifi("btn_SE_wifi"), btn_SE_radio("btn_SE_radio");
-// BRIGHTNESS
-button1state btn_BR_ready("btn_BR_ready");
-pictureBox   pic_BR_logo("pic_BR_logo");
-slider       sdr_BR_value("sdr_BR_value");
-textbox      txt_BR_value("txt_BR_value");
-// SLEEPTIMER
-button1state btn_SL_up("btn_SL_up"), btn_SL_down("btn_SL_down"), btn_SL_ready("btn_SL_ready"), btn_SL_cancel("btn_SL_cancel");
-// EQUALIZER
-slider       sdr_EQ_lowPass("sdr_E_LP"), sdr_EQ_bandPass("sdr_E_BP"), sdr_EQ_highPass("sdr_E_HP"), sdr_EQ_balance("sdr_E_BAL");
-textbox      txt_EQ_lowPass("txt_E_LP"), txt_EQ_bandPass("txt_E_BP"), txt_EQ_highPass("txt_E_HP"), txt_EQ_balance("txt_E_BAL");
-button1state btn_EQ_lowPass("btn_E_LP");
-button1state btn_EQ_bandPass("btn_E_BP"), btn_EQ_highPass("btn_E_HP"), btn_EQ_balance("btn_E_BAL");
-button1state btn_EQ_Radio("btn_EQ_Radio"), btn_EQ_Player("btn_EQ_Player");
-button2state btn_EQ_mute("btn_EQ_mute");
-// BLUETOOTH
-button2state btn_BT_pause("btn_BT_pause"), btn_BT_power("btn_BT_power");
-button1state btn_BT_volDown("btn_BT_volDown"), btn_BT_volUp("btn_BT_volUp"), btn_BT_radio("btn_BT_radio"), btn_BT_mode("btn_BT_mode");
-pictureBox   pic_BT_mode("pic_BT_mode");
-textbox      txt_BT_mode("txt_BT_mode");
-textbox      txt_BT_volume("txt_BT_volume");
-// IR_SETTINGS
-button1state btn_IR_radio("btn_IR_radio");
-// WIFI_SETTINGS
-wifiSettings cls_wifiSettings("wifiSettings", 2);
 
 /*  ╔═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
@@ -761,35 +479,85 @@ void timer100ms(){
  *                                                               D I S P L A Y                                                                       *
  *****************************************************************************************************************************************************/
 
-// clang-format off
-inline void bgColorHeader()             {tft.fillRect(_winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h,   TFT_BLACK);}
-inline void bgColorLogo()               {tft.fillRect(_winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h,     TFT_BLACK);}
-inline void bgColorStationName()        {tft.fillRect(_winName.x,      _winName.y,      _winName.w,      _winName.h,     TFT_BLACK);}
-inline void bgColorLogoAndStationname() {tft.fillRect(_winFName.x,     _winFName.y,     _winFName.w,     _winFName.h,    TFT_BLACK);}
-inline void bgColorTitle()              {tft.fillRect(_winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h,    TFT_BLACK);} // incl. VUmeter
-inline void bgColorStreamTitle()        {tft.fillRect(_winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h,   TFT_BLACK);} // without VUmeter
-inline void bgColorWithOutHeaderFooter(){tft.fillRect(_winWoHF.x,      _winWoHF.y,      _winWoHF.w,      _winWoHF.h,     TFT_BLACK);}
-inline void bgColorFooter()             {tft.fillRect(_winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h,   TFT_BLACK);}
-inline void bgColorStaNr()              {tft.fillRect(_winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h,    TFT_BLACK);}
-inline void bgColorSleep()              {tft.fillRect(_winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h,    TFT_BLACK);}
-inline void bgColorDigits()             {tft.fillRect(_winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h,   TFT_BLACK);}
-inline void bgColorButtonBar()          {tft.fillRect( 0,              _winButton.y,    _dispWidth,      _winButton.h,   TFT_BLACK);}
-inline void bgColorAll()                {tft.fillScreen(TFT_BLACK);}                      // y   0...239
+inline void bgColorHeader() {
+    tft.fillRect(layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h, TFT_BLACK);
+}
+inline void bgColorLogo() {
+    tft.fillRect(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, TFT_BLACK);
+}
+inline void bgColorStationName() {
+    tft.fillRect(layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h, TFT_BLACK);
+}
+inline void bgColorLogoAndStationname() {
+    tft.fillRect(layout.winFName.x, layout.winFName.y, layout.winFName.w, layout.winFName.h, TFT_BLACK);
+}
+inline void bgColorTitle() {
+    tft.fillRect(layout.winTitle.x, layout.winTitle.y, layout.winTitle.w, layout.winTitle.h, TFT_BLACK);
+} // incl. VUmeter
+inline void bgColorStreamTitle() {
+    tft.fillRect(layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h, TFT_BLACK);
+} // without VUmeter
+inline void bgColorWithOutHeaderFooter() {
+    tft.fillRect(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, TFT_BLACK);
+}
+inline void bgColorFooter() {
+    tft.fillRect(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h, TFT_BLACK);
+}
+inline void bgColorStaNr() {
+    tft.fillRect(layout.winStaNr.x, layout.winStaNr.y, layout.winStaNr.w, layout.winStaNr.h, TFT_BLACK);
+}
+inline void bgColorSleep() {
+    tft.fillRect(layout.winSleep.x, layout.winSleep.y, layout.winSleep.w, layout.winSleep.h, TFT_BLACK);
+}
+inline void bgColorDigits() {
+    tft.fillRect(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h, TFT_BLACK);
+}
+inline void bgColorButtonBar() {
+    tft.fillRect(0, layout.winButton.y, displayConfig.dispWidth, layout.winButton.h, TFT_BLACK);
+}
+inline void bgColorAll() {
+    tft.fillScreen(TFT_BLACK);
+} // y   0...239
 
-
-inline void clearHeader()             {tft.copyFramebuffer(1, 0, _winHeader.x,    _winHeader.y,    _winHeader.w,    _winHeader.h);}
-inline void clearLogo()               {tft.copyFramebuffer(1, 0, _winLogo.x,      _winLogo.y,      _winLogo.w,      _winLogo.h);}
-inline void clearStationName()        {tft.copyFramebuffer(1, 0, _winName.x,      _winName.y,      _winName.w,      _winName.h);}
-inline void clearLogoAndStationname() {tft.copyFramebuffer(1, 0, _winFName.x,     _winFName.y,     _winFName.w,     _winFName.h);}
-inline void clearTitle()              {tft.copyFramebuffer(1, 0, _winTitle.x,     _winTitle.y,     _winTitle.w,     _winTitle.h);} // incl. VUmeter
-inline void clearStreamTitle()        {tft.copyFramebuffer(1, 0, _winSTitle.x,    _winSTitle.y,    _winSTitle.w,    _winSTitle.h);} // without VUmeter
-inline void clearWithOutHeaderFooter(){tft.copyFramebuffer(1, 0, _winWoHF.x,       _winWoHF.y,      _winWoHF.w,     _winWoHF.h);}
-inline void clearFooter()             {tft.copyFramebuffer(1, 0, _winFooter.x,    _winFooter.y,    _winFooter.w,    _winFooter.h);}
-inline void clearStaNr()              {tft.copyFramebuffer(1, 0, _winStaNr.x,     _winStaNr.y,     _winStaNr.w,     _winStaNr.h);}
-inline void clearSleep()              {tft.copyFramebuffer(1, 0, _winSleep.x,     _winSleep.y,     _winSleep.w,     _winSleep.h);}
-inline void clearDigits()             {tft.copyFramebuffer(1, 0, _winDigits.x,    _winDigits.y,    _winDigits.w,    _winDigits.h);}
-inline void clearButtonBar()          {tft.copyFramebuffer(1, 0,  0,              _winButton.y,    _dispWidth,      _winButton.h);}
-inline void clearAll()                {tft.copyFramebuffer(1, 0,  0,               0,              _dispWidth,      _dispHeight);}
+inline void clearHeader() {
+    tft.copyFramebuffer(1, 0, layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
+}
+inline void clearLogo() {
+    tft.copyFramebuffer(1, 0, layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h);
+}
+inline void clearStationName() {
+    tft.copyFramebuffer(1, 0, layout.winName.x, layout.winName.y, layout.winName.w, layout.winName.h);
+}
+inline void clearLogoAndStationname() {
+    tft.copyFramebuffer(1, 0, layout.winFName.x, layout.winFName.y, layout.winFName.w, layout.winFName.h);
+}
+inline void clearTitle() {
+    tft.copyFramebuffer(1, 0, layout.winTitle.x, layout.winTitle.y, layout.winTitle.w, layout.winTitle.h);
+} // incl. VUmeter
+inline void clearStreamTitle() {
+    tft.copyFramebuffer(1, 0, layout.winSTitle.x, layout.winSTitle.y, layout.winSTitle.w, layout.winSTitle.h);
+} // without VUmeter
+inline void clearWithOutHeaderFooter() {
+    tft.copyFramebuffer(1, 0, layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h);
+}
+inline void clearFooter() {
+    tft.copyFramebuffer(1, 0, layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
+}
+inline void clearStaNr() {
+    tft.copyFramebuffer(1, 0, layout.winStaNr.x, layout.winStaNr.y, layout.winStaNr.w, layout.winStaNr.h);
+}
+inline void clearSleep() {
+    tft.copyFramebuffer(1, 0, layout.winSleep.x, layout.winSleep.y, layout.winSleep.w, layout.winSleep.h);
+}
+inline void clearDigits() {
+    tft.copyFramebuffer(1, 0, layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
+}
+inline void clearButtonBar() {
+    tft.copyFramebuffer(1, 0, 0, layout.winButton.y, displayConfig.dispWidth, layout.winButton.h);
+}
+inline void clearAll() {
+    tft.copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
+}
 
 // clang-format on
 
@@ -956,7 +724,7 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
             else
                 strcat(path, "srt.jpg");
         }
-        drawImage(path, _sleeptimeXPos[i], _sleeptimeYPos);
+        drawImage(path, displayConfig.sleeptimeXPos[i], displayConfig.sleeptimeYPos);
     }
 }
 
@@ -1585,9 +1353,9 @@ void setup() {
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if (!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
-        tft.setFont(_fonts[6]);
+        tft.setFont(displayConfig.fonts[6]);
         tft.setTextColor(TFT_YELLOW);
-        tft.writeText("SD Card Mount Failed", 0, 50, _dispWidth, _dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
+        tft.writeText("SD Card Mount Failed", 0, 50, displayConfig.dispWidth, displayConfig.dispHeight, TFT_ALIGN_CENTER, TFT_ALIGN_TOP, false, false);
         SerialPrintfln(ANSI_ESC_RED "SD Card Mount Failed");
         return;
     }
@@ -1629,7 +1397,30 @@ void setup() {
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
         setRTC(s_TZString.c_str());
     }
+
     placingGraphicObjects();
+    sdr_BR_value.setValue(s_brightness);
+    sdr_EQ_lowPass.setValue(s_toneLP);
+    sdr_EQ_bandPass.setValue(s_toneBP);
+    sdr_EQ_highPass.setValue(s_toneHP);
+    sdr_EQ_balance.setValue(s_toneBAL);
+    sdr_DL_volume.setMinMaxVal(0, s_volumeSteps);
+    sdr_DL_volume.setValue(s_cur_volume);
+    sdr_PL_volume.setMinMaxVal(0, s_volumeSteps);
+    sdr_PL_volume.setValue(s_cur_volume);
+    sdr_RA_volume.setMinMaxVal(0, s_volumeSteps);
+    sdr_RA_volume.setValue(s_cur_volume);
+    sdr_CL_volume.setMinMaxVal(0, s_volumeSteps);
+    sdr_CL_volume.setValue(s_cur_volume);
+    btn_RA_mute.setValue(s_f_mute);
+    btn_CL_mute.setValue(s_f_mute);
+    btn_EQ_mute.setValue(s_f_mute);
+    btn_PL_mute.setValue(s_f_mute);
+    btn_DL_mute.setValue(s_f_mute);
+    btn_BT_power.setValue(s_f_BTpower);
+    lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0]);
+    lst_RADIO.currentStationNr(&s_cur_station);
+    clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
@@ -1637,11 +1428,6 @@ void setup() {
     audio.setVolume(0);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
-
-    sdr_CL_volume.setNewMinMaxVal(0, s_volumeSteps);
-    sdr_DL_volume.setNewMinMaxVal(0, s_volumeSteps);
-    sdr_PL_volume.setNewMinMaxVal(0, s_volumeSteps);
-    sdr_RA_volume.setNewMinMaxVal(0, s_volumeSteps);
 
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
@@ -1698,7 +1484,7 @@ void setup() {
 
     tft.fillScreen(TFT_BLACK);                                // Clear screen
     drawImage("/common/Wallpaper.jpg", 0, 0);                 // Wallpaper
-    tft.copyFramebuffer(0, 1, 0, 0, _dispWidth, _dispHeight); // copy wallpaper to background
+    tft.copyFramebuffer(0, 1, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight); // copy wallpaper to background
     muteChanged(s_f_mute);
     dispFooter.setIpAddr(WiFi.localIP().toString().c_str());
     dispFooter.updateStation(s_cur_station);
@@ -2160,284 +1946,8 @@ void setTimeCounter(uint8_t sec) {
     }
 }
 
-/*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
-           ║                                                                                  M E N U E / B U T T O N S                                                                  ║
-           ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-// clang-format off
-void placingGraphicObjects() { // and initialize them
-    // ALL STATE
-    dispHeader.begin(         _winHeader.x, _winHeader.y, _winHeader.w, _winHeader.h);   dispHeader.setTimeColor(TFT_LIGHTGREEN);
-    dispFooter.begin(         _winFooter.x, _winFooter.y, _winFooter.w, _winFooter.h);
-    volBox.begin(             _winVolBox.x, _winVolBox.y, _winVolBox.w, _winVolBox.h);
-    myList.begin(             _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _fonts[0]);
-    // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_RA_volume.begin(      _sdrOvBtns.x, _sdrOvBtns.y, _sdrOvBtns.w, _sdrOvBtns.h, _sdrOvBtns.pl, _sdrOvBtns.pr, _sdrOvBtns.pt, _sdrOvBtns.pb, 0, s_volumeSteps);               sdr_RA_volume.setValue(s_cur_volume);
-    btn_RA_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                         btn_RA_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                         btn_RA_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                         btn_RA_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                         btn_RA_mute.setValue(s_f_mute);
-    btn_RA_prevSta.begin( 1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_prevSta.setDefaultPicturePath("/btn/Button_Previous_Green.png");
-                                                                                         btn_RA_prevSta.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
-    btn_RA_nextSta.begin( 2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_nextSta.setDefaultPicturePath("/btn/Button_Next_Green.png");
-                                                                                         btn_RA_nextSta.setClickedPicturePath("/btn/Button_Next_Yellow.png");
-    btn_RA_staList.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_staList.setDefaultPicturePath("/btn/Button_List_Green.png");
-                                                                                         btn_RA_staList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-                                                                                         btn_RA_staList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
-    btn_RA_player.begin(  1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_player.setDefaultPicturePath("/btn/Button_Player_Green.png");
-                                                                                         btn_RA_player.setClickedPicturePath("/btn/Button_Player_Yellow.png");
-                                                                                         btn_RA_player.setAlternativePicturePath("/btn/Button_Player_Magenta.png");
-    btn_RA_dlna.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_dlna.setDefaultPicturePath("/btn/Button_DLNA_Green.png");
-                                                                                         btn_RA_dlna.setClickedPicturePath("/btn/Button_DLNA_Yellow.png");
-                                                                                         btn_RA_dlna.setAlternativePicturePath("/btn/Button_DLNA_Magenta.png");
-    btn_RA_clock.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_clock.setDefaultPicturePath("/btn/Button_Clock_Green.png");
-                                                                                         btn_RA_clock.setClickedPicturePath("/btn/Button_Clock_Yellow.png");
-                                                                                         btn_RA_clock.setAlternativePicturePath("/btn/Button_Clock_Magenta.png");
-    btn_RA_sleep.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_sleep.setDefaultPicturePath("/btn/Button_OffTimer_Green.png");
-                                                                                         btn_RA_sleep.setClickedPicturePath("/btn/Button_OffTimer_Yellow.png");
-                                                                                         btn_RA_sleep.setAlternativePicturePath("/btn/Button_OffTimer_Magenta.png");
-    btn_RA_settings.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_settings.setDefaultPicturePath("/btn/Button_Settings_Green.png");
-                                                                                         btn_RA_settings.setClickedPicturePath("/btn/Button_Settings_Yellow.png");
-                                                                                         btn_RA_settings.setAlternativePicturePath("/btn/Button_Settings_Magenta.png");
-    btn_RA_bt.begin(      6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_bt.setDefaultPicturePath("/btn/Button_Bluetooth_Green.png");
-                                                                                         btn_RA_bt.setClickedPicturePath("/btn/Button_Bluetooth_Yellow.png");
-                                                                                         btn_RA_bt.setAlternativePicturePath("/btn/Button_Bluetooth_Magenta.png");
-                                                                                         btn_RA_bt.setInactivePicturePath("/btn/Button_Bluetooth_Grey.png");
-    btn_RA_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_RA_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-                                                                                         btn_RA_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-                                                                                         btn_RA_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    txt_RA_sTitle.begin( _winSTitle.x, _winSTitle.y, _winSTitle.w, _winSTitle.h, _winSTitle.pl, _winSTitle.pr, _winSTitle.pt, _winSTitle.pb); txt_RA_sTitle.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_RA_sTitle.setFont(0); // 0 -> auto
-    txt_RA_staName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pl);    txt_RA_staName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_TOP);    txt_RA_staName.setFont(0); // 0 -> auto
-    txt_RA_irNum.begin(         _winWoHF.x,   _winWoHF.y,   _winWoHF.w,   _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb);    txt_RA_irNum.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_RA_irNum.setTextColor(TFT_GOLD); txt_RA_irNum.setFont(_bigNumbersFontSize);
-    pic_RA_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
-    VUmeter_RA.begin(        _winVUmeter.x,_winVUmeter.y,_winVUmeter.w,_winVUmeter.h);
-    // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_RADIO.begin(          _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize, &s_cur_station);
-    // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_PL_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                             btn_PL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                             btn_PL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                             btn_PL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                             btn_PL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-                                                                                             btn_PL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
-                                                                                             btn_PL_mute.setValue(s_f_mute);
-    btn_PL_pause.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
-                                                                                             btn_PL_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
-                                                                                             btn_PL_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
-                                                                                             btn_PL_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
-                                                                                             btn_PL_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
-                                                                                             btn_PL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
-                                                                                             btn_PL_pause.setValue(false);
-    btn_PL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
-                                                                                             btn_PL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-                                                                                             btn_PL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    sdr_PL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _dispWidth - (5 * _winButton.w + 20), _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, s_volumeSteps); sdr_PL_volume.setValue(s_cur_volume);
-    btn_PL_prevFile.begin(0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_prevFile.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-                                                                                             btn_PL_prevFile.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-                                                                                             btn_PL_prevFile.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
-    btn_PL_nextFile.begin(1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_nextFile.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-                                                                                             btn_PL_nextFile.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-                                                                                             btn_PL_nextFile.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
-    btn_PL_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                             btn_PL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                             btn_PL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    btn_PL_playAll.begin( 3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playAll.setDefaultPicturePath("/btn/Button_PlayAll_Blue.png");
-                                                                                             btn_PL_playAll.setClickedPicturePath("/btn/Button_PlayAll_Yellow.png");
-                                                                                             btn_PL_playAll.setAlternativePicturePath("/btn/Button_PlayAll_Magenta.png");
-    btn_PL_shuffle.begin( 4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_shuffle.setDefaultPicturePath("/btn/Button_Shuffle_Blue.png");
-                                                                                             btn_PL_shuffle.setClickedPicturePath("/btn/Button_Shuffle_Yellow.png");
-                                                                                             btn_PL_shuffle.setAlternativePicturePath("/btn/Button_Shuffle_Magenta.png");
-    btn_PL_fileList.begin(5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
-                                                                                             btn_PL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-                                                                                             btn_PL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
-    btn_PL_radio.begin(   6 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                             btn_PL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                             btn_PL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    btn_PL_off.begin(     7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h, true); btn_PL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-                                                                                             btn_PL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-                                                                                             btn_PL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    btn_PL_playPrev.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playPrev.setDefaultPicturePath("/btn/Button_Previous_Blue.png");
-                                                                                             btn_PL_playPrev.setClickedPicturePath("/btn/Button_Previous_Yellow.png");
-                                                                                             btn_PL_playPrev.setAlternativePicturePath("/btn/Button_Previous_Magenta.png");
-    btn_PL_playNext.begin(4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);       btn_PL_playNext.setDefaultPicturePath("/btn/Button_Next_Blue.png");
-                                                                                             btn_PL_playNext.setClickedPicturePath("/btn/Button_Next_Yellow.png");
-                                                                                             btn_PL_playNext.setAlternativePicturePath("/btn/Button_Next_Magenta.png");
 
-    txt_PL_fName.begin(         _winName.x,   _winName.y,   _winName.w,   _winName.h,    _winName.pl,    _winName.pr,    _winName.pt,    _winName.pb);  txt_PL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);  txt_PL_fName.setFont(0); // 0 -> auto
-    txt_PL_fNumber.begin(       _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h,  _winFileNr.pl,  _winFileNr.pr,  _winFileNr.pt,  _winFileNr.pb);txt_PL_fNumber.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_PL_fNumber.setFont(_fileNumberFontSize);
-    pic_PL_logo.begin(          _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,    _winLogo.pl,    _winLogo.pr,    _winLogo.pt,    _winLogo.pb);
-    pgb_PL_progress.begin(      _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_PL_progress.setValue(0);
-    // AUDIOFILESLIST-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_PLAYER.begin(         _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
-    // DLNA --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_DL_mute.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                         btn_DL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                         btn_DL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                         btn_DL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                         btn_DL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-                                                                                         btn_DL_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
-                                                                                         btn_DL_mute.setValue(s_f_mute);
-    btn_DL_pause.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
-                                                                                         btn_DL_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
-                                                                                         btn_DL_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
-                                                                                         btn_DL_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
-                                                                                         btn_DL_pause.setInactivePicturePath("/btn/Button_Pause_Grey.png");
-                                                                                         btn_DL_pause.setAlternativeOffPicturePath("/btn/Button_Pause_Magenta.png");
-                                                                                         btn_DL_pause.setAlternativeOnPicturePath("/btn/Button_Play_Magenta.png");
-                                                                                         btn_DL_pause.setValue(false);
-    btn_DL_cancel.begin(  2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Red.png");
-                                                                                         btn_DL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-                                                                                         btn_DL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    btn_DL_fileList.begin(3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_fileList.setDefaultPicturePath("/btn/Button_List_Green.png");
-                                                                                         btn_DL_fileList.setClickedPicturePath("/btn/Button_List_Yellow.png");
-                                                                                         btn_DL_fileList.setAlternativePicturePath("/btn/Button_List_Magenta.png");
-    btn_DL_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_DL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_DL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                         btn_DL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    sdr_DL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, s_volumeSteps); sdr_DL_volume.setValue(s_cur_volume);
-    txt_DL_fName.begin(       _winName.x,   _winName.y,   _winName.w,   _winName.h, _winName.pl, _winName.pr, _winName.pt, _winName.pb); txt_DL_fName.setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER); txt_DL_fName.setFont(0); // 0 -> auto)
-    pic_DL_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl,   _winLogo.pr, _winLogo.pt, _winLogo.pb);
-    pgb_DL_progress.begin(    _winProgbar.x,_winProgbar.y,_winProgbar.w,_winProgbar.h, _winProgbar.pl, _winProgbar.pr, _winProgbar.pt, _winProgbar.pb, 0, 30); pgb_DL_progress.setValue(0);
-    // DLNAITEMSLIST -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    lst_DLNA.begin(           _winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _tftSize, _listFontSize);
-    // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_CL_24.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
-    clk_CL_12.begin(          _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);
-    btn_CL_alarm.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_alarm.setDefaultPicturePath("/btn/Button_Bell_Green.png");
-                                                                                         btn_CL_alarm.setClickedPicturePath("/btn/Button_Bell_Yellow.png");
-                                                                                         btn_CL_alarm.setAlternativePicturePath("/btn/Button_Bell_Magenta.png");
-    btn_CL_radio.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_CL_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                         btn_CL_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    btn_CL_mute.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                         btn_CL_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                         btn_CL_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                         btn_CL_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                         btn_CL_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-                                                                                         btn_CL_mute.setAlternativeOnPicturePath("/btn/Button_MuteOn_Magenta.png");
-                                                                                         btn_CL_mute.setValue(s_f_mute);
-    btn_CL_off.begin(     3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_CL_off.setDefaultPicturePath("/btn/Button_Off_Red.png");
-                                                                                         btn_CL_off.setClickedPicturePath("/btn/Button_Off_Yellow.png");
-                                                                                         btn_CL_off.setAlternativePicturePath("/btn/Button_Off_Magenta.png");
-    sdr_CL_volume.begin(  5 * _winButton.w + 10, _winButton.y, _winButton.w * 3 - 10, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, 0, s_volumeSteps); sdr_CL_volume.setValue(s_cur_volume);
-    // ALARM -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    clk_AC_red.begin(         _winDigits.x, _winDigits.y, _winDigits.w, _winDigits.h);      clk_AC_red.setAlarmTimeAndDays(&s_alarmdays, s_alarmtime);
-    btn_AC_left.begin(    0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_left.setDefaultPicturePath("/btn/Button_Left_Blue.png");
-                                                                                         btn_AC_left.setClickedPicturePath("/btn/Button_Left_Yellow.png");
-                                                                                         btn_AC_left.setAlternativePicturePath("/btn/Button_Left_Magenta.png");
-    btn_AC_right.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_right.setDefaultPicturePath("/btn/Button_Right_Blue.png");
-                                                                                         btn_AC_right.setClickedPicturePath("/btn/Button_Right_Yellow.png");
-                                                                                         btn_AC_right.setAlternativePicturePath("/btn/Button_Right_Magenta.png");
-    btn_AC_up.begin(      2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
-                                                                                         btn_AC_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
-                                                                                         btn_AC_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
-    btn_AC_down.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
-                                                                                         btn_AC_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
-                                                                                         btn_AC_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
-    btn_AC_ready.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_AC_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                         btn_AC_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                         btn_AC_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    // RINGING -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    pic_RI_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
-    clk_RI_24small.begin(     _winName.x,   _winName.y,   _winName.w,   _winName.h);
-    // SLEEPTIMER --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_SL_up.begin(      0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_up.setDefaultPicturePath("/btn/Button_Up_Blue.png");
-                                                                                         btn_SL_up.setClickedPicturePath("/btn/Button_Up_Yellow.png");
-                                                                                         btn_SL_up.setAlternativePicturePath("/btn/Button_Up_Magenta.png");
-    btn_SL_down.begin(    1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_down.setDefaultPicturePath("/btn/Button_Down_Blue.png");
-                                                                                         btn_SL_down.setClickedPicturePath("/btn/Button_Down_Yellow.png");
-                                                                                         btn_SL_down.setAlternativePicturePath("/btn/Button_Down_Magenta.png");
-    btn_SL_ready.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                         btn_SL_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                         btn_SL_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    btn_SL_cancel.begin(  4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SL_cancel.setDefaultPicturePath("/btn/Button_Cancel_Blue.png");
-                                                                                         btn_SL_cancel.setClickedPicturePath("/btn/Button_Cancel_Yellow.png");
-                                                                                         btn_SL_cancel.setAlternativePicturePath("/btn/Button_Cancel_Magenta.png");
-    // SETTINGS ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_SE_bright.begin(  0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_bright.setDefaultPicturePath("/btn/Button_Brightness_Green.png");
-                                                                                         btn_SE_bright.setClickedPicturePath("/btn/Button_Brightness_Yellow.png");
-                                                                                         btn_SE_bright.setAlternativePicturePath("/btn/Button_Brightness_Magenta.png");
-                                                                                         btn_SE_bright.setInactivePicturePath("/btn/Button_Brightness_Grey.png");
-    btn_SE_equal.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_equal.setDefaultPicturePath("/btn/Button_Equalizer_Green.png");
-                                                                                         btn_SE_equal.setClickedPicturePath("/btn/Button_Equalizer_Yellow.png");
-                                                                                         btn_SE_equal.setAlternativePicturePath("/btn/Button_Equalizer_Magenta.png");
-    btn_SE_wifi.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_wifi.setDefaultPicturePath("/btn/Button_WiFi_Green.png");
-                                                                                         btn_SE_wifi.setClickedPicturePath("/btn/Button_WiFi_Yellow.png");
-                                                                                         btn_SE_wifi.setAlternativePicturePath("/btn/Button_WiFi_Magenta.png");
-    btn_SE_radio.begin(   3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_SE_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_SE_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                         btn_SE_radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    pic_SE_logo.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h, _winLogo.pl, _winLogo.pr, _winLogo.pt, _winLogo.pb);
-    // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_BR_value.begin(   2 * _winButton.w, _winButton.y + 5,  4 * _winButton.w, _sdrOvBtns.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb, _BrightnessMin, 100); sdr_BR_value.setValue(s_brightness);
-    btn_BR_ready.begin(   7 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
-                                                                                         btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");
-                                                                                         btn_BR_ready.setAlternativePicturePath("/btn/Button_Ready_Magenta.png");
-    pic_BR_logo.begin(    0, _winWoHF.y, _winWoHF.w, _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb); pic_BR_logo.setPicturePath("/common/Brightness.jpg");
-    txt_BR_value.begin(   0, _winButton.y, _winButton.w * 2, _winButton.h, _winButton.pl, _winButton.pr, _winButton.pt, _winButton.pb); txt_BR_value.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BR_value.setFont(_fonts[4]);
-    // EQUALIZER ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    sdr_EQ_lowPass.begin(  _sdrLP.x,  _sdrLP.y,  _sdrLP.w,  _sdrLP.h,  _sdrLP.pl,  _sdrLP.pr,  _sdrLP.pt,  _sdrLP.pb, -40,  6); sdr_EQ_lowPass.setValue(s_toneLP);
-    sdr_EQ_bandPass.begin( _sdrBP.x,  _sdrBP.y,  _sdrBP.w,  _sdrBP.h,  _sdrBP.pl,  _sdrBP.pr,  _sdrBP.pt,  _sdrBP.pb, -40,  6); sdr_EQ_bandPass.setValue(s_toneBP);
-    sdr_EQ_highPass.begin( _sdrHP.x,  _sdrHP.y,  _sdrHP.w,  _sdrHP.h,  _sdrHP.pl,  _sdrHP.pr,  _sdrHP.pt,  _sdrHP.pb, -40,  6); sdr_EQ_highPass.setValue(s_toneHP);
-    sdr_EQ_balance.begin( _sdrBAL.x, _sdrBAL.y, _sdrBAL.w, _sdrBAL.h, _sdrBAL.pl, _sdrBAL.pr, _sdrBAL.pt, _sdrBAL.pb, -16, 16); sdr_EQ_balance.setValue(s_toneBAL);
-    txt_EQ_lowPass.begin(  _txtLP.x,  _txtLP.y,  _txtLP.w,  _txtLP.h, 0, 0, 0, 0); txt_EQ_lowPass.setAlign( TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER); txt_EQ_lowPass.setFont(0); // 0 -> auto
-    txt_EQ_bandPass.begin( _txtBP.x,  _txtBP.y,  _txtBP.w,  _txtBP.h, 0, 0, 0, 0); txt_EQ_bandPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER); txt_EQ_bandPass.setFont(0); // 0 -> auto
-    txt_EQ_highPass.begin( _txtHP.x,  _txtHP.y,  _txtHP.w,  _txtHP.h, 0, 0, 0, 0); txt_EQ_highPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER); txt_EQ_highPass.setFont(0); // 0 -> auto
-    txt_EQ_balance.begin( _txtBAL.x, _txtBAL.y, _txtBAL.w, _txtBAL.h, 0, 0, 0, 0); txt_EQ_balance.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);  txt_EQ_balance.setFont(0); // 0 -> auto
-    btn_EQ_lowPass.begin( _btnLP.x, _btnLP.y, _btnLP.w, _btnLP.h);                       btn_EQ_lowPass.setDefaultPicturePath("/btn/Button_LP_Green.png");
-                                                                                         btn_EQ_lowPass.setClickedPicturePath("/btn/Button_LP_Yellow.png");
-                                                                                         btn_EQ_lowPass.setAlternativePicturePath("/btn/Button_LP_Magenta.png");
-    btn_EQ_bandPass.begin(_btnBP.x, _btnBP.y, _btnBP.w, _btnBP.h);                       btn_EQ_bandPass.setDefaultPicturePath("/btn/Button_BP_Green.png");
-                                                                                         btn_EQ_bandPass.setClickedPicturePath("/btn/Button_BP_Yellow.png");
-                                                                                         btn_EQ_bandPass.setAlternativePicturePath("/btn/Button_BP_Magenta.png");
-    btn_EQ_highPass.begin(_btnHP.x, _btnHP.y, _btnHP.w, _btnHP.h);                       btn_EQ_highPass.setDefaultPicturePath("/btn/Button_HP_Green.png");
-                                                                                         btn_EQ_highPass.setClickedPicturePath("/btn/Button_HP_Yellow.png");
-                                                                                         btn_EQ_highPass.setAlternativePicturePath("/btn/Button_HP_Magenta.png");
-    btn_EQ_balance.begin(_btnBAL.x, _btnBAL.y, _btnBAL.w, _btnBAL.h);                    btn_EQ_balance.setDefaultPicturePath("/btn/Button_BAL_Green.png");
-                                                                                         btn_EQ_balance.setClickedPicturePath("/btn/Button_BAL_Yellow.png");
-                                                                                         btn_EQ_balance.setAlternativePicturePath("/btn/Button_BAL_Magenta.png");
-    btn_EQ_Radio.begin(   0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_Radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_EQ_Radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-                                                                                         btn_EQ_Radio.setAlternativePicturePath("/btn/Button_Radio_Magenta.png");
-    btn_EQ_Player.begin(  1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_Player.setDefaultPicturePath("/btn/Button_Player_Green.png");
-                                                                                         btn_EQ_Player.setClickedPicturePath("/btn/Button_Player_Yellow.png");
-                                                                                         btn_EQ_Player.setAlternativePicturePath("/btn/Button_Player_Magenta.png");
-    btn_EQ_mute.begin(    2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_EQ_mute.setOffPicturePath("/btn/Button_Mute_Off_Green.png");
-                                                                                         btn_EQ_mute.setOnPicturePath("/btn/Button_Mute_On_Red.png");
-                                                                                         btn_EQ_mute.setClickedOffPicturePath("/btn/Button_Mute_Off_Yellow.png");
-                                                                                         btn_EQ_mute.setClickedOnPicturePath("/btn/Button_Mute_On_Yellow.png");
-                                                                                         btn_EQ_mute.setAlternativeOffPicturePath("/btn/Button_Mute_Off_Magenta.png");
-                                                                                         btn_EQ_mute.setAlternativeOnPicturePath("/btn/Button_Mute_On_Magenta.png");
-                                                                                         btn_EQ_mute.setValue(s_f_mute);
-    // BLUETOOTH ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_BT_volDown.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volDown.setDefaultPicturePath("/btn/Button_Volume_Down_Blue.png");
-                                                                                         btn_BT_volDown.setClickedPicturePath("/btn/Button_Volume_Down_Yellow.png");
-    btn_BT_volUp.begin(   1 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_volUp.setDefaultPicturePath("/btn/Button_Volume_Up_Blue.png");
-                                                                                         btn_BT_volUp.setClickedPicturePath("/btn/Button_Volume_Up_Yellow.png");
-    btn_BT_pause.begin(   2 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_pause.setOffPicturePath("/btn/Button_Pause_Blue.png");
-                                                                                         btn_BT_pause.setOnPicturePath("/btn/Button_Play_Blue.png");
-                                                                                         btn_BT_pause.setClickedOffPicturePath("/btn/Button_Pause_Yellow.png");
-                                                                                         btn_BT_pause.setClickedOnPicturePath("/btn/Button_Play_Yellow.png");
-    btn_BT_mode.begin(    3 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_mode.setDefaultPicturePath("/btn/Button_RxTx_Blue.png");
-                                                                                         btn_BT_mode.setClickedPicturePath("/btn/Button_RxTx_Yellow.png");
-    btn_BT_radio.begin(   4 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_BT_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    btn_BT_power.begin(   5 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);   btn_BT_power.setOffPicturePath("/btn/Button_Bluetooth_Red.png");
-                                                                                         btn_BT_power.setOnPicturePath("/btn/Button_Bluetooth_Blue.png");
-                                                                                         btn_BT_power.setClickedOffPicturePath("/btn/Button_Bluetooth_Yellow.png");
-                                                                                         btn_BT_power.setClickedOnPicturePath("/btn/Button_Bluetooth_Yellow.png");
-                                                                                         btn_BT_power.setValue(s_f_BTpower);
-                                                                                         pic_BT_mode.setPicturePath("/common/BTnc.png");
-    pic_BT_mode.begin(        _winLogo.x,   _winLogo.y,   _winLogo.w,   _winLogo.h,   _winLogo.pl,   _winLogo.pr,   _winLogo.pt,   _winLogo.pb); pic_BT_mode.setAlternativPicturePath("/common/BTnc.png");
-    txt_BT_volume.begin(      _winFileNr.x, _winFileNr.y, _winFileNr.w, _winFileNr.h, _winFileNr.pl, _winFileNr.pr, _winFileNr.pt, _winFileNr.pb); txt_BT_volume.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_volume.setFont(_fonts[2]);
-    txt_BT_mode.begin(        _winName.x,   _winName.y,   _winName.w,   _winName.h,   _winName.pl,   _winName.pr,   _winName.pt,   _winName.pb); txt_BT_mode.setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER); txt_BT_mode.setFont(_fonts[5]);
-    // IR_SETTINGS -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    btn_IR_radio.begin( 0 * _winButton.w, _winButton.y, _winButton.w, _winButton.h);     btn_IR_radio.setDefaultPicturePath("/btn/Button_Radio_Green.png");
-                                                                                         btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
-    // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    cls_wifiSettings.begin(_winWoHF.x, _winWoHF.y, _winWoHF.w, _winWoHF.h, _winWoHF.pl, _winWoHF.pr, _winWoHF.pt, _winWoHF.pb);
-}
 // clang-format off
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
@@ -2875,7 +2385,7 @@ void changeState(int32_t state) {
             clearWithOutHeaderFooter();
             cls_wifiSettings.clearText();
             cls_wifiSettings.setBorderWidth(1);
-            cls_wifiSettings.setFontSize(_listFontSize);
+            cls_wifiSettings.setFontSize(displayConfig.listFontSize);
             int16_t n = WiFi.scanNetworks();
             SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
             for (int i = 0; i < n; i++) {
@@ -5256,7 +4766,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     if(s_f_sleeping) return;  // awake in tp_released()
     const char* objName = NULL;
-    if(s_state == RADIO && y > _winHeader.y + _winHeader.h && y < _sdrOvBtns.y){
+    if(s_state == RADIO && y > layout.winHeader.y + layout.winHeader.h && y < layout.sdrOvBtns.y){
         objName = "backpane";
         s_radioSubMenue++;
         if(s_radioSubMenue == 3) s_radioSubMenue = 0;
@@ -5446,10 +4956,10 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
                                         s_volumeAfterAlarm = map_l(s_volumeAfterAlarm, 0, s_volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(s_volumeAfterAlarm));
                                         s_volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volumeSteps);
                                         // log_w("s_volumeSteps  %i", s_volumeSteps);
-                                        sdr_CL_volume.setNewMinMaxVal(0, s_volumeSteps);
-                                        sdr_DL_volume.setNewMinMaxVal(0, s_volumeSteps);
-                                        sdr_PL_volume.setNewMinMaxVal(0, s_volumeSteps);
-                                        sdr_RA_volume.setNewMinMaxVal(0, s_volumeSteps);
+                                        sdr_CL_volume.setMinMaxVal(0, s_volumeSteps);
+                                        sdr_DL_volume.setMinMaxVal(0, s_volumeSteps);
+                                        sdr_PL_volume.setMinMaxVal(0, s_volumeSteps);
+                                        sdr_RA_volume.setMinMaxVal(0, s_volumeSteps);
                                         setVolume(s_cur_volume);
                                         SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d", s_volumeSteps);
                                         return;}
@@ -5507,7 +5017,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
 
     CMD_EQUALS("getnetworks"){          webSrv.send("networks=", WiFi.SSID()); return;}                                                  // via websocket
 
-    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=", _tftSize); return;};
+    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=", displayConfig.tftSize); return;};
 
     CMD_EQUALS("getTimeZones"){         webSrv.send("timezones=", timezones_json); return;}
 

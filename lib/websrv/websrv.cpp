@@ -175,6 +175,12 @@ boolean WebSrv::send(const char* cmd, String msg, uint8_t opcode) {  // sends te
     return send(cmd, msg.c_str(), opcode);
 }
 //--------------------------------------------------------------------------------------------------------------
+boolean WebSrv::send(const char* cmd, char msg, uint8_t opcode) {
+    char m[2];
+    m[0] = msg;
+    m[1] = '\0';
+    return send(cmd, m, opcode);
+}
 boolean WebSrv::send(const char* cmd, const char *msg, uint8_t opcode) {  // sends text messages via websocket
     uint8_t headerLen = 2;
 
