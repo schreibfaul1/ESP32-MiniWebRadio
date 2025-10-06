@@ -52,16 +52,17 @@ char _hl_item[18][40]{"",                    // none
                       "WiFi Settings", //
                       ""};
 
-settings_t                s_settings;
+
+
+
+settings                  s_settings;
+volume                    s_volume;
+dlnaHistory               s_dlnaHistory[10];
+timecounter               s_timeCounter;
+SD_content                s_SD_content;
 const uint16_t            s_max_stations = 1000;
 int8_t                    s_currDLNAsrvNr = -1;
 uint8_t                   s_alarmdays = 0;
-uint8_t                   s_cur_volume = 21;
-uint8_t                   s_BTvolume = 16; // KCX-BT_Emitter volume
-uint8_t                   s_ringVolume = 21;
-uint8_t                   s_volumeAfterAlarm = 12;
-uint8_t                   s_volumeSteps = 21;
-uint8_t                   s_volumeCurve = 1;
 uint8_t                   s_brightness = 100;   // percent
 uint8_t                   s_state = UNDEFINED;  // statemaschine
 uint8_t                   s_commercial_dur = 0; // duration of advertising
@@ -122,7 +123,6 @@ char                      s_chbuf[512];
 char                      s_fName[256];
 char                      s_myIP[25] = {0};
 char                      s_path[128];
-char                      s_prefix[5] = "s/";
 char                      s_commercial[25];
 char                      s_icyDescription[512] = {};
 char                      s_streamTitle[512] = {};
@@ -193,9 +193,7 @@ String                    s_filename = "";
 String                    s_TZName = "Europe/Berlin";
 String                    s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String                    s_media_downloadIP = "";
-dlnaHistory               s_dlnaHistory[10];
-timecounter               s_timeCounter;
-SD_content                s_SD_content;
+
 std::vector<char*>        s_PLS_content;
 std::deque<ps_ptr<char>>  s_logBuffer;
 
@@ -298,11 +296,11 @@ boolean defaultsettings() {
     s_settings.lastconnectedhost.reset();
     s_settings.lastconnectedfile.reset();
 
-    s_cur_volume = atoi(parseJson("\"volume\":"));
-    s_volumeSteps = atoi(parseJson("\"volumeSteps\":"));
-    s_ringVolume = atoi(parseJson("\"ringVolume\":"));
-    s_volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
-    s_BTvolume = atoi(parseJson("\"BTvolume\":"));
+    s_volume.cur_volume = atoi(parseJson("\"volume\":"));
+    s_volume.volumeSteps = atoi(parseJson("\"volumeSteps\":"));
+    s_volume.ringVolume = atoi(parseJson("\"ringVolume\":"));
+    s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
+    s_volume.BTvolume = atoi(parseJson("\"BTvolume\":"));
     s_f_BTpower = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
     s_btEmitterMode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
@@ -362,11 +360,11 @@ void updateSettings() {
     ps_ptr<char> jO;
     ; // JSON Object
     jO.assign("{\n");
-    jO.appendf("  \"volume\":%i", s_cur_volume);
-    jO.appendf(",\n  \"volumeSteps\":%i", s_volumeSteps);
-    jO.appendf(",\n  \"ringVolume\":%i", s_ringVolume);
-    jO.appendf(",\n  \"volumeAfterAlarm\":%i", s_volumeAfterAlarm);
-    jO.appendf(",\n  \"BTvolume\":%i", s_BTvolume);
+    jO.appendf("  \"volume\":%i", s_volume.cur_volume);
+    jO.appendf(",\n  \"volumeSteps\":%i", s_volume.volumeSteps);
+    jO.appendf(",\n  \"ringVolume\":%i", s_volume.ringVolume);
+    jO.appendf(",\n  \"volumeAfterAlarm\":%i", s_volume.volumeAfterAlarm);
+    jO.appendf(",\n  \"BTvolume\":%i", s_volume.BTvolume);
     jO.appendf(",\n  \"BTpower\":");
     (s_f_BTpower == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
     jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode());
@@ -597,7 +595,7 @@ void showLogoAndStationName(bool force) {
         //    log_w("showLogoAndStationName: %s", staMgnt.getStationName(s_cur_station));
         SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(s_cur_station)) + 12, 1);
         memcpy(SN_utf8, staMgnt.getStationName(s_cur_station), strlen(staMgnt.getStationName(s_cur_station)) + 1);
-        SerialPrintfln("Country: ... " ANSI_ESC_GREEN "%s", staMgnt.getStationCountry(s_cur_station));
+        SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "%s", staMgnt.getStationCountry(s_cur_station));
     } else {
         if (!s_stationName_air) s_stationName_air = strdup("");
         SN_utf8 = x_ps_calloc(strlen(s_stationName_air) + 12, 1);
@@ -1309,14 +1307,6 @@ void setup() {
 
     s_cur_AudioFolder = strdup("/audiofiles/");
 
-    if (TFT_CONTROLLER < 2) {
-        strcpy(s_prefix, "s/");
-    } else if (TFT_CONTROLLER < 7) {
-        strcpy(s_prefix, "m/");
-    } else {
-        strcpy(s_prefix, "l/");
-    }
-
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if TFT_CONTROLLER < 7
@@ -1344,7 +1334,7 @@ void setup() {
     tft.reset();
 #endif
 
-    SerialPrintfln("setup: ....  Init SD card");
+    SerialPrintfln("setup: ...   Init SD card");
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     pinMode(SD_MMC_D0, INPUT_PULLUP);
 #ifdef CONFIG_IDF_TARGET_ESP32S3
@@ -1375,7 +1365,7 @@ void setup() {
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
     if (s_brightness < 5) s_brightness = 5;
-    if (s_volumeSteps < 21) s_volumeSteps = 21;
+    if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
     setTFTbrightness(s_brightness);
 
     s_f_WiFiConnected = connectToWiFi();
@@ -1404,14 +1394,14 @@ void setup() {
     sdr_EQ_bandPass.setValue(s_toneBP);
     sdr_EQ_highPass.setValue(s_toneHP);
     sdr_EQ_balance.setValue(s_toneBAL);
-    sdr_DL_volume.setMinMaxVal(0, s_volumeSteps);
-    sdr_DL_volume.setValue(s_cur_volume);
-    sdr_PL_volume.setMinMaxVal(0, s_volumeSteps);
-    sdr_PL_volume.setValue(s_cur_volume);
-    sdr_RA_volume.setMinMaxVal(0, s_volumeSteps);
-    sdr_RA_volume.setValue(s_cur_volume);
-    sdr_CL_volume.setMinMaxVal(0, s_volumeSteps);
-    sdr_CL_volume.setValue(s_cur_volume);
+    sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_DL_volume.setValue(s_volume.cur_volume);
+    sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_PL_volume.setValue(s_volume.cur_volume);
+    sdr_RA_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_RA_volume.setValue(s_volume.cur_volume);
+    sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+    sdr_CL_volume.setValue(s_volume.cur_volume);
     btn_RA_mute.setValue(s_f_mute);
     btn_CL_mute.setValue(s_f_mute);
     btn_EQ_mute.setValue(s_f_mute);
@@ -1424,7 +1414,7 @@ void setup() {
 
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
-    audio.setVolumeSteps(s_volumeSteps);
+    audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
@@ -1432,9 +1422,9 @@ void setup() {
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", s_cur_station);
-    SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", s_cur_volume);
-    SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", s_volumeSteps);
-    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d", s_volumeAfterAlarm);
+    SerialPrintfln("setup: ....  current volume: " ANSI_ESC_CYAN "%d", s_volume.cur_volume);
+    SerialPrintfln("setup: ....  volume steps: " ANSI_ESC_CYAN "%d", s_volume.volumeSteps);
+    SerialPrintfln("setup: ....  volume after alarm: " ANSI_ESC_CYAN "%d", s_volume.volumeAfterAlarm);
     SerialPrintfln("setup: ....  last connected host: " ANSI_ESC_CYAN "%s", s_settings.lastconnectedhost.c_get());
     SerialPrintfln("setup: ....  connection timeout: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT);
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
@@ -1466,7 +1456,7 @@ void setup() {
         }
     }
 
-    if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_cur_volume); }
+    if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
     if (I2C_SCL != -1) {
@@ -1492,7 +1482,7 @@ void setup() {
     dispFooter.show(true);
 
     dispHeader.updateItem(_hl_item[RADIO]);
-    dispHeader.updateVolume(s_cur_volume);
+    dispHeader.updateVolume(s_volume.cur_volume);
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.show(true);
     s_radioSubMenue = 0;
@@ -1518,8 +1508,10 @@ const char* scaleImage(const char* path) {
     if (idx < 0)
         return path; // invalid path
     else {
+        char prefix[03] = " /";
+        prefix[0] = displayConfig.tftSize;
         strncpy(pathBuff, path, idx + 1);
-        strcat(pathBuff, s_prefix);
+        strcat(pathBuff, prefix);
         strcat(pathBuff, path + idx + 1);
     }
     return pathBuff;
@@ -1527,50 +1519,50 @@ const char* scaleImage(const char* path) {
 
 void setVolume(uint8_t vol) {
     static int16_t oldVol = -1;
-    log_i("volume old: %i. new: %i", oldVol, vol);
     if (vol == oldVol) return;
-    s_cur_volume = vol;
+    log_i("volume old: %i. new: %i", oldVol, vol);
+    s_volume.cur_volume = vol;
     oldVol = vol;
-    dispHeader.updateVolume(s_cur_volume);
-    sdr_CL_volume.setValue(s_cur_volume);
-    sdr_DL_volume.setValue(s_cur_volume);
-    sdr_PL_volume.setValue(s_cur_volume);
-    sdr_RA_volume.setValue(s_cur_volume);
-    SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", s_cur_volume);
+    dispHeader.updateVolume(s_volume.cur_volume);
+    sdr_CL_volume.setValue(s_volume.cur_volume);
+    sdr_DL_volume.setValue(s_volume.cur_volume);
+    sdr_PL_volume.setValue(s_volume.cur_volume);
+    sdr_RA_volume.setValue(s_volume.cur_volume);
+    SerialPrintfln("action: ...  current volume is " ANSI_ESC_CYAN "%d", s_volume.cur_volume);
 }
 
 uint8_t downvolume() {
-    uint8_t steps = s_volumeSteps / 20;
-    if (s_cur_volume == 0)
-        return s_cur_volume;
-    else if (steps < s_cur_volume)
-        s_cur_volume -= steps;
+    uint8_t steps = s_volume.volumeSteps / 20;
+    if (s_volume.cur_volume == 0)
+        return s_volume.cur_volume;
+    else if (steps < s_volume.cur_volume)
+        s_volume.cur_volume -= steps;
     else
-        s_cur_volume--;
-    sdr_CL_volume.setValue(s_cur_volume);
-    sdr_DL_volume.setValue(s_cur_volume);
-    sdr_PL_volume.setValue(s_cur_volume);
-    sdr_RA_volume.setValue(s_cur_volume);
+        s_volume.cur_volume--;
+    sdr_CL_volume.setValue(s_volume.cur_volume);
+    sdr_DL_volume.setValue(s_volume.cur_volume);
+    sdr_PL_volume.setValue(s_volume.cur_volume);
+    sdr_RA_volume.setValue(s_volume.cur_volume);
     s_f_mute = false;
     muteChanged(s_f_mute); // set mute off
-    return s_cur_volume;
+    return s_volume.cur_volume;
 }
 
 uint8_t upvolume() {
-    uint8_t steps = s_volumeSteps / 20;
-    if (s_cur_volume == s_volumeSteps)
-        return s_cur_volume;
-    else if (s_volumeSteps > s_cur_volume + steps)
-        s_cur_volume += steps;
+    uint8_t steps = s_volume.volumeSteps / 20;
+    if (s_volume.cur_volume == s_volume.volumeSteps)
+        return s_volume.cur_volume;
+    else if (s_volume.volumeSteps > s_volume.cur_volume + steps)
+        s_volume.cur_volume += steps;
     else
-        s_cur_volume++;
-    sdr_CL_volume.setValue(s_cur_volume);
-    sdr_DL_volume.setValue(s_cur_volume);
-    sdr_PL_volume.setValue(s_cur_volume);
-    sdr_RA_volume.setValue(s_cur_volume);
+        s_volume.cur_volume++;
+    sdr_CL_volume.setValue(s_volume.cur_volume);
+    sdr_DL_volume.setValue(s_volume.cur_volume);
+    sdr_PL_volume.setValue(s_volume.cur_volume);
+    sdr_RA_volume.setValue(s_volume.cur_volume);
     s_f_mute = false;
     muteChanged(s_f_mute); // set mute off
-    return s_cur_volume;
+    return s_volume.cur_volume;
 }
 
 void setStation(uint16_t sta) {
@@ -1704,7 +1696,9 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
 
     if (!s_f_SD_Upload && endsWith(fileName, "jpg")) {
         strcpy(fn, "/logo/");
-        strcat(fn, s_prefix);
+        char prefix[03] = " /";
+        prefix[0] = displayConfig.tftSize;
+        strcat(fn, prefix);
         if (!startsWith(fileName, "/")) strcat(fn, "/");
         strcat(fn, fileName);
         if (webSrv.uploadB64image(SD_MMC, fn, contentLength)) {
@@ -1904,7 +1898,7 @@ void muteChanged(bool m) {
     else
         webSrv.send("mute=", "0");
     dispHeader.speakerOnOff(!s_f_mute);
-    dispHeader.updateVolume(s_cur_volume);
+    dispHeader.updateVolume(s_volume.cur_volume);
     updateSettings();
 };
 
@@ -2364,13 +2358,13 @@ void changeState(int32_t state) {
             dispHeader.show(true);
             dispFooter.show(true);
             clearWithOutHeaderFooter();
-            if (s_ringVolume > 0) { // alarm with bell
+            if (s_volume.ringVolume > 0) { // alarm with bell
                 pic_RI_logo.enable();
                 showFileLogo(RINGING);
                 setTFTbrightness(s_brightness);
                 SerialPrintfln(ANSI_ESC_MAGENTA "Alarm");
-                setVolume(s_ringVolume);
-                audio.setVolume(s_ringVolume, s_volumeCurve);
+                setVolume(s_volume.ringVolume);
+                audio.setVolume(s_volume.ringVolume, s_volume.volumeCurve);
                 muteChanged(false);
                 connecttoFS("SD_MMC", "/ring/alarm_clock.mp3");
                 clk_RI_24small.show();
@@ -2640,26 +2634,26 @@ void loop() {
         if (!s_f_rtc) { s_f_rtc = rtc.hasValidTime(); }
 
         int16_t audioVol = audio.getVolume();
-        uint8_t currVol = s_cur_volume;
+        uint8_t currVol = s_volume.cur_volume;
         if (s_f_mute) currVol = 0;
-        uint8_t steps = s_volumeSteps / 7;
+        uint8_t steps = s_volume.volumeSteps / 7;
         if (audioVol > currVol) { // downvolume
             if (audioVol - steps >= currVol) {
                 if (audioVol - steps < 0)
-                    audio.setVolume(0, s_volumeCurve);
+                    audio.setVolume(0, s_volume.volumeCurve);
                 else
-                    audio.setVolume(audioVol - steps, s_volumeCurve);
+                    audio.setVolume(audioVol - steps, s_volume.volumeCurve);
             } else
-                audio.setVolume(audioVol - 1, s_volumeCurve);
+                audio.setVolume(audioVol - 1, s_volume.volumeCurve);
         }
         if (audioVol < currVol) { // upvolume
             if (audioVol + steps <= currVol) {
                 if (audioVol + steps > 255)
-                    audio.setVolume(255, s_volumeCurve);
+                    audio.setVolume(255, s_volume.volumeCurve);
                 else
-                    audio.setVolume(audioVol + steps, s_volumeCurve);
+                    audio.setVolume(audioVol + steps, s_volume.volumeCurve);
             } else {
-                audio.setVolume(audioVol + 1, s_volumeCurve);
+                audio.setVolume(audioVol + 1, s_volume.volumeCurve);
             }
         }
     }
@@ -2689,10 +2683,10 @@ void loop() {
         if (s_f_eof_alarm) { // AFTER RINGING
             s_f_eof_alarm = false;
             if (!s_f_rtc) return;
-            s_cur_volume = s_volumeAfterAlarm;
-            setVolume(s_cur_volume);
-            audio.setVolume(s_cur_volume, s_volumeCurve);
-            dispHeader.updateVolume(s_cur_volume);
+            s_volume.cur_volume = s_volume.volumeAfterAlarm;
+            setVolume(s_volume.cur_volume);
+            audio.setVolume(s_volume.cur_volume, s_volume.volumeCurve);
+            dispHeader.updateVolume(s_volume.cur_volume);
             wake_up();
         }
 
@@ -3872,7 +3866,7 @@ void ir_short_key(uint8_t key) {
                 txt_RA_staName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -3886,7 +3880,7 @@ void ir_short_key(uint8_t key) {
                 txt_PL_fName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -3900,7 +3894,7 @@ void ir_short_key(uint8_t key) {
                 txt_DL_fName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -3943,7 +3937,7 @@ void ir_short_key(uint8_t key) {
                 txt_RA_staName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -3957,7 +3951,7 @@ void ir_short_key(uint8_t key) {
                 txt_PL_fName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -3971,7 +3965,7 @@ void ir_short_key(uint8_t key) {
                 txt_DL_fName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4665,7 +4659,7 @@ void ir_short_key(uint8_t key) {
                 txt_RA_staName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4674,7 +4668,7 @@ void ir_short_key(uint8_t key) {
                 txt_PL_fName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4683,7 +4677,7 @@ void ir_short_key(uint8_t key) {
                 txt_DL_fName.hide();
                 volBox.enable();
                 upvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4705,7 +4699,7 @@ void ir_short_key(uint8_t key) {
                 txt_RA_staName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4714,7 +4708,7 @@ void ir_short_key(uint8_t key) {
                 txt_PL_fName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4723,7 +4717,7 @@ void ir_short_key(uint8_t key) {
                 txt_DL_fName.hide();
                 volBox.enable();
                 downvolume();
-                volBox.setNumbers(s_cur_volume);
+                volBox.setNumbers(s_volume.cur_volume);
                 volBox.show();
                 setTimeCounter(2);
                 break;
@@ -4949,28 +4943,28 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("upvolume"){             webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
     CMD_EQUALS("downvolume"){           webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
 
-    CMD_EQUALS("getVolumeSteps"){       webSrv.send("volumeSteps=", int2str(s_volumeSteps)); return;}
+    CMD_EQUALS("getVolumeSteps"){       webSrv.send("volumeSteps=", int2str(s_volume.volumeSteps)); return;}
 
-    CMD_EQUALS("setVolumeSteps"){       s_cur_volume = map_l(s_cur_volume, 0, s_volumeSteps, 0, param.toInt());
-                                        s_ringVolume = map_l(s_ringVolume, 0, s_volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(s_ringVolume));
-                                        s_volumeAfterAlarm = map_l(s_volumeAfterAlarm, 0, s_volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(s_volumeAfterAlarm));
-                                        s_volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volumeSteps);
+    CMD_EQUALS("setVolumeSteps"){       s_volume.cur_volume = map_l(s_volume.cur_volume, 0, s_volume.volumeSteps, 0, param.toInt());
+                                        s_volume.ringVolume = map_l(s_volume.ringVolume, 0, s_volume.volumeSteps, 0, param.toInt()); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
+                                        s_volume.volumeAfterAlarm = map_l(s_volume.volumeAfterAlarm, 0, s_volume.volumeSteps, 0, param.toInt()); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+                                        s_volume.volumeSteps = param.toInt(); webSrv.send("volumeSteps=", param); audio.setVolumeSteps(s_volume.volumeSteps);
                                         // log_w("s_volumeSteps  %i", s_volumeSteps);
-                                        sdr_CL_volume.setMinMaxVal(0, s_volumeSteps);
-                                        sdr_DL_volume.setMinMaxVal(0, s_volumeSteps);
-                                        sdr_PL_volume.setMinMaxVal(0, s_volumeSteps);
-                                        sdr_RA_volume.setMinMaxVal(0, s_volumeSteps);
-                                        setVolume(s_cur_volume);
-                                        SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d", s_volumeSteps);
+                                        sdr_CL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+                                        sdr_DL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+                                        sdr_PL_volume.setMinMaxVal(0, s_volume.volumeSteps);
+                                        sdr_RA_volume.setMinMaxVal(0, s_volume.volumeSteps);
+                                        setVolume(s_volume.cur_volume);
+                                        SerialPrintfln("action: ...  new volume steps: " ANSI_ESC_CYAN "%d", s_volume.volumeSteps);
                                         return;}
 
-    CMD_EQUALS("getRingVolume"){        webSrv.send("ringVolume=", int2str(s_ringVolume)); return;}
-    CMD_EQUALS("setRingVolume"){        s_ringVolume = param.toInt(); webSrv.send("ringVolume=", int2str(s_ringVolume));
-                                        SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "%d", s_ringVolume); return;}
+    CMD_EQUALS("getRingVolume"){        webSrv.send("ringVolume=", int2str(s_volume.ringVolume)); return;}
+    CMD_EQUALS("setRingVolume"){        s_volume.ringVolume = param.toInt(); webSrv.send("ringVolume=", int2str(s_volume.ringVolume));
+                                        SerialPrintfln("action: ...  new ring volume: " ANSI_ESC_CYAN "%d", s_volume.ringVolume); return;}
 
-    CMD_EQUALS("getVolAfterAlarm"){     webSrv.send("volAfterAlarm=", int2str(s_volumeAfterAlarm)); return;}
-    CMD_EQUALS("setVolAfterAlarm"){     s_volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(s_volumeAfterAlarm));
-                                        SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", s_volumeAfterAlarm); return;}
+    CMD_EQUALS("getVolAfterAlarm"){     webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm)); return;}
+    CMD_EQUALS("setVolAfterAlarm"){     s_volume.volumeAfterAlarm = param.toInt(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
+                                        SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", s_volume.volumeAfterAlarm); return;}
 
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage);
                                         return;}
@@ -5164,8 +5158,8 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
     CMD_EQUALS("KCX_BT_changeMode"){    bt_emitter.changeMode(); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
-    CMD_EQUALS("KCX_BT_downvolume"){    if(s_BTvolume > 0)  {s_BTvolume--; bt_emitter.downvolume();} return;}
-    CMD_EQUALS("KCX_BT_upvolume"){      if(s_BTvolume < 31) {s_BTvolume++; bt_emitter.upvolume();}   return;}
+    CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
+    CMD_EQUALS("KCX_BT_upvolume"){      if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}   return;}
     CMD_EQUALS("KCX_BT_getPower"){      if(s_f_BTpower) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
     CMD_EQUALS("KCX_BT_power"){         s_f_BTpower = !s_f_BTcurPowerState; BTpowerChanged(!s_f_BTcurPowerState); return;}
 
@@ -5276,7 +5270,7 @@ void kcx_bt_info(const char* info, const char* val) {
         char c[10];
         sprintf(c, "Vol: %s", val);
         txt_BT_volume.writeText(c);
-        if (s_BTvolume != atoi(val)) bt_emitter.setVolume(s_BTvolume);
+        if (s_volume.BTvolume != atoi(val)) bt_emitter.setVolume(s_volume.BTvolume);
     }
     if (startsWith(info, "Mode")) { txt_BT_mode.writeText(val); }
     if (startsWith(info, "POWER OFF")) {
@@ -5452,8 +5446,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(s_state == BLUETOOTH) {
         if( val && !strcmp(name, "btn_BT_pause"))    {bt_emitter.pauseResume(); return;}
         if( val && !strcmp(name, "btn_BT_radio"))    {return;}
-        if( val && !strcmp(name, "btn_BT_volDown"))  {if(s_BTvolume > 0)  {s_BTvolume--; bt_emitter.downvolume();} return;}
-        if( val && !strcmp(name, "btn_BT_volUp"))    {if(s_BTvolume < 31) {s_BTvolume++; bt_emitter.upvolume();}  return;}
+        if( val && !strcmp(name, "btn_BT_volDown"))  {if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
+        if( val && !strcmp(name, "btn_BT_volUp"))    {if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}  return;}
         if( val && !strcmp(name, "btn_BT_mode"))     {bt_emitter.changeMode(); return;}
         if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }
