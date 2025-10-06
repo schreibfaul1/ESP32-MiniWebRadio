@@ -8,7 +8,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0 - 04.10.2025                                                                                                               ";
+    Version 4.0.4 - 04.10.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -164,7 +164,6 @@ bool                      s_f_playlistNextFile = false;
 bool                      s_f_logoUnknown = false;
 bool                      s_f_pauseResume = false;
 bool                      s_f_SD_Upload = false;
-bool                      s_f_PSRAMfound = false;
 bool                      s_f_FFatFound = false;
 bool                      s_f_SD_MMCfound = false;
 bool                      s_f_ESPfound = false;
@@ -231,6 +230,8 @@ stationManagement staMgnt(&s_cur_station);
 
 SemaphoreHandle_t mutex_rtc;
 SemaphoreHandle_t mutex_display;
+
+
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1 // ⏹⏹⏹⏹
 // clang-format off
 //
@@ -1525,88 +1526,28 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
-    Serial.print("\n\n");
-    const char* chipModel = ESP.getChipModel();
-    uint8_t     avMajor = ESP_ARDUINO_VERSION_MAJOR;
-    uint8_t     avMinor = ESP_ARDUINO_VERSION_MINOR;
-    uint8_t     avPatch = ESP_ARDUINO_VERSION_PATCH;
-    Serial.printf("ESP32 Chip: %s\n", chipModel);
-    Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
-    uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
-    uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
-    uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
-    Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
-    trim(Version);
-    Serial.printf("MiniWebRadio %s\n", Version);
-    Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
-    Serial.printf("FLASH size %lu bytes, speed %lu MHz\n", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
-    Serial.printf("CPU speed %lu MHz\n", (long unsigned)ESP.getCpuFreqMHz());
-    Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
-    Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
-
-    if (!psramInit()) {
-        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
-    } else {
-        s_f_PSRAMfound = true;
-        Serial.printf("PSRAM total size: %lu bytes\n", (long unsigned)ESP.getPsramSize());
-    }
-    if (ESP.getFlashChipSize() > 80000000) {
-        if (!FFat.begin()) {
-            if (!FFat.format()) Serial.printf("FFat Mount Failed\n");
-        } else {
-            Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
-            s_f_FFatFound = true;
-        }
-    }
-    const char* rr = NULL;
-    s_resetReason = esp_reset_reason();
-    switch (s_resetReason) {
-        case ESP_RST_UNKNOWN: rr = "Reset reason can not be determined"; break;
-        case ESP_RST_POWERON: rr = "Reset due to power-on event"; break;
-        case ESP_RST_EXT: rr = "Reset by external pin (not applicable for ESP32)"; break;
-        case ESP_RST_SW: rr = "Software reset via esp_restart"; break;
-        case ESP_RST_PANIC: rr = "Software reset due to exception/panic"; break;
-        case ESP_RST_INT_WDT: rr = "Reset (software or hardware) due to interrupt watchdog"; break;
-        case ESP_RST_TASK_WDT: rr = "Reset due to task watchdog"; break;
-        case ESP_RST_WDT:
-            rr = "Reset due to other watchdogs";
-            s_resetReason = 1;
-            break;
-        case ESP_RST_DEEPSLEEP: rr = "Reset after exiting deep sleep mode"; break;
-        case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
-        case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
-    }
-    Serial.printf("RESET_REASON: %s", rr);
-    Serial.print("\n\n");
+    vTaskDelay(1000); // wait for serial terminal is ready
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
-    SerialPrintfln("   ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       *     MiniWebRadio V4     *    ");
-    SerialPrintfln(ANSI_ESC_YELLOW "       ***************************    ");
-    SerialPrintfln("   ");
-    if (startsWith(chipModel, "ESP32-D")) { ; } // ESP32-D    ...  okay
-    if (startsWith(chipModel, "ESP32-P")) { ; } // ESP32-PICO ...  okay
-    if (startsWith(chipModel, "ESP32-S2")) {
-        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-S2");
-        return;
-    }
-    if (startsWith(chipModel, "ESP32-C3")) {
-        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with ESP32-C3");
-        return;
-    }
-    if (startsWith(chipModel, "ESP32-S3")) { ; } // ESP32-S3  ...  okay
+    Serial.print("\n\n");
+    trim(Version);
+    Serial.println(ANSI_ESC_YELLOW "             *****************************************************   ");
+    Serial.printf(ANSI_ESC_YELLOW "             *     MiniWebRadio % 29s    *    \n", Version);
+    Serial.println(ANSI_ESC_YELLOW "             *****************************************************    ");
+    Serial.println(ANSI_ESC_RESET "   ");
+
+    if(!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
     s_f_ESPfound = true;
-    SerialPrintfln("setup: ....  Arduino is pinned to core " ANSI_ESC_CYAN "%d", xPortGetCoreID());
 
     s_cur_AudioFolder = strdup("/audiofiles/");
 
-    if (TFT_CONTROLLER < 2)
+    if (TFT_CONTROLLER < 2) {
         strcpy(s_prefix, "s/");
-    else if (TFT_CONTROLLER < 7)
+    } else if (TFT_CONTROLLER < 7) {
         strcpy(s_prefix, "m/");
-    else
+    } else {
         strcpy(s_prefix, "l/");
+    }
 
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
@@ -1737,8 +1678,6 @@ void setup() {
                 setStation(s_cur_station);
             else { setStationViaURL(s_settings.lastconnectedhost.c_get(), ""); }
         }
-    } else {
-        SerialPrintfln("RESET_REASON:" ANSI_ESC_RED "%s", rr);
     }
 
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_cur_volume); }

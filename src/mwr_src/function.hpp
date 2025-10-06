@@ -140,6 +140,71 @@ void GetRunTimeStats(char* pcWriteBuffer) {
     }
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
+
+    ps_ptr<char> chipModel = ESP.getChipModel();
+    uint8_t      avMajor = ESP_ARDUINO_VERSION_MAJOR;
+    uint8_t      avMinor = ESP_ARDUINO_VERSION_MINOR;
+    uint8_t      avPatch = ESP_ARDUINO_VERSION_PATCH;
+    Serial.printf("ESP32 Chip: %s\n", chipModel.c_get());
+    Serial.printf("Arduino Version: %d.%d.%d\n", avMajor, avMinor, avPatch);
+    uint8_t idfMajor = ESP_IDF_VERSION_MAJOR;
+    uint8_t idfMinor = ESP_IDF_VERSION_MINOR;
+    uint8_t idfPatch = ESP_IDF_VERSION_PATCH;
+    Serial.printf("ESP-IDF Version: %d.%d.%d\n", idfMajor, idfMinor, idfPatch);
+
+    Serial.printf("ARDUINO_LOOP_STACK_SIZE %d words (32 bit)\n", CONFIG_ARDUINO_LOOP_STACK_SIZE);
+    Serial.printf("FLASH size %lu bytes, speed %lu MHz\n", (long unsigned)ESP.getFlashChipSize(), (long unsigned)ESP.getFlashChipSpeed() / 1000000);
+    Serial.printf("CPU speed %lu MHz\n", (long unsigned)ESP.getCpuFreqMHz());
+    Serial.printf("SDMMC speed %d MHz\n", SDMMC_FREQUENCY / 1000000);
+    Serial.printf("TFT speed %d MHz\n", TFT_FREQUENCY / 1000000);
+
+    if (!psramInit()) {
+        Serial.printf(ANSI_ESC_RED "PSRAM not found! MiniWebRadio doesn't work properly without PSRAM!" ANSI_ESC_WHITE);
+    } else {
+        Serial.printf("PSRAM total size: %lu bytes\n", (long unsigned)ESP.getPsramSize());
+    }
+    if (ESP.getFlashChipSize() > 80000000) {
+        if (!FFat.begin()) {
+            if (!FFat.format()) Serial.printf("FFat Mount Failed\n");
+        } else {
+            Serial.printf("FFat total space: %d bytes, free space: %d bytes", FFat.totalBytes(), FFat.freeBytes());
+            *s_f_FFatFound = true;
+        }
+    }
+    Serial.printf("Arduino is pinned to core %d\n", xPortGetCoreID());
+    const char* rr = NULL;
+    *s_resetReason = (esp_reset_reason_t)esp_reset_reason();
+    switch (*s_resetReason) {
+        case ESP_RST_UNKNOWN: rr = "Reset reason can not be determined"; break;
+        case ESP_RST_POWERON: rr = "Reset due to power-on event"; break;
+        case ESP_RST_EXT: rr = "Reset by external pin (not applicable for ESP32)"; break;
+        case ESP_RST_SW: rr = "Software reset via esp_restart"; break;
+        case ESP_RST_PANIC: rr = "Software reset due to exception/panic"; break;
+        case ESP_RST_INT_WDT: rr = "Reset (software or hardware) due to interrupt watchdog"; break;
+        case ESP_RST_TASK_WDT: rr = "Reset due to task watchdog"; break;
+        case ESP_RST_WDT:
+            rr = "Reset due to other watchdogs";
+            *s_resetReason = 1;
+            break;
+        case ESP_RST_DEEPSLEEP: rr = "Reset after exiting deep sleep mode"; break;
+        case ESP_RST_BROWNOUT: rr = "Brownout reset (software or hardware)"; break;
+        case ESP_RST_SDIO: rr = "Reset over SDIO"; break;
+    }
+    Serial.printf("RESET_REASON: %s\n", rr);
+    Serial.print("\n");
+
+    if (chipModel.equals("ESP32-S3")) { } // ...  okay
+    else if (chipModel.equals("ESP32-P4")) {} // ...  okay
+    else{
+        SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with %s", chipModel.c_get());
+        return false;
+    }
+    Serial.print("\n");
+    return true;
+}
+
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char ir_buttons_json[] = "[{\"A\":\"0x00\",\"label\":\"IR address\"},"
                                "{\"C\":\"0x4a\",\"label\":\"IR command\"},"
                                "{\"0\":\"0x52\",\"label\":\"ZERO\"},"
@@ -669,7 +734,7 @@ const char voice_time_de[24][50] = {"Beim dritten Ton ist es genau Mitternacht",
                                     "Beim dritten Ton ist es genau zwanzig Uhr",        "Beim dritten Ton ist es genau einundzwanzig Uhr",
                                     "Beim dritten Ton ist es genau zweiundzwanzig Uhr", "Beim dritten Ton ist es genau dreiundzwanzig Uhr"};
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-inline const char* aes_encrypt(const char* input) {
+const char* aes_encrypt(const char* input) {
     static char* output = NULL;
     uint16_t     len = strlen(input) / 16;
     len++;
@@ -696,39 +761,7 @@ const char* aes_decrypt(const char* input) {
     return output;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void encode_base64(unsigned char* input, size_t input_len) {
-    // Buffer-Größe berechnen für Base64-Kodierung
-    size_t         buffer_size = ((input_len + 2) / 3) * 4 + 1;
-    unsigned char* output = (unsigned char*)malloc(buffer_size); // Dynamischer Buffer
-
-    size_t output_len;
-    int    ret = mbedtls_base64_encode(output, buffer_size, &output_len, input, input_len);
-
-    if (ret == 0) {
-        printf("Base64-Kodierung: %s\n", output);
-    } else {
-        printf("Fehler bei der Base64-Kodierung\n");
-    }
-
-    free(output); // Buffer freigeben
-}
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void decode_base64(unsigned char* input, size_t input_len) {
-    size_t output_len;
-    // Buffer-Größe berechnen für Base64-Dekodierung
-    size_t         buffer_size = (input_len / 4) * 3 + 1;
-    unsigned char* output = (unsigned char*)malloc(buffer_size); // Dynamischer Buffer
-
-    // Dekodierung
-    int ret = mbedtls_base64_decode((uint8_t*)output, sizeof(output), &output_len, (const unsigned char*)input, input_len);
-
-    if (ret == 0) {
-        printf("Dekodierter Text: %s\n", output);
-    } else {
-        printf("Fehler bei der Base64-Dekodierung\n");
-    }
-    free(output); // Buffer freigeben
-}
+// 📌📌📌  I R _ B U T T O N S  📌📌📌
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
   private:
