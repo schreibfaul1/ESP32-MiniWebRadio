@@ -143,17 +143,17 @@ inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66
 
 inline constexpr DisplayConfig config = {
     fonts,
-    16,
-    0,
-    0,
-    156,
-    21, // list, header, footer, bigNum, fileNum
-    {5, 77, 129, 57, 0},
-    48, // Xpos, Ypos
-    320,
-    240,
-    5,  // width, height, brightnessMin
-    's' // size code
+    16,                  // listFontSize
+    0,                   // headerFontSize, 0 -> autoSize
+    0,                   // footerFontSize, 0 -> autoSize
+    156,                 // bigNumbersFontSize
+    21,                  // fileNumberFontSize
+    {5, 77, 129, 57, 0}, // sleeptimeXPos[5]
+    48,                  // sleeptimeYPos
+    320,                 // width
+    240,                 // height
+    5,                   // brightnessMin
+    's'                  // size code
 };
 } // namespace layout_320x240
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -216,7 +216,20 @@ constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(140, sdrBAL
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
-inline constexpr DisplayConfig config = {fonts, 21, 0, 0, 156, 27, {5, 107, 175, 73, 0}, 48, 480, 320, 5, 'm'};
+inline constexpr DisplayConfig config = {
+    fonts,
+    21,                   // listFontSize
+    0,                    // headerFontSize, 0 -> autoSize
+    0,                    // footerFontSize, 0 -> autoSize
+    156,                  // bigNumbersFontSize
+    27,                   // fileNumberFontSize
+    {5, 107, 175, 73, 0}, // sleeptimeXPos[5]
+    48,                   // sleeptimeYPos
+    480,                  // width
+    320,                  // height
+    5,                    // brightnessMin
+    'm'                   // size code
+};
 } // namespace layout_480x320
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -278,7 +291,20 @@ constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(190, sdrBAL
 
 inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
 
-inline constexpr DisplayConfig config = {fonts, 27, 38, 38, 156, 34, {20, 137, 223, 106, 0}, 112, 800, 480, 25, 'l'};
+inline constexpr DisplayConfig config = {
+    fonts,
+    27,                     // listFontSize
+    38,                     // headerFontSize
+    38,                     // footerFontSize
+    156,                    // bigNumbersFontSize
+    34,                     // fileNumberFontSize
+    {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
+    112,                    // sleeptimeYPos
+    800,                    // width
+    480,                    // height
+    25,                     // brightnessMin
+    'l'                     // size code
+};
 } // namespace layout_800x480
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -315,7 +341,6 @@ inline DisplayConfig makeDisplayConfig() {
 
 inline const DisplayConfig displayConfig = makeDisplayConfig();
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                  M E N U E / B U T T O N S                                                                  ║
@@ -687,7 +712,7 @@ void placingGraphicObjects() { // and initialize them
     sdr_EQ_highPass.begin(layout.sdrHP.x, layout.sdrHP.y, layout.sdrHP.w, layout.sdrHP.h, layout.sdrHP.pl, layout.sdrHP.pr, layout.sdrHP.pt, layout.sdrHP.pb);
     sdr_EQ_highPass.setMinMaxVal(-40, 6);
     sdr_EQ_balance.begin(layout.sdrBAL.x, layout.sdrBAL.y, layout.sdrBAL.w, layout.sdrBAL.h, layout.sdrBAL.pl, layout.sdrBAL.pr, layout.sdrBAL.pt, layout.sdrBAL.pb);
-    sdr_EQ_balance.setMinMaxVal( -16, 16);
+    sdr_EQ_balance.setMinMaxVal(-16, 16);
     txt_EQ_lowPass.begin(layout.txtLP.x, layout.txtLP.y, layout.txtLP.w, layout.txtLP.h, 0, 0, 0, 0);
     txt_EQ_lowPass.setAlign(TFT_ALIGN_RIGHT, TFT_ALIGN_CENTER);
     txt_EQ_lowPass.setFont(0); // 0 -> auto

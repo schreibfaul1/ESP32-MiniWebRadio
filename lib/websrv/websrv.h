@@ -28,10 +28,10 @@ extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd,  const char* 
 class WebSrv
 {
 protected:
-    WiFiClient      cmdclient;                               // An instance of the client for commands
-    WiFiClient      webSocketClient ;
-    WiFiServer      cmdserver;
-    WiFiServer      webSocketServer;
+    NetworkClient      cmdclient;                               // An instance of the client for commands
+    NetworkClient      webSocketClient ;
+    NetworkServer      cmdserver;
+    NetworkServer      webSocketServer;
 
 private:
     bool            http_reponse_flag = false ;               // Response required

@@ -1,8 +1,7 @@
-// created: 10.Feb.2022
-// updated: 06.Jum.2025
+// created: 10.02.2022
+// updated: 06.10.2025
 
 #pragma once
-#pragma GCC optimize("Os") // optimize for code size
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
