@@ -919,6 +919,8 @@ class IR_buttons {
     }
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  S D _ C O N T E N T   📌📌📌
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class SD_content {
   private:
     struct FileInfo {
@@ -934,27 +936,24 @@ class SD_content {
     };
     std::vector<FileInfo> m_files;
 
-    File  m_masterFile;
-    File  m_slaveFile;
-    char* m_buff = NULL;
-    char* m_lastConnectedFile = NULL;
-    char* m_lastConnectedFolder = NULL;
-    char* m_lastConnectedFileName = NULL;
+    File         m_masterFile;
+    File         m_slaveFile;
+    ps_ptr<char> m_buff;
+    ps_ptr<char> m_lastConnectedFile = "";
+    ps_ptr<char> m_lastConnectedFolder = "";
+    ps_ptr<char> m_lastConnectedFileName = "";
+    ps_ptr<char> m_JSONstr;
 
   public:
-    SD_content() {
-        m_buff = x_ps_malloc(1024);
-        m_files.clear();
-    }
+    SD_content() { m_files.clear(); }
     ~SD_content() {
         m_files.clear();
-        x_ps_free(&m_buff);
+        m_JSONstr.reset();
+        m_lastConnectedFile.reset();
+        m_lastConnectedFolder.reset();
+        m_lastConnectedFileName.reset();
     }
     bool listFilesInDir(const char* path, boolean audioFilesOnly, boolean withoutDirs) {
-        if (!m_buff) {
-            log_e("oom");
-            return false;
-        }
         m_files.clear();
         if (m_masterFile) m_masterFile.close();
         if (!SD_MMC.exists(path)) {
@@ -972,11 +971,9 @@ class SD_content {
             if (!m_slaveFile) break;
             if (m_slaveFile.isDirectory()) {
                 if (!withoutDirs) { // folder size is -1
-                    char* path = x_ps_malloc(strlen(m_slaveFile.path()) + 3);
-                    strcpy(path, (const char*)m_slaveFile.path());
-                    strcat(path, "/"); // add '/'
-                    m_files.emplace_back((int)-1, m_slaveFile.name(), path);
-                    x_ps_free(&path);
+                    ps_ptr<char> path = m_slaveFile.path();
+                    path.append("/"); // add '/'
+                    m_files.emplace_back((int)-1, m_slaveFile.name(), path.c_get());
                 }
             } else {
                 if (audioFilesOnly) {
@@ -996,7 +993,7 @@ class SD_content {
 
     bool isDir(uint16_t idx) {
         if (idx >= m_files.size()) {
-            log_e("idx %i is oor, max = %i", idx, m_files.size() - 1);
+            MWR_LOG_ERROR("idx %i is oor, max = %i", idx, m_files.size() - 1);
             return false;
         }
         if (m_files[idx].fileSize == -1) return true;
@@ -1005,24 +1002,24 @@ class SD_content {
     size_t      getSize() { return m_files.size(); }
     const char* getColouredSStringByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
-            log_w("m_files.size() is 0");
+            MWR_LOG_WARN("m_files.size() is 0");
             return "";
         }
         if (m_files.size() < idx + 1) {
-            log_w("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        sprintf(m_buff, "%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.get(), m_files[idx].fileSize);
-        return m_buff;
+        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.get(), m_files[idx].fileSize);
+        return m_buff.get();
     }
     const char* getFileNameByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
-            log_w("m_files.size() is 0");
+            MWR_LOG_WARN("m_files.size() is 0");
             return "";
         }
         if (m_files.size() < idx + 1) {
-            log_w("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
         return m_files[idx].fileName.get();
@@ -1030,11 +1027,11 @@ class SD_content {
 
     int32_t getFileSizeByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
-            log_w("m_files.size() is 0");
+            MWR_LOG_WARN("m_files.size() is 0");
             return 0;
         }
         if (m_files.size() < idx + 1) {
-            log_w("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
             return 0;
         }
         return m_files[idx].fileSize;
@@ -1042,11 +1039,11 @@ class SD_content {
 
     const char* getFilePathByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
-            log_w("m_files.size() is 0");
+            MWR_LOG_WARN("m_files.size() is 0");
             return "";
         }
         if (m_files.size() < idx + 1) {
-            log_w("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
         /*
@@ -1066,11 +1063,11 @@ class SD_content {
 
     const char* getFileFolderByIndex(uint16_t idx) {
         if (m_files.size() == 0) {
-            log_w("m_files.size() is 0");
+            MWR_LOG_WARN("m_files.size() is 0");
             return "";
         }
         if (m_files.size() < idx + 1) {
-            log_w("idx %i is oor, max = %i", idx, m_files.size());
+            MWR_LOG_WARN("idx %i is oor, max = %i", idx, m_files.size());
             return "";
         }
         /*
@@ -1087,9 +1084,9 @@ class SD_content {
         */
         if (isDir(idx)) return m_files[idx].filePath.c_get();
         int lastSlashIndex = m_files[idx].filePath.last_index_of('/');
-        strcpy(m_buff, m_files[idx].filePath.get());
+        m_buff.copy_from(m_files[idx].filePath.get());
         m_buff[lastSlashIndex + 1] = '\0';
-        return m_buff;
+        return m_buff.get();
     }
 
     int16_t getIndexByName(const char* path) {
@@ -1147,62 +1144,99 @@ class SD_content {
             "/audiofiles/wavfiles/"                 "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // we have no file
             "/audiofiles/wavfiles/.wav"             "/audiofiles/wavfiles/"     ""                          "/audiofiles/wavfiles/"             // file has no name
         */
-        x_ps_free(&m_lastConnectedFileName);
-        x_ps_free(&m_lastConnectedFolder);
+        m_lastConnectedFileName.assign("");
+        m_lastConnectedFolder.assign("");
         int posFirst = 0, posLast = 0, posDot = 0;
         if (!lastconnectedItem) { // guard, lastconnectedItem == NULL
-            m_lastConnectedFileName = x_ps_strdup("");
-            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            m_lastConnectedFileName.assign("");
+            m_lastConnectedFolder.assign("/audiofiles/");
             goto exit;
         }
         posFirst = indexOf(lastconnectedItem, "/", 0);
         posLast = lastIndexOf(lastconnectedItem, '/');
         if (posFirst != 0) { // guard, does not start with /
-            m_lastConnectedFileName = x_ps_strdup("");
-            m_lastConnectedFolder = x_ps_strdup("/audiofiles/");
+            m_lastConnectedFileName.assign("");
+            m_lastConnectedFolder.assign("/audiofiles/");
             goto exit;
         }
         if (posLast == 0) {
-            m_lastConnectedFolder = x_ps_strdup("/");
+            m_lastConnectedFolder.assign("/");
         } // we have no folder name
         else {
-            m_lastConnectedFolder = x_ps_strndup(lastconnectedItem, posLast + 1);
+            m_lastConnectedFolder.copy_from(lastconnectedItem, posLast + 1);
         }
 
         if (posLast == strlen(lastconnectedItem) - 1) {
-            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFileName.assign("");
         } // we have no file name
         else {
-            m_lastConnectedFileName = x_ps_strdup(lastconnectedItem + posLast + 1);
+            m_lastConnectedFileName.copy_from(lastconnectedItem + posLast + 1);
         }
 
         // log_e("posFirst %i, posLast %i, m_lastConnectedFileName %s, m_lastConnectedFolder %s", posFirst, posLast, m_lastConnectedFileName, m_lastConnectedFolder);
-        posDot = indexOf(m_lastConnectedFileName, ".", 0);
+        posDot = m_lastConnectedFileName.index_of('.', 0);
         if (posDot == -1) { // no extension
-            x_ps_free(&m_lastConnectedFileName);
-            m_lastConnectedFileName = x_ps_strdup("");
+            m_lastConnectedFileName.assign("");
         }
 
     exit:
-        x_ps_free(&m_lastConnectedFile);
-        m_lastConnectedFile = x_ps_malloc(strlen(m_lastConnectedFolder) + strlen(m_lastConnectedFileName) + 1);
-        strcpy(m_lastConnectedFile, m_lastConnectedFolder);
-        strcat(m_lastConnectedFile, m_lastConnectedFileName);
-        // log_e("lastconnectedItem %s", lastconnectedItem);
-        // log_e("lastConnectedFile %s", m_lastConnectedFile.c_get());
-        // log_e("m_lastConnectedFileName %s", m_lastConnectedFileName);
-        // log_e("m_lastConnectedFolder %s", m_lastConnectedFolder);
-        listFilesInDir(m_lastConnectedFolder, true, false);
+        m_lastConnectedFile.clone_from(m_lastConnectedFolder);
+        m_lastConnectedFile.append(m_lastConnectedFileName.c_get());
+        MWR_LOG_DEBUG("lastconnectedItem %s", lastconnectedItem);
+        MWR_LOG_DEBUG("lastConnectedFile %s", m_lastConnectedFile.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFileName %s", m_lastConnectedFileName.c_get());
+        MWR_LOG_DEBUG("m_lastConnectedFolder %s", m_lastConnectedFolder.c_get());
+        listFilesInDir(m_lastConnectedFolder.c_get(), true, false);
         sort();
     }
-    const char* getLastConnectedFolder() { return m_lastConnectedFolder; }
+    const char* getLastConnectedFolder() { return m_lastConnectedFolder.c_get(); }
 
-    const char* getLastConnectedFileName() { return m_lastConnectedFileName; }
+    const char* getLastConnectedFileName() { return m_lastConnectedFileName.c_get(); }
     int         getPosByFileName(const char* fileName) {
         for (int i = 0; i < m_files.size(); i++) {
-            if (!strcmp(m_files[i].fileName.get(), fileName)) return i; // fileName e.g. "file.mp3"
+            if (m_files[i].fileName.equals(fileName)) return i; // fileName e.g. "file.mp3"
         }
-        return 0;
+        return -1;
+    }
+
+    const char* stringifyDirContent(String path) {
+        ps_ptr<char> fileName;
+        ps_ptr<char> fileSize;
+        uint8_t      isDir = 0;
+        if (!listFilesInDir(path.c_str(), false, false)) return "[]"; // if success: result will be in SD_content
+        if (!getSize()) return "[]";                                  // empty?
+        m_JSONstr.assign("[");
+
+        for (int i = 0; i < getSize(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
+            const char* fn = getColouredSStringByIndex(i);
+            if (startsWith(fn, ".")) continue;    // ignore hidden folders
+            int16_t idx = indexOf(fn, "\033", 1); // idx > 0 we have size (after ANSI ESC SEQUENCE)
+            if (idx > 0) {
+                isDir = 0; // {"name":"test.mp3","dir":false,"size":"3421"}
+                fileName.copy_from(fn, idx);
+                fileSize.copy_from(fn + idx + 6); // "all after 033[33m"
+            } else {
+                isDir = 1;
+                fileName.copy_from(fn);
+            }
+            m_JSONstr.append("{\"name\":");
+            m_JSONstr.appendf("\"%s\"", fileName.c_get());
+            m_JSONstr.append(",\"dir\":");
+            if (isDir) {
+                m_JSONstr.append("true");
+                m_JSONstr.append(",\"size\":0");
+            } else {
+                m_JSONstr.append("false");
+                m_JSONstr.append(",\"size\":");
+                m_JSONstr.appendf("%s", fileSize.c_get());
+            }
+            m_JSONstr.append("},");
+            MWR_LOG_DEBUG("%s", fn);
+        }
+        int lastComma = m_JSONstr.last_index_of(',');
+        m_JSONstr[lastComma] = ']'; // replace comma by square bracket close
+        MWR_LOG_DEBUG("%s", m_JSONstr.c_get());
+        return m_JSONstr.c_get();
     }
 
   private:
@@ -1220,6 +1254,8 @@ class SD_content {
         });
     }
 };
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  S T A T I O N S M A N A G E M E N T    📌📌📌
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class stationManagement {
   private:

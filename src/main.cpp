@@ -99,7 +99,7 @@ int16_t                   s_toneBAL = 0;         // -16...0....+16         audio
 uint32_t                  s_icyBitRate = 0;      // from http response header via event
 uint32_t                  s_decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t                  s_cur_station = 0;     // current station(nr), will be set later
-uint16_t                  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+int16_t                   s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t                  s_sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t                  s_plsCurPos = 0;
 int16_t                   s_totalNumberReturned = -1;
@@ -129,7 +129,6 @@ char                      s_timeSpeechLang[10] = "en";
 char*                     s_cur_AudioFolder = NULL;
 char*                     s_cur_AudioFileName = NULL;
 char*                     s_stationURL = NULL;
-char*                     s_JSONstr = NULL;
 char*                     s_BT_metaData = NULL;
 char*                     s_playlistPath = NULL;
 bool                      s_f_rtc = false; // true if time from ntp is received
@@ -623,6 +622,7 @@ boolean defaultsettings() {
     x_ps_free(&s_cur_AudioFileName);
     s_cur_AudioFileName = x_ps_strdup(s_SD_content.getLastConnectedFileName());
     s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
+    if(s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0; // not found
     // ------------------------------------------------------------------------------------------------------------
     x_ps_free(&jO);
     x_ps_free(&tmp);
@@ -637,7 +637,6 @@ boolean defaultsettings() {
 }
 // clang-format on  🟢🟡🔴
 
-// clang-format off  🟢🟡🔴
 void updateSettings() {
     if (!s_settings.lastconnectedhost.valid()) s_settings.lastconnectedhost.assign("");
     if (!s_settings.lastconnectedfile.valid()) s_settings.lastconnectedfile.assign("/audiofiles/");
@@ -690,69 +689,6 @@ void updateSettings() {
         s_settingsHash = simpleHash(jO.c_get());
     }
 }
-// clang-format on
-
-/*****************************************************************************************************************************************************
- *                                                    F I L E   E X P L O R E R                                                                      *
- *****************************************************************************************************************************************************/
-// Sends a list of the content of a directory as JSON file
-const char* SD_stringifyDirContent(String path) {
-    uint16_t JSONstrLength = 0;
-    uint8_t  isDir = 0;
-    uint16_t fnLen = 0; // length of file mame
-    uint8_t  fsLen = 0; // length of file size
-    x_ps_free(&s_JSONstr);
-    if (!s_SD_content.listFilesInDir(path.c_str(), false, false)) return "[]"; // if success: result will be in s_SD_content
-    if (psramFound()) {
-        s_JSONstr = (char*)ps_malloc(2);
-    } else {
-        s_JSONstr = (char*)malloc(2);
-    }
-    JSONstrLength += 2;
-    memcpy(s_JSONstr, "[\0", 2);
-    if (!s_SD_content.getSize()) return "[]"; // empty?
-
-    for (int i = 0; i < s_SD_content.getSize(); i++) { // build a JSON string in PSRAM, e.g. [{"name":"m","dir":true},{"name":"s","dir":true}]
-        const char* fn = s_SD_content.getColouredSStringByIndex(i);
-        if (startsWith(fn, "/.")) continue;   // ignore hidden folders
-        int16_t idx = indexOf(fn, "\033", 1); // idx >0 we have size (after ANSI ESC SEQUENCE)
-        if (idx > 0) {
-            isDir = 0;
-            fnLen = idx;
-            fsLen = strlen(fn) - (idx + 6);          // "033[33m"
-            JSONstrLength += fnLen + 24 + 8 + fsLen; // {"name":"test.mp3","dir":false,"size":"3421"}
-        } else {
-            isDir = 1;
-            fnLen = strlen(fn);
-            fsLen = 0;
-            JSONstrLength += fnLen + 23 + 11;
-        }
-        if (psramFound()) {
-            s_JSONstr = (char*)ps_realloc(s_JSONstr, JSONstrLength);
-        } else {
-            s_JSONstr = (char*)realloc(s_JSONstr, JSONstrLength);
-        }
-
-        strcat(s_JSONstr, "{\"name\":\"");
-        strncat(s_JSONstr, fn, fnLen);
-        strcat(s_JSONstr, "\",\"dir\":");
-        if (isDir) {
-            strcat(s_JSONstr, "true");
-        } else {
-            strcat(s_JSONstr, "false");
-        }
-        if (!isDir) {
-            strcat(s_JSONstr, ",\"size\":");
-            strncat(s_JSONstr, fn + idx + 6, fsLen);
-        } else {
-            strcat(s_JSONstr, ",\"size\": \"\"");
-        }
-        strcat(s_JSONstr, "},");
-    }
-    s_JSONstr[JSONstrLength - 2] = ']'; // replace comma by square bracket close
-    return s_JSONstr;
-}
-
 /*****************************************************************************************************************************************************
  *                                                    T F T   B R I G H T N E S S                                                                    *
  *****************************************************************************************************************************************************/
@@ -1558,6 +1494,7 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
         x_ps_free(&s_cur_AudioFileName);
         s_cur_AudioFileName = x_ps_strdup(s_SD_content.getLastConnectedFileName());
         s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
+        if(s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0;
     }
     //    log_w("Filesize %d", audioGetFileSize());
     //    log_w("FilePos %d", audioGetFilePosition());
@@ -1583,8 +1520,8 @@ void stopSong() {
  *****************************************************************************************************************************************************/
 
 void setup() {
-    Audio::audio_info_callback = my_audio_info;
-    dlna.dlna_client_callbak(on_dlna_client);
+    Audio::audio_info_callback = my_audio_info; // audio callback
+    dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
@@ -5704,7 +5641,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                         return;}
 
-    CMD_EQUALS("SD_GetFolder"){         webSrv.reply(SD_stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
+    CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_str());
                                         return;}
 

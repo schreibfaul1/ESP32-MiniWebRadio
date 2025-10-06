@@ -349,7 +349,6 @@ typedef struct __settings{
 boolean        defaultsettings();
 void           updateSettings();
 void           urldecode(char* str);
-const char*    SD_stringifyDirContent(String path);
 void           setTFTbrightness(uint8_t duty);
 void           fall_asleep();
 void           wake_up();
