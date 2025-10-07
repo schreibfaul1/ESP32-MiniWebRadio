@@ -28,7 +28,7 @@
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
 #include "IR.h"
-#include "KCX_BT_Emitter.h"
+#include "kcx_bt_emitter.h"
 #include "SPIFFS.h"
 #include "base64.h"
 #include "esp_log.h"
