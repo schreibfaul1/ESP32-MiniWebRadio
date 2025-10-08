@@ -3002,11 +3002,7 @@ void loop() {
                 log_w("stereo");
         }
         if (r.startsWith("btp")) { // bluetooth RX/TX protocol
-            uint16_t i = 0;
-            while (bt_emitter.list_protokol(i)) {
-                log_e("%s", bt_emitter.list_protokol(i));
-                i++;
-            }
+            bt_emitter.list_protokol();
         }
         if (r.startsWith("btstr")) { // bluetooth string, send to bt emitter e.g. btstr:AT+
             bt_emitter.userCommand(r.substring(6, r.length() - 1).c_str());
@@ -5245,12 +5241,10 @@ void kcx_bt_info(const char* info, const char* val) {
     if (endsWith(info, "Emitter found")) {
         s_f_BtEmitterFound = true;
         if (s_btEmitterMode)
-            bt_emitter.setMode(s_btEmitterMode);
+            bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_RECEIVER);
         else
-            bt_emitter.setMode("TX");
-        bt_emitter.userCommand("AT+GMR?");                        // get version
-        bt_emitter.userCommand("AT+VOL?");                        // get volume (in receiver mode 0 ... 31)
-        bt_emitter.userCommand("AT+BT_MODE?");                    // transmitter or receiver
+            bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_EMITTER);
+
         if (!s_f_BTpower) bt_emitter.userCommand("AT+POWER_OFF"); // forced by user
     }
 
