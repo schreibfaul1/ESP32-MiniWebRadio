@@ -66,7 +66,7 @@ void KCX_BT_Emitter::readCmd() {
         }
         extracted_message.copy_from(msg.get() + start);
         if (extracted_message.strlen() < 3) return;
-        if(!extracted_message.is_utf8()) return;
+        if (!extracted_message.is_utf8()) return;
         protocol_addElement("RX", extracted_message.c_get());
         add_rx_queue_item(extracted_message);
         m_last_rx_command = extracted_message;
@@ -252,11 +252,10 @@ void KCX_BT_Emitter::changeMode() {
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::setMode(btmode mode) {
-    if (mode == BT_MODE_RECEIVER){
+    if (mode == BT_MODE_RECEIVER) {
         m_f_bt_mode = BT_MODE_RECEIVER;
         digitalWrite(BT_MODE_PIN, LOW);
-    }
-    else{
+    } else {
         m_f_bt_mode = BT_MODE_EMITTER;
         digitalWrite(BT_MODE_PIN, HIGH);
     }
@@ -347,8 +346,8 @@ const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three 
             m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
             continue;
         }
-        ps_ptr<char>addr = m_bt_scannedItems[i].substr(idx1 + 1, idx2 - idx1 - 1).c_get();
-        ps_ptr<char>name = m_bt_scannedItems[i].substr(idx3 + 1).c_get();
+        ps_ptr<char> addr = m_bt_scannedItems[i].substr(idx1 + 1, idx2 - idx1 - 1).c_get();
+        ps_ptr<char> name = m_bt_scannedItems[i].substr(idx3 + 1).c_get();
         if (addr.strlen() < 12) { // MacAdd:82435181cc6a,Name:VHM-314
             m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
             continue;
@@ -359,8 +358,9 @@ const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three 
         m_jsonScanItemsStr.append(name.c_get());
         m_jsonScanItemsStr.append("\"},");
     }
+    if (!m_bt_scannedItems.size()) m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
     int posComma = m_jsonScanItemsStr.last_index_of(',');
     m_jsonScanItemsStr[posComma] = ']'; // and terminate
-KCX_LOG_ERROR("%s", m_jsonScanItemsStr.c_get());
+    KCX_LOG_ERROR("%s", m_jsonScanItemsStr.c_get());
     return m_jsonScanItemsStr.c_get();
 }
