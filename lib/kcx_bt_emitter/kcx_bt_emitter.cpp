@@ -252,10 +252,14 @@ void KCX_BT_Emitter::changeMode() {
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::setMode(btmode mode) {
-    if (mode == BT_MODE_RECEIVER)
+    if (mode == BT_MODE_RECEIVER){
         m_f_bt_mode = BT_MODE_RECEIVER;
-    else
+        digitalWrite(BT_MODE_PIN, LOW);
+    }
+    else{
         m_f_bt_mode = BT_MODE_EMITTER;
+        digitalWrite(BT_MODE_PIN, HIGH);
+    }
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::pauseResume() {
