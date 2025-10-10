@@ -31,12 +31,12 @@ void KCX_BT_Emitter::begin() {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::loop() {
+
     if (m_TX_queue.size()) {
         writeCommand(get_tx_queue_item());
         return;
     }
     if (Serial2.available()) readCmd();
-
     if (m_RX_queue.size()) { parseATcmds(); }
     return;
 }
@@ -70,7 +70,7 @@ void KCX_BT_Emitter::readCmd() {
         protocol_addElement("RX", extracted_message.c_get());
         add_rx_queue_item(extracted_message);
         m_last_rx_command = extracted_message;
-        KCX_LOG_WARN("readCmd %s", extracted_message.c_get());
+        KCX_LOG_INFO("readCmd %s", extracted_message.c_get());
         return;
     };
 
@@ -103,6 +103,7 @@ void KCX_BT_Emitter::readCmd() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::writeCommand(ps_ptr<char> cmd) {
     protocol_addElement("TX", cmd.c_get());
+    KCX_LOG_DEBUG("writeCmd %s", cmd.c_get());
     Serial2.printf("%s%s", cmd.c_get(), "\r\n");
     return;
 }
@@ -110,13 +111,13 @@ void KCX_BT_Emitter::writeCommand(ps_ptr<char> cmd) {
 void KCX_BT_Emitter::parseATcmds() {
     ps_ptr<char> item;
     item = get_rx_queue_item();
-    KCX_LOG_ERROR("%s", item.c_get());
+    KCX_LOG_DEBUG("%s", item.c_get());
 
     if (item.equals("OK+")) {
         if (kcx_bt_info) kcx_bt_info("KCX_BT_Emitter found", "");
-        m_TX_queue.push_back("AT+BT_MODE?"); // transmitter or receiver
-        m_TX_queue.push_back("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
-        m_TX_queue.push_back("AT+GMR?");     // get version
+        add_tx_queue_item("AT+GMR?");     // get version
+        add_tx_queue_item("AT+BT_MODE?"); // transmitter or receiver
+        add_tx_queue_item("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
     }
     if (item.equals("OK+RESET")) {
         if (kcx_bt_info) kcx_bt_info("Reset", "");
@@ -168,15 +169,9 @@ void KCX_BT_Emitter::parseATcmds() {
         bool found = false;
         for (auto sc : m_bt_scannedItems) {
             KCX_LOG_ERROR("item %s", item);
-            if (item.equals(sc)) {
-                KCX_LOG_ERROR("found");
-                found = true;
-            }
+            if (item.equals(sc)) { found = true; }
         }
-        if (!found) {
-            KCX_LOG_ERROR("not found");
-            m_bt_scannedItems.push_back(item);
-        }
+        if (!found) { m_bt_scannedItems.push_back(item); }
     }
 
     m_f_bt_inUse = false;
@@ -194,31 +189,31 @@ void KCX_BT_Emitter::protocol_addElement(const char* RX_TX, const char* str) {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::add_tx_queue_item(ps_ptr<char> item) {
-    m_TX_queue.insert(m_TX_queue.begin(), item);
-    KCX_LOG_WARN("%s", item.c_get());
+    m_TX_queue.push_back(item);
+    KCX_LOG_ERROR("add_tx_queue_item %s", item.c_get());
     return;
 }
 
 ps_ptr<char> KCX_BT_Emitter::get_tx_queue_item() {
     ps_ptr<char> queue_item;
     if (m_TX_queue.size() == 0) return queue_item;
-    queue_item = m_TX_queue[m_TX_queue.size() - 1];
-    KCX_LOG_DEBUG("%s", queue_item.c_get());
-    m_TX_queue.pop_back();
+    queue_item = m_TX_queue[0];
+    KCX_LOG_WARN("get_tx_queue_item %s", queue_item.c_get());
+    m_TX_queue.pop_front();
     return queue_item;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::add_rx_queue_item(ps_ptr<char> item) {
-    m_RX_queue.insert(m_RX_queue.begin(), item);
+    m_RX_queue.push_front(item);
     return;
 }
 
 ps_ptr<char> KCX_BT_Emitter::get_rx_queue_item() {
     ps_ptr<char> queue_item;
     if (m_RX_queue.size() == 0) return "";
-    queue_item = m_RX_queue[m_RX_queue.size() - 1];
+    queue_item = m_RX_queue[0];
     KCX_LOG_DEBUG("%s", queue_item.c_get());
-    m_RX_queue.pop_back();
+    m_RX_queue.pop_front();
     return queue_item;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -242,16 +237,11 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     v.appendf("%i", vol);
     add_tx_queue_item(v);
 }
-const char* KCX_BT_Emitter::getMode() { // returns RX or TX
+bool KCX_BT_Emitter::getMode() { // returns RX or TX
     if (m_f_bt_mode == BT_MODE_RECEIVER) return ("RX");
     return ("TX");
 }
-void KCX_BT_Emitter::changeMode() {
-    m_f_bt_mode = !m_f_bt_mode;
-    digitalWrite(BT_MODE_PIN, m_f_bt_mode);
-    add_tx_queue_item("AT+RESET");
-}
-void KCX_BT_Emitter::setMode(btmode mode) {
+void KCX_BT_Emitter::setMode(bool mode) {
     if (mode == BT_MODE_RECEIVER) {
         m_f_bt_mode = BT_MODE_RECEIVER;
         digitalWrite(BT_MODE_PIN, LOW);
@@ -260,6 +250,7 @@ void KCX_BT_Emitter::setMode(btmode mode) {
         digitalWrite(BT_MODE_PIN, HIGH);
     }
     add_tx_queue_item("AT+RESET");
+    add_tx_queue_item("AT+BT_MODE?");
 }
 void KCX_BT_Emitter::pauseResume() {
     add_tx_queue_item("AT+PAUSE");

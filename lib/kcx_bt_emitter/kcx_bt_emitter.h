@@ -78,8 +78,8 @@ class KCX_BT_Emitter {
     }
     uint8_t     getVolume() { return m_bt_volume; }
     void        setVolume(uint8_t vol);
-    const char* getMode();
-    void        setMode(btmode mode);
+    bool getMode();
+    void        setMode(bool mode);
     void        changeMode();
     void        pauseResume();
     void        downvolume();

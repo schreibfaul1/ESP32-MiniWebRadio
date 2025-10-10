@@ -115,7 +115,7 @@ uint8_t        s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 const char*    s_pressBtn[8];
 const char*    s_releaseBtn[8];
 const char*    s_time_s = "";
-const char*    s_btEmitterMode = NULL;
+bool           s_btEmitterMode = KCX_BT_Emitter::BT_MODE_EMITTER;
 char           s_chbuf[512];
 char           s_fName[256];
 char           s_myIP[25] = {0};
@@ -296,7 +296,7 @@ boolean defaultsettings() {
     s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
     s_volume.BTvolume = atoi(parseJson("\"BTvolume\":"));
     s_f_BTpower = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-    s_btEmitterMode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
+    s_btEmitterMode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? KCX_BT_Emitter::BT_MODE_EMITTER : KCX_BT_Emitter::BT_MODE_RECEIVER);
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     s_alarmtime[2] = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -359,7 +359,7 @@ void updateSettings() {
     jO.appendf(",\n  \"BTvolume\":%i", s_volume.BTvolume);
     jO.appendf(",\n  \"BTpower\":");
     (s_f_BTpower == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
-    jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode());
+    jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode() == KCX_BT_Emitter::BT_MODE_EMITTER ? "TX" : "RX");
     jO.appendf(",\n  \"alarmtime_sun\":\"%02d:%02d\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"%02d:%02d\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
     jO.appendf(",\n  \"alarmtime_tue\":\"%02d:%02d\"", s_alarmtime[2] / 60, s_alarmtime[2] % 60);
@@ -1484,6 +1484,7 @@ void setup() {
     else
         changeState(WIFI_SETTINGS);
     bt_emitter.begin();
+//    bt_emitter.setMode(s_btEmitterMode);
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2318,8 +2319,8 @@ void changeState(int32_t state) {
             btn_BT_radio.show();
             btn_BT_power.show();
             pic_BT_mode.show(true, false);
-            char* mode = strdup(bt_emitter.getMode());
-            if (strcmp(mode, "RX") == 0) {
+            s_btEmitterMode = bt_emitter.getMode();
+            if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_RECEIVER) {
                 txt_BT_mode.writeText("RECEIVER");
                 if (bt_emitter.isConnected()) muteChanged(true);
             } else {
@@ -2332,7 +2333,6 @@ void changeState(int32_t state) {
             txt_BT_volume.writeText(c);
             txt_BT_volume.show(true, false);
             if (s_state != BLUETOOTH) webSrv.send("changeState=", "BLUETOOTH");
-            x_ps_free(&mode);
             break;
         }
         case IR_SETTINGS:
@@ -5140,7 +5140,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    bt_emitter.changeMode(); return;}
+    CMD_EQUALS("KCX_BT_changeMode"){    s_btEmitterMode = !s_btEmitterMode;  bt_emitter.setMode(s_btEmitterMode); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
     CMD_EQUALS("KCX_BT_upvolume"){      if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}   return;}
@@ -5238,15 +5238,15 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val) {
-    if (endsWith(info, "Emitter found")) {
-        s_f_BtEmitterFound = true;
-        if (s_btEmitterMode)
-            bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_RECEIVER);
-        else
-            bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_EMITTER);
+    // if (endsWith(info, "Emitter found")) {
+    //     s_f_BtEmitterFound = true;
+    //     if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_RECEIVER)
+    //         bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_RECEIVER);
+    //     else
+    //         bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_EMITTER);
 
-        if (!s_f_BTpower) bt_emitter.userCommand("AT+POWER_OFF"); // forced by user
-    }
+    //     if (!s_f_BTpower) bt_emitter.userCommand("AT+POWER_OFF"); // forced by user
+    // }
 
     if (startsWith(info, "Volume")) {
         char c[10];
@@ -5284,10 +5284,11 @@ void kcx_bt_status(bool status) { // is always called when the status changes fr
 
     if (status) {
         if (!s_f_BTcurPowerState) return;
-        const char* mode = bt_emitter.getMode();
+        s_btEmitterMode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
-        if (strcmp(mode, "TX") == 0)
+        if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_EMITTER){
             pic_BT_mode.setPicturePath("/common/BTgold.png");
+        }
         else {
             pic_BT_mode.setPicturePath("/common/BTblue.png");
             muteChanged(true);
@@ -5309,10 +5310,6 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
     webSrv.send("KCX_BT_SCANNED=", jsonItems);
 }
 
-void kcx_bt_modeChanged(const char* m) { // Every time the mode has changed
-    if (strcmp("RX", m) == 0) { webSrv.send("KCX_BT_MODE=RX"); }
-    if (strcmp("TX", m) == 0) { webSrv.send("KCX_BT_MODE=TX"); }
-}
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // clang-format off
 void graphicObjects_OnChange(const char* name, int32_t arg1) {
@@ -5430,7 +5427,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && !strcmp(name, "btn_BT_radio"))    {return;}
         if( val && !strcmp(name, "btn_BT_volDown"))  {if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
         if( val && !strcmp(name, "btn_BT_volUp"))    {if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}  return;}
-        if( val && !strcmp(name, "btn_BT_mode"))     {bt_emitter.changeMode(); return;}
+        if( val && !strcmp(name, "btn_BT_mode"))     {s_btEmitterMode = !s_btEmitterMode;  bt_emitter.setMode(s_btEmitterMode); return;}
         if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }
     if(s_state == IR_SETTINGS) {
