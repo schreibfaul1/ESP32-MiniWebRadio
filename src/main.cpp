@@ -5139,7 +5139,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_addAddr"){       bt_emitter.addLinkAddr(param.c_str()); return;}
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
-    CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode()); return;}
+    CMD_EQUALS("KCX_BT_getMode"){     log_e("mode");   webSrv.send("KCX_BT_MODE=", bt_emitter.getMode() == KCX_BT_Emitter::BT_MODE_EMITTER ? "TX" : "RX"); return;}
     CMD_EQUALS("KCX_BT_changeMode"){    s_btEmitterMode = !s_btEmitterMode;  bt_emitter.setMode(s_btEmitterMode); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}

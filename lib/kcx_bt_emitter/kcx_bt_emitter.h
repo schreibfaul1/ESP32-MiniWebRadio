@@ -78,7 +78,7 @@ class KCX_BT_Emitter {
     }
     uint8_t     getVolume() { return m_bt_volume; }
     void        setVolume(uint8_t vol);
-    bool getMode();
+    bool        getMode();
     void        setMode(bool mode);
     void        changeMode();
     void        pauseResume();
@@ -123,29 +123,15 @@ class KCX_BT_Emitter {
     bool     m_f_bt_inUse = false;          // waiting for response
     bool     m_f_scan = false;
     bool     m_f_KCX_BT_Emitter_isInit = false;
-    char*    m_chbuf;
     uint32_t m_timeStamp = 0;
-    uint32_t m_timeCounter = 0;
-
-    static void            isr0();
-    static void            t1s();
-    static KCX_BT_Emitter* objPtr;
-    static KCX_BT_Emitter* tckPtr;
-    void                   handleInterrupt();
-    void                   handleTicker();
-    volatile bool          m_f_linkChanged;
-    volatile bool          m_f_ticker1s;
+    bool     m_lock = false;
 
     uint8_t m_bt_add_num = 0;
     uint8_t m_bt_name_num = 0;
     uint8_t m_bt_add_cnt = 0;
     uint8_t m_bt_name_cnt = 0;
     char*   m_bt_version = NULL;
-    char*   m_lastMsg = NULL;
-    char*   m_autoLink = NULL;
-
-   
-    char*   m_myName = NULL;
+    char* m_myName = NULL;
 
     void readCmd();
     void parseATcmds();
@@ -171,7 +157,6 @@ class KCX_BT_Emitter {
 
     void stringifyMemItems();
     void protocol_addElement(const char* RX_TX, const char* str);
-
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls

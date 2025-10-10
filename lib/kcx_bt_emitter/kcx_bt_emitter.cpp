@@ -32,12 +32,21 @@ void KCX_BT_Emitter::begin() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::loop() {
 
-    if (m_TX_queue.size()) {
-        writeCommand(get_tx_queue_item());
-        return;
+    if (millis() > m_timeStamp + 2000) m_lock = false;
+
+    if (!m_lock) {
+        m_lock = true;
+        m_timeStamp = millis();
+        if (m_TX_queue.size()) {
+            writeCommand(get_tx_queue_item());
+            return;
+        }
     }
     if (Serial2.available()) readCmd();
-    if (m_RX_queue.size()) { parseATcmds(); }
+    if (m_RX_queue.size()) {
+        parseATcmds();
+        m_lock = false;
+    }
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -115,11 +124,12 @@ void KCX_BT_Emitter::parseATcmds() {
 
     if (item.equals("OK+")) {
         if (kcx_bt_info) kcx_bt_info("KCX_BT_Emitter found", "");
-        add_tx_queue_item("AT+GMR?");     // get version
+        add_tx_queue_item("AT+GMR?"); // get version
+        vTaskDelay(1000);
         add_tx_queue_item("AT+BT_MODE?"); // transmitter or receiver
-        add_tx_queue_item("AT+VOL?");     // get volume (in receiver mode 0 ... 31)
     }
     if (item.equals("OK+RESET")) {
+        m_f_status = BT_NOT_CONNECTED;
         if (kcx_bt_info) kcx_bt_info("Reset", "");
     }
     if (item.equals("POWER ON")) {
@@ -168,10 +178,18 @@ void KCX_BT_Emitter::parseATcmds() {
     if (item.starts_with("MacAdd")) {
         bool found = false;
         for (auto sc : m_bt_scannedItems) {
-            KCX_LOG_ERROR("item %s", item);
+            KCX_LOG_ERROR("item %s", item.c_get());
             if (item.equals(sc)) { found = true; }
         }
         if (!found) { m_bt_scannedItems.push_back(item); }
+    }
+    if (item.starts_with("CONNECT=>")) {
+        m_f_status = BT_CONNECTED;
+        if (kcx_bt_info) kcx_bt_info("Status ->", "Connected");
+    }
+    if (item.equals("SCAN....")) {
+        m_f_status = BT_NOT_CONNECTED;
+        if (kcx_bt_info) kcx_bt_info("Status ->", "Disconnected");
     }
 
     m_f_bt_inUse = false;
@@ -238,8 +256,7 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     add_tx_queue_item(v);
 }
 bool KCX_BT_Emitter::getMode() { // returns RX or TX
-    if (m_f_bt_mode == BT_MODE_RECEIVER) return ("RX");
-    return ("TX");
+    return m_f_bt_mode;
 }
 void KCX_BT_Emitter::setMode(bool mode) {
     if (mode == BT_MODE_RECEIVER) {
@@ -250,7 +267,6 @@ void KCX_BT_Emitter::setMode(bool mode) {
         digitalWrite(BT_MODE_PIN, HIGH);
     }
     add_tx_queue_item("AT+RESET");
-    add_tx_queue_item("AT+BT_MODE?");
 }
 void KCX_BT_Emitter::pauseResume() {
     add_tx_queue_item("AT+PAUSE");
