@@ -49,7 +49,6 @@ CONNECT=>MacAdd:2c63c23c0200,Name: Pebble V3
 #include "vector"
 
 extern __attribute__((weak)) void kcx_bt_info(const char* info, const char* val);
-extern __attribute__((weak)) void kcx_bt_status(bool);
 extern __attribute__((weak)) void kcx_bt_memItems(const char*);
 extern __attribute__((weak)) void kcx_bt_scanItems(const char*);
 extern __attribute__((weak)) void kcx_bt_modeChanged(const char*);
@@ -70,26 +69,21 @@ class KCX_BT_Emitter {
     enum btconn { BT_NOT_CONNECTED = 0, BT_CONNECTED = 1 };
     enum btstate { BT_PAUSE = 0, BT_PLAY = 1 };
 
-    bool isConnected() {
-        if (!m_f_KCX_BT_Emitter_isInit)
-            return false;
-        else
-            return digitalRead(BT_LINK_PIN);
-    }
-    uint8_t     getVolume() { return m_bt_volume; }
-    void        setVolume(uint8_t vol);
-    bool        getMode();
-    void        setMode(bool mode);
-    void        changeMode();
-    void        pauseResume();
-    void        downvolume();
-    void        upvolume();
-    const char* getMyName();
-    void        cmd_PowerOff();
-    void        cmd_PowerOn();
-    void        userCommand(const char* cmd);
-    const char* stringifyScannedItems();
-    const char* list_protokol();
+    bool         isConnected() { return m_f_connected; }
+    uint8_t      getVolume() { return m_bt_volume; }
+    void         setVolume(uint8_t vol); // 0 ... 31
+    bool         getMode() {return m_f_bt_mode;} // 0: RECEIVER, 1: EMITTER
+    void         setMode(bool mode); // 0: RECEIVER, 1: EMITTER
+    void         pauseResume();
+    void         downvolume();
+    void         upvolume();
+    const char*  getMyName();
+    ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
+    void         cmd_PowerOff();
+    void         cmd_PowerOn();
+    void         userCommand(const char* cmd);
+    const char*  stringifyScannedItems();
+    const char*  list_protokol();
 
   private:
     std::deque<ps_ptr<char>> m_TX_queue;
@@ -107,8 +101,9 @@ class KCX_BT_Emitter {
     void                     add_tx_queue_item(ps_ptr<char> item);
     ps_ptr<char>             get_rx_queue_item();
     void                     add_rx_queue_item(ps_ptr<char> item);
-    ps_ptr<char>             m_version;
+    ps_ptr<char>             m_bt_version;
     uint8_t                  m_bt_volume = 0;
+    bool                     m_bt_found = false;
 
     int8_t BT_LINK_PIN = -1;
     int8_t BT_MODE_PIN = -1;
@@ -116,11 +111,9 @@ class KCX_BT_Emitter {
     int8_t BT_TX_PIN = -1;
     bool   m_f_btEmitter_found = false;
 
-    bool     m_f_waitForBtEmitter = false;
-    bool     m_f_bt_mode = BT_MODE_EMITTER; // 0: BT_MODE_EMITTER, 1: BT_MODE_RECEIVER
-    bool     m_f_bt_state = BT_PLAY;        // 0: BT_PAUSE, 1: BT_PLAY
-    bool     m_f_status = BT_NOT_CONNECTED; // scan, connected or not
-    bool     m_f_bt_inUse = false;          // waiting for response
+    bool     m_f_bt_mode = BT_MODE_EMITTER;    // 0: BT_MODE_EMITTER, 1: BT_MODE_RECEIVER
+    bool     m_f_bt_state = BT_PLAY;           // 0: BT_PAUSE, 1: BT_PLAY
+    bool     m_f_connected = BT_NOT_CONNECTED; // scan, connected or not
     bool     m_f_scan = false;
     bool     m_f_KCX_BT_Emitter_isInit = false;
     uint32_t m_timeStamp = 0;
@@ -130,30 +123,12 @@ class KCX_BT_Emitter {
     uint8_t m_bt_name_num = 0;
     uint8_t m_bt_add_cnt = 0;
     uint8_t m_bt_name_cnt = 0;
-    char*   m_bt_version = NULL;
-    char* m_myName = NULL;
+
+    ps_ptr<char> m_myName = "unknown";
 
     void readCmd();
     void parseATcmds();
-    void handle1sEvent();
     void writeCommand(ps_ptr<char> cmd);
-    void bt_Version();
-    void warning(const char* w);
-
-    void cmd_Mode();
-    void cmd_AutoLink();
-    void cmd_Volume();
-    void cmd_Delete();
-    void cmd_AddNum();
-    void cmd_NameNum();
-    void cmd_MemName();
-    void cmd_MemAddr();
-    void cmd_connectedName();
-    void cmd_connectedAddr();
-    void cmd_scannedItems();
-    void cmd_statePause();
-    void cmd_statePlay();
-    void cmd_ScanMode();
 
     void stringifyMemItems();
     void protocol_addElement(const char* RX_TX, const char* str);

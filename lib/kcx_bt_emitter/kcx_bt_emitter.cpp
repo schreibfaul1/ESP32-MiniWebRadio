@@ -18,7 +18,7 @@ KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, in
     pinMode(BT_LINK_PIN, INPUT_PULLUP);
     pinMode(BT_MODE_PIN, OUTPUT);
     digitalWrite(BT_MODE_PIN, LOW);
-    m_f_bt_inUse = false;
+    m_bt_found = false;
 }
 
 KCX_BT_Emitter::~KCX_BT_Emitter() {}
@@ -27,6 +27,7 @@ void KCX_BT_Emitter::begin() {
     KCX_LOG_WARN("begin");
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
     add_tx_queue_item("AT+");
+    m_bt_found = false;
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -123,21 +124,19 @@ void KCX_BT_Emitter::parseATcmds() {
     KCX_LOG_DEBUG("%s", item.c_get());
 
     if (item.equals("OK+")) {
+        m_bt_found = true;
         if (kcx_bt_info) kcx_bt_info("KCX_BT_Emitter found", "");
-        add_tx_queue_item("AT+GMR?"); // get version
-        vTaskDelay(1000);
-        add_tx_queue_item("AT+BT_MODE?"); // transmitter or receiver
     }
     if (item.equals("OK+RESET")) {
-        m_f_status = BT_NOT_CONNECTED;
+        m_f_connected = BT_NOT_CONNECTED;
         if (kcx_bt_info) kcx_bt_info("Reset", "");
     }
     if (item.equals("POWER ON")) {
         if (kcx_bt_info) kcx_bt_info("Power On", "");
     }
     if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
-        m_version.copy_from(item.get() + 8);
-        if (kcx_bt_info) kcx_bt_info("Version", m_version.c_get());
+        m_bt_version.copy_from(item.get() + 8);
+        if (kcx_bt_info) kcx_bt_info("Version", m_bt_version.c_get());
     }
     if (item.starts_with("OK+BT_")) { // OK+BT_EMITTER or OK+BT_RECEIVER
         if (item.ends_with("EMITTER")) {
@@ -184,15 +183,13 @@ void KCX_BT_Emitter::parseATcmds() {
         if (!found) { m_bt_scannedItems.push_back(item); }
     }
     if (item.starts_with("CONNECT=>")) {
-        m_f_status = BT_CONNECTED;
+        m_f_connected = BT_CONNECTED;
         if (kcx_bt_info) kcx_bt_info("Status ->", "Connected");
     }
     if (item.equals("SCAN....")) {
-        m_f_status = BT_NOT_CONNECTED;
+        m_f_connected = BT_NOT_CONNECTED;
         if (kcx_bt_info) kcx_bt_info("Status ->", "Disconnected");
     }
-
-    m_f_bt_inUse = false;
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -255,9 +252,6 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     v.appendf("%i", vol);
     add_tx_queue_item(v);
 }
-bool KCX_BT_Emitter::getMode() { // returns RX or TX
-    return m_f_bt_mode;
-}
 void KCX_BT_Emitter::setMode(bool mode) {
     if (mode == BT_MODE_RECEIVER) {
         m_f_bt_mode = BT_MODE_RECEIVER;
@@ -292,7 +286,7 @@ void KCX_BT_Emitter::upvolume() {
     add_tx_queue_item(v);
 }
 const char* KCX_BT_Emitter::getMyName() {
-    return m_myName;
+    return m_myName.c_get();
 }
 void KCX_BT_Emitter::cmd_PowerOff() {
     KCX_LOG_INFO("POWER OFF", "");

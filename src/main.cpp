@@ -1484,7 +1484,9 @@ void setup() {
     else
         changeState(WIFI_SETTINGS);
     bt_emitter.begin();
-//    bt_emitter.setMode(s_btEmitterMode);
+    bt_emitter.userCommand("AT+GMR?");     // get version
+    bt_emitter.userCommand("AT+VOL?");
+    bt_emitter.userCommand("AT+RESET");
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -5238,15 +5240,10 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void kcx_bt_info(const char* info, const char* val) {
-    // if (endsWith(info, "Emitter found")) {
-    //     s_f_BtEmitterFound = true;
-    //     if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_RECEIVER)
-    //         bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_RECEIVER);
-    //     else
-    //         bt_emitter.setMode(KCX_BT_Emitter::BT_MODE_EMITTER);
 
-    //     if (!s_f_BTpower) bt_emitter.userCommand("AT+POWER_OFF"); // forced by user
-    // }
+    if (endsWith(info, "Emitter found")) {
+        s_f_BtEmitterFound = true;
+    }
 
     if (startsWith(info, "Volume")) {
         char c[10];
@@ -5267,6 +5264,7 @@ void kcx_bt_info(const char* info, const char* val) {
         webSrv.send("KCX_BT_connected=", "-1");
     }
     if (startsWith(info, "POWER ON")) {
+        bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
         s_f_BTcurPowerState = true;
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
         webSrv.send("KCX_BT_power=", "1");
@@ -5276,29 +5274,53 @@ void kcx_bt_info(const char* info, const char* val) {
             pic_BT_mode.show(true, false);
         }
     }
-    // log_w("BT-Emitter:  " ANSI_ESC_YELLOW "%s" ANSI_ESC_CYAN " %s", info, val);
-    SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
-}
 
-void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
-
-    if (status) {
-        if (!s_f_BTcurPowerState) return;
-        s_btEmitterMode = bt_emitter.getMode();
+    if (strcmp(val, "Connected") == 0) {
+        bool mode = bt_emitter.getMode();
         webSrv.send("KCX_BT_connected=", "1");
-        if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_EMITTER){
+        if (mode) {
             pic_BT_mode.setPicturePath("/common/BTgold.png");
-        }
-        else {
+        } else {
             pic_BT_mode.setPicturePath("/common/BTblue.png");
             muteChanged(true);
         }
-    } else {
+        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
+    }
+    if (strcmp(val, "Disconnected") == 0) {
         webSrv.send("KCX_BT_connected=", "0");
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
+        if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
     }
-    if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
+    if (s_state == BLUETOOTH) {
+        if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_EMITTER)txt_BT_mode.writeText("EMITTER");
+        if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_RECEIVER)txt_BT_mode.writeText("RECEIVER");
+        pic_BT_mode.show(true, false);
+    }
 }
+
+// void kcx_bt_status(bool status) { // is always called when the status changes from disconnected to connected and vice versa
+
+//     if (status) {
+//         if (!s_f_BTcurPowerState) return;
+//         s_btEmitterMode = bt_emitter.getMode();
+//         webSrv.send("KCX_BT_connected=", "1");
+//         if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_EMITTER){
+//             pic_BT_mode.setPicturePath("/common/BTgold.png");
+//         }
+//         else {
+//             pic_BT_mode.setPicturePath("/common/BTblue.png");
+//             muteChanged(true);
+//         }
+//     } else {
+//         webSrv.send("KCX_BT_connected=", "0");
+//         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
+//     }
+//     if (s_state == BLUETOOTH) {
+//         if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_EMITTER)txt_BT_mode.writeText("EMITTER");
+//         if (s_btEmitterMode == KCX_BT_Emitter::BT_MODE_RECEIVER)txt_BT_mode.writeText("RECEIVER");
+//         pic_BT_mode.show(true, false);
+//     }
+// }
 
 void kcx_bt_memItems(const char* jsonItems) { // Every time an item (name or address) was added, a JSON string is passed here
     // SerialPrintfln("bt_memItems %s", jsonItems);
