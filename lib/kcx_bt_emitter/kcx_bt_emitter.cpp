@@ -32,27 +32,12 @@ void KCX_BT_Emitter::begin() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::loop() {
     if (m_TX_queue.size()) {
-        if (!m_f_bt_inUse) {
-            m_f_bt_inUse = true;
-            writeCommand(get_tx_queue_item());
-            m_timeStamp = millis();
-        }
+        writeCommand(get_tx_queue_item());
+        return;
     }
     if (Serial2.available()) readCmd();
 
-    if (m_RX_queue.size()) {
-        if (m_f_bt_inUse) {
-            m_f_bt_inUse = false;
-            parseATcmds();
-        }
-    }
-
-    if (m_f_bt_inUse) {
-        if (m_timeStamp + 3000 < millis()) {
-            KCX_LOG_ERROR("timeout while waiting for response");
-            m_f_bt_inUse = false;
-        }
-    }
+    if (m_RX_queue.size()) { parseATcmds(); }
     return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -66,18 +51,22 @@ void KCX_BT_Emitter::readCmd() {
     buff.calloc(buff_size);
 
     auto process_message = [&](ps_ptr<char> msg, uint16_t len) {
-        ps_ptr<char>extracted_message;
-        if(len < 3) return; // min OK+
+        ps_ptr<char> extracted_message;
+        if (len < 3) return; // min OK+
         int start = 0;
         for (int i = 0; i < len; i++) {
             if (msg[i] < 32) msg[i] = '\0';
             if (msg[i] > 127) msg[i] = '\0';
         }
-        for(int i = len - 2; i >= 0; i--){
-            if(msg[i] == '\0') {start = i + 1; break;}
+        for (int i = len - 2; i >= 0; i--) {
+            if (msg[i] == '\0') {
+                start = i + 1;
+                break;
+            }
         }
         extracted_message.copy_from(msg.get() + start);
-        if(extracted_message.strlen() < 3) return;
+        if (extracted_message.strlen() < 3) return;
+        if(!extracted_message.is_utf8()) return;
         protocol_addElement("RX", extracted_message.c_get());
         add_rx_queue_item(extracted_message);
         m_last_rx_command = extracted_message;
@@ -90,7 +79,7 @@ void KCX_BT_Emitter::readCmd() {
             KCX_LOG_ERROR("timeout while reading from KCX_BT_Emitter, received: %s", buff.c_get());
             return;
         }
-        if(ch == '\n'){
+        if (ch == '\n') {
             process_message(buff, idx);
             buff.clear();
             idx = 0;
@@ -143,10 +132,12 @@ void KCX_BT_Emitter::parseATcmds() {
         if (item.ends_with("EMITTER")) {
             m_f_bt_mode = BT_MODE_EMITTER;
             if (kcx_bt_info) kcx_bt_info("Mode", "EMITTER");
+            if (kcx_bt_modeChanged) kcx_bt_modeChanged("TX");
         }
         if (item.ends_with("RECEIVER")) {
             m_f_bt_mode = BT_MODE_RECEIVER;
             if (kcx_bt_info) kcx_bt_info("Mode", "RECEIVER");
+            if (kcx_bt_modeChanged) kcx_bt_modeChanged("RX");
         }
     }
     if (item.starts_with("OK+VOL=")) {
@@ -159,13 +150,33 @@ void KCX_BT_Emitter::parseATcmds() {
     if (item.starts_with("Delete_Vmlink")) {
         if (kcx_bt_info) kcx_bt_info("Vmlink", "deleted");
     }
-    if (item.starts_with("MEM_Name")) {
-        m_bt_names.push_back(item.get() + 12);
+    if (item.starts_with("MEM_Name")) { // MEM_Name 00: Pebble V3
+        auto num = item.substr(9, 2);
+        auto name = item.substr(12);
+        m_MEM_Name[num.to_uint32()] = name;
         if (kcx_bt_info) kcx_bt_info("MEM_Name", item.get() + 9);
+        stringifyMemItems();
     }
     if (item.starts_with("MEM_MacAdd")) {
-        m_bt_names.push_back(item.get() + 14);
+        auto num = item.substr(11, 2);
+        auto addr = item.substr(14);
+        m_MEM_MacAdd[num.to_uint32()] = addr;
         if (kcx_bt_info) kcx_bt_info("MEM_MacAdd", item.get() + 11);
+        stringifyMemItems();
+    }
+    if (item.starts_with("MacAdd")) {
+        bool found = false;
+        for (auto sc : m_bt_scannedItems) {
+            KCX_LOG_ERROR("item %s", item);
+            if (item.equals(sc)) {
+                KCX_LOG_ERROR("found");
+                found = true;
+            }
+        }
+        if (!found) {
+            KCX_LOG_ERROR("not found");
+            m_bt_scannedItems.push_back(item);
+        }
     }
 
     m_f_bt_inUse = false;
@@ -223,6 +234,7 @@ void KCX_BT_Emitter::addLinkName(ps_ptr<char> name) {
 }
 void KCX_BT_Emitter::addLinkAddr(ps_ptr<char> addr) {
     addr.insert("AT+ADDLINKADD=", 0);
+    add_tx_queue_item(addr);
 }
 void KCX_BT_Emitter::setVolume(uint8_t vol) {
     if (vol > 31) { vol = 31; }
@@ -235,7 +247,8 @@ const char* KCX_BT_Emitter::getMode() { // returns RX or TX
     return ("TX");
 }
 void KCX_BT_Emitter::changeMode() {
-    digitalWrite(BT_MODE_PIN, !m_f_bt_mode);
+    m_f_bt_mode = !m_f_bt_mode;
+    digitalWrite(BT_MODE_PIN, m_f_bt_mode);
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::setMode(btmode mode) {
@@ -284,8 +297,9 @@ void KCX_BT_Emitter::userCommand(const char* cmd) {
 }
 const char* KCX_BT_Emitter::list_protokol() {
     for (auto& item : m_RX_TX_protocol) { KCX_LOG_ERROR("RX_TX_protocol %s", item.c_get()); }
+    return "";
 }
-// -------------------------- JSON relevant ----------------------------------------------------------------------------------------------------------
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::stringifyMemItems() {
     // "AT+VMLINK" returns:
     // "OK+VMLINK"
@@ -294,56 +308,55 @@ void KCX_BT_Emitter::stringifyMemItems() {
     // "MEM_Name 00:MyName"         --> save in _KCX_BT_names vector
     // "MEM_MacAdd 00:82435181cc6a" --> save in _KCX_BT_addr vector
 
-    for (auto& item : m_bt_names) { KCX_LOG_ERROR("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_MEM_MacAdd) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_MEM_Name) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
 
     m_jsonMemItemsStr.assign("[");
     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6a"},{....}]
     for (int i = 0; i < 10; i++) {
         m_jsonMemItemsStr.append("{\"name\":\"");
-        if (m_bt_names.size() > i) {
-            m_jsonMemItemsStr.append(m_bt_names[i].c_get());
-        } else {
-            m_jsonMemItemsStr.append("");
-        }
+        m_jsonMemItemsStr.append(m_MEM_Name[i].c_get());
         m_jsonMemItemsStr.append("\",\"addr\":\"");
-        if (m_bt_names.size() > i) {
-            m_jsonMemItemsStr.append(m_bt_addr[i].c_get());
-        } else {
-            m_jsonMemItemsStr.append("");
-        }
+        m_jsonMemItemsStr.append(m_MEM_MacAdd[i].c_get());
         m_jsonMemItemsStr.append("\"},");
     }
     int posComma = m_jsonMemItemsStr.last_index_of(',');
     m_jsonMemItemsStr[posComma] = ']'; // replace comma by square bracket close
+    KCX_LOG_DEBUG("%s", m_jsonMemItemsStr.c_get());
     if (kcx_bt_memItems) kcx_bt_memItems(m_jsonMemItemsStr.c_get());
     return;
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three scanned BT devices as jsonStr
 
     for (auto& item : m_bt_scannedItems) { KCX_LOG_ERROR("RX_TX_protocol %s", item.c_get()); }
 
     m_jsonScanItemsStr.assign("[");
     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6b"},{name":"btthirdName","addr":"82435181cc6c"}]
-    int idx1, idx2;
-    for (int i = 0; i < 3; i++) {
-        if (m_bt_scannedItems.size() > i) {
-            idx1 = m_bt_scannedItems[i].index_of(':');
-            idx2 = m_bt_scannedItems[i].index_of(',');
-            // if (m_bt_scannedItems[i].strlen() < 13) { // MacAdd:82435181cc6a,Name:VHM-314
-            //     KCX_LOG_ERROR("wrong scanned items %s", m_bt_scannedItems[i]);
-            //     return "null";
-            // } // can't be, MacAddr must have 12 chars
-
-            m_jsonScanItemsStr.append("{\"addr\":\"");
-            m_jsonScanItemsStr.append(m_bt_scannedItems[i].substr(idx1, idx2 - idx1).c_get());
-
-        } else {
+    int idx1, idx2, idx3;
+    for (int i = 0; i < m_bt_scannedItems.size(); i++) {
+        KCX_LOG_WARN("m_bt_scannedItems[i]   %s", m_bt_scannedItems[i].c_get());
+        idx1 = m_bt_scannedItems[i].index_of(':');
+        idx2 = m_bt_scannedItems[i].index_of(',');
+        idx3 = m_bt_scannedItems[i].last_index_of(':');
+        if (idx1 < 0 || idx2 < 0 || idx3 <= idx1) {
             m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
+            continue;
         }
+        ps_ptr<char>addr = m_bt_scannedItems[i].substr(idx1 + 1, idx2 - idx1 - 1).c_get();
+        ps_ptr<char>name = m_bt_scannedItems[i].substr(idx3 + 1).c_get();
+        if (addr.strlen() < 12) { // MacAdd:82435181cc6a,Name:VHM-314
+            m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
+            continue;
+        }
+        m_jsonScanItemsStr.append("{\"addr\":\"");
+        m_jsonScanItemsStr.append(addr.c_get());
+        m_jsonScanItemsStr.append("\",\"name\":\"");
+        m_jsonScanItemsStr.append(name.c_get());
+        m_jsonScanItemsStr.append("\"},");
     }
     int posComma = m_jsonScanItemsStr.last_index_of(',');
     m_jsonScanItemsStr[posComma] = ']'; // and terminate
-    KCX_LOG_ERROR("%s", m_jsonScanItemsStr.c_get());
+KCX_LOG_ERROR("%s", m_jsonScanItemsStr.c_get());
     return m_jsonScanItemsStr.c_get();
 }

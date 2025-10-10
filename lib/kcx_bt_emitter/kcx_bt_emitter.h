@@ -35,6 +35,11 @@ AT+ADDLINKADD=xx    OK+ADDLINKADD=xx
                     Auto_link_Add:xx
                     MEM_MacAdd 00:xx
                     MEM_Name 00:xx
+POWER ON
+SCAN....
+MacAdd:2c63c23c0200,Name: Pebble V3
+CON MATCH ADD
+CONNECT=>MacAdd:2c63c23c0200,Name: Pebble V3
 */
 
 #ifndef KCX_BT_EMITTER_H_
@@ -90,7 +95,8 @@ class KCX_BT_Emitter {
     std::deque<ps_ptr<char>> m_TX_queue;
     std::deque<ps_ptr<char>> m_RX_queue;
     std::deque<ps_ptr<char>> m_RX_TX_protocol;
-    std::deque<ps_ptr<char>> m_bt_names;
+    ps_ptr<char>             m_MEM_MacAdd[10];
+    ps_ptr<char>             m_MEM_Name[10];
     std::deque<ps_ptr<char>> m_bt_addr;
     std::deque<ps_ptr<char>> m_bt_scannedItems;
     ps_ptr<char>             m_last_tx_command;
