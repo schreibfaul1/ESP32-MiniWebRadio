@@ -54,6 +54,28 @@ extern __attribute__((weak)) void kcx_bt_scanItems(const char*);
 extern __attribute__((weak)) void kcx_bt_modeChanged(const char*);
 
 class KCX_BT_Emitter {
+  public:
+    enum { FOUND, VERSION, CONNECTED, MODE, VOLUME};
+    enum { BT_MODE_RECEIVER = 0, BT_MODE_EMITTER = 1 };
+    enum { BT_NOT_CONNECTED, BT_CONNECTED };
+    enum { BT_PAUSE = 0, BT_PLAY = 1 };
+
+    // callbacks ---------------------------------------------------------
+  public:
+    typedef enum { evt_found = 0, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_scan, evt_volume, evt_version, evt_mode } event_t;
+    struct msg_s { // used in info(audio_info_callback());
+        const char*             msg = nullptr;
+        const char*             s = nullptr;
+        event_t                 e = (event_t)0; // event type
+        int32_t                 val = 0;
+        const char*             arg = nullptr;
+    };
+    using BT_Callback = std::function<void(const msg_s&)>;
+    void kcx_bt_emitter_callback(BT_Callback cb) { m_bt_callback = std::move(cb); }
+
+  private:
+    BT_Callback m_bt_callback;
+    // -------------------------------------------------------------------
 
   public:
     KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
@@ -65,9 +87,7 @@ class KCX_BT_Emitter {
     void addLinkName(ps_ptr<char> name); // up to 10 names can be saved
     void addLinkAddr(ps_ptr<char> addr); // up to 10 MAC addresses can be saved
 
-    enum btmode { BT_MODE_RECEIVER = 0, BT_MODE_EMITTER = 1 };
-    enum btconn { BT_NOT_CONNECTED = 0, BT_CONNECTED = 1 };
-    enum btstate { BT_PAUSE = 0, BT_PLAY = 1 };
+
 
     bool         isConnected() { return m_f_connected; }
     uint8_t      getVolume() { return m_bt_volume; }
@@ -86,6 +106,7 @@ class KCX_BT_Emitter {
     const char*  list_protokol();
 
   private:
+    msg_s m_msg;
     std::deque<ps_ptr<char>> m_TX_queue;
     std::deque<ps_ptr<char>> m_RX_queue;
     std::deque<ps_ptr<char>> m_RX_TX_protocol;

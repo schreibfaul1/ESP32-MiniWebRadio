@@ -52,11 +52,12 @@ char _hl_item[18][40]{"",                    // none
                       "WiFi Settings", //
                       ""};
 
-settings       s_settings;
-volume         s_volume;
-dlnaHistory    s_dlnaHistory[10];
-timecounter    s_timeCounter;
+settings_s     s_settings;
+volume_s       s_volume;
+dlnaHistory_s  s_dlnaHistory[10];
+timecounter_s  s_timeCounter;
 SD_content     s_SD_content;
+bt_emitter_s   s_bt_emitter;
 const uint16_t s_max_stations = 1000;
 int8_t         s_currDLNAsrvNr = -1;
 uint8_t        s_alarmdays = 0;
@@ -174,7 +175,6 @@ bool           s_f_dlnaWaitForResponse = false;
 bool           s_f_dlnaSeekServer = false;
 bool           s_f_dlnaMakePlaylistOTF = false; // notify callback that this browsing was to build a On-The_fly playlist
 bool           s_f_dlna_browseReady = false;
-bool           s_f_BtEmitterFound = false;
 bool           s_f_BTEmitterConnected = false;
 bool           s_f_brightnessIsChangeable = false;
 bool           s_f_connectToLastStation = false;
@@ -1281,6 +1281,7 @@ void stopSong() {
 void setup() {
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
+    bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
@@ -1897,7 +1898,7 @@ void muteChanged(bool m) {
 
 void BTpowerChanged(int8_t newState) {
     if (BT_EMITTER_CONNECT == -1) return;    // guard
-    if (s_f_BtEmitterFound == false) return; // guard
+    if (s_bt_emitter.found == false) return; // guard
 
     if (newState) { // POWER_ON
         digitalWrite(BT_EMITTER_CONNECT, LOW);
@@ -1988,7 +1989,7 @@ void changeState(int32_t state) {
                 btn_RA_clock.show();
                 btn_RA_sleep.show();
                 btn_RA_settings.show();
-                btn_RA_bt.show(!s_f_BtEmitterFound);
+                btn_RA_bt.show(!s_bt_emitter.found);
                 btn_RA_off.show();
                 setTimeCounter(2);
             }
@@ -2008,7 +2009,7 @@ void changeState(int32_t state) {
                 btn_RA_clock.show();
                 btn_RA_sleep.show();
                 btn_RA_settings.show();
-                btn_RA_bt.show(!s_f_BtEmitterFound);
+                btn_RA_bt.show(!s_bt_emitter.found);
                 btn_RA_off.show();
                 setTimeCounter(2);
             }
@@ -2902,7 +2903,7 @@ void loop() {
             dispFooter.updateOffTime(s_sleeptime);
         }
         static uint8_t btEmitterCnt = 0;
-        if (!s_f_BtEmitterFound && btEmitterCnt < 1) {
+        if (!s_bt_emitter.found && btEmitterCnt < 1) {
             btEmitterCnt++;
             bt_emitter.begin(); // if the emitter has not yet responded
         }
@@ -5239,17 +5240,62 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void kcx_bt_info(const char* info, const char* val) {
-
-    if (endsWith(info, "Emitter found")) {
-        s_f_BtEmitterFound = true;
+void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
+    if (msg.e == KCX_BT_Emitter::evt_found) {
+        s_bt_emitter.found = true;
+        SerialPrintfln("BT-Emitter:  %s ", "found");
+        MWR_LOG_ERROR("found");
     }
+    if (msg.e == KCX_BT_Emitter::evt_connect) {
+        MWR_LOG_ERROR("connected");
+        SerialPrintfln("BT-Emitter:  %s ", "connected");
+        s_bt_emitter.connect = true;
+    }
+    if (msg.e == KCX_BT_Emitter::evt_disconnect) {
+        MWR_LOG_ERROR("disconnected");
+        SerialPrintfln("BT-Emitter:  %s ", "disconnected");
+        s_bt_emitter.connect = false;
+    }
+    if (msg.e == KCX_BT_Emitter::evt_reset) {
+        MWR_LOG_ERROR("reset");
+        SerialPrintfln("BT-Emitter:  %s ", "reset");
+        s_bt_emitter.connect = false;
+    }
+    if (msg.e == KCX_BT_Emitter::evt_power_on) {
+        MWR_LOG_ERROR("power on");
+        SerialPrintfln("BT-Emitter:  %s ", "power on");
+        bt_emitter.userCommand("AT+BT_MODE?");
+    }
+    if (msg.e == KCX_BT_Emitter::evt_scan) {
+        MWR_LOG_ERROR("scan ...");
+        s_bt_emitter.connect = false;
+        SerialPrintfln("BT-Emitter:  %s ", "scan ...");
+    }
+    if (msg.e == KCX_BT_Emitter::evt_volume) {
+        s_bt_emitter.volume = msg.val;
+        MWR_LOG_ERROR("volume: %i", s_bt_emitter.volume);
+        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i", "volume", msg.val);
+    }
+    if (msg.e == KCX_BT_Emitter::evt_version) {
+        s_bt_emitter.version = msg.arg;
+        MWR_LOG_ERROR("version: %s", msg.arg);
+        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "version", msg.arg);
+        bt_emitter.setVolume(s_volume.BTvolume);
+    }
+    if (msg.e == KCX_BT_Emitter::evt_mode) {
+        s_bt_emitter.mode = msg.arg;
+        MWR_LOG_ERROR("mode: %s", msg.arg);
+        SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "RX_TX_mode", msg.arg);
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void kcx_bt_info(const char* info, const char* val) {
 
     if (startsWith(info, "Volume")) {
         char c[10];
         sprintf(c, "Vol: %s", val);
         txt_BT_volume.writeText(c);
-        if (s_volume.BTvolume != atoi(val)) bt_emitter.setVolume(s_volume.BTvolume);
+    //    if (s_volume.BTvolume != atoi(val)) bt_emitter.setVolume(s_volume.BTvolume);
     }
     if (startsWith(info, "Mode")) { txt_BT_mode.writeText(val); }
     if (startsWith(info, "POWER OFF")) {
@@ -5264,7 +5310,7 @@ void kcx_bt_info(const char* info, const char* val) {
         webSrv.send("KCX_BT_connected=", "-1");
     }
     if (startsWith(info, "POWER ON")) {
-        bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
+    //    bt_emitter.userCommand("AT+BT_MODE?"); // transmitter or receiver
         s_f_BTcurPowerState = true;
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", info, val);
         webSrv.send("KCX_BT_power=", "1");

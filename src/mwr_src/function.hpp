@@ -765,11 +765,11 @@ const char* aes_decrypt(const char* input) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class IR_buttons {
   private:
-    settings*   m_settings;
+    settings_s* m_settings;
     uint8_t     m_numOfIrButtons = 0;
 
   public:
-    IR_buttons(settings* s) {
+    IR_buttons(settings_s* s) {
         m_settings = s;
         m_numOfIrButtons = 0;
     }

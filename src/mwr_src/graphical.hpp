@@ -4133,7 +4133,7 @@ class dlnaList : public RegisterTable {
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
     DLNA_Client*                               m_dlna;
-    dlnaHistory*                               m_dlnaHistory = NULL;
+    dlnaHistory_s*                             m_dlnaHistory = NULL;
     releasedArg                                m_ra;
 
   public:
@@ -4169,7 +4169,7 @@ class dlnaList : public RegisterTable {
         m_lineHight = m_h / 10;
         m_tftSize = tftSize;
     }
-    void client_and_history(DLNA_Client* dlna, dlnaHistory* dh){
+    void client_and_history(DLNA_Client* dlna, dlnaHistory_s* dh){
         m_dlna = dlna;
         m_dlnaHistory = dh;
     }

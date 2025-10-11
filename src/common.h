@@ -277,7 +277,7 @@ int log_redirect_handler(const char* format, va_list args) {
 }
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-struct dlnaHistory {
+struct dlnaHistory_s {
     char*    objId = NULL;
     char*    name = NULL;
     uint16_t maxItems = 0;
@@ -289,7 +289,7 @@ struct releasedArg {
     int16_t val1 = 0;
     int16_t val2 = 0;
 };
-struct timecounter {
+struct timecounter_s {
     uint8_t timer = 0;
     uint8_t factor = 2;
 };
@@ -297,20 +297,28 @@ struct irButtons {
     int16_t val;
     char*   label;
 };
-struct settings {
+struct settings_s {
     irButtons    irbuttons[45];
     uint8_t      numOfIrButtons = 0;
     ps_ptr<char> lastconnectedhost = {};
     ps_ptr<char> lastconnectedfile = {};
 };
 
-struct volume {
+struct volume_s {
     uint8_t cur_volume = 21;
     uint8_t BTvolume = 16; // KCX-BT_Emitter volume
     uint8_t ringVolume = 21;
     uint8_t volumeAfterAlarm = 12;
     uint8_t volumeSteps = 21;
     uint8_t volumeCurve = 1;
+};
+
+struct bt_emitter_s{
+    bool found = false;
+    bool connect = false;
+    uint8_t volume = 0;
+    ps_ptr<char> mode;
+    ps_ptr<char> version;
 };
 
 //——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -374,6 +382,7 @@ const char* getWiFiPW(const char* ssid);
 bool        setWiFiPW(const char* ssid, const char* password);
 void        my_audio_info(Audio::msg_t m);
 void        on_dlna_client(const DLNA_Client::msg_s& msg);
+void        on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
