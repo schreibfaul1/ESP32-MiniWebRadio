@@ -55,7 +55,7 @@ extern __attribute__((weak)) void kcx_bt_modeChanged(const char*);
 
 class KCX_BT_Emitter {
   public:
-    enum { FOUND, VERSION, CONNECTED, MODE, VOLUME};
+    enum { FOUND, VERSION, CONNECTED, MODE, VOLUME };
     enum { BT_MODE_RECEIVER = 0, BT_MODE_EMITTER = 1 };
     enum { BT_NOT_CONNECTED, BT_CONNECTED };
     enum { BT_PAUSE = 0, BT_PLAY = 1 };
@@ -64,11 +64,11 @@ class KCX_BT_Emitter {
   public:
     typedef enum { evt_found = 0, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode } event_t;
     struct msg_s { // used in info(audio_info_callback());
-        const char*             msg = nullptr;
-        const char*             s = nullptr;
-        event_t                 e = (event_t)0; // event type
-        int32_t                 val = 0;
-        const char*             arg = nullptr;
+        const char* msg = nullptr;
+        const char* s = nullptr;
+        event_t     e = (event_t)0; // event type
+        int32_t     val = 0;
+        const char* arg = nullptr;
     };
     using BT_Callback = std::function<void(const msg_s&)>;
     void kcx_bt_emitter_callback(BT_Callback cb) { m_bt_callback = std::move(cb); }
@@ -87,13 +87,11 @@ class KCX_BT_Emitter {
     void addLinkName(ps_ptr<char> name); // up to 10 names can be saved
     void addLinkAddr(ps_ptr<char> addr); // up to 10 MAC addresses can be saved
 
-
-
     bool         isConnected() { return m_f_connected; }
     uint8_t      getVolume() { return m_bt_volume; }
-    void         setVolume(uint8_t vol); // 0 ... 31
-    bool         getMode() {return m_f_bt_mode;} // 0: RECEIVER, 1: EMITTER
-    void         setMode(ps_ptr<char> mode);  // RX: RECEIVER, TX: EMITTER
+    void         setVolume(uint8_t vol);           // 0 ... 31
+    ps_ptr<char> getMode() { return m_f_bt_mode; } // 0: RECEIVER, 1: EMITTER
+    void         setMode(ps_ptr<char> mode);       // RX: RECEIVER, TX: EMITTER
     void         pauseResume();
     void         downvolume();
     void         upvolume();
@@ -106,7 +104,7 @@ class KCX_BT_Emitter {
     const char*  list_protokol();
 
   private:
-    msg_s m_msg;
+    msg_s                    m_msg;
     std::deque<ps_ptr<char>> m_TX_queue;
     std::deque<ps_ptr<char>> m_RX_queue;
     std::deque<ps_ptr<char>> m_RX_TX_protocol;
@@ -132,13 +130,13 @@ class KCX_BT_Emitter {
     int8_t BT_TX_PIN = -1;
     bool   m_f_btEmitter_found = false;
 
-    bool     m_f_bt_mode = BT_MODE_EMITTER;    // 0: BT_MODE_EMITTER, 1: BT_MODE_RECEIVER
-    bool     m_f_bt_state = BT_PLAY;           // 0: BT_PAUSE, 1: BT_PLAY
-    bool     m_f_connected = BT_NOT_CONNECTED; // scan, connected or not
-    bool     m_f_scan = false;
-    bool     m_f_KCX_BT_Emitter_isInit = false;
-    uint32_t m_timeStamp = 0;
-    bool     m_lock = false;
+    ps_ptr<char> m_f_bt_mode = "NA";
+    bool         m_f_bt_state = BT_PLAY;           // 0: BT_PAUSE, 1: BT_PLAY
+    bool         m_f_connected = BT_NOT_CONNECTED; // scan, connected or not
+    bool         m_f_scan = false;
+    bool         m_f_KCX_BT_Emitter_isInit = false;
+    uint32_t     m_timeStamp = 0;
+    bool         m_lock = false;
 
     uint8_t m_bt_add_num = 0;
     uint8_t m_bt_name_num = 0;

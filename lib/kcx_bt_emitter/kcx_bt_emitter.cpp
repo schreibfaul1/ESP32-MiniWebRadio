@@ -164,7 +164,7 @@ void KCX_BT_Emitter::parseATcmds() {
             m_msg.e = evt_mode;
             if (m_bt_callback) { m_bt_callback(m_msg); }
 
-            m_f_bt_mode = BT_MODE_EMITTER;
+            m_f_bt_mode = "TX";
             if (kcx_bt_info) kcx_bt_info("Mode", "EMITTER");
             if (kcx_bt_modeChanged) kcx_bt_modeChanged("TX");
         }
@@ -172,7 +172,7 @@ void KCX_BT_Emitter::parseATcmds() {
             m_msg.arg = "RX";
             m_msg.e = evt_mode;
             if (m_bt_callback) { m_bt_callback(m_msg); }
-            m_f_bt_mode = BT_MODE_RECEIVER;
+            m_f_bt_mode = "RX";
             if (kcx_bt_info) kcx_bt_info("Mode", "RECEIVER");
             if (kcx_bt_modeChanged) kcx_bt_modeChanged("RX");
         }
@@ -296,12 +296,13 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
     if (mode.equals("RX")) {
-        m_f_bt_mode = BT_MODE_RECEIVER;
+        m_f_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, LOW);
-    } else {
-        m_f_bt_mode = BT_MODE_EMITTER;
+    } else if (mode.equals("TX")) {
+        m_f_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, HIGH);
     }
+    else {KCX_LOG_ERROR("unknown mode %s", mode.c_get()); return;}
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::pauseResume() {

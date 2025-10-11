@@ -296,7 +296,7 @@ boolean defaultsettings() {
     s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
     s_volume.BTvolume = atoi(parseJson("\"BTvolume\":"));
     s_f_BTpower = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
-//    s_bt_emitter.mode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
+    s_bt_emitter.mode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
     s_alarmtime[2] = computeMinuteOfTheDay(parseJson("\"alarmtime_tue\":"));
@@ -359,7 +359,7 @@ void updateSettings() {
     jO.appendf(",\n  \"BTvolume\":%i", s_volume.BTvolume);
     jO.appendf(",\n  \"BTpower\":");
     (s_f_BTpower == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
-    jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode() == KCX_BT_Emitter::BT_MODE_EMITTER ? "TX" : "RX");
+    jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode().c_get());
     jO.appendf(",\n  \"alarmtime_sun\":\"%02d:%02d\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"%02d:%02d\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
     jO.appendf(",\n  \"alarmtime_tue\":\"%02d:%02d\"", s_alarmtime[2] / 60, s_alarmtime[2] % 60);
@@ -1484,14 +1484,11 @@ void setup() {
     } else {
         changeState(WIFI_SETTINGS);
     }
-    if (BT_EMITTER_CONNECT >= 0) {
-        pinMode(BT_EMITTER_CONNECT, OUTPUT);
-        digitalWrite(BT_EMITTER_CONNECT, HIGH); // awake
-    }
+
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?"); // get version
     bt_emitter.userCommand("AT+VOL?");
-    bt_emitter.userCommand("AT+RESET");
+    bt_emitter.setMode(s_bt_emitter.mode);
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -2954,10 +2951,10 @@ void loop() {
             log_w("openAI speech");
             //    audio.openai_speech("openAI-key", "tts-1", "Today is a wonderful day to build something people love!", "", "shimer", "mp3", "1");
         }
-        // if(r.startsWith("ctfs")){ // connecttoFS
+        if(r.startsWith("ctfs")){ // connecttoFS
         //     log_w("SPIFFS");
-        //     connecttoFS("SPIFFS", "/Collide.ogg");
-        // }
+            connecttoFS("SD", "/Collide.ogg");
+        }
         if (r.startsWith("sto")) { // setTimeOffset
             int32_t t = r.substring(3, r.length() - 1).toInt();
             log_w("setTimeOffset %li", t);
@@ -5130,8 +5127,8 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_addAddr"){       bt_emitter.addLinkAddr(param.c_str()); return;}
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
-    CMD_EQUALS("KCX_BT_getMode"){     log_e("mode");   webSrv.send("KCX_BT_MODE=", bt_emitter.getMode() == KCX_BT_Emitter::BT_MODE_EMITTER ? "TX" : "RX"); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    s_bt_emitter.mode.equals("RX") ? s_bt_emitter.mode.assign("TX") : s_bt_emitter.mode.assign("RX");  bt_emitter.setMode(s_bt_emitter.mode); return;}
+    CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
+    CMD_EQUALS("KCX_BT_changeMode"){    s_bt_emitter.mode.equals("RX") ? s_bt_emitter.mode = "TX" : s_bt_emitter.mode = "RX";  bt_emitter.setMode(s_bt_emitter.mode); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
     CMD_EQUALS("KCX_BT_upvolume"){      if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}   return;}
@@ -5509,7 +5506,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && !strcmp(name, "btn_BT_radio"))    {return;}
         if( val && !strcmp(name, "btn_BT_volDown"))  {if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
         if( val && !strcmp(name, "btn_BT_volUp"))    {if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}  return;}
-        if( val && !strcmp(name, "btn_BT_mode"))     {if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode.assign("TX"); else s_bt_emitter.mode.assign("RX");  bt_emitter.setMode(s_bt_emitter.mode); return;}
+        if( val && !strcmp(name, "btn_BT_mode"))     {if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else s_bt_emitter.mode = "RX";  bt_emitter.setMode(s_bt_emitter.mode); return;}
         if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }
     if(s_state == IR_SETTINGS) {
