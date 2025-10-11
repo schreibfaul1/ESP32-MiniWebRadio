@@ -145,6 +145,12 @@ void KCX_BT_Emitter::parseATcmds() {
         if (m_bt_callback) { m_bt_callback(m_msg); }
         if (kcx_bt_info) kcx_bt_info("Power On", "");
     }
+
+    if (item.equals("AT+POWER_OFF")) {
+        m_msg.e = evt_power_off;
+        if (m_bt_callback) { m_bt_callback(m_msg); }
+    }
+
     if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
         m_bt_version.copy_from(item.get() + 8);
         m_msg.arg = m_bt_version.c_get();
@@ -288,8 +294,8 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
     v.appendf("%i", vol);
     add_tx_queue_item(v);
 }
-void KCX_BT_Emitter::setMode(bool mode) {
-    if (mode == BT_MODE_RECEIVER) {
+void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
+    if (mode.equals("RX")) {
         m_f_bt_mode = BT_MODE_RECEIVER;
         digitalWrite(BT_MODE_PIN, LOW);
     } else {
@@ -324,11 +330,11 @@ void KCX_BT_Emitter::upvolume() {
 const char* KCX_BT_Emitter::getMyName() {
     return m_myName.c_get();
 }
-void KCX_BT_Emitter::cmd_PowerOff() {
+void KCX_BT_Emitter::power_off() {
     KCX_LOG_INFO("POWER OFF", "");
     add_tx_queue_item("AT+POWER_OFF");
 }
-void KCX_BT_Emitter::cmd_PowerOn() {
+void KCX_BT_Emitter::power_on() {
     KCX_LOG_INFO("POWER ON", "");
     add_tx_queue_item("AT+BT_MODE?");
 }

@@ -62,7 +62,7 @@ class KCX_BT_Emitter {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_found = 0, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_scan, evt_volume, evt_version, evt_mode } event_t;
+    typedef enum { evt_found = 0, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode } event_t;
     struct msg_s { // used in info(audio_info_callback());
         const char*             msg = nullptr;
         const char*             s = nullptr;
@@ -93,14 +93,14 @@ class KCX_BT_Emitter {
     uint8_t      getVolume() { return m_bt_volume; }
     void         setVolume(uint8_t vol); // 0 ... 31
     bool         getMode() {return m_f_bt_mode;} // 0: RECEIVER, 1: EMITTER
-    void         setMode(bool mode); // 0: RECEIVER, 1: EMITTER
+    void         setMode(ps_ptr<char> mode);  // RX: RECEIVER, TX: EMITTER
     void         pauseResume();
     void         downvolume();
     void         upvolume();
     const char*  getMyName();
     ps_ptr<char> get_bt_Version() { return m_bt_version; } // KCX_BT_RTX_V1.4
-    void         cmd_PowerOff();
-    void         cmd_PowerOn();
+    void         power_off();
+    void         power_on();
     void         userCommand(const char* cmd);
     const char*  stringifyScannedItems();
     const char*  list_protokol();

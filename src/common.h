@@ -316,6 +316,7 @@ struct volume_s {
 struct bt_emitter_s{
     bool found = false;
     bool connect = false;
+    bool power_state = false;
     uint8_t volume = 0;
     ps_ptr<char> mode;
     ps_ptr<char> version;
@@ -376,7 +377,6 @@ void        connecttoFS(const char* FS, const char* filename, uint32_t fileStart
 void        stopSong();
 void        placingGraphicObjects();
 void        muteChanged(bool m);
-void        BTpowerChanged(int8_t newState); // true -> power on, false -> power off
 void        setTimeCounter(uint8_t sec);
 const char* getWiFiPW(const char* ssid);
 bool        setWiFiPW(const char* ssid, const char* password);
