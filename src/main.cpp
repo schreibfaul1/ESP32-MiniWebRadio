@@ -1482,7 +1482,8 @@ void setup() {
 
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?"); // get version
-    bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio");
+    bt_emitter.userCommand("AT+PAUSE?"); // pause or play?
+    bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
     bt_emitter.setVolume(s_bt_emitter.volume);
     bt_emitter.setMode(s_bt_emitter.mode);
 }
@@ -5290,6 +5291,14 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         if (s_state == BLUETOOTH) txt_BT_mode.writeText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER");
         s_bt_emitter.mode = msg.arg;
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "RX_TX_mode", msg.arg);
+    }
+    if (msg.e == KCX_BT_Emitter::evt_pause) {
+        s_bt_emitter.play = false;
+        SerialPrintfln("BT-Emitter:  %s ", "Pause");
+    }
+    if (msg.e == KCX_BT_Emitter::evt_play) {
+        s_bt_emitter.play =true;
+        SerialPrintfln("BT-Emitter:  %s ", "Play");
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

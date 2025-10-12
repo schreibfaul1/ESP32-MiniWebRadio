@@ -10,7 +10,7 @@
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t connect_pin, int8_t mode_pin) {
-    BT_MODE_PIN = mode_pin; // low RX, high TX
+    BT_MODE_PIN = mode_pin;       // low RX, high TX
     BT_CONNECT_PIN = connect_pin; // 100ms low -> awake from POWER_OFF
     BT_RX_PIN = RX_pin;
     BT_TX_PIN = TX_pin;
@@ -25,7 +25,7 @@ KCX_BT_Emitter::~KCX_BT_Emitter() {}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::begin() {
     KCX_LOG_DEBUG("KCX_BT_Emitter begin");
-    digitalWrite(BT_CONNECT_PIN, LOW);  // awake if POWER_OFF
+    digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
@@ -37,7 +37,7 @@ void KCX_BT_Emitter::begin() {
 void KCX_BT_Emitter::loop() {
 
     if (millis() > m_timeStamp + 2000) m_lock = false;
-    if (millis() > m_timeStamp + 3000) { userCommand("AT+STATUS?");} //0 disconnected, 1 connected
+    if (millis() > m_timeStamp + 3000) { userCommand("AT+STATUS?"); } // 0 disconnected, 1 connected
 
     if (!m_lock) {
         m_lock = true;
@@ -84,7 +84,7 @@ void KCX_BT_Emitter::readCmd() {
         if (!extracted_message.is_utf8()) return;
         protocol_addElement("RX", extracted_message.c_get());
         add_rx_queue_item(extracted_message);
-        if(extracted_message.starts_with("OK+STATUS")) return; // do no protokol heart beat
+        if (extracted_message.starts_with("OK+STATUS")) return; // do no protokol heart beat
         m_last_rx_command = extracted_message;
         m_msg.e = evt_info;
         m_msg.arg = extracted_message.c_get();
@@ -94,7 +94,7 @@ void KCX_BT_Emitter::readCmd() {
 
     while (true) {
         if (t < millis()) {
-            if(!buff.is_utf8()) return;
+            if (!buff.is_utf8()) return;
             KCX_LOG_ERROR("timeout while reading from KCX_BT_Emitter, received: %s", buff.c_get());
             return;
         }
@@ -136,7 +136,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_found;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.equals("OK+RESET")) {
+    else if (item.equals("OK+RESET")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -145,23 +145,21 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_reset;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.equals("POWER ON")) {
+    else if (item.equals("POWER ON")) {
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-
-    if (item.equals("AT+POWER_OFF")) {
+    else if (item.equals("AT+POWER_OFF")) {
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-
-    if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
+    else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
         m_bt_version.copy_from(item.get() + 8);
         m_msg.arg = m_bt_version.c_get();
         m_msg.e = evt_version;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("OK+BT_")) { // OK+BT_EMITTER or OK+BT_RECEIVER
+    else if (item.starts_with("OK+BT_")) { // OK+BT_EMITTER or OK+BT_RECEIVER
         if (item.ends_with("EMITTER")) {
             m_bt_mode = "TX";
             m_msg.arg = "TX";
@@ -175,23 +173,23 @@ void KCX_BT_Emitter::parseATcmds() {
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
     }
-    if (item.starts_with("OK+VOL=")) {
+    else if (item.starts_with("OK+VOL=")) {
         m_bt_volume = atoi(item.get() + 7); // OK+VOL=31
         m_msg.val = m_bt_volume;
         m_msg.e = evt_volume;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("OK+NAME=")) {
+    else if (item.starts_with("OK+NAME=")) {
         m_msg.e = evt_info;
         m_msg.arg = ""; // todo
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("Delete_Vmlink")) {
+    else if (item.starts_with("Delete_Vmlink")) {
         m_msg.e = evt_info;
         m_msg.arg = "Vmlink deleted";
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("MEM_Name")) { // MEM_Name 00: Pebble V3
+    else if (item.starts_with("MEM_Name")) { // MEM_Name 00: Pebble V3
         auto num = item.substr(9, 2);
         auto name = item.substr(12);
         m_MEM_Name[num.to_uint32()] = name;
@@ -200,7 +198,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("MEM_MacAdd")) {
+    else if (item.starts_with("MEM_MacAdd")) {
         auto num = item.substr(11, 2);
         auto addr = item.substr(14);
         m_MEM_MacAdd[num.to_uint32()] = addr;
@@ -209,7 +207,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if (item.starts_with("MacAdd")) {
+    else if (item.starts_with("MacAdd")) {
         bool found = false;
         for (auto sc : m_bt_scannedItems) {
             KCX_LOG_ERROR("item %s", item.c_get());
@@ -217,14 +215,14 @@ void KCX_BT_Emitter::parseATcmds() {
         }
         if (!found) { m_bt_scannedItems.push_back(item); }
     }
-    if (item.starts_with("CONNECT=>")) {
+    else if (item.starts_with("CONNECT=>")) {
         if (m_f_connected == BT_NOT_CONNECTED) {
             m_f_connected = BT_CONNECTED;
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
     }
-    if (item.equals("SCAN....")) {
+    else if (item.equals("SCAN....")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -233,21 +231,30 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_scan;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     }
-    if(item.starts_with("OK+STATUS:")){
-        if(item.equals("OK+STATUS:0")){
-            if(m_f_connected == BT_CONNECTED){
-                m_f_connected = BT_NOT_CONNECTED;
-                m_msg.e = evt_disconnect;
-                if (m_bt_callback) { m_bt_callback(m_msg); }
-            }
+    else if (item.equals("OK+STATUS:0")) {
+        if (m_f_connected == BT_CONNECTED) {
+            m_f_connected = BT_NOT_CONNECTED;
+            m_msg.e = evt_disconnect;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-        if(item.equals("OK+STATUS:1")){
-            if(m_f_connected == BT_NOT_CONNECTED){
-                m_f_connected = BT_CONNECTED;
-                m_msg.e = evt_connect;
-                if (m_bt_callback) { m_bt_callback(m_msg); }
-            }
+    }
+    else if (item.equals("OK+STATUS:1")) {
+        if (m_f_connected == BT_NOT_CONNECTED) {
+            m_f_connected = BT_CONNECTED;
+            m_msg.e = evt_connect;
+            if (m_bt_callback) { m_bt_callback(m_msg); }
         }
+    }
+    else if (item.equals("OK+PAUSE")) {
+        m_msg.e = evt_pause;
+        if (m_bt_callback) { m_bt_callback(m_msg); }
+    }
+    else if (item.equals("OK+PLAY")) {
+        m_msg.e = evt_play;
+        if (m_bt_callback) { m_bt_callback(m_msg); }
+    }
+    else{
+        KCX_LOG_INFO("command :%s", item.c_get());
     }
     return;
 }
@@ -264,7 +271,7 @@ void KCX_BT_Emitter::protocol_addElement(const char* RX_TX, const char* str) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::add_tx_queue_item(ps_ptr<char> item) {
     m_TX_queue.push_back(item);
-    KCX_LOG_ERROR("add_tx_queue_item %s", item.c_get());
+    KCX_LOG_DEBUG("add_tx_queue_item %s", item.c_get());
     return;
 }
 
@@ -272,7 +279,7 @@ ps_ptr<char> KCX_BT_Emitter::get_tx_queue_item() {
     ps_ptr<char> queue_item;
     if (m_TX_queue.size() == 0) return queue_item;
     queue_item = m_TX_queue[0];
-    KCX_LOG_WARN("get_tx_queue_item %s", queue_item.c_get());
+    KCX_LOG_DEBUG("get_tx_queue_item %s", queue_item.c_get());
     m_TX_queue.pop_front();
     return queue_item;
 }
@@ -318,8 +325,10 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
     } else if (mode.equals("TX")) {
         m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, HIGH);
+    } else {
+        KCX_LOG_ERROR("unknown mode %s", mode.c_get());
+        return;
     }
-    else {KCX_LOG_ERROR("unknown mode %s", mode.c_get()); return;}
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::changeMode() {
@@ -403,13 +412,13 @@ void KCX_BT_Emitter::stringifyMemItems() {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three scanned BT devices as jsonStr
 
-    for (auto& item : m_bt_scannedItems) { KCX_LOG_ERROR("RX_TX_protocol %s", item.c_get()); }
+    for (auto& item : m_bt_scannedItems) { KCX_LOG_DEBUG("RX_TX_protocol %s", item.c_get()); }
 
     m_jsonScanItemsStr.assign("[");
     // [{"name":"btName","addr":"82435181cc6a"},{"name":"btsecondName","addr":"82435181cc6b"},{name":"btthirdName","addr":"82435181cc6c"}]
     int idx1, idx2, idx3;
     for (int i = 0; i < m_bt_scannedItems.size(); i++) {
-        KCX_LOG_WARN("m_bt_scannedItems[i]   %s", m_bt_scannedItems[i].c_get());
+        KCX_LOG_DEBUG("m_bt_scannedItems[i]   %s", m_bt_scannedItems[i].c_get());
         idx1 = m_bt_scannedItems[i].index_of(':');
         idx2 = m_bt_scannedItems[i].index_of(',');
         idx3 = m_bt_scannedItems[i].last_index_of(':');

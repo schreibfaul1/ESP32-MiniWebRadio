@@ -323,6 +323,7 @@ struct bt_emitter_s{
     bool found = false;
     bool connect = false;
     bool power_state = false;
+    bool play = true; // play: true, pause: false
     uint8_t volume = 0;
     ps_ptr<char> mode;
     ps_ptr<char> version;
