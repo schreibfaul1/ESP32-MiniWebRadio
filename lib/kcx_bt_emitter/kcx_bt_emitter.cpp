@@ -160,13 +160,13 @@ void KCX_BT_Emitter::parseATcmds() {
     }
     if (item.starts_with("OK+BT_")) { // OK+BT_EMITTER or OK+BT_RECEIVER
         if (item.ends_with("EMITTER")) {
-            m_f_bt_mode = "TX";
+            m_bt_mode = "TX";
             m_msg.arg = "TX";
             m_msg.e = evt_mode;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
         if (item.ends_with("RECEIVER")) {
-            m_f_bt_mode = "RX";
+            m_bt_mode = "RX";
             m_msg.arg = "RX";
             m_msg.e = evt_mode;
             if (m_bt_callback) { m_bt_callback(m_msg); }
@@ -222,8 +222,8 @@ void KCX_BT_Emitter::parseATcmds() {
         }
     }
     if (item.equals("SCAN....")) {
-        if (m_f_connected == BT_NOT_CONNECTED) {
-            m_f_connected = BT_CONNECTED;
+        if (m_f_connected == BT_CONNECTED) {
+            m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
@@ -310,13 +310,23 @@ void KCX_BT_Emitter::setVolume(uint8_t vol) {
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
     if (mode.equals("RX")) {
-        m_f_bt_mode = mode;
+        m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, LOW);
     } else if (mode.equals("TX")) {
-        m_f_bt_mode = mode;
+        m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, HIGH);
     }
     else {KCX_LOG_ERROR("unknown mode %s", mode.c_get()); return;}
+    add_tx_queue_item("AT+RESET");
+}
+void KCX_BT_Emitter::changeMode() {
+    if (m_bt_mode.equals("RX")) {
+        m_bt_mode = "TX";
+        digitalWrite(BT_MODE_PIN, LOW);
+    } else {
+        m_bt_mode = "RX";
+        digitalWrite(BT_MODE_PIN, HIGH);
+    }
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::pauseResume() {

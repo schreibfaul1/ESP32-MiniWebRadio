@@ -5129,9 +5129,8 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    s_bt_emitter.mode.equals("RX") ? s_bt_emitter.mode = "TX" : s_bt_emitter.mode = "RX";
-                                        webSrv.send("KCX_BT_connected=", "0");
-                                        bt_emitter.setMode(s_bt_emitter.mode);
+    CMD_EQUALS("KCX_BT_changeMode"){    webSrv.send("KCX_BT_connected=", "0");
+                                        bt_emitter.changeMode();
                                         webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
@@ -5426,7 +5425,7 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
         if( val && !strcmp(name, "btn_BT_radio"))    {return;}
         if( val && !strcmp(name, "btn_BT_volDown"))  {bt_emitter.downvolume(); return;}
         if( val && !strcmp(name, "btn_BT_volUp"))    {bt_emitter.upvolume();  return;}
-        if( val && !strcmp(name, "btn_BT_mode"))     {if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else s_bt_emitter.mode = "RX";  bt_emitter.setMode(s_bt_emitter.mode); return;}
+        if( val && !strcmp(name, "btn_BT_mode"))     {bt_emitter.changeMode(); return;}
         if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }
     if(s_state == IR_SETTINGS) {

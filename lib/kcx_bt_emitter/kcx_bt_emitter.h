@@ -88,8 +88,9 @@ class KCX_BT_Emitter {
     bool         isConnected() { return m_f_connected; }
     uint8_t      getVolume() { return m_bt_volume; }
     void         setVolume(uint8_t vol);           // 0 ... 31
-    ps_ptr<char> getMode() { return m_f_bt_mode; } // 0: RECEIVER, 1: EMITTER
+    ps_ptr<char> getMode() { return m_bt_mode; } // 0: RECEIVER, 1: EMITTER
     void         setMode(ps_ptr<char> mode);       // RX: RECEIVER, TX: EMITTER
+    void         changeMode();
     void         pauseResume();
     void         downvolume();
     void         upvolume();
@@ -128,7 +129,7 @@ class KCX_BT_Emitter {
     int8_t BT_TX_PIN = -1;
     bool   m_f_btEmitter_found = false;
 
-    ps_ptr<char> m_f_bt_mode = "NA";
+    ps_ptr<char> m_bt_mode = "NA";
     bool         m_f_bt_state = BT_PLAY;           // 0: BT_PAUSE, 1: BT_PLAY
     bool         m_f_connected = BT_NOT_CONNECTED; // scan, connected or not
     bool         m_f_scan = false;
