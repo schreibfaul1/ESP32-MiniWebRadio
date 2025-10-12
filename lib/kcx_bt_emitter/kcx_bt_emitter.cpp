@@ -135,8 +135,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_bt_found = true;
         m_msg.e = evt_found;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.equals("OK+RESET")) {
+    } else if (item.equals("OK+RESET")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -144,52 +143,41 @@ void KCX_BT_Emitter::parseATcmds() {
         }
         m_msg.e = evt_reset;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.equals("POWER ON")) {
+    } else if (item.equals("POWER ON")) {
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.equals("AT+POWER_OFF")) {
+    } else if (item.equals("AT+POWER_OFF")) {
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
+    } else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
         m_bt_version.copy_from(item.get() + 8);
         m_msg.arg = m_bt_version.c_get();
         m_msg.e = evt_version;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("OK+BT_")) { // OK+BT_EMITTER or OK+BT_RECEIVER
-        if (item.ends_with("EMITTER")) {
-            m_bt_mode = "TX";
-            m_msg.arg = "TX";
-            m_msg.e = evt_mode;
-            if (m_bt_callback) { m_bt_callback(m_msg); }
-        }
-        if (item.ends_with("RECEIVER")) {
-            m_bt_mode = "RX";
-            m_msg.arg = "RX";
-            m_msg.e = evt_mode;
-            if (m_bt_callback) { m_bt_callback(m_msg); }
-        }
-    }
-    else if (item.starts_with("OK+VOL=")) {
+    } else if (item.equals("OK+BT_EMITTER")) {
+        m_bt_mode = "TX";
+        m_msg.arg = "TX";
+        m_msg.e = evt_mode;
+        if (m_bt_callback) { m_bt_callback(m_msg); }
+    } else if (item.equals("OK+BT_RECEIVER")) {
+        m_bt_mode = "RX";
+        m_msg.arg = "RX";
+        m_msg.e = evt_mode;
+        if (m_bt_callback) { m_bt_callback(m_msg); }
+    } else if (item.starts_with("OK+VOL=")) {
         m_bt_volume = atoi(item.get() + 7); // OK+VOL=31
         m_msg.val = m_bt_volume;
         m_msg.e = evt_volume;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("OK+NAME=")) {
+    } else if (item.starts_with("OK+NAME=")) {
         m_msg.e = evt_info;
         m_msg.arg = ""; // todo
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("Delete_Vmlink")) {
+    } else if (item.starts_with("Delete_Vmlink")) {
         m_msg.e = evt_info;
         m_msg.arg = "Vmlink deleted";
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("MEM_Name")) { // MEM_Name 00: Pebble V3
+    } else if (item.starts_with("MEM_Name")) { // MEM_Name 00: Pebble V3
         auto num = item.substr(9, 2);
         auto name = item.substr(12);
         m_MEM_Name[num.to_uint32()] = name;
@@ -197,8 +185,7 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_info;
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("MEM_MacAdd")) {
+    } else if (item.starts_with("MEM_MacAdd")) {
         auto num = item.substr(11, 2);
         auto addr = item.substr(14);
         m_MEM_MacAdd[num.to_uint32()] = addr;
@@ -206,23 +193,20 @@ void KCX_BT_Emitter::parseATcmds() {
         m_msg.e = evt_info;
         m_msg.arg = item.c_get();
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.starts_with("MacAdd")) {
+    } else if (item.starts_with("MacAdd")) {
         bool found = false;
         for (auto sc : m_bt_scannedItems) {
             KCX_LOG_ERROR("item %s", item.c_get());
             if (item.equals(sc)) { found = true; }
         }
         if (!found) { m_bt_scannedItems.push_back(item); }
-    }
-    else if (item.starts_with("CONNECT=>")) {
+    } else if (item.starts_with("CONNECT=>")) {
         if (m_f_connected == BT_NOT_CONNECTED) {
             m_f_connected = BT_CONNECTED;
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-    }
-    else if (item.equals("SCAN....")) {
+    } else if (item.equals("SCAN....")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -230,31 +214,26 @@ void KCX_BT_Emitter::parseATcmds() {
         }
         m_msg.e = evt_scan;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.equals("OK+STATUS:0")) {
+    } else if (item.equals("OK+STATUS:0")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-    }
-    else if (item.equals("OK+STATUS:1")) {
+    } else if (item.equals("OK+STATUS:1")) {
         if (m_f_connected == BT_NOT_CONNECTED) {
             m_f_connected = BT_CONNECTED;
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-    }
-    else if (item.equals("OK+PAUSE")) {
+    } else if (item.equals("OK+PAUSE")) {
         m_msg.e = evt_pause;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else if (item.equals("OK+PLAY")) {
+    } else if (item.equals("OK+PLAY")) {
         m_msg.e = evt_play;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    }
-    else{
-        KCX_LOG_INFO("command :%s", item.c_get());
+    } else {
+        KCX_LOG_INFO("command: %s", item.c_get());
     }
     return;
 }
