@@ -293,7 +293,7 @@ boolean defaultsettings() {
     s_volume.volumeSteps = atoi(parseJson("\"volumeSteps\":"));
     s_volume.ringVolume = atoi(parseJson("\"ringVolume\":"));
     s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
-    s_volume.BTvolume = atoi(parseJson("\"BTvolume\":"));
+    s_bt_emitter.volume = atoi(parseJson("\"BTvolume\":"));
     s_bt_emitter.power_state = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
     s_bt_emitter.mode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
@@ -355,7 +355,7 @@ void updateSettings() {
     jO.appendf(",\n  \"volumeSteps\":%i", s_volume.volumeSteps);
     jO.appendf(",\n  \"ringVolume\":%i", s_volume.ringVolume);
     jO.appendf(",\n  \"volumeAfterAlarm\":%i", s_volume.volumeAfterAlarm);
-    jO.appendf(",\n  \"BTvolume\":%i", s_volume.BTvolume);
+    jO.appendf(",\n  \"BTvolume\":%i", s_bt_emitter.volume);
     jO.appendf(",\n  \"BTpower\":");
     s_bt_emitter.power_state == true ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
     jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode().c_get());
@@ -1487,7 +1487,8 @@ void setup() {
 
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?"); // get version
-    bt_emitter.userCommand("AT+VOL?");
+    bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio");
+    bt_emitter.setVolume(s_bt_emitter.volume);
     bt_emitter.setMode(s_bt_emitter.mode);
 }
 /*****************************************************************************************************************************************************
@@ -5133,8 +5134,8 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
                                         bt_emitter.setMode(s_bt_emitter.mode);
                                         webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
-    CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
-    CMD_EQUALS("KCX_BT_upvolume"){      if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}   return;}
+    CMD_EQUALS("KCX_BT_downvolume"){    bt_emitter.downvolume(); return;}
+    CMD_EQUALS("KCX_BT_upvolume"){      bt_emitter.upvolume();   return;}
     CMD_EQUALS("KCX_BT_getPower"){      if(s_bt_emitter.power_state) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
     CMD_EQUALS("KCX_BT_power"){         s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on() ; return;}
 
@@ -5289,7 +5290,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_version) {
         s_bt_emitter.version = msg.arg;
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "version", msg.arg);
-        bt_emitter.setVolume(s_volume.BTvolume);
     }
     if (msg.e == KCX_BT_Emitter::evt_mode) {
         webSrv.send("KCX_BT_MODE=", msg.arg);
@@ -5424,8 +5424,8 @@ void graphicObjects_OnClick(const char* name, uint8_t val) { // val = 0 --> is i
     if(s_state == BLUETOOTH) {
         if( val && !strcmp(name, "btn_BT_pause"))    {bt_emitter.pauseResume(); return;}
         if( val && !strcmp(name, "btn_BT_radio"))    {return;}
-        if( val && !strcmp(name, "btn_BT_volDown"))  {if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
-        if( val && !strcmp(name, "btn_BT_volUp"))    {if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}  return;}
+        if( val && !strcmp(name, "btn_BT_volDown"))  {bt_emitter.downvolume(); return;}
+        if( val && !strcmp(name, "btn_BT_volUp"))    {bt_emitter.upvolume();  return;}
         if( val && !strcmp(name, "btn_BT_mode"))     {if(s_bt_emitter.mode.equals("RX")) s_bt_emitter.mode = "TX"; else s_bt_emitter.mode = "RX";  bt_emitter.setMode(s_bt_emitter.mode); return;}
         if( val && !strcmp(name, "btn_BT_power"))    {return;}
     }

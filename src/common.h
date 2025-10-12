@@ -315,7 +315,6 @@ struct settings_s {
 
 struct volume_s {
     uint8_t cur_volume = 21;
-    uint8_t BTvolume = 16; // KCX-BT_Emitter volume
     uint8_t ringVolume = 21;
     uint8_t volumeAfterAlarm = 12;
     uint8_t volumeSteps = 21;
