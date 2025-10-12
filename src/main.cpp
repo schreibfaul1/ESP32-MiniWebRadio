@@ -178,7 +178,6 @@ bool           s_f_dlna_browseReady = false;
 bool           s_f_BTEmitterConnected = false;
 bool           s_f_brightnessIsChangeable = false;
 bool           s_f_connectToLastStation = false;
-bool           s_f_BTpower = false;
 
 bool   s_f_timeSpeech = false;
 bool   s_f_stationsChanged = false;
@@ -295,7 +294,7 @@ boolean defaultsettings() {
     s_volume.ringVolume = atoi(parseJson("\"ringVolume\":"));
     s_volume.volumeAfterAlarm = atoi(parseJson("\"volumeAfterAlarm\":"));
     s_volume.BTvolume = atoi(parseJson("\"BTvolume\":"));
-    s_f_BTpower = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
+    s_bt_emitter.power_state = (strcmp(parseJson("\"BTpower\":"), "true") == 0) ? 1 : 0;
     s_bt_emitter.mode = ((strcmp(parseJson("\"BTmode\":"), "TX") == 0) ? "TX" : "RX");
     s_alarmtime[0] = computeMinuteOfTheDay(parseJson("\"alarmtime_sun\":"));
     s_alarmtime[1] = computeMinuteOfTheDay(parseJson("\"alarmtime_mon\":"));
@@ -358,7 +357,7 @@ void updateSettings() {
     jO.appendf(",\n  \"volumeAfterAlarm\":%i", s_volume.volumeAfterAlarm);
     jO.appendf(",\n  \"BTvolume\":%i", s_volume.BTvolume);
     jO.appendf(",\n  \"BTpower\":");
-    (s_f_BTpower == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
+    s_bt_emitter.power_state == true ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
     jO.appendf(",\n  \"BTmode\":\"%s\"", bt_emitter.getMode().c_get());
     jO.appendf(",\n  \"alarmtime_sun\":\"%02d:%02d\"", s_alarmtime[0] / 60, s_alarmtime[0] % 60);
     jO.appendf(",\n  \"alarmtime_mon\":\"%02d:%02d\"", s_alarmtime[1] / 60, s_alarmtime[1] % 60);
@@ -1290,9 +1289,10 @@ void setup() {
     mutex_display = xSemaphoreCreateMutex();
     Serial.print("\n\n");
     trim(Version);
-    Serial.println(ANSI_ESC_YELLOW "             *****************************************************   ");
-    Serial.printf(ANSI_ESC_YELLOW "             *     MiniWebRadio % 29s    *    \n", Version);
-    Serial.println(ANSI_ESC_YELLOW "             *****************************************************    ");
+
+    Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
+    Serial.printf("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "    \n", Version);
+    Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
     Serial.println(ANSI_ESC_RESET "   ");
 
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
@@ -1400,7 +1400,7 @@ void setup() {
     btn_EQ_mute.setValue(s_f_mute);
     btn_PL_mute.setValue(s_f_mute);
     btn_DL_mute.setValue(s_f_mute);
-    btn_BT_power.setValue(s_f_BTpower);
+    btn_BT_power.setValue(s_bt_emitter.power_state);
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0]);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
@@ -5118,7 +5118,7 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
                                         return;}
 
     CMD_EQUALS("DLNA_GetFolder"){       webSrv.sendStatus(306); return;}  // todo
-    CMD_EQUALS("KCX_BT_connected") {    if     (!s_f_BTpower)              webSrv.send("KCX_BT_connected=", "-1");
+    CMD_EQUALS("KCX_BT_connected") {    if(!s_bt_emitter.power_state)     webSrv.send("KCX_BT_connected=", "-1");
                                         else if(bt_emitter.isConnected()) webSrv.send("KCX_BT_connected=",  "1");
                                         else                              webSrv.send("KCX_BT_connected=",  "0");
                                         return;}
@@ -5128,11 +5128,14 @@ void WEBSRV_onCommand(const char* cmd, const String param, const String arg){  /
     CMD_EQUALS("KCX_BT_mem"){           bt_emitter.getVMlinks(); return;}
     CMD_EQUALS("KCX_BT_scanned"){       webSrv.send("KCX_BT_SCANNED=", bt_emitter.stringifyScannedItems()); return;}
     CMD_EQUALS("KCX_BT_getMode"){       webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
-    CMD_EQUALS("KCX_BT_changeMode"){    s_bt_emitter.mode.equals("RX") ? s_bt_emitter.mode = "TX" : s_bt_emitter.mode = "RX";  bt_emitter.setMode(s_bt_emitter.mode); return;}
+    CMD_EQUALS("KCX_BT_changeMode"){    s_bt_emitter.mode.equals("RX") ? s_bt_emitter.mode = "TX" : s_bt_emitter.mode = "RX";
+                                        webSrv.send("KCX_BT_connected=", "0");
+                                        bt_emitter.setMode(s_bt_emitter.mode);
+                                        webSrv.send("KCX_BT_MODE=", bt_emitter.getMode().c_get()); return;}
     CMD_EQUALS("KCX_BT_pause"){         bt_emitter.pauseResume(); return;}
     CMD_EQUALS("KCX_BT_downvolume"){    if(s_volume.BTvolume > 0)  {s_volume.BTvolume--; bt_emitter.downvolume();} return;}
     CMD_EQUALS("KCX_BT_upvolume"){      if(s_volume.BTvolume < 31) {s_volume.BTvolume++; bt_emitter.upvolume();}   return;}
-    CMD_EQUALS("KCX_BT_getPower"){      if(s_f_BTpower) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
+    CMD_EQUALS("KCX_BT_getPower"){      if(s_bt_emitter.power_state) webSrv.send("KCX_BT_power=", "1"); else webSrv.send("KCX_BT_power=", "0"); return;}
     CMD_EQUALS("KCX_BT_power"){         s_bt_emitter.power_state == 1 ? bt_emitter.power_off() : bt_emitter.power_on() ; return;}
 
     CMD_EQUALS("hardcopy"){             SerialPrintfln("Webpage: ... " ANSI_ESC_YELLOW "create a display hardcopy"); make_hardcopy_on_sd(); webSrv.send("hardcopy=", "/hardcopy.bmp"); return;}
@@ -5226,10 +5229,12 @@ void on_dlna_client(const DLNA_Client::msg_s& msg) {
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
+    if(msg.e == KCX_BT_Emitter::evt_info){
+        SerialPrintfln("BT-Emitter:  " ANSI_ESC_GREEN "%s ", msg.arg);
+    }
     if (msg.e == KCX_BT_Emitter::evt_found) {
         s_bt_emitter.found = true;
         SerialPrintfln("BT-Emitter:  %s ", "found");
-        MWR_LOG_ERROR("found");
     }
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
@@ -5240,18 +5245,15 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
             pic_BT_mode.setPicturePath("/common/BTblue.png");
         }
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
-        MWR_LOG_ERROR("connected");
         SerialPrintfln("BT-Emitter:  %s ", "connected");
     }
     if (msg.e == KCX_BT_Emitter::evt_disconnect) {
         webSrv.send("KCX_BT_connected=", "0");
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
-        MWR_LOG_ERROR("disconnected");
         SerialPrintfln("BT-Emitter:  %s ", "disconnected");
     }
     if (msg.e == KCX_BT_Emitter::evt_reset) {
-        MWR_LOG_ERROR("reset");
         SerialPrintfln("BT-Emitter:  %s ", "reset");
         s_bt_emitter.connect = false;
     }
@@ -5263,7 +5265,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
         SerialPrintfln("BT-Emitter:  %s ", "power on");
         bt_emitter.userCommand("AT+BT_MODE?");
-        MWR_LOG_ERROR("power on");
     }
     if (msg.e == KCX_BT_Emitter::evt_power_off) {
         s_bt_emitter.power_state = false;
@@ -5273,10 +5274,8 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         pic_BT_mode.setPicturePath("/common/BToff.png");
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
         SerialPrintfln("BT-Emitter:  %s ", "power off");
-        MWR_LOG_ERROR("power off");
     }
     if (msg.e == KCX_BT_Emitter::evt_scan) {
-        MWR_LOG_ERROR("scan ...");
         s_bt_emitter.connect = false;
         SerialPrintfln("BT-Emitter:  %s ", "scan ...");
     }
@@ -5285,12 +5284,10 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         char v[5];
         itoa(s_bt_emitter.volume, v, 10);
         txt_BT_volume.writeText(v);
-        MWR_LOG_ERROR("volume: %i", s_bt_emitter.volume);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%i", "volume", msg.val);
     }
     if (msg.e == KCX_BT_Emitter::evt_version) {
         s_bt_emitter.version = msg.arg;
-        MWR_LOG_ERROR("version: %s", msg.arg);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "version", msg.arg);
         bt_emitter.setVolume(s_volume.BTvolume);
     }
@@ -5298,7 +5295,6 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
         webSrv.send("KCX_BT_MODE=", msg.arg);
         if (s_state == BLUETOOTH) txt_BT_mode.writeText(msg.arg[0] == 'R' ? "RECEIVER" : "EMITTER");
         s_bt_emitter.mode = msg.arg;
-        MWR_LOG_ERROR("mode: %s", msg.arg);
         SerialPrintfln("BT-Emitter:  %s " ANSI_ESC_YELLOW "%s", "RX_TX_mode", msg.arg);
     }
 }

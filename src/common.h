@@ -126,6 +126,7 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
 #define ANSI_ESC_RESET        "\033[0m"
+
 #define ANSI_ESC_BLACK        "\033[30m"
 #define ANSI_ESC_RED          "\033[31m"
 #define ANSI_ESC_GREEN        "\033[32m"
@@ -134,6 +135,14 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
 #define ANSI_ESC_MAGENTA      "\033[35m"
 #define ANSI_ESC_CYAN         "\033[36m"
 #define ANSI_ESC_WHITE        "\033[37m"
+#define ANSI_ESC_BG_BLACK     "\033[40m"
+#define ANSI_ESC_BG_RED       "\033[41m"
+#define ANSI_ESC_BG_GREEN     "\033[42m"
+#define ANSI_ESC_BG_YELLOW    "\033[43m"
+#define ANSI_ESC_BG_BLUE      "\033[44m"
+#define ANSI_ESC_BG_MAGENTA   "\033[45m"
+#define ANSI_ESC_BG_CYAN      "\033[46m"
+#define ANSI_ESC_BG_WHITE     "\033[47m"
 #define ANSI_ESC_GREY         "\033[90m"
 #define ANSI_ESC_LIGHTRED     "\033[91m"
 #define ANSI_ESC_LIGHTGREEN   "\033[92m"

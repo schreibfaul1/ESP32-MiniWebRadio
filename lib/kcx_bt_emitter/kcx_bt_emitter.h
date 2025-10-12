@@ -62,7 +62,7 @@ class KCX_BT_Emitter {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_found = 0, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode } event_t;
+    typedef enum { evt_info = 0, evt_found, evt_connect, evt_disconnect, evt_reset, evt_power_on, evt_power_off, evt_scan, evt_volume, evt_version, evt_mode } event_t;
     struct msg_s { // used in info(audio_info_callback());
         const char* msg = nullptr;
         const char* s = nullptr;

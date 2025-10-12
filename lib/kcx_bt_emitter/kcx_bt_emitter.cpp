@@ -34,12 +34,14 @@ void KCX_BT_Emitter::begin() {
 void KCX_BT_Emitter::loop() {
 
     if (millis() > m_timeStamp + 2000) m_lock = false;
+    if (millis() > m_timeStamp + 3000) { userCommand("AT+STATUS?");} //0 disconnected, 1 connected
 
     if (!m_lock) {
         m_lock = true;
-        m_timeStamp = millis();
         if (m_TX_queue.size()) {
-            writeCommand(get_tx_queue_item());
+            m_timeStamp = millis();
+            ps_ptr<char> cmd = get_tx_queue_item();
+            writeCommand(cmd);
             return;
         }
     }
@@ -79,13 +81,17 @@ void KCX_BT_Emitter::readCmd() {
         if (!extracted_message.is_utf8()) return;
         protocol_addElement("RX", extracted_message.c_get());
         add_rx_queue_item(extracted_message);
+        if(extracted_message.starts_with("OK+STATUS")) return; // do no protokol heart beat
         m_last_rx_command = extracted_message;
-        KCX_LOG_INFO("readCmd %s", extracted_message.c_get());
+        m_msg.e = evt_info;
+        m_msg.arg = extracted_message.c_get();
+        if (m_bt_callback) { m_bt_callback(m_msg); }
         return;
     };
 
     while (true) {
         if (t < millis()) {
+            if(!buff.is_utf8()) return;
             KCX_LOG_ERROR("timeout while reading from KCX_BT_Emitter, received: %s", buff.c_get());
             return;
         }
@@ -105,7 +111,6 @@ void KCX_BT_Emitter::readCmd() {
         if (ch == '\r') continue;
         if (ch == '\0') ch = 255;
         buff[idx] = ch;
-
         idx++;
         if (idx == buff_size) break;
     }
@@ -224,13 +229,30 @@ void KCX_BT_Emitter::parseATcmds() {
     if (item.equals("SCAN....")) {
         if (m_f_connected == BT_NOT_CONNECTED) {
             m_f_connected = BT_CONNECTED;
-            m_msg.e = evt_connect;
+            m_msg.e = evt_disconnect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
         m_msg.e = evt_scan;
         if (m_bt_callback) { m_bt_callback(m_msg); }
         m_f_connected = BT_NOT_CONNECTED;
         if (kcx_bt_info) kcx_bt_info("Status ->", "Disconnected");
+    }
+    if(item.starts_with("OK+STATUS:")){
+        if(item.equals("OK+STATUS:0")){
+            if(m_f_connected == BT_CONNECTED){
+                m_f_connected = BT_NOT_CONNECTED;
+                m_msg.e = evt_disconnect;
+                if (m_bt_callback) { m_bt_callback(m_msg); }
+            }
+        }
+        if(item.equals("OK+STATUS:1")){
+            if(m_f_connected == BT_NOT_CONNECTED){
+                m_f_connected = BT_CONNECTED;
+                m_msg.e = evt_connect;
+                if (m_bt_callback) { m_bt_callback(m_msg); }
+            }
+        }
+
     }
     return;
 }
