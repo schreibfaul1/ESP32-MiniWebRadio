@@ -207,7 +207,7 @@ IR          ir(IR_PIN); // do not change the objectname, it must be "ir"
 File           audioFile;
 FtpServer      ftpSrv;
 DLNA_Client    dlna;
-KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_LINK, BT_EMITTER_MODE);
+KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
 hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
@@ -1284,7 +1284,7 @@ void setup() {
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
-    vTaskDelay(1000); // wait for serial terminal is ready
+    vTaskDelay(1500); // wait for serial terminal is ready
     mutex_rtc = xSemaphoreCreateMutex();
     mutex_display = xSemaphoreCreateMutex();
     Serial.print("\n\n");
@@ -1425,11 +1425,6 @@ void setup() {
     ir.begin(); // Init InfraredDecoder
 
     if (s_f_WiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
-
-    if (BT_EMITTER_CONNECT >= 0) {
-        pinMode(BT_EMITTER_CONNECT, OUTPUT);
-        digitalWrite(BT_EMITTER_CONNECT, HIGH); // POWER_ON
-    }
 
     s_dlnaLevel = 0;
     s_dlnaHistory[0].name = strdup("Media Server");

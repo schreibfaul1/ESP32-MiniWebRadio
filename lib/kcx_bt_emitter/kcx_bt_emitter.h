@@ -76,7 +76,7 @@ class KCX_BT_Emitter {
     // -------------------------------------------------------------------
 
   public:
-    KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin);
+    KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t connect_pin, int8_t mode_pin);
     ~KCX_BT_Emitter();
     void begin();
     void loop();
@@ -123,7 +123,7 @@ class KCX_BT_Emitter {
     uint8_t                  m_bt_volume = 0;
     bool                     m_bt_found = false;
 
-    int8_t BT_LINK_PIN = -1;
+    int8_t BT_CONNECT_PIN = -1;
     int8_t BT_MODE_PIN = -1;
     int8_t BT_RX_PIN = -1;
     int8_t BT_TX_PIN = -1;

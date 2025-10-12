@@ -9,13 +9,13 @@
 #include "kcx_bt_emitter.h"
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, int8_t mode_pin) {
-    BT_MODE_PIN = mode_pin;
-    BT_LINK_PIN = link_pin;
+KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t connect_pin, int8_t mode_pin) {
+    BT_MODE_PIN = mode_pin; // low RX, high TX
+    BT_CONNECT_PIN = connect_pin; // 100ms low -> awake from POWER_OFF
     BT_RX_PIN = RX_pin;
     BT_TX_PIN = TX_pin;
-    if (BT_MODE_PIN < 0 || BT_LINK_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
-    pinMode(BT_LINK_PIN, INPUT_PULLUP);
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+    pinMode(BT_CONNECT_PIN, OUTPUT);
     pinMode(BT_MODE_PIN, OUTPUT);
     digitalWrite(BT_MODE_PIN, LOW);
     m_bt_found = false;
@@ -24,7 +24,10 @@ KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t link_pin, in
 KCX_BT_Emitter::~KCX_BT_Emitter() {}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::begin() {
-    KCX_LOG_WARN("begin");
+    KCX_LOG_DEBUG("KCX_BT_Emitter begin");
+    digitalWrite(BT_CONNECT_PIN, LOW);  // awake if POWER_OFF
+    vTaskDelay(100);
+    digitalWrite(BT_CONNECT_PIN, HIGH);
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
     add_tx_queue_item("AT+");
     m_bt_found = false;
@@ -322,10 +325,10 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
 void KCX_BT_Emitter::changeMode() {
     if (m_bt_mode.equals("RX")) {
         m_bt_mode = "TX";
-        digitalWrite(BT_MODE_PIN, LOW);
+        digitalWrite(BT_MODE_PIN, HIGH);
     } else {
         m_bt_mode = "RX";
-        digitalWrite(BT_MODE_PIN, HIGH);
+        digitalWrite(BT_MODE_PIN, LOW);
     }
     add_tx_queue_item("AT+RESET");
 }
@@ -356,12 +359,12 @@ const char* KCX_BT_Emitter::getMyName() {
     return m_myName.c_get();
 }
 void KCX_BT_Emitter::power_off() {
-    KCX_LOG_INFO("POWER OFF", "");
     add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on() {
-    KCX_LOG_INFO("POWER ON", "");
-    add_tx_queue_item("AT+BT_MODE?");
+    digitalWrite(BT_CONNECT_PIN, LOW);
+    vTaskDelay(100);
+    digitalWrite(BT_CONNECT_PIN, HIGH);
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
     add_tx_queue_item(cmd);

@@ -76,7 +76,6 @@
     #define I2S_MCLK           0
     #define BT_EMITTER_RX      45 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
     #define BT_EMITTER_TX      38 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_LINK    19 // high if connected                     (-1 if not available)
     #define BT_EMITTER_MODE    20 // high transmit - low receive           (-1 if not available)
     #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
     #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
@@ -114,7 +113,6 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
     #define IR_PIN             38 // IR Receiver (if available)
     #define BT_EMITTER_RX      -1 // must be -1, not enough pins
     #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-    #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
     #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
     #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
     #define TFT_BL             2  // same as RGB_PINS.bl
