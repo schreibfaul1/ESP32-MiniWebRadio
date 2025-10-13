@@ -360,18 +360,22 @@ bool DLNA_Client::readContent() {
         }
     }
 
-    buff.replace("</", "\n</");     // also new line
-    buff.replace("\r", "");         // remove '\r'
-    buff.replace("\n\n", "\n");     // remove emtpy lines
-    buff.replace("&lt;", "<");      // lower than
-    buff.replace("&gt;", ">");      // greater than
-    buff.replace("> ", ">\n");      // new line
-    buff.replace("</", "\n</");     // new line
-    buff.replace("><", ">\n<");     // also new line
-    buff.replace("&quot", "\"");    // quota sign
-    buff.replace("&ampamp", "&");   // ampersand
-    buff.replace("&ampapos", "'");  // apostrophe
-    buff.replace("&ampquot", "\""); // quotation
+    buff.replace("</", "\n</");       // also new line
+    buff.replace("\r", "");           // remove '\r'
+    buff.replace("\n\n", "\n");       // remove emtpy lines
+    buff.replace("&lt;", "<");        // lower than
+    buff.replace("&gt;", ">");        // greater than
+    buff.replace("> ", ">\n");        // new line
+    buff.replace("</", "\n</");       // new line
+    buff.replace("><", ">\n<");       // also new line
+    buff.replace("&amp;quot;", "\""); // quota sign
+    buff.replace("&amp;pos;", "'");   // apostrophe
+    buff.replace("&amp;", "&");       // ampersand
+    buff.replace("&quot", "\"");      // quota sign
+    buff.replace("&apos", "'");       // apostrophe >&amp;pos; -> &pos; -> '
+    buff.replace("&aquot;", "\"");    // quotation
+    buff.replace("&szlig;;", "ß");    // ß
+
     buff.trim();
     DLNA_LOG_DEBUG("%s", buff.get());
 
