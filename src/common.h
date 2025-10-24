@@ -5,7 +5,7 @@
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
-#define TFT_CONTROLLER    5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER    7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     80000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -116,8 +116,8 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
     #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
     #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
     #define TFT_BL             2  // same as RGB_PINS.bl
-    #define I2C_SDA            19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
-    #define I2C_SCL            20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
+    #define I2C_SDA         -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
+    #define I2C_SCL         -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
 
 #endif
 
