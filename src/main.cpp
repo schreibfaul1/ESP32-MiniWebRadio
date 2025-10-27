@@ -1446,7 +1446,7 @@ void setup() {
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
-    if (I2C_SCL != -1) {
+    if (I2C_SCL < 0) {
         s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
     }
     if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found

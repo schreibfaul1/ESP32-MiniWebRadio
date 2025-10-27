@@ -28,10 +28,10 @@
 #include "DLNAClient.h"
 #include "ESP32FtpServer.h"
 #include "IR.h"
-#include "kcx_bt_emitter.h"
 #include "SPIFFS.h"
 #include "base64.h"
 #include "esp_log.h"
+#include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
 #include "tft_rgb.h"
@@ -123,7 +123,7 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  output on serial terminal
-#define ANSI_ESC_RESET        "\033[0m"
+#define ANSI_ESC_RESET "\033[0m"
 
 #define ANSI_ESC_BLACK        "\033[30m"
 #define ANSI_ESC_RED          "\033[31m"
@@ -319,17 +319,17 @@ struct volume_s {
     uint8_t volumeCurve = 1;
 };
 
-struct bt_emitter_s{
-    bool found = false;
-    bool connect = false;
-    bool power_state = false;
-    bool play = true; // play: true, pause: false
-    uint8_t volume = 0;
+struct bt_emitter_s {
+    bool         found = false;
+    bool         connect = false;
+    bool         power_state = false;
+    bool         play = true; // play: true, pause: false
+    uint8_t      volume = 0;
     ps_ptr<char> mode;
     ps_ptr<char> version;
 };
 
-//——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
 boolean     defaultsettings();
@@ -708,8 +708,6 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     }
     return objName;
 }
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // Macro for comfortable calls
 #define MWR_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)

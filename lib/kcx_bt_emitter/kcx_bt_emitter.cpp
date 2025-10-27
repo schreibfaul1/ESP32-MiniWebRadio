@@ -25,6 +25,7 @@ KCX_BT_Emitter::~KCX_BT_Emitter() {}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::begin() {
     KCX_LOG_DEBUG("KCX_BT_Emitter begin");
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
@@ -35,6 +36,7 @@ void KCX_BT_Emitter::begin() {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::loop() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
 
     if (millis() > m_timeStamp + 2000) m_lock = false;
     if (millis() > m_timeStamp + 3000) { userCommand("AT+STATUS?"); } // 0 disconnected, 1 connected
@@ -278,26 +280,32 @@ ps_ptr<char> KCX_BT_Emitter::get_rx_queue_item() {
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void KCX_BT_Emitter::deleteVMlinks() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item("AT+DELVMLINK");
 }
 void KCX_BT_Emitter::getVMlinks() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item("AT+VMLINK?");
 }
 void KCX_BT_Emitter::addLinkName(ps_ptr<char> name) {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     name.insert("AT+ADDLINKNAME=", 0);
     add_tx_queue_item(name);
 }
 void KCX_BT_Emitter::addLinkAddr(ps_ptr<char> addr) {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     addr.insert("AT+ADDLINKADD=", 0);
     add_tx_queue_item(addr);
 }
 void KCX_BT_Emitter::setVolume(uint8_t vol) {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (vol > 31) { vol = 31; }
     ps_ptr<char> v = "AT+VOL=";
     v.appendf("%i", vol);
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (mode.equals("RX")) {
         m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, LOW);
@@ -311,6 +319,7 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::changeMode() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (m_bt_mode.equals("RX")) {
         m_bt_mode = "TX";
         digitalWrite(BT_MODE_PIN, HIGH);
@@ -321,9 +330,11 @@ void KCX_BT_Emitter::changeMode() {
     add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::pauseResume() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item("AT+PAUSE");
 }
 void KCX_BT_Emitter::downvolume() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (m_bt_volume == 0) {
         KCX_LOG_WARN("The volume is already 0");
         return;
@@ -334,6 +345,7 @@ void KCX_BT_Emitter::downvolume() {
     add_tx_queue_item(v);
 }
 void KCX_BT_Emitter::upvolume() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     if (m_bt_volume == 31) {
         KCX_LOG_WARN("The maximum volume has been reached");
         return;
@@ -347,14 +359,17 @@ const char* KCX_BT_Emitter::getMyName() {
     return m_myName.c_get();
 }
 void KCX_BT_Emitter::power_off() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on() {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     digitalWrite(BT_CONNECT_PIN, LOW);
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
+    if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     add_tx_queue_item(cmd);
 }
 const char* KCX_BT_Emitter::list_protokol() {
