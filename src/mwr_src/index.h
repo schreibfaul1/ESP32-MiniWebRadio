@@ -1062,7 +1062,7 @@ function saveTextFileToSD (fileName, content) {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
             if (xhr.status === 200) alert(fileName + ' successfully uploaded')
-            else alert(fileName + 'not successfully uploaded')
+            else alert(fileName + ' not successfully uploaded')
         }
     }
     xhr.send(fd) // send
