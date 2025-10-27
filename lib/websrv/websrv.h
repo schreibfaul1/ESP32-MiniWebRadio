@@ -45,8 +45,6 @@ private:
     String          _Name;
     String          _Version;
     String          contenttype;
-    char*           m_buff = NULL;
-    char*           msgBuff = NULL;
     char*           m_transBuf = NULL;
     uint8_t         method;
     String          WS_sec_Key;

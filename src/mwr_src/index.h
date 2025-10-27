@@ -2016,7 +2016,7 @@ function uploadCanvasImage () {
     xhr.onreadystatechange = function () { // Call a function when the state changes.
         if (xhr.readyState === 4) {
             if(xhr.status === 200) alert(filename + ' successfully uploaded')
-            else alert(filename + 'not successfully uploaded')
+            else alert(filename + ' not successfully uploaded')
         }
     }
     xhr.send(fd)

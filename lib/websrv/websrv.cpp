@@ -19,10 +19,6 @@ WebSrv::~WebSrv() {
         free(m_transBuf);
         m_transBuf = NULL;
     }
-    if (m_buff) {
-        free(m_buff);
-        m_buff = NULL;
-    }
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show_not_found() {
@@ -55,7 +51,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     uint           TCPCHUNKSIZE = 1024;  // Max number of bytes per write
     size_t         pagelen = 0, res = 0; // Size of requested page
     const uint8_t* p;
-    ps_ptr<char> msg;
+    ps_ptr<char>   msg;
     p = reinterpret_cast<const unsigned char*>(pagename);
     if (len == -1) {
         pagelen = strlen(pagename);
@@ -219,7 +215,7 @@ boolean WebSrv::send(const char* cmd, const char* msg, uint8_t opcode) { // send
     uint8_t rsv2 = 0;
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
-    char header[4] = {0};
+    char    header[4] = {0};
 
     header[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + opcode;
     if (msgLen + cmdLen < 126) {
@@ -246,7 +242,7 @@ void WebSrv::sendPing() { // heartbeat, keep alive via websockets
     uint8_t rsv2 = 0;
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
-    char ping[2] = {0};
+    char    ping[2] = {0};
 
     ping[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Ping_Frame;
     ping[1] = (128 * mask) + 0;
@@ -261,7 +257,7 @@ void WebSrv::sendPong() { // heartbeat, keep alive via websockets
     uint8_t rsv2 = 0;
     uint8_t rsv3 = 0;
     uint8_t mask = 0;
-    char pong[2] = {0};
+    char    pong[2] = {0};
 
     pong[0] = (128 * fin) + (64 * rsv1) + (32 * rsv2) + (16 * rsv3) + Pong_Frame;
     pong[1] = (128 * mask) + 0;
@@ -274,103 +270,161 @@ void WebSrv::sendPong() { // heartbeat, keep alive via websockets
 //
 //       endBoundary          ------WebKitFormBoundaryi52Pv7aBYloXIuZB--
 //
-boolean WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength) { // transfer imagefile from webbrowser to SD
-    int16_t      idx = 0;
-    uint32_t     av = 0;
-    uint32_t     nrOfBytesToWrite = contentLength;
-    int32_t      bytesWritten = 0;
-    int32_t      bytesInTransBuf = 0;
-    int32_t      startBoundaryLength = 0;
-    int32_t      endBoundaryLength = 0;
-    File         file;
-    uint32_t     t = millis();
-    uint8_t*     b64buff = (uint8_t*)x_ps_malloc(m_bytesPerTransaction);
-    ps_ptr<char> msg;
-    ps_ptr<char>boundary;
+boolean WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength) {
+    File            file;
+    uint32_t        t = millis();
+    const uint32_t  TIMEOUT = 2000;
+    int16_t         idx = 0, pos = 0, bytesRead = 0, startPos = 0, base64Start = 0;
+    int32_t         base64Length = 0, endPos = 0;
+    size_t          decodedLen = 0;
+    int             ret = 0;
+    const uint16_t  bytesPerTransaction = 16384; // multiple of 4
+    uint32_t totalRead = 0;
+    uint32_t totalDecoded = 0;
+    uint32_t remaining = 0;
+    uint32_t chunkSize = 0;
 
-    if (!b64buff) {
-        msg.assign("out of memory (b64buff, uploadB64image()");
-        goto exit;
-    }
+    ps_ptr<char>    msg;
+    ps_ptr<char>    data;
+    ps_ptr<char>    b64buff;
+    ps_ptr<uint8_t> decoded;
+    ps_ptr<char>    boundary;
+    ps_ptr<char>    boundaryString;
+    ps_ptr<char>    endMarker;
 
     boundary.calloc(256);
-    while (true) { // read startBoundary until ','
-        if ((t + 2000) < millis()) {
-            msg.assign("timeout while reading startBoundary (uploadB64image()");
+
+    // === 1. Read start boundary until first ',' ===
+    while (true) {
+        if ((t + TIMEOUT) < millis()) {
+            msg = "Timeout while reading startBoundary (uploadB64image)";
             goto exit;
         }
         if (cmdclient.available()) {
             boundary[idx] = cmdclient.read();
             if (boundary[idx] == ',') {
+                boundary[idx + 1] = '\0';
                 break;
             }
             idx++;
             if (idx == 255) {
-                boundary.hex_dump(255);
-                msg.assign("buffer overflow (buff[256], uploadB64image()");
+                msg = "Buffer overflow (buff[256], uploadB64image)";
                 goto exit;
             }
         }
     }
 
-    startBoundaryLength = idx + 1;
-    idx =  boundary.index_of("\r\n");
-    endBoundaryLength = idx + 2 + 4; // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
-    nrOfBytesToWrite -= (startBoundaryLength + endBoundaryLength);
+    pos = boundary.index_of("\r\n");
+    if (pos < 0) {
+        msg = "No CRLF found in boundary (uploadB64image)";
+        goto exit;
+    }
+    boundaryString = boundary.substr(0, pos);
+    boundaryString.println();
 
-    if (fs.exists(path)) fs.remove(path); // delete file if exists
+    // === Check image header markers ===
+    pos = boundary.index_of("\r\n\r\ndata:image/");
+    if (pos < 0) {
+        msg = "No 'data:image/' marker found";
+        goto exit;
+    }
+
+    base64Start = boundary.index_of("base64,", startPos);
+    if (base64Start < 0) {
+        msg = "No 'base64,' marker found";
+        goto exit;
+    }
+    base64Start += 7; // skip comma
+
+    // === 2. Read rest of content ===
+    data.calloc(contentLength - base64Start + 1);
+    while (bytesRead < contentLength - base64Start && (t + TIMEOUT) > millis()) {
+        if (cmdclient.available()) { data[bytesRead++] = cmdclient.read(); }
+    }
+    if (bytesRead < contentLength - base64Start) {
+        msg = "Timeout while reading form data (uploadB64image)";
+        goto exit;
+    }
+
+    // === 3. Find end boundary ===
+    endMarker = "\r\n" + boundaryString + "--";
+    endPos = data.index_of(endMarker.get());
+    if (endPos < 0) {
+        msg = "End boundary not found";
+        goto exit;
+    }
+
+    // base64 data without end boundary
+    base64Length = endPos;
+    log_i("Base64 data length: %d", base64Length);
+
+    // === 4. Basic checks ===
+    if (base64Length % 4 != 0) {
+        msg = "Base64 data length not divisible by 4 — possibly truncated";
+        goto exit;
+    }
+
+    if (fs.exists(path)) fs.remove(path);
     file = fs.open(path, FILE_WRITE);
+    if (!file) {
+        msg = "Cannot open file for writing";
+        goto exit;
+    }
 
-    while (true) {
-        if (cmdclient.available()) {
-            t = millis();
+    // === 5. Streaming Base64 decode ===
+    b64buff.alloc(bytesPerTransaction + 4);
+    decoded.alloc((bytesPerTransaction * 3) / 4 + 4);
 
-            av = min3(cmdclient.available(), m_bytesPerTransaction, nrOfBytesToWrite);
-            bytesInTransBuf = cmdclient.read((uint8_t*)m_transBuf, av);
-            if (bytesInTransBuf != av) {
-                msg.assignf("read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
-                goto exit;
+    totalRead = 0;
+    totalDecoded = 0;
+    while (totalRead < (uint32_t)base64Length) {
+        remaining = base64Length - totalRead;
+        chunkSize = (remaining > bytesPerTransaction) ? bytesPerTransaction : remaining;
+
+        // make sure chunkSize is multiple of 4
+        chunkSize &= ~0x03;
+
+        // copy base64 chunk
+        memcpy(b64buff.get(), data.get() + totalRead, chunkSize);
+        totalRead += chunkSize;
+
+        // === if this is the last chunk, check for end boundary ===
+        if (remaining <= bytesPerTransaction) {
+            int boundaryPos = b64buff.index_of(endMarker.get());
+            if (boundaryPos >= 0) {
+                chunkSize = boundaryPos;
+                b64buff[chunkSize] = '\0';
             }
-            nrOfBytesToWrite -= bytesInTransBuf;
-
-            size_t bytesInb64buff = 0;
-            int    ret = mbedtls_base64_decode(b64buff, m_bytesPerTransaction, &bytesInb64buff, (const unsigned char*)m_transBuf, bytesInTransBuf);
-            //    log_w("ret %i, bytesInTransBuf %li, bytesInb64buff %u, startBoundaryLength %li", ret, bytesInTransBuf, bytesInb64buff, startBoundaryLength);
-            if (ret != 0) {
-                msg.assign("error while b64 decoding");
-                goto exit;
-            }
-
-            bytesWritten = file.write((uint8_t*)b64buff, bytesInb64buff);
-            if (bytesWritten != bytesInb64buff) {
-                msg.assignf("write error in %s, available %u bytes, written %li bytes\n", path, bytesInb64buff, bytesWritten);
-                 goto exit;
-            }
-
-            if (nrOfBytesToWrite == 0) break;
         }
-        if ((t + 2000) < millis()) {
-            msg.assign("timeout in webSrv uploadfile()\n");
+
+        // decode chunk
+        decodedLen = 0;
+        ret = mbedtls_base64_decode(decoded.get(), decoded.size(), &decodedLen,
+                                    (const unsigned char*)b64buff.get(), chunkSize);
+        if (ret != 0) {
+            msg.assignf("Base64 decode error at offset %u", totalRead);
             goto exit;
         }
+
+        // write decoded data to SD
+        size_t written = file.write(decoded.get(), decodedLen);
+        if (written != decodedLen) {
+            msg = "Error while writing on SD card";
+            goto exit;
+        }
+
+        totalDecoded += decodedLen;
+        log_i("Decoded %u / %u bytes so far", totalDecoded, decodedLen);
     }
 
-    while (cmdclient.available()) cmdclient.read(); // read endBoundary
     file.close();
-    msg.assignf("File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
+    msg.assignf("File '%s' written successfully, size %lu bytes", path, (unsigned long)totalDecoded);
     if (WEBSRV_onInfo) WEBSRV_onInfo(msg.c_get());
-    if (b64buff) {
-        free(b64buff);
-        b64buff = NULL;
-    }
     return true;
 
 exit:
     if (WEBSRV_onError) WEBSRV_onError(msg.c_get());
-    if (b64buff) {
-        free(b64buff);
-        b64buff = NULL;
-    }
+    cmdclient.stop();
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -446,8 +500,6 @@ void WebSrv::begin(uint16_t http_port, uint16_t websocket_port) {
     m_bytesPerTransaction = 4096;
     m_transBuf = x_ps_malloc(m_bytesPerTransaction);
     if (!m_transBuf) { log_e("WebServer: not enough memory"); }
-    m_buff = (char*)x_ps_malloc(1024);
-    if (!m_buff) { log_e("WebServer: not enough memory"); }
     cmdserver.stop();
     cmdserver.begin(http_port);
     webSocketServer.stop();
@@ -515,10 +567,10 @@ boolean WebSrv::handlehttp() { // HTTPserver, message received
     uint32_t ctime = millis();
     uint32_t timeout = 4500; // ms
     uint32_t contentLength = 0;
-    char     rhl[512] = {0}; // requestHeaderline
-    char     http_cmd[512] = {0};
-    char     http_param[512] = {0};
-    char     http_arg[512] = {0};
+    char     rhl[1024] = {0}; // requestHeaderline
+    char     http_cmd[1024] = {0};
+    char     http_param[1024] = {0};
+    char     http_arg[1024] = {0};
     char     contentType[50] = {0};
 
     static uint32_t stime;
@@ -557,12 +609,13 @@ boolean WebSrv::handlehttp() { // HTTPserver, message received
             if (b < 0x20) continue;
             rhl[pos] = b;
             pos++;
-            if (pos == 511) {
+            if (pos == 1023) {
                 pos = 510;
                 continue;
             }
-            if (pos == 510) {
+            if (pos == 1022) {
                 rhl[pos] = '\0';
+                cmdclient.stop();
                 log_i("requestHeaderline overflow");
             }
         } // inner while
@@ -759,10 +812,10 @@ boolean WebSrv::handleWS() { // Websocketserver, receive messages
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::parseWsMessage(uint32_t len) {
-    uint8_t  headerLen = 2;
-    uint16_t paylodLen;
-    uint8_t  maskingKey[4];
-    char c[2];
+    uint8_t      headerLen = 2;
+    uint16_t     paylodLen;
+    uint8_t      maskingKey[4];
+    char         c[2];
     ps_ptr<char> msgBuff;
 
     if (len > UINT16_MAX) {
