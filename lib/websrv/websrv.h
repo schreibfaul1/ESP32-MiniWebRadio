@@ -10,11 +10,9 @@
 #define WEBSRV_H_
 #include "Audio.h"
 #include "base64.h"
-#include "mbedtls/sha1.h"
 #include "mbedtls/base64.h"
+#include "mbedtls/sha1.h"
 
-
-extern __attribute__((weak)) void WEBSRV_onError(const char*);
 extern __attribute__((weak)) void WEBSRV_onCommand(const char* cmd, const String param, const String arg);
 extern __attribute__((weak)) void WEBSRV_onRequest(const char* cmd, const char* param, const char* arg, const char* contentType, uint32_t contentLength);
 extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* param, const char* arg);
@@ -22,6 +20,10 @@ extern __attribute__((weak)) void WEBSRV_onDelete(const char* cmd, const char* p
 #define ANSI_ESC_RED "\033[31m"
 
 class WebSrv {
+  public:
+    WebSrv(String Name = "WebSrv library", String Version = "1.0");
+    ~WebSrv();
+
   protected:
     NetworkClient cmdclient; // An instance of the client for commands
     NetworkClient webSocketClient;
@@ -30,13 +32,16 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0 } event_t;
-    struct msg_s { // used in info(audio_info_callback());
-        const char* msg = nullptr;
-        const char* s = nullptr;
-        const char* arg = nullptr;
-        event_t     e = (event_t)0; // event type
+    typedef enum { evt_info = 0, evt_error } event_t;
+    struct msg_s {
+        const char*  msg = nullptr;
+        const char*  s = nullptr;
+        const char*  param;
+        const char*  command;
+        ps_ptr<char> arg;
+        event_t      e = (event_t)0; // event type
     };
+
     using BrowseCallback = std::function<void(const msg_s&)>;
     void websrv_callbak(BrowseCallback cb) { m_websrv_callback = std::move(cb); }
 
@@ -77,8 +82,6 @@ class WebSrv {
   public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
     enum { Continuation_Frame = 0x00, Text_Frame = 0x01, Binary_Frame = 0x02, Connection_Close_Frame = 0x08, Ping_Frame = 0x09, Pong_Frame = 0x0A };
-    WebSrv(String Name = "WebSrv library", String Version = "1.0");
-    ~WebSrv();
     void    begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
     void    stop();
     void    loop();

@@ -543,13 +543,13 @@ function connect() {
         pingIntervalId = setInterval(ping, 10000); // Ping alle 10 Sekunden
 
         socket.send('get_tftSize');
-        socket.send("getmute");
+        socket.send("get_mute");
         socket.send("get_timeAnnouncement");
-        socket.send("gettone=");
-        socket.send("getnetworks=");
+        socket.send("get_tone=");
+        socket.send("get_networks=");
         socket.send("change_state=" + "RADIO");
-        socket.send("getTimeFormat");
-        socket.send("getSleepMode");
+        socket.send("get_timeFormat");
+        socket.send("get_sleepMode");
 
         loadStationsFromSD("/stations.json")
             .then(() => {
@@ -703,7 +703,7 @@ function connect() {
                                         if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
                                         if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
                                         break
-            case "getTimeSpeechLang":   console.log(val)
+            case "get_timeSpeechLang":  console.log(val)
                                         select = document.getElementById('timeSpeechLang')
                                         for (let i = 0; i < select.options.length; i++) {
                                             if (select.options[i].text === val) {
@@ -732,7 +732,7 @@ function connect() {
             case "IR_address":          if(state === 'IR' && IR_addr != val){
                                             IR_addr = val
                                             ir_command_A.value=val
-                                            socket.send("setIRadr=" + val)
+                                            socket.send("set:IRaddr=" + val)
                                         }
                                         break
             case "IR_command":          ir_command_C.value=val
@@ -854,7 +854,7 @@ function showTab1 () {
     document.getElementById('btn6').src = 'SD/png/Settings_Green.png'
     document.getElementById('btn7').src = 'SD/png/About_Green.png'
     socket.send("change_state=" + "RADIO")
-    socket.send("getmute")
+    socket.send("get_mute")
 }
 
 function showTab2 () {
@@ -968,10 +968,10 @@ function showTab6 () {
     loadRingVolume()
     loadVolumeAfterAlarm()
     loadVolumeSteps()
-    socket.send('getRingVolume')
-    socket.send('getVolAfterAlarm')
-    socket.send("getTimeSpeechLang")
-    socket.send("getTimeZones")  // fetch timezones_json
+    socket.send('get_ringVolume')
+    socket.send('get_volAfterAlarm')
+    socket.send("get_timeSpeechLang")
+    socket.send("get_timeZones")  // fetch timezones_json
 }
 
 function showTab7 () {
@@ -2055,7 +2055,7 @@ function getTimeZoneName() {
     return new Promise((resolve, reject) => {
         const xhr = new XMLHttpRequest();
         xhr.timeout = 2000; // Zeit in Millisekunden
-        xhr.open('GET', 'getTimeZoneName' + '&version=' + Math.random(), true);
+        xhr.open('GET', 'get_timeZoneName' + '&version=' + Math.random(), true);
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
                 if (xhr.status === 200) {
@@ -2079,7 +2079,7 @@ function getTimeZoneName() {
 function setTimeZone(selectObject){
     var value = selectObject.value;
     var txt = selectObject.options[selectObject.selectedIndex].text;
-    socket.send("setTimeZone=" + txt + "&" + value)
+    socket.send("set_timeZone=" + txt + "&" + value)
 }
 
 function fillTimeZoneSelect(timezones_json){
@@ -2135,7 +2135,7 @@ function loadVolumeAfterAlarm(){
 }
 
 function loadVolumeSteps(){
-    socket.send('getVolumeSteps')
+    socket.send('get_volumeSteps')
     const selectVolumeSteps = document.getElementById('selVolumeSteps');
 
     selectVolumeSteps.options.length = 0;
@@ -2222,8 +2222,8 @@ function chIRcmd(btn){  // IR command, value changed
     if(btn == -1) return
     if(ret){
         var id = "#ir_command_" + btn
-        console.log("setIRcmd=" + $(id).val() + "&" + btn)
-        socket.send("setIRcmd=" + $(id).val() + "&" + btn)
+        console.log("set_IRcmd=" + $(id).val() + "&" + btn)
+        socket.send("set_IRcmd=" + $(id).val() + "&" + btn)
     }
     IRupdateJSON(btn)
     return
@@ -2723,7 +2723,7 @@ function appendToTerminal(text) {
                 <img id="Mute" src="SD/png/Button_Mute_Green.png" alt="Mute"
                     onmousedown="this.src='SD/png/Button_Mute_Yellow.png'"
                     ontouchstart="this.src='SD/png/Button_Mute_Yellow.png'"
-                    onclick="socket.send('setmute')">
+                    onclick="socket.send('set_mute')">
             </div>
             <div style="flex:1;">
                 <input type="text" class="boxstyle" style="width: calc(100% - 8px); margin-top: 14px; padding-left:7px 0;" id="cmd"
@@ -3073,7 +3073,7 @@ function appendToTerminal(text) {
                     <div style="margin-top: 0px;  border-bottom: 3px double #999999;">
                         <h3>
                             Timezone
-                            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
+                            <select class="boxstyle" onchange="set_timeZone(this)" id="TimeZoneSelect"></select>
                         </h3>
                     </div>
                     <div>
@@ -3093,11 +3093,11 @@ function appendToTerminal(text) {
                     <fieldset>
                         <legend> 12-hour and 24-hour time format </legend>
                         <div>
-                            <input type="radio" id="h12" name="timeFormat" value="12h" onclick="socket.send('setTimeFormat=12');">
+                            <input type="radio" id="h12" name="timeFormat" value="12h" onclick="socket.send('set_timeFormat=12');">
                             <label for="h12">12h</label>
                         </div>
                         <div>
-                            <input type="radio" id="h24" name="timeFormat" value="24h" checked onclick="socket.send('setTimeFormat=24');">
+                            <input type="radio" id="h24" name="timeFormat" value="24h" checked onclick="socket.send('set_timeFormat=24');">
                             <label for="h24">24h</label>
                         </div>
                     </fieldset>
@@ -3105,11 +3105,11 @@ function appendToTerminal(text) {
                     <fieldset>
                         <legend> sleep mode </legend>
                         <div>
-                            <input type="radio" id="sleepMode0" name="sleepMode" value="display off" onclick="socket.send('setSleepMode=0');">
+                            <input type="radio" id="sleepMode0" name="sleepMode" value="display off" onclick="socket.send('set_sleepMode=0');">
                             <label for="sleepMode0">display off</label>
                         </div>
                         <div>
-                            <input type="radio" id="sleepMode1" name="sleepMode" value="show the time" checked onclick="socket.send('setSleepMode=1');">
+                            <input type="radio" id="sleepMode1" name="sleepMode" value="show the time" checked onclick="socket.send('set_sleepMode=1');">
                             <label for="sleepMode1">show the time</label>
                         </div>
                     </fieldset>
@@ -3118,7 +3118,7 @@ function appendToTerminal(text) {
                         <legend> alarm </legend>
                         <div>
                             <div style="margin-bottom: 10px;">
-                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('setRingVolume=' + this.value);"
+                                <select id="selRingVolume" style="width: 50px;" onchange="socket.send('set_ringVolume=' + this.value);"
                                     title="This is the volume at which the ringtone sounds in the event of an alarm. A value of 0 skips the ringtone
                                     sequence and immediately turns on the radio.">
                                 </select>
@@ -3127,7 +3127,7 @@ function appendToTerminal(text) {
                                 </span>
                             </div>
                             <div>
-                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('setVolAfterAlarm=' + this.value);"
+                                <select id="selVolumeAfterAlarm" style="width: 50px;" onchange="socket.send('set_volAfterAlarm=' + this.value);"
                                     title="This is the volume at which the radio plays. This volume is maintained as long as it is not manually changed.">
                                 </select>
                                 <label for="selVolumeAfterAlarm">Radio Volume After Alarm: </label>
@@ -3138,7 +3138,7 @@ function appendToTerminal(text) {
                     <fieldset>
                         <legend> volume steps </legend>
                         <div>
-                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('setVolumeSteps=' + this.value);"
+                            <select id="selVolumeSteps" style="width: 50px;" onchange="socket.send('set_volumeSteps=' + this.value);"
                                 title= "Specifies the number of volume levels to choose from. 21 is the lowest value.
                                 A change adjusts all other volume values to the new default.">
                             </select>

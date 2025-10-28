@@ -48,7 +48,6 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     uint           TCPCHUNKSIZE = 1024;  // Max number of bytes per write
     size_t         pagelen = 0, res = 0; // Size of requested page
     const uint8_t* p;
-    ps_ptr<char>   msg;
     p = reinterpret_cast<const unsigned char*>(pagename);
     if (len == -1) {
         pagelen = strlen(pagename);
@@ -71,9 +70,8 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 
     cmdclient.print(httpheader); // header sent
 
-    msg.assignf("Length of page is %d", pagelen);
     m_msg.e = evt_info;
-    m_msg.arg = msg.c_get();
+    m_msg.arg = "Length of page is 333";
     if (m_websrv_callback) m_websrv_callback(m_msg);
     // The content of the HTTP response follows the header:
 
@@ -81,7 +79,9 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
         if (pagelen <= TCPCHUNKSIZE) {         // Near the end?
             res = cmdclient.write(p, pagelen); // Yes, send last part
             if (res != pagelen) {
-                log_e("write error in webpage");
+                m_msg.e = evt_error;
+                m_msg.arg.assign("write error in webpage");
+                if (m_websrv_callback) m_websrv_callback(m_msg);
                 cmdclient.clearWriteError();
                 return;
             }
@@ -91,7 +91,9 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
             res = cmdclient.write(p, TCPCHUNKSIZE); // Send part of the page
 
             if (res != TCPCHUNKSIZE) {
-                log_e("write error in webpage");
+                m_msg.e = evt_error;
+                m_msg.arg.assign("write error in webpage");
+                if (m_websrv_callback) m_websrv_callback(m_msg);
                 cmdclient.clearWriteError();
                 return;
             }
@@ -104,27 +106,22 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
 //--------------------------------------------------------------------------------------------------------------
 boolean WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
 
-    ps_ptr<char> msg;
-
     if (!path) {
-        msg.assignf(ANSI_ESC_RED "SD path is null");
-        m_msg.e = evt_info;
-        m_msg.arg = msg.c_get();
+        m_msg.e = evt_error;
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is null");
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
     if (strlen(path) > 1024) {
-        msg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", strlen(path));
         m_msg.e = evt_info;
-        m_msg.arg = msg.c_get();
+        m_msg.arg.assignf(ANSI_ESC_RED "SD path is too long %i bytes", strlen(path));
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
     for (int i = 0; path[i] != '\0'; ++i) {
         if (path[i] < 32) {
-            msg.assignf(ANSI_ESC_RED "Illegal character in path");
             m_msg.e = evt_info;
-            m_msg.arg = msg.c_get();
+            m_msg.arg.assignf(ANSI_ESC_RED "Illegal character in path");
             if (m_websrv_callback) m_websrv_callback(m_msg);
             return false;
         }
@@ -140,17 +137,15 @@ boolean WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from
 
     File file = fs.open(path, "r");
     if (!file) {
-        msg.assignf("Failed to open file for reading: %s", c_path.c_get());
         m_msg.e = evt_info;
-        m_msg.arg = msg.c_get();
+        m_msg.arg.assignf("Failed to open file for reading: %s", c_path.c_get());
         if (m_websrv_callback) m_websrv_callback(m_msg);
         show_not_found();
         return false;
     }
 
-    msg.assignf("Length of file %s is %d", c_path.c_get(), file.size());
     m_msg.e = evt_info;
-    m_msg.arg = msg.c_get();
+    m_msg.arg.assignf("Length of file %s is %d", c_path.c_get(), file.size());
     if (m_websrv_callback) m_websrv_callback(m_msg);
 
     // HTTP header
@@ -428,12 +423,14 @@ boolean WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLen
     file.close();
     msg.assignf("File '%s' written successfully, size %lu bytes", path, (unsigned long)totalDecoded);
     m_msg.e = evt_info;
-    m_msg.arg = msg.c_get();
+    m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
     return true;
 
 exit:
-    if (WEBSRV_onError) WEBSRV_onError(msg.c_get());
+    m_msg.e = evt_error;
+    m_msg.arg = msg;
+    if (m_websrv_callback) m_websrv_callback(m_msg);
     cmdclient.stop();
     return false;
 }
@@ -494,12 +491,14 @@ boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength)
     file.close();
     msg.assignf("File: %s written, FileSize %ld\n", path, (long unsigned int)contentLength);
     m_msg.e = evt_info;
-    m_msg.arg = msg.c_get();
+    m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
     return true;
 
 exit:
-    if (WEBSRV_onError) WEBSRV_onError(msg.c_get());
+    m_msg.e = evt_error;
+    m_msg.arg = msg;
+    if (m_websrv_callback) m_websrv_callback(m_msg);
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
@@ -753,7 +752,7 @@ lastToDo:
         trim(http_arg);
         if (strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
         m_msg.e = evt_info;
-        m_msg.arg = http_cmd;
+    //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
     }
@@ -765,7 +764,7 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         m_msg.e = evt_info;
-        m_msg.arg = http_cmd;
+    //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
     }
@@ -777,7 +776,7 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         m_msg.e = evt_info;
-        m_msg.arg = http_cmd;
+    //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
     }
@@ -918,7 +917,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
         }
         msgBuff[pll] = 0;
         m_msg.e = evt_info;
-        m_msg.arg = msgBuff.c_get();
+        m_msg.arg = msgBuff;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         const char* cmd = msgBuff.get();
         const char* param = NULL;
@@ -937,7 +936,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
                 goto exit;
             } else {
                 param = msgBuff.get() + offset;
-                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
+               if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
                 goto exit;
             }
         } else {
@@ -969,7 +968,7 @@ void WebSrv::loop() {
 
     if (webSocketClient.available()) {
         m_msg.e = evt_info;
-        m_msg.arg = "WebSocket client available";
+        m_msg.arg.assign("WebSocket client available");
         if (m_websrv_callback) m_websrv_callback(m_msg);
         handleWS();
     }
