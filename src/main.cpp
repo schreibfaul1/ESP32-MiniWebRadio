@@ -1281,6 +1281,7 @@ void setup() {
     Audio::audio_info_callback = my_audio_info; // audio callback
     dlna.dlna_client_callbak(on_dlna_client);   // dlna callback
     bt_emitter.kcx_bt_emitter_callback(on_kcx_bt_emitter);
+    webSrv.websrv_callbak(on_websrv);
     esp_log_level_set("*", ESP_LOG_DEBUG);
     esp_log_set_vprintf(log_redirect_handler);
     Serial.begin(MONITOR_SPEED);
@@ -2474,6 +2475,7 @@ void loop() {
         return;
     } // Guard:  SD_MMC could not be initialisized
 
+    dlna.loop();
     vTaskDelay(1);
     audio.loop();
     webSrv.loop();
@@ -2481,7 +2483,6 @@ void loop() {
     tp.loop();
     ftpSrv.handleFTP();
     ArduinoOTA.handle();
-    dlna.loop();
     bt_emitter.loop();
     tft.loop();
 
@@ -5299,6 +5300,17 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     if (msg.e == KCX_BT_Emitter::evt_play) {
         s_bt_emitter.play =true;
         SerialPrintfln("BT-Emitter:  %s ", "Play");
+    }
+}
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void on_websrv(const WebSrv::msg_s& msg) {
+    if (msg.e == WebSrv::evt_info) {
+        if (startsWith(msg.arg, "WebSocket")) return;      // suppress WebSocket client available
+        if (startsWith(msg.arg, "ping")) return;           // suppress ping
+        if (startsWith(msg.arg, "to_listen")) return;      // suppress to_isten
+        if (startsWith(msg.arg, "Command client")) return; // suppress Command client available
+        if (startsWith(msg.arg, "test=")) return;          // suppress stackHighWaterMark
+        SerialPrintfln("WebSrv Info: " ANSI_ESC_GREEN "%s ", msg.arg);
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
