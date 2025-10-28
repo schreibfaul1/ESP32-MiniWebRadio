@@ -116,8 +116,8 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
     #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
     #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
     #define TFT_BL             2  // same as RGB_PINS.bl
-    #define I2C_SDA         -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
-    #define I2C_SCL         -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
+    #define I2C_SDA            -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
+    #define I2C_SCL            -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
 
 #endif
 
@@ -285,9 +285,9 @@ int log_redirect_handler(const char* format, va_list args) {
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct dlnaHistory_s {
-    char*    objId = NULL;
-    char*    name = NULL;
-    uint16_t maxItems = 0;
+    ps_ptr<char> objId;
+    char*        name = NULL;
+    uint16_t     maxItems = 0;
 };
 struct releasedArg {
     char*   arg1 = NULL;

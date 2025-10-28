@@ -32,13 +32,16 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_error } event_t;
+    typedef enum { evt_info = 0, evt_error, evt_command} event_t;
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
         const char*  param;
         const char*  command;
         ps_ptr<char> arg;
+        ps_ptr<char> param1;
+        ps_ptr<char> cmd;
+        ps_ptr<char> arg1;
         event_t      e = (event_t)0; // event type
     };
 

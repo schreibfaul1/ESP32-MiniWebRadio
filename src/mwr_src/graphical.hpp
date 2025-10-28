@@ -4225,13 +4225,13 @@ class dlnaList : public RegisterTable {
         } // get serverlist
         if (m_browseOnRelease == 2) {
             (*m_dlnaLevel)--;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         } // previous level
         if (m_browseOnRelease == 3) {
             (*m_dlnaLevel)++;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
         } // folder, next level
-        if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9); } // scroll up / down
+        if (m_browseOnRelease == 4) { m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9); } // scroll up / down
 
         m_browseOnRelease = 0;
         m_oldX = 0;
@@ -4434,8 +4434,7 @@ class dlnaList : public RegisterTable {
             sprintf(m_buff, "%s (%d)", m_srvContent->at(m_itemListPos - 1).title.c_get(), m_srvContent->at(m_itemListPos - 1).childCount);
             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
             m_chptr = m_buff;
-            x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].objId);
-            m_dlnaHistory[(*m_dlnaLevel) + 1].objId = strdup(m_srvContent->at(m_itemListPos - 1).objectId.c_get());
+            m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
             x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
             m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_srvContent->at(m_itemListPos - 1).title.c_get());
             m_browseOnRelease = 3;
@@ -4459,7 +4458,7 @@ class dlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = 0;
         }
         m_chptr = NULL;
-        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
             m_dlna->loop();
@@ -4483,7 +4482,7 @@ class dlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = m_dlnaMaxItems - 1;
         }
         m_chptr = NULL;
-        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+        m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
         m_dlna->loop();
         while (m_dlna->getState() != m_dlna->IDLE) {
             m_dlna->loop();
@@ -4501,7 +4500,7 @@ class dlnaList : public RegisterTable {
             m_viewPoint -= 9;
             if (m_viewPoint < 0) m_viewPoint = 0;
             m_chptr = NULL;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4522,7 +4521,7 @@ class dlnaList : public RegisterTable {
         if (m_currItemNr[*m_dlnaLevel] >= m_viewPoint + 9) {
             m_viewPoint += 9;
             m_chptr = NULL;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4572,7 +4571,7 @@ class dlnaList : public RegisterTable {
             m_dlnaMaxItems = m_dlnaHistory[*m_dlnaLevel].maxItems;
             m_viewPoint = 0;
             m_currItemNr[*m_dlnaLevel] = 0;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, m_viewPoint, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), m_viewPoint, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();
@@ -4587,12 +4586,11 @@ class dlnaList : public RegisterTable {
             vTaskDelay(300);
             (*m_dlnaLevel)++;
             m_currItemNr[*m_dlnaLevel] = 0;
-            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].objId);
-            m_dlnaHistory[*m_dlnaLevel].objId = strdup(m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).objectId.c_get());
+            m_dlnaHistory[*m_dlnaLevel].objId = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).objectId;
             x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
             m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title.c_get());
             m_viewPoint = 0;
-            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId, 0, 9);
+            m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
                 m_dlna->loop();

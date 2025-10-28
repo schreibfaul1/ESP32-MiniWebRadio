@@ -751,8 +751,10 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         if (strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
-        m_msg.e = evt_info;
-    //    m_msg.arg = http_cmd;
+        m_msg.e = evt_command;
+        m_msg.cmd.assignf("%s", http_cmd);
+        m_msg.param1.assignf("%s", http_param);
+        m_msg.arg1.assignf("%s", http_arg);
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand(http_cmd, http_param, http_arg);
     }
@@ -764,7 +766,7 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         m_msg.e = evt_info;
-    //    m_msg.arg = http_cmd;
+        //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onRequest) WEBSRV_onRequest(http_cmd, http_param, http_arg, contentType, contentLength);
     }
@@ -776,7 +778,7 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         m_msg.e = evt_info;
-    //    m_msg.arg = http_cmd;
+        //    m_msg.arg = http_cmd;
         if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onDelete) WEBSRV_onDelete(http_cmd, http_param, http_arg);
     }
@@ -823,9 +825,9 @@ boolean WebSrv::handleWS() { // Websocketserver, receive messages
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::parseWsMessage(uint32_t len) {
     uint8_t      headerLen = 2;
-    uint16_t     paylodLen;
+    uint16_t     paylodLen = 0;
     uint8_t      maskingKey[4];
-    char         c[2];
+    char         c[2] = {0};
     ps_ptr<char> msgBuff;
 
     if (len > UINT16_MAX) {
@@ -856,7 +858,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
     }
 
     uint16_t msgBuffPtr = 0;
-    msgBuff.alloc(paylodLen + 1);
+    msgBuff.calloc(paylodLen + 1);
     if (!msgBuff.valid()) {
         log_e("oom");
         goto exit;
@@ -881,6 +883,11 @@ void WebSrv::parseWsMessage(uint32_t len) {
     }
 
     if (opcode == 0x09) { // denotes a ping
+        m_msg.e = evt_command;
+        m_msg.cmd = "ping received, send pong";
+        m_msg.param1 = "";
+        m_msg.arg1 = "";
+        if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand("ping received, send pong", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "ping received, send pong";
@@ -889,6 +896,11 @@ void WebSrv::parseWsMessage(uint32_t len) {
     }
 
     if (opcode == 0x0A) { // denotes a pong
+        m_msg.e = evt_command;
+        m_msg.cmd = "pong received";
+        m_msg.param1 = "";
+        m_msg.arg1 = "";
+        if (m_websrv_callback) m_websrv_callback(m_msg);
         if (WEBSRV_onCommand) WEBSRV_onCommand("pong received", "", "");
         m_msg.e = evt_info;
         m_msg.arg = "pong received";
@@ -915,7 +927,26 @@ void WebSrv::parseWsMessage(uint32_t len) {
         if (mask) {
             for (int32_t i = 0; i < pll; i++) { msgBuff[i] = (msgBuff[i] ^ maskingKey[i % 4]); }
         }
-        msgBuff[pll] = 0;
+        msgBuff[pll] = '\0';
+
+        int pos1 = msgBuff.index_of('=');
+        int pos2 = msgBuff.index_of('&', pos1 + 1);
+        if (pos1 < 0) {
+            m_msg.cmd = msgBuff;
+            m_msg.param1.assign("");
+            m_msg.arg1.assign("");
+        } else if (pos2 < 0) {
+            m_msg.cmd = msgBuff.substr(0, pos1);
+            m_msg.param1 = msgBuff.substr(pos1 + 1);
+            m_msg.arg1.assign("");
+        } else {
+            m_msg.cmd = msgBuff.substr(0, pos1);
+            m_msg.param1 = msgBuff.substr(pos1 + 1, pos2 - pos1 - 1);
+            m_msg.arg1 = msgBuff.substr(pos2 + 1);
+        }
+        m_msg.e = evt_command;
+        if (m_websrv_callback) m_websrv_callback(m_msg);
+
         m_msg.e = evt_info;
         m_msg.arg = msgBuff;
         if (m_websrv_callback) m_websrv_callback(m_msg);
@@ -936,7 +967,7 @@ void WebSrv::parseWsMessage(uint32_t len) {
                 goto exit;
             } else {
                 param = msgBuff.get() + offset;
-               if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
+                if (WEBSRV_onCommand) WEBSRV_onCommand(cmd, param, "");
                 goto exit;
             }
         } else {

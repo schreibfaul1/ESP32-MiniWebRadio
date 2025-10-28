@@ -545,8 +545,8 @@ function connect() {
         socket.send('get_tftSize');
         socket.send("get_mute");
         socket.send("get_timeAnnouncement");
-        socket.send("get_tone=");
-        socket.send("get_networks=");
+        socket.send("get_tone");
+        socket.send("get_networks");
         socket.send("change_state=" + "RADIO");
         socket.send("get_timeFormat");
         socket.send("get_sleepMode");
@@ -3073,7 +3073,7 @@ function appendToTerminal(text) {
                     <div style="margin-top: 0px;  border-bottom: 3px double #999999;">
                         <h3>
                             Timezone
-                            <select class="boxstyle" onchange="set_timeZone(this)" id="TimeZoneSelect"></select>
+                            <select class="boxstyle" onchange="setTimeZone(this)" id="TimeZoneSelect"></select>
                         </h3>
                     </div>
                     <div>
