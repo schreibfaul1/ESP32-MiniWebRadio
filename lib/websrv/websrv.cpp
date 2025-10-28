@@ -751,6 +751,10 @@ lastToDo:
         url_decode_in_place(http_arg);
         trim(http_arg);
         if (strlen(http_cmd) == 0) strcpy(http_cmd, "index.html");
+        if (startsWith(http_cmd, "SD/")) { // SD/logo/0N 90s.jpg ->  http_cmd = SD/    http_param = /logo/0N 90s.jpg
+            strcpy(http_param, http_cmd + 2);
+            http_cmd[3] = '\0';
+        }
         m_msg.e = evt_command;
         m_msg.cmd.assignf("%s", http_cmd);
         m_msg.param1.assignf("%s", http_param);
