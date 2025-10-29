@@ -864,17 +864,17 @@ bool preparePlaylistFromDLNAFolder() {
         if (!foldercontent->at(i).isAudio) continue;
         uint16_t len =
             strlen((const char*)foldercontent->at(i).itemURL.c_get()) + strlen((const char*)foldercontent->at(i).title.c_get()) + strlen((const char*)foldercontent->at(i).duration.c_get()) + 3;
-        char* itstr = x_ps_malloc(len);
-        strcpy(itstr, (const char*)foldercontent->at(i).itemURL.c_get());
-        strcat(itstr, "\n");
-        strcat(itstr, (const char*)foldercontent->at(i).duration.c_get());
-        strcat(itstr, ",");
-        strcat(itstr, (const char*)foldercontent->at(i).title.c_get());
-        log_i("pushing to playlist : %s", itstr);
+        ps_ptr<char> itstr(len);
+        itstr = foldercontent->at(i).itemURL;
+        itstr += "\n";
+        itstr += foldercontent->at(i).duration;
+        itstr += ",";
+        itstr += foldercontent->at(i).title;
+        MWR_LOG_DEBUG("pushing to playlist : %s", itstr.c_get());
         s_PLS_content.push_back(itstr);
     }
     if (!s_PLS_content.size()) return false;
-    log_i("pls length %i", s_PLS_content.size());
+    MWR_LOG_INFO("pls length %i", s_PLS_content.size());
     return true;
 }
 //____________________________________________________________________________________________________________________________________________________
@@ -978,7 +978,7 @@ exit:
  *****************************************************************************************************************************************************/
 bool connectToWiFi() {
 
-    char* line = x_ps_malloc(512);
+    ps_ptr<char> line(512);
     if (!line) {
         log_e("oom");
         return false;
@@ -995,27 +995,27 @@ bool connectToWiFi() {
     const char* SSID = _SSID;
     const char* PW = _PW;
     line[0] = '\0';
-    strcpy(line, SSID);
-    strcat(line, "\t");
-    strcat(line, PW);
-    pref.putString("wifiStr0", line);
+    line += SSID;
+    line += "\t";
+    line += PW;
+    pref.putString("wifiStr0", line.c_get());
 
     for (int i = 0; i < 6; i++) {
-        line[0] = '\0'; // Move this line outside the switch statement
+        line.clear(); // Move this line outside the switch statement
         switch (i) {
-            case 0: strcpy(line, pref.getString("wifiStr0").c_str()); break;
-            case 1: strcpy(line, pref.getString("wifiStr1").c_str()); break;
-            case 2: strcpy(line, pref.getString("wifiStr2").c_str()); break;
-            case 3: strcpy(line, pref.getString("wifiStr3").c_str()); break;
-            case 4: strcpy(line, pref.getString("wifiStr4").c_str()); break;
-            case 5: strcpy(line, pref.getString("wifiStr5").c_str()); break;
+            case 0: line = pref.getString("wifiStr0").c_str(); break;
+            case 1: line = pref.getString("wifiStr1").c_str(); break;
+            case 2: line = pref.getString("wifiStr2").c_str(); break;
+            case 3: line = pref.getString("wifiStr3").c_str(); break;
+            case 4: line = pref.getString("wifiStr4").c_str(); break;
+            case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (strlen(line) < 5) continue;   // line is empty
-        int pos = indexOf(line, "\t", 0); // find first tab
+        if (line.strlen() < 5) continue;  // line is empty
+        int pos = line.index_of("\t", 0); // find first tab
         if (pos < 0) continue;            // no tab found
         line[pos] = '\0';                 // terminate ssid
-        char* ssid = line;                // ssid is the first part
-        char* pw = line + pos + 1;        // password is the second part
+        char* ssid = line.get();          // ssid is the first part
+        char* pw = line.get() + pos + 1;  // password is the second part
         WiFi.mode(WIFI_STA);
         wifiMulti.addAP(ssid, pw); // SSID and PW in code"
         size_t offset = 0;
@@ -1052,55 +1052,51 @@ void setWiFiCredentials(const char* ssid, const char* password) {
 
     log_e("ssid %s pw %s", ssid, password);
 
-    char* line = x_ps_malloc(512);
+    ps_ptr<char> line;
     int   i = 0, state = 0;
-    if (!line) {
-        log_e("oom");
-        goto exit;
-    }
 
     for (i = 0; i < 6; i++) {
         line[0] = '\0'; // Move this line outside the switch statement
         switch (i) {
-            case 0: strcpy(line, pref.getString("wifiStr0").c_str()); break;
-            case 1: strcpy(line, pref.getString("wifiStr1").c_str()); break;
-            case 2: strcpy(line, pref.getString("wifiStr2").c_str()); break;
-            case 3: strcpy(line, pref.getString("wifiStr3").c_str()); break;
-            case 4: strcpy(line, pref.getString("wifiStr4").c_str()); break;
-            case 5: strcpy(line, pref.getString("wifiStr5").c_str()); break;
+            case 0: line = pref.getString("wifiStr0").c_str(); break;
+            case 1: line = pref.getString("wifiStr1").c_str(); break;
+            case 2: line = pref.getString("wifiStr2").c_str(); break;
+            case 3: line = pref.getString("wifiStr3").c_str(); break;
+            case 4: line = pref.getString("wifiStr4").c_str(); break;
+            case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (startsWith(line, ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
+        if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
             line[0] = '\0';                                         // clear line
-            strcat(line, ssid);
-            strcat(line, "\t");
-            strcat(line, password);
+            line = ssid;
+            line += "\t";
+            line += password;
             if (i == 0) {
                 log_e("password can't changed, is hard coded");
                 state = 0;
                 goto exit;
             }
             if (i == 1) {
-                pref.putString("wifiStr1", line);
+                pref.putString("wifiStr1", line.get());
                 state = 1;
                 goto exit;
             }
             if (i == 2) {
-                pref.putString("wifiStr2", line);
+                pref.putString("wifiStr2", line.get());
                 state = 1;
                 goto exit;
             }
             if (i == 3) {
-                pref.putString("wifiStr3", line);
+                pref.putString("wifiStr3", line.get());
                 state = 1;
                 goto exit;
             }
             if (i == 4) {
-                pref.putString("wifiStr4", line);
+                pref.putString("wifiStr4", line.get());
                 state = 1;
                 goto exit;
             }
             if (i == 5) {
-                pref.putString("wifiStr5", line);
+                pref.putString("wifiStr5", line.get());
                 state = 1;
                 goto exit;
             }
@@ -1109,39 +1105,39 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     for (i = 1; i < 6; i++) {
         line[0] = '\0';
         switch (i) {
-            case 1: strcpy(line, pref.getString("wifiStr1").c_str()); break;
-            case 2: strcpy(line, pref.getString("wifiStr2").c_str()); break;
-            case 3: strcpy(line, pref.getString("wifiStr3").c_str()); break;
-            case 4: strcpy(line, pref.getString("wifiStr4").c_str()); break;
-            case 5: strcpy(line, pref.getString("wifiStr5").c_str()); break;
+            case 1: line = pref.getString("wifiStr1").c_str(); break;
+            case 2: line = pref.getString("wifiStr2").c_str(); break;
+            case 3: line = pref.getString("wifiStr3").c_str(); break;
+            case 4: line = pref.getString("wifiStr4").c_str(); break;
+            case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (strlen(line) < 5) { // line is empty
+        if (line.strlen() < 5) { // line is empty
             line[0] = '\0';     // clear line
-            strcat(line, ssid);
-            strcat(line, "\t");
-            strcat(line, password);
+            line = ssid;
+            line += "\t";
+            line += password;
             if (i == 1) {
-                pref.putString("wifiStr1", line);
+                pref.putString("wifiStr1", line.get());
                 state = 2;
                 goto exit;
             }
             if (i == 2) {
-                pref.putString("wifiStr2", line);
+                pref.putString("wifiStr2", line.get());
                 state = 2;
                 goto exit;
             }
             if (i == 3) {
-                pref.putString("wifiStr3", line);
+                pref.putString("wifiStr3", line.get());
                 state = 2;
                 goto exit;
             }
             if (i == 4) {
-                pref.putString("wifiStr4", line);
+                pref.putString("wifiStr4", line.get());
                 state = 2;
                 goto exit;
             }
             if (i == 5) {
-                pref.putString("wifiStr5", line);
+                pref.putString("wifiStr5", line.get());
                 state = 2;
                 goto exit;
             }
@@ -1150,7 +1146,6 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     state = 3;
 
 exit:
-    x_ps_free(&line); // free memory
     if (state == 0) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid);
         if (s_f_WiFiConnected) audio.connecttospeech("S S I D and password are hard coded", "en");
