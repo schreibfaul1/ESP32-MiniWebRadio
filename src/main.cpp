@@ -679,7 +679,7 @@ void showAudioFileNumber() {
 }
 
 void display_sleeptime(int8_t ud) { // set sleeptimer
-    if (ud == 1) {
+    if (ud == 1) { // up
         switch (s_sleeptime) {
             case 0 ... 14: s_sleeptime = (s_sleeptime / 5) * 5 + 5; break;
             case 15 ... 59: s_sleeptime = (s_sleeptime / 15) * 15 + 15; break;
@@ -687,7 +687,7 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
             default: s_sleeptime = 360; break; // max 6 hours
         }
     }
-    if (ud == -1) {
+    if (ud == -1) { // down
         switch (s_sleeptime) {
             case 1 ... 15: s_sleeptime = ((s_sleeptime - 1) / 5) * 5; break;
             case 16 ... 60: s_sleeptime = ((s_sleeptime - 1) / 15) * 15; break;
@@ -718,18 +718,19 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
 }
 
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
-    const char* scImg = scaleImage(path);
-    if (!SD_MMC.exists(scImg)) {
-        if (indexOf(scImg, "/.", 0) > 0) return false; // empty filename
+    ps_ptr<char> p = path;
+    auto scImg = scaleImage(p);
+    if (!SD_MMC.exists(scImg.c_get())) {
+        if (scImg.index_of("/.", 0) > 0) return false; // empty filename
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg);
         return false;
     }
-    if (endsWith(scImg, "bmp")) { return tft.drawBmpFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth, 1.0); }
-    if (endsWith(scImg, "jpg")) { return tft.drawJpgFile(SD_MMC, scImg, posX, posY, maxWidth, maxHeigth); }
-    if (endsWith(scImg, "gif")) { return tft.drawGifFile(SD_MMC, scImg, posX, posY, 0); }
-    if (endsWith(scImg, "png")) { return tft.drawPngFile(SD_MMC, scImg, posX, posY); }
+    if (scImg.ends_with("bmp")) { return tft.drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
+    if (scImg.ends_with("jpg")) { return tft.drawJpgFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth); }
+    if (scImg.ends_with("gif")) { return tft.drawGifFile(SD_MMC, scImg.c_get(), posX, posY, 0); }
+    if (scImg.ends_with("png")) { return tft.drawPngFile(SD_MMC, scImg.c_get(), posX, posY); }
 
-    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpg graphic", scImg);
+    SerialPrintfln(ANSI_ESC_RED "the file \"%s\" contains neither a bmp, a gif nor a jpg graphic", scImg.c_get());
     return false; // neither jpg nor bmp
 }
 /*****************************************************************************************************************************************************
@@ -1492,24 +1493,45 @@ void setup() {
  *                                                                   C O M M O N                                                                     *
  *****************************************************************************************************************************************************/
 
-const char* scaleImage(const char* path) {
-    if ((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") && (!endsWith(path, "png")))) { // not a image
-        return path;
-    }
-    if (startsWith(path, "/png")) return path; // nothing to do, icons for website
-    static char pathBuff[256];
-    memset(pathBuff, 0, sizeof(pathBuff));
-    int idx = indexOf(path, "/", 1);
-    if (idx < 0)
-        return path; // invalid path
-    else {
-        char prefix[03] = " /";
-        prefix[0] = displayConfig.tftSize;
-        strncpy(pathBuff, path, idx + 1);
-        strcat(pathBuff, prefix);
-        strcat(pathBuff, path + idx + 1);
-    }
-    return pathBuff;
+// const char* scaleImage(const char* path) {
+//     if ((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") && (!endsWith(path, "png")))) { // not a image
+//         return path;
+//     }
+//     if (startsWith(path, "/png")) return path; // nothing to do, icons for website
+//     static char pathBuff[256];
+//     memset(pathBuff, 0, sizeof(pathBuff));
+//     int idx = indexOf(path, "/", 1);
+//     if (idx < 0)
+//         return path; // invalid path
+//     else {
+//         char prefix[03] = " /";
+//         prefix[0] = displayConfig.tftSize;
+//         strncpy(pathBuff, path, idx + 1);
+//         strcat(pathBuff, prefix);
+//         strcat(pathBuff, path + idx + 1);
+//     }
+//     return pathBuff;
+// }
+
+ps_ptr<char> scaleImage(ps_ptr<char> path) {
+    MWR_LOG_WARN("path %s", path.c_get());
+    bool ok = false;
+    if(path.ends_with("bmp")) ok = true;
+    if(path.ends_with("jpg")) ok = true;
+    if(path.ends_with("gif")) ok = true;
+    if(path.ends_with("png")) ok = true;
+    if(path.starts_with("/png")) ok = false;  // is web button
+    if(!ok) return path;
+
+    int idx = path.index_of('/', 1);
+    if(idx < 0) return path; // invalid path
+
+    char prefix[03] = " /";
+    prefix[0] = displayConfig.tftSize;
+
+    path.insert(prefix, idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
+    MWR_LOG_WARN("path %s", path.c_get());
+    return path;
 }
 
 void setVolume(uint8_t vol) {
@@ -4895,7 +4917,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("favicon.ico"){          webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
-    CMD_EQUALS("test"){                 sprintf(s_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu",
+    CMD_EQUALS("test"){                 sprintf(s_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu,",
                                         (long unsigned)ESP.getFreeHeap(), (long unsigned)audio.inBufferFilled(), (long unsigned)audio.inBufferFree(),
                                         (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
                                         webSrv.send("test=", s_chbuf);
@@ -4903,15 +4925,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                         return;}
 
-    CMD_EQUALS("get_mute"){             if(s_f_mute) webSrv.send("mute=", "1");
-                                        else        webSrv.send("mute=", "0");
-                                        return;}
-
+    CMD_EQUALS("get_mute"){             s_f_mute == true ? webSrv.send("mute=", "1") : webSrv.send("mute=", "0"); return;}
     CMD_EQUALS("set_mute"){             muteChanged(!s_f_mute); return;}
-
     CMD_EQUALS("upvolume"){             webSrv.send("volume=", int2str(upvolume()));  return;}                                                            // via websocket
     CMD_EQUALS("downvolume"){           webSrv.send("volume=", int2str(downvolume())); return;}                                                           // via websocket
-
     CMD_EQUALS("get_volumeSteps"){      webSrv.send("volumeSteps=", int2str(s_volume.volumeSteps)); return;}
 
     CMD_EQUALS("set_volumeSteps"){      s_volume.cur_volume = map_l(s_volume.cur_volume, 0, s_volume.volumeSteps, 0, param.to_uint32());
@@ -4935,17 +4952,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
                                         SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", s_volume.volumeAfterAlarm); return;}
 
-    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage);
-                                        return;}
+    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
 
-    CMD_EQUALS("to_listen"){            StationsItems(); // via websocket, return the name and number of the current station
-                                        return;}
+    CMD_EQUALS("to_listen"){            StationsItems(); return;}   // via websocket, return the name and number of the current station
+    CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone()); return;}
 
-    CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone());
-                                        return;}
-
-    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle, webSrv.TEXT);
-                                        return;}
+    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle, webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_toneLP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>lp; lp = "Lowpass set to " + param  + "dB";
@@ -5043,7 +5055,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         dlna.browseServer(s_currDLNAsrvNr, s_dlnaHistory[s_dlnaLevel].objId.c_get());
                                         return;}
 
-    CMD_EQUALS("SD/"){                  if(!webSrv.streamfile(SD_MMC, scaleImage(param.get()))){                                               // via XMLHttpRequest
+    CMD_EQUALS("SD/"){                  if(!webSrv.streamfile(SD_MMC, scaleImage(param).c_get())){                                               // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "The file could not be transferred " ANSI_ESC_RED "\"%s\"", param.get());
                                         webSrv.sendStatus(404);} // not found
                                         return;}

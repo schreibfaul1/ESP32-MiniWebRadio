@@ -2375,12 +2375,13 @@ class pictureBox : public RegisterTable {
   private:
     bool GetImageSize(const char* picturePath) {
         if (!picturePath) return false;
-        const char* scaledPicPath = scaleImage(picturePath);
-        if (!SD_MMC.exists(scaledPicPath)) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
+        ps_ptr<char>pp = picturePath;
+        auto scaledPicPath = scaleImage(pp);
+        if (!SD_MMC.exists(scaledPicPath.c_get())) { /* log_w("file %s not exists, objName: %s", scaledPicPath, m_name)*/
             ;
             return false;
         }
-        File file = SD_MMC.open(scaledPicPath, "r", false);
+        File file = SD_MMC.open(scaledPicPath.c_get(), "r", false);
         if (file.size() < 24) {
             log_w("file %s is too small", scaledPicPath);
             file.close();
