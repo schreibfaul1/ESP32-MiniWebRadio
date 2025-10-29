@@ -129,7 +129,7 @@ char*          s_cur_AudioFolder = NULL;
 char*          s_cur_AudioFileName = NULL;
 char*          s_stationURL = NULL;
 char*          s_BT_metaData = NULL;
-char*          s_playlistPath = NULL;
+ps_ptr<char>   s_playlistPath;
 bool           s_f_rtc = false; // true if time from ntp is received
 bool           s_f_100ms = false;
 bool           s_f_1sec = false;
@@ -190,7 +190,7 @@ String s_TZName = "Europe/Berlin";
 String s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String s_media_downloadIP = "";
 
-std::vector<char*>       s_PLS_content;
+std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
 
 const char* codecname[10] = {"unknown", "WAV", "MP3", "AAC", "M4A", "FLAC", "AACP", "OPUS", "OGG", "VORBIS"};
@@ -762,6 +762,16 @@ boolean isPlaylist(File file) {
  *****************************************************************************************************************************************************/
 
 bool preparePlaylistFromFile(const char* path) { // *.m3u
+
+    s_playlistPath = path; // "/audiofiles/myPlaylist.m3u"
+    if(!s_playlistPath.ends_with(".m3u")){
+        MWR_LOG_ERROR("wrong playlist path %s", s_playlistPath.c_get());
+        s_playlistPath.reset();
+        return false;
+    }
+    int idx = s_playlistPath.last_index_of('/'); // e.g. "/audiofiles"
+    s_playlistPath = s_playlistPath.substr(0, idx);
+
     File playlistFile = SD_MMC.open(path);
     if (!playlistFile) {
         log_e("playlistfile path not found");
@@ -773,8 +783,7 @@ bool preparePlaylistFromFile(const char* path) { // *.m3u
         playlistFile.close();
         return false;
     }
-    x_ps_free(&s_playlistPath);
-    vector_clear_and_shrink(s_PLS_content); // clear s_PLS_content first
+    s_PLS_content.clear(); // clear s_PLS_content first
     char* buff1 = x_ps_malloc(2024);
     char* buff2 = x_ps_malloc(1048);
     if (!buff1 || !buff2) {
@@ -802,12 +811,9 @@ bool preparePlaylistFromFile(const char* path) { // *.m3u
             strcat(buff1, "\n");
             strcat(buff1, buff2);
         }
-        s_PLS_content.push_back(x_ps_strdup((const char*)buff1));
+        s_PLS_content.push_back(buff1);
     }
-    s_playlistPath = x_ps_strdup(playlistFile.path());
-    int idx = lastIndexOf((const char*)s_playlistPath, '/');
-    if (idx < 0) log_e("wrong playlist path");
-    s_playlistPath[idx] = '\0';
+
     playlistFile.close();
     x_ps_free(&buff1);
     x_ps_free(&buff2);
@@ -826,20 +832,20 @@ bool preparePlaylistFromSDFolder(const char* path) { // all files within a SD fo
         folder.close();
         return false;
     }
-    vector_clear_and_shrink(s_PLS_content); // clear _PLS_content first
+    s_PLS_content.clear(); // clear _PLS_content first
 
     while (true) { // get content
         File file = folder.openNextFile();
         if (!file) break;
         if (file.isDirectory()) continue;
-        if (isAudio(file)) { s_PLS_content.push_back(x_ps_strdup((const char*)file.path())); }
+        if (isAudio(file)) { s_PLS_content.push_back(file.path());}
         file.close();
     }
     folder.close();
 
     for (int i = 0; i < s_PLS_content.size(); i++) {
         if (s_PLS_content[i][0] == 2) { // remove ASCII 2
-            memcpy(s_PLS_content[i], s_PLS_content[i] + 1, strlen(s_PLS_content[i]));
+            s_PLS_content[i].remove_before(1, true);
         }
     }
 
@@ -852,7 +858,7 @@ bool preparePlaylistFromSDFolder(const char* path) { // all files within a SD fo
 }
 //____________________________________________________________________________________________________________________________________________________
 bool preparePlaylistFromDLNAFolder() {
-    vector_clear_and_shrink(s_PLS_content); // clear _PLS_content first
+    s_PLS_content.clear(); // clear _PLS_content first
     const std::deque<DLNA_Client::srvItem>* foldercontent = &dlna.getBrowseResult();
     for (int i = 0; i < foldercontent->size(); i++) {
         // log_i( "%d : (%d) %s %s -- %s",i, foldercontent.isAudio[i], foldercontent.itemURL[i], foldercontent.title[i], foldercontent.duration[i]);
@@ -877,7 +883,7 @@ bool preparePlaylistFromDLNAFolder() {
 void sortPlayListAlphabetical() {
     for (int i = 0; i < s_PLS_content.size(); i++) { // easy bubble sort
         for (int j = 1; j < s_PLS_content.size(); j++) {
-            if (strcmp(s_PLS_content[j - 1], s_PLS_content[i]) > 0) { swap(s_PLS_content[i], s_PLS_content[j - 1]); }
+            if (strcmp(s_PLS_content[j - 1].c_get(), s_PLS_content[i].c_get()) > 0) { swap(s_PLS_content[i], s_PLS_content[j - 1]); }
         }
     }
 }
@@ -886,18 +892,18 @@ void sortPlayListAlphabetical() {
 void sortPlayListRandom() {
     for (int i = 0; i < s_PLS_content.size(); i++) { // easy bubble sort
         uint16_t randIndex = random(0, s_PLS_content.size());
-        swap(s_PLS_content[i], s_PLS_content[randIndex]); // swapping the values
+        s_PLS_content[i].swap(s_PLS_content[randIndex]); // swapping the values
     }
 }
 //____________________________________________________________________________________________________________________________________________________
 
 void processPlaylist(boolean first) {
 
-    char *playFile = NULL, *duration = NULL, *title = NULL, *plsContent = NULL, *plsExtension = NULL;
     bool  f_hasTitle = false, f_isURL = false, f_isRoot = false, f_isConnected = false;
+    ps_ptr<char>playFile, plsContent, plsExtension, duration, title;
 
     if (s_PLS_content.size() == 0) {
-        log_e("playlist is empty");
+        MWR_LOG_ERROR("playlist is empty");
         return;
     } // guard
     if (s_plsCurPos == s_PLS_content.size()) goto exit; // end of playlist
@@ -905,62 +911,56 @@ void processPlaylist(boolean first) {
         s_plsCurPos = 0;
         s_f_playlistEnabled = true;
     } // reset before start
-
-    if (indexOf(s_PLS_content[s_plsCurPos], "\n", 0) > 0) f_hasTitle = true; // has additional infos: duration, title
+MWR_LOG_WARN("%s", s_PLS_content[s_plsCurPos].c_get());
+    if (s_PLS_content[s_plsCurPos].index_of("\n", 0) > 0) f_hasTitle = true; // has additional infos: duration, title
     // now read from vector _PLS_content
-    if (startsWith(s_PLS_content[s_plsCurPos], "http")) f_isURL = true;     // is web file
-    if (startsWith(s_PLS_content[s_plsCurPos], "file://")) f_isRoot = true; // SD file from root
+    if (s_PLS_content[s_plsCurPos].starts_with("http")) f_isURL = true;     // is web file
+    if (s_PLS_content[s_plsCurPos].starts_with("file://")) f_isRoot = true; // SD file from root
     if (f_hasTitle) {
-        int idx = indexOf(s_PLS_content[s_plsCurPos], "\n", 0);
-        plsContent = x_ps_strndup(s_PLS_content[s_plsCurPos], idx);
-        plsExtension = x_ps_strdup(s_PLS_content[s_plsCurPos] + idx + 1);
+        int idx = s_PLS_content[s_plsCurPos].index_of("\n", 0);
+        plsContent = s_PLS_content[s_plsCurPos].substr(0, idx);
+        plsExtension = s_PLS_content[s_plsCurPos].substr(idx + 1);
     } else {
-        plsContent = x_ps_strdup(s_PLS_content[s_plsCurPos]);
+        plsContent = s_PLS_content[s_plsCurPos];
     }
-
+MWR_LOG_INFO("plsContent %s, plsExtension %s", plsContent.c_get(), plsExtension.c_get());
     s_cur_Codec = 0;
     if (f_isURL) { // is web file
-        playFile = x_ps_strdup(plsContent);
-        connecttohost(playFile);
+        playFile = plsContent;
+        connecttohost(playFile.c_get());
         f_isConnected = s_f_isWebConnected;
     } else { // is local file
         if (f_isRoot) {
-            playFile = x_ps_strdup(plsContent + 7); // skip "file://"
-            urldecode(playFile);
+            playFile = plsContent.substr(7); // skip "file://"
+            playFile.urldecode();
             f_isConnected = s_f_isFSConnected;
         } else { // local file, not root
-            urldecode(plsContent);
-            if (s_playlistPath) { // path of m3u file
-                playFile = x_ps_malloc(strlen(s_playlistPath) + strlen(plsContent) + 5);
-                strcpy(playFile, s_playlistPath);
-                if (plsContent[0] != '/') strcat(playFile, "/");
-                strcat(playFile, plsContent);
+            plsContent.urldecode();
+            if (s_playlistPath.valid()) { // path of m3u file
+                playFile = s_playlistPath;
+MWR_LOG_INFO("playFile %s, plsContent %s", playFile.c_get(), plsContent.c_get());
+                if (plsContent[0] != '/') playFile += "/";
+                playFile += plsContent;
             } else { // have no playlistpath
-                playFile = x_ps_malloc(strlen(plsContent) + 5);
-                strcpy(playFile, plsContent);
+                playFile = plsContent;
             }
         }
-        connecttoFS("SD_MMC", playFile);
+        connecttoFS("SD_MMC", playFile.c_get());
         f_isConnected = s_f_isFSConnected;
     }
     if (f_isConnected) {
-        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, playFile);
-        webSrv.send("SD_playFile=", playFile);
+        SerialPrintflnCut("Playlist:    ", ANSI_ESC_YELLOW, playFile.c_get());
+        webSrv.send("SD_playFile=", playFile.c_get());
         s_playerSubMenue = 1;
         changeState(PLAYER);
         if (f_hasTitle) {
-            int16_t idx1 = indexOf(plsExtension, ",", 0); // "18,logo-1.mp3"
-            duration = x_ps_strndup(plsExtension, idx1);
-            title = x_ps_strdup(plsExtension + idx1 + 1);
-            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", title);
-            showFileName(title);
+            int16_t idx1 = plsExtension.index_of(",", 0); // "18,logo-1.mp3"
+            duration = plsExtension.substr(0, idx1);
+            title = plsExtension.substr(+ idx1 + 1);
+            SerialPrintfln("Playlist:    " ANSI_ESC_GREEN "Title: %s", title.c_get());
+            showFileName(title.c_get());
         }
     }
-    x_ps_free(&playFile);
-    x_ps_free(&duration);
-    x_ps_free(&title);
-    x_ps_free(&plsContent);
-    x_ps_free(&plsExtension);
     s_plsCurPos++;
     showPlsFileNumber();
     return;
@@ -972,12 +972,6 @@ exit:
     s_playerSubMenue = 0;
     changeState(PLAYER);
     s_plsCurPos = 0;
-    x_ps_free(&playFile);
-    x_ps_free(&duration);
-    x_ps_free(&title);
-    x_ps_free(&plsContent);
-    x_ps_free(&plsExtension);
-    x_ps_free(&s_playlistPath);
     return;
 }
 /*****************************************************************************************************************************************************
@@ -1263,7 +1257,7 @@ void stopSong() {
     s_f_isFSConnected = false;
     s_f_isWebConnected = false;
     if (s_f_playlistEnabled) {
-        vector_clear_and_shrink(s_PLS_content);
+        s_PLS_content.clear();
         s_f_playlistEnabled = false;
         SerialPrintfln("Playlist:    " ANSI_ESC_BLUE "playlist stopped");
         webSrv.send("SD_playFile=", "playlist stopped");
@@ -1271,7 +1265,7 @@ void stopSong() {
     s_f_pauseResume = false;
     s_f_playlistNextFile = false;
     s_f_shuffle = false;
-    x_ps_free(&s_playlistPath);
+    s_playlistPath.reset();
 }
 
 /*****************************************************************************************************************************************************
@@ -1493,28 +1487,8 @@ void setup() {
  *                                                                   C O M M O N                                                                     *
  *****************************************************************************************************************************************************/
 
-// const char* scaleImage(const char* path) {
-//     if ((!endsWith(path, "bmp")) && (!endsWith(path, "jpg")) && (!endsWith(path, "gif") && (!endsWith(path, "png")))) { // not a image
-//         return path;
-//     }
-//     if (startsWith(path, "/png")) return path; // nothing to do, icons for website
-//     static char pathBuff[256];
-//     memset(pathBuff, 0, sizeof(pathBuff));
-//     int idx = indexOf(path, "/", 1);
-//     if (idx < 0)
-//         return path; // invalid path
-//     else {
-//         char prefix[03] = " /";
-//         prefix[0] = displayConfig.tftSize;
-//         strncpy(pathBuff, path, idx + 1);
-//         strcat(pathBuff, prefix);
-//         strcat(pathBuff, path + idx + 1);
-//     }
-//     return pathBuff;
-// }
-
 ps_ptr<char> scaleImage(ps_ptr<char> path) {
-    MWR_LOG_WARN("path %s", path.c_get());
+    MWR_LOG_DEBUG("path %s", path.c_get());
     bool ok = false;
     if(path.ends_with("bmp")) ok = true;
     if(path.ends_with("jpg")) ok = true;
@@ -1530,7 +1504,7 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     prefix[0] = displayConfig.tftSize;
 
     path.insert(prefix, idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
-    MWR_LOG_WARN("path %s", path.c_get());
+    MWR_LOG_DEBUG("path %s", path.c_get());
     return path;
 }
 
