@@ -183,7 +183,7 @@ bool   s_f_timeSpeech = false;
 bool   s_f_stationsChanged = false;
 bool   s_f_WiFiConnected = false;
 String s_station = "";
-char*  s_stationName_air = NULL;
+ps_ptr<char> s_stationName_air;
 String s_homepage = "";
 String s_filename = "";
 String s_TZName = "Europe/Berlin";
@@ -573,41 +573,33 @@ void showStreamTitle(const char* streamtitle) {
 }
 
 void showLogoAndStationName(bool force) {
-    char*        SN_utf8 = NULL;
-    static char* old_SN_utf8 = strdup("");
+    ps_ptr<char> SN_utf8;
+    ps_ptr<char>path;
+    static ps_ptr<char> old_SN_utf8;
     if (force) {
-        if (old_SN_utf8) {
-            x_ps_free(&old_SN_utf8);
-            old_SN_utf8 = strdup("");
-        }
+        old_SN_utf8.reset();
     }
 
     if (s_cur_station) {
         //    log_w("showLogoAndStationName: %s", staMgnt.getStationName(s_cur_station));
-        SN_utf8 = x_ps_calloc(strlen(staMgnt.getStationName(s_cur_station)) + 12, 1);
-        memcpy(SN_utf8, staMgnt.getStationName(s_cur_station), strlen(staMgnt.getStationName(s_cur_station)) + 1);
+        SN_utf8 = staMgnt.getStationName(s_cur_station);
         SerialPrintfln("Country: ..  " ANSI_ESC_GREEN "%s", staMgnt.getStationCountry(s_cur_station));
     } else {
-        if (!s_stationName_air) s_stationName_air = strdup("");
-        SN_utf8 = x_ps_calloc(strlen(s_stationName_air) + 12, 1);
-        memcpy(SN_utf8, s_stationName_air, strlen(s_stationName_air) + 1);
+        SN_utf8 = s_stationName_air;
     }
-    trim(SN_utf8);
-    if (strcmp(old_SN_utf8, SN_utf8) == 0) { goto exit; }
-    x_ps_free(&old_SN_utf8);
-    old_SN_utf8 = x_ps_strdup(SN_utf8);
+    SN_utf8.trim();
+    if(old_SN_utf8 == SN_utf8) { goto exit; }
+    else old_SN_utf8 = SN_utf8;
     txt_RA_staName.setTextColor(TFT_CYAN);
-    txt_RA_staName.setText(SN_utf8);
+    txt_RA_staName.setText(SN_utf8.c_get());
     txt_RA_staName.show(true, false);
 
-    memmove(SN_utf8 + 6, SN_utf8, strlen(SN_utf8) + 1);
-    memmove(SN_utf8, "/logo/", 6);
-    strcat(SN_utf8, ".jpg");
-    pic_RA_logo.setPicturePath(SN_utf8);
+    path = "/logo/" + SN_utf8 + ".jpg";
+    pic_RA_logo.setPicturePath(path.c_get());
     pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
     pic_RA_logo.show(true, false);
 exit:
-    x_ps_free(&SN_utf8);
+    return;
 }
 
 void showFileLogo(uint8_t state) {
@@ -1050,7 +1042,7 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     if (!ssid || !password) return;
     if (strlen(ssid) < 5) return; // min length
 
-    log_e("ssid %s pw %s", ssid, password);
+    MWR_LOG_DEBUG("ssid %s pw %s", ssid, password);
 
     ps_ptr<char> line;
     int   i = 0, state = 0;
@@ -1612,16 +1604,12 @@ void setStationByNumber(uint16_t staNr) {
 }
 
 void StationsItems() {
-    if (!s_stationName_air) s_stationName_air = (char*)calloc(1, 1);
-    char* stationLogo_air = x_ps_malloc(strlen(s_stationName_air) + 15);
-    strcpy(stationLogo_air, "/logo/");
-    strcat(stationLogo_air, s_stationName_air);
-    strcat(stationLogo_air, ".jpg");
+    ps_ptr<char>stationLogo_air = "/logo/" + s_stationName_air + ".jpg";
     char staNr[10];
     itoa(s_cur_station, staNr, 10);
 
     if (s_cur_station == 0) {
-        webSrv.send("stationLogo=", stationLogo_air);
+        webSrv.send("stationLogo=", stationLogo_air.c_get());
         webSrv.send("stationNr=", staNr);
         webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
     } else {
@@ -1629,13 +1617,13 @@ void StationsItems() {
         webSrv.send("stationNr=", staNr);
         if (s_stationURL) webSrv.send("stationURL=", String(s_stationURL));
     }
-    x_ps_free(&stationLogo_air);
 }
 
 void setStationViaURL(const char* url, const char* extension) {
     // e.g.  http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one&bitrate=96000
     // url is http://lstn.lv/bbcradio.m3u8?station=bbc_radio_one, extension is bitrate=96000
-    x_ps_free(&s_stationName_air);
+    s_stationName_air.reset();
+
     s_cur_station = 0;
     x_ps_free(&s_stationURL);
     int   len_url = strlen(url) + strlen(extension) + 3;
@@ -3053,8 +3041,7 @@ void my_audio_info(Audio::msg_t m) {
             break;
 
         case Audio::evt_name:
-            x_ps_free(&s_stationName_air);
-            s_stationName_air = x_ps_strndup(m.msg, 200); // set max length
+            s_stationName_air = m.msg; // set max length
             SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", m.msg);
             s_f_newStationName = true;
             break;
@@ -4951,8 +4938,8 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("set_station"){          setStationByNumber(param.to_uint32()); return;}                                                                          // via websocket
 
-    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_get(), arg.c_get()); x_ps_free(&s_stationName_air);                                          // via websocket
-                                        s_stationName_air = x_ps_strndup(param.c_get(), 200); // set max length
+    CMD_EQUALS("stationURL"){           setStationViaURL(param.c_get(), arg.c_get());                                         // via websocket
+                                        s_stationName_air = param;
                                         SerialPrintfln("StationName: " ANSI_ESC_MAGENTA "%s", param.c_get());
                                         s_f_newStationName = true; return;}
 
