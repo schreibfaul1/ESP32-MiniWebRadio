@@ -761,15 +761,15 @@ boolean isPlaylist(File file) {
  *                                                                     P L A Y L I S T                                                               *
  *****************************************************************************************************************************************************/
 
-bool preparePlaylistFromFile(const char* path) { // *.m3u
-
-    s_playlistPath = path; // "/audiofiles/myPlaylist.m3u"
-    if(!s_playlistPath.ends_with(".m3u")){
+bool preparePlaylistFromFile(const char* path) {
+    s_playlistPath = path;
+    if (!s_playlistPath.ends_with(".m3u")) {
         MWR_LOG_ERROR("wrong playlist path %s", s_playlistPath.c_get());
         s_playlistPath.reset();
         return false;
     }
-    int idx = s_playlistPath.last_index_of('/'); // e.g. "/audiofiles"
+
+    int idx = s_playlistPath.last_index_of('/');
     s_playlistPath = s_playlistPath.substr(0, idx);
 
     File playlistFile = SD_MMC.open(path);
@@ -783,40 +783,39 @@ bool preparePlaylistFromFile(const char* path) { // *.m3u
         playlistFile.close();
         return false;
     }
-    s_PLS_content.clear(); // clear s_PLS_content first
-    char* buff1 = x_ps_malloc(2024);
-    char* buff2 = x_ps_malloc(1048);
-    if (!buff1 || !buff2) {
-        log_e("oom");
-        playlistFile.close();
-        return false;
-    }
+
+    s_PLS_content.clear();
+    ps_ptr<char> readBuff;
+    ps_ptr<char> tmpBuff;
+
     size_t bytesRead = 0;
-    bool   f_EXTINF_seen = false;
+    bool f_EXTINF_seen = false;
 
     while (playlistFile.available() > 0) {
-        bytesRead = playlistFile.readBytesUntil('\n', buff1, 1024);
-        if (bytesRead < 5) continue; // line is # or space or nothing, smallest filename "1.mp3" < 5
-        buff1[bytesRead] = '\0';
-        trim(buff1);
-        if (startsWith(buff1, "#EXTM3U")) continue;
-        if (startsWith(buff1, "#EXTINF:")) { // #EXTINF:8,logo-1.mp3
-            strcpy(buff2, buff1 + 8);
+        readBuff.alloc(2024);
+        bytesRead = playlistFile.readBytesUntil('\n', readBuff.get(), readBuff.size());
+        if (bytesRead < 5) continue;
+
+        readBuff[bytesRead] = '\0';
+        trim(readBuff.get());
+
+        if (readBuff.starts_with("#EXTM3U")) continue;
+        if (readBuff.starts_with("#EXTINF:")) {
+            tmpBuff = readBuff.substr(8);
             f_EXTINF_seen = true;
             continue;
         }
-        if (startsWith(buff1, "#")) continue; // all other lines
+        if (readBuff.starts_with("#")) continue;
+
         if (f_EXTINF_seen) {
             f_EXTINF_seen = false;
-            strcat(buff1, "\n");
-            strcat(buff1, buff2);
+            readBuff.append("\n");
+            readBuff += tmpBuff;
         }
-        s_PLS_content.push_back(buff1);
+        s_PLS_content.push_back(readBuff);
     }
 
     playlistFile.close();
-    x_ps_free(&buff1);
-    x_ps_free(&buff2);
     return true;
 }
 //____________________________________________________________________________________________________________________________________________________
