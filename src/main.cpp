@@ -547,19 +547,16 @@ inline uint16_t txtlen(String str) {
     return len;
 }
 
-void showStreamTitle(const char* streamtitle) {
+void showStreamTitle(ps_ptr<char> streamtitle) {
     if (s_f_sleeping) return;
 
-    char* st = x_ps_strdup(streamtitle);
-    trim(st);
+    streamtitle.trim();
     // replacestr(st, " | ", "\n"); // some stations use pipe as \n or
     // replacestr(st, "| ", "\n");
     // replacestr(st, "|", "\n");
 
     txt_RA_sTitle.setTextColor(TFT_CORNSILK);
-    txt_RA_sTitle.writeText(st);
-
-    x_ps_free(&st);
+    txt_RA_sTitle.writeText(streamtitle.c_get());
 }
 
 void showLogoAndStationName(bool force) {
@@ -2689,9 +2686,9 @@ void loop() {
             s_f_newStreamTitle = false;
             if (s_state == RADIO) {
                 if (s_streamTitle.strlen())
-                    showStreamTitle(s_streamTitle.c_get());
+                    showStreamTitle(s_streamTitle);
                 else if (s_icyDescription.strlen()) {
-                    showStreamTitle(s_icyDescription.c_get());
+                    showStreamTitle(s_icyDescription);
                     s_f_newIcyDescription = false;
                     webSrv.send("icy_description=", s_icyDescription.c_get());
                 } else
@@ -2702,7 +2699,7 @@ void loop() {
         //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
         if (s_f_newIcyDescription && !s_timeCounter.timer) {
             if (s_state == RADIO) {
-                if (!s_streamTitle.strlen()) showStreamTitle(s_icyDescription.c_get());
+                if (!s_streamTitle.strlen()) showStreamTitle(s_icyDescription);
             }
             webSrv.send("icy_description=", s_icyDescription.c_get());
             s_f_newIcyDescription = false;

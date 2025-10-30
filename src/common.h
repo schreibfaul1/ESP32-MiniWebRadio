@@ -348,7 +348,7 @@ void         wake_up();
 void         setRTC(const char* TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
-void         showStreamTitle(const char* streamTitle);
+void         showStreamTitle(ps_ptr<char> streamTitle);
 void         showLogoAndStationName(bool force);
 void         showFileLogo(uint8_t state);
 void         showFileName(const char* fname);
