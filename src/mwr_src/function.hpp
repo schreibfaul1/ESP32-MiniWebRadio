@@ -961,7 +961,7 @@ class SD_content {
         ps_ptr<char> fileName;
         ps_ptr<char> filePath;
 
-        FileInfo(int32_t fs, const char* fn, const char* fp) : fileSize(fs), fileName(fn), filePath(fp) {}
+        FileInfo(int32_t fs, ps_ptr<char> fn, ps_ptr<char> fp) : fileSize(fs), fileName(fn), filePath(fp) {}
 
         ~FileInfo() = default;
         FileInfo(const FileInfo&) = default;
@@ -1006,7 +1006,7 @@ class SD_content {
                 if (!withoutDirs) { // folder size is -1
                     ps_ptr<char> path = m_slaveFile.path();
                     path.append("/"); // add '/'
-                    m_files.emplace_back((int)-1, m_slaveFile.name(), path.c_get());
+                    m_files.emplace_back((int)-1, m_slaveFile.name(), path);
                 }
             } else {
                 if (audioFilesOnly) {
@@ -1043,7 +1043,7 @@ class SD_content {
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.get(), m_files[idx].fileSize);
+        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName, m_files[idx].fileSize);
         return m_buff.get();
     }
     const char* getFileNameByIndex(uint16_t idx) {

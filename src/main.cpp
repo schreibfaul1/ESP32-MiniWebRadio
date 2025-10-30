@@ -1674,31 +1674,30 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
 }
 
 ps_ptr<char> setI2STone() {
-    ps_ptr<char>tone;
+    ps_ptr<char> tone;
     audio.setTone(s_tone.LP, s_tone.BP, s_tone.HP);
     audio.setBalance(s_tone.BAL);
     tone.assignf("LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", s_tone.LP, s_tone.BP, s_tone.HP, s_tone.BAL);
     return tone;
 }
 
-void SD_playFile(const char* pathWoFileName, const char* fileName) { // pathWithoutFileName e.g. /audiofiles/playlist/
-    sprintf(s_chbuf, "%s%s", pathWoFileName, fileName);
-    int32_t idx = indexOf(s_chbuf, "\033[", 1);
-    if (idx == -1) {
-        ;
-    } // do nothing
-    else {
-        s_chbuf[idx] = '\0';
-    } // remove color and filesize
-    SD_playFile(s_chbuf, 0, true);
+void SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName) { // pathWithoutFileName e.g. /audiofiles/playlist/
+    pathWoFileName += fileName;
+    int32_t idx = pathWoFileName.index_of("\033[", 1);
+    if (idx == -1) { // do nothing
+        SD_playFile(pathWoFileName, 0, true);
+        return;
+    }
+    SD_playFile(pathWoFileName.substr(0, idx), 0, true); // remove color and filesize
+    return;
 }
 
-void SD_playFile(const char* path, uint32_t fileStartTime, bool showFN) {
-    if (!path) return;                            // avoid a possible crash
+void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
+    if (!path) return; // avoid a possible crash
     ps_ptr<char> audiopath = path;
-    if (audiopath.ends_with( "m3u")) {
-        if (SD_MMC.exists(path)) {
-            preparePlaylistFromFile(path);
+    if (audiopath.ends_with("m3u")) {
+        if (SD_MMC.exists(path.c_get())) {
+            preparePlaylistFromFile(path.c_get());
             processPlaylist(true);
         }
         return;
@@ -1707,19 +1706,19 @@ void SD_playFile(const char* path, uint32_t fileStartTime, bool showFN) {
         s_playerSubMenue = 1;
         changeState(PLAYER);
     }
-    int32_t idx = lastIndexOf(path, '/');
+    int32_t idx = path.last_index_of('/');
     if (idx < 0) return;
     s_cur_AudioFolder = audiopath.substr(0, idx);
 
     if (showFN) {
         clearLogo();
-        showFileName(path + idx + 1);
+        showFileName(path.c_get() + idx + 1);
     }
 
-    SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path + idx + 1);
-    connecttoFS("SD_MMC", (const char*)path, fileStartTime);
+    SerialPrintfln("AUDIO_FILE:  " ANSI_ESC_MAGENTA "%s", path.c_get() + idx + 1);
+    connecttoFS("SD_MMC", (const char*)path.c_get(), fileStartTime);
     if (s_f_playlistEnabled) showPlsFileNumber();
-    if (s_f_isFSConnected) { s_settings.lastconnectedfile.copy_from(path); }
+    if (s_f_isFSConnected) { s_settings.lastconnectedfile = path; }
 }
 
 bool SD_rename(const char* src, const char* dest) {
@@ -2058,7 +2057,7 @@ void changeState(int32_t state) {
             dispHeader.show(false);
             dispFooter.show(false);
             clearWithOutHeaderFooter();
-            lst_PLAYER.show(s_cur_AudioFolder.c_get(), s_cur_AudioFileNr);
+            lst_PLAYER.show(s_cur_AudioFolder, s_cur_AudioFileNr);
             setTimeCounter(LIST_TIMER);
             break;
         }
@@ -2640,8 +2639,8 @@ void loop() {
         static bool f_resume = false;
         if (s_f_timeSpeech) { // speech the time 7 sec before a new hour is arrived
             s_f_timeSpeech = false;
-            ps_ptr<char> hh = s_time_s.substr(0 , 2);
-            int hour = hh.to_uint32();
+            ps_ptr<char> hh = s_time_s.substr(0, 2);
+            int          hour = hh.to_uint32();
             hour++;
             if (hour == 24) hour = 0; //  extract the hour
             if (s_f_mute) return;
@@ -5712,7 +5711,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
             if (ra.val1 == 2) {
                 s_cur_AudioFolder = ra.arg1;
                 s_cur_AudioFileNr = ra.val2;
-                lst_PLAYER.show(s_cur_AudioFolder.c_get(), s_cur_AudioFileNr);
+                lst_PLAYER.show(s_cur_AudioFolder, s_cur_AudioFileNr);
             } // next prev folder
             if (ra.val1 == 3) {
                 s_cur_AudioFolder = ra.arg1;
