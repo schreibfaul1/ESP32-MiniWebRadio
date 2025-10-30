@@ -345,7 +345,7 @@ void         urldecode(char* str);
 void         setTFTbrightness(uint8_t duty);
 void         fall_asleep();
 void         wake_up();
-void         setRTC(const char* TZString);
+void         setRTC(ps_ptr<char> TZString);
 boolean      isAlarm(uint8_t weekDay, uint8_t alarmDays, uint16_t minuteOfTheDay, int16_t* alarmTime);
 boolean      copySDtoFFat(const char* path);
 void         showStreamTitle(ps_ptr<char> streamTitle);

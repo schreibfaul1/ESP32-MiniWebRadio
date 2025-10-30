@@ -1009,9 +1009,9 @@ void WebSrv::loop() {
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::reply(const String response, const char* MIMEType, boolean header) {
+void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, boolean header) {
     if (header == true) {
-        int32_t l = response.length();
+        int32_t l = response.strlen();
         // HTTP header
         String httpheader = "";
         httpheader += "HTTP/1.1 200 OK\r\n";
@@ -1020,7 +1020,7 @@ void WebSrv::reply(const String response, const char* MIMEType, boolean header) 
 
         cmdclient.print(httpheader); // header sent
     }
-    cmdclient.print(response);
+    cmdclient.print(response.c_get());
 }
 void WebSrv::sendStatus(uint16_t HTTPstatusCode) {
     int32_t l = 0; // respunse length

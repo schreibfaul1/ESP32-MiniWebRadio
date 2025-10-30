@@ -97,7 +97,7 @@ class WebSrv {
     void    sendPong();
     boolean uploadfile(fs::FS& fs, const char* path, uint32_t contentLength);
     boolean uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
-    void    reply(const String response, const char* MIMEType, boolean header = true);
+    void    reply(ps_ptr<char> response, const char* MIMEType, boolean header = true);
     void    sendStatus(uint16_t HTTPstatusCode);
 
     const char JSON[17] = "application/json";

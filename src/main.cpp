@@ -174,8 +174,8 @@ bool         s_f_stationsChanged = false;
 bool         s_f_WiFiConnected = false;
 ps_ptr<char> s_stationName_air;
 ps_ptr<char> s_homepage = "";
-String       s_TZName = "Europe/Berlin";
-String       s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+ps_ptr<char> s_TZName = "Europe/Berlin";
+ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String       s_media_downloadIP = "";
 
 std::deque<ps_ptr<char>> s_PLS_content;
@@ -364,8 +364,8 @@ void updateSettings() {
     jO.appendf(",\n  \"lastconnectedhost\":\"%s\"", s_settings.lastconnectedhost.c_get());
     jO.appendf(",\n  \"lastconnectedfile\":\"%s\"", s_settings.lastconnectedfile.c_get());
     jO.appendf(",\n  \"station\":%i", s_cur_station);
-    jO.appendf(",\n  \"Timezone_Name\":\"%s\"", s_TZName.c_str());
-    jO.appendf(",\n  \"Timezone_String\":\"%s\"", s_TZString.c_str());
+    jO.appendf(",\n  \"Timezone_Name\":\"%s\"", s_TZName.c_get());
+    jO.appendf(",\n  \"Timezone_String\":\"%s\"", s_TZString.c_get());
     jO.appendf(",\n  \"toneLP\":%i", s_tone.LP);
     jO.appendf(",\n  \"toneBP\":%i", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":%i", s_tone.HP);
@@ -1342,7 +1342,7 @@ void setup() {
         ArduinoOTA.setHostname("MiniWebRadio");
         ArduinoOTA.begin();
         ftpSrv.begin(SD_MMC, FTP_USERNAME, FTP_PASSWORD); // username, password for ftp.
-        setRTC(s_TZString.c_str());
+        setRTC(s_TZString);
     }
 
     placingGraphicObjects();
@@ -1786,9 +1786,9 @@ void wake_up() {
     if (!s_bt_emitter.power_state) bt_emitter.power_on();
 }
 
-void setRTC(const char* TZString) {
+void setRTC(ps_ptr<char> TZString) {
     rtc.stop();
-    rtc.begin(s_TZString.c_str());
+    rtc.begin(TZString.c_get());
     // if(!s_f_rtc) {
     //     SerialPrintfln(ANSI_ESC_RED "connection to NTP failed, trying again");
     //     ESP.restart();
@@ -4909,9 +4909,9 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
 
-    CMD_EQUALS("set_timeZone"){         s_TZName = param.c_get();  s_TZString = arg.c_get();
+    CMD_EQUALS("set_timeZone"){         s_TZName = param;  s_TZString = arg.c_get();
                                         SerialPrintfln("Timezone: .. " ANSI_ESC_BLUE "%s, %s", param.c_get(), arg.c_get());
-                                        setRTC(s_TZString.c_str());
+                                        setRTC(s_TZString);
                                         updateSettings(); // write new TZ items to settings.json
                                         return;}
 
@@ -4987,7 +4987,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_playFile"){          stopSong();
-                                        webSrv.reply("SD_playFile=" + String(param.get()), webSrv.TEXT);                                                                // via XMLHttpRequest
+                                        webSrv.reply("SD_playFile=" + param, webSrv.TEXT);                                                                // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play " ANSI_ESC_ORANGE "\"%s\"", param.c_get());
                                         SD_playFile(param.c_get());
                                         return;}
