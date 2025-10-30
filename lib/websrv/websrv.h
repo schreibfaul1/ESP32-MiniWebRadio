@@ -91,9 +91,8 @@ class WebSrv {
     void    show(const char* pagename, const char* MIMEType, int16_t len = -1);
     void    show_not_found();
     boolean streamfile(fs::FS& fs, const char* path);
-    boolean send(const char* cmd, char msg, uint8_t opcode = Text_Frame);
-    boolean send(const char* cmd, String msg, uint8_t opcode = Text_Frame);
-    boolean send(const char* cmd, const char* msg = "", uint8_t opcode = Text_Frame);
+    boolean send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
+    boolean send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
     void    sendPing();
     void    sendPong();
     boolean uploadfile(fs::FS& fs, const char* path, uint32_t contentLength);

@@ -1043,7 +1043,7 @@ class SD_content {
             return "";
         }
         if (isDir(idx)) return m_files[idx].fileName.get();
-        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName, m_files[idx].fileSize);
+        m_buff.assignf("%s" ANSI_ESC_YELLOW " %li", m_files[idx].fileName.c_get(), m_files[idx].fileSize);
         return m_buff.get();
     }
     const char* getFileNameByIndex(uint16_t idx) {
@@ -1232,11 +1232,11 @@ class SD_content {
         return -1;
     }
 
-    const char* stringifyDirContent(String path) {
+    const char* stringifyDirContent(ps_ptr<char> path) {
         ps_ptr<char> fileName;
         ps_ptr<char> fileSize;
         uint8_t      isDir = 0;
-        if (!listFilesInDir(path.c_str(), false, false)) return "[]"; // if success: result will be in SD_content
+        if (!listFilesInDir(path.c_get(), false, false)) return "[]"; // if success: result will be in SD_content
         if (!getSize()) return "[]";                                  // empty?
         m_JSONstr.assign("[");
 

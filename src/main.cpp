@@ -119,7 +119,6 @@ char           s_timeSpeechLang[10] = "en";
 ps_ptr<char>   s_cur_AudioFolder = "/audiofiles/";
 char*          s_cur_AudioFileName = NULL;
 ps_ptr<char>   s_stationURL;
-char*          s_BT_metaData = NULL;
 ps_ptr<char>   s_playlistPath;
 bool           s_f_rtc = false; // true if time from ntp is received
 bool           s_f_100ms = false;
@@ -173,10 +172,8 @@ bool           s_f_connectToLastStation = false;
 bool         s_f_timeSpeech = false;
 bool         s_f_stationsChanged = false;
 bool         s_f_WiFiConnected = false;
-String       s_station = "";
 ps_ptr<char> s_stationName_air;
-String       s_homepage = "";
-String       s_filename = "";
+ps_ptr<char> s_homepage = "";
 String       s_TZName = "Europe/Berlin";
 String       s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
 String       s_media_downloadIP = "";
@@ -385,6 +382,8 @@ void updateSettings() {
         }
         file.print(jO.get());
         s_settingsHash = simpleHash(jO.c_get());
+
+        MWR_LOG_DEBUG("%s", jO.c_get());
     }
 }
 /*****************************************************************************************************************************************************
@@ -599,14 +598,14 @@ void showFileLogo(uint8_t state) {
         pic_RA_logo.setPicturePath(logo.c_str());
         pic_RA_logo.setAlternativPicturePath("/common/unknown.png");
         pic_RA_logo.show(true, false);
-        webSrv.send("stationLogo=", logo);
+        webSrv.send("stationLogo=", logo.c_str());
         return;
     } else if (state == DLNA) {
         logo = "/common/DLNA.jpg";
         pic_DL_logo.setPicturePath(logo.c_str());
         pic_DL_logo.setAlternativPicturePath("/common/unknown.png");
         pic_DL_logo.show(true, false);
-        webSrv.send("stationLogo=", logo);
+        webSrv.send("stationLogo=", logo.c_str());
         return;
     }
     if (state == PLAYER) { // s_state PLAYER
@@ -1595,7 +1594,8 @@ void StationsItems() {
         webSrv.send("stationNr=", staNr);
         webSrv.send("stationURL=", s_settings.lastconnectedhost.get());
     } else {
-        webSrv.send("stationLogo=", "/logo/" + String(staMgnt.getStationName(s_cur_station)) + ".jpg");
+        ps_ptr<char>sn; sn.assignf("/logo/%s.jpg", staMgnt.getStationName(s_cur_station));
+        webSrv.send("stationLogo=", sn);
         webSrv.send("stationNr=", staNr);
         if (s_stationURL.valid()) {
             s_stationURL.insert("stationURL=", 0);
@@ -3044,8 +3044,8 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_icyurl:
             if (strlen(m.msg) > 5) {
                 SerialPrintflnCut("icy-url: ..  ", ANSI_ESC_WHITE, m.msg);
-                s_homepage = String(m.msg);
-                if (!s_homepage.startsWith("http")) s_homepage = "http://" + s_homepage;
+                s_homepage = m.msg;
+                if (!s_homepage.starts_with("http")) s_homepage = "http://" + s_homepage;
             }
             break;
 
@@ -4867,7 +4867,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("set_volAfterAlarm"){    s_volume.volumeAfterAlarm = param.to_int32(); webSrv.send("volAfterAlarm=", int2str(s_volume.volumeAfterAlarm));
                                         SerialPrintfln("action: ...  new volume after alarm: " ANSI_ESC_CYAN "%d", s_volume.volumeAfterAlarm); return;}
 
-    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
+    CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage.c_get()); return;}
 
     CMD_EQUALS("to_listen"){            StationsItems(); return;}   // via websocket, return the name and number of the current station
     CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone().c_get()); return;}
@@ -4890,8 +4890,6 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         ps_ptr<char> bal = "Balance set to " + param;
                                         webSrv.send("tone=", bal.c_get()); setI2STone().c_get(); return;}
 
-    CMD_EQUALS("uploadfile"){           s_filename = param.c_get(); return;}
-
     CMD_EQUALS("prev_station"){         prevFavStation(); return;}                                                                                           // via websocket
 
     CMD_EQUALS("next_station"){         nextFavStation(); return;}                                                                                           // via websocket
@@ -4905,7 +4903,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("webFileURL"){           audio.connecttohost(param.c_get())? s_playerSubMenue = 1 : s_playerSubMenue = 0; changeState(PLAYER); return;}          // via websocket
 
-    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID()); return;}                                                  // via websocket
+    CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return;}                                                  // via websocket
 
     CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=", displayConfig.tftSize); return;};
 
@@ -4936,7 +4934,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         else {                webSrv.send("resumefile=", "audiofile paused");  btn_PL_pause.setOn(); btn_PL_pause.show();}
                                         return;}
 
-    CMD_EQUALS("get_alarmdays"){        webSrv.send("alarmdays=", String(s_alarmdays, 10)); return;}
+    CMD_EQUALS("get_alarmdays"){        webSrv.send("alarmdays=", s_alarmdays); return;}
 
     CMD_EQUALS("set_alarmdays"){        s_alarmdays = param.to_uint32(); updateSettings(); return;}
 
@@ -4953,7 +4951,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "%s", (s_f_timeAnnouncement == 1) ? "on" : "off");
                                         return;}
 
-    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("getTimeSpeechLang=", String(s_timeSpeechLang, 10)); return;}
+    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("getTimeSpeechLang=", s_timeSpeechLang); return;}
 
     CMD_EQUALS("setTimeSpeechLang"){    if(param.strlen() > 2){log_e("set_timeSpeechLang too long %s", param.c_get()); return;}
                                         strcpy(s_timeSpeechLang, param.c_get());
@@ -4979,7 +4977,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Load from SD  " ANSI_ESC_ORANGE "\"%s\"", param.c_get());
                                         return;}
 
-    CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param.c_get()), webSrv.JS);                                                           // via XMLHttpRequest
+    CMD_EQUALS("SD_GetFolder"){         webSrv.reply(s_SD_content.stringifyDirContent(param), webSrv.JS);                                                           // via XMLHttpRequest
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "GetFolder " ANSI_ESC_ORANGE "\"%s\"", param.c_get());
                                         return;}
 
@@ -4995,7 +4993,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         return;}
 
     CMD_EQUALS("SD_playAllFiles"){      stopSong();
-                                        webSrv.send("SD_playFolder=", "" + String(param.get()));                                                                        // via websocket
+                                        webSrv.send("SD_playFolder=", param);                                                                                      // via websocket
                                         SerialPrintfln("webSrv: ...  " ANSI_ESC_YELLOW "Play Folder" ANSI_ESC_ORANGE "\"%s\"", param.c_get());
                                         preparePlaylistFromSDFolder(param.c_get()); processPlaylist(true);
                                         s_playerSubMenue = 1;
@@ -5025,7 +5023,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         s_settings.irbuttons[42].val = address;
                                         return;}
 
-    CMD_EQUALS("get_timeFormat"){       webSrv.send("timeFormat=", String(s_timeFormat, 10));
+    CMD_EQUALS("get_timeFormat"){       webSrv.send("timeFormat=", s_timeFormat);
                                         return;}
 
     CMD_EQUALS("set_timeFormat"){       s_timeFormat = param.to_uint32();
@@ -5033,7 +5031,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("TimeFormat:  " ANSI_ESC_YELLOW "new time format: " ANSI_ESC_BLUE "%sh", param.c_get());
                                         return;}
 
-    CMD_EQUALS("get_sleepMode"){        webSrv.send("sleepMode=", String(s_sleepMode, 10)); return;}
+    CMD_EQUALS("get_sleepMode"){        webSrv.send("sleepMode=", s_sleepMode); return;}
 
     CMD_EQUALS("set_sleepMode"){        s_sleepMode = param.to_uint32();
                                         if(s_sleepMode == 0) SerialPrintfln("SleepMode:   " ANSI_ESC_YELLOW "Display off");

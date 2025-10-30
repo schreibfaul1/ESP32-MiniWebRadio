@@ -189,25 +189,20 @@ error:
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(const char* cmd, String msg, uint8_t opcode) { // sends text messages via websocket
-    return send(cmd, msg.c_str(), opcode);
+boolean WebSrv::send(const char* cmd, int msg, uint8_t opcode) { // sends text messages via websocket
+    char nr_txt[10];
+    itoa(msg, nr_txt, 10);
+    return send(cmd, nr_txt, opcode);
 }
-//--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(const char* cmd, char msg, uint8_t opcode) {
-    char m[2];
-    m[0] = msg;
-    m[1] = '\0';
-    return send(cmd, m, opcode);
-}
-boolean WebSrv::send(const char* cmd, const char* msg, uint8_t opcode) { // sends text messages via websocket
+boolean WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
     uint8_t headerLen = 2;
 
     if (!hasclient_WS) {
         //      log_e("can't send, websocketserver not connected");
         return false;
     }
-    size_t cmdLen = strlen(cmd);
-    size_t msgLen = strlen(msg);
+    size_t cmdLen = cmd.strlen();
+    size_t msgLen = msg.strlen();
 
     if (msgLen > UINT16_MAX) {
         log_e("send: message too long, greater than 64kB");
@@ -232,8 +227,8 @@ boolean WebSrv::send(const char* cmd, const char* msg, uint8_t opcode) { // send
     }
 
     webSocketClient.write(header, headerLen);
-    webSocketClient.write(cmd, cmdLen);
-    webSocketClient.write(msg, msgLen);
+    webSocketClient.write(cmd.c_get(), cmdLen);
+    webSocketClient.write(msg.c_get(), msgLen);
 
     return true;
 }
