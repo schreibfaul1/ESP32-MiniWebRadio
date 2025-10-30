@@ -1379,7 +1379,7 @@ class wifiSettings : public RegisterTable {
     uint8_t            m_paddig_right = 0;  // right margin
     uint8_t            m_paddig_top = 0;    // top margin
     uint8_t            m_paddig_bottom = 0; // bottom margin
-    uint8_t            m_pwd_idx = 0;
+    uint8_t            m_credentials_idx = 0;
     uint8_t            m_borderWidth = 0;
     uint32_t           m_bgColor = 0;
     uint32_t           m_fgColor = 0;
@@ -1392,12 +1392,20 @@ class wifiSettings : public RegisterTable {
     bool               m_noWrap = false;
     bool               m_backgroundTransparency = false;
     bool               m_saveBackground = false;
-    std::vector<char*> m_ssid;
-    std::vector<char*> m_password;
     releasedArg        m_ra;
     selectbox*         m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
     inputbox*          m_in_password = new inputbox("wifiSettings_txtbox_pwd");
     keyBoard*          m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
+
+    struct credentials {
+        ps_ptr<char> ssid;
+        ps_ptr<char> password;
+
+        credentials(const char* s, const char* p)
+            : ssid(s), password(p) {}
+    };
+    deque<credentials> m_credentials;
+
     struct w_se {
         uint16_t x = 0;
         uint16_t y = 0;
@@ -1449,13 +1457,12 @@ class wifiSettings : public RegisterTable {
     }
     ~wifiSettings() {
         x_ps_free(&m_name);
-        vector_clear_and_shrink(m_password);
+        m_credentials.clear();
         delete m_sel_ssid;
         delete m_in_password;
         delete m_keyboard;
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, uint8_t paddig_left, uint8_t paddig_right, uint8_t paddig_top, uint8_t paddig_bottom) {
-
         if (w == 320) { // s 320x240
             m_winSelect.x = 10;
             m_winSelect.y = 40;
@@ -1519,7 +1526,7 @@ class wifiSettings : public RegisterTable {
             m_winPWD.y = 130;
             m_winPWD.w = 636;
             m_winPWD.h = 50;
-            m_winPWD.pl = 1;
+            m_winPWD.pl = 3;
             m_winPWD.pr = 1;
             m_winPWD.pt = 1;
             m_winPWD.pb = 1; // password
@@ -1527,7 +1534,7 @@ class wifiSettings : public RegisterTable {
             m_winKeybrd.y = 240;
             m_winKeybrd.w = 636;
             m_winKeybrd.h = 160;
-            m_winKeybrd.pl = 1;
+            m_winKeybrd.pl = 3;
             m_winKeybrd.pr = 1;
             m_winKeybrd.pt = 1;
             m_winKeybrd.pb = 1; // keyboard
@@ -1553,12 +1560,15 @@ class wifiSettings : public RegisterTable {
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
     const char* getName() { return m_name; }
-    bool        isEnabled() { return m_enabled; }
-    void        show(bool backgroundTransparency, bool saveBackground) {
+
+    bool isEnabled() { return m_enabled; }
+
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_in_password->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_sel_ssid->show(m_backgroundTransparency, m_saveBackground);
+        m_in_password->setText(m_credentials[0].password.c_get());
         m_in_password->show(m_backgroundTransparency, m_saveBackground);
         m_keyboard->show(m_backgroundTransparency, m_saveBackground);
         m_enabled = true;
@@ -1631,8 +1641,8 @@ class wifiSettings : public RegisterTable {
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
             // log_e("key pressed %i", m_keyboard->getVal());
-            changePassword(m_keyboard->getVal(), m_pwd_idx);
-            m_in_password->setText(m_password[m_pwd_idx]);
+            changePassword(m_keyboard->getVal(), m_credentials_idx);
+            m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
         if (!m_enabled) return false;
@@ -1645,11 +1655,11 @@ class wifiSettings : public RegisterTable {
         if (m_sel_ssid->released()) {
             const char* selTxt = m_sel_ssid->getSelectedText();
             if (selTxt) {
-                for (int i = 0; i < m_ssid.size(); i++) {
-                    if (strcmp(selTxt, m_ssid[i]) == 0) {
-                        m_in_password->setText(m_password[i]);
+                for (int i = 0; i < m_credentials.size(); i++) {
+                    if (m_credentials[i].ssid.equals(selTxt)) {
+                        m_in_password->setText(m_credentials[i].password.c_get());
                         m_in_password->show(m_backgroundTransparency, m_saveBackground);
-                        m_pwd_idx = i;
+                        m_credentials_idx = i;
                     }
                 }
             }
@@ -1662,36 +1672,21 @@ class wifiSettings : public RegisterTable {
             ;
         }
         if (m_keyboard->getVal() == 0x0D) {    // enter
-            m_ra.arg1 = m_ssid[m_pwd_idx];     // ssid
-            m_ra.arg2 = m_password[m_pwd_idx]; // password
+            m_ra.arg1 = m_credentials[m_credentials_idx].ssid.get();     // ssid
+            m_ra.arg2 = m_credentials[m_credentials_idx].password.get(); // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
             if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
         }
-
         m_clicked = false;
         return ret;
     }
-    void addWiFiItems(const char* ssid, const char* pw) {
+    void add_WiFi_Items(const char* ssid, const char* pw) {
         if (!ssid) { ssid = strdup(""); }
-        char* pwd = x_ps_calloc(64, sizeof(char)); // password max 63 chars
-        if (!pw) {
-            strcpy(pwd, "");
-        } else {
-            strcpy(pwd, pw);
-        }
+        m_credentials.emplace_back(ssid, pw);
         m_sel_ssid->addText(ssid);
-        m_ssid.push_back(strdup(ssid));
-        if (m_ssid.size() == 1) {
-            m_in_password->setText(pwd);
-            m_in_password->show(m_backgroundTransparency, m_saveBackground);
-        }
-        m_password.push_back(strndup(pwd, strlen(pwd) + 1));
-        x_ps_free(&pwd);
     }
     void clearText() {
         m_sel_ssid->clearText();
-        vector_clear_and_shrink(m_password);
-        vector_clear_and_shrink(m_ssid);
         m_in_password->setText("");
     }
     char* getSelectedText() {
@@ -1701,16 +1696,17 @@ class wifiSettings : public RegisterTable {
 
   private:
     void changePassword(char ch, uint8_t idx) {
+        int len = m_credentials[idx].password.strlen();
         if (ch == 0x08) { // backspace
-            if (m_password[idx][0] == '\0') return;
-            m_password[idx][strlen(m_password[idx]) - 1] = '\0';
+            if(len == 0) return;
+            m_credentials[idx].password =  m_credentials[idx].password.substr(0, len - 1);
         } else if (ch == 0x0D) { // enter
             //    log_w("enter pressed");
         } else {
-            if (strlen(m_password[idx]) < 63) {
-                int len = strlen(m_password[idx]);
-                m_password[idx][len] = ch;
-                m_password[idx][len + 1] = '\0';
+            if (len < 63) {
+                char c[2] = {0};
+                c[0] = ch;
+                m_credentials[idx].password.append(c);
             }
         }
     }

@@ -1028,13 +1028,13 @@ void setWiFiCredentials(const char* ssid, const char* password) {
     if (!ssid || !password) return;
     if (strlen(ssid) < 5) return; // min length
 
-    MWR_LOG_DEBUG("ssid %s pw %s", ssid, password);
+    MWR_LOG_ERROR("ssid %s pw %s", ssid, password);
 
-    ps_ptr<char> line;
+    ps_ptr<char> line = "";
+    ps_ptr<char> credentials;
     int          i = 0, state = 0;
 
     for (i = 0; i < 6; i++) {
-        line[0] = '\0'; // Move this line outside the switch statement
         switch (i) {
             case 0: line = pref.getString("wifiStr0").c_str(); break;
             case 1: line = pref.getString("wifiStr1").c_str(); break;
@@ -1043,45 +1043,44 @@ void setWiFiCredentials(const char* ssid, const char* password) {
             case 4: line = pref.getString("wifiStr4").c_str(); break;
             case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
-        if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
-            line[0] = '\0';                                         // clear line
-            line = ssid;
-            line += "\t";
-            line += password;
+         if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') { // ssid found, update password
+            credentials = ssid;
+            credentials += "\t";
+            credentials += password;
             if (i == 0) {
                 log_e("password can't changed, is hard coded");
                 state = 0;
                 goto exit;
             }
             if (i == 1) {
-                pref.putString("wifiStr1", line.get());
+                pref.putString("wifiStr1", credentials.get());
                 state = 1;
                 goto exit;
             }
             if (i == 2) {
-                pref.putString("wifiStr2", line.get());
+                pref.putString("wifiStr2", credentials.get());
                 state = 1;
                 goto exit;
             }
             if (i == 3) {
-                pref.putString("wifiStr3", line.get());
+                pref.putString("wifiStr3", credentials.get());
                 state = 1;
                 goto exit;
             }
             if (i == 4) {
-                pref.putString("wifiStr4", line.get());
+                pref.putString("wifiStr4", credentials.get());
                 state = 1;
                 goto exit;
             }
             if (i == 5) {
-                pref.putString("wifiStr5", line.get());
+                pref.putString("wifiStr5", credentials.get());
                 state = 1;
                 goto exit;
             }
         }
     }
     for (i = 1; i < 6; i++) {
-        line[0] = '\0';
+        line.clear();
         switch (i) {
             case 1: line = pref.getString("wifiStr1").c_str(); break;
             case 2: line = pref.getString("wifiStr2").c_str(); break;
@@ -1090,32 +1089,31 @@ void setWiFiCredentials(const char* ssid, const char* password) {
             case 5: line = pref.getString("wifiStr5").c_str(); break;
         }
         if (line.strlen() < 5) { // line is empty
-            line[0] = '\0';      // clear line
-            line = ssid;
-            line += "\t";
-            line += password;
+            credentials = ssid;
+            credentials += "\t";
+            credentials += password;
             if (i == 1) {
-                pref.putString("wifiStr1", line.get());
+                pref.putString("wifiStr1", credentials.get());
                 state = 2;
                 goto exit;
             }
             if (i == 2) {
-                pref.putString("wifiStr2", line.get());
+                pref.putString("wifiStr2", credentials.get());
                 state = 2;
                 goto exit;
             }
             if (i == 3) {
-                pref.putString("wifiStr3", line.get());
+                pref.putString("wifiStr3", credentials.get());
                 state = 2;
                 goto exit;
             }
             if (i == 4) {
-                pref.putString("wifiStr4", line.get());
+                pref.putString("wifiStr4", credentials.get());
                 state = 2;
                 goto exit;
             }
             if (i == 5) {
-                pref.putString("wifiStr5", line.get());
+                pref.putString("wifiStr5", credentials.get());
                 state = 2;
                 goto exit;
             }
@@ -2308,7 +2306,7 @@ void changeState(int32_t state) {
                 const char* pw = getWiFiPW(WiFi.SSID(i).c_str());
                 // if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
                 // else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
-                cls_wifiSettings.addWiFiItems(WiFi.SSID(i).c_str(), pw);
+                cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw);
             }
             cls_wifiSettings.show(false, false);
             break;
