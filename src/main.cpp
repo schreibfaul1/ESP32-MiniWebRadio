@@ -112,7 +112,6 @@ uint64_t       s_totalRuntime = 0; // total runtime in seconds since start
 uint8_t        s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 ps_ptr<char>   s_time_s = "";
 bool           s_btEmitterMode = KCX_BT_Emitter::BT_MODE_EMITTER;
-char           s_chbuf[512];
 char           s_fName[256];
 char           s_myIP[25] = {0};
 char           s_path[128];
@@ -2652,9 +2651,9 @@ void loop() {
                 if (s_timeFormat == 12) {
                     if (hour > 12) hour -= 12;
                 }
-                sprintf(s_chbuf, "/voice_time/%s/%d_00.mp3", s_timeSpeechLang, hour);
-                SerialPrintfln("Time: ...... play Audiofile %s", s_chbuf);
-                connecttoFS("SD_MMC", s_chbuf);
+                ps_ptr<char> p; p.assignf("/voice_time/%s/%d_00.mp3", s_timeSpeechLang, hour);
+                SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
+                connecttoFS("SD_MMC", p.c_get());
                 return;
             } else {
                 SerialPrintfln("Time: ...... Announcement at %d o'clock is silent", hour);
@@ -4851,10 +4850,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("favicon.ico"){          webSrv.streamfile(SD_MMC, "/favicon.ico"); return;}                                                               // via XMLHttpRequest
 
-    CMD_EQUALS("test"){                 sprintf(s_chbuf, "free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu,",
+    CMD_EQUALS("test"){                 ps_ptr<char>p; p.assignf("free heap: %lu, Inbuff filled: %lu, Inbuff free: %lu, PSRAM filled %lu, PSRAM free %lu,",
                                         (long unsigned)ESP.getFreeHeap(), (long unsigned)audio.inBufferFilled(), (long unsigned)audio.inBufferFree(),
                                         (long unsigned) (ESP.getPsramSize() - ESP.getFreePsram()), (long unsigned)ESP.getFreePsram());
-                                        webSrv.send("test=", s_chbuf);
+                                        webSrv.send("test=", p.c_get());
                                         SerialPrintfln("audiotask .. stackHighWaterMark: %lu bytes", (long unsigned)audio.getHighWatermark() * 4);
                                         SerialPrintfln("looptask ... stackHighWaterMark: %lu bytes", (long unsigned)uxTaskGetStackHighWaterMark(NULL) * 4);
                                         return;}
