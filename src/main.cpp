@@ -112,12 +112,9 @@ uint64_t       s_totalRuntime = 0; // total runtime in seconds since start
 uint8_t        s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
 ps_ptr<char>   s_time_s = "";
 bool           s_btEmitterMode = KCX_BT_Emitter::BT_MODE_EMITTER;
-char           s_fName[256];
-char           s_myIP[25] = {0};
-char           s_path[128];
-char           s_commercial[25];
-char           s_icyDescription[512] = {};
-char           s_streamTitle[512] = {};
+ps_ptr<char>   s_myIP;
+ps_ptr<char>   s_icyDescription = "";
+ps_ptr<char>   s_streamTitle = "";
 char           s_timeSpeechLang[10] = "en";
 ps_ptr<char>   s_cur_AudioFolder = "/audiofiles/";
 char*          s_cur_AudioFileName = NULL;
@@ -1334,10 +1331,10 @@ void setup() {
 
     s_f_WiFiConnected = connectToWiFi();
     if (s_f_WiFiConnected) {
-        strcpy(s_myIP, WiFi.localIP().toString().c_str());
+        s_myIP = WiFi.localIP().toString().c_str();
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
                        "%i" ANSI_ESC_WHITE " dB",
-                       WiFi.SSID().c_str(), s_myIP, WiFi.RSSI());
+                       WiFi.SSID().c_str(), s_myIP.c_get(), WiFi.RSSI());
 
         if (!MDNS.begin("MiniWebRadio")) {
             SerialPrintfln("WiFI_info:   " ANSI_ESC_YELLOW "Error starting mDNS");
@@ -1546,8 +1543,8 @@ void setStation(uint16_t sta) {
             s_radioSubMenue = 0;
             changeState(RADIO);
         }
-        s_streamTitle[0] = '\0';
-        s_icyDescription[0] = '\0';
+        s_streamTitle = "";
+        s_icyDescription = "";
         s_f_newStreamTitle = true;
         s_f_newIcyDescription = true;
         connecttohost(s_stationURL.c_get());
@@ -2691,36 +2688,24 @@ void loop() {
         if (s_f_newStreamTitle && !s_timeCounter.timer) {
             s_f_newStreamTitle = false;
             if (s_state == RADIO) {
-                if (strlen(s_streamTitle))
-                    showStreamTitle(s_streamTitle);
-                else if (strlen(s_icyDescription)) {
-                    showStreamTitle(s_icyDescription);
+                if (s_streamTitle.strlen())
+                    showStreamTitle(s_streamTitle.c_get());
+                else if (s_icyDescription.strlen()) {
+                    showStreamTitle(s_icyDescription.c_get());
                     s_f_newIcyDescription = false;
-                    webSrv.send("icy_description=", s_icyDescription);
+                    webSrv.send("icy_description=", s_icyDescription.c_get());
                 } else
                     txt_RA_sTitle.writeText("");
             }
-            webSrv.send("streamtitle=", s_streamTitle);
+            webSrv.send("streamtitle=", s_streamTitle.c_get());
         }
         //------------------------------------------NEW ICY-DESCRIPTION-------------------------------------------------------------------------------
         if (s_f_newIcyDescription && !s_timeCounter.timer) {
             if (s_state == RADIO) {
-                if (!strlen(s_streamTitle)) showStreamTitle(s_icyDescription);
+                if (!s_streamTitle.strlen()) showStreamTitle(s_icyDescription.c_get());
             }
-            webSrv.send("icy_description=", s_icyDescription);
+            webSrv.send("icy_description=", s_icyDescription.c_get());
             s_f_newIcyDescription = false;
-        }
-        //------------------------------------------NEW COMMERCIALS-----------------------------------------------------------------------------------
-        if (s_f_newCommercial && !s_timeCounter.timer) {
-            if (s_state == RADIO) { showStreamTitle(s_commercial); }
-            webSrv.send("streamtitle=", s_commercial);
-            s_f_newCommercial = false;
-        }
-        //------------------------------------------END OF COMMERCIALS--------------------------------------------------------------------------------
-        if (s_commercial_dur > 0) {
-            s_commercial_dur--;
-            if ((s_commercial_dur == 2) && (s_state == RADIO)) /* showStreamTitle(""); */
-                s_f_newStreamTitle = true;                     // end of commercial? clear streamtitle
         }
         //------------------------------------------DETERMINE AUDIOCODEC------------------------------------------------------------------------------
         if (s_cur_Codec == 0) {
@@ -2881,22 +2866,22 @@ void loop() {
             SerialPrintfln("inBuffer  :  free   %lu bytes", (long unsigned)audio.inBufferFree());
         }
         if (r.startsWith("st")) { // testtext for streamtitle
-            if (r[2] == '0') strcpy(s_streamTitle, "A Ё Ю");
-            if (r[2] == '1') strcpy(s_streamTitle, "A B C D E F G");
-            if (r[2] == '2') strcpy(s_streamTitle, "A B C D E F G H I");
-            if (r[2] == '3') strcpy(s_streamTitle, "A B C D E F G H I J K L");
-            if (r[2] == '4') strcpy(s_streamTitle, "A B C D E F G H I J K J M Q O");
-            if (r[2] == '5') strcpy(s_streamTitle, "A B C D E F G H I K L J M y O P Q R");
+            if (r[2] == '0') s_streamTitle = "A Ё Ю";
+            if (r[2] == '1') s_streamTitle = "A B C D E F G";
+            if (r[2] == '2') s_streamTitle = "A B C D E F G H I";
+            if (r[2] == '3') s_streamTitle = "A B C D E F G H I J K L";
+            if (r[2] == '4') s_streamTitle = "A B C D E F G H I J K J M Q O";
+            if (r[2] == '5') s_streamTitle = "A B C D E F G H I K L J M y O P Q R";
             if (r[2] == '6')
-                strcpy(s_streamTitle, "A B C D E F G H I K L J M g O P Q R S T V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T "
+                s_streamTitle = "A B C D E F G H I K L J M g O P Q R S T V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T "
                                       "U V W K J Q p O P Q R S T U V W K J Q V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S T U "
-                                      "V W K J Q p O P Q R S T U V W K J Q");
+                                      "V W K J Q p O P Q R S T U V W K J Q";
             if (r[2] == '7')
-                strcpy(s_streamTitle, "A B C D E F G H I K L J M j O P Q R S T U V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S "
-                                      "T U V W K J Q p O P Q R S T U V W K J Q");
-            if (r[2] == '8') strcpy(s_streamTitle, "A B C D E F G H I K L J M p O P Q R S T U V W A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
-            if (r[2] == '9') strcpy(s_streamTitle, "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q");
-            log_w("st: %s", s_streamTitle);
+                s_streamTitle = "A B C D E F G H I K L J M j O P Q R S T U V A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q A B C D E F G H I K L J M p O P Q R S "
+                                      "T U V W K J Q p O P Q R S T U V W K J Q";
+            if (r[2] == '8') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
+            if (r[2] == '9') s_streamTitle = "A B C D E F G H I K L J M p O P Q R S T U V W K J Q p O P Q R S T U V W K J Q";
+            log_w("st: %s", s_streamTitle.c_get());
             s_f_newStreamTitle = true;
         }
         if (r.startsWith("ais")) { // openAIspeech
@@ -2984,7 +2969,7 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_info:
             if (endsWith(m.msg, "failed!")) {
                 SerialPrintflnCut("AUDIO_info:  ", ANSI_ESC_YELLOW, m.msg);
-                sprintf(s_streamTitle, "" ANSI_ESC_ORANGE "%s", m.msg);
+                s_streamTitle.assignf(ANSI_ESC_ORANGE "%s", m.msg);
                 s_f_newStreamTitle = true;
                 s_f_webFailed = true;
                 return;
@@ -3023,7 +3008,7 @@ void my_audio_info(Audio::msg_t m) {
             break;
 
         case Audio::evt_streamtitle:
-            strcpy(s_streamTitle, m.msg);
+            s_streamTitle = m.msg;
             if (!s_f_irNumberSeen) s_f_newStreamTitle = true;
             SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", m.msg);
             break;
@@ -3078,7 +3063,7 @@ void my_audio_info(Audio::msg_t m) {
             break;
 
         case Audio::evt_icydescription:
-            strcpy(s_icyDescription, m.msg);
+            s_icyDescription = m.msg;
             s_f_newIcyDescription = true;
             if (strlen(m.msg)) SerialPrintfln("icy-descr:   %s", m.msg);
             break;
@@ -4890,7 +4875,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("to_listen"){            StationsItems(); return;}   // via websocket, return the name and number of the current station
     CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone().c_get()); return;}
 
-    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle, webSrv.TEXT); return;}
+    CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle.c_get(), webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_tone.LP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>lp; lp = "Lowpass set to " + param  + "dB";
