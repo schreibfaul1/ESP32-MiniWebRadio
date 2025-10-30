@@ -896,7 +896,7 @@ void processPlaylist(boolean first) {
         s_plsCurPos = 0;
         s_f_playlistEnabled = true;
     } // reset before start
-    MWR_LOG_WARN("%s", s_PLS_content[s_plsCurPos].c_get());
+    MWR_LOG_DEBUG("%s", s_PLS_content[s_plsCurPos].c_get());
     if (s_PLS_content[s_plsCurPos].index_of("\n", 0) > 0) f_hasTitle = true; // has additional infos: duration, title
     // now read from vector _PLS_content
     if (s_PLS_content[s_plsCurPos].starts_with("http")) f_isURL = true;     // is web file
@@ -908,7 +908,7 @@ void processPlaylist(boolean first) {
     } else {
         plsContent = s_PLS_content[s_plsCurPos];
     }
-    MWR_LOG_INFO("plsContent %s, plsExtension %s", plsContent.c_get(), plsExtension.c_get());
+    MWR_LOG_DEBUG("plsContent %s, plsExtension %s", plsContent.c_get(), plsExtension.c_get());
     s_cur_Codec = 0;
     if (f_isURL) { // is web file
         playFile = plsContent;
@@ -1673,15 +1673,11 @@ void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg i
     }
 }
 
-String setI2STone() {
-    int8_t LP = s_tone.LP;
-    int8_t BP = s_tone.BP;
-    int8_t HP = s_tone.HP;
-    int8_t BAL = s_tone.BAL;
-    audio.setTone(LP, BP, HP);
-    audio.setBalance(BAL);
-    sprintf(s_chbuf, "LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", LP, BP, HP, BAL);
-    String tone = String(s_chbuf);
+ps_ptr<char> setI2STone() {
+    ps_ptr<char>tone;
+    audio.setTone(s_tone.LP, s_tone.BP, s_tone.HP);
+    audio.setBalance(s_tone.BAL);
+    tone.assignf("LowPass=%i\nBandPass=%i\nHighPass=%i\nBalance=%i\n", s_tone.LP, s_tone.BP, s_tone.HP, s_tone.BAL);
     return tone;
 }
 
@@ -3432,7 +3428,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_balance.writeText(c);
                             sdr_EQ_balance.setValue(s_tone.BAL);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // balance
@@ -3443,7 +3439,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_lowPass.writeText(c);
                             sdr_EQ_lowPass.setValue(s_tone.LP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // HP
@@ -3454,7 +3450,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_bandPass.writeText(c);
                             sdr_EQ_bandPass.setValue(s_tone.BP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // BP
@@ -3465,7 +3461,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_highPass.writeText(c);
                             sdr_EQ_highPass.setValue(s_tone.HP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // LP
@@ -3736,7 +3732,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_balance.writeText(c);
                             sdr_EQ_balance.setValue(s_tone.BAL);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // balance
@@ -3747,7 +3743,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_lowPass.writeText(c);
                             sdr_EQ_lowPass.setValue(s_tone.LP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // LP
@@ -3758,7 +3754,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_bandPass.writeText(c);
                             sdr_EQ_bandPass.setValue(s_tone.BP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // BP
@@ -3769,7 +3765,7 @@ void ir_short_key(uint8_t key) {
                             txt_EQ_highPass.writeText(c);
                             sdr_EQ_highPass.setValue(s_tone.HP);
                         }
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         setTimeCounter(2);
                         return;
                     } // HP
@@ -4501,7 +4497,7 @@ void ir_short_key(uint8_t key) {
                         s_tone.BAL = 0;
                         txt_EQ_balance.writeText("0");
                         sdr_EQ_balance.setValue(s_tone.LP);
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         btn_EQ_balance.showAlternativePic();
                     }
                     if (btnNr == 20) {
@@ -4509,7 +4505,7 @@ void ir_short_key(uint8_t key) {
                         s_tone.LP = 0;
                         txt_EQ_lowPass.writeText("0");
                         sdr_EQ_lowPass.setValue(s_tone.LP);
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         btn_EQ_lowPass.showAlternativePic();
                     }
                     if (btnNr == 30) {
@@ -4517,7 +4513,7 @@ void ir_short_key(uint8_t key) {
                         s_tone.BP = 0;
                         txt_EQ_bandPass.writeText("0");
                         sdr_EQ_bandPass.setValue(s_tone.LP);
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         btn_EQ_bandPass.showAlternativePic();
                     }
                     if (btnNr == 40) {
@@ -4525,7 +4521,7 @@ void ir_short_key(uint8_t key) {
                         s_tone.HP = 0;
                         txt_EQ_highPass.writeText("0");
                         sdr_EQ_highPass.setValue(s_tone.LP);
-                        webSrv.send("settone=", setI2STone());
+                        webSrv.send("settone=", setI2STone().c_get());
                         btn_EQ_highPass.showAlternativePic();
                     }
                 }
@@ -4894,25 +4890,25 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     CMD_EQUALS("homepage"){             webSrv.send("homepage=", s_homepage); return;}
 
     CMD_EQUALS("to_listen"){            StationsItems(); return;}   // via websocket, return the name and number of the current station
-    CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone()); return;}
+    CMD_EQUALS("get_tone"){             webSrv.send("settone=", setI2STone().c_get()); return;}
 
     CMD_EQUALS("get_streamtitle"){      webSrv.reply(s_streamTitle, webSrv.TEXT); return;}
 
     CMD_EQUALS("LowPass"){              s_tone.LP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>lp; lp = "Lowpass set to " + param  + "dB";
-                                        webSrv.send("tone=", lp.c_get()); setI2STone(); return;}
+                                        webSrv.send("tone=", lp.c_get()); setI2STone().c_get(); return;}
 
     CMD_EQUALS("BandPass"){             s_tone.BP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char>bp; bp = "Bandpass set to " + param + "dB";
-                                        webSrv.send("tone=", bp.c_get()); setI2STone(); return;}
+                                        webSrv.send("tone=", bp.c_get()); setI2STone().c_get(); return;}
 
     CMD_EQUALS("HighPass"){             s_tone.HP = param.to_int32();                           // audioI2S tone
                                         ps_ptr<char> hp; hp = "Highpass set to " + param + "dB";
-                                        webSrv.send("tone=", hp.c_get()); setI2STone(); return;}
+                                        webSrv.send("tone=", hp.c_get()); setI2STone().c_get(); return;}
 
     CMD_EQUALS("Balance"){              s_tone.BAL = param.to_int32();
                                         ps_ptr<char> bal = "Balance set to " + param;
-                                        webSrv.send("tone=", bal.c_get()); setI2STone(); return;}
+                                        webSrv.send("tone=", bal.c_get()); setI2STone().c_get(); return;}
 
     CMD_EQUALS("uploadfile"){           s_filename = param.c_get(); return;}
 
@@ -5301,7 +5297,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
         strcat(c, " dB");
         txt_EQ_lowPass.writeText(c);
         s_tone.LP = arg1;
-        webSrv.send("settone=", setI2STone());
+        webSrv.send("settone=", setI2STone().c_get());
         return;
     }
     if (strcmp(name, "sdr_E_BP") == 0) {
@@ -5309,7 +5305,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
         strcat(c, " dB");
         txt_EQ_bandPass.writeText(c);
         s_tone.BP = arg1;
-        webSrv.send("settone=", setI2STone());
+        webSrv.send("settone=", setI2STone().c_get());
         return;
     }
     if (strcmp(name, "sdr_E_HP") == 0) {
@@ -5317,7 +5313,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
         strcat(c, " dB");
         txt_EQ_highPass.writeText(c);
         s_tone.HP = arg1;
-        webSrv.send("settone=", setI2STone());
+        webSrv.send("settone=", setI2STone().c_get());
         return;
     }
     if (strcmp(name, "sdr_E_BAL") == 0) {
@@ -5325,7 +5321,7 @@ void graphicObjects_OnChange(const char* name, int32_t arg1) {
         strcat(c, " ");
         txt_EQ_balance.writeText(c);
         s_tone.BAL = arg1;
-        webSrv.send("settone=", setI2STone());
+        webSrv.send("settone=", setI2STone().c_get());
         return;
     }
 

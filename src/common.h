@@ -373,7 +373,7 @@ void         setStationByNumber(uint16_t staNr);
 void         StationsItems();
 void         setStationViaURL(const char* url, const char* extension);
 void         savefile(const char* fileName, uint32_t contentLength);
-String       setI2STone();
+ps_ptr<char> setI2STone();
 void         SD_playFile(const char* pathWoFileName, const char* fileName);
 void         SD_playFile(const char* path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool         SD_rename(const char* src, const char* dest);
