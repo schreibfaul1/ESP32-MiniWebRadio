@@ -424,6 +424,8 @@ textbox      txt_BT_volume("txt_BT_volume");
 button1state btn_IR_radio("btn_IR_radio");
 // WIFI_SETTINGS
 wifiSettings cls_wifiSettings("wifiSettings", 2);
+// ALL_STATE
+messageBox   msg_box("messagebox");
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 void placingGraphicObjects() { // and initialize them
@@ -794,5 +796,8 @@ void placingGraphicObjects() { // and initialize them
     btn_IR_radio.setClickedPicturePath("/btn/Button_Radio_Yellow.png");
     // WIFI_SETTINGS -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     cls_wifiSettings.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, layout.winWoHF.pl, layout.winWoHF.pr, layout.winWoHF.pt, layout.winWoHF.pb);
+    // ALL_STATE ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    msg_box.begin(-1, -1, -1, -1);
+
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

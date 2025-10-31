@@ -6135,6 +6135,120 @@ class displayFooter : public RegisterTable {
 
   private:
 }; // displayFooter
-// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+class messageBox : public RegisterTable {
+  private:
+    ps_ptr<char> m_name;
+    ps_ptr<char> m_text;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_narrow = false;
+    bool         m_noWrap = false;
+    uint16_t     m_x = 0;
+    uint16_t     m_y = 0;
+    uint16_t     m_w = 0;
+    uint16_t     m_h = 0;
+    uint16_t     m_pl = 0;
+    uint16_t     m_pr = 0;
+    uint16_t     m_pt = 0;
+    uint16_t     m_pb = 0;
+    releasedArg  m_ra;
+    uint16_t     m_bgColor = TFT_YELLOW;
+    uint16_t     m_textColor = TFT_DARKRED;
+    bool         m_backgroundTransparency = false;
+    bool         m_saveBackground = false;
+    textbox*     txt_msgBox = new textbox("msgBox txt");
 
+#if TFT_CONTROLLER < 2 // 320 x 240px
+
+    m_x = 320 / 4 : m_y = 240 / 4;
+    m_w = 320 / 2;
+    m_h = 240 / 2;
+
+#elif TFT_CONTROLLER < 7 // 480 x 320px
+    m_x = 480 / 4 : m_y = 320 / 4;
+    m_w = 480 / 2;
+    m_h = 320 / 2;
+#else                    // 800 x 480px
+    struct p {
+        uint16_t x = 800 / 4;
+        uint16_t y = 480 / 4;
+        uint16_t w = 800 / 2;
+        uint16_t h = 480 / 2;
+        uint8_t  pl = 20;
+        uint8_t  pr = 20;
+        uint8_t  pt = 20;
+        uint8_t  pb = 20;
+    } const m_win;
+#endif
+
+  public:
+    messageBox(const char* name) {
+        m_name = name;
+        m_x = m_win.w;
+        m_y = m_win.y;
+    }
+    ~messageBox() { delete txt_msgBox; }
+
+    // clang-format off
+    void begin(int16_t x, int16_t y, int16_t w, int16_t h) {
+        if (x > -1) m_x = x; else m_x = m_win.x;
+        if (y > -1) m_y = y; else m_y = m_win.y;
+        if (w > -1) m_w = w; else m_w = m_win.w;
+        if (h > -1) m_h = h; else m_h = m_win.h;
+        txt_msgBox->begin(m_x, m_y, m_w, m_h, m_pl, m_pr, m_pt, m_pb);
+        txt_msgBox->setTextColor(m_textColor);
+        txt_msgBox->setBGcolor(m_bgColor);
+        txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_msgBox->setFont(0); // auto
+    }
+    // clang-format on
+
+    const char* getName() { return m_name.c_get(); }
+    bool        isEnabled() { return m_enabled; }
+    void        disable() { m_enabled = false; }
+    void        setBGcolor(uint32_t color) { m_bgColor = color; }
+
+    void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+        m_text = txt;
+        m_narrow = narrow;
+        m_noWrap = noWrap;
+        txt_msgBox->setText(m_text.c_get(), m_narrow, m_noWrap);
+    }
+
+    void show() {
+        txt_msgBox->setText(m_text.c_get());
+        txt_msgBox->show(m_backgroundTransparency, m_saveBackground);
+    }
+
+    void hide() {
+        if (m_saveBackground) {
+            tft.copyFramebuffer(2, 1, m_x, m_y, m_w, m_h); // restore background
+        }
+        if (m_backgroundTransparency) {
+            tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
+        m_enabled = false;
+    }
+
+    bool positionXY(uint16_t x, uint16_t y) {
+        if (x < m_x) return false;
+        if (y < m_y) return false;
+        if (x > m_x + m_w) return false;
+        if (y > m_y + m_h) return false;
+        if (m_enabled) m_clicked = true;
+        if (!m_enabled) return false;
+        return true;
+    }
+
+    bool released() {
+        if (!m_enabled) return false;
+        if (!m_clicked) return false;
+        m_clicked = false;
+        if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
+        return true;
+    }
+};
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

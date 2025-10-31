@@ -166,7 +166,9 @@ bool           s_f_dlna_browseReady = false;
 bool           s_f_BTEmitterConnected = false;
 bool           s_f_brightnessIsChangeable = false;
 bool           s_f_connectToLastStation = false;
-
+bool           s_f_msg_box = false;
+bool           s_f_esp_restart = false;
+uint32_t       s_timestamp = 0;
 bool         s_f_timeSpeech = false;
 bool         s_f_stationsChanged = false;
 bool         s_f_WiFiConnected = false;
@@ -2555,6 +2557,16 @@ void loop() {
                     audio.setVolume(audioVol + steps, s_volume.volumeCurve);
             } else {
                 audio.setVolume(audioVol + 1, s_volume.volumeCurve);
+            }
+        }
+        if(s_f_msg_box){
+            if(s_timestamp < millis()){
+                s_f_msg_box = false;
+                msg_box.hide();
+                if(s_f_esp_restart){
+                    s_f_esp_restart = false;
+                    ESP.restart();
+                }
             }
         }
     }
@@ -5880,7 +5892,12 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if (s_state == WIFI_SETTINGS) {
         if (!strcmp(name, "wifiSettings")) {
             setWiFiCredentials(ra.arg1, ra.arg2);
-            ESP.restart();
+            msg_box.setText("ESP.restart");
+            msg_box.show();
+            vTaskDelay(4000);
+            s_f_msg_box = true;
+            s_timestamp = millis() + 4000;
+            s_f_esp_restart = true;
         }
     }
     log_d("unused event: graphicObject %s was released", name);
