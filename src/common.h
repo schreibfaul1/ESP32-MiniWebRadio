@@ -286,7 +286,7 @@ int log_redirect_handler(const char* format, va_list args) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 struct dlnaHistory_s {
     ps_ptr<char> objId;
-    char*        name = NULL;
+    ps_ptr<char> name;
     uint16_t     maxItems = 0;
 };
 struct releasedArg {
@@ -386,14 +386,13 @@ void         sortPlayListAlphabetical();
 void         sortPlayListRandom();
 void         processPlaylist(boolean first = false);
 void         changeState(int32_t state);
-void         connecttohost(const char* host);
+void         connecttohost(ps_ptr<char> host);
 void         connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime = 0);
 void         stopSong();
 void         placingGraphicObjects();
 void         muteChanged(bool m);
 void         setTimeCounter(uint8_t sec);
 ps_ptr<char> get_WiFi_PW(const char* ssid);
-bool         setWiFiPW(const char* ssid, const char* password);
 void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
 void         on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg);

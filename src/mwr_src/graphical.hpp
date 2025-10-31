@@ -4263,7 +4263,7 @@ class dlnaList : public RegisterTable {
         uint8_t pos = 0;
         myList.setMode(DLNA, m_tftSize, m_fontSize);
         myList.clearList();
-        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name, NULL, ANSI_ESC_ORANGE);
+        myList.drawLine(0, m_dlnaHistory[*m_dlnaLevel].name.c_get(), NULL, ANSI_ESC_ORANGE);
         tft.setTextColor(TFT_WHITE);
         for (pos = 1; pos < 10; pos++) {
             if (pos == 1 && m_viewPoint > 0) { myList.drawTriangeUp(); }
@@ -4308,7 +4308,7 @@ class dlnaList : public RegisterTable {
             else
                 color = ANSI_ESC_ORANGE;
             if (selectedLine) color = ANSI_ESC_CYAN;
-            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name, "", "", color, 1);
+            myList.drawLine(pos, m_dlnaHistory[*m_dlnaLevel].name.c_get(), "", "", color, 1);
             return;
         }
         if (*m_dlnaLevel == 0) {
@@ -4419,13 +4419,12 @@ class dlnaList : public RegisterTable {
                 m_chptr = m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get();
                 m_currDLNAsrvNr = m_itemListPos - 1;
                 m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
-                x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
                 if (m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get() == NULL) {
                     log_e("invalid pointer in dlna history");
-                    m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup((char*)"dummy");
+                    m_dlnaHistory[(*m_dlnaLevel) + 1].name = "dummy";
                     goto exit;
                 }
-                m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_dlnaServer->at(m_itemListPos - 1).friendlyName.c_get());
+                m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_dlnaServer->at(m_itemListPos - 1).friendlyName;
                 m_browseOnRelease = 1;
                 goto exit;
             }
@@ -4452,8 +4451,7 @@ class dlnaList : public RegisterTable {
             m_currItemNr[*m_dlnaLevel] = m_itemListPos - 1;
             m_chptr = m_buff;
             m_dlnaHistory[(*m_dlnaLevel) + 1].objId = m_srvContent->at(m_itemListPos - 1).objectId;
-            x_ps_free(&m_dlnaHistory[(*m_dlnaLevel) + 1].name);
-            m_dlnaHistory[(*m_dlnaLevel) + 1].name = strdup(m_srvContent->at(m_itemListPos - 1).title.c_get());
+            m_dlnaHistory[(*m_dlnaLevel) + 1].name = m_srvContent->at(m_itemListPos - 1).title;
             m_browseOnRelease = 3;
             goto exit;
         }
@@ -4560,13 +4558,12 @@ class dlnaList : public RegisterTable {
             drawItem(m_currItemNr[*m_dlnaLevel] + m_viewPoint + 1, true); // make cyan
             vTaskDelay(300);
             (*m_dlnaLevel)++;
-            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
             if (m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get() == NULL) {
                 log_e("invalid pointer in dlna history");
-                m_dlnaHistory[*m_dlnaLevel].name = strdup((char*)"dummy");
+                m_dlnaHistory[*m_dlnaLevel].name = "dummy";
                 return NULL;
             }
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_dlnaServer->at(m_currItemNr[0]).friendlyName.c_get());
+            m_dlnaHistory[*m_dlnaLevel].name = m_dlnaServer->at(m_currItemNr[0]).friendlyName;
             m_dlna->browseServer(m_currDLNAsrvNr, "0", 0, 9);
             m_dlna->loop();
             while (m_dlna->getState() != m_dlna->IDLE) {
@@ -4604,8 +4601,7 @@ class dlnaList : public RegisterTable {
             (*m_dlnaLevel)++;
             m_currItemNr[*m_dlnaLevel] = 0;
             m_dlnaHistory[*m_dlnaLevel].objId = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).objectId;
-            x_ps_free(&m_dlnaHistory[*m_dlnaLevel].name);
-            m_dlnaHistory[*m_dlnaLevel].name = strdup(m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title.c_get());
+            m_dlnaHistory[*m_dlnaLevel].name = m_srvContent->at(m_currItemNr[(*m_dlnaLevel) - 1] - m_viewPoint).title;
             m_viewPoint = 0;
             m_dlna->browseServer(m_currDLNAsrvNr, m_dlnaHistory[*m_dlnaLevel].objId.c_get(), 0, 9);
             m_dlna->loop();

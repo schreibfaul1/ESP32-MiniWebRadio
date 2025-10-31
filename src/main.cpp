@@ -116,7 +116,7 @@ ps_ptr<char>   s_icyDescription = "";
 ps_ptr<char>   s_streamTitle = "";
 char           s_timeSpeechLang[10] = "en";
 ps_ptr<char>   s_cur_AudioFolder = "/audiofiles/";
-char*          s_cur_AudioFileName = NULL;
+ps_ptr<char>   s_cur_AudioFileName = NULL;
 ps_ptr<char>   s_stationURL;
 ps_ptr<char>   s_playlistPath;
 bool           s_f_rtc = false; // true if time from ntp is received
@@ -316,9 +316,8 @@ boolean defaultsettings() {
     if (!s_settings.lastconnectedfile.starts_with("/")) { s_settings.lastconnectedfile.assign("/audiofiles/"); } // guard
     s_SD_content.setLastConnectedFile(s_settings.lastconnectedfile.get());
     s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
-    x_ps_free(&s_cur_AudioFileName);
-    s_cur_AudioFileName = x_ps_strdup(s_SD_content.getLastConnectedFileName());
-    s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
+    s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();
+    s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
     if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0; // not found
     // ------------------------------------------------------------------------------------------------------------
 
@@ -1145,11 +1144,11 @@ exit:
 /*****************************************************************************************************************************************************
  *                                                                     A U D I O                                                                     *
  *****************************************************************************************************************************************************/
-void connecttohost(const char* host) {
+void connecttohost(ps_ptr<char> host) {
     int32_t idx1, idx2;
-    char*   url = nullptr;
-    char*   user = nullptr;
-    char*   pwd = nullptr;
+    ps_ptr<char> url;
+    ps_ptr<char> user;
+    ps_ptr<char> pwd;
 
     dispFooter.updateBitRate(0);
     s_cur_Codec = 0;
@@ -1158,9 +1157,9 @@ void connecttohost(const char* host) {
     s_decoderBitRate = 0;
     s_f_webFailed = false;
 
-    idx1 = indexOf(host, "|", 0);
+    idx1 = host.index_of("|", 0);
     if (idx1 == -1) { // no pipe found
-        s_f_isWebConnected = audio.connecttohost(host);
+        s_f_isWebConnected = audio.connecttohost(host.c_get());
 
         if (!s_f_isWebConnected) {
             s_cthFailCounter++;
@@ -1170,10 +1169,10 @@ void connecttohost(const char* host) {
         s_f_isFSConnected = false;
         return;
     } else { // pipe found     e.g. http://xxx.com/ext|user|pw
-        idx2 = indexOf(host, "|", idx1 + 1);
+        idx2 = host.index_of("|", idx1 + 1);
         // log_i("idx2 = %i", idx2);
         if (idx2 == -1) { // second pipe not found
-            s_f_isWebConnected = audio.connecttohost(host);
+            s_f_isWebConnected = audio.connecttohost(host.c_get());
 
             if (!s_f_isWebConnected) {
                 s_cthFailCounter++;
@@ -1183,15 +1182,12 @@ void connecttohost(const char* host) {
             s_f_isFSConnected = false;
             return;
         } else {                       // extract url, user, pwd
-            url = strndup(host, idx1); // extract url
-            user = strndup(host + idx1 + 1, idx2 - idx1 - 1);
-            pwd = strdup(host + idx2 + 1);
-            SerialPrintfln("new host: .  %s user %s, pwd %s", url, user, pwd);
-            s_f_isWebConnected = audio.connecttohost(url, user, pwd);
+            url = host.substr(idx1); // extract url
+            user = host.substr(idx1 + 1, idx2 - idx1 - 1);
+            pwd = host.substr(idx2 + 1);
+            SerialPrintfln("new host: .  %s user %s, pwd %s", url.c_get(), user.c_get(), pwd.c_get());
+            s_f_isWebConnected = audio.connecttohost(url.c_get(), user.c_get(), pwd.c_get());
             s_f_isFSConnected = false;
-            x_ps_free(&url);
-            x_ps_free(&user);
-            x_ps_free(&pwd);
         }
     }
     if (s_cthFailCounter >= 3) {
@@ -1213,9 +1209,8 @@ void connecttoFS(const char* FS, const char* filename, uint32_t fileStartTime) {
         s_settings.lastconnectedfile.copy_from(filename);
         s_SD_content.setLastConnectedFile(filename);
         s_cur_AudioFolder = s_SD_content.getLastConnectedFolder();
-        x_ps_free(&s_cur_AudioFileName);
-        s_cur_AudioFileName = x_ps_strdup(s_SD_content.getLastConnectedFileName());
-        s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName);
+        s_cur_AudioFileName = s_SD_content.getLastConnectedFileName();
+        s_cur_AudioFileNr = s_SD_content.getPosByFileName(s_cur_AudioFileName.c_get());
         if (s_cur_AudioFileNr == -1) s_cur_AudioFileNr = 0;
     }
     //    log_w("Filesize %d", audioGetFileSize());
@@ -1389,7 +1384,7 @@ void setup() {
     if (s_f_WiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
     s_dlnaLevel = 0;
-    s_dlnaHistory[0].name = strdup("Media Server");
+    s_dlnaHistory[0].name = "Media Server";
     s_dlnaHistory[0].objId = "";
     s_dlnaHistory[1].objId = "0";
     s_f_dlnaSeekServer = true;
@@ -2334,62 +2329,6 @@ ps_ptr<char> get_WiFi_PW(const char* ssid) {
     return password;
 }
 
-bool setWiFiPW(const char* ssid, const char* password) {
-    if (!ssid || !password) return NULL;
-    static char* line = NULL;
-    if (line) x_ps_free(&line);
-    line = (char*)x_ps_malloc(512);
-    if (!line) {
-        log_e("oom");
-        return NULL;
-    }
-    strcpy(line, ssid);
-    strcat(line, "\t");
-    strcat(line, password);
-
-    for (int j = 1; j < 6; j++) {
-        if (j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
-        if (j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
-        if (j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
-        if (j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
-        if (j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
-        if (startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
-            switch (j) {
-                case 1: pref.putString("wifiStr1", line); break;
-                case 2: pref.putString("wifiStr2", line); break;
-                case 3: pref.putString("wifiStr3", line); break;
-                case 4: pref.putString("wifiStr4", line); break;
-                case 5: pref.putString("wifiStr5", line); break;
-            }
-            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new PW for SSID %s,  %s", ssid, line);
-            return true;
-        }
-    }
-    for (int j = 0; j < 6; j++) {
-        if (j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
-        if (j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
-        if (j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
-        if (j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
-        if (j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
-        if (j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
-        if (strcmp(line, "\t") == 0) {
-            switch (j) {
-                case 0: pref.putString("wifiStr0", line); break;
-                case 1: pref.putString("wifiStr1", line); break;
-                case 2: pref.putString("wifiStr2", line); break;
-                case 3: pref.putString("wifiStr3", line); break;
-                case 4: pref.putString("wifiStr4", line); break;
-                case 5: pref.putString("wifiStr5", line); break;
-            }
-            SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "save new SSID and PW %s,  %s", ssid, line);
-            return true;
-        }
-    }
-    SerialPrintfln("WiFi: .....  " ANSI_ESC_RED "no free space for new SSID and PW %s,  %s", ssid, line);
-    x_ps_free(&line);
-    return false;
-}
-
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                                    L O O P                                                                                  ║
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
@@ -2559,11 +2498,11 @@ void loop() {
                 audio.setVolume(audioVol + 1, s_volume.volumeCurve);
             }
         }
-        if(s_f_msg_box){
-            if(s_timestamp < millis()){
+        if(s_f_msg_box){ // messagebox is visible?
+            if(s_timestamp < millis()){  // time to hide
                 s_f_msg_box = false;
                 msg_box.hide();
-                if(s_f_esp_restart){
+                if(s_f_esp_restart){  // restart after time
                     s_f_esp_restart = false;
                     ESP.restart();
                 }
@@ -2933,12 +2872,12 @@ void loop() {
         static uint32_t time = 0;
         if (r.startsWith("stops")) { // stop song
             time = audio.stopSong();
-            log_w("file %s stopped at time %lu", s_cur_AudioFileName, time);
+            MWR_LOG_DEBUG("file %s stopped at time %lu", s_cur_AudioFileName.c_get(), time);
         }
         if (r.startsWith("starts")) { // start song
-            String path = "/audiofiles/" + (String)s_cur_AudioFileName;
-            audio.connecttoFS(SD_MMC, path.c_str(), time);
-            log_w("file %s started at time %lu", s_cur_AudioFileName, time);
+            ps_ptr<char> path = "/audiofiles/" + s_cur_AudioFileName;
+            audio.connecttoFS(SD_MMC, path.c_get(), time);
+            MWR_LOG_DEBUG("file %s started at time %lu", s_cur_AudioFileName.c_get(), time);
         }
 
         if (r.startsWith("gbr")) { // get bitrate
