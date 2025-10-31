@@ -392,13 +392,21 @@ class textbox : public RegisterTable {
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
-    void        show(bool backgroundTransparency, bool saveBackground) {
+
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
         if (!m_text) { m_text = strdup(""); }
-        if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_backgroundTransparency) {
+            if (m_saveBackground)
+                tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         writeText(m_text);
     }
     void hide() {
@@ -552,13 +560,21 @@ class inputbox : public RegisterTable {
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
-    void        show(bool backgroundTransparency, bool saveBackground) {
+
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
         if (!m_text) { m_text = strdup(""); }
-        if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_backgroundTransparency) {
+            if (m_saveBackground)
+                tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         writeText(m_text);
     }
     void hide() {
@@ -770,13 +786,21 @@ class textbutton : public RegisterTable {
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
-    void        show(bool backgroundTransparency, bool saveBackground) {
+
+    void show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         m_enabled = true;
         m_clicked = false;
         if (!m_text) { m_text = strdup(""); }
-        if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+        if (m_backgroundTransparency) {
+            if (m_saveBackground)
+                tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
+            else
+                tft.copyFramebuffer(1, 0, m_x, m_y, m_w, m_h);
+        } else {
+            tft.fillRect(m_x, m_y, m_w, m_h, m_bgColor);
+        }
         writeText(m_text);
     }
     void hide() {
@@ -979,7 +1003,9 @@ class selectbox : public RegisterTable {
     }
     const char* getName() { return m_name; }
     bool        isEnabled() { return m_enabled; }
-    void        show(bool backgroundTransparency, bool saveBackground) {
+
+    void show(bool backgroundTransparency, bool saveBackground) {
+
         m_txt_select->setAlign(TFT_ALIGN_LEFT, TFT_ALIGN_CENTER);
         m_txt_btn_down->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
         m_txt_btn_up->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
@@ -993,7 +1019,6 @@ class selectbox : public RegisterTable {
         m_enabled = true;
         m_clicked = false;
 
-        if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
         m_idx = 0;
         if (m_selContent.size() > 0) writeText(m_idx);
     }
@@ -1370,39 +1395,38 @@ class wifiSettings : public RegisterTable {
                       —————————————————————————————————————————————————————————————————————————————
     */
   private:
-    int16_t            m_x = 0;
-    int16_t            m_y = 0;
-    int16_t            m_w = 0;
-    int16_t            m_h = 0;
-    uint8_t            m_fontSize = 0;
-    uint8_t            m_padding_left = 0;  // left margin
-    uint8_t            m_paddig_right = 0;  // right margin
-    uint8_t            m_paddig_top = 0;    // top margin
-    uint8_t            m_paddig_bottom = 0; // bottom margin
-    uint8_t            m_credentials_idx = 0;
-    uint8_t            m_borderWidth = 0;
-    uint32_t           m_bgColor = 0;
-    uint32_t           m_fgColor = 0;
-    uint32_t           m_borderColor = TFT_BLACK;
-    ps_ptr<char>       m_name;
-    bool               m_enabled = false;
-    bool               m_clicked = false;
-    bool               m_autoSize = false;
-    bool               m_narrow = false;
-    bool               m_noWrap = false;
-    bool               m_backgroundTransparency = false;
-    bool               m_saveBackground = false;
-    releasedArg        m_ra;
-    selectbox*         m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
-    inputbox*          m_in_password = new inputbox("wifiSettings_txtbox_pwd");
-    keyBoard*          m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
+    int16_t      m_x = 0;
+    int16_t      m_y = 0;
+    int16_t      m_w = 0;
+    int16_t      m_h = 0;
+    uint8_t      m_fontSize = 0;
+    uint8_t      m_padding_left = 0;  // left margin
+    uint8_t      m_paddig_right = 0;  // right margin
+    uint8_t      m_paddig_top = 0;    // top margin
+    uint8_t      m_paddig_bottom = 0; // bottom margin
+    uint8_t      m_credentials_idx = 0;
+    uint8_t      m_borderWidth = 0;
+    uint32_t     m_bgColor = 0;
+    uint32_t     m_fgColor = 0;
+    uint32_t     m_borderColor = TFT_BLACK;
+    ps_ptr<char> m_name;
+    bool         m_enabled = false;
+    bool         m_clicked = false;
+    bool         m_autoSize = false;
+    bool         m_narrow = false;
+    bool         m_noWrap = false;
+    bool         m_backgroundTransparency = false;
+    bool         m_saveBackground = false;
+    releasedArg  m_ra;
+    selectbox*   m_sel_ssid = new selectbox("wifiSettings_selectbox_ssid", 0);
+    inputbox*    m_in_password = new inputbox("wifiSettings_txtbox_pwd");
+    keyBoard*    m_keyboard = new keyBoard("wifiSettings_keyBoard", 0);
 
     struct credentials {
         ps_ptr<char> ssid;
         ps_ptr<char> password;
 
-        credentials(const char* s, const char* p)
-            : ssid(s), password(p) {}
+        credentials(const char* s, const char* p) : ssid(s), password(p) {}
     };
     deque<credentials> m_credentials;
 
@@ -1569,8 +1593,6 @@ class wifiSettings : public RegisterTable {
         m_keyboard->show(m_backgroundTransparency, m_saveBackground);
         m_enabled = true;
         m_clicked = false;
-
-        if (m_saveBackground) tft.copyFramebuffer(0, 2, m_x, m_y, m_w, m_h);
     }
     void hide() {
         m_enabled = false;
@@ -1667,7 +1689,7 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->released()) { /*log_e("keyboard released")*/
             ;
         }
-        if (m_keyboard->getVal() == 0x0D) {    // enter
+        if (m_keyboard->getVal() == 0x0D) {                              // enter
             m_ra.arg1 = m_credentials[m_credentials_idx].ssid.get();     // ssid
             m_ra.arg2 = m_credentials[m_credentials_idx].password.get(); // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
@@ -1694,8 +1716,8 @@ class wifiSettings : public RegisterTable {
     void changePassword(char ch, uint8_t idx) {
         int len = m_credentials[idx].password.strlen();
         if (ch == 0x08) { // backspace
-            if(len == 0) return;
-            m_credentials[idx].password =  m_credentials[idx].password.substr(0, len - 1);
+            if (len == 0) return;
+            m_credentials[idx].password = m_credentials[idx].password.substr(0, len - 1);
         } else if (ch == 0x0D) { // enter
             //    log_w("enter pressed");
         } else {
@@ -4683,8 +4705,8 @@ class fileList : public RegisterTable {
     ~fileList() {
         x_ps_free(&m_name);
         x_ps_free(&m_fileItemsPos);
-        x_ps_free(&m_curAudioName);   //   song.mp3
-        x_ps_free(&m_curAudioPath);   //   /audiofiles/folder1/song.mp3
+        x_ps_free(&m_curAudioName); //   song.mp3
+        x_ps_free(&m_curAudioPath); //   /audiofiles/folder1/song.mp3
     }
     void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
         m_x = x; // x pos
@@ -4763,7 +4785,7 @@ class fileList : public RegisterTable {
             }
             audioFileslist(m_viewPos);
         }
-        if (m_browseOnRelease == 3) {                                 // log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
+        if (m_browseOnRelease == 3) {                               // log_e("m_curAudioFolder = %s", m_curAudioFolder);                                         // previous folder
             if (m_curAudioFolder.equals("/audiofiles/")) goto exit; // is already the root
             myList.drawLine(pos, m_curAudioFolder.c_get(), "", "", ANSI_ESC_CYAN, 1);
             int lastSlash = m_curAudioFolder.last_index_of('/');
@@ -4796,10 +4818,10 @@ class fileList : public RegisterTable {
             myList.drawLine(pos, m_curAudioName, "", "", ANSI_ESC_CYAN, 1);
             vTaskDelay(300 / portTICK_PERIOD_MS);
             m_ra.arg1 = m_curAudioFolder.get(); // fileFolder
-            m_ra.arg2 = m_curAudioName;   // fileName
-            m_ra.arg3 = m_curAudioPath;   // filePath
-            m_ra.val1 = 3;                // isfile
-            m_ra.val2 = m_viewPos - 1;    // fileNr (is curAudioFileNr)
+            m_ra.arg2 = m_curAudioName;         // fileName
+            m_ra.arg3 = m_curAudioPath;         // filePath
+            m_ra.val1 = 3;                      // isfile
+            m_ra.val2 = m_viewPos - 1;          // fileNr (is curAudioFileNr)
         }
     exit:
         m_browseOnRelease = 0;
@@ -4879,7 +4901,7 @@ class fileList : public RegisterTable {
         myList.colourLine(pos + 1, m_irColor);
     }
     const char* getSelectedFile() {
-        if (m_curAudioFileNr == -1) {                                   // get parent folder
+        if (m_curAudioFileNr == -1) {                                 // get parent folder
             if (m_curAudioFolder.equals("/audiofiles/")) return NULL; // is already the root
             myList.colourLine(m_y, m_selectColor);
             vTaskDelay(300 / portTICK_PERIOD_MS);
@@ -4926,7 +4948,7 @@ class fileList : public RegisterTable {
         const char* color;
 
         color = m_folderColor;
-        if (m_curAudioFolder.equals("/audiofiles/") ) color = m_rootColor; // is root
+        if (m_curAudioFolder.equals("/audiofiles/")) color = m_rootColor; // is root
         myList.drawLine(0, m_curAudioFolder.c_get(), "", "", color, 0);
         color = m_fileColor;
         for (uint8_t pos = 1; pos < 10; pos++) {
@@ -4984,7 +5006,7 @@ class fileList : public RegisterTable {
             goto exit;
         }
 
-        if (m_fileListPos == 0) {                         //  ----------------------------------------------------------- previous folder
+        if (m_fileListPos == 0) {                          //  ----------------------------------------------------------- previous folder
             if (m_curAudioFolder.last_index_of('/') > 0) { // not the first '/'
                 m_browseOnRelease = 3;
             }

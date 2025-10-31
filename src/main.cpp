@@ -2301,10 +2301,10 @@ void changeState(int32_t state) {
             SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "%i WiFi networks found", n);
             for (int i = 0; i < n; i++) {
                 SerialPrintfln("setup: ....  " ANSI_ESC_GREEN "%s (%d)", WiFi.SSID(i).c_str(), (int16_t)WiFi.RSSI(i));
-                const char* pw = getWiFiPW(WiFi.SSID(i).c_str());
+                ps_ptr<char> pw = get_WiFi_PW(WiFi.SSID(i).c_str());
                 // if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
                 // else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
-                cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw);
+                cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
             }
             cls_wifiSettings.show(false, false);
             break;
@@ -2313,39 +2313,23 @@ void changeState(int32_t state) {
 }
 // clang-format on
 
-const char* getWiFiPW(const char* ssid) {
-    static char* line = NULL;
-    if (line) x_ps_free(&line);
-    line = (char*)x_ps_malloc(128);
-
-    static char* password = NULL;
-    if (line) x_ps_free(&password);
-    password = (char*)x_ps_malloc(128);
-    if (!password) {
-        log_e("oom");
-        return NULL;
-    }
+ps_ptr<char> get_WiFi_PW(const char* ssid) {
+    ps_ptr<char> line;
+    ps_ptr<char> password;
 
     for (int j = 0; j < 6; j++) {
-        if (j == 0) strcpy(line, pref.getString("wifiStr0").c_str());
-        if (j == 1) strcpy(line, pref.getString("wifiStr1").c_str());
-        if (j == 2) strcpy(line, pref.getString("wifiStr2").c_str());
-        if (j == 3) strcpy(line, pref.getString("wifiStr3").c_str());
-        if (j == 4) strcpy(line, pref.getString("wifiStr4").c_str());
-        if (j == 5) strcpy(line, pref.getString("wifiStr5").c_str());
-        if (startsWith(line, ssid) && line[strlen(ssid)] == '\t') {
-            if (indexOf(line, "\t", 0) > 0) {
-                int idx = indexOf(line, "\t", 0);
-                strcpy(password, line + idx + 1);
-                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, password);
-                return password;
-            } else {
-                // SerialPrintfln("WiFi: .....  " ANSI_ESC_GREEN "SSID '%s', PW '%s'", ssid, "is not set");
-                return NULL;
-            }
+        if (j == 0) line = pref.getString("wifiStr0").c_str();
+        if (j == 1) line = pref.getString("wifiStr1").c_str();
+        if (j == 2) line = pref.getString("wifiStr2").c_str();
+        if (j == 3) line = pref.getString("wifiStr3").c_str();
+        if (j == 4) line = pref.getString("wifiStr4").c_str();
+        if (j == 5) line = pref.getString("wifiStr5").c_str();
+        if (line.starts_with(ssid) && line[strlen(ssid)] == '\t') {
+            int idx = line.index_of("\t", 0);
+            password = line.substr(idx + 1);
         }
     }
-    return NULL;
+    return password;
 }
 
 bool setWiFiPW(const char* ssid, const char* password) {

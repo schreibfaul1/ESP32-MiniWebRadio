@@ -392,7 +392,7 @@ void         stopSong();
 void         placingGraphicObjects();
 void         muteChanged(bool m);
 void         setTimeCounter(uint8_t sec);
-const char*  getWiFiPW(const char* ssid);
+ps_ptr<char> get_WiFi_PW(const char* ssid);
 bool         setWiFiPW(const char* ssid, const char* password);
 void         my_audio_info(Audio::msg_t m);
 void         on_dlna_client(const DLNA_Client::msg_s& msg);
