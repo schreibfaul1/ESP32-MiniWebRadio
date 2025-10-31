@@ -703,7 +703,7 @@ function connect() {
                                         if(val == '0') document.getElementById('chk_timeSpeech').checked = false;
                                         if(val == '1') document.getElementById('chk_timeSpeech').checked = true;
                                         break
-            case "get_timeSpeechLang":  console.log(val)
+            case "get_timeSpeechLang":  console.log("get_timeSpeechLang=" + val)
                                         select = document.getElementById('timeSpeechLang')
                                         for (let i = 0; i < select.options.length; i++) {
                                             if (select.options[i].text === val) {
@@ -3081,7 +3081,7 @@ function appendToTerminal(text) {
                             Time announcement on the hour
                             <input style="transform: scale(1.8); margin: 10px;" type="checkbox" id="chk_timeSpeech"
                                     onclick="socket.send('set_timeAnnouncement=' + document.getElementById('chk_timeSpeech').checked);">
-                            <select class="boxstyle" onchange="socket.send('setTimeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
+                            <select class="boxstyle" onchange="socket.send('set_timeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
                                 <option value="fr">fr</option>
                                 <option value="en">en</option>
                             </select>

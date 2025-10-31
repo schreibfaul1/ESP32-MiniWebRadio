@@ -52,6 +52,8 @@ char _hl_item[18][40]{"",                    // none
                       "WiFi Settings", //
                       ""};
 
+constexpr uint16_t MAX_STATIONS = 1000;
+
 settings_s     s_settings;
 volume_s       s_volume;
 dlnaHistory_s  s_dlnaHistory[10];
@@ -59,7 +61,21 @@ timecounter_s  s_timeCounter;
 SD_content     s_SD_content;
 bt_emitter_s   s_bt_emitter;
 tone_s         s_tone;
-const uint16_t s_max_stations = 1000;
+
+ps_ptr<char>   s_time_s = "";
+ps_ptr<char>   s_myIP;
+ps_ptr<char>   s_icyDescription = "";
+ps_ptr<char>   s_streamTitle = "";
+ps_ptr<char>   s_cur_AudioFolder = "/audiofiles/";
+ps_ptr<char>   s_cur_AudioFileName = NULL;
+ps_ptr<char>   s_stationURL;
+ps_ptr<char>   s_playlistPath;
+ps_ptr<char>   s_stationName_air;
+ps_ptr<char>   s_homepage = "";
+ps_ptr<char>   s_TZName = "Europe/Berlin";
+ps_ptr<char>   s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
+ps_ptr<char>   s_timeSpeechLang = "en";
+
 int8_t         s_currDLNAsrvNr = -1;
 uint8_t        s_alarmdays = 0;
 uint8_t        s_brightness = 100;   // percent
@@ -73,7 +89,7 @@ uint8_t        s_staListPos = 0;
 uint8_t        s_WiFi_disconnectCnt = 0;
 uint8_t        s_reconnectCnt = 0;
 uint8_t        s_cthFailCounter = 0; // connecttohost fail
-uint16_t       s_staListNr = 0;
+uint8_t        s_itemListPos = 0; // DLNA items
 uint8_t        s_fileListPos = 0;
 uint8_t        s_radioSubMenue = 0;
 uint8_t        s_playerSubMenue = 0;
@@ -85,40 +101,33 @@ uint8_t        s_settingsSubMenue = 0;
 uint8_t        s_brightnessSubMenue = 0;
 uint8_t        s_equalizerSubMenue = 0;
 uint8_t        s_ambientValue = 50;
+uint8_t        s_dlnaLevel = 0;
+uint8_t        s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
+int16_t        s_totalNumberReturned = -1;
+int16_t        s_dlnaMaxItems = -1;
+int16_t        s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
+int16_t        s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+uint16_t       s_staListNr = 0;
 uint16_t       s_fileListNr = 0;
 uint16_t       s_irNumber = 0;
 uint16_t       s_irResult = 0;
-uint8_t        s_itemListPos = 0; // DLNA items
-uint16_t       s_dlnaItemNr = 0;
-uint8_t        s_dlnaLevel = 0;
-int16_t        s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
-uint32_t       s_icyBitRate = 0;      // from http response header via event
-uint32_t       s_decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint16_t       s_cur_station = 0;     // current station(nr), will be set later
-int16_t        s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t       s_sleeptime = 0;       // time in min until MiniWebRadio goes to sleep
 uint16_t       s_plsCurPos = 0;
-int16_t        s_totalNumberReturned = -1;
-int16_t        s_dlnaMaxItems = -1;
+uint16_t       s_dlnaItemNr = 0;
 uint16_t       s_bh1750Value = 50;
+uint32_t       s_icyBitRate = 0;      // from http response header via event
+uint32_t       s_decoderBitRate = 0;  // from decoder via getBitRate(false)
 uint32_t       s_playlistTime = 0; // playlist start time millis() for timeout
 uint32_t       s_settingsHash = 0;
 uint32_t       s_audioFileSize = 0;
 uint32_t       s_media_downloadPort = 0;
 uint32_t       s_audioCurrentTime = 0;
+uint32_t       s_timestamp = 0;
 uint32_t       s_audioFileDuration = 0;
 uint64_t       s_totalRuntime = 0; // total runtime in seconds since start
-uint8_t        s_resetReason = (esp_reset_reason_t)ESP_RST_UNKNOWN;
-ps_ptr<char>   s_time_s = "";
+
 bool           s_btEmitterMode = KCX_BT_Emitter::BT_MODE_EMITTER;
-ps_ptr<char>   s_myIP;
-ps_ptr<char>   s_icyDescription = "";
-ps_ptr<char>   s_streamTitle = "";
-char           s_timeSpeechLang[10] = "en";
-ps_ptr<char>   s_cur_AudioFolder = "/audiofiles/";
-ps_ptr<char>   s_cur_AudioFileName = NULL;
-ps_ptr<char>   s_stationURL;
-ps_ptr<char>   s_playlistPath;
 bool           s_f_rtc = false; // true if time from ntp is received
 bool           s_f_100ms = false;
 bool           s_f_1sec = false;
@@ -168,15 +177,9 @@ bool           s_f_brightnessIsChangeable = false;
 bool           s_f_connectToLastStation = false;
 bool           s_f_msg_box = false;
 bool           s_f_esp_restart = false;
-uint32_t       s_timestamp = 0;
-bool         s_f_timeSpeech = false;
-bool         s_f_stationsChanged = false;
-bool         s_f_WiFiConnected = false;
-ps_ptr<char> s_stationName_air;
-ps_ptr<char> s_homepage = "";
-ps_ptr<char> s_TZName = "Europe/Berlin";
-ps_ptr<char> s_TZString = "CET-1CEST,M3.5.0,M10.5.0/3";
-String       s_media_downloadIP = "";
+bool           s_f_timeSpeech = false;
+bool           s_f_stationsChanged = false;
+bool           s_f_WiFiConnected = false;
 
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
@@ -295,7 +298,7 @@ boolean defaultsettings() {
     s_alarmtime[6] = computeMinuteOfTheDay(parseJson("\"alarmtime_sat\":"));
     s_alarmdays = atoi(parseJson("\"alarm_weekdays\":"));
     s_f_timeAnnouncement = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
-    strcpy(s_timeSpeechLang, parseJson("\"timeSpeechLang\":"));
+    s_timeSpeechLang = parseJson("\"timeSpeechLang\":");
     s_f_mute = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
     s_brightness = atoi(parseJson("\"brightness\":"));
     s_sleeptime = atoi(parseJson("\"sleeptime\":"));
@@ -355,7 +358,7 @@ void updateSettings() {
     jO.appendf(",\n  \"alarm_weekdays\":%i", s_alarmdays);
     jO.appendf(",\n  \"timeAnnouncing\":");
     (s_f_timeAnnouncement == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
-    jO.appendf(",\n  \"timeSpeechLang\":\"%s\"", s_timeSpeechLang);
+    jO.appendf(",\n  \"timeSpeechLang\":\"%s\"", s_timeSpeechLang.c_get());
     jO.appendf(",\n  \"mute\":");
     (s_f_mute == true) ? jO.appendf("\"true\"") : jO.appendf("\"false\"");
     jO.appendf(",\n  \"brightness\":%i", s_brightness);
@@ -2576,7 +2579,7 @@ void loop() {
                 if (s_timeFormat == 12) {
                     if (hour > 12) hour -= 12;
                 }
-                ps_ptr<char> p; p.assignf("/voice_time/%s/%d_00.mp3", s_timeSpeechLang, hour);
+                ps_ptr<char> p; p.assignf("/voice_time/%s/%d_00.mp3", s_timeSpeechLang.c_get(), hour);
                 SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
                 connecttoFS("SD_MMC", p.c_get());
                 return;
@@ -4882,10 +4885,10 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "hourly time announcement " ANSI_ESC_BLUE "%s", (s_f_timeAnnouncement == 1) ? "on" : "off");
                                         return;}
 
-    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("getTimeSpeechLang=", s_timeSpeechLang); return;}
+    CMD_EQUALS("get_timeSpeechLang"){   webSrv.send("get_timeSpeechLang=", s_timeSpeechLang); SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "%s", s_timeSpeechLang.c_get()); return;}
 
-    CMD_EQUALS("setTimeSpeechLang"){    if(param.strlen() > 2){log_e("set_timeSpeechLang too long %s", param.c_get()); return;}
-                                        strcpy(s_timeSpeechLang, param.c_get());
+    CMD_EQUALS("set_timeSpeechLang"){   if(param.strlen() > 2){log_e("set_timeSpeechLang too long %s", param.c_get()); return;}
+                                        s_timeSpeechLang = param;
                                         SerialPrintfln("Timespeech   " ANSI_ESC_YELLOW "language is " ANSI_ESC_BLUE "%s", param.c_get());
                                         return;}
 
