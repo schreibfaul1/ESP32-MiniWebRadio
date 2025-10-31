@@ -1384,7 +1384,7 @@ class wifiSettings : public RegisterTable {
     uint32_t           m_bgColor = 0;
     uint32_t           m_fgColor = 0;
     uint32_t           m_borderColor = TFT_BLACK;
-    char*              m_name = NULL;
+    ps_ptr<char>       m_name;
     bool               m_enabled = false;
     bool               m_clicked = false;
     bool               m_autoSize = false;
@@ -1440,10 +1440,7 @@ class wifiSettings : public RegisterTable {
   public:
     wifiSettings(const char* name, uint8_t fontSize) {
         register_object(this);
-        if (name)
-            m_name = x_ps_strdup(name);
-        else
-            m_name = x_ps_strdup("textbox");
+        m_name = name;
         m_bgColor = TFT_BLACK;
         m_fgColor = TFT_LIGHTGREY;
         m_borderColor = TFT_LIGHTGREY;
@@ -1456,7 +1453,6 @@ class wifiSettings : public RegisterTable {
         m_in_password->setFont(0); // auto size
     }
     ~wifiSettings() {
-        x_ps_free(&m_name);
         m_credentials.clear();
         delete m_sel_ssid;
         delete m_in_password;
@@ -1559,7 +1555,7 @@ class wifiSettings : public RegisterTable {
         m_in_password->begin(m_winPWD.x, m_winPWD.y, m_winPWD.w, m_winPWD.h, m_winPWD.pl, m_winPWD.pr, m_winPWD.pt, m_winPWD.pb);
         m_keyboard->begin(m_winKeybrd.x, m_winKeybrd.y, m_winKeybrd.w, m_winKeybrd.h, m_winKeybrd.pl, m_winKeybrd.pr, m_winKeybrd.pt, m_winKeybrd.pb);
     }
-    const char* getName() { return m_name; }
+    const char* getName() { return m_name.c_get(); }
 
     bool isEnabled() { return m_enabled; }
 
@@ -1636,7 +1632,7 @@ class wifiSettings : public RegisterTable {
         if (x > m_x + m_w) return false;
         if (y > m_y + m_h) return false;
         if (m_enabled) m_clicked = true;
-        if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name, m_enabled);
+        if (graphicObjects_OnClick) graphicObjects_OnClick((const char*)m_name.c_get(), m_enabled);
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
@@ -1675,7 +1671,7 @@ class wifiSettings : public RegisterTable {
             m_ra.arg1 = m_credentials[m_credentials_idx].ssid.get();     // ssid
             m_ra.arg2 = m_credentials[m_credentials_idx].password.get(); // password
             // log_w("enter pressed ssid %s, password %s", m_ssid[m_pwd_idx], m_password[m_pwd_idx]);
-            if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name, m_ra);
+            if (graphicObjects_OnRelease) graphicObjects_OnRelease((const char*)m_name.c_get(), m_ra);
         }
         m_clicked = false;
         return ret;
@@ -2289,8 +2285,10 @@ class pictureBox : public RegisterTable {
         m_enabled = false;
     }
     const char* getName() { return m_name; }
-    bool        isEnabled() { return m_enabled; }
-    bool        show(bool backgroundTransparency, bool saveBackground) {
+
+    bool isEnabled() { return m_enabled; }
+
+    bool show(bool backgroundTransparency, bool saveBackground) {
         m_backgroundTransparency = backgroundTransparency;
         m_saveBackground = saveBackground;
         int x = m_x + m_padding_left;
