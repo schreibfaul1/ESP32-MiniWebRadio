@@ -135,8 +135,6 @@ bool           s_f_10sec = false;
 bool           s_f_1min = false;
 bool           s_f_mute = false;
 bool           s_f_muteIsPressed = false;
-bool           s_f_volumeDownIsPressed = false;
-bool           s_f_volumeUpIsPressed = false;
 bool           s_f_sleeping = false;
 bool           s_f_irOnOff = false;
 bool           s_f_isWebConnected = false;
@@ -159,10 +157,7 @@ bool           s_f_playlistEnabled = false;
 bool           s_f_playlistNextFile = false;
 bool           s_f_logoUnknown = false;
 bool           s_f_pauseResume = false;
-bool           s_f_SD_Upload = false;
 bool           s_f_FFatFound = false;
-bool           s_f_SD_MMCfound = false;
-bool           s_f_ESPfound = false;
 bool           s_f_BH1750_found = false;
 bool           s_f_clearLogo = false;
 bool           s_f_clearStationName = false;
@@ -1259,7 +1254,6 @@ void setup() {
     Serial.println(ANSI_ESC_RESET "   ");
 
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
-    s_f_ESPfound = true;
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
 #if TFT_CONTROLLER < 7
@@ -1305,7 +1299,6 @@ void setup() {
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
-    s_f_SD_MMCfound = true;
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if (TFT_BL >= 0) { s_f_brightnessIsChangeable = true; }
@@ -1628,7 +1621,6 @@ void setStationViaURL(const char* url, const char* extension) {
 
 void savefile(const char* fileName, uint32_t contentLength) { // save the uploadfile on SD_MMC
     char fn[256];
-    s_f_SD_Upload = false;
     if (!startsWith(fileName, "/")) {
         strcpy(fn, "/");
         strcat(fn, fileName);
@@ -1647,7 +1639,7 @@ void savefile(const char* fileName, uint32_t contentLength) { // save the upload
 void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg image on SD_MMC
     char fn[256];
 
-    if (!s_f_SD_Upload && endsWith(fileName, "jpg")) {
+    if (endsWith(fileName, "jpg")) {
         strcpy(fn, "/logo/");
         char prefix[03] = " /";
         prefix[0] = displayConfig.tftSize;
@@ -2337,15 +2329,6 @@ ps_ptr<char> get_WiFi_PW(const char* ssid) {
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 void loop() {
-    if (!s_f_ESPfound) {
-        vTaskDelay(10);
-        return;
-    } // Guard:  wrong chip?
-    if (!s_f_SD_MMCfound) {
-        vTaskDelay(10);
-        return;
-    } // Guard:  SD_MMC could not be initialisized
-
     dlna.loop();
     vTaskDelay(1);
     audio.loop();
