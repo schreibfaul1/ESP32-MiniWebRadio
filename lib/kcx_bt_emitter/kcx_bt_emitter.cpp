@@ -2,7 +2,7 @@
  *  KCX_BT_Emitter.cpp
  *
  *  Created on: 21.01.2024
- *  updated on: 26.04.2025
+ *  updated on: 01.11.2025
  *      Author: Wolle
  */
 
@@ -27,7 +27,7 @@ void KCX_BT_Emitter::begin() {
     KCX_LOG_DEBUG("KCX_BT_Emitter begin");
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
-    vTaskDelay(100);
+    vTaskDelay(200);
     digitalWrite(BT_CONNECT_PIN, HIGH);
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
     add_tx_queue_item("AT+");
@@ -148,7 +148,7 @@ void KCX_BT_Emitter::parseATcmds() {
     } else if (item.equals("POWER ON")) {
         m_msg.e = evt_power_on;
         if (m_bt_callback) { m_bt_callback(m_msg); }
-    } else if (item.equals("AT+POWER_OFF")) {
+    } else if (item.equals("OK+POWEROFF_MODE")) {
         m_msg.e = evt_power_off;
         if (m_bt_callback) { m_bt_callback(m_msg); }
     } else if (item.starts_with("OK+VERS:")) { // OK+VERS:KCX_BT_RTX_V1.4
@@ -364,6 +364,7 @@ void KCX_BT_Emitter::power_off() {
 }
 void KCX_BT_Emitter::power_on() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+    KCX_LOG_ERROR("PowerOn");
     digitalWrite(BT_CONNECT_PIN, LOW);
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
@@ -435,6 +436,6 @@ const char* KCX_BT_Emitter::stringifyScannedItems() { // returns the last three 
     if (!m_bt_scannedItems.size()) m_jsonScanItemsStr.append("{\"addr\":\"\",\"name\":\"\"},");
     int posComma = m_jsonScanItemsStr.last_index_of(',');
     m_jsonScanItemsStr[posComma] = ']'; // and terminate
-    KCX_LOG_ERROR("%s", m_jsonScanItemsStr.c_get());
+    KCX_LOG_DEBUG("%s", m_jsonScanItemsStr.c_get());
     return m_jsonScanItemsStr.c_get();
 }
