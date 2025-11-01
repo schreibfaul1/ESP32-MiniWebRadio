@@ -316,7 +316,7 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
         KCX_LOG_ERROR("unknown mode %s", mode.c_get());
         return;
     }
-    add_tx_queue_item("AT+RESET");
+    // add_tx_queue_item("AT+RESET");
 }
 void KCX_BT_Emitter::changeMode() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
