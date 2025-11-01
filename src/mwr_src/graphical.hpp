@@ -912,7 +912,7 @@ class textbutton : public RegisterTable {
             } else if (strcmp(m_text, "/d") == 0) {
                 drawTriangeDown();
             } else
-                tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
+            tft.writeText(m_text, x, y, w, h, m_h_align, m_v_align, m_narrow, m_noWrap, m_autoSize);
             tft.setTextColor(txtColor_tmp);
             tft.setBackGoundColor(bgColor_tmp);
         }
@@ -1698,10 +1698,10 @@ class wifiSettings : public RegisterTable {
         m_clicked = false;
         return ret;
     }
-    void add_WiFi_Items(const char* ssid, const char* pw) {
-        if (!ssid) { ssid = strdup(""); }
-        m_credentials.emplace_back(ssid, pw);
-        m_sel_ssid->addText(ssid);
+    void add_WiFi_Items(ps_ptr<char> ssid, ps_ptr<char> pw) {
+        if (ssid.strlen() == 0) { ssid = ""; }
+        m_credentials.emplace_back(ssid.c_get(), pw.c_get());
+        m_sel_ssid->addText(ssid.c_get());
     }
     void clearText() {
         m_sel_ssid->clearText();
@@ -6157,14 +6157,28 @@ class messageBox : public RegisterTable {
 
 #if TFT_CONTROLLER < 2 // 320 x 240px
 
-    m_x = 320 / 4 : m_y = 240 / 4;
-    m_w = 320 / 2;
-    m_h = 240 / 2;
+    struct p {
+        uint16_t x = 320 / 4;
+        uint16_t y = 240 / 4;
+        uint16_t w = 320 / 2;
+        uint16_t h = 240 / 2;
+        uint8_t  pl = 5;
+        uint8_t  pr = 5;
+        uint8_t  pt = 5;
+        uint8_t  pb = 5;
+    } const m_win;
 
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    m_x = 480 / 4 : m_y = 320 / 4;
-    m_w = 480 / 2;
-    m_h = 320 / 2;
+    struct p {
+        uint16_t x = 480 / 4;
+        uint16_t y = 320 / 4;
+        uint16_t w = 480 / 2;
+        uint16_t h = 320 / 2;
+        uint8_t  pl = 10;
+        uint8_t  pr = 10;
+        uint8_t  pt = 10;
+        uint8_t  pb = 10;
+    } const m_win;
 #else                    // 800 x 480px
     struct p {
         uint16_t x = 800 / 4;
@@ -6195,8 +6209,6 @@ class messageBox : public RegisterTable {
         txt_msgBox->begin(m_x, m_y, m_w, m_h, m_pl, m_pr, m_pt, m_pb);
         txt_msgBox->setTextColor(m_textColor);
         txt_msgBox->setBGcolor(m_bgColor);
-        txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
-        txt_msgBox->setFont(0); // auto
     }
     // clang-format on
 
@@ -6205,15 +6217,16 @@ class messageBox : public RegisterTable {
     void        disable() { m_enabled = false; }
     void        setBGcolor(uint32_t color) { m_bgColor = color; }
 
-    void setText(const char* txt, bool narrow = false, bool noWrap = false) { // prepare a text, wait of show() to write it
+    void setText(const char* txt, bool narrow = false, bool noWrap = true) { // prepare a text, wait of show() to write it
         m_text = txt;
         m_narrow = narrow;
         m_noWrap = noWrap;
+        txt_msgBox->setAlign(TFT_ALIGN_CENTER, TFT_ALIGN_CENTER);
+        txt_msgBox->setFont(0); // auto
         txt_msgBox->setText(m_text.c_get(), m_narrow, m_noWrap);
     }
 
     void show() {
-        txt_msgBox->setText(m_text.c_get());
         txt_msgBox->show(m_backgroundTransparency, m_saveBackground);
     }
 

@@ -5,11 +5,7 @@
 #pragma once
 
 #include "Arduino.h"
-#include "SPI.h"
-#include "FS.h"
-#include "vector"
-
-#include "esp_log.h"
+#include "Audio.h"
 
 #include "driver/gpio.h"
 #include "fonts/fontsdef.h"

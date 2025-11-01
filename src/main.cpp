@@ -2297,6 +2297,7 @@ void changeState(int32_t state) {
                 // if(pw){log_e("found password %s for %s", pw, WiFi.SSID(i).c_str());}
                 // else  {log_e("no password found for %s", WiFi.SSID(i).c_str());}
                 cls_wifiSettings.add_WiFi_Items(WiFi.SSID(i).c_str(), pw.c_get());
+
             }
             cls_wifiSettings.show(false, false);
             break;
@@ -2307,7 +2308,7 @@ void changeState(int32_t state) {
 
 ps_ptr<char> get_WiFi_PW(const char* ssid) {
     ps_ptr<char> line;
-    ps_ptr<char> password;
+    ps_ptr<char> password = "N/A";
 
     for (int j = 0; j < 6; j++) {
         if (j == 0) line = pref.getString("wifiStr0").c_str();
@@ -5817,7 +5818,7 @@ void graphicObjects_OnRelease(const char* name, releasedArg ra) {
     if (s_state == WIFI_SETTINGS) {
         if (!strcmp(name, "wifiSettings")) {
             setWiFiCredentials(ra.arg1, ra.arg2);
-            msg_box.setText("ESP.restart");
+            msg_box.setText("ESP restart", false, false);
             msg_box.show();
             vTaskDelay(4000);
             s_f_msg_box = true;
