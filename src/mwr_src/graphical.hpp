@@ -1180,16 +1180,16 @@ class keyBoard : public RegisterTable { // show time "hh:mm:ss" e.g. in header
     float       m_row3[11] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.1};
     const char  m_alpha1[12][4] = {"1..", "q", "w", "e", "r", "t", "y", "u", "i", "o", "p", "BS"};
     const char  m_alpha2[11][4] = {"A..", "a", "s", "d", "f", "g", "h", "j", "k", "l", "RET"};
-    const char  m_alpha3[11][5] = {"#..", ".", "z", "x", "c", "v", "b", "n", "m", "_", "   "};
+    const char  m_alpha3[11][6] = {"#..", ".", "z", "x", "c", "v", "b", "n", "m", "_", "   "};
     const char  m_Alpha1[12][4] = {"1..", "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P", "BS"};
     const char  m_Alpha2[11][4] = {"a..", "A", "S", "D", "F", "G", "H", "J", "K", "L", "RET"};
-    const char  m_Alpha3[11][5] = {"#..", ".", "Z", "X", "C", "V", "B", "N", "M", "_", "   "};
+    const char  m_Alpha3[11][6] = {"#..", ".", "Z", "X", "C", "V", "B", "N", "M", "_", "   "};
     const char  m_special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
     const char  m_special2[11][4] = {"a..", "!", "\"", "#", "$", "%", "&", "'", "(", ")", "RET"};
-    const char  m_special3[11][5] = {"#..", "*", "+", ",", "-", "*", "-", ".", "/", ":", "   "};
+    const char  m_special3[11][6] = {"#..", "*", "+", ",", "-", "*", "-", ".", "/", ":", "   "};
     const char  m_Special1[12][4] = {"1..", "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "BS"};
     const char  m_Special2[11][4] = {"a..", ";", "<", "=", ">", "?", "@", "[", "\\", "]", "RET"};
-    const char  m_Special3[11][5] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
+    const char  m_Special3[11][6] = {"#..", "^", "_", "`", "{", "|", "}", "~", "#", "$", "   "};
     uint32_t    m_color1[12] = {TFT_YELLOW,    TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY,
                                 TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_YELLOW};
     uint32_t    m_color2[11] = {TFT_YELLOW, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_LIGHTGREY, TFT_RED};
