@@ -1,5 +1,6 @@
 // light sensor BH1750
 #include <Arduino.h>
+
 #include <Wire.h>
 
 #pragma once
@@ -68,6 +69,7 @@ public:
     bool         powerOn();
     bool         powerOff();
     bool         writeMtreg(uint8_t mtreg);
+    bool         isInit = false;
 
 
 

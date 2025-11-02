@@ -85,8 +85,6 @@ private:
     void abortTransfer();
     boolean makePath(char *fullname);
     boolean makePath(char *fullName, char *param);
-    uint8_t getDateTime(uint16_t *pyear, uint8_t *pmonth, uint8_t *pday, uint8_t *phour, uint8_t *pminute, uint8_t *second);
-    char* makeDateTimeStr(char *tstr, uint16_t date, uint16_t time);
     int16_t readChar();
 
     IPAddress dataIp;              // IP address of client for data

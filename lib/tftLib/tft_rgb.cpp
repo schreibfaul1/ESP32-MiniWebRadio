@@ -1755,11 +1755,11 @@ size_t TFT_RGB::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         while(true) {               // inner while
             isEmoji = false;
             setTextColor(colorArr[idx]);
-            if(cnt == 0 && utfPosArr[idx] == 0x20) {
-                idx++;
-                charsDrawn++;
-                continue;
-            } // skip leading spaces
+            // if(cnt == 0 && utfPosArr[idx] == 0x20) {
+            //     idx++;
+            //     charsDrawn++;
+            //     continue;
+            // } // skip leading spaces
             if((utfPosArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
                 if(utfPosArr[idx] == 0xF9A2) {isEmoji = true;}
                 if(utfPosArr[idx] == 0xF9A1) {isEmoji = true;}

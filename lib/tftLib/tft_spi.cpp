@@ -1443,6 +1443,12 @@ void TFT_SPI::writeInAddrWindow(const uint8_t* bmi, uint16_t posX, uint16_t posY
 
     bitreader(bmi);
 
+    if(posX >= m_h_res) {log_e("%s %i posX %i", __FILE__, __LINE__, posX); return;}
+    if(posY >= m_v_res) {log_e("%s %i posY %i", __FILE__, __LINE__, posY); return;}
+    if(posX + width >= m_h_res) {log_e("%s %i posX %i, width %i", __FILE__, __LINE__, posX, width); return;}
+    if(posY + height >= m_v_res) {log_e("%s %i posY %i, height %i", __FILE__, __LINE__, posY, height); return;}
+
+
     for(int16_t j = posY; j < posY + height; j++) {
         for(int16_t i = posX; i < posX + width; i++) {
             int32_t color = bitreader(0);
@@ -1777,16 +1783,17 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     };
     //-------------------------------------------------------------------------------------------------------------------
     auto drawChar = [&](uint16_t idx, uint16_t x, uint16_t y) { // lambda
-        uint16_t glyphPos = m_current_font.lookup_table[utfPosArr[idx]];
-        uint16_t adv_w = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
+        uint32_t glyphPos = m_current_font.lookup_table[utfPosArr[idx]];
+        uint32_t adv_w = m_current_font.glyph_dsc[glyphPos].adv_w / 16;
         uint32_t bitmap_index = m_current_font.glyph_dsc[glyphPos].bitmap_index;
-        uint16_t box_w = m_current_font.glyph_dsc[glyphPos].box_w;
-        uint16_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
+        uint32_t box_w = m_current_font.glyph_dsc[glyphPos].box_w;
+        uint32_t box_h = m_current_font.glyph_dsc[glyphPos].box_h;
         int16_t  ofs_x = m_current_font.glyph_dsc[glyphPos].ofs_x;
         int16_t  ofs_y = m_current_font.glyph_dsc[glyphPos].ofs_y;
         if(ofs_x < 0) ofs_x = 0;
         x += ofs_x;
         y = y + (m_current_font.line_height - m_current_font.base_line - 1) - box_h - ofs_y;
+        if(y > 479) log_e("%s%i y %i idx %i", __FILE__, __LINE__, y, idx);
         writeInAddrWindow(m_current_font.glyph_bitmap + bitmap_index, x, y, box_w, box_h);
         if(!narrow) adv_w += ofs_x;
         return adv_w;
@@ -1811,10 +1818,12 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
     }
     if(v_align == TFT_ALIGN_CENTER){
         int offset = (win_H - (nrOfLines * m_current_font.line_height)) / 2;
+        if(offset < 0) log_e("%i %i offset %i", __FILE__, __LINE__, offset);
         pY = pY + offset;
     }
     if(v_align == TFT_ALIGN_DOWN){
         int offset = (win_H - (nrOfLines * m_current_font.line_height));
+        if(offset < 0) log_e("%i %i offset %i", __FILE__, __LINE__, offset);
         pY = pY + offset;
     }
 
@@ -1833,11 +1842,11 @@ size_t TFT_SPI::writeText(const char* str, uint16_t win_X, uint16_t win_Y, int16
         while(true) {               // inner while
             isEmoji = false;
             setTextColor(colorArr[idx]);
-            if(cnt == 0 && utfPosArr[idx] == 0x20) {
-                idx++;
-                charsDrawn++;
-                continue;
-            } // skip leading spaces
+            // if(cnt == 0 && utfPosArr[idx] == 0x20) {
+            //     idx++;
+            //     charsDrawn++;
+            //     continue;
+            // } // skip leading spaces
             if((utfPosArr[idx] & 0xFF00) == 0xF900){ // This is a emoji, width is the same as height
                 if(utfPosArr[idx] == 0xF9A2) {isEmoji = true;}
                 if(utfPosArr[idx] == 0xF9A1) {isEmoji = true;}
