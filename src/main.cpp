@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4 - 04.10.2025                                                                                                               ";
+    Version 4.0.4 - 02.11.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -5069,20 +5069,23 @@ void on_kcx_bt_emitter(const KCX_BT_Emitter::msg_s& msg) {
     }
     if (msg.e == KCX_BT_Emitter::evt_connect) {
         s_bt_emitter.connect = true;
-        webSrv.send("KCX_BT_connected=", "1");
         if (s_bt_emitter.mode.equals("TX")) {
             pic_BT_mode.setPicturePath("/common/BTgold.png");
+            webSrv.send("KCX_BT_MODE=", "TX");
         } else {
             pic_BT_mode.setPicturePath("/common/BTblue.png");
+            webSrv.send("KCX_BT_MODE=", "RX");
         }
+        webSrv.send("KCX_BT_connected=", "1");
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
         SerialPrintfln("BT-Emitter:  %s ", "connected");
     }
     if (msg.e == KCX_BT_Emitter::evt_disconnect) {
-        webSrv.send("KCX_BT_connected=", "0");
+        SerialPrintfln("BT-Emitter:  %s ", "disconnected");
+        if (s_bt_emitter.power_state == false) return;
         pic_BT_mode.setPicturePath("/common/BTnc.png"); // not connected
         if (s_state == BLUETOOTH) pic_BT_mode.show(true, false);
-        SerialPrintfln("BT-Emitter:  %s ", "disconnected");
+        webSrv.send("KCX_BT_connected=", "0");
     }
     if (msg.e == KCX_BT_Emitter::evt_reset) {
         SerialPrintfln("BT-Emitter:  %s ", "reset");
