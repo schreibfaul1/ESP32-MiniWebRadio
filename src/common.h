@@ -375,7 +375,7 @@ void         setStationViaURL(const char* url, const char* extension);
 void         savefile(const char* fileName, uint32_t contentLength);
 ps_ptr<char> setI2STone();
 void         SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName);
-void         SD_playFile(ps_ptr<char>path, uint32_t resumeFilePos = 0, bool showFN = true);
+void         SD_playFile(ps_ptr<char> path, uint32_t resumeFilePos = 0, bool showFN = true);
 bool         SD_rename(const char* src, const char* dest);
 bool         SD_newFolder(const char* folderPathName);
 bool         SD_delete(const char* itemPath);
@@ -686,10 +686,10 @@ inline void vector_clear_and_shrink(vector<char*>& vec) {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 class RegisterTable {
   public:
-    virtual const char* getName() = 0;
-    virtual bool        isEnabled() = 0;
-    virtual void        disable() = 0;
-    virtual bool        positionXY(uint16_t, uint16_t) = 0;
+    virtual ps_ptr<char> getName() = 0;
+    virtual bool         isEnabled() = 0;
+    virtual void         disable() = 0;
+    virtual bool         positionXY(uint16_t, uint16_t) = 0;
     virtual ~RegisterTable() {}
 };
 static std::vector<RegisterTable*> registertable_objects;
@@ -698,7 +698,7 @@ static void                        register_object(RegisterTable* obj) {
 }
 inline void get_registered_names() {
     for (auto obj : registertable_objects) {
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s\n", obj->getName(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_RESET, "\n", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
     }
 }
 inline void disableAllObjects() {
@@ -710,7 +710,7 @@ inline const char* isObjectClicked(uint16_t x, uint16_t y) {
     for (auto obj : registertable_objects) {
         if (obj->isEnabled() && obj->positionXY(x, y)) {
             if (strlen(objName) > 0) strcat(objName, ", ");
-            strcat(objName, obj->getName());
+            strcat(objName, obj->getName().get());
         }
     }
     return objName;
