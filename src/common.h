@@ -57,6 +57,7 @@
 #include <vector>
 
 #if TFT_CONTROLLER < 7
+#if CONFIG_IDF_TARGET_ESP32S3
 // Digital I/O used
     #define TFT_CS             8
     #define TFT_DC             12
@@ -80,6 +81,35 @@
     #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
     #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
     #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
+#endif
+#if CONFIG_IDF_TARGET_ESP32P4
+    #define TFT_CS             2
+    #define TFT_DC             3
+    #define TFT_BL             4 // at -1 the brightness menu is not displayed
+    #define TP_IRQ             5
+    #define TP_CS              7
+    #define SD_MMC_D0          39
+    #define SD_MMC_D1          40
+    #define SD_MMC_D2          41
+    #define SD_MMC_D3          42
+    #define SD_MMC_CLK         43
+    #define SD_MMC_CMD         44
+    #define IR_PIN             8  // IR Receiver (if available)
+    #define TFT_MOSI           20 // TFT and TP (FSPI)
+    #define TFT_MISO           21  // TFT and TP (FSPI)
+    #define TFT_SCK            22 // TFT and TP (FSPI)
+    #define I2S_DOUT           23
+    #define I2S_BCLK           24
+    #define I2S_LRC            25
+    #define I2S_MCLK           -1
+    #define BT_EMITTER_RX      26 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_TX      27 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_MODE    28 // high transmit - low receive           (-1 if not available)
+    #define BT_EMITTER_CONNECT 29 // high impulse -> awake after POWER_OFF (-1 if not available)
+    #define I2C_SDA            30 // I2C, dala line for capacitive touchpad
+    #define I2C_SCL            31 // I2C, clock line for capacitive touchpad
+    // free pins 32, 33, 46, 47, 48, 49, 50, 51, 52
+#endif
 #endif
 
 #if TFT_CONTROLLER == 7 // RGB display
