@@ -216,6 +216,12 @@ SemaphoreHandle_t mutex_display;
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
+bool SD_MMC_exists(const char* path){
+    return SD_MMC.exists(path);
+}
+
+
+
 // clang-format off  🟢🟡🔴
 boolean defaultsettings() {
 
@@ -954,10 +960,6 @@ exit:
 bool connectToWiFi() {
 
     ps_ptr<char> line(512);
-    if (!line) {
-        log_e("oom");
-        return false;
-    }
 
     // create nvs entries if they do not exist
     if (!pref.isKey("wifiStr0")) pref.putString("wifiStr0", ""); // SSID + \t + PW
@@ -1007,15 +1009,14 @@ bool connectToWiFi() {
     }
 
     wifiMulti.setStrictMode(true);
-    WiFi.mode(WIFI_STA);
     wifiMulti.run();
+
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
     if (WiFi.isConnected()) {
         WiFi.setAutoReconnect(true);
         if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
         return true;
     } else {
-        WiFi.mode(WIFI_MODE_NULL);
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false; // can't connect to any network
     }
@@ -1284,9 +1285,7 @@ void setup() {
     SerialPrintfln("setup: ...   Init SD card");
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     pinMode(SD_MMC_D0, INPUT_PULLUP);
-#ifdef CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
-#endif
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
     if (!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
         clearAll();
@@ -1302,9 +1301,7 @@ void setup() {
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
     if (TFT_BL >= 0) { s_f_brightnessIsChangeable = true; }
-#if ESP_IDF_VERSION_MAJOR == 5
     if (TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
-#endif
 
     if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
@@ -1315,6 +1312,7 @@ void setup() {
     setTFTbrightness(s_brightness);
 
     s_f_WiFiConnected = connectToWiFi();
+
     if (s_f_WiFiConnected) {
         s_myIP = WiFi.localIP().toString().c_str();
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
