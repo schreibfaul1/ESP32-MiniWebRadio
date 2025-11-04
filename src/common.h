@@ -83,11 +83,11 @@
     #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
 #endif
 #if CONFIG_IDF_TARGET_ESP32P4
-    #define TFT_CS             2
-    #define TFT_DC             3
-    #define TFT_BL             4 // at -1 the brightness menu is not displayed
-    #define TP_IRQ             5
-    #define TP_CS              7
+    #define TFT_CS              2
+    #define TFT_DC              3
+    #define TFT_BL              4 // at -1 the brightness menu is not displayed
+    #define TP_IRQ              5
+    #define TP_CS               7
     #define SD_MMC_D0          39
     #define SD_MMC_D1          40
     #define SD_MMC_D2          41
