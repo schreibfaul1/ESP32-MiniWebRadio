@@ -175,6 +175,7 @@ bool s_f_esp_restart = false;
 bool s_f_timeSpeech = false;
 bool s_f_stationsChanged = false;
 bool s_f_WiFiConnected = false;
+bool s_f_sd_card_found = false;
 
 std::deque<ps_ptr<char>> s_PLS_content;
 std::deque<ps_ptr<char>> s_logBuffer;
@@ -1281,13 +1282,22 @@ void setup() {
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     tft.reset();
 #endif
-
-    SerialPrintfln("setup: ...   Init SD card");
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
+    SerialPrintfln("setup: ...   Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
-    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
-    if (!SD_MMC.begin("/sdcard", true, false, sdmmc_frequency)) {
+
+#if CONFIG_IDF_TARGET_ESP32S3
+    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
+    s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
+#endif
+
+#if CONFIG_IDF_TARGET_ESP32P4
+    SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
+    s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
+#endif
+
+    if (!s_f_sd_card_found){
         clearAll();
         tft.setFont(displayConfig.fonts[6]);
         tft.setTextColor(TFT_YELLOW);
@@ -2330,8 +2340,8 @@ ps_ptr<char> get_WiFi_PW(const char* ssid) {
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
 void loop() {
-    dlna.loop();
     vTaskDelay(1);
+    dlna.loop();
     audio.loop();
     webSrv.loop();
     ir.loop();
