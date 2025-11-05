@@ -102,12 +102,12 @@
     #define I2S_BCLK           24
     #define I2S_LRC            25
     #define I2S_MCLK           -1
-    #define BT_EMITTER_RX      26 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_TX      27 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_MODE    28 // high transmit - low receive           (-1 if not available)
-    #define BT_EMITTER_CONNECT 29 // high impulse -> awake after POWER_OFF (-1 if not available)
-    #define I2C_SDA            30 // I2C, dala line for capacitive touchpad
-    #define I2C_SCL            31 // I2C, clock line for capacitive touchpad
+    #define BT_EMITTER_RX      27 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_TX      28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+    #define BT_EMITTER_MODE    29 // high transmit - low receive           (-1 if not available)
+    #define BT_EMITTER_CONNECT 30 // high impulse -> awake after POWER_OFF (-1 if not available)
+    #define I2C_SDA             7 // I2C, dala line for capacitive touchpad
+    #define I2C_SCL             8 // I2C, clock line for capacitive touchpad
     // free pins 32, 33, 46, 47, 48, 49, 50, 51, 52
 #endif
 #endif
