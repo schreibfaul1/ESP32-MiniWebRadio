@@ -94,9 +94,9 @@
     #define SD_MMC_D3          42
     #define SD_MMC_CLK         43
     #define SD_MMC_CMD         44
-    #define IR_PIN             8  // IR Receiver (if available)
+    #define IR_PIN              8 // IR Receiver (if available)
     #define TFT_MOSI           20 // TFT and TP (FSPI)
-    #define TFT_MISO           21  // TFT and TP (FSPI)
+    #define TFT_MISO           21 // TFT and TP (FSPI)
     #define TFT_SCK            22 // TFT and TP (FSPI)
     #define I2S_DOUT           23
     #define I2S_BCLK           24

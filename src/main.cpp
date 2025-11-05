@@ -972,11 +972,11 @@ bool connectToWiFi() {
 
     const char* SSID = _SSID;
     const char* PW = _PW;
-    line[0] = '\0';
-    line += SSID;
+    line = SSID;
     line += "\t";
     line += PW;
     pref.putString("wifiStr0", line.c_get());
+    WiFi.mode(WIFI_STA);
 
     for (int i = 0; i < 6; i++) {
         line.clear(); // Move this line outside the switch statement
@@ -994,7 +994,8 @@ bool connectToWiFi() {
         line[pos] = '\0';                 // terminate ssid
         char* ssid = line.get();          // ssid is the first part
         char* pw = line.get() + pos + 1;  // password is the second part
-        WiFi.mode(WIFI_STA);
+        MWR_LOG_DEBUG("ssid %s", ssid);
+        MWR_LOG_DEBUG("pw %s", pw);
         wifiMulti.addAP(ssid, pw); // SSID and PW in code"
         size_t offset = 0;
         size_t pwlen = strlen(pw);
@@ -1009,18 +1010,27 @@ bool connectToWiFi() {
         SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
     }
 
-    wifiMulti.setStrictMode(true);
+    // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
+    wifiMulti.setStrictMode(false);  // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
+    SerialPrintfln("WiFI_info:   Connecting WiFi...");
+
     wifiMulti.run();
 
-    SerialPrintfln("WiFI_info:   Connecting WiFi...");
-    if (WiFi.isConnected()) {
-        WiFi.setAutoReconnect(true);
-        if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
-        return true;
-    } else {
-        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
-        return false; // can't connect to any network
+    int i = 0;
+    while(!WiFi.isConnected()){
+        vTaskDelay(100);
+        i++;
+        if(i > 50) break;
     }
+    if(!WiFi.isConnected()){
+        SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
+        return false;
+    }
+    WiFi.setAutoReconnect(true);
+    if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
+    SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected");
+    return true; // can't connect to any network
+
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void setWiFiCredentials(const char* ssid, const char* password) {

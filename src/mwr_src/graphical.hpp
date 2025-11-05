@@ -1625,7 +1625,7 @@ class wifiSettings : public RegisterTable {
         if (m_sel_ssid->positionXY(x, y)) { ; }
         if (m_in_password->positionXY(x, y)) { ; }
         if (m_keyboard->positionXY(x, y)) {
-            // log_e("key pressed %i", m_keyboard->getVal());
+            log_e("key pressed %i", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
             m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
