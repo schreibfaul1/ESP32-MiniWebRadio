@@ -430,21 +430,29 @@ exit:
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength) { // upload from web to SD card
-    uint32_t     av;
-    uint32_t     nrOfBytesToWrite = contentLength;
-    uint32_t     bytesPerTransaction = 16384 * 2;
-    int32_t      bytesWritten = 0;
-    int32_t      bytesInTransBuf = 0;
-    int          ret = 0;
-    File         file;
+/* example:
+   startBoundary    ------WebKitFormBoundary6R1gey0yfb0yh8Ih\r\n
+                    Content-Disposition: form-data; name="audio"; filename="test.txt"\r\n
+                    Content-Type: text/plain\r\n\r\n
+                    xxxxxxx content xxxxxxxxxx
+    endBoundary     \r\n------WebKitFormBoundary6R1gey0yfb0yh8Ih--\r\n
+*/
+boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength) {
+    uint32_t av;
+    uint32_t nrOfBytesToWrite = contentLength;
+    uint32_t bytesPerTransaction = 16384 * 2;
+    int32_t bytesWritten = 0;
+    int32_t bytesInTransBuf = 0;
+    int32_t startBoundaryLength = 0;
+    int32_t endBoundaryLength = 0;
+    File file;
     ps_ptr<char> msg;
     ps_ptr<char> transBuf;
-
     transBuf.alloc(bytesPerTransaction);
 
     if (fs.exists(path)) fs.remove(path); // Vorherige Version entfernen, falls vorhanden
-    file = fs.open(path, FILE_WRITE);     // Datei zum Schreiben öffnen
+
+    file = fs.open(path, FILE_WRITE); // Datei zum Schreiben öffnen
     uint32_t t = millis();
 
     while (true) {
@@ -458,26 +466,33 @@ boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength)
                 goto exit;
             }
 
-            bytesWritten = 0;
-            while (bytesWritten < bytesInTransBuf) {
-                ret = file.write((uint8_t*)transBuf.get() + bytesWritten, bytesInTransBuf - bytesWritten);
-                if (ret < 0) {
-                    msg = "Error while writing on SD card";
-                    goto exit;
-                }
-                bytesWritten += ret;
-                log_i("bytesWritten %i, bytesInTransBuf %i, ret %i", bytesWritten, bytesInTransBuf, ret);
-            }
+            if (nrOfBytesToWrite == contentLength) { // first round
+                if (startsWith(transBuf.get(), "------")) { // ------WebKitFormBoundary\r\nContent-Disposition ....  \r\n\r\n
+                    int startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
+                    if (startBoundaryEndPos > 20) {
+                        startBoundaryLength = startBoundaryEndPos;
 
+                        nrOfBytesToWrite -= startBoundaryLength;
+                        bytesInTransBuf -= startBoundaryLength;
+
+                        endBoundaryLength = indexOf(transBuf.get(), "\r\n"); // same length as startBoundary + \r\n--\r\n
+                        endBoundaryLength += 2 + 4;  // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
+                        nrOfBytesToWrite -= endBoundaryLength;
+                    }
+                }
+            }
+            if(bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite; // only if endBoundary is in first round
+            bytesWritten = file.write((uint8_t*)transBuf.get() + startBoundaryLength, bytesInTransBuf);
+            startBoundaryLength = 0;
             if (bytesWritten != bytesInTransBuf) {
-                msg.assignf("write error in %s, bytesInTransBuf %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
+                msg.assignf("write error in %s, available %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
                 goto exit;
             }
             nrOfBytesToWrite -= bytesWritten;
             if (nrOfBytesToWrite == 0) break;
         }
         if ((t + 2000) < millis()) {
-            msg.assign("timeout in webSrv uploadfile()\n");
+            msg.assignf("timeout in webSrv uploadfile()\n");
             goto exit;
         }
     }

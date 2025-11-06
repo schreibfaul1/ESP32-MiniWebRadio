@@ -57,63 +57,63 @@
 #include <vector>
 
 #if TFT_CONTROLLER < 7
-#if CONFIG_IDF_TARGET_ESP32S3
-// Digital I/O used
-    #define TFT_CS             8
-    #define TFT_DC             12
-    #define TFT_BL             10 // at -1 the brightness menu is not displayed
-    #define TP_IRQ             39
-    #define TP_CS              15
-    #define SD_MMC_D0          11
-    #define SD_MMC_CLK         13
-    #define SD_MMC_CMD         14
-    #define IR_PIN             4  // IR Receiver (if available)
-    #define TFT_MOSI           18 // TFT and TP (FSPI)
-    #define TFT_MISO           2  // TFT and TP (FSPI)
-    #define TFT_SCK            17 // TFT and TP (FSPI)
-    #define I2S_DOUT           9
-    #define I2S_BCLK           3
-    #define I2S_LRC            1
-    #define I2S_MCLK           0
-    #define BT_EMITTER_RX      45 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_TX      38 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_MODE    20 // high transmit - low receive           (-1 if not available)
-    #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
-    #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
-    #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
-#endif
-#if CONFIG_IDF_TARGET_ESP32P4
-    #define TFT_CS             26
-    #define TFT_DC              3
-    #define TFT_BL              4 // at -1 the brightness menu is not displayed
-    #define TP_IRQ              5
-    #define TP_CS               2
-    #define SD_MMC_D0          39
-    #define SD_MMC_D1          40
-    #define SD_MMC_D2          41
-    #define SD_MMC_D3          42
-    #define SD_MMC_CLK         43
-    #define SD_MMC_CMD         44
-    #define IR_PIN              8 // IR Receiver (if available)
-    #define TFT_MOSI           20 // TFT and TP (FSPI)
-    #define TFT_MISO           21 // TFT and TP (FSPI)
-    #define TFT_SCK            22 // TFT and TP (FSPI)
-    #define I2S_DOUT           23
-    #define I2S_BCLK           24
-    #define I2S_LRC            25
-    #define I2S_MCLK           -1
-    #define BT_EMITTER_RX      27 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_TX      28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
-    #define BT_EMITTER_MODE    29 // high transmit - low receive           (-1 if not available)
-    #define BT_EMITTER_CONNECT 30 // high impulse -> awake after POWER_OFF (-1 if not available)
-    #define I2C_SDA             7 // I2C, dala line for capacitive touchpad
-    #define I2C_SCL             8 // I2C, clock line for capacitive touchpad
+    #if CONFIG_IDF_TARGET_ESP32S3
+    // Digital I/O used
+        #define TFT_CS             8
+        #define TFT_DC             12
+        #define TFT_BL             10 // at -1 the brightness menu is not displayed
+        #define TP_IRQ             39
+        #define TP_CS              15
+        #define SD_MMC_D0          11
+        #define SD_MMC_CLK         13
+        #define SD_MMC_CMD         14
+        #define IR_PIN             4  // IR Receiver (if available)
+        #define TFT_MOSI           18 // TFT and TP (FSPI)
+        #define TFT_MISO           2  // TFT and TP (FSPI)
+        #define TFT_SCK            17 // TFT and TP (FSPI)
+        #define I2S_DOUT           9
+        #define I2S_BCLK           3
+        #define I2S_LRC            1
+        #define I2S_MCLK           0
+        #define BT_EMITTER_RX      45 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      38 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_MODE    20 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
+        #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
+        #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
+    #endif
+    #if CONFIG_IDF_TARGET_ESP32P4
+        #define TFT_CS             26
+        #define TFT_DC             3
+        #define TFT_BL             4 // at -1 the brightness menu is not displayed
+        #define TP_IRQ             5
+        #define TP_CS              2
+        #define SD_MMC_D0          39
+        #define SD_MMC_D1          40
+        #define SD_MMC_D2          41
+        #define SD_MMC_D3          42
+        #define SD_MMC_CLK         43
+        #define SD_MMC_CMD         44
+        #define IR_PIN             8  // IR Receiver (if available)
+        #define TFT_MOSI           20 // TFT and TP (FSPI)
+        #define TFT_MISO           21 // TFT and TP (FSPI)
+        #define TFT_SCK            22 // TFT and TP (FSPI)
+        #define I2S_DOUT           23
+        #define I2S_BCLK           24
+        #define I2S_LRC            25
+        #define I2S_MCLK           -1
+        #define BT_EMITTER_RX      27 // TX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_TX      28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
+        #define BT_EMITTER_MODE    29 // high transmit - low receive           (-1 if not available)
+        #define BT_EMITTER_CONNECT 30 // high impulse -> awake after POWER_OFF (-1 if not available)
+        #define I2C_SDA            7  // I2C, dala line for capacitive touchpad
+        #define I2C_SCL            8  // I2C, clock line for capacitive touch
     // free pins 32, 33, 46, 47, 48, 49, 50, 51, 52
-#endif
-#endif
+    #endif // CONFIG_IDF_TARGET_ESP32P4
+#endif     // CONFIG_IDF_TARGET_ESP32S3
 
 #if TFT_CONTROLLER == 7 // RGB display
-
+    #if CONFIG_IDF_TARGET_ESP32S3
 const TFT_RGB::Pins RGB_PINS = { // SUNTON 7"
     .b0 = 15, .b1 = 7,  .b2 = 6,  .b3 = 5,  .b4 = 4,  .g0 = 9,     .g1 = 46,    .g2 = 3,  .g3 = 8,    .g4 = 16, .g5 = 1,
     .r0 = 14, .r1 = 21, .r2 = 47, .r3 = 48, .r4 = 45, .hsync = 39, .vsync = 40, .de = 41, .pclk = 42, .bl = 2};
@@ -128,27 +128,30 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
                                     .vsync_back_porch = 10,
                                     .vsync_front_porch = 22};
 
-    #define TP_SDA             19
-    #define TP_SCL             20
-    #define TP_IRQ             -1
-    #define SD_MMC_CMD         11
-    #define SD_MMC_CLK         12
-    #define SD_MMC_D0          13
-    #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
-    #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
-    #define I2S_DOUT           17
-    #define I2S_BCLK           0
-    #define I2S_LRC            18
-    #define I2S_MCLK           -1 // important!
-    #define IR_PIN             38 // IR Receiver (if available)
-    #define BT_EMITTER_RX      -1 // must be -1, not enough pins
-    #define BT_EMITTER_TX      -1 // must be -1, not enough pins
-    #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
-    #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
-    #define TFT_BL             2  // same as RGB_PINS.bl
-    #define I2C_SDA            -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
-    #define I2C_SCL            -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
-
+        #define TP_SDA             19
+        #define TP_SCL             20
+        #define TP_IRQ             -1
+        #define SD_MMC_CMD         11
+        #define SD_MMC_CLK         12
+        #define SD_MMC_D0          13
+        #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
+        #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
+        #define I2S_DOUT           17
+        #define I2S_BCLK           0
+        #define I2S_LRC            18
+        #define I2S_MCLK           -1 // important!
+        #define IR_PIN             38 // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
+        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
+        #define TFT_BL             2  // same as RGB_PINS.bl
+        #define I2C_SDA            -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
+        #define I2C_SCL            -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
+    #endif                            // CONFIG_IDF_TARGET_ESP32S3
+    #if CONFIG_IDF_TARGET_ESP32P4
+    // todo
+    #endif
 #endif
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -369,7 +372,7 @@ struct tone_s {
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // prototypes (main.cpp)
-bool SD_MMC_exists(const char* path);
+bool         SD_MMC_exists(const char* path);
 boolean      defaultsettings();
 void         updateSettings();
 void         urldecode(char* str);
@@ -729,7 +732,8 @@ static void                        register_object(RegisterTable* obj) {
 }
 inline void get_registered_names() {
     for (auto obj : registertable_objects) {
-        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_RESET, "\n", obj->getName().c_get(), obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
+        printf(ANSI_ESC_WHITE "    registered object:" ANSI_ESC_YELLOW " %-17s" ANSI_ESC_WHITE " is enabled: %-5s" ANSI_ESC_RESET, "\n", obj->getName().c_get(),
+               obj->isEnabled() ? ANSI_ESC_RED "yes" : ANSI_ESC_BLUE "no");
     }
 }
 inline void disableAllObjects() {
