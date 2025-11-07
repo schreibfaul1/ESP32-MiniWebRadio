@@ -214,7 +214,7 @@ function uploadFile(uploadFile){
     console.log(file.name, file.size)
     if(lastNode.data.path === '/') filename = file.name
     else filename = "/" + file.name
-    var theUrl = 'SD_Upload?' + lastNode.data.path + filename + '&version=' + Math.random()
+    var theUrl = 'upload_player2sd?' + lastNode.data.path + filename + '&version=' + Math.random()
     var fd = new FormData(document.forms.form2)
     var xhr = new XMLHttpRequest()
     // xhr.timeout = 2000; // time in milliseconds

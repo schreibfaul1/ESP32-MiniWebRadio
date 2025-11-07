@@ -217,13 +217,12 @@ SemaphoreHandle_t mutex_display;
     ║                                                     D E F A U L T S E T T I N G S                                                         ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-bool SD_MMC_exists(const char* path){
+bool SD_MMC_exists(const char* path) {
     return SD_MMC.exists(path);
 }
 
-
-
-// clang-format off  🟢🟡🔴
+// clang-format off
+/*🟢🟡🔴*/
 boolean defaultsettings() {
 
     if (!SD_MMC.exists("/ir_buttons.json")) { // if not found ir_buttons.json create a default file
@@ -334,7 +333,8 @@ boolean defaultsettings() {
     staMgnt.updateStationsList();
     return true;
 }
-// clang-format on  🟢🟡🔴
+// clang-format on
+/*🟢🟡🔴*/
 
 void updateSettings() {
     if (!s_settings.lastconnectedhost.valid()) s_settings.lastconnectedhost.assign("");
@@ -442,20 +442,21 @@ void urldecode(char* str) {
  *                                                               T I M E R                                                                           *
  *****************************************************************************************************************************************************/
 
-// clang-format off
-void timer100ms(){
+void timer100ms() {
     static uint16_t ms100 = 0;
     s_f_100ms = true;
-    ms100 ++;
-    if(!(ms100 % 10))   {
-        s_f_1sec  = true;
+    ms100++;
+    if (!(ms100 % 10)) {
+        s_f_1sec = true;
         s_time_s = rtc.gettime_s();
-        if(s_time_s.ends_with("59:53"))  s_f_timeSpeech = true;
+        if (s_time_s.ends_with("59:53")) s_f_timeSpeech = true;
     }
-    if(!(ms100 % 100))  s_f_10sec = true;
-    if(!(ms100 % 600)) {s_f_1min  = true; ms100 = 0;}
+    if (!(ms100 % 100)) s_f_10sec = true;
+    if (!(ms100 % 600)) {
+        s_f_1min = true;
+        ms100 = 0;
+    }
 }
-// clang-format on
 
 /*****************************************************************************************************************************************************
  *                                                               D I S P L A Y                                                                       *
@@ -540,8 +541,6 @@ inline void clearButtonBar() {
 inline void clearAll() {
     tft.copyFramebuffer(1, 0, 0, 0, displayConfig.dispWidth, displayConfig.dispHeight);
 }
-
-// clang-format on
 
 inline uint16_t txtlen(String str) {
     uint16_t len = 0;
@@ -1011,18 +1010,18 @@ bool connectToWiFi() {
     }
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
-    wifiMulti.setStrictMode(false);  // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
+    wifiMulti.setStrictMode(false); // Default is true.  Library will disconnect and forget currently connected AP if it's not in the AP list.
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
 
     wifiMulti.run();
 
     int i = 0;
-    while(!WiFi.isConnected()){
+    while (!WiFi.isConnected()) {
         vTaskDelay(100);
         i++;
-        if(i > 50) break;
+        if (i > 50) break;
     }
-    if(!WiFi.isConnected()){
+    if (!WiFi.isConnected()) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "WiFi credentials are not correct");
         return false;
     }
@@ -1030,7 +1029,6 @@ bool connectToWiFi() {
     if (WIFI_TX_POWER >= 2 && WIFI_TX_POWER <= 21) WiFi.setTxPower((wifi_power_t)(WIFI_TX_POWER * 4));
     SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "WiFi connected");
     return true; // can't connect to any network
-
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void setWiFiCredentials(const char* ssid, const char* password) {
@@ -1307,7 +1305,7 @@ void setup() {
     s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif
 
-    if (!s_f_sd_card_found){
+    if (!s_f_sd_card_found) {
         clearAll();
         tft.setFont(displayConfig.fonts[6]);
         tft.setTextColor(TFT_YELLOW);
@@ -1881,13 +1879,10 @@ void setTimeCounter(uint8_t sec) {
     }
 }
 
-// clang-format off
-
 /*         ╔═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
            ║                                                                              C H A N G E    S T A T E                                                                       ║
            ╚═════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝   */
 
-// clang-format on
 void changeState(int32_t state) {
     disableAllObjects();
     s_f_volBarVisible = false;
@@ -2324,7 +2319,6 @@ void changeState(int32_t state) {
     }
     s_state = state;
 }
-// clang-format on
 
 ps_ptr<char> get_WiFi_PW(const char* ssid) {
     ps_ptr<char> line;
@@ -4602,26 +4596,24 @@ void ir_long_key(int8_t key) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 // Event from TouchPad
-// clang-format off
+
 void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
-    if(s_f_sleeping) return;  // awake in tp_released()
+    if (s_f_sleeping) return; // awake in tp_released()
     const char* objName = NULL;
-    if(s_state == RADIO && y > layout.winHeader.y + layout.winHeader.h && y < layout.sdrOvBtns.y){
+    if (s_state == RADIO && y > layout.winHeader.y + layout.winHeader.h && y < layout.sdrOvBtns.y) {
         objName = "backpane";
         s_radioSubMenue++;
-        if(s_radioSubMenue == 3) s_radioSubMenue = 0;
+        if (s_radioSubMenue == 3) s_radioSubMenue = 0;
         changeState(RADIO);
         goto exit;
     }
     objName = isObjectClicked(x, y);
 exit:
-    if(objName){
-        SerialPrintfln("click on ..  %s", objName);
-    }
+    if (objName) { SerialPrintfln("click on ..  %s", objName); }
     return;
 }
-void tp_long_pressed(uint16_t x, uint16_t y){
+void tp_long_pressed(uint16_t x, uint16_t y) {
 
     // if(s_f_muteIsPressed) {
     //     if(!s_f_mute){
@@ -4633,12 +4625,13 @@ void tp_long_pressed(uint16_t x, uint16_t y){
     //     return;
     // }
 
-    if(s_state == DLNAITEMSLIST){
-    //    lst_DLNA.longPressed(x, y);
+    if (s_state == DLNAITEMSLIST) {
+        //    lst_DLNA.longPressed(x, y);
     }
 }
-//————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// clang-format off  🟢🟡🔴
+// ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// clang-format off
+/*🟢🟡🔴*/
 void tp_released(uint16_t x, uint16_t y){
 
     if(s_f_sleeping){ wake_up(); return;}   // if sleeping
@@ -4712,53 +4705,56 @@ void tp_released(uint16_t x, uint16_t y){
     }
     // SerialPrintfln("tp_released, state is: %i", s_state);
 }
-// clang-format on  🟢🟡🔴
+
 void tp_long_released(uint16_t x, uint16_t y){
 //    log_w("long released)");
 //    if(s_state == DLNAITEMSLIST) {lst_DLNA.longReleased();}
 }
+// clang-format on
+/*🟢🟡🔴*/
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-void tp_moved(uint16_t x, uint16_t y){
-    if(s_state == RADIO){
-        if(sdr_RA_volume.positionXY(x, y)) return;
+void tp_moved(uint16_t x, uint16_t y) {
+    if (s_state == RADIO) {
+        if (sdr_RA_volume.positionXY(x, y)) return;
     }
-    if(s_state == STATIONSLIST){
-        if(lst_RADIO.positionXY(x, y)) return;
+    if (s_state == STATIONSLIST) {
+        if (lst_RADIO.positionXY(x, y)) return;
     }
-    if(s_state == PLAYER){
-        if(sdr_PL_volume.positionXY(x, y)) return;
+    if (s_state == PLAYER) {
+        if (sdr_PL_volume.positionXY(x, y)) return;
     }
-    if(s_state == AUDIOFILESLIST){
-        if(lst_PLAYER.positionXY(x, y)) return;
+    if (s_state == AUDIOFILESLIST) {
+        if (lst_PLAYER.positionXY(x, y)) return;
     }
-    if(s_state == DLNA){
-        if(sdr_DL_volume.positionXY(x, y)) return;
+    if (s_state == DLNA) {
+        if (sdr_DL_volume.positionXY(x, y)) return;
     }
-    if(s_state == CLOCK){
-        if(sdr_CL_volume.positionXY(x, y)) return;
+    if (s_state == CLOCK) {
+        if (sdr_CL_volume.positionXY(x, y)) return;
     }
-    if(s_state == DLNAITEMSLIST){
-        if(lst_DLNA.positionXY(x, y)) return;
+    if (s_state == DLNAITEMSLIST) {
+        if (lst_DLNA.positionXY(x, y)) return;
     }
-    if(s_state == BRIGHTNESS){
-        if(sdr_BR_value.positionXY(x, y)) return;
+    if (s_state == BRIGHTNESS) {
+        if (sdr_BR_value.positionXY(x, y)) return;
     }
-    if(s_state == EQUALIZER){
-        if(sdr_EQ_lowPass.positionXY(x, y)) return;
-        if(sdr_EQ_bandPass.positionXY(x, y)) return;
-        if(sdr_EQ_highPass.positionXY(x, y)) return;
-        if(sdr_EQ_balance.positionXY(x, y)) return;
+    if (s_state == EQUALIZER) {
+        if (sdr_EQ_lowPass.positionXY(x, y)) return;
+        if (sdr_EQ_bandPass.positionXY(x, y)) return;
+        if (sdr_EQ_highPass.positionXY(x, y)) return;
+        if (sdr_EQ_balance.positionXY(x, y)) return;
     }
-    if(s_state == IR_SETTINGS){
-        if(btn_IR_radio.positionXY(x, y)) return;
+    if (s_state == IR_SETTINGS) {
+        if (btn_IR_radio.positionXY(x, y)) return;
     }
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-//Events from websrv
-// clang-format off  🟢🟡🔴
+// Events from websrv /*🟢🟡🔴*/
+// clang-format off
+
 void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  // called via html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"", cmd.c_get(), param.c_get(), arg.c_get());
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
@@ -5005,14 +5001,19 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param.c_get());
     webSrv.sendStatus(400);
 }
-// clang-format on  🟢🟡🔴
-
+// clang-format on
+/*🟢🟡🔴*/
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// POST Events from websrv /*🟢🟡🔴*/
+// clang-format off
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    // log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
     if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
+
+    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);
@@ -5027,7 +5028,7 @@ void WEBSRV_onDelete(const char* cmd,  const char* param, const char* arg){  // 
     webSrv.sendStatus(400);
 }
 // clang-format on
-
+/*🟢🟡🔴*/
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 //  Events from DLNA
 void on_dlna_client(const DLNA_Client::msg_s& msg) {
@@ -5186,7 +5187,8 @@ void kcx_bt_scanItems(const char* jsonItems) { // Every time an item (name and a
 }
 
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// clang-format off  🟢🟡🔴
+// clang-format off
+/*🟢🟡🔴*/
 void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
     char c[10];
     if (name.equals("sdr_RA_volume")) {
@@ -5250,9 +5252,11 @@ void graphicObjects_OnChange(ps_ptr<char> name, int32_t arg1) {
 
     log_d("unused event: graphicObject %s was changed, val %li", name, arg1);
 }
-// clang-format on  🟢🟡🔴
+// clang-format on
+/*🟢🟡🔴*/
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// clang-format off  🟢🟡🔴
+// clang-format off
+/*🟢🟡🔴*/
 void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is inactive
 
     // all state
@@ -5470,9 +5474,11 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
     }
     log_d("unused event: graphicObject %s was clicked", name);
 }
-// clang-format on  🟢🟡🔴
+// clang-format on
+/*🟢🟡🔴*/
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-// clang-format off  🟢🟡🔴
+// clang-format off
+/*🟢🟡🔴*/
 void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
 
     // all state
@@ -5855,4 +5861,5 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
     }
     log_d("unused event: graphicObject %s was released", name);
 }
-// clang-format off  🟢🟡🔴
+// clang-format on
+/*🟢🟡🔴*/

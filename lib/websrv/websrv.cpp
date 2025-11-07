@@ -434,21 +434,23 @@ exit:
    startBoundary    ------WebKitFormBoundary6R1gey0yfb0yh8Ih\r\n
                     Content-Disposition: form-data; name="audio"; filename="test.txt"\r\n
                     Content-Type: text/plain\r\n\r\n
-                    xxxxxxx content xxxxxxxxxx
+
     endBoundary     \r\n------WebKitFormBoundary6R1gey0yfb0yh8Ih--\r\n
 */
-boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength) {
-    uint32_t av;
-    uint32_t nrOfBytesToWrite = contentLength;
-    uint32_t bytesPerTransaction = 16384 * 2;
-    int32_t bytesWritten = 0;
-    int32_t bytesInTransBuf = 0;
-    int32_t startBoundaryLength = 0;
-    int32_t endBoundaryLength = 0;
-    File file;
+boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength) {
+    uint32_t     av;
+    uint32_t     nrOfBytesToWrite = contentLength;
+    uint32_t     bytesPerTransaction = UINT16_MAX;
+    uint32_t     bytes_received = 0;
+    int32_t      bytesWritten = 0;
+    int32_t      bytesInTransBuf = 0;
+    int32_t      startBoundaryLength = 0;
+    int32_t      endBoundaryLength = 0;
+    File         file;
     ps_ptr<char> msg;
     ps_ptr<char> transBuf;
     transBuf.alloc(bytesPerTransaction);
+    bool first_round = true;
 
     if (fs.exists(path)) fs.remove(path); // Vorherige Version entfernen, falls vorhanden
 
@@ -458,15 +460,19 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
     while (true) {
         if (cmdclient.available()) {
             t = millis();
+            av = 0;
 
-            av = min3(cmdclient.available(), bytesPerTransaction, nrOfBytesToWrite);
+            av = min3(cmdclient.available(), bytesPerTransaction, contentLength - bytes_received);
+            // log_i("bytes_received %i, av %i", bytes_received, av);
+            bytes_received += av;
             bytesInTransBuf = cmdclient.read((uint8_t*)transBuf.get(), av);
             if (bytesInTransBuf != av) {
                 msg.assignf("read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
                 goto exit;
             }
 
-            if (nrOfBytesToWrite == contentLength) { // first round
+            if (first_round) { // first round
+                first_round = false;
                 if (startsWith(transBuf.get(), "------")) { // ------WebKitFormBoundary\r\nContent-Disposition ....  \r\n\r\n
                     int startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
                     if (startBoundaryEndPos > 20) {
@@ -476,13 +482,14 @@ boolean WebSrv::uploadfile(fs::FS &fs, const char* path, uint32_t contentLength)
                         bytesInTransBuf -= startBoundaryLength;
 
                         endBoundaryLength = indexOf(transBuf.get(), "\r\n"); // same length as startBoundary + \r\n--\r\n
-                        endBoundaryLength += 2 + 4;  // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
+                        endBoundaryLength += 2 + 4;                          // \r\n------WebKitFormBoundaryBU7PpycW1D7ZjARC--\r\n
                         nrOfBytesToWrite -= endBoundaryLength;
                     }
                 }
             }
-            if(bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite; // only if endBoundary is in first round
+            if (bytesInTransBuf > nrOfBytesToWrite) bytesInTransBuf = nrOfBytesToWrite; // only if endBoundary is in first round
             bytesWritten = file.write((uint8_t*)transBuf.get() + startBoundaryLength, bytesInTransBuf);
+            // log_w("bytesInTransBuf %i", bytesInTransBuf);
             startBoundaryLength = 0;
             if (bytesWritten != bytesInTransBuf) {
                 msg.assignf("write error in %s, available %li bytes, written %li bytes\n", path, bytesInTransBuf, bytesWritten);
