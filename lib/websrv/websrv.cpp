@@ -104,7 +104,7 @@ void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
+bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
 
     if (!path) {
         m_msg.e = evt_error;
@@ -189,12 +189,12 @@ error:
     return false;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::send(const char* cmd, int msg, uint8_t opcode) { // sends text messages via websocket
+bool WebSrv::send(const char* cmd, int msg, uint8_t opcode) { // sends text messages via websocket
     char nr_txt[10];
     itoa(msg, nr_txt, 10);
     return send(cmd, nr_txt, opcode);
 }
-boolean WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
+bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends text messages via websocket
     uint8_t headerLen = 2;
 
     if (!hasclient_WS) {
@@ -269,7 +269,7 @@ void WebSrv::sendPong() { // heartbeat, keep alive via websockets
 //
 //       endBoundary          ------WebKitFormBoundaryi52Pv7aBYloXIuZB--
 //
-boolean WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength) {
+bool WebSrv::uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength) {
     File           file;
     uint32_t       t = millis();
     const uint32_t TIMEOUT = 2000;
@@ -437,7 +437,7 @@ exit:
 
     endBoundary     \r\n------WebKitFormBoundary6R1gey0yfb0yh8Ih--\r\n
 */
-boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength) {
+bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType) {
     uint32_t     av;
     uint32_t     nrOfBytesToWrite = contentLength;
     uint32_t     bytesPerTransaction = UINT16_MAX;
@@ -452,9 +452,9 @@ boolean WebSrv::uploadfile(fs::FS& fs, const char* path, uint32_t contentLength)
     transBuf.alloc(bytesPerTransaction);
     bool first_round = true;
 
-    if (fs.exists(path)) fs.remove(path); // Vorherige Version entfernen, falls vorhanden
+    if (fs.exists(path.c_get())) fs.remove(path.c_get()); // remove previous version if there is one
 
-    file = fs.open(path, FILE_WRITE); // Datei zum Schreiben öffnen
+    file = fs.open(path.c_get(), FILE_WRITE); // Datei zum Schreiben öffnen
     uint32_t t = millis();
 
     while (true) {
@@ -579,7 +579,7 @@ const char* WebSrv::getContentType(ps_ptr<char>& filename) {
     return "text/plain";
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::handlehttp() { // HTTPserver, message received
+bool WebSrv::handlehttp() { // HTTPserver, message received
 
     bool     method_GET = false;
     bool     method_POST = false;
@@ -808,7 +808,7 @@ exit:
     return true;
 }
 //--------------------------------------------------------------------------------------------------------------
-boolean WebSrv::handleWS() { // Websocketserver, receive messages
+bool WebSrv::handleWS() { // Websocketserver, receive messages
     String currentLine = ""; // Build up to complete line
 
     if (!webSocketClient.connected()) {
@@ -1031,7 +1031,7 @@ void WebSrv::loop() {
     return;
 }
 //--------------------------------------------------------------------------------------------------------------
-void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, boolean header) {
+void WebSrv::reply(ps_ptr<char> response, const char* MIMEType, bool header) {
     if (header == true) {
         int32_t l = response.strlen();
         // HTTP header

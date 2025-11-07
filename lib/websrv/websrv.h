@@ -90,13 +90,13 @@ class WebSrv {
     void    loop();
     void    show(const char* pagename, const char* MIMEType, int16_t len = -1);
     void    show_not_found();
-    boolean streamfile(fs::FS& fs, const char* path);
-    boolean send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
-    boolean send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
+    bool    streamfile(fs::FS& fs, const char* path);
+    bool    send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
+    bool    send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
     void    sendPing();
     void    sendPong();
-    boolean uploadfile(fs::FS& fs, const char* path, uint32_t contentLength);
-    boolean uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
+    bool    uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
+    bool    uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
     void    reply(ps_ptr<char> response, const char* MIMEType, boolean header = true);
     void    sendStatus(uint16_t HTTPstatusCode);
 

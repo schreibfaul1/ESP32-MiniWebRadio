@@ -1636,19 +1636,16 @@ void setStationViaURL(const char* url, const char* extension) {
     dispFooter.updateStation(0); // set 000
 }
 
-void savefile(const char* fileName, uint32_t contentLength) { // save the uploadfile on SD_MMC
-    char fn[256];
-    if (!startsWith(fileName, "/")) {
-        strcpy(fn, "/");
-        strcat(fn, fileName);
-    } else {
-        strcpy(fn, fileName);
+void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> contentType) { // save the uploadfile on SD_MMC
+
+    if (!fileName.starts_with("/")) {
+        fileName = "/" + fileName;
     }
-    if (webSrv.uploadfile(SD_MMC, fn, contentLength)) {
-        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+    if (webSrv.uploadfile(SD_MMC, fileName, contentLength, contentType)) {
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fileName.c_get());
         webSrv.sendStatus(200);
     } else {
-        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fn);
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fileName.c_get());
         webSrv.sendStatus(400);
     }
 }
@@ -5009,11 +5006,11 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
     log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
-    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength); // PC --> SD
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, arg); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
 
-    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength); return; }
+    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, arg); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);
