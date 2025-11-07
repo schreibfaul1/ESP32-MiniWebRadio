@@ -32,7 +32,7 @@ class WebSrv {
 
     // callbacks ---------------------------------------------------------
   public:
-    typedef enum { evt_info = 0, evt_error, evt_command} event_t;
+    typedef enum { evt_info = 0, evt_error, evt_command } event_t;
     struct msg_s {
         const char*  msg = nullptr;
         const char*  s = nullptr;
@@ -69,6 +69,15 @@ class WebSrv {
     String  WS_sec_Key;
     String  WS_resp_Key;
     String  WS_sec_conKey = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    bool    m_handle_upload = false;
+
+    struct upload_items {
+        File         uploadfile;
+        ps_ptr<char> endBoundary;
+        uint16_t     max_endBoundary_length;
+        uint32_t     bytes_left;
+    };
+    upload_items m_upload_items;
 
   protected:
     String      calculateWebSocketResponseKey(String sec_WS_key);
@@ -81,24 +90,25 @@ class WebSrv {
     void        url_decode_in_place(char* url);
     String      UTF8toASCII(String str);
     String      responseCodeToString(int32_t code);
+    void        handle_upload_file();
 
   public:
     enum { HTTP_NONE = 0, HTTP_GET = 1, HTTP_POST = 2, HTTP_PUT = 3 };
     enum { Continuation_Frame = 0x00, Text_Frame = 0x01, Binary_Frame = 0x02, Connection_Close_Frame = 0x08, Ping_Frame = 0x09, Pong_Frame = 0x0A };
-    void    begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
-    void    stop();
-    void    loop();
-    void    show(const char* pagename, const char* MIMEType, int16_t len = -1);
-    void    show_not_found();
-    bool    streamfile(fs::FS& fs, const char* path);
-    bool    send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
-    bool    send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
-    void    sendPing();
-    void    sendPong();
-    bool    uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
-    bool    uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
-    void    reply(ps_ptr<char> response, const char* MIMEType, boolean header = true);
-    void    sendStatus(uint16_t HTTPstatusCode);
+    void begin(uint16_t http_port = 80, uint16_t websocket_port = 81);
+    void stop();
+    void loop();
+    void show(const char* pagename, const char* MIMEType, int16_t len = -1);
+    void show_not_found();
+    bool streamfile(fs::FS& fs, const char* path);
+    bool send(const char* cmd, int msg, uint8_t opcode = Text_Frame);
+    bool send(ps_ptr<char> cmd, ps_ptr<char> msg = "", uint8_t opcode = Text_Frame);
+    void sendPing();
+    void sendPong();
+    bool uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
+    bool uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
+    void reply(ps_ptr<char> response, const char* MIMEType, boolean header = true);
+    void sendStatus(uint16_t HTTPstatusCode);
 
     const char JSON[17] = "application/json";
     const char TEXT[10] = "text/html";
@@ -178,6 +188,13 @@ class WebSrv {
     }
 
     //--------------------------------------------------------------------------------------------------------------
+
+// Macro for comfortable calls
+#define WS_LOG_ERROR(fmt, ...)   Audio::AUDIO_LOG_IMPL(1, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define WS_LOG_WARN(fmt, ...)    Audio::AUDIO_LOG_IMPL(2, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define WS_LOG_INFO(fmt, ...)    Audio::AUDIO_LOG_IMPL(3, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define WS_LOG_DEBUG(fmt, ...)   Audio::AUDIO_LOG_IMPL(4, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+#define WS_LOG_VERBOSE(fmt, ...) Audio::AUDIO_LOG_IMPL(5, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
 };
 
 #endif /* WEBSRV_H_ */

@@ -1642,7 +1642,7 @@ void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> conten
         fileName = "/" + fileName;
     }
     if (webSrv.uploadfile(SD_MMC, fileName, contentLength, contentType)) {
-        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fileName.c_get());
+        SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " in progress", fileName.c_get());
         webSrv.sendStatus(200);
     } else {
         SerialPrintfln("save file:   " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD failed", fileName.c_get());
@@ -4751,7 +4751,7 @@ void tp_moved(uint16_t x, uint16_t y) {
 
 void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  // called via html
 
-    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_INFO){
+    if(CORE_DEBUG_LEVEL == ARDUHAL_LOG_LEVEL_DEBUG){
         SerialPrintfln("WS_onCmd:    " ANSI_ESC_YELLOW "cmd=\"%s\", params=\"%s\", arg=\"%s\"", cmd.c_get(), param.c_get(), arg.c_get());
     }
     #define CMD_EQUALS(x) if(cmd.equals(x) == true)
@@ -5005,12 +5005,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 // clang-format off
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
-    log_w("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
+    MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
     if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, arg); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
 
-    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, arg); return; }
+    if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, contentType); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);
