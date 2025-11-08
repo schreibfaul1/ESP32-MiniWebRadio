@@ -118,14 +118,14 @@ bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD
         if (m_websrv_callback) m_websrv_callback(m_msg);
         return false;
     } // guard
-    for (int i = 0; path[i] != '\0'; ++i) {
+    for (int i = 0; path[i] != '\0'; ++i) {  // Validate path for illegal characters
         if (path[i] < 32) {
             m_msg.e = evt_info;
             m_msg.arg.assignf(ANSI_ESC_RED "Illegal character in path");
             if (m_websrv_callback) m_websrv_callback(m_msg);
             return false;
         }
-    } // guard                                                                                        // Validate path for illegal characters
+    } // guard
     if (!fs.exists(path)) {
         show_not_found();
         return false;
