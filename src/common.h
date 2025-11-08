@@ -5,7 +5,7 @@
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
-#define TFT_CONTROLLER    7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER    5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     80000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
@@ -88,13 +88,13 @@
         #define TFT_BL             4 // at -1 the brightness menu is not displayed
         #define TP_IRQ             5
         #define TP_CS              2
-        #define SD_MMC_D0          39
-        #define SD_MMC_D1          40
-        #define SD_MMC_D2          41
-        #define SD_MMC_D3          42
-        #define SD_MMC_CLK         43
-        #define SD_MMC_CMD         44
-        #define IR_PIN             8  // IR Receiver (if available)
+        #define SD_MMC_D0          39 // also SDIO to ESP32-C6, do not change this pin
+        #define SD_MMC_D1          40 // also SDIO to ESP32-C6, do not change this pin
+        #define SD_MMC_D2          41 // also SDIO to ESP32-C6, do not change this pin
+        #define SD_MMC_D3          42 // also SDIO to ESP32-C6, do not change this pin
+        #define SD_MMC_CLK         43 // also SDIO to ESP32-C6, do not change this pin
+        #define SD_MMC_CMD         44 // also SDIO to ESP32-C6, do not change this pin
+        #define IR_PIN             32  // IR Receiver (if available)
         #define TFT_MOSI           20 // TFT and TP (FSPI)
         #define TFT_MISO           21 // TFT and TP (FSPI)
         #define TFT_SCK            22 // TFT and TP (FSPI)

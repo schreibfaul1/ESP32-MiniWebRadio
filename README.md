@@ -45,7 +45,8 @@ Optional HW:
 Control is via the display touchscreen or a web page in a browser, no additional components such as switches, rotary encoders, capacitors or resistors are required.
 
 Schematic<br>SPI Display
-![Schematic ESP32-S3 with external DAC](docs/MWR_V4_SPI_Display_schematic.jpg)<br>
+![Schematic ESP32-S3 with external DAC](docs/MWR_S3_SPI_Display_schematic.jpg)<br>
+![Schematic ESP32-P4 with external DAC](docs/MWR_P4_SPI_Display_schematic.jpg)<br>
 <br>RGB Display
 ![Schematic ESP32-S3 with RGB Display](docs/MWR_V4_RGB_Display_schematic.jpg)<br>
 <br>
