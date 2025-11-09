@@ -254,7 +254,8 @@ extern SemaphoreHandle_t        mutex_rtc;
 extern RTIME                    rtc;
 extern WebSrv                   webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
-void                            SerialPrintfln(const char* fmt, ...) {
+
+void SerialPrintfln(const char* fmt, ...) {
     ps_ptr<char> myLog;
     if (newLine) {
         newLine = false;
