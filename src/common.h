@@ -88,13 +88,13 @@
         #define TFT_BL             4 // at -1 the brightness menu is not displayed
         #define TP_IRQ             5
         #define TP_CS              2
-        #define SD_MMC_D0          39 // also SDIO to ESP32-C6, do not change this pin
-        #define SD_MMC_D1          40 // also SDIO to ESP32-C6, do not change this pin
-        #define SD_MMC_D2          41 // also SDIO to ESP32-C6, do not change this pin
-        #define SD_MMC_D3          42 // also SDIO to ESP32-C6, do not change this pin
-        #define SD_MMC_CLK         43 // also SDIO to ESP32-C6, do not change this pin
-        #define SD_MMC_CMD         44 // also SDIO to ESP32-C6, do not change this pin
-        #define IR_PIN             32  // IR Receiver (if available)
+        #define SD_MMC_D0          39
+        #define SD_MMC_D1          40
+        #define SD_MMC_D2          41
+        #define SD_MMC_D3          42
+        #define SD_MMC_CLK         43
+        #define SD_MMC_CMD         44
+        #define IR_PIN             32 // IR Receiver (if available)
         #define TFT_MOSI           20 // TFT and TP (FSPI)
         #define TFT_MISO           21 // TFT and TP (FSPI)
         #define TFT_SCK            22 // TFT and TP (FSPI)
@@ -254,7 +254,8 @@ extern SemaphoreHandle_t        mutex_rtc;
 extern RTIME                    rtc;
 extern WebSrv                   webSrv;
 extern std::deque<ps_ptr<char>> s_logBuffer;
-void                            SerialPrintfln(const char* fmt, ...) {
+
+void SerialPrintfln(const char* fmt, ...) {
     ps_ptr<char> myLog;
     if (newLine) {
         newLine = false;
@@ -535,7 +536,7 @@ inline int32_t indexOf(const char* haystack, const char* needle, int32_t startIn
     const char* p = haystack;
     for (; startIndex > 0; startIndex--)
         if (*p++ == '\0') return -1;
-    char* pos = strstr(p, needle);
+    const char* pos = strstr(p, needle);
     if (pos == nullptr) return -1;
     return pos - haystack;
 }

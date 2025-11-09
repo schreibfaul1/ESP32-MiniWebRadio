@@ -676,25 +676,24 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
             default: s_sleeptime = 0; break; // min
         }
     }
-    char tmp[10];
-    sprintf(tmp, "%d%02d", s_sleeptime / 60, s_sleeptime % 60);
-    char path[128] = "/digits_small/";
+    ps_ptr<char> tmp, path;
+    tmp.assignf("%d%02d", s_sleeptime / 60, s_sleeptime % 60);
 
     for (uint8_t i = 0; i < 4; i++) {
-        strcpy(path, "/digits_small/");
+        path = "/digits_small/";
         if (i == 3) {
             if (!s_sleeptime)
-                strcat(path, "dsgn.jpg");
+                path.append("dsgn.jpg");
             else
-                strcat(path, "dsrt.jpg");
+                path.append("dsrt.jpg");
         } else {
-            strncat(path, (tmp + i), 1);
+            path.append(tmp.get() + i, 1);
             if (!s_sleeptime)
-                strcat(path, "sgn.jpg");
+                path.append("sgn.jpg");
             else
-                strcat(path, "srt.jpg");
+                path.append("srt.jpg");
         }
-        drawImage(path, displayConfig.sleeptimeXPos[i], displayConfig.sleeptimeYPos);
+        drawImage(path.c_get(), displayConfig.sleeptimeXPos[i], displayConfig.sleeptimeYPos);
     }
 }
 

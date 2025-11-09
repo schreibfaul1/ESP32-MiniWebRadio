@@ -117,7 +117,7 @@ The values ​​of the PLCK frequency specified for RGB displays are not fully 
 On some PCM5102 boards the solder bridges are missing on the back.<br>
 ![PCM5102A Board](docs/PCM5102A.png)<br>
 This is how the DAC CS4344 is connected:<br>
-![CS4344 Board](docs/DAC_CS434.jpg)<br>
+![CS4344 Board](docs/DAC_CS4344.jpg)<br>
 If the DAC PT8211 is used, the *I2S_COMM_FMT* must be changed in common.h. This DAC requires Japanese LSBJ (Least Significant Bit Justified) format
 
 ### IR Receíver
