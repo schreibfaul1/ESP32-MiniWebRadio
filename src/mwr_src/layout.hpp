@@ -360,6 +360,7 @@ pictureBox   pic_RA_logo("pic_RA_logo");
 textbox      txt_RA_sTitle("txt_RA_sTitle"), txt_RA_staName("txt_RA_staName"), txt_RA_irNum("txt_RA_irNum");
 vuMeter      VUmeter_RA("VUmeter_RA");
 slider       sdr_RA_volume("sdr_RA_volume");
+numbersBox   nbr_RA_irBox("nbr_RA_irBox");
 // STATIONSLIST
 stationsList lst_RADIO("lst_RADIO");
 // PLAYER
@@ -433,7 +434,7 @@ void placingGraphicObjects() { // and initialize them
     dispHeader.begin(layout.winHeader.x, layout.winHeader.y, layout.winHeader.w, layout.winHeader.h);
     dispHeader.setTimeColor(TFT_LIGHTGREEN);
     dispFooter.begin(layout.winFooter.x, layout.winFooter.y, layout.winFooter.w, layout.winFooter.h);
-    volBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h);
+    volBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "blue");
     myList.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.fonts[0]);
     // RADIO -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_RA_volume.begin(layout.sdrOvBtns.x, layout.sdrOvBtns.y, layout.sdrOvBtns.w, layout.sdrOvBtns.h, layout.sdrOvBtns.pl, layout.sdrOvBtns.pr, layout.sdrOvBtns.pt, layout.sdrOvBtns.pb);
@@ -493,6 +494,7 @@ void placingGraphicObjects() { // and initialize them
     txt_RA_irNum.setFont(displayConfig.bigNumbersFontSize);
     pic_RA_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     VUmeter_RA.begin(layout.winVUmeter.x, layout.winVUmeter.y, layout.winVUmeter.w, layout.winVUmeter.h);
+    nbr_RA_irBox.begin(layout.winVolBox.x, layout.winVolBox.y, layout.winVolBox.w, layout.winVolBox.h, "orange");
     // STATIONSLIST ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     lst_RADIO.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
     // PLAYER-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

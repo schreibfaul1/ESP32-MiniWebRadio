@@ -194,9 +194,11 @@ bool get_esp_items(uint8_t* s_resetReason, bool* s_f_FFatFound) {
     Serial.printf("RESET_REASON: %s\n", rr);
     Serial.print("\n");
 
-    if (chipModel.equals("ESP32-S3")) { } // ...  okay
-    else if (chipModel.equals("ESP32-P4")) {} // ...  okay
-    else{
+    if (chipModel.equals("ESP32-S3")) {
+    } // ...  okay
+    else if (chipModel.equals("ESP32-P4")) {
+    } // ...  okay
+    else {
         SerialPrintfln(ANSI_ESC_RED "MiniWebRadio does not work with %s", chipModel.c_get());
         return false;
     }
@@ -1363,10 +1365,11 @@ class stationManagement {
         file.close();
     }
     //----------------------------------------------------------------------------------------------------------
+    uint16_t getCurrentStationNumber() { return *m_curStation; }
+    //----------------------------------------------------------------------------------------------------------
     uint16_t getSumStations() { return m_staCnt; }
     //----------------------------------------------------------------------------------------------------------
     uint16_t getSumFavStations() { return m_staFavCnt; }
-
     //----------------------------------------------------------------------------------------------------------
     uint16_t nextStation() {
         if (!m_staCnt) return 1;
@@ -1420,8 +1423,11 @@ class stationManagement {
         if (!m_staCnt) return 1;
         if (staNr > m_staCnt)
             *m_curStation = m_staCnt;
-        else
+        else if (staNr == 0) {
+            *m_curStation = 1;
+        } else {
             *m_curStation = staNr;
+        }
         return *m_curStation;
     }
     //----------------------------------------------------------------------------------------------------------

@@ -177,7 +177,7 @@ void IR::loop(){ // transform raw data from IR to ir_result
         m_short_key = -1;
         found_short = false;
     }
-    if(found_number && (m_t0 + 2000 < millis())){
+    if(found_number && (m_t0 + 2500 < millis())){
         if(ir_res) ir_res(number);
         number = 0;
         found_number = false;

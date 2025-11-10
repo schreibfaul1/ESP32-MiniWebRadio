@@ -2146,6 +2146,7 @@ class numbersBox : public RegisterTable { // range 000...999
     bool         m_clicked = false;
     releasedArg  m_ra;
     ps_ptr<char> m_name;
+    const char*  m_color = "sbl";
     char         m_root[20] = "/digits_small/";
     char         m_numbers[4] = "000";
 
@@ -2161,11 +2162,14 @@ class numbersBox : public RegisterTable { // range 000...999
             m_segmWidth = 86;
     }
     ~numbersBox() {; }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* color) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        if(!strcmp(color, "orange")) m_color = "sor";
+        if(!strcmp(color, "blue")) m_color = "sbl";
+        if(!strcmp(color, "red")) m_color = "srt";
         m_enabled = false;
     }
     ps_ptr<char> getName() { return m_name; }
@@ -2173,7 +2177,7 @@ class numbersBox : public RegisterTable { // range 000...999
         if (!m_enabled) return false;
         char path[50];
         for (uint8_t i = 0; i < 3; i++) {
-            sprintf(path, "%s%csbl.jpg", m_root, m_numbers[i]);
+            sprintf(path, "%s%c%s.jpg", m_root, m_numbers[i], m_color);
             if (!drawImage(path, m_x + i * m_segmWidth, m_y)) return false;
             ;
         }
