@@ -14,7 +14,7 @@
 #define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
-#define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
+#define SDMMC_FREQUENCY   40000000         // 80000000 or 40000000 Hz
 #define FTP_USERNAME      "esp32"          // user name in FTP Client
 #define FTP_PASSWORD      "esp32"          // pw in FTP Client
 #define CONN_TIMEOUT      2500             // unencrypted connection timeout in ms (http://...)

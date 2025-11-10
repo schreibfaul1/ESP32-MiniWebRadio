@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4b - 08.11.2025                                                                                                               ";
+    Version 4.0.4c - 09.11.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1434,9 +1434,10 @@ void setup() {
             s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
             s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
             if (WiFi.isConnected()) {
+                s_radioSubMenue = 0;
+                changeState(RADIO);
                 if (s_cur_station > 0) {
                     setStation(s_cur_station);
-                    changeState(RADIO);
                 } else {
                     setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
                 }
@@ -2907,6 +2908,7 @@ void my_audio_info(Audio::msg_t m) {
         case Audio::evt_streamtitle:
             s_streamTitle = m.msg;
             SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", m.msg);
+            s_f_newStreamTitle = true;
             break;
 
         case Audio::evt_eof:
