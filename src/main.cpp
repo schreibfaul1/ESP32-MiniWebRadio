@@ -4976,11 +4976,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
     MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
-    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, arg); // PC --> SD
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, contentType); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
 
     if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, contentType); return; }
+    if(strcmp(cmd, "upload_text_file") == 0) {savefile(param, contentLength, contentType); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);

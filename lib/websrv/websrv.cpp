@@ -45,63 +45,68 @@ void WebSrv::printWebSocketHeader(String wsRespKey) {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
-    uint           TCPCHUNKSIZE = 1024;  // Max number of bytes per write
-    size_t         pagelen = 0, res = 0; // Size of requested page
-    const uint8_t* p;
-    p = reinterpret_cast<const unsigned char*>(pagename);
-    if (len == -1) {
-        pagelen = strlen(pagename);
-    } else {
-        if (len > 0) pagelen = len;
+    constexpr size_t TCP_CHUNK_SIZE = 4096; // optimal für WiFi/Ethernet
+    size_t pagelen = 0;
+
+    // --- Check whether source comes from PROGMEM ---
+    bool isProgmem = !esp_ptr_in_dram(pagename);
+
+    // --- Seitengröße bestimmen ---
+    if (len < 0)
+        pagelen = isProgmem ? strlen_P(pagename) : strlen(pagename);
+    else if (len > 0)
+        pagelen = len;
+
+  // --- Skip leading newlines ---
+    while (pagelen && (isProgmem ? pgm_read_byte(pagename) : *pagename) == '\n') {
+        ++pagename;
+        --pagelen;
     }
-    while ((*p == '\n') && (pagelen > 0)) { // If page starts with newline:
-        p++;                                // Skip first character
-        pagelen--;
+
+    // --- HTTP Header ---
+    String header;
+    header.reserve(160);
+    header += F("HTTP/1.1 200 OK\r\n"
+                "Connection: close\r\n"
+                "Cache-Control: max-age=86400\r\n");
+    header += F("Content-Type: ");
+    header += MIMEType;
+    header += F("\r\nContent-Length: ");
+    header += String(pagelen);
+    header += F("\r\nServer: ");
+    header += _Name;
+    header += F("\r\nLast-Modified: ");
+    header += _Version;
+    header += F("\r\n\r\n");
+
+    cmdclient.print(header);
+
+    if (m_websrv_callback) {
+        m_msg.e = evt_info;
+        m_msg.arg.assignf("%s %s %u",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_websrv_callback(m_msg);
     }
-    // HTTP header
-    String httpheader = "";
-    httpheader += "HTTP/1.1 200 OK\r\n";
-    httpheader += "Connection: close\r\n";
-    httpheader += "Content-type: " + (String)MIMEType + "\r\n";
-    httpheader += "Content-Length: " + String(pagelen, 10) + "\r\n";
-    httpheader += "Server: " + _Name + "\r\n";
-    httpheader += "Cache-Control: max-age=86400\r\n";
-    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
-    cmdclient.print(httpheader); // header sent
+    // --- Main transmission ---
+    size_t sent = 0;
+    while (sent < pagelen) {
+        size_t chunk = std::min(TCP_CHUNK_SIZE, pagelen - sent);
 
-    m_msg.e = evt_info;
-    m_msg.arg = "Length of page is 333";
-    if (m_websrv_callback) m_websrv_callback(m_msg);
-    // The content of the HTTP response follows the header:
+        size_t res = isProgmem
+                     ? cmdclient.write_P(pagename + sent, chunk)
+                     : cmdclient.write((const uint8_t*)pagename + sent, chunk);
 
-    while (pagelen) {                          // Loop through the output page
-        if (pagelen <= TCPCHUNKSIZE) {         // Near the end?
-            res = cmdclient.write(p, pagelen); // Yes, send last part
-            if (res != pagelen) {
-                m_msg.e = evt_error;
-                m_msg.arg.assign("write error in webpage");
-                if (m_websrv_callback) m_websrv_callback(m_msg);
-                cmdclient.clearWriteError();
-                return;
-            }
-            pagelen = 0;
-        } else {
-
-            res = cmdclient.write(p, TCPCHUNKSIZE); // Send part of the page
-
-            if (res != TCPCHUNKSIZE) {
-                m_msg.e = evt_error;
-                m_msg.arg.assign("write error in webpage");
-                if (m_websrv_callback) m_websrv_callback(m_msg);
-                cmdclient.clearWriteError();
-                return;
-            }
-            p += TCPCHUNKSIZE; // Update startpoint and rest of bytes
-            pagelen -= TCPCHUNKSIZE;
+        if (res != chunk) {
+            m_msg.e = evt_error;
+            m_msg.arg = "write error in webpage";
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            cmdclient.clearWriteError();
+            return;
         }
+        sent += chunk;
     }
-    return;
+
+    cmdclient.clear();
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
