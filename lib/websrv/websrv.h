@@ -72,10 +72,14 @@ class WebSrv {
     bool    m_handle_upload = false;
 
     struct upload_items {
-        File         uploadfile;
-        ps_ptr<char> endBoundary;
-        uint16_t     max_endBoundary_length;
-        uint32_t     bytes_left;
+        File         uploadfile{};
+        ps_ptr<char> endBoundary{};
+        uint16_t     max_endBoundary_length{};
+        uint32_t     bytes_left{};
+
+        void reset() {
+        *this = upload_items{};
+    }
     };
     upload_items m_upload_items;
 

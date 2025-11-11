@@ -443,67 +443,124 @@ exit:
     endBoundary     \r\n------WebKitFormBoundary6R1gey0yfb0yh8Ih--\r\n
 */
 bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType) {
-    uint32_t     av;
-    int32_t      bytesInTransBuf = 0;
-    int32_t      startBoundaryEndPos = 0;
-    int32_t      startBoundaryLength = 0;
-    File         file;
     ps_ptr<char> msg;
+    File file;
+    uint32_t av;
+    int32_t  bytesInTransBuf = 0;
+    int32_t  startBoundaryEndPos = 0;
+    int32_t  startBoundaryLength = 0;
     ps_ptr<char> transBuf;
     ps_ptr<char> startBoundary;
-    transBuf.alloc(256);
-    // bool first_round = true;
+    uint32_t t = 0;
+    // m_upload_items.reset();
 
-    if (!contentType.equals("multipart/form-data")) {
-        WS_LOG_ERROR("wrong content type %s", contentType.c_get());
+    // check whether multipart/form-data
+    bool multipart = contentType.starts_with("multipart/form-data");
+
+    // delete old file if there is one
+    if (fs.exists(path.c_get())) fs.remove(path.c_get());
+
+    file = fs.open(path.c_get(), FILE_WRITE);
+    if (!file) {
+        WS_LOG_ERROR("cannot open file %s for writing", path.c_get());
         return false;
     }
 
-    if (fs.exists(path.c_get())) fs.remove(path.c_get()); // remove previous version if there is one
-    file = fs.open(path.c_get(), FILE_WRITE);             // Datei zum Schreiben öffnen
+    if (!multipart) {
+        // === simple Upload (no boundaries, e.g. json, text, binary) ===
+        uint8_t buffer[1024];
+        uint32_t bytesRemaining = contentLength;
+        uint32_t bytesRead = 0;
+        uint32_t totalWritten = 0;
+        uint32_t t = millis();
 
-    uint32_t t = millis();
+        while (bytesRemaining > 0) {
+            if ((t + 2000) < millis()) {
+                msg.assign("timeout in uploadfile() (simple mode)");
+                goto exit;
+            }
 
+            uint32_t toRead = std::min<uint32_t>(sizeof(buffer), bytesRemaining);
+            if (!cmdclient.available()) {
+                vTaskDelay(10);
+                continue;
+            }
+
+            bytesRead = cmdclient.readBytes(buffer, toRead);
+            if (bytesRead == 0) {
+                msg.assignf("read error in simple upload (%lu bytes left)", bytesRemaining);
+                goto exit;
+            }
+
+            int written = file.write(buffer, bytesRead);
+            if (written != bytesRead) {
+                msg.assignf("write error, written %i/%i bytes", written, bytesRead);
+                goto exit;
+            }
+
+            bytesRemaining -= bytesRead;
+            totalWritten += written;
+        }
+
+        file.close();
+        m_msg.e = evt_info;
+        m_msg.arg.assignf("upload of %s successful (%lu bytes)", path.c_get(), totalWritten);
+        if (m_websrv_callback) m_websrv_callback(m_msg);
+        return true;
+    }
+
+    // === Multipart upload ===
+
+    transBuf.alloc(256);
+
+    t = millis();
     while (true) {
         if ((t + 2000) < millis()) {
-            msg.assignf("timeout in webSrv uploadfile()\n");
+            msg.assignf("timeout in webSrv uploadfile()");
             goto exit;
         }
+
         av = min3(cmdclient.available(), 256, contentLength);
         if (av < contentLength && av < 256) {
             vTaskDelay(10);
             continue;
         }
+
         bytesInTransBuf = cmdclient.readBytes(transBuf.get(), 256);
         if (bytesInTransBuf != av) {
             msg.assignf("read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
             goto exit;
         }
-        if (!transBuf.starts_with("------")) { // ------WebKitFormBoundary\r\nContent-Disposition ....  \r\n\r\n
+
+        if (!transBuf.starts_with("------")) {
             msg.assignf("startBoundary not found");
             goto exit;
         }
+
         startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
         if (startBoundaryEndPos < 0) {
             msg.assignf("startBoundaryEndPos not found");
             goto exit;
         }
-        startBoundaryLength = transBuf.index_of("\r\n"); // same length as startBoundary + \r\n--\r\n
+
+        startBoundaryLength = transBuf.index_of("\r\n");
         startBoundary.copy_from(transBuf.get(), startBoundaryLength);
-        // startBoundary.hex_dump(startBoundaryLength);
         m_upload_items.endBoundary = "\r\n" + startBoundary + "--";
         m_upload_items.max_endBoundary_length = startBoundaryLength + 6;
         m_upload_items.uploadfile = file;
         m_upload_items.bytes_left = contentLength - startBoundaryEndPos;
 
-        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos, bytesInTransBuf - startBoundaryEndPos);
+        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos,
+                                 bytesInTransBuf - startBoundaryEndPos);
         if (written > 0) m_upload_items.bytes_left -= written;
         m_handle_upload = true;
         break;
     }
-    return true; // upload in progress
+
+    return true; // multipart upload in progress
 
 exit:
+    file.close();
     m_msg.e = evt_error;
     m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
