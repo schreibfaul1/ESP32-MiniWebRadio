@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4b - 08.11.2025                                                                                                               ";
+    Version 4.0.4e - 12.11.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -109,8 +109,6 @@ int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1]
 int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
 uint16_t s_staListNr = 0;
 uint16_t s_fileListNr = 0;
-uint16_t s_irNumber = 0;
-uint16_t s_irResult = 0;
 uint16_t s_cur_station = 0; // current station(nr), will be set later
 uint16_t s_sleeptime = 0;   // time in min until MiniWebRadio goes to sleep
 uint16_t s_plsCurPos = 0;
@@ -143,8 +141,6 @@ bool s_f_eof = false;
 bool s_f_reconnect = false;
 bool s_f_eof_alarm = false;
 bool s_f_alarm = false;
-bool s_f_irNumberSeen = false;
-bool s_f_irResultSeen = false;
 bool s_f_newIcyDescription = false;
 bool s_f_newStreamTitle = false;
 bool s_f_webFailed = false;
@@ -174,7 +170,6 @@ bool s_f_msg_box = false;
 bool s_f_esp_restart = false;
 bool s_f_timeSpeech = false;
 bool s_f_stationsChanged = false;
-bool s_f_WiFiConnected = false;
 bool s_f_sd_card_found = false;
 
 std::deque<ps_ptr<char>> s_PLS_content;
@@ -1131,19 +1126,19 @@ void setWiFiCredentials(const char* ssid, const char* password) {
 exit:
     if (state == 0) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "SSID: %s password can't changed, it is hard coded", ssid);
-        if (s_f_WiFiConnected) audio.connecttospeech("S S I D and password are hard coded", "en");
+        if (WiFi.isConnected()) audio.connecttospeech("S S I D and password are hard coded", "en");
     }
     if (state == 1) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The passord \"%s\" for the SSID: %s has been changed", password, ssid);
-        if (s_f_WiFiConnected) audio.connecttospeech("The password has been changed", "en");
+        if (WiFi.isConnected()) audio.connecttospeech("The password has been changed", "en");
     }
     if (state == 2) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_GREEN "The SSID: %s has been added", ssid);
-        if (s_f_WiFiConnected) audio.connecttospeech("The credentials has been added", "en");
+        if (WiFi.isConnected()) audio.connecttospeech("The credentials has been added", "en");
     }
     if (state == 3) {
         SerialPrintfln("WiFI_info:   " ANSI_ESC_RED "No more memory to save the credentials for: %s", ssid);
-        if (s_f_WiFiConnected) audio.connecttospeech("The S S I D and password can't be stored", "en");
+        if (WiFi.isConnected()) audio.connecttospeech("The S S I D and password can't be stored", "en");
     }
     return;
 }
@@ -1329,9 +1324,9 @@ void setup() {
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
     setTFTbrightness(s_brightness);
 
-    s_f_WiFiConnected = connectToWiFi();
+    connectToWiFi();
 
-    if (s_f_WiFiConnected) {
+    if (WiFi.isConnected()) {
         s_myIP = WiFi.localIP().toString().c_str();
         SerialPrintfln("setup: ....  connected to " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", IP address is " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE ", Received Signal Strength " ANSI_ESC_CYAN
                        "%i" ANSI_ESC_WHITE " dB",
@@ -1393,7 +1388,7 @@ void setup() {
 
     ir.begin(); // Init InfraredDecoder
 
-    if (s_f_WiFiConnected) webSrv.begin(80, 81); // HTTP port, WebSocket port
+    if (WiFi.isConnected()) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
     s_dlnaLevel = 0;
     s_dlnaHistory[0].name = "Media Server";
@@ -1401,21 +1396,10 @@ void setup() {
     s_dlnaHistory[1].objId = "0";
     s_f_dlnaSeekServer = true;
 
-    if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
-        s_resetReason == ESP_RST_SW ||        // ESP.restart()
-        s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
-        s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
-        if (WiFi.isConnected()) {
-            if (s_cur_station > 0)
-                setStation(s_cur_station);
-            else { setStationViaURL(s_settings.lastconnectedhost.c_get(), ""); }
-        }
-    }
-
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
-    if (I2C_SCL < 0) {
+    if (I2C_SCL >= 0) {
         s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
     }
     if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found
@@ -1442,9 +1426,23 @@ void setup() {
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.show(true);
     s_radioSubMenue = 0;
-    s_state = NONE;
-    if (s_f_WiFiConnected) {
-        changeState(RADIO);
+
+    if (WiFi.isConnected()) {
+        s_state = RADIO;
+        if (s_resetReason == ESP_RST_POWERON ||   // Simply switch on the operating voltage
+            s_resetReason == ESP_RST_SW ||        // ESP.restart()
+            s_resetReason == ESP_RST_SDIO ||      // The boot button was pressed
+            s_resetReason == ESP_RST_DEEPSLEEP) { // Wake up
+            if (WiFi.isConnected()) {
+                s_radioSubMenue = 0;
+                changeState(RADIO);
+                if (s_cur_station > 0) {
+                    setStation(s_cur_station);
+                } else {
+                    setStationViaURL(s_settings.lastconnectedhost.c_get(), "");
+                }
+            }
+        }
     } else {
         changeState(WIFI_SETTINGS);
     }
@@ -1897,11 +1895,6 @@ void changeState(int32_t state) {
             txt_RA_staName.enable();
             pic_RA_logo.enable();
             if (s_radioSubMenue == 0) {
-                if (s_f_irResultSeen) {
-                    txt_RA_irNum.hide();
-                    setStationByNumber(s_irResult);
-                    s_f_irResultSeen = false;
-                } // ir_number, valid between 1 ... 999
                 if (s_state != RADIO) { showLogoAndStationName(true); }
                 setTimeCounter(0);
                 VUmeter_RA.show(true);
@@ -1930,13 +1923,7 @@ void changeState(int32_t state) {
                 btn_RA_off.show();
                 setTimeCounter(2);
             }
-            if (s_radioSubMenue == 3) { // show Numbers from IR
-                char buf[10];
-                itoa(s_irNumber, buf, 10);
-                txt_RA_irNum.setText(buf);
-                txt_RA_irNum.show(true, false);
-                setTimeCounter(1);
-            }
+            if (s_radioSubMenue == 3) { ; }
             if (s_radioSubMenue == 4) { // IR select mode
                 clearTitle();
                 txt_RA_sTitle.disable();
@@ -2653,7 +2640,7 @@ void loop() {
                 connecttohost(s_settings.lastconnectedhost.get());
         }
         //------------------------------------------RECONNECT AFTER FAIL------------------------------------------------------------------------------
-        if (s_f_reconnect && !s_f_WiFiConnected) {
+        if (s_f_reconnect && !WiFi.isConnected()) { // not used yet
             s_f_reconnect = false;
             connecttohost(s_settings.lastconnectedhost.get());
         }
@@ -2673,35 +2660,22 @@ void loop() {
             s_f_dlna_browseReady = false;
         }
         //-------------------------------------------WIFI DISCONNECTED?-------------------------------------------------------------------------------
-        if (s_f_WiFiConnected) {
-            if ((WiFi.status() != WL_CONNECTED)) {
-                s_WiFi_disconnectCnt++;
-                if (s_WiFi_disconnectCnt == 15) {
-                    s_WiFi_disconnectCnt = 1;
-                    SerialPrintfln("WiFi      :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
-                    WiFi.disconnect();
-                    WiFi.reconnect();
-                }
-            } else {
-                if (s_WiFi_disconnectCnt) {
-                    s_WiFi_disconnectCnt = 0;
-                    if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
-                }
-            }
-        }
-        //------------------------------------------CONNECTTOHOST FAIL--------------------------------------------------------------------------------
-        static uint8_t failCnt = 0;
-        if (s_f_webFailed) {
-            failCnt++;
-            if (failCnt == 30) {
-                failCnt = 0;
-                if (WiFi.isConnected())
-                    connecttohost(s_settings.lastconnectedhost.get());
-                else
-                    ESP.restart();
-            }
-        } else
-            failCnt = 0;
+        // if (WiFi.isConnected()) {
+        //     if ((WiFi.status() != WL_CONNECTED)) {
+        //         s_WiFi_disconnectCnt++;
+        //         if (s_WiFi_disconnectCnt == 15) {
+        //             s_WiFi_disconnectCnt = 1;
+        //             SerialPrintfln("WiFi      :  " ANSI_ESC_YELLOW "Reconnecting to WiFi...");
+        //             WiFi.disconnect();
+        //             WiFi.reconnect();
+        //         }
+        //     } else {
+        //         if (s_WiFi_disconnectCnt) {
+        //             s_WiFi_disconnectCnt = 0;
+        //             if (s_state == RADIO) audio.connecttohost(s_settings.lastconnectedhost.get());
+        //         }
+        //     }
+        // }
         //------------------------------------------GET AUDIO FILE ITEMS------------------------------------------------------------------------------
         if (s_f_isFSConnected) {
             //    uint32_t t = 0;
@@ -2713,7 +2687,7 @@ void loop() {
         //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
         if (s_f_BH1750_found) {
             int32_t ambVal = BH1750.getBrightness();
-            if (ambVal < 0) goto endbrightness;
+            if (ambVal < 5) goto endbrightness;
             if (ambVal > 350) ambVal = 350;
             s_bh1750Value = map_l(ambVal, 0, 350, 5, 100);
             //    log_i("s_bh1750Value %i, s_brightness %i", s_bh1750Value, s_brightness);
@@ -2933,8 +2907,8 @@ void my_audio_info(Audio::msg_t m) {
 
         case Audio::evt_streamtitle:
             s_streamTitle = m.msg;
-            if (!s_f_irNumberSeen) s_f_newStreamTitle = true;
             SerialPrintfln("StreamTitle: " ANSI_ESC_YELLOW "%s", m.msg);
+            s_f_newStreamTitle = true;
             break;
 
         case Audio::evt_eof:
@@ -3070,18 +3044,17 @@ void ir_res(uint32_t res) {
     if (s_state != RADIO) return;
     if (s_f_sleeping == true) return;
     SerialPrintfln("ir_result:   " ANSI_ESC_YELLOW "Stationnumber " ANSI_ESC_BLUE "%lu", (long unsigned)res);
-    s_f_irResultSeen = true;
-    s_f_irNumberSeen = false;
-    s_irResult = res;
+    nbr_RA_irBox.hide();
+    setStationByNumber(res);
     return;
 }
 void ir_number(uint16_t num) {
     if (s_state != RADIO) return;
     if (s_f_sleeping) return;
-    s_f_irNumberSeen = true;
-    s_irNumber = num;
-    s_radioSubMenue = 3;
-    changeState(RADIO);
+    txt_RA_staName.hide();
+    nbr_RA_irBox.enable();
+    nbr_RA_irBox.setNumbers(num);
+    nbr_RA_irBox.show();
 }
 void ir_short_key(uint8_t key) {
     SerialPrintfln("ir_code: ..  " ANSI_ESC_YELLOW "short pressed key nr: " ANSI_ESC_BLUE "%02i", key);
@@ -4837,7 +4810,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return;}                                                  // via websocket
 
-    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=", displayConfig.tftSize); return;};
+    CMD_EQUALS("get_tftSize"){          char s[2] = {0}; s[0] = displayConfig.tftSize; webSrv.send("tftSize=", s); return;};
 
     CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
 
@@ -5003,11 +4976,12 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
 void WEBSRV_onRequest(const char* cmd,  const char* param, const char* arg, const char* contentType, uint32_t contentLength){
     MWR_LOG_DEBUG("cmd %s, param %s, arg %s, ct %s, cl %i", cmd, param, arg, contentType, contentLength);
-    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, arg); // PC --> SD
+    if(strcmp(cmd, "SD_Upload") == 0) {savefile(param, contentLength, contentType); // PC --> SD
                                        if(strcmp(param, "/stations.json") == 0) staMgnt.updateStationsList();
                                        return;}
 
     if(strcmp(cmd, "upload_player2sd") == 0) {savefile(param, contentLength, contentType); return; }
+    if(strcmp(cmd, "upload_text_file") == 0) {savefile(param, contentLength, contentType); return; }
     if(strcmp(cmd, "uploadfile") == 0){saveImage(param, contentLength); return;}
     SerialPrintfln(ANSI_ESC_RED "unknown HTMLcommand %s, param=%s", cmd, param);
     webSrv.sendStatus(400);

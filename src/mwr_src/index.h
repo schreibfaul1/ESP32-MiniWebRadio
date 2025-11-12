@@ -1051,7 +1051,7 @@ function showTab9 () {  // KCX BT Emitter
 function saveTextFileToSD (fileName, content) {
     var fd = new FormData()
     fd.append('Text=', content)
-    var theUrl = 'uploadfile?' + fileName + '&version=' + Math.random()
+    var theUrl = 'upload_text_file?' + fileName + '&version=' + Math.random()
     var xhr = new XMLHttpRequest()
     xhr.timeout = 2000; // time in milliseconds
     xhr.open('POST', theUrl, true)

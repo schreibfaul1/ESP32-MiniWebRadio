@@ -7,7 +7,7 @@
  */
 
 #include "websrv.h"
-
+#include "esp_memory_utils.h"
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::WebSrv(String Name, String Version) {
     _Name = Name;
@@ -45,63 +45,68 @@ void WebSrv::printWebSocketHeader(String wsRespKey) {
 }
 //--------------------------------------------------------------------------------------------------------------
 void WebSrv::show(const char* pagename, const char* MIMEType, int16_t len) {
-    uint           TCPCHUNKSIZE = 1024;  // Max number of bytes per write
-    size_t         pagelen = 0, res = 0; // Size of requested page
-    const uint8_t* p;
-    p = reinterpret_cast<const unsigned char*>(pagename);
-    if (len == -1) {
-        pagelen = strlen(pagename);
-    } else {
-        if (len > 0) pagelen = len;
+    constexpr size_t TCP_CHUNK_SIZE = 4096; // optimal für WiFi/Ethernet
+    size_t pagelen = 0;
+
+    // --- Check whether source comes from PROGMEM ---
+    bool isProgmem = !esp_ptr_in_dram(pagename);
+
+    // --- Seitengröße bestimmen ---
+    if (len < 0)
+        pagelen = isProgmem ? strlen_P(pagename) : strlen(pagename);
+    else if (len > 0)
+        pagelen = len;
+
+  // --- Skip leading newlines ---
+    while (pagelen && (isProgmem ? pgm_read_byte(pagename) : *pagename) == '\n') {
+        ++pagename;
+        --pagelen;
     }
-    while ((*p == '\n') && (pagelen > 0)) { // If page starts with newline:
-        p++;                                // Skip first character
-        pagelen--;
+
+    // --- HTTP Header ---
+    String header;
+    header.reserve(160);
+    header += F("HTTP/1.1 200 OK\r\n"
+                "Connection: close\r\n"
+                "Cache-Control: max-age=86400\r\n");
+    header += F("Content-Type: ");
+    header += MIMEType;
+    header += F("\r\nContent-Length: ");
+    header += String(pagelen);
+    header += F("\r\nServer: ");
+    header += _Name;
+    header += F("\r\nLast-Modified: ");
+    header += _Version;
+    header += F("\r\n\r\n");
+
+    cmdclient.print(header);
+
+    if (m_websrv_callback) {
+        m_msg.e = evt_info;
+        m_msg.arg.assignf("%s %s %u",  isProgmem ? "PROGMEM" : "RAM", ", page length:", pagelen);
+        m_websrv_callback(m_msg);
     }
-    // HTTP header
-    String httpheader = "";
-    httpheader += "HTTP/1.1 200 OK\r\n";
-    httpheader += "Connection: close\r\n";
-    httpheader += "Content-type: " + (String)MIMEType + "\r\n";
-    httpheader += "Content-Length: " + String(pagelen, 10) + "\r\n";
-    httpheader += "Server: " + _Name + "\r\n";
-    httpheader += "Cache-Control: max-age=86400\r\n";
-    httpheader += "Last-Modified: " + _Version + "\r\n\r\n";
 
-    cmdclient.print(httpheader); // header sent
+    // --- Main transmission ---
+    size_t sent = 0;
+    while (sent < pagelen) {
+        size_t chunk = std::min(TCP_CHUNK_SIZE, pagelen - sent);
 
-    m_msg.e = evt_info;
-    m_msg.arg = "Length of page is 333";
-    if (m_websrv_callback) m_websrv_callback(m_msg);
-    // The content of the HTTP response follows the header:
+        size_t res = isProgmem
+                     ? cmdclient.write_P(pagename + sent, chunk)
+                     : cmdclient.write((const uint8_t*)pagename + sent, chunk);
 
-    while (pagelen) {                          // Loop through the output page
-        if (pagelen <= TCPCHUNKSIZE) {         // Near the end?
-            res = cmdclient.write(p, pagelen); // Yes, send last part
-            if (res != pagelen) {
-                m_msg.e = evt_error;
-                m_msg.arg.assign("write error in webpage");
-                if (m_websrv_callback) m_websrv_callback(m_msg);
-                cmdclient.clearWriteError();
-                return;
-            }
-            pagelen = 0;
-        } else {
-
-            res = cmdclient.write(p, TCPCHUNKSIZE); // Send part of the page
-
-            if (res != TCPCHUNKSIZE) {
-                m_msg.e = evt_error;
-                m_msg.arg.assign("write error in webpage");
-                if (m_websrv_callback) m_websrv_callback(m_msg);
-                cmdclient.clearWriteError();
-                return;
-            }
-            p += TCPCHUNKSIZE; // Update startpoint and rest of bytes
-            pagelen -= TCPCHUNKSIZE;
+        if (res != chunk) {
+            m_msg.e = evt_error;
+            m_msg.arg = "write error in webpage";
+            if (m_websrv_callback) m_websrv_callback(m_msg);
+            cmdclient.clearWriteError();
+            return;
         }
+        sent += chunk;
     }
-    return;
+
+    cmdclient.clear();
 }
 //--------------------------------------------------------------------------------------------------------------
 bool WebSrv::streamfile(fs::FS& fs, const char* path) { // transfer file from SD to webbrowser
@@ -438,67 +443,124 @@ exit:
     endBoundary     \r\n------WebKitFormBoundary6R1gey0yfb0yh8Ih--\r\n
 */
 bool WebSrv::uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType) {
-    uint32_t     av;
-    int32_t      bytesInTransBuf = 0;
-    int32_t      startBoundaryEndPos = 0;
-    int32_t      startBoundaryLength = 0;
-    File         file;
     ps_ptr<char> msg;
+    File file;
+    uint32_t av;
+    int32_t  bytesInTransBuf = 0;
+    int32_t  startBoundaryEndPos = 0;
+    int32_t  startBoundaryLength = 0;
     ps_ptr<char> transBuf;
     ps_ptr<char> startBoundary;
-    transBuf.alloc(256);
-    // bool first_round = true;
+    uint32_t t = 0;
+    // m_upload_items.reset();
 
-    if (!contentType.equals("multipart/form-data")) {
-        WS_LOG_ERROR("wrong content type %s", contentType.c_get());
+    // check whether multipart/form-data
+    bool multipart = contentType.starts_with("multipart/form-data");
+
+    // delete old file if there is one
+    if (fs.exists(path.c_get())) fs.remove(path.c_get());
+
+    file = fs.open(path.c_get(), FILE_WRITE);
+    if (!file) {
+        WS_LOG_ERROR("cannot open file %s for writing", path.c_get());
         return false;
     }
 
-    if (fs.exists(path.c_get())) fs.remove(path.c_get()); // remove previous version if there is one
-    file = fs.open(path.c_get(), FILE_WRITE);             // Datei zum Schreiben öffnen
+    if (!multipart) {
+        // === simple Upload (no boundaries, e.g. json, text, binary) ===
+        uint8_t buffer[1024];
+        uint32_t bytesRemaining = contentLength;
+        uint32_t bytesRead = 0;
+        uint32_t totalWritten = 0;
+        uint32_t t = millis();
 
-    uint32_t t = millis();
+        while (bytesRemaining > 0) {
+            if ((t + 2000) < millis()) {
+                msg.assign("timeout in uploadfile() (simple mode)");
+                goto exit;
+            }
 
+            uint32_t toRead = std::min<uint32_t>(sizeof(buffer), bytesRemaining);
+            if (!cmdclient.available()) {
+                vTaskDelay(10);
+                continue;
+            }
+
+            bytesRead = cmdclient.readBytes(buffer, toRead);
+            if (bytesRead == 0) {
+                msg.assignf("read error in simple upload (%lu bytes left)", bytesRemaining);
+                goto exit;
+            }
+
+            int written = file.write(buffer, bytesRead);
+            if (written != bytesRead) {
+                msg.assignf("write error, written %i/%i bytes", written, bytesRead);
+                goto exit;
+            }
+
+            bytesRemaining -= bytesRead;
+            totalWritten += written;
+        }
+
+        file.close();
+        m_msg.e = evt_info;
+        m_msg.arg.assignf("upload of %s successful (%lu bytes)", path.c_get(), totalWritten);
+        if (m_websrv_callback) m_websrv_callback(m_msg);
+        return true;
+    }
+
+    // === Multipart upload ===
+
+    transBuf.alloc(256);
+
+    t = millis();
     while (true) {
         if ((t + 2000) < millis()) {
-            msg.assignf("timeout in webSrv uploadfile()\n");
+            msg.assignf("timeout in webSrv uploadfile()");
             goto exit;
         }
+
         av = min3(cmdclient.available(), 256, contentLength);
         if (av < contentLength && av < 256) {
             vTaskDelay(10);
             continue;
         }
+
         bytesInTransBuf = cmdclient.readBytes(transBuf.get(), 256);
         if (bytesInTransBuf != av) {
             msg.assignf("read error in %s, available %lu bytes, read %li bytes\n", path, av, bytesInTransBuf);
             goto exit;
         }
-        if (!transBuf.starts_with("------")) { // ------WebKitFormBoundary\r\nContent-Disposition ....  \r\n\r\n
+
+        if (!transBuf.starts_with("------")) {
             msg.assignf("startBoundary not found");
             goto exit;
         }
+
         startBoundaryEndPos = indexOf(transBuf.get(), "\r\n\r\n") + 4;
         if (startBoundaryEndPos < 0) {
             msg.assignf("startBoundaryEndPos not found");
             goto exit;
         }
-        startBoundaryLength = transBuf.index_of("\r\n"); // same length as startBoundary + \r\n--\r\n
+
+        startBoundaryLength = transBuf.index_of("\r\n");
         startBoundary.copy_from(transBuf.get(), startBoundaryLength);
-        // startBoundary.hex_dump(startBoundaryLength);
         m_upload_items.endBoundary = "\r\n" + startBoundary + "--";
         m_upload_items.max_endBoundary_length = startBoundaryLength + 6;
         m_upload_items.uploadfile = file;
         m_upload_items.bytes_left = contentLength - startBoundaryEndPos;
 
-        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos, bytesInTransBuf - startBoundaryEndPos);
+        int written = file.write((uint8_t*)transBuf.get() + startBoundaryEndPos,
+                                 bytesInTransBuf - startBoundaryEndPos);
         if (written > 0) m_upload_items.bytes_left -= written;
         m_handle_upload = true;
         break;
     }
-    return true; // upload in progress
+
+    return true; // multipart upload in progress
 
 exit:
+    file.close();
     m_msg.e = evt_error;
     m_msg.arg = msg;
     if (m_websrv_callback) m_websrv_callback(m_msg);
