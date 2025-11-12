@@ -7,7 +7,7 @@
  */
 
 #include "websrv.h"
-
+#include "esp_memory_utils.h"
 //--------------------------------------------------------------------------------------------------------------
 WebSrv::WebSrv(String Name, String Version) {
     _Name = Name;
