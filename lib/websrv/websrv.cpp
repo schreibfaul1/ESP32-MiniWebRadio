@@ -209,7 +209,17 @@ bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends
     size_t cmdLen = cmd.strlen();
     size_t msgLen = msg.strlen();
 
-    if (msgLen > UINT16_MAX) {
+    std::string sanitized;
+
+    if (opcode == 1) {
+        // Nur prüfen/reinigen bei Textnachrichten
+        std::string combined = std::string(cmd.c_get(), cmdLen) + std::string(msg.c_get(), msgLen);
+        sanitized = sanitize_utf8_replace(combined.c_str(), combined.size());
+        cmdLen = sanitized.size();
+        msgLen = 0;  // alles in sanitized
+    }
+
+    if (cmdLen + msgLen > UINT16_MAX) {
         log_e("send: message too long, greater than 64kB");
         return false;
     }
@@ -232,8 +242,12 @@ bool WebSrv::send(ps_ptr<char> cmd, ps_ptr<char> msg, uint8_t opcode) { // sends
     }
 
     webSocketClient.write(header, headerLen);
-    webSocketClient.write(cmd.c_get(), cmdLen);
-    webSocketClient.write(msg.c_get(), msgLen);
+    if (opcode == 1)
+        webSocketClient.write(sanitized.c_str(), sanitized.size());
+    else {
+        webSocketClient.write(cmd.c_get(), cmdLen);
+        webSocketClient.write(msg.c_get(), msgLen);
+    }
 
     return true;
 }
@@ -1190,6 +1204,58 @@ String WebSrv::UTF8toASCII(String str) {
         i++;
     }
     return res;
+}
+//--------------------------------------------------------------------------------------------------------------
+// replaces invalid UTF-8 sequences (only allows valid characters)
+std::string WebSrv::sanitize_utf8_replace(const char* input, size_t len) {
+    std::string output;
+    output.reserve(len);
+
+    const unsigned char* s = reinterpret_cast<const unsigned char*>(input);
+    const unsigned char* end = s + len;
+
+    const char replacement[] = "\xEF\xBF\xBD"; // UTF-8 für U+FFFD → „�“
+
+    while (s < end) {
+        unsigned char c = *s;
+
+        // 1-Byte (ASCII)
+        if (c <= 0x7F) {
+            output.push_back(c);
+            s++;
+        }
+        // 2-Byte Sequenz
+        else if ((c >> 5) == 0x6 &&
+                 s + 1 < end &&
+                 (s[1] & 0xC0) == 0x80) {
+            output.append(reinterpret_cast<const char*>(s), 2);
+            s += 2;
+        }
+        // 3-Byte Sequenz
+        else if ((c >> 4) == 0xE &&
+                 s + 2 < end &&
+                 (s[1] & 0xC0) == 0x80 &&
+                 (s[2] & 0xC0) == 0x80) {
+            output.append(reinterpret_cast<const char*>(s), 3);
+            s += 3;
+        }
+        // 4-Byte Sequenz
+        else if ((c >> 3) == 0x1E &&
+                 s + 3 < end &&
+                 (s[1] & 0xC0) == 0x80 &&
+                 (s[2] & 0xC0) == 0x80 &&
+                 (s[3] & 0xC0) == 0x80) {
+            output.append(reinterpret_cast<const char*>(s), 4);
+            s += 4;
+        }
+        // Ungültig → Ersatzzeichen einfügen
+        else {
+            output.append(replacement, 3);
+            s++;
+        }
+    }
+
+    return output;
 }
 //--------------------------------------------------------------------------------------------------------------
 String WebSrv::URLdecode(String str) {

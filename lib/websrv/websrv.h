@@ -77,9 +77,7 @@ class WebSrv {
         uint16_t     max_endBoundary_length{};
         uint32_t     bytes_left{};
 
-        void reset() {
-        *this = upload_items{};
-    }
+        void reset() { *this = upload_items{}; }
     };
     upload_items m_upload_items;
 
@@ -111,7 +109,7 @@ class WebSrv {
     void sendPong();
     bool uploadfile(fs::FS& fs, ps_ptr<char> path, uint32_t contentLength, ps_ptr<char> contentType);
     bool uploadB64image(fs::FS& fs, const char* path, uint32_t contentLength);
-    void reply(ps_ptr<char> response, const char* MIMEType, boolean header = true);
+    void reply(ps_ptr<char> response, const char* MIMEType, bool header = true);
     void sendStatus(uint16_t HTTPstatusCode);
 
     const char JSON[17] = "application/json";
@@ -122,7 +120,9 @@ class WebSrv {
     const char PNG[15] = "image/png";
 
   private:
-    int32_t indexOf(const char* base, char ch, int32_t startIndex = 0) {
+    static std::string sanitize_utf8_replace(const char* input, size_t len);
+
+    int32_t      indexOf(const char* base, char ch, int32_t startIndex = 0) {
         // fb
         const char* p = base;
         for (; startIndex > 0; startIndex--)

@@ -3084,6 +3084,7 @@ function appendToTerminal(text) {
                             <select class="boxstyle" onchange="socket.send('set_timeSpeechLang=' + this.value)" id="timeSpeechLang" name="timeSpeechLang">
                                 <option value="fr">fr</option>
                                 <option value="en">en</option>
+                                <option value="ru">ru</option>
                             </select>
                         </h3>
                     </div>
