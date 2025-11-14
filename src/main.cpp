@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4e - 12.11.2025                                                                                                               ";
+    Version 4.0.4f - 14.11.2025                                                                                                               ";
 
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
@@ -1399,7 +1399,7 @@ void setup() {
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
-    if (I2C_SCL >= 0) {
+    if (I2C_SCL != -1) {
         s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
     }
     if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found
