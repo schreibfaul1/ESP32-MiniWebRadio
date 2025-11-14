@@ -11,6 +11,7 @@
     first release on 03/2017                                                                                                      */char Version[] ="\
     Version 4.0.4f - 14.11.2025                                                                                                               ";
 
+
 /*  display (320x240px) with controller ILI9341 or
     display (480x320px) with controller ILI9486 or ILI9488 (SPI) or
     display (800x480px) (RGB-HMI) with TP controller GT911 (I2C)
@@ -1528,14 +1529,12 @@ uint8_t upvolume() {
 }
 
 void setStation(uint16_t sta) {
-    static uint16_t old_cur_station = 0;
     if (sta == 0) { return; }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
-    s_stationURL = staMgnt.getStationUrl(sta);
-    s_homepage = "";
+
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
-    if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
+    if (s_f_isWebConnected && sta == staMgnt.getCurrentStationNumber() && s_state == RADIO) { // Station is already selected
         s_f_newStreamTitle = true;
     } else {
         if (s_state != RADIO) {
@@ -1544,12 +1543,14 @@ void setStation(uint16_t sta) {
         }
         s_streamTitle = "";
         s_icyDescription = "";
+        s_stationURL = staMgnt.getStationUrl(sta);
+        s_homepage = "";
         s_f_newStreamTitle = true;
         s_f_newIcyDescription = true;
         connecttohost(s_stationURL.c_get());
         //    if(!s_f_isWebConnected) s_cur_station = old_cur_station; // host is not connected
     }
-    old_cur_station = sta;
+
     StationsItems();
     if (s_state == RADIO) {
         showLogoAndStationName(true);
