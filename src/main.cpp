@@ -1531,12 +1531,14 @@ uint8_t upvolume() {
 }
 
 void setStation(uint16_t sta) {
+    static uint16_t old_cur_station = 0;
     if (sta == 0) { return; }
     if (sta > staMgnt.getSumStations()) sta = s_cur_station;
-
+    s_stationURL = staMgnt.getStationUrl(sta);
+    s_homepage = "";
     SerialPrintfln("action: ...  switch to station " ANSI_ESC_CYAN "%d", sta);
 
-    if (s_f_isWebConnected && sta == staMgnt.getCurrentStationNumber() && s_state == RADIO) { // Station is already selected
+    if (s_f_isWebConnected && sta == old_cur_station && s_state == RADIO) { // Station is already selected
         s_f_newStreamTitle = true;
     } else {
         if (s_state != RADIO) {
@@ -1545,14 +1547,12 @@ void setStation(uint16_t sta) {
         }
         s_streamTitle = "";
         s_icyDescription = "";
-        s_stationURL = staMgnt.getStationUrl(sta);
-        s_homepage = "";
         s_f_newStreamTitle = true;
         s_f_newIcyDescription = true;
         connecttohost(s_stationURL.c_get());
         //    if(!s_f_isWebConnected) s_cur_station = old_cur_station; // host is not connected
     }
-
+    old_cur_station = sta;
     StationsItems();
     if (s_state == RADIO) {
         showLogoAndStationName(true);
@@ -1564,6 +1564,7 @@ void setStation(uint16_t sta) {
     }
     dispFooter.updateStation(s_cur_station);
 }
+
 const char* getFlagPath(uint16_t station) {
     static char flagPath[40];
     flagPath[0] = '\0';
