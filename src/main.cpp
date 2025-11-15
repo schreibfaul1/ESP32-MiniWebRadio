@@ -1688,10 +1688,10 @@ void SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName) { // pathWit
 }
 
 void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
-    if (!path) return; // avoid a possible crash
-    ps_ptr<char> audiopath = path;
-    ps_ptr<char> file_name ;
-    if (audiopath.ends_with("m3u")) {
+    if (!path.valid()) return; // avoid a possible crash
+
+    ps_ptr<char> file_name;
+    if (path.ends_with("m3u")) {
         if (SD_MMC.exists(path.c_get())) {
             preparePlaylistFromFile(path.c_get());
             processPlaylist(true);
@@ -1704,9 +1704,10 @@ void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
     }
     int32_t idx = path.last_index_of('/');
     if (idx < 0) return;
-    s_cur_AudioFolder = audiopath.substr(0, idx);
-    file_name = audiopath.substr(idx + 1); // without '/'
+    s_cur_AudioFolder = path.substr(0, idx);
+    file_name = path.substr(idx + 1); // without '/'
 
+MWR_LOG_ERROR("%s, %i, %s", path.c_get(), idx, file_name.substr(idx + 1).c_get());
     if (showFN) {
         clearLogo();
         showFileName(path.get() + idx + 1);
@@ -2616,7 +2617,7 @@ void loop() {
             }
             webSrv.send("streamtitle=", s_streamTitle.c_get());
         }
-        if(s_f_newLyrics){
+        if (s_f_newLyrics) {
             s_f_newLyrics = false;
             if (s_state == RADIO) showStreamTitle(s_lyrics);
             if (s_state == PLAYER) showFileName(s_lyrics.c_get());
@@ -2864,6 +2865,9 @@ void loop() {
         if (r.startsWith("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
             log_w("bitrate: %lu", br);
+        }
+        if (r.startsWith("ibs")) { // get bitrate
+            audio.inBufferStatus();
         }
     }
 }
