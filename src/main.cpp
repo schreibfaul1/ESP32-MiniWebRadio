@@ -1256,6 +1256,10 @@ void setup() {
     Serial.print("\n\n");
     trim(Version);
 
+    if (TFT_BL >= 0) { s_f_brightnessIsChangeable = true; }
+    if (TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+    setTFTbrightness(100);
+
     Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
     Serial.printf("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "    \n", Version);
     Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
@@ -1316,17 +1320,15 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-    if (TFT_BL >= 0) { s_f_brightnessIsChangeable = true; }
-    if (TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
+
 
     if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
-    if (s_brightness < 5) s_brightness = 5;
-    if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
-    setTFTbrightness(s_brightness);
 
+    if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
+ 
     connectToWiFi();
 
     if (WiFi.isConnected()) {
@@ -1402,14 +1404,6 @@ void setup() {
     if (s_f_mute) { SerialPrintfln("setup: ....  volume is muted: (from " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET ")", s_volume.cur_volume); }
     setI2STone();
 
-    if (I2C_SCL != -1) {
-        s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
-    }
-    if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found
-        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found");
-        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-    }
     ticker100ms.attach(0.1, timer100ms);
 #if TFT_CONTROLLER == 7
     tft.clearVsyncCounter(); // clear the vsync counter and start them
@@ -1450,12 +1444,24 @@ void setup() {
         changeState(WIFI_SETTINGS);
     }
 
+    if (I2C_SCL != -1) {
+        s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
+    }
+    if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found
+        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found");
+        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+    }
+    if (s_brightness < 5) s_brightness = 5;
+    setTFTbrightness(s_brightness);
+
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?");                 // get version
     bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
     bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
     bt_emitter.setVolume(s_bt_emitter.volume);
     bt_emitter.setMode(s_bt_emitter.mode);
+
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -1688,10 +1694,10 @@ void SD_playFile(ps_ptr<char> pathWoFileName, const char* fileName) { // pathWit
 }
 
 void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
-    if (!path) return; // avoid a possible crash
-    ps_ptr<char> audiopath = path;
-    ps_ptr<char> file_name ;
-    if (audiopath.ends_with("m3u")) {
+    if (!path.valid()) return; // avoid a possible crash
+
+    ps_ptr<char> file_name;
+    if (path.ends_with("m3u")) {
         if (SD_MMC.exists(path.c_get())) {
             preparePlaylistFromFile(path.c_get());
             processPlaylist(true);
@@ -1704,8 +1710,8 @@ void SD_playFile(ps_ptr<char> path, uint32_t fileStartTime, bool showFN) {
     }
     int32_t idx = path.last_index_of('/');
     if (idx < 0) return;
-    s_cur_AudioFolder = audiopath.substr(0, idx);
-    file_name = audiopath.substr(idx + 1); // without '/'
+    s_cur_AudioFolder = path.substr(0, idx);
+    file_name = path.substr(idx + 1); // without '/'
 
     if (showFN) {
         clearLogo();
@@ -2341,6 +2347,7 @@ void loop() {
     ArduinoOTA.handle();
     bt_emitter.loop();
     tft.loop();
+    BH1750.loop();
 
     while (s_logBuffer.size() > 0) {
         size_t i = s_logBuffer.size();
@@ -2616,7 +2623,7 @@ void loop() {
             }
             webSrv.send("streamtitle=", s_streamTitle.c_get());
         }
-        if(s_f_newLyrics){
+        if (s_f_newLyrics) {
             s_f_newLyrics = false;
             if (s_state == RADIO) showStreamTitle(s_lyrics);
             if (s_state == PLAYER) showFileName(s_lyrics.c_get());
@@ -2694,22 +2701,6 @@ void loop() {
             //    uint32_t br = audioGetBitRate();
             //    if(br) t = (fs * 8)/ br;
             //    log_w("Br %d, Dur %ds", br, t);
-        }
-        //--------------------------------------AMBIENT LIGHT SENSOR BH1750---------------------------------------------------------------------------
-        if (s_f_BH1750_found) {
-            int32_t ambVal = BH1750.getBrightness();
-            if (ambVal < 5) goto endbrightness;
-            if (ambVal > 350) ambVal = 350;
-            s_bh1750Value = map_l(ambVal, 0, 350, 5, 100);
-            //    log_i("s_bh1750Value %i, s_brightness %i", s_bh1750Value, s_brightness);
-            if (!s_f_sleeping) {
-                if (s_bh1750Value >= s_brightness)
-                    setTFTbrightness(s_bh1750Value);
-                else
-                    setTFTbrightness(s_brightness);
-            }
-        endbrightness:
-            BH1750.start();
         }
     } //  END s_f_1sec
 
@@ -2864,6 +2855,9 @@ void loop() {
         if (r.startsWith("gbr")) { // get bitrate
             uint32_t br = audio.getBitRate();
             log_w("bitrate: %lu", br);
+        }
+        if (r.startsWith("ibs")) { // get bitrate
+            audio.inBufferStatus();
         }
     }
 }
@@ -3021,6 +3015,14 @@ void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool* continueI2
     //     if(tabPtr == 44) tabPtr = 0;
     // }
     *continueI2S = true;
+}
+// ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
+    if (ambVal < 5) return;
+    if (ambVal > 350) ambVal = 350;
+    s_bh1750Value = map_l(ambVal, 0, 350, 5, 100);
+    //    log_i("s_bh1750Value %i, s_brightness %i", s_bh1750Value, s_brightness);
+    setTFTbrightness(s_bh1750Value);
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {

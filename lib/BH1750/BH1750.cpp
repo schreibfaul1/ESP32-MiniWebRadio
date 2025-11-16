@@ -48,6 +48,7 @@ bool hp_BH1750::begin(uint8_t address, int8_t sda, int8_t scl) {
     _wire->end();                            // if already started
     isInit = _wire->begin(sda, scl, 400000); // Initialisation of wire object with standard SDA/SCL lines
     if (!isInit) return false;
+    _timeflag = false;
     return writeMtreg(BH1750_MTREG_DEFAULT); // Set standard sensitivity
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -106,5 +107,20 @@ uint16_t hp_BH1750::getBrightness() {
     if(!isInit) return 0;
     return (float)readValue() / ((float)SENSITIVITY_ADJ_DEFAULT / m_sensitivity) * m_resolution;
     ;
+}
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+void hp_BH1750::loop() {
+    if(!isInit) return;
+    if(_timeflag == false){
+        _timeflag = true;
+        _timer = millis();
+        start();
+    }
+    if(_timer + 1000 < millis() && _timeflag){
+        _timeflag = false;
+        int32_t res = readValue() / ((float)SENSITIVITY_ADJ_DEFAULT / m_sensitivity) * m_resolution;
+        if(on_BH1750) (on_BH1750(res));
+    }
+    return;
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
