@@ -5,6 +5,8 @@
 
 #pragma once
 
+extern __attribute__((weak)) void on_BH1750(int32_t);
+
 static const unsigned int BH1750_SATURATED = 65535;
 enum BH1750Quality {
     BH1750_QUALITY_HIGH = 0x20,
@@ -77,6 +79,7 @@ public:
     bool         start();
     float        getLux();
     uint16_t     getBrightness();
+    void         loop();
 
 
     unsigned int getMtregTime() const;
@@ -90,6 +93,8 @@ private:
     uint8_t       _address;
     uint8_t       _mtreg;
     uint8_t       _percent = 50;
+    uint32_t      _timer = 0;
+    bool          _timeflag = false;
     bool          _processed = false;
     unsigned int  _mtregTime;
     unsigned long _startMillis;
