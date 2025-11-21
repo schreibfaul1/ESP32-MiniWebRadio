@@ -81,6 +81,7 @@
         #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
         #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
         #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
+        #define AMP_ENABLED        -1 // onboard amplifier                     (-1 if not available)
     #endif
     #if CONFIG_IDF_TARGET_ESP32P4
         #define TFT_CS             26
@@ -108,7 +109,8 @@
         #define BT_EMITTER_CONNECT 30 // high impulse -> awake after POWER_OFF (-1 if not available)
         #define I2C_SDA            7  // I2C, dala line for capacitive touchpad
         #define I2C_SCL            8  // I2C, clock line for capacitive touch
-    // free pins 32, 33, 46, 47, 48, 49, 50, 51, 52
+        #define AMP_ENABLED        33 // onboard amplifier                     (-1 if not available)
+    // free pins 46, 47, 48, 49, 50, 51, 52
     #endif // CONFIG_IDF_TARGET_ESP32P4
 #endif     // CONFIG_IDF_TARGET_ESP32S3
 
@@ -148,7 +150,8 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define TFT_BL             2  // same as RGB_PINS.bl
         #define I2C_SDA            -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
         #define I2C_SCL            -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
-    #endif                            // CONFIG_IDF_TARGET_ESP32S3
+        #define AMP_ENABLED        -1 // onboard amplifier (-1 if not available)
+    #endif // CONFIG_IDF_TARGET_ESP32S3
     #if CONFIG_IDF_TARGET_ESP32P4
     // todo
     #endif
@@ -359,8 +362,8 @@ struct bt_emitter_s {
     bool         power_state = false;
     bool         play = true; // play: true, pause: false
     uint8_t      volume = 0;
-    ps_ptr<char> mode;
-    ps_ptr<char> version;
+    ps_ptr<char> mode = {};
+    ps_ptr<char> version = {};
 };
 
 struct tone_s {
@@ -558,7 +561,7 @@ inline int rfind(const char* str, char ch, int start = -1) { // same as indexof(
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 inline int replacestr(char* line, const char* search, const char* replace) { /* returns number of strings replaced.*/
-    int   count;
+    int   count = 0;
     char* sp; // start of pattern
     // printf("replacestr(%s, %s, %s)\n", line, search, replace);
     if ((sp = strstr(line, search)) == NULL) { return (0); }

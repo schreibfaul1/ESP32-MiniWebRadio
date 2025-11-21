@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4g - 15.11.2025                                                                                                               ";
+    Version 4.0.4h - 21.11.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -1328,7 +1328,7 @@ void setup() {
     updateSettings();
 
     if (s_volume.volumeSteps < 21) s_volume.volumeSteps = 21;
- 
+
     connectToWiFi();
 
     if (WiFi.isConnected()) {
@@ -1392,6 +1392,12 @@ void setup() {
     SerialPrintfln("setup: ....  connection timeout SSL: " ANSI_ESC_CYAN "%d" ANSI_ESC_WHITE " ms", CONN_TIMEOUT_SSL);
 
     ir.begin(); // Init InfraredDecoder
+
+    if(AMP_ENABLED != -1) { // enable onboard amplifier
+        pinMode(AMP_ENABLED, OUTPUT);
+        digitalWrite(AMP_ENABLED, HIGH);
+        SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET, AMP_ENABLED);
+    }
 
     if (WiFi.isConnected()) webSrv.begin(80, 81); // HTTP port, WebSocket port
 
@@ -1755,7 +1761,7 @@ bool SD_delete(const char* itemPath) {
 
 void fall_asleep() {
     s_f_sleeping = true;
-    s_f_mute = true;
+    muteChanged(true);
     s_f_playlistEnabled = false;
     s_f_isFSConnected = false;
     s_f_isWebConnected = false;
@@ -1775,11 +1781,8 @@ void fall_asleep() {
 
 void wake_up() {
     s_f_sleeping = false;
-    s_f_mute = false;
-    s_f_irOnOff = false;
-    SerialPrintfln("awake");
-    s_f_mute = true;
     muteChanged(false);
+    SerialPrintfln("awake");
     clearAll();
     setTFTbrightness(s_brightness);
     if (s_cur_station)
@@ -1848,13 +1851,19 @@ void muteChanged(bool m) {
     btn_RA_mute.setValue(m);
     if (m) {
         s_f_mute = true;
+        if(AMP_ENABLED != -1) {
+            digitalWrite(AMP_ENABLED, LOW);
+            SerialPrintfln("mute:  ....  On Board Amplifier is off");
+        }
+        webSrv.send("mute=", "1");
     } else {
         s_f_mute = false;
-    }
-    if (m)
-        webSrv.send("mute=", "1");
-    else
+        if(AMP_ENABLED != -1){
+            digitalWrite(AMP_ENABLED, HIGH);
+            SerialPrintfln("mute:  ....  On Board Amplifier is on");
+        }
         webSrv.send("mute=", "0");
+    }
     dispHeader.speakerOnOff(!s_f_mute);
     dispHeader.updateVolume(s_volume.cur_volume);
     updateSettings();
