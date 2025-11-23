@@ -1,5 +1,5 @@
 // first release on 01/2025
-// updated on Feb 02 2025
+// updated on Nov 23 2025
 
 
 #include <Arduino.h>
@@ -40,19 +40,17 @@ class TP_GT911{
     } m_info;
 
   public:
-    enum Rotate { _0, _90, _180, _270 };
-    enum : uint8_t { GT911_MODE_INTERRUPT, GT911_MODE_POLLING };
     enum : uint8_t { GT911};
 
   public:
-    TP_GT911(TwoWire* twi);
-    bool     begin(int8_t sda, int8_t scl, uint8_t addr, uint32_t clkint8_t = 400000, int8_t intPin = -1, int8_t rstPin = -1);
+    TP_GT911();
+    bool     begin(TwoWire* twi, uint8_t addr);
     void     loop();
     void     setVersion(uint8_t v);
     void     setRotation(uint8_t m);
     void     setMirror(bool h, bool v);
     bool     getProductID();
-    uint8_t  touched(uint8_t mode);
+    uint8_t  touched();
     GTPoint  getPoint(uint8_t num);
     GTPoint* getPoints();
     bool     readTouchPoints();
@@ -67,6 +65,7 @@ class TP_GT911{
     int8_t   m_rstPin;
     uint8_t  m_rotation = 0;
     uint8_t  m_version = GT911;
+    bool     m_isInit = false;
     bool     m_mirror_h = false;
     bool     m_mirror_v = false;
     bool     m_f_isTouch = false;

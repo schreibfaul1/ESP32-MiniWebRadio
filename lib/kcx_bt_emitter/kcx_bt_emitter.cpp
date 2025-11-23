@@ -18,6 +18,7 @@ KCX_BT_Emitter::KCX_BT_Emitter(int8_t RX_pin, int8_t TX_pin, int8_t connect_pin,
     pinMode(BT_CONNECT_PIN, OUTPUT);
     pinMode(BT_MODE_PIN, OUTPUT);
     digitalWrite(BT_MODE_PIN, LOW);
+    m_mode_pin = LOW;
     m_bt_found = false;
 }
 
@@ -27,8 +28,10 @@ void KCX_BT_Emitter::begin() {
     KCX_LOG_DEBUG("KCX_BT_Emitter begin");
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     digitalWrite(BT_CONNECT_PIN, LOW); // awake if POWER_OFF
+    m_connect_pin = LOW;
     vTaskDelay(200);
     digitalWrite(BT_CONNECT_PIN, HIGH);
+    m_connect_pin = HIGH;
     Serial2.begin(115200, SERIAL_8N1, BT_TX_PIN, BT_RX_PIN);
     add_tx_queue_item("AT+");
     m_bt_found = false;
@@ -208,7 +211,7 @@ void KCX_BT_Emitter::parseATcmds() {
             m_msg.e = evt_connect;
             if (m_bt_callback) { m_bt_callback(m_msg); }
         }
-    } else if (item.equals("SCAN....")) {
+    } else if (item.equals("SCAN ...")) {
         if (m_f_connected == BT_CONNECTED) {
             m_f_connected = BT_NOT_CONNECTED;
             m_msg.e = evt_disconnect;
@@ -309,9 +312,11 @@ void KCX_BT_Emitter::setMode(ps_ptr<char> mode) {
     if (mode.equals("RX")) {
         m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, LOW);
+        m_mode_pin = LOW;
     } else if (mode.equals("TX")) {
         m_bt_mode = mode;
         digitalWrite(BT_MODE_PIN, HIGH);
+        m_mode_pin = HIGH;
     } else {
         KCX_LOG_ERROR("unknown mode %s", mode.c_get());
         return;
@@ -323,9 +328,11 @@ void KCX_BT_Emitter::changeMode() {
     if (m_bt_mode.equals("RX")) {
         m_bt_mode = "TX";
         digitalWrite(BT_MODE_PIN, HIGH);
+        m_mode_pin = HIGH;
     } else {
         m_bt_mode = "RX";
         digitalWrite(BT_MODE_PIN, LOW);
+        m_mode_pin = LOW;
     }
     add_tx_queue_item("AT+RESET");
 }
@@ -360,14 +367,18 @@ const char* KCX_BT_Emitter::getMyName() {
 }
 void KCX_BT_Emitter::power_off() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
+
     add_tx_queue_item("AT+POWER_OFF");
 }
 void KCX_BT_Emitter::power_on() {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;
     KCX_LOG_ERROR("PowerOn");
+    digitalWrite(BT_MODE_PIN, m_mode_pin);
     digitalWrite(BT_CONNECT_PIN, LOW);
+    m_connect_pin = LOW;
     vTaskDelay(100);
     digitalWrite(BT_CONNECT_PIN, HIGH);
+    m_connect_pin = HIGH;
 }
 void KCX_BT_Emitter::userCommand(const char* cmd) {
     if (BT_MODE_PIN < 0 || BT_CONNECT_PIN < 0 || BT_RX_PIN < 0 || BT_TX_PIN < 0) return;

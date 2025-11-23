@@ -44,7 +44,7 @@ extern TwoWire Wire; /**< Forward declaration of Wire object */
 class hp_BH1750 {
 
 public:
-    hp_BH1750(TwoWire* myWire);
+    hp_BH1750();
 	~hp_BH1750();
 
 public:
@@ -64,7 +64,7 @@ public:
 
 	bool         setSensitivity(uint8_t sensitivity);
     bool         setResolutionMode(uint8_t resolution);
-    bool         begin(uint8_t address, int8_t sda, int8_t scl);
+    bool         begin(TwoWire* myWire, uint8_t address);
     bool         writeByte(uint8_t b);
     int32_t      readValue();
     bool         reset();

@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4h - 21.11.2025                                                                                                               ";
+    Version 4.0.4i - 23.11.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -80,7 +80,7 @@ ps_ptr<char> s_lyrics = "";
 
 int8_t   s_currDLNAsrvNr = -1;
 uint8_t  s_alarmdays = 0;
-uint8_t  s_brightness = 100;  // percent
+uint8_t  s_brightness = UINT8_MAX;
 uint8_t  s_state = UNDEFINED; // statemaschine
 uint8_t  s_cur_Codec = 0;
 uint8_t  s_numServers = 0; //
@@ -195,15 +195,25 @@ DLNA_Client    dlna;
 KCX_BT_Emitter bt_emitter(BT_EMITTER_RX, BT_EMITTER_TX, BT_EMITTER_CONNECT, BT_EMITTER_MODE);
 TwoWire        i2cBusOne = TwoWire(0); // additional HW, sensors, buttons, encoder etc
 TwoWire        i2cBusTwo = TwoWire(1); // external DAC, AC101 or ES8388
-hp_BH1750      BH1750(&i2cBusOne);     // create the sensor
+hp_BH1750      BH1750;                 // create the sensor
 SPIClass       spiBus(FSPI);
 
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
-TFT_SPI    tft(spiBus, TFT_CS);
-TP_XPT2046 tp(spiBus, TP_CS);
-#else
+TFT_SPI tft(spiBus, TFT_CS);
+#elif TFT_CONTROLLER == 7
 TFT_RGB  tft;
-TP_GT911 tp(&i2cBusOne);
+#else
+#error "wrong TFT_CONTROLLER"
+#endif
+
+#if TP_VERSION < 7 // ⏹⏹⏹⏹
+TP_XPT2046 tp(spiBus, TP_CS);
+#elif TP_VERSION == 7
+TP_GT911 tp;
+#elif TP_VERSION == 8
+FT6x36 tp;
+#else
+#error "wrong TP_VERSION"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -299,7 +309,7 @@ boolean defaultsettings() {
     s_f_timeAnnouncement = (strcmp(parseJson("\"timeAnnouncing\":"), "true") == 0) ? 1 : 0;
     s_timeSpeechLang = parseJson("\"timeSpeechLang\":");
     s_f_mute = (strcmp(parseJson("\"mute\":"), "true") == 0) ? 1 : 0;
-    s_brightness = atoi(parseJson("\"brightness\":"));
+    s_brightness = max(5, atoi(parseJson("\"brightness\":")));
     s_sleeptime = atoi(parseJson("\"sleeptime\":"));
     s_cur_station = atoi(parseJson("\"station\":"));
     s_tone.LP = atoi(parseJson("\"toneLP\":"));
@@ -388,20 +398,6 @@ void updateSettings() {
         MWR_LOG_DEBUG("%s", jO.c_get());
     }
 }
-/*****************************************************************************************************************************************************
- *                                                    T F T   B R I G H T N E S S                                                                    *
- *****************************************************************************************************************************************************/
-void setTFTbrightness(uint8_t duty) { // duty 0...100 (min...max)
-    if (TFT_BL == -1) return;
-    uint8_t d = round((double)duty * 2.55); // #186
-    ledcWrite(TFT_BL, d);
-}
-
-int16_t getTFTbrightness() { // duty 0...100 (min...max)
-    if (TFT_BL == -1) return -1;
-    return ledcRead(TFT_BL);
-}
-
 /*****************************************************************************************************************************************************
  *                                                      U R L d e c o d e                                                                            *
  *****************************************************************************************************************************************************/
@@ -1256,9 +1252,15 @@ void setup() {
     Serial.print("\n\n");
     trim(Version);
 
-    if (TFT_BL >= 0) { s_f_brightnessIsChangeable = true; }
-    if (TFT_BL >= 0) ledcAttach(TFT_BL, 1200, 8); // 1200 Hz PWM and 8 bit resolution
-    setTFTbrightness(100);
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+        setupBacklight(TFT_BL);
+    }
+
+    if (I2C_SDA >= 0) {
+        i2cBusOne.end();
+        i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
+    }
 
     Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
     Serial.printf("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "    \n", Version);
@@ -1273,25 +1275,38 @@ void setup() {
     tft.setTFTcontroller(TFT_CONTROLLER);
     tft.setDiaplayInversion(DISPLAY_INVERSION);
     tft.begin(TFT_DC); // Init TFT interface
-    setTFTbrightness(100);
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tft.setBackGoundColor(TFT_BLACK);
-
-    tp.begin(TP_IRQ);
-    tp.setVersion(TP_VERSION);
-    tp.setRotation(TP_ROTATION);
-    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#else
-    tp.begin(TP_SDA, TP_SCL, GT911_I2C_ADDRESS, I2C_MASTER_FREQ_HZ, TP_IRQ, -1);
-    tp.getProductID();
-    tp.setVersion(TP_GT911::GT911);
-    tp.setRotation(TP_GT911::Rotate::_0);
+#elif TFT_CONTROLLER == 7
     tft.begin(RGB_PINS, RGB_TIMING);
     tft.setDisplayInversion(false);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     tft.reset();
+#else
+#error "wrong TFT_CONTROLLER"
 #endif
+
+#if TP_VERSION < 7
+    tp.begin(TP_IRQ);
+    tp.setVersion(TP_VERSION);
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#elif TP_VERSION == 7
+    tp.begin(&i2cBusOne, GT911_I2C_ADDRESS);
+    tp.getProductID();
+    tp.setVersion(TP_GT911::GT911);
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#elif TP_VERSION == 8
+    tp.begin(&i2cBusOne, 0x38);
+    tp.get_FT6x36_items();
+    tp.setRotation(TP_ROTATION);
+    tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
+#else
+#error "wrong TP_VERSION"
+#endif
+
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     SerialPrintfln("setup: ...   Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
@@ -1320,7 +1335,6 @@ void setup() {
     SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-
 
     if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 
@@ -1393,7 +1407,7 @@ void setup() {
 
     ir.begin(); // Init InfraredDecoder
 
-    if(AMP_ENABLED != -1) { // enable onboard amplifier
+    if (AMP_ENABLED != -1) { // enable onboard amplifier
         pinMode(AMP_ENABLED, OUTPUT);
         digitalWrite(AMP_ENABLED, HIGH);
         SerialPrintfln("setup: ....  On Board Amplifier pin is: " ANSI_ESC_CYAN "%i" ANSI_ESC_RESET, AMP_ENABLED);
@@ -1450,24 +1464,22 @@ void setup() {
         changeState(WIFI_SETTINGS);
     }
 
-    if (I2C_SCL != -1) {
-        s_f_BH1750_found = BH1750.begin(BH1750.ADDR_TO_GROUND, I2C_SDA, I2C_SCL); // init the sensor with address pin connetcted to ground
+    if (LIGHT_SENSOR > 0) {
+        s_f_BH1750_found = BH1750.begin(&i2cBusOne, BH1750.ADDR_TO_GROUND); // init the sensor with address pin connetcted to ground
+        if (s_f_BH1750_found) {                                             // result (bool) wil be be "false" if no sensor found
+            SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found at " ANSI_ESC_CYAN "0x%X" ANSI_ESC_RESET, BH1750.ADDR_TO_GROUND);
+            BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
+            BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
+        } else {
+            SerialPrintfln("setup: ....  " ANSI_ESC_RED "Ambient Light Sensor BH1750 not found" ANSI_ESC_RESET);
+        }
     }
-    if (s_f_BH1750_found) { // result (bool) wil be be "false" if no sensor found
-        SerialPrintfln("setup: ....  " ANSI_ESC_WHITE "Ambient Light Sensor BH1750 found");
-        BH1750.setResolutionMode(BH1750.ONE_TIME_H_RESOLUTION_MODE);
-        BH1750.setSensitivity(BH1750.SENSITIVITY_ADJ_MAX);
-    }
-    if (s_brightness < 5) s_brightness = 5;
-    setTFTbrightness(s_brightness);
-
     bt_emitter.begin();
     bt_emitter.userCommand("AT+GMR?");                 // get version
     bt_emitter.userCommand("AT+PAUSE?");               // pause or play?
     bt_emitter.userCommand("AT+NAME+BT-MiniWebRadio"); // set BT receiver name
     bt_emitter.setVolume(s_bt_emitter.volume);
     bt_emitter.setMode(s_bt_emitter.mode);
-
 }
 /*****************************************************************************************************************************************************
  *                                                                   C O M M O N                                                                     *
@@ -1851,14 +1863,14 @@ void muteChanged(bool m) {
     btn_RA_mute.setValue(m);
     if (m) {
         s_f_mute = true;
-        if(AMP_ENABLED != -1) {
+        if (AMP_ENABLED != -1) {
             digitalWrite(AMP_ENABLED, LOW);
             SerialPrintfln("mute:  ....  On Board Amplifier is off");
         }
         webSrv.send("mute=", "1");
     } else {
         s_f_mute = false;
-        if(AMP_ENABLED != -1){
+        if (AMP_ENABLED != -1) {
             digitalWrite(AMP_ENABLED, HIGH);
             SerialPrintfln("mute:  ....  On Board Amplifier is on");
         }
@@ -3027,11 +3039,10 @@ void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool* continueI2
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
-    if (ambVal < 5) return;
-    if (ambVal > 350) ambVal = 350;
-    s_bh1750Value = map_l(ambVal, 0, 350, 5, 100);
-    //    log_i("s_bh1750Value %i, s_brightness %i", s_bh1750Value, s_brightness);
-    setTFTbrightness(s_bh1750Value);
+    uint8_t bh1750Value = 0;
+    bh1750Value = map_l(ambVal, 0, 1600, 5, 255);
+    MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
+    setTFTbrightness(max(bh1750Value, s_brightness));
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void ftp_debug(const char* info) {

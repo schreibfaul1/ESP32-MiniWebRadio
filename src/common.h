@@ -1,5 +1,5 @@
 // created: 10.02.2022
-// updated: 07.11.2025
+// updated: 23.11.2025
 
 #pragma once
 
@@ -13,6 +13,7 @@
 #define TP_ROTATION       1                // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right
+#define LIGHT_SENSOR      1                // (0) none, (1) BH1750
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
 #define FTP_USERNAME      "esp32"          // user name in FTP Client
@@ -30,12 +31,14 @@
 #include "IR.h"
 #include "SPIFFS.h"
 #include "base64.h"
+#include "driver/ledc.h"
 #include "esp_log.h"
 #include "kcx_bt_emitter.h"
 #include "mbedtls/sha1.h"
 #include "rtime.h"
 #include "tft_rgb.h"
 #include "tft_spi.h"
+#include "tp_ft6x36.h"
 #include "tp_gt911.h"
 #include "tp_xpt2046.h"
 #include "websrv.h"
@@ -79,10 +82,10 @@
         #define BT_EMITTER_TX      38 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_MODE    20 // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 48 // high impulse -> awake after POWER_OFF (-1 if not available)
-        #define I2C_SDA            41 // I2C, dala line for capacitive touchpad
-        #define I2C_SCL            42 // I2C, clock line for capacitive touchpad
-        #define AMP_ENABLED        -1 // onboard amplifier                     (-1 if not available)
-    #endif
+        #define I2C_SDA            41 // I2C, dala line for capacitive touchpadand and light sensor (-1 if not available)
+        #define I2C_SCL            42 // I2C, clock line for capacitive touchpadand and light sensor (-1 if not available)
+        #define AMP_ENABLED        -1 // onboard amplifier (-1 if not available)
+    #endif                            // CONFIG_IDF_TARGET_ESP32S3
     #if CONFIG_IDF_TARGET_ESP32P4
         #define TFT_CS             26
         #define TFT_DC             3
@@ -107,12 +110,12 @@
         #define BT_EMITTER_TX      28 // RX pin - KCX Bluetooth Transmitter    (-1 if not available)
         #define BT_EMITTER_MODE    29 // high transmit - low receive           (-1 if not available)
         #define BT_EMITTER_CONNECT 30 // high impulse -> awake after POWER_OFF (-1 if not available)
-        #define I2C_SDA            7  // I2C, dala line for capacitive touchpad
-        #define I2C_SCL            8  // I2C, clock line for capacitive touch
-        #define AMP_ENABLED        33 // onboard amplifier                     (-1 if not available)
+        #define I2C_SDA            7  // I2C, dala line for capacitive touchpad and light sensor (-1 if not available)
+        #define I2C_SCL            8  // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
+        #define AMP_ENABLED        33 // onboard amplifier (-1 if not available)
     // free pins 46, 47, 48, 49, 50, 51, 52
     #endif // CONFIG_IDF_TARGET_ESP32P4
-#endif     // CONFIG_IDF_TARGET_ESP32S3
+#endif     // TFT_CONTROLLER < 7
 
 #if TFT_CONTROLLER == 7 // RGB display
     #if CONFIG_IDF_TARGET_ESP32S3
@@ -130,8 +133,6 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
                                     .vsync_back_porch = 10,
                                     .vsync_front_porch = 22};
 
-        #define TP_SDA             19
-        #define TP_SCL             20
         #define TP_IRQ             -1
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
@@ -148,10 +149,10 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
         #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
         #define TFT_BL             2  // same as RGB_PINS.bl
-        #define I2C_SDA            -1 //   19 // I2C line, same as dala line for capacitive touchpad  (-1 if not used) can be used for brightness sensor
-        #define I2C_SCL            -1 //   20 // I2C line, same as clock line for capacitive touchpad (-1 if not used) can be used for brightness sensor
+        #define I2C_SDA            19 // I2C, data line for capacitive touchpad and light sensor (-1 if not available)
+        #define I2C_SCL            20 // I2C, clock line for capacitive touchpad and light sensor (-1 if not available)
         #define AMP_ENABLED        -1 // onboard amplifier (-1 if not available)
-    #endif // CONFIG_IDF_TARGET_ESP32S3
+    #endif                            // CONFIG_IDF_TARGET_ESP32S3
     #if CONFIG_IDF_TARGET_ESP32P4
     // todo
     #endif
@@ -380,7 +381,6 @@ bool         SD_MMC_exists(const char* path);
 boolean      defaultsettings();
 void         updateSettings();
 void         urldecode(char* str);
-void         setTFTbrightness(uint8_t duty);
 void         fall_asleep();
 void         wake_up();
 void         setRTC(ps_ptr<char> TZString);
@@ -674,15 +674,54 @@ inline int16_t strlenUTF8(const char* str) { // returns only printable glyphs, a
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min, int32_t out_max) {
-    const int32_t run = in_max - in_min;
+    // --- Clamp Input ---
+    if (x <= in_min) return out_min;
+    if (x >= in_max) return out_max;
+
+   // --- Normal map operation with 64-bit ---
+    const int64_t run = int64_t(in_max) - int64_t(in_min);
     if (run == 0) {
-        log_e("map(): Invalid input range, %li == %li (min == max)", in_min, in_max);
-        return -1; // AVR returns -1, SAM returns 0
+        log_e("map(): Invalid range, %li == %li (min == max)", in_min, in_max);
+        return out_min; // fallback
     }
-    const int32_t rise = out_max - out_min;
-    const int32_t delta = x - in_min;
-    return round((delta * rise) / run + out_min);
+
+    const int64_t rise = int64_t(out_max) - int64_t(out_min);
+    const int64_t delta = int64_t(x) - int64_t(in_min);
+
+    return int32_t((delta * rise) / run + out_min);
 }
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
+inline void setupBacklight(int pin) {
+
+log_w("pin %i", pin);
+    ledc_channel_config_t ch =
+        {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
+
+    ledc_timer_config_t tmr = {
+        .speed_mode = LEDC_LOW_SPEED_MODE,
+        .duty_resolution = LEDC_TIMER_8_BIT,
+        .timer_num = LEDC_TIMER_3,
+        .freq_hz = 100000,
+        .clk_cfg = LEDC_USE_APB_CLK,
+    };
+
+    // Timer zuerst initialisieren
+    ledc_timer_config(&tmr);
+
+    // Dann Channel anlegen
+    ledc_channel_config(&ch);
+
+    // Optional Helligkeit setzen
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, 255);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+}
+
+inline void setTFTbrightness(uint8_t duty) {
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+}
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline void SerialPrintflnCut(const char* item, const char* color, const char* str) {

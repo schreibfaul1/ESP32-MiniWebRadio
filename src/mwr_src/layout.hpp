@@ -698,7 +698,7 @@ void placingGraphicObjects() { // and initialize them
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y + 5, 4 * layout.winButton.w, layout.sdrOvBtns.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, 100);
+    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, UINT8_MAX);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
     btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");

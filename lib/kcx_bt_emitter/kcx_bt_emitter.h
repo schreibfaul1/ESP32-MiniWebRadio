@@ -122,6 +122,8 @@ class KCX_BT_Emitter {
     ps_ptr<char>             m_bt_version;
     uint8_t                  m_bt_volume = 0;
     bool                     m_bt_found = false;
+    bool                     m_mode_pin = false;
+    bool                     m_connect_pin = false;
 
     int8_t BT_CONNECT_PIN = -1;
     int8_t BT_MODE_PIN = -1;
