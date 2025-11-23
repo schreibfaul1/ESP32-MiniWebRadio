@@ -206,14 +206,14 @@ TFT_RGB  tft;
 #error "wrong TFT_CONTROLLER"
 #endif
 
-#if TP_VERSION < 7 // ⏹⏹⏹⏹
+#if TP_CONTROLLER < 7 // ⏹⏹⏹⏹
 TP_XPT2046 tp(spiBus, TP_CS);
-#elif TP_VERSION == 7
+#elif TP_CONTROLLER == 7
 TP_GT911 tp;
-#elif TP_VERSION == 8
+#elif TP_CONTROLLER == 8
 FT6x36 tp;
 #else
-#error "wrong TP_VERSION"
+#error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -1287,24 +1287,24 @@ void setup() {
 #error "wrong TFT_CONTROLLER"
 #endif
 
-#if TP_VERSION < 7
+#if TP_CONTROLLER < 7
     tp.begin(TP_IRQ);
-    tp.setVersion(TP_VERSION);
+    tp.setVersion(TP_CONTROLLER);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_VERSION == 7
+#elif TP_CONTROLLER == 7
     tp.begin(&i2cBusOne, GT911_I2C_ADDRESS);
     tp.getProductID();
     tp.setVersion(TP_GT911::GT911);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_VERSION == 8
+#elif TP_CONTROLLER == 8
     tp.begin(&i2cBusOne, 0x38);
     tp.get_FT6x36_items();
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #else
-#error "wrong TP_VERSION"
+#error "wrong TP_CONTROLLER"
 #endif
 
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
