@@ -3,15 +3,15 @@
 
 #define _SSID             "mySSID"         // Your WiFi credentials here
 #define _PW               "myWiFiPassword" // Or in textfile on SD-card
-#define TFT_CONTROLLER    5                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
+#define TFT_CONTROLLER    7                // (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7) RGB display
 #define DISPLAY_INVERSION 0                // only SPI displays, (0) off (1) on
 #define TFT_ROTATION      1                // only SPI displays, 1 or 3 (landscape)
 #define TFT_FREQUENCY     40000000         // only SPI displays, 80000000, 40000000, 27000000, 20000000, 10000000
-#define TP_CONTROLLER     5                // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
+#define TP_CONTROLLER     7                // only SPI displays, (0)ILI9341, (3)ILI9486, (4)ILI9488, (5)ST7796, (7)GT911, (8)FT6x63
 #define TP_ROTATION       1                // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right
-#define LIGHT_SENSOR      1                // (0) none, (1) BH1750
+#define LIGHT_SENSOR      0                // (0) none, (1) BH1750
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
 #define FTP_USERNAME      "esp32"          // user name in FTP Client
@@ -87,7 +87,7 @@
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S§ SUNTON   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 1 // 0 deactivated, 1 activated
+#if 1                       // 0 deactivated, 1 activated
     #if TFT_CONTROLLER == 7 // RGB display
 const TFT_RGB::Pins RGB_PINS = { // SUNTON 7"
     .b0 = 15, .b1 = 7,  .b2 = 6,  .b3 = 5,  .b4 = 4,  .g0 = 9,     .g1 = 46,    .g2 = 3,  .g3 = 8,    .g4 = 16, .g5 = 1,
@@ -107,7 +107,7 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
         #define SD_MMC_D0          13
-        #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
+        #define GT911_I2C_ADDRESS  0x5D // default I2C-address of GT911
         #define I2S_DOUT           17
         #define I2S_BCLK           0
         #define I2S_LRC            18
@@ -124,9 +124,57 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
     #endif
 #endif
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+// 📌📌📌  DISPLAY [800x480] ESP32-S3 ELECROW 5"   📌📌📌
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+#if 0                            // 0 deactivated, 1 activated
+    #if TFT_CONTROLLER == 7      // RGB display
+const TFT_RGB::Pins RGB_PINS = { // ELECROW 5"
+    .b0 = 8,  .b1 = 3,  .b2 = 46, .b3 = 9,  .b4 = 1,  .g0 = 5,     .g1 = 6,     .g2 = 7,  .g3 = 15,  .g4 = 16, .g5 = 4,
+    .r0 = 45, .r1 = 48, .r2 = 47, .r3 = 21, .r4 = 14, .hsync = 39, .vsync = 41, .de = 40, .pclk = 0, .bl = 2};
+
+const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
+                                    .v_res = 480,
+                                    .pixel_clock_hz = 11000000,
+                                    .hsync_pulse_width = 4,
+                                    .hsync_back_porch = 43,
+                                    .hsync_front_porch = 8,
+                                    .vsync_pulse_width = 4,
+                                    .vsync_back_porch = 12,
+                                    .vsync_front_porch = 8};
+
+
+        #define TP_IRQ -1
+        #define SD_MMC_CMD 11
+        #define SD_MMC_CLK 12
+        #define SD_MMC_D0  13
+
+        #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
+        #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
+
+        #define I2S_DOUT 17
+        #define I2S_BCLK 42
+        #define I2S_LRC  18
+        #define I2S_MCLK -1 // important!
+
+        #define IR_PIN             38 // IR Receiver (if available)
+        #define BT_EMITTER_RX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_TX      -1 // must be -1, not enough pins
+        #define BT_EMITTER_LINK    -1 // must be -1, not enough pins
+        #define BT_EMITTER_MODE    -1 // must be -1, not enough pins
+        #define BT_EMITTER_CONNECT -1 // must be -1, not enough pins
+
+        #define TFT_BL      2  // same as RGB_PINS.bl
+        #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
+
+        #define I2C_SDA 19 // dala line for capacitive touchpadand and light sensor  (-1 if not used)
+        #define I2C_SCL 20 // clock line for capacitive touchpad  and light sensor (-1 if not used)
+
+    #endif
+#endif
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 ELECROW 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 0 // 0 deactivated, 1 activated
+#if 0                       // 0 deactivated, 1 activated
     #if TFT_CONTROLLER == 7 // RGB display
 const TFT_RGB::Pins RGB_PINS = { // ELECROW 7"
     .b0 = 15, .b1 = 7,  .b2 = 6,  .b3 = 5,  .b4 = 4,  .g0 = 9,     .g1 = 46,    .g2 = 3,  .g3 = 8,   .g4 = 16, .g5 = 1,
@@ -146,8 +194,7 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
         #define SD_MMC_D0          13
-        #define I2C_MASTER_FREQ_HZ 200000 // 400 kHz I2C-frequency
-        #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
+        #define GT911_I2C_ADDRESS  0x14 // default I2C-address of GT911
         #define I2S_DOUT           17
         #define I2S_BCLK           42
         #define I2S_LRC            18
@@ -167,15 +214,15 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 // 📌📌📌  DISPLAY [800x480] ESP32-S3 WAVESHARE 7"   📌📌📌
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-#if 0 // 0 deactivated, 1 activated
-    #if TFT_CONTROLLER == 7      // RGB display
+#if 0                       // 0 deactivated, 1 activated
+    #if TFT_CONTROLLER == 7 // RGB display
 const TFT_RGB::Pins RGB_PINS = { // WAVESHARE
     .b0 = 14, .b1 = 38, .b2 = 18, .b3 = 17, .b4 = 10, .g0 = 39,    .g1 = 0,    .g2 = 45, .g3 = 48,  .g4 = 47, .g5 = 21,
     .r0 = 1,  .r1 = 2,  .r2 = 42, .r3 = 41, .r4 = 40, .hsync = 46, .vsync = 3, .de = 5,  .pclk = 7, .bl = -1};
 
 const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
                                     .v_res = 480,
-                                    .pixel_clock_hz = 12000000,
+                                    .pixel_clock_hz = 13000000,
                                     .hsync_pulse_width = 1,
                                     .hsync_back_porch = 1,
                                     .hsync_front_porch = 1,
@@ -183,16 +230,13 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
                                     .vsync_back_porch = 4,
                                     .vsync_front_porch = 4};
 
-        #define TP_SDA 8
-        #define TP_SCL 9
         #define TP_IRQ -1
 
         #define SD_MMC_CMD 11
         #define SD_MMC_CLK 12
         #define SD_MMC_D0  13
 
-        #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
-        #define GT911_I2C_ADDRESS  0x14   // 0x5D   // default I2C-address of GT911
+        #define GT911_I2C_ADDRESS 0x14 // default I2C-address of GT911
 
         #define I2S_DOUT 19
         #define I2S_BCLK 20
@@ -209,7 +253,7 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define TFT_BL      -1 // same as RGB_PINS.bl
         #define AMP_ENABLED -1 // control pin for extenal amplifier (if available)
 
-        #define I2C_SDA -1 // I2C line, same as dala line for capacitive touchpad  (-1 if not used)
-        #define I2C_SCL -1 // I2C line, same as clock line for capacitive touchpad (-1 if not used)
+        #define I2C_SDA 8 // I2C dala line for capacitive touchpad  (-1 if not used)
+        #define I2C_SCL 9 // I2C clock line for capacitive touchpad (-1 if not used)
     #endif
 #endif
