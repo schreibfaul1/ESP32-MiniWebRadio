@@ -573,7 +573,7 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
-inline void setupBacklight(int pin) {
+inline void setupBacklight(int pin, uint32_t freq_hz)  {
 
 log_w("pin %i", pin);
     ledc_channel_config_t ch =
@@ -583,7 +583,7 @@ log_w("pin %i", pin);
         .speed_mode = LEDC_LOW_SPEED_MODE,
         .duty_resolution = LEDC_TIMER_8_BIT,
         .timer_num = LEDC_TIMER_3,
-        .freq_hz = 100000,
+        .freq_hz = freq_hz,
         .clk_cfg = LEDC_USE_APB_CLK,
     };
 

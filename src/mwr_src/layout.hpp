@@ -302,7 +302,7 @@ inline constexpr DisplayConfig config = {
     112,                    // sleeptimeYPos
     800,                    // width
     480,                    // height
-    25,                     // brightnessMin
+    30,                     // brightnessMin
     'l'                     // size code
 };
 } // namespace layout_800x480

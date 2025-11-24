@@ -107,7 +107,6 @@ const TFT_RGB::Timing RGB_TIMING = {.h_res = 800,
         #define SD_MMC_CMD         11
         #define SD_MMC_CLK         12
         #define SD_MMC_D0          13
-        #define I2C_MASTER_FREQ_HZ 400000 // 400 kHz I2C-frequency
         #define GT911_I2C_ADDRESS  0x5D   // default I2C-address of GT911
         #define I2S_DOUT           17
         #define I2S_BCLK           0
