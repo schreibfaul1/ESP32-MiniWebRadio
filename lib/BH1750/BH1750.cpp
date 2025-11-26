@@ -89,7 +89,7 @@ int32_t hp_BH1750::readValue() {
 bool hp_BH1750::writeMtreg(uint8_t mtreg) { // Change sensitivity measurement time
     uint8_t hiByte = mtreg >> 5;
     hiByte |= 0b01000000; // High bit: 01000_MT[7,6,5]
-    bool res = writeByte(hiByte);
+    writeByte(hiByte);
     uint8_t loByte = mtreg & 0b00011111;
     loByte |= 0b01100000; // Low bit:  011_MT[4,3,2,1,0]
     return writeByte(loByte);

@@ -206,14 +206,14 @@ TFT_RGB  tft;
 #error "wrong TFT_CONTROLLER"
 #endif
 
-#if TP_VERSION < 7 // ⏹⏹⏹⏹
+#if TP_CONTROLLER < 7 // ⏹⏹⏹⏹
 TP_XPT2046 tp(spiBus, TP_CS);
-#elif TP_VERSION == 7
+#elif TP_CONTROLLER == 7
 TP_GT911 tp;
-#elif TP_VERSION == 8
+#elif TP_CONTROLLER == 8
 FT6x36 tp;
 #else
-#error "wrong TP_VERSION"
+#error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -1252,16 +1252,13 @@ void setup() {
     Serial.print("\n\n");
     trim(Version);
 
-    if (TFT_BL >= 0) {
-        s_f_brightnessIsChangeable = true;
-        setupBacklight(TFT_BL);
-    }
-
     if (I2C_SDA >= 0) {
         i2cBusOne.end();
+        i2cBusOne.flush();
         i2cBusOne.begin(I2C_SDA, I2C_SCL, 100000);
     }
 
+    Serial.println("");
     Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "   ");
     Serial.printf("             " ANSI_ESC_BG_MAGENTA " *     MiniWebRadio % 29s    * " ANSI_ESC_RESET "    \n", Version);
     Serial.println("             " ANSI_ESC_BG_MAGENTA " ***************************************************** " ANSI_ESC_RESET "    ");
@@ -1278,34 +1275,44 @@ void setup() {
     tft.setFrequency(TFT_FREQUENCY);
     tft.setRotation(TFT_ROTATION);
     tft.setBackGoundColor(TFT_BLACK);
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+        setupBacklight(TFT_BL, 100000);
+    }
 #elif TFT_CONTROLLER == 7
     tft.begin(RGB_PINS, RGB_TIMING);
     tft.setDisplayInversion(false);
     vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
     tft.reset();
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+        setupBacklight(TFT_BL, 512);
+    }
 #else
 #error "wrong TFT_CONTROLLER"
 #endif
 
-#if TP_VERSION < 7
+#if TP_CONTROLLER < 7
     tp.begin(TP_IRQ);
-    tp.setVersion(TP_VERSION);
+    tp.setVersion(TP_CONTROLLER);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_VERSION == 7
+#elif TP_CONTROLLER == 7
     tp.begin(&i2cBusOne, GT911_I2C_ADDRESS);
     tp.getProductID();
     tp.setVersion(TP_GT911::GT911);
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
-#elif TP_VERSION == 8
+#elif TP_CONTROLLER == 8
     tp.begin(&i2cBusOne, 0x38);
     tp.get_FT6x36_items();
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #else
-#error "wrong TP_VERSION"
+#error "wrong TP_CONTROLLER"
 #endif
+
+
 
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     SerialPrintfln("setup: ...   Init SD card");
@@ -3040,7 +3047,7 @@ void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool* continueI2
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
     uint8_t bh1750Value = 0;
-    bh1750Value = map_l(ambVal, 0, 1600, 5, 255);
+    bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, 255);
     MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
     setTFTbrightness(max(bh1750Value, s_brightness));
 }

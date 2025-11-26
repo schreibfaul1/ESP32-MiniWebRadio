@@ -23,7 +23,6 @@ class FT6x36 {
     };
 
    public:
-    static const uint32_t I2C_MASTER_FREQ_HZ = 100000;
     static const uint8_t  FT6x36U_I2C_ADDRESS = 0x38;
 
   private:
