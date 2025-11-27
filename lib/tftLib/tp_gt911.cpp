@@ -20,6 +20,8 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr) {
         if (tp_info) tp_info(buff);
 
         readInfo(); // Need to get resolution to use rotation
+        m_h_res = m_info.xResolution;
+        m_v_res = m_info.yResolution;
         return true;
     }
     sprintf(buff, ANSI_ESC_RED "TouchPad not found at 0x%02X" ANSI_ESC_RESET, m_addr);
@@ -31,29 +33,7 @@ bool TP_GT911::begin(TwoWire* twi, uint8_t addr) {
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::setRotation(uint8_t m) {
-
     m_rotation = m;
-
-    if (m_version == GT911) {
-        switch (m_rotation) {
-            case 0:
-                m_info.xResolution = 480;
-                m_info.yResolution = 800;
-                break;
-            case 1:
-                m_info.xResolution = 800;
-                m_info.yResolution = 480;
-                break;
-            case 2:
-                m_info.xResolution = 480;
-                m_info.yResolution = 800;
-                break;
-            case 3:
-                m_info.xResolution = 800;
-                m_info.yResolution = 480;
-                break;
-        }
-    }
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::setMirror(bool h, bool v) {
@@ -69,7 +49,9 @@ void TP_GT911::setVersion(uint8_t v) {
                    // case 4: m_version = TP_ILI2510; break; // ILI9488
                    // case 5: m_version = TP_FT5406; break; // FT5446, FT6336U
     }
-    log_i("Resulution: %dx%d", m_info.xResolution, m_info.yResolution);
+    char buff[256];
+    sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_info.xResolution, m_info.yResolution);
+    if (tp_info) tp_info(buff);
 }
 //----------------------------------------------------------------------------------------------------------------------------------------------------
 void TP_GT911::loop() {
@@ -236,12 +218,12 @@ TP_GT911::GTPoint TP_GT911::getPoint(uint8_t num) {
             break;
         case 1: return m_points[num]; // No change
         case 2:
-            x_new = m_info.xResolution - m_points[num].x;
-            y_new = m_info.yResolution - m_points[num].y;
-            break;
-        case 3:
             x_new = m_info.xResolution - m_points[num].y;
             y_new = m_points[num].x;
+            break;
+        case 3:
+            x_new = m_info.xResolution - m_points[num].x;
+            y_new = m_info.yResolution - m_points[num].y;
             break;
     }
     m_points[num].x = x_new;

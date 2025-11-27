@@ -312,6 +312,82 @@ inline constexpr DisplayConfig config = {
 } // namespace layout_800x480
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
+namespace layout_1024x600 {
+//
+//  Display 1024x800
+//  +-------------------------------------------+ _yHeader=0
+//  | Header                                    |       winHeader=80px
+//  +-------------------------------------------+ _yName=50
+//  |                                           |
+//  | Logo                   StationName        |       winFName=320px
+//  |                                           |
+//  +-------------------------------------------+ _yTitle=300
+//  |                                           |
+//  |              StreamTitle                  |       winTitle=320px
+//  |                                           |
+//  +-------------------------------------------+ _yFooter=430
+//  | Footer                                    |       winFooter=80px
+//  +-------------------------------------------+ 800
+//                                            1024
+
+// -----------------------------------------------------------------------------------
+// window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
+// -----------------------------------------------------------------------------------
+constexpr coor winHeader = coor().pos(0, 0).size(1024, 80);
+constexpr coor winLogo = coor().pos(0, 80).size(320, 320).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(190, 50).size(610, 190).pad(15, 5, 0, 0);
+constexpr coor winFName = coor().pos(0, 50).size(800, 190).pad(5, 5, 0, 0);
+constexpr coor winFileNr = coor().pos(0, 240).size(190, 50).pad(0, 4, 0, 0);
+constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
+constexpr coor winProgbar = coor().pos(0, 290).size(800, 14).pad(5, 5, 0, 0);
+constexpr coor winTitle = coor().pos(0, 240).size(800, 190).pad(15, 5, 2, 2);
+constexpr coor winSTitle = coor().pos(0, 240).size(768, 190).pad(10, 5, 2, 2);
+constexpr coor winVUmeter = coor().pos(768, 280).size(32, 150);
+constexpr coor winFooter = coor().pos(0, 430).size(800, 50);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
+constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
+constexpr coor sdrOvBtns = coor().pos(0, 265).size(800, 60).pad(5, 5, 0, 0);
+constexpr coor winButton = coor().pos(0, 345).size(80, 80);
+constexpr coor winDigits = coor().pos(0, 50).size(800, 295);
+constexpr coor winWoHF = coor().pos(0, 50).size(800, 380);
+constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
+constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
+constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
+constexpr coor sdrBAL = coor().pos(200, 272).size(300, 73);
+
+// -----------------------------------------------------------------------------------
+// window derived (calculated from others)
+// -----------------------------------------------------------------------------------
+constexpr coor btnHP = coor().pos(100, sdrHP.y).size(sdrHP.w, sdrHP.h);
+constexpr coor btnBP = coor().pos(100, sdrBP.y).size(sdrBP.w, sdrBP.h);
+constexpr coor btnLP = coor().pos(100, sdrLP.y).size(sdrLP.w, sdrLP.h);
+constexpr coor btnBAL = coor().pos(100, sdrBAL.y).size(sdrBAL.w, sdrBAL.h);
+
+constexpr coor txtHP = coor().pos(sdrHP.x + sdrHP.w, sdrHP.y).size(190, sdrHP.h);
+constexpr coor txtBP = coor().pos(sdrHP.x + sdrHP.w, sdrBP.y).size(190, sdrBP.h);
+constexpr coor txtLP = coor().pos(sdrHP.x + sdrHP.w, sdrLP.y).size(190, sdrLP.h);
+constexpr coor txtBAL = coor().pos(sdrHP.x + sdrHP.w, sdrBAL.y).size(190, sdrBAL.h);
+
+inline constexpr uint8_t fonts[13] = {15, 16, 18, 21, 25, 27, 34, 38, 43, 56, 66, 81, 96};
+
+inline constexpr DisplayConfig config = {
+    fonts,
+    27,                     // listFontSize
+    38,                     // headerFontSize
+    38,                     // footerFontSize
+    156,                    // bigNumbersFontSize
+    34,                     // fileNumberFontSize
+    {20, 137, 223, 106, 0}, // sleeptimeXPos[5]
+    112,                    // sleeptimeYPos
+    800,                    // width
+    480,                    // height
+    30,                     // brightnessMin
+    255,                    // brightnessMax
+    'l'                     // size code
+};
+} // namespace layout_800x480
+// —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+
 // Factory-Funktion (Compile-Time)
 inline Layout makeLayout() {
 #if TFT_CONTROLLER == 0 || TFT_CONTROLLER == 1

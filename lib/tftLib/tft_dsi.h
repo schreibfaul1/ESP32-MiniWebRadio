@@ -1,8 +1,10 @@
 // first release on 11/2025
 // updated on Nov 26 2025
-
+#include "Arduino.h"
+#include "../../src/settings.h"
+#ifdef CONFIG_IDF_TARGET_ESP32P4
 #pragma once
-
+#include "tft_structures.h"
 #include "Arduino.h"
 #include "FS.h"
 #include "SD.h"
@@ -26,8 +28,6 @@
 #include "fonts/TimesNewRoman.h"
 #include "fonts/Z003.h"
 #include "fonts/fontsdef.h"
-#include "settings.h"
-#include "structs.h"
 #include "vector"
 
 using namespace std;
@@ -664,5 +664,5 @@ class TFT_DSI {
     void          png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char* rgbaBuffer, uint32_t png_outbuff_size, uint8_t png_format);
 };
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
+#endif
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

@@ -3,8 +3,7 @@
 
 
 #include "tft_dsi.h"
-
-
+#ifdef CONFIG_IDF_TARGET_ESP32P4
     #define __malloc_heap_psram(size) heap_caps_malloc_prefer(size, 2, MALLOC_CAP_DEFAULT | MALLOC_CAP_SPIRAM, MALLOC_CAP_DEFAULT | MALLOC_CAP_INTERNAL)
 
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -148,6 +147,7 @@ void TFT_DSI::begin(const Timing& newTiming) {
 
     m_err = esp_lcd_panel_init(m_panel);
     if (m_err != 0) { log_e("init panel, err: %i\n", m_err); }
+    else if (tft_info) tft_info("TFT Controller: " ANSI_ESC_CYAN "EK97001" ANSI_ESC_RESET " initialized");
 
     // --------------------------------------------------
     // 6. Fetch Framebuffer-Pointer from Driver
@@ -158,9 +158,9 @@ void TFT_DSI::begin(const Timing& newTiming) {
     m_framebuffer[0] = (uint16_t*)fb0;
     m_framebuffer[1] = (uint16_t*)fb1;
     m_framebuffer[2] = (uint16_t*)fb2;
-    if(tft_info) tft_info("Display initialisiert.");
-    log_e("init panel okay");
-
+    char buff[256];
+    sprintf(buff, "Resolution: " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET " x " ANSI_ESC_CYAN "%d" ANSI_ESC_RESET, m_h_res, m_v_res);
+    if (tft_info) tft_info(buff);
 }
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void TFT_DSI::reset() {
@@ -5279,5 +5279,5 @@ void TFT_DSI::png_draw_into_Framebuffer(uint16_t x, uint16_t y, uint16_t w, uint
     panelDrawBitmap(x, y, x + w, y + h, m_framebuffer[0]);
 }
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
-
+#endif // CONFIG_IDF_TARGET_ESP32P4
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————

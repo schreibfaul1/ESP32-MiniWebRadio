@@ -10,6 +10,14 @@ extern __attribute__((weak)) void graphicObjects_OnChange(ps_ptr<char> name, int
 extern __attribute__((weak)) void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val);
 extern __attribute__((weak)) void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra);
 
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+extern TFT_SPI tft;
+#elif TFT_CONTROLLER == 7 // ⏹⏹⏹⏹
+extern TFT_RGB tft;
+#elif TFT_CONTROLLER == 8 // ⏹⏹⏹⏹
+extern TFT_DSI tft;
+#endif
+
 extern SemaphoreHandle_t mutex_display;
 extern SD_content        s_SD_content;
 class slider : public RegisterTable {
@@ -1629,7 +1637,7 @@ class wifiSettings : public RegisterTable {
         if (m_keyboard->positionXY(x, y)) {
             log_e("key pressed %i", m_keyboard->getVal());
             changePassword(m_keyboard->getVal(), m_credentials_idx);
-            m_in_password->setText(m_credentials[m_credentials_idx].password.c_get());
+            m_in_password->setText(m_credentials[m_credentials_idx].password.get());
             m_in_password->show(m_backgroundTransparency, m_saveBackground);
         }
         if (!m_enabled) return false;

@@ -65,6 +65,8 @@ class TP_GT911{
     int8_t   m_rstPin;
     uint8_t  m_rotation = 0;
     uint8_t  m_version = GT911;
+    uint16_t m_h_res;
+    uint16_t m_v_res;
     bool     m_isInit = false;
     bool     m_mirror_h = false;
     bool     m_mirror_v = false;

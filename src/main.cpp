@@ -202,8 +202,8 @@ SPIClass       spiBus(FSPI);
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
 TFT_RGB tft;
-#else
-    #error "wrong TFT_CONTROLLER"
+#elif TFT_CONTROLLER == 8
+TFT_DSI tft;
 #endif
 
 #if TP_CONTROLLER < 7 // ⏹⏹⏹⏹
@@ -988,18 +988,20 @@ bool connectToWiFi() {
         char* pw = line.get() + pos + 1;  // password is the second part
         MWR_LOG_DEBUG("ssid %s", ssid);
         MWR_LOG_DEBUG("pw %s", pw);
-        wifiMulti.addAP(ssid, pw); // SSID and PW in code"
-        size_t offset = 0;
-        size_t pwlen = strlen(pw);
-        size_t dot_len = strlen(emoji.blueCircle); // = 4
-        size_t buf_size = pwlen * dot_len + 1;     // +1 für '\0'
-        char   pass[buf_size];
-        for (size_t j = 0; j < pwlen; j++) {
-            memcpy(pass + offset, emoji.blueCircle, dot_len);
-            offset += dot_len;
+        if (strlen(pw) > 1) {
+            wifiMulti.addAP(ssid, pw); // SSID and PW in code"
+            size_t offset = 0;
+            size_t pwlen = strlen(pw);
+            size_t dot_len = strlen(emoji.blueCircle); // = 4
+            size_t buf_size = pwlen * dot_len + 1;     // +1 für '\0'
+            char   pass[buf_size];
+            for (size_t j = 0; j < pwlen; j++) {
+                memcpy(pass + offset, emoji.blueCircle, dot_len);
+                offset += dot_len;
+            }
+            pass[offset] = '\0'; // Zero-terminate the string
+            SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
         }
-        pass[offset] = '\0'; // Zero-terminate the string
-        SerialPrintfln("WiFI_info:   add credentials: " ANSI_ESC_CYAN "%s - %s" ANSI_ESC_YELLOW " [%s:%d]", ssid, pass, __FILENAME__, __LINE__);
     }
 
     // These options can help when you need ANY kind of wifi connection to get a config file, report errors, etc.
@@ -1267,6 +1269,7 @@ void setup() {
     if (!get_esp_items(&s_resetReason, &s_f_FFatFound)) return;
     pref.begin("Pref", false); // instance of preferences from AccessPoint (SSID, PW ...)
 
+//=========================== TFT and TP ====================================
 #if TFT_CONTROLLER < 7
     spiBus.begin(TFT_SCK, TFT_MISO, TFT_MOSI, -1); // SPI1 for TFT
     tft.setTFTcontroller(TFT_CONTROLLER);
@@ -1288,8 +1291,16 @@ void setup() {
         s_f_brightnessIsChangeable = true;
         setupBacklight(TFT_BL, 512);
     }
+#elif TFT_CONTROLLER == 8
+    tft.begin(DSI_TIMING);
+    vTaskDelay(100 / portTICK_PERIOD_MS); // wait for TFT to be ready
+    if (TFT_BL >= 0) {
+        s_f_brightnessIsChangeable = true;
+        setupBacklight(TFT_BL, 512);
+        setTFTbrightness(5);
+    }
 #else
-    #error "wrong TFT_CONTROLLER"
+    SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
 #endif
 
 #if TP_CONTROLLER < 7
@@ -1309,10 +1320,10 @@ void setup() {
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #else
-    #error "wrong TP_CONTROLLER"
+    SerialPrintfln(ANSI_ESC_RED "The value in TP_CONTROLLER is invalid");
 #endif
 
-    if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
+    //=========================== SD_MMC ====================================
     SerialPrintfln("setup: ...   Init SD card");
     pinMode(SD_MMC_D0, INPUT_PULLUP);
     int32_t sdmmc_frequency = SDMMC_FREQUENCY / 1000; // MHz -> KHz, default is 40MHz
@@ -1320,9 +1331,7 @@ void setup() {
 #if CONFIG_IDF_TARGET_ESP32S3
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", true, false, sdmmc_frequency);
-#endif
-
-#if CONFIG_IDF_TARGET_ESP32P4
+#elif CONFIG_IDF_TARGET_ESP32P4
     SD_MMC.setPins(SD_MMC_CLK, SD_MMC_CMD, SD_MMC_D0, SD_MMC_D1, SD_MMC_D2, SD_MMC_D3);
     s_f_sd_card_found = SD_MMC.begin("/sdcard", false, false, sdmmc_frequency);
 #endif
@@ -1337,12 +1346,12 @@ void setup() {
     }
     float cardSize = ((float)SD_MMC.cardSize()) / (1024 * 1024);
     float freeSize = ((float)SD_MMC.cardSize() - SD_MMC.usedBytes()) / (1024 * 1024);
-    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB by %.1f MB free", freeSize, cardSize);
+    SerialPrintfln(ANSI_ESC_WHITE "setup: ....  SD card found, %.1f MB free %.1f MB total", freeSize, cardSize);
+    //=========================================================================
+
+    if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     defaultsettings();
     if (ESP.getFlashChipSize() > 80000000) { FFat.begin(); }
-
-    if (TFT_CONTROLLER > 8) SerialPrintfln(ANSI_ESC_RED "The value in TFT_CONTROLLER is invalid");
-
     drawImage("/common/MiniWebRadioV4.jpg", 0, 0); // Welcomescreen
     updateSettings();
 
@@ -1392,14 +1401,14 @@ void setup() {
     lst_DLNA.client_and_history(&dlna, &s_dlnaHistory[0]);
     lst_RADIO.currentStationNr(&s_cur_station);
     clk_AC_red.alarm_time_and_days(&s_alarmdays, s_alarmtime);
-
+    MWR_LOG_WARN("hier");
     audio.setAudioTaskCore(AUDIOTASK_CORE);
     audio.setConnectionTimeout(CONN_TIMEOUT, CONN_TIMEOUT_SSL);
     audio.setVolumeSteps(s_volume.volumeSteps);
     audio.setVolume(0);
     audio.setPinout(I2S_BCLK, I2S_LRC, I2S_DOUT, I2S_MCLK);
     audio.setI2SCommFMT_LSB(I2S_COMM_FMT);
-
+    MWR_LOG_WARN("hier1");
     SerialPrintfln("setup: ....  number of saved stations: " ANSI_ESC_CYAN "%d", staMgnt.getSumStations());
     SerialPrintfln("setup: ....  number of saved favourites: " ANSI_ESC_CYAN "%d", staMgnt.getSumFavStations());
     SerialPrintfln("setup: ....  current station number: " ANSI_ESC_CYAN "%d", s_cur_station);
@@ -2240,8 +2249,7 @@ void changeState(int32_t state) {
                 sdr_BR_value.show(true, true);
                 txt_BR_value.setText(int2str(s_brightness));
                 txt_BR_value.show(true, true);
-            }
-            else{
+            } else {
                 sdr_BR_value.enable();
                 txt_BR_value.enable();
             }

@@ -2,6 +2,14 @@
 
 #pragma once
 
+#if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
+extern TFT_SPI tft;
+#elif TFT_CONTROLLER == 7 // ⏹⏹⏹⏹
+extern TFT_RGB tft;
+#elif TFT_CONTROLLER == 8 // ⏹⏹⏹⏹
+extern TFT_DSI tft;
+#endif
+
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void make_hardcopy_on_sd() {
     const uint8_t bmp320x240[70] = {
