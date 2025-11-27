@@ -9,7 +9,7 @@
     MiniWebRadio -- Webradio receiver for ESP32-S3
 
     first release on 03/2017                                                                                                      */char Version[] ="\
-    Version 4.0.4j - 26.11.2025                                                                                                               ";
+    Version 4.0.4k - 27.11.2025                                                                                                               ";
 
 
 /*  display (320x240px) with controller ILI9341 or
@@ -80,7 +80,6 @@ ps_ptr<char> s_lyrics = "";
 
 int8_t   s_currDLNAsrvNr = -1;
 uint8_t  s_alarmdays = 0;
-uint8_t  s_brightness = UINT8_MAX;
 uint8_t  s_state = UNDEFINED; // statemaschine
 uint8_t  s_cur_Codec = 0;
 uint8_t  s_numServers = 0; //
@@ -109,6 +108,7 @@ int16_t  s_totalNumberReturned = -1;
 int16_t  s_dlnaMaxItems = -1;
 int16_t  s_alarmtime[7] = {0};  // in minutes (23:59 = 23 *60 + 59) [0] Sun, [1] Mon
 int16_t  s_cur_AudioFileNr = 0; // this is the position of the file within the (alpha ordered) folder starting with 0
+int16_t  s_brightness = UINT8_MAX;
 uint16_t s_staListNr = 0;
 uint16_t s_fileListNr = 0;
 uint16_t s_cur_station = 0; // current station(nr), will be set later
@@ -201,9 +201,9 @@ SPIClass       spiBus(FSPI);
 #if TFT_CONTROLLER < 7 // ⏹⏹⏹⏹
 TFT_SPI tft(spiBus, TFT_CS);
 #elif TFT_CONTROLLER == 7
-TFT_RGB  tft;
+TFT_RGB tft;
 #else
-#error "wrong TFT_CONTROLLER"
+    #error "wrong TFT_CONTROLLER"
 #endif
 
 #if TP_CONTROLLER < 7 // ⏹⏹⏹⏹
@@ -213,7 +213,7 @@ TP_GT911 tp;
 #elif TP_CONTROLLER == 8
 FT6x36 tp;
 #else
-#error "wrong TP_CONTROLLER"
+    #error "wrong TP_CONTROLLER"
 #endif
 
 stationManagement staMgnt(&s_cur_station);
@@ -1289,7 +1289,7 @@ void setup() {
         setupBacklight(TFT_BL, 512);
     }
 #else
-#error "wrong TFT_CONTROLLER"
+    #error "wrong TFT_CONTROLLER"
 #endif
 
 #if TP_CONTROLLER < 7
@@ -1309,10 +1309,8 @@ void setup() {
     tp.setRotation(TP_ROTATION);
     tp.setMirror(TP_H_MIRROR, TP_V_MIRROR);
 #else
-#error "wrong TP_CONTROLLER"
+    #error "wrong TP_CONTROLLER"
 #endif
-
-
 
     if (IR_PIN >= 0) pinMode(IR_PIN, INPUT_PULLUP); // if ir_pin is read only, have a external resistor (~10...40KOhm)
     SerialPrintfln("setup: ...   Init SD card");
@@ -2122,6 +2120,8 @@ void changeState(int32_t state) {
             dispFooter.show(false);
             lst_DLNA.show(s_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems);
             setTimeCounter(LIST_TIMER);
+            lst_DLNA.show(s_currDLNAsrvNr, dlna.getServer(), dlna.getBrowseResult(), &s_dlnaLevel, s_dlnaMaxItems);
+            setTimeCounter(LIST_TIMER);
             break;
         }
         case CLOCK: {
@@ -2236,10 +2236,16 @@ void changeState(int32_t state) {
             if (s_state != BRIGHTNESS) {
                 clearWithOutHeaderFooter();
                 pic_BR_logo.show(true, false);
+                sdr_BR_value.setValue(s_brightness);
+                sdr_BR_value.show(true, true);
+                txt_BR_value.setText(int2str(s_brightness));
+                txt_BR_value.show(true, true);
             }
-            sdr_BR_value.show(true, true);
-            txt_BR_value.setText(int2str(s_brightness));
-            txt_BR_value.show(true, true);
+            else{
+                sdr_BR_value.enable();
+                txt_BR_value.enable();
+            }
+
             if (s_brightnessSubMenue == 0) { btn_BR_ready.show(); }
             if (s_brightnessSubMenue == 1) { // same as s_brightnessSubMenue for IR
                 btn_BR_ready.showAlternativePic();
@@ -3046,8 +3052,8 @@ void audio_process_i2s(int16_t* outBuff, uint16_t validSamples, bool* continueI2
 }
 // ————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 void on_BH1750(int32_t ambVal) { //--AMBIENT LIGHT SENSOR BH1750--
-    uint8_t bh1750Value = 0;
-    bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, 255);
+    int16_t bh1750Value = 0;
+    bh1750Value = map_l(ambVal, 0, 1600, displayConfig.brightnessMin, displayConfig.brightnessMax);
     MWR_LOG_DEBUG("ambVal %i, bh1750Value %i, s_brightness %i", ambVal, bh1750Value, s_brightness);
     setTFTbrightness(max(bh1750Value, s_brightness));
 }
@@ -3336,7 +3342,7 @@ void ir_short_key(uint8_t key) {
             if (s_state == BRIGHTNESS) {
                 if (s_brightnessSubMenue == 1) {
                     s_brightness += 5;
-                    if (s_brightness > 100) s_brightness = 100;
+                    s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
                     sdr_BR_value.setValue(s_brightness);
                     setTimeCounter(2);
                 }
@@ -3638,8 +3644,8 @@ void ir_short_key(uint8_t key) {
             }
             if (s_state == BRIGHTNESS) {
                 if (s_brightnessSubMenue == 1) {
-                    if (s_brightness > 5) s_brightness -= 5;
-                    if (s_brightness < 5) s_brightness = 5;
+                    s_brightness -= 5;
+                    s_brightness = clamp_min_max(s_brightness, displayConfig.brightnessMin, displayConfig.brightnessMax);
                     sdr_BR_value.setValue(s_brightness);
                     setTimeCounter(2);
                     return;
@@ -4378,6 +4384,7 @@ void ir_short_key(uint8_t key) {
                     return;
                 }
                 if (s_brightnessSubMenue == 1) {
+                    s_brightnessSubMenue = 0;
                     s_radioSubMenue = 0;
                     changeState(RADIO);
                     return;

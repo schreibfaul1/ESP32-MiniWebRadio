@@ -473,7 +473,13 @@ inline int replacestr(char* line, const char* search, const char* replace) { /* 
     count += replacestr(sp + rLen, search, replace);
     return (count);
 }
-
+// ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
+inline int32_t clamp_min_max(int32_t val, int32_t min, int32_t max){
+    if(min >= max){log_e("min >= max, min: %i, max %i", min, max); return val; }
+    if(val < min) val = min;
+    if(val > max) val = max;
+    return val;
+}
 // ——————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 inline char* x_ps_malloc(uint16_t len) {
@@ -575,7 +581,6 @@ inline int32_t map_l(int32_t x, int32_t in_min, int32_t in_max, int32_t out_min,
 
 inline void setupBacklight(int pin, uint32_t freq_hz)  {
 
-log_w("pin %i", pin);
     ledc_channel_config_t ch =
         {.gpio_num = (gpio_num_t)pin, .speed_mode = LEDC_LOW_SPEED_MODE, .channel = LEDC_CHANNEL_1, .intr_type = LEDC_INTR_DISABLE, .timer_sel = LEDC_TIMER_3, .duty = 0, .hpoint = 0};
 
@@ -584,7 +589,7 @@ log_w("pin %i", pin);
         .duty_resolution = LEDC_TIMER_8_BIT,
         .timer_num = LEDC_TIMER_3,
         .freq_hz = freq_hz,
-        .clk_cfg = LEDC_USE_APB_CLK,
+        .clk_cfg = LEDC_AUTO_CLK,
     };
 
     // Timer zuerst initialisieren

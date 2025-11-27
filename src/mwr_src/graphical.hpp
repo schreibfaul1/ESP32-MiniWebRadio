@@ -128,8 +128,10 @@ class slider : public RegisterTable {
         drawNewSpot(m_spotPos);
     }
     void disable() {
-        if (m_enabled) hide();
         m_enabled = false;
+    }
+    void enable(){
+        m_enabled = true;
     }
     void hide() {
         if (m_backgroundTransparency) {

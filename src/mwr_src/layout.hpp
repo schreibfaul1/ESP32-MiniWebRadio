@@ -78,6 +78,7 @@ struct DisplayConfig {
     uint16_t dispWidth;
     uint16_t dispHeight;
     uint8_t  brightnessMin;
+    uint8_t  brightnessMax;
 
     char tftSize; // 's', 'm', 'l'
 };
@@ -153,6 +154,7 @@ inline constexpr DisplayConfig config = {
     320,                 // width
     240,                 // height
     5,                   // brightnessMin
+    255,                 // brightnessMax
     's'                  // size code
 };
 } // namespace layout_320x240
@@ -228,6 +230,7 @@ inline constexpr DisplayConfig config = {
     480,                  // width
     320,                  // height
     5,                    // brightnessMin
+    255,                  // brightnessMax
     'm'                   // size code
 };
 } // namespace layout_480x320
@@ -303,6 +306,7 @@ inline constexpr DisplayConfig config = {
     800,                    // width
     480,                    // height
     30,                     // brightnessMin
+    255,                    // brightnessMax
     'l'                     // size code
 };
 } // namespace layout_800x480
@@ -698,7 +702,7 @@ void placingGraphicObjects() { // and initialize them
     pic_SE_logo.begin(layout.winLogo.x, layout.winLogo.y, layout.winLogo.w, layout.winLogo.h, layout.winLogo.pl, layout.winLogo.pr, layout.winLogo.pt, layout.winLogo.pb);
     // BRIGHTNESS --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     sdr_BR_value.begin(2 * layout.winButton.w, layout.winButton.y + 5, 4 * layout.winButton.w, layout.sdrOvBtns.h, layout.winButton.pl, layout.winButton.pr, layout.winButton.pt, layout.winButton.pb);
-    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, UINT8_MAX);
+    sdr_BR_value.setMinMaxVal(displayConfig.brightnessMin, displayConfig.brightnessMax);
     btn_BR_ready.begin(7 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_BR_ready.setDefaultPicturePath("/btn/Button_Ready_Blue.png");
     btn_BR_ready.setClickedPicturePath("/btn/Button_Ready_Yellow.png");

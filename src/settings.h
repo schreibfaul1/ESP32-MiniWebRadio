@@ -11,7 +11,7 @@
 #define TP_ROTATION       1                // only SPI displays, 1 or 3 (landscape)
 #define TP_H_MIRROR       0                // only SPI displays, (0) default, (1) mirror up <-> down
 #define TP_V_MIRROR       0                // only SPI displays, (0) default, (1) mittor left <-> right
-#define LIGHT_SENSOR      0                // (0) none, (1) BH1750
+#define LIGHT_SENSOR      1                // (0) none, (1) BH1750
 #define I2S_COMM_FMT      0                // (0) MAX98357A PCM5102A CS4344, (1) LSBJ (Least Significant Bit Justified format) PT8211
 #define SDMMC_FREQUENCY   80000000         // 80000000 or 40000000 Hz
 #define FTP_USERNAME      "esp32"          // user name in FTP Client
