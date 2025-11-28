@@ -41,6 +41,25 @@ void make_hardcopy_on_sd() {
         0x1F, 0x00, 0x00, 0x00,                                     // Blue mask
         0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional, empty)
     };
+    const uint8_t bmp1024x600[70] = {
+        0x42, 0x4D, 0x46, 0xC0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, // BM + File size 1,228,870
+        0x46, 0x00, 0x00, 0x00,                                     // Pixel data offset (70 bytes)
+        0x28, 0x00, 0x00, 0x00,                                     // DIB header size
+        0x00, 0x04, 0x00, 0x00,                                     // Width: 1024
+        0x58, 0x02, 0x00, 0x00,                                     // Height: 600
+        0x01, 0x00,                                                 // Color planes
+        0x10, 0x00,                                                 // Bit count: 16 (RGB565)
+        0x03, 0x00, 0x00, 0x00,                                     // Compression: BI_BITFIELDS
+        0x00, 0xC0, 0x12, 0x00,                                     // Image size: 1,228,800 bytes
+        0x23, 0x2E, 0x00, 0x00,                                     // X pixels per meter
+        0x23, 0x2E, 0x00, 0x00,                                     // Y pixels per meter
+        0x00, 0x00, 0x00, 0x00,                                     // Colors used
+        0x00, 0x00, 0x00, 0x00,                                     // Important colors
+        0x00, 0xF8, 0x00, 0x00,                                     // Red mask
+        0xE0, 0x07, 0x00, 0x00,                                     // Green mask
+        0x1F, 0x00, 0x00, 0x00,                                     // Blue mask
+        0x00, 0x00, 0x00, 0x00                                      // Alpha mask (optional)
+    };
 
     File hc = SD_MMC.open("/hardcopy.bmp", "w", true);
     if (TFT_CONTROLLER < 2) {
@@ -59,12 +78,20 @@ void make_hardcopy_on_sd() {
             hc.write((uint8_t*)buff, 480 * 2);
         }
         hc.close();
-    } else {
+    } else if (TFT_CONTROLLER == 7) {
         hc.write(bmp800x480, sizeof(bmp800x480));
         uint16_t buff[800];
         for (int i = 480; i > 0; i--) {
             tft.readRect(0, i - 1, 800, 1, buff);
             hc.write((uint8_t*)buff, 800 * 2);
+        }
+        hc.close();
+    } else if (TFT_CONTROLLER == 8) {
+        hc.write(bmp1024x600, sizeof(bmp800x480));
+        uint16_t buff[1024];
+        for (int i = 600; i > 0; i--) {
+            tft.readRect(0, i - 1, 1024, 1, buff);
+            hc.write((uint8_t*)buff, 1024 * 2);
         }
         hc.close();
     }

@@ -401,7 +401,7 @@ inline constexpr DisplayConfig config = {
     255,                    // brightnessMax
     "xl"                    // size code
 };
-} // namespace layout_800x480
+} // namespace layout_1024x600
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
 // Factory-Funktion (Compile-Time)
@@ -429,8 +429,10 @@ inline DisplayConfig makeDisplayConfig() {
     using namespace layout_320x240;
 #elif TFT_CONTROLLER >= 2 && TFT_CONTROLLER <= 6
     using namespace layout_480x320;
-#elif TFT_CONTROLLER >= 7
+#elif TFT_CONTROLLER == 7
     using namespace layout_800x480;
+#elif TFT_CONTROLLER == 8
+    using namespace layout_1024x600;
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif

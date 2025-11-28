@@ -696,7 +696,7 @@ boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWi
     auto         scImg = scaleImage(p);
     if (!SD_MMC.exists(scImg.c_get())) {
         if (scImg.index_of("/.", 0) > 0) return false; // empty filename
-        SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg);
+        SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg.c_get());
         return false;
     }
     if (scImg.ends_with("bmp")) { return tft.drawBmpFile(SD_MMC, scImg.c_get(), posX, posY, maxWidth, maxHeigth, 1.0); }
@@ -1512,7 +1512,6 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     int idx = path.index_of('/', 1);
     if (idx < 0) return path; // invalid path
     ps_ptr<char>tfts = displayConfig.tftSize;
-tfts.println();
     tfts += "/";
     path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
     MWR_LOG_WARN("path %s", path.c_get());
