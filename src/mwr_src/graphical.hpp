@@ -3887,14 +3887,15 @@ class uniList {
         m_lineHight = m_h / 10;
         m_buff = x_ps_malloc(1024);
     }
-    void setMode(uint8_t mode, char tftSize, uint8_t fontSize) {
+    void setMode(uint8_t mode, const char* tftSize, uint8_t fontSize) {
         if (mode == RADIO) { m_mode = RADIO; }
         if (mode == PLAYER) { m_mode = PLAYER; }
         if (mode == DLNA) { m_mode = DLNA; }
         m_fontSize = fontSize;
-        if (tftSize == 's') m_tftSize = 1;
-        if (tftSize == 'm') m_tftSize = 2;
-        if (tftSize == 'l') m_tftSize = 3;
+        if (strcmp(tftSize, "s") == 0) m_tftSize = 1;
+        if (strcmp(tftSize, "m") == 0) m_tftSize = 2;
+        if (strcmp(tftSize, "l") == 0) m_tftSize = 3;
+        if (strcmp(tftSize, "xl") == 0) m_tftSize = 4;
         switch (m_tftSize) {
             case 1:
                 if (m_mode == RADIO) {
@@ -3925,6 +3926,21 @@ class uniList {
                 }
                 break;
             case 3:
+                if (m_mode == RADIO) {
+                    m_indentDirectory = 30;
+                    m_indentContent = 30;
+                } // 800x480
+                if (m_mode == DLNA) {
+                    m_indentDirectory = 10;
+                    m_indentContent = 30;
+                }
+                if (m_mode == PLAYER) {
+                    m_indentDirectory = 10;
+                    m_indentContent = 30;
+                }
+                break;
+            case 4:
+                log_e("is xl");
                 if (m_mode == RADIO) {
                     m_indentDirectory = 30;
                     m_indentContent = 30;
@@ -4087,7 +4103,7 @@ class dlnaList : public RegisterTable {
     char*                                      m_pathBuff = NULL;
     const char*                                m_chptr = NULL;
     char*                                      m_buff = NULL;
-    char                                       m_tftSize = ' ';
+    const char*                                m_tftSize = "";
     const std::deque<DLNA_Client::dlnaServer>* m_dlnaServer;
     const std::deque<DLNA_Client ::srvItem>*   m_srvContent;
     DLNA_Client*                               m_dlna;
@@ -4117,7 +4133,7 @@ class dlnaList : public RegisterTable {
         x_ps_free(&m_name);
         x_ps_free(&m_buff);
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -4611,7 +4627,7 @@ class fileList : public RegisterTable {
     char*        m_curAudioPath = NULL;
     char*        m_curAudioName = NULL;
     char*        m_fileItemsPos = NULL;
-    char         m_tftSize = ' ';
+    const char*  m_tftSize = "";
     const char*  m_rootColor = ANSI_ESC_LIGHTBROWN;
     const char*  m_folderColor = ANSI_ESC_ORANGE;
     const char*  m_fileColor = ANSI_ESC_WHITE;
@@ -4641,7 +4657,7 @@ class fileList : public RegisterTable {
         x_ps_free(&m_curAudioName); //   song.mp3
         x_ps_free(&m_curAudioPath); //   /audiofiles/folder1/song.mp3
     }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width
@@ -5003,7 +5019,7 @@ class stationsList : public RegisterTable {
     releasedArg  m_ra;
     const char*  m_colorToDraw = NULL;
     const char*  m_staNameToDraw = NULL;
-    char         m_tftSize = ' ';
+    const char*  m_tftSize = "";
     uint16_t     m_staNrToDraw = 0;
 
   public:
@@ -5021,7 +5037,7 @@ class stationsList : public RegisterTable {
         m_ra.val2 = 0;
     }
     ~stationsList() { x_ps_free(&m_buff); }
-    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, char tftSize, uint8_t fontSize) {
+    void begin(uint16_t x, uint16_t y, uint16_t w, uint16_t h, const char* tftSize, uint8_t fontSize) {
         m_x = x; // x pos
         m_y = y; // y pos
         m_w = w; // width

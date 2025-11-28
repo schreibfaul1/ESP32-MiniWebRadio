@@ -80,7 +80,7 @@ struct DisplayConfig {
     uint8_t  brightnessMin;
     uint8_t  brightnessMax;
 
-    char tftSize; // 's', 'm', 'l'
+    const char* tftSize; // "s", "m", "l", "xl"
 };
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
 
@@ -155,7 +155,7 @@ inline constexpr DisplayConfig config = {
     240,                 // height
     5,                   // brightnessMin
     255,                 // brightnessMax
-    's'                  // size code
+    "s"                  // size code
 };
 } // namespace layout_320x240
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -231,7 +231,7 @@ inline constexpr DisplayConfig config = {
     320,                  // height
     5,                    // brightnessMin
     255,                  // brightnessMax
-    'm'                   // size code
+    "m"                   // size code
 };
 } // namespace layout_480x320
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -243,37 +243,44 @@ namespace layout_800x480 {
 //  | Header                                    |       winHeader=50px
 //  +-------------------------------------------+ _yName=50
 //  |                                           |
-//  | Logo                   StationName        |       winFName=190px
+//  | Logo                   StationName        |       winFName=190px, area1
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=240
 //  |                                           |
-//  |              StreamTitle                  |       winTitle=190px
+//  |              StreamTitle                  |       winTitle=190px, area2
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=430
 //  | Footer                                    |       winFooter=50px
 //  +-------------------------------------------+ 480
 //                                             800
+constexpr uint16_t h_res = 800, v_res = 480;
+constexpr uint16_t v_footer = 50;
+constexpr uint16_t vh_btn = 76 + 4; // 76x76 + padding
+
+constexpr uint16_t v_area = (v_res - 2 * v_footer) / 2;  // 190
+constexpr uint16_t y_area2 = v_res - v_footer - v_area;  // 480 - 50 - 190
+constexpr uint16_t y_btn = v_res - v_footer - vh_btn;   // 480 - 50 - 80
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(800, 50);
-constexpr coor winLogo = coor().pos(0, 50).size(190, 190).pad(4, 4, 4, 4);
-constexpr coor winName = coor().pos(190, 50).size(610, 190).pad(15, 5, 0, 0);
-constexpr coor winFName = coor().pos(0, 50).size(800, 190).pad(5, 5, 0, 0);
-constexpr coor winFileNr = coor().pos(0, 240).size(190, 50).pad(0, 4, 0, 0);
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, v_footer);
+constexpr coor winLogo = coor().pos(0, v_footer).size(v_area, v_area).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(v_area, v_footer).size(h_res - v_area, v_area).pad(15, 5, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, v_footer).size(h_res, v_area).pad(5, 5, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(v_area, v_footer).pad(0, 4, 0, 0);
 constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
-constexpr coor winProgbar = coor().pos(0, 290).size(800, 14).pad(5, 5, 0, 0);
-constexpr coor winTitle = coor().pos(0, 240).size(800, 190).pad(15, 5, 2, 2);
-constexpr coor winSTitle = coor().pos(0, 240).size(768, 190).pad(10, 5, 2, 2);
+constexpr coor winProgbar = coor().pos(0, 290).size(h_res, 14).pad(5, 5, 0, 0);
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res, v_area).pad(15, 5, 2, 2);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(768, v_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(768, 280).size(32, 150);
-constexpr coor winFooter = coor().pos(0, 430).size(800, 50);
-constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
-constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
-constexpr coor sdrOvBtns = coor().pos(0, 265).size(800, 60).pad(5, 5, 0, 0);
-constexpr coor winButton = coor().pos(0, 345).size(80, 80);
-constexpr coor winDigits = coor().pos(0, 50).size(800, 295);
-constexpr coor winWoHF = coor().pos(0, 50).size(800, 380);
+constexpr coor winFooter = coor().pos(0, 430).size(h_res, v_footer);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, v_footer);
+constexpr coor winSleep = coor().pos(85, 290).size(87, v_footer);
+constexpr coor sdrOvBtns = coor().pos(0, 265).size(h_res, 60).pad(5, 5, 0, 0);
+constexpr coor winButton = coor().pos(0, y_btn).size(vh_btn, vh_btn).pad(4, 4 , 0, 0);
+constexpr coor winDigits = coor().pos(0, v_footer).size(h_res, 295);
+constexpr coor winWoHF = coor().pos(0, v_footer).size(h_res, 380);
 constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
 constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
 constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
@@ -307,7 +314,7 @@ inline constexpr DisplayConfig config = {
     480,                    // height
     30,                     // brightnessMin
     255,                    // brightnessMax
-    'l'                     // size code
+    "l"                     // size code
 };
 } // namespace layout_800x480
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -316,40 +323,49 @@ namespace layout_1024x600 {
 //
 //  Display 1024x800
 //  +-------------------------------------------+ _yHeader=0
-//  | Header                                    |       winHeader=80px
+//  | Header                                    |       winHeader=60px
 //  +-------------------------------------------+ _yName=50
 //  |                                           |
-//  | Logo                   StationName        |       winFName=320px
+//  | Logo                   StationName        |       winFName=240px
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=300
 //  |                                           |
-//  |              StreamTitle                  |       winTitle=320px
+//  |              StreamTitle                  |       winTitle=240px
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=430
-//  | Footer                                    |       winFooter=80px
-//  +-------------------------------------------+ 800
+//  | Footer                                    |       winFooter=60px
+//  +-------------------------------------------+ 600
 //                                            1024
+
+constexpr uint16_t h_res = 1024, v_res = 600;
+constexpr uint16_t v_footer = 60;
+constexpr uint16_t vh_btn = 96 + 4; // 96x96 + padding
+
+constexpr uint16_t v_area = (v_res - 2 * v_footer) / 2;  // 240
+constexpr uint16_t y_area2 = v_res - v_footer - v_area;  // 600 - 60 - 240
+constexpr uint16_t y_btn = v_res - v_footer - vh_btn;   // 600 - 60 - 100
+
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(1024, 80);
-constexpr coor winLogo = coor().pos(0, 80).size(320, 320).pad(4, 4, 4, 4);
-constexpr coor winName = coor().pos(190, 50).size(610, 190).pad(15, 5, 0, 0);
-constexpr coor winFName = coor().pos(0, 50).size(800, 190).pad(5, 5, 0, 0);
-constexpr coor winFileNr = coor().pos(0, 240).size(190, 50).pad(0, 4, 0, 0);
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, v_footer);
+constexpr coor winLogo = coor().pos(0, v_footer).size(v_area, v_area).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(v_area, v_footer).size(h_res - v_area, v_area).pad(15, 5, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, v_footer).size(h_res, v_area).pad(5, 5, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(v_area, v_footer).pad(0, 4, 0, 0);
 constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
-constexpr coor winProgbar = coor().pos(0, 290).size(800, 14).pad(5, 5, 0, 0);
-constexpr coor winTitle = coor().pos(0, 240).size(800, 190).pad(15, 5, 2, 2);
+constexpr coor winProgbar = coor().pos(0, 290).size(h_res, 14).pad(5, 5, 0, 0);
+constexpr coor winTitle = coor().pos(0, 240).size(h_res, 190).pad(15, 5, 2, 2);
 constexpr coor winSTitle = coor().pos(0, 240).size(768, 190).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(768, 280).size(32, 150);
-constexpr coor winFooter = coor().pos(0, 430).size(800, 50);
-constexpr coor winStaNr = coor().pos(0, 290).size(85, 50);
-constexpr coor winSleep = coor().pos(85, 290).size(87, 50);
-constexpr coor sdrOvBtns = coor().pos(0, 265).size(800, 60).pad(5, 5, 0, 0);
+constexpr coor winFooter = coor().pos(0, v_res - v_footer).size(h_res, v_footer);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, v_area);
+constexpr coor winSleep = coor().pos(85, 290).size(87, v_area);
+constexpr coor sdrOvBtns = coor().pos(0, 265).size(h_res, 60).pad(5, 5, 0, 0);
 constexpr coor winButton = coor().pos(0, 345).size(80, 80);
-constexpr coor winDigits = coor().pos(0, 50).size(800, 295);
-constexpr coor winWoHF = coor().pos(0, 50).size(800, 380);
+constexpr coor winDigits = coor().pos(0, v_area).size(h_res, 295);
+constexpr coor winWoHF = coor().pos(0, v_area).size(h_res, 380);
 constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
 constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
 constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
@@ -383,7 +399,7 @@ inline constexpr DisplayConfig config = {
     480,                    // height
     30,                     // brightnessMin
     255,                    // brightnessMax
-    'l'                     // size code
+    "xl"                    // size code
 };
 } // namespace layout_800x480
 // —————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————————
@@ -394,8 +410,10 @@ inline Layout makeLayout() {
     using namespace layout_320x240;
 #elif TFT_CONTROLLER == 2 || TFT_CONTROLLER == 3 || TFT_CONTROLLER == 4 || TFT_CONTROLLER == 5 || TFT_CONTROLLER == 6
     using namespace layout_480x320;
-#elif TFT_CONTROLLER >= 7
+#elif TFT_CONTROLLER == 7
     using namespace layout_800x480;
+#elif TFT_CONTROLLER == 8
+    using namespace layout_1024x600;
 #else
     #error "Unsupported TFT_CONTROLLER"
 #endif

@@ -1511,12 +1511,11 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
 
     int idx = path.index_of('/', 1);
     if (idx < 0) return path; // invalid path
-
-    char prefix[03] = " /";
-    prefix[0] = displayConfig.tftSize;
-
-    path.insert(prefix, idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
-    MWR_LOG_DEBUG("path %s", path.c_get());
+    ps_ptr<char>tfts = displayConfig.tftSize;
+tfts.println();
+    tfts += "/";
+    path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
+    MWR_LOG_WARN("path %s", path.c_get());
     return path;
 }
 
@@ -1689,17 +1688,15 @@ void savefile(ps_ptr<char> fileName, uint32_t contentLength, ps_ptr<char> conten
 }
 
 void saveImage(const char* fileName, uint32_t contentLength) { // save the jpg image on SD_MMC
-    char fn[256];
+    ps_ptr<char> fn;
 
     if (endsWith(fileName, "jpg")) {
-        strcpy(fn, "/logo/");
-        char prefix[03] = " /";
-        prefix[0] = displayConfig.tftSize;
-        strcat(fn, prefix);
-        if (!startsWith(fileName, "/")) strcat(fn, "/");
-        strcat(fn, fileName);
-        if (webSrv.uploadB64image(SD_MMC, fn, contentLength)) {
-            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn);
+        fn.assign("/logo/");
+        fn.append(displayConfig.tftSize);
+        if (!startsWith(fileName, "/")) fn.append("/");
+        fn.append(fileName);
+        if (webSrv.uploadB64image(SD_MMC, fn.c_get(), contentLength)) {
+            SerialPrintfln("save image (jpg) " ANSI_ESC_CYAN "%s" ANSI_ESC_WHITE " to SD card was successfully", fn.c_get());
             webSrv.sendStatus(200);
         } else
             webSrv.sendStatus(400);
@@ -4865,7 +4862,7 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
 
     CMD_EQUALS("get_networks"){         webSrv.send("networks=", WiFi.SSID().c_str()); return;}                                                              // via websocket
 
-    CMD_EQUALS("get_tftSize"){          char s[2] = {0}; s[0] = displayConfig.tftSize; webSrv.send("tftSize=", s); return;};
+    CMD_EQUALS("get_tftSize"){          webSrv.send("tftSize=",displayConfig.tftSize); return;};
 
     CMD_EQUALS("get_timeZones"){        webSrv.send("timezones=", timezones_json); return;}
 
