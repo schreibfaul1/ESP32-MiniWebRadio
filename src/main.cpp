@@ -1009,11 +1009,11 @@ bool connectToWiFi() {
     SerialPrintfln("WiFI_info:   Connecting WiFi...");
 
     WiFi.mode(WIFI_MODE_STA);
-    wifiMulti.run();
 
     int i = 0;
     while (!WiFi.isConnected()) {
-        vTaskDelay(100);
+        wifiMulti.run();
+        vTaskDelay(200);
         i++;
         if (i > 50) break;
     }
