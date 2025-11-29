@@ -84,7 +84,6 @@ uint8_t  s_state = UNDEFINED; // statemaschine
 uint8_t  s_cur_Codec = 0;
 uint8_t  s_numServers = 0; //
 uint8_t  s_level = 0;
-uint8_t  s_timeFormat = 24; // 24 or 12
 uint8_t  s_sleepMode = 1;   // 0 display off, 1 show the clock
 uint8_t  s_staListPos = 0;
 uint8_t  s_WiFi_disconnectCnt = 0;
@@ -316,7 +315,6 @@ boolean defaultsettings() {
     s_tone.BP = atoi(parseJson("\"toneBP\":"));
     s_tone.HP = atoi(parseJson("\"toneHP\":"));
     s_tone.BAL = atoi(parseJson("\"balance\":"));
-    s_timeFormat = atoi(parseJson("\"timeFormat\":"));
     s_TZName = parseJson("\"Timezone_Name\":");
     s_TZString = parseJson("\"Timezone_String\":");
     s_settings.lastconnectedhost.copy_from(parseJson("\"lastconnectedhost\":"));
@@ -382,7 +380,6 @@ void updateSettings() {
     jO.appendf(",\n  \"toneBP\":%i", s_tone.BP);
     jO.appendf(",\n  \"toneHP\":%i", s_tone.HP);
     jO.appendf(",\n  \"balance\":%i", s_tone.BAL);
-    jO.appendf(",\n  \"timeFormat\":%i", s_timeFormat);
     jO.appendf(",\n  \"state\":%i", s_state);
     jO.appendf(",\n  \"sleepMode\":%i\n}", s_sleepMode);
 
@@ -694,6 +691,7 @@ void display_sleeptime(int8_t ud) { // set sleeptimer
 boolean drawImage(const char* path, uint16_t posX, uint16_t posY, uint16_t maxWidth, uint16_t maxHeigth) {
     ps_ptr<char> p = path;
     auto         scImg = scaleImage(p);
+
     if (!SD_MMC.exists(scImg.c_get())) {
         if (scImg.index_of("/.", 0) > 0) return false; // empty filename
         SerialPrintfln("AUDIO_info:  " ANSI_ESC_RED "file \"%s\" not found", scImg.c_get());
@@ -2133,12 +2131,7 @@ void changeState(int32_t state) {
             dispHeader.show(false);
             dispFooter.show(false);
             if (s_state != CLOCK) { bgColorWithOutHeaderFooter(); }
-            if (s_timeFormat == 24) {
-                clk_CL_24.show();
-            }
-
-            else
-                clk_CL_12.show();
+            clk_CL_24.show();
             if (s_clockSubMenue == 0) {
                 btn_CL_mute.hide();
                 btn_CL_alarm.hide();
@@ -2549,10 +2542,7 @@ void loop() {
         s_totalRuntime++;
         uint16_t minuteOfTheDay = rtc.getMinuteOfTheDay();
         uint8_t  weekDay = rtc.getweekday();
-        if (s_timeFormat == 24)
-            clk_CL_24.updateTime(minuteOfTheDay, weekDay);
-        else
-            clk_CL_12.updateTime(minuteOfTheDay, weekDay);
+        clk_CL_24.updateTime(minuteOfTheDay, weekDay);
         if (s_state == RINGING) clk_RI_24small.updateTime(minuteOfTheDay, weekDay);
         static uint8_t semaphore = 0;
         if (!semaphore) { s_f_alarm = isAlarm(weekDay, s_alarmdays, minuteOfTheDay, s_alarmtime) && s_f_rtc; } // alarm if rtc and CL green
@@ -2606,9 +2596,6 @@ void loop() {
             if (s_f_timeAnnouncement) {
                 f_resume = true;
                 s_f_eof = false;
-                if (s_timeFormat == 12) {
-                    if (hour > 12) hour -= 12;
-                }
                 ps_ptr<char> p;
                 p.assignf("/voice_time/%s/%d_00.mp3", s_timeSpeechLang.c_get(), hour);
                 SerialPrintfln("Time: ...... play Audiofile %s", p.c_get());
@@ -4690,7 +4677,7 @@ void tp_released(uint16_t x, uint16_t y){
             lst_DLNA.released(x, y);
             break;
         case CLOCK:
-            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_12.released();  clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
+            btn_CL_mute.released(); btn_CL_alarm.released(); btn_CL_radio.released(); clk_CL_24.released(); sdr_CL_volume.released(); btn_CL_off.released();
             break;
         case ALARMCLOCK:
             clk_AC_red.released(); btn_AC_left.released(); btn_AC_right.released(); btn_AC_up.released(); btn_AC_down.released(); btn_AC_ready.released();
@@ -4977,14 +4964,6 @@ void WEBSRV_onCommand(ps_ptr<char> cmd, ps_ptr<char> param, ps_ptr<char> arg){  
                                         int32_t address = (int32_t)strtol(param.c_get(), NULL, 16);
                                         ir.set_irAddress(address);
                                         s_settings.irbuttons[42].val = address;
-                                        return;}
-
-    CMD_EQUALS("get_timeFormat"){       webSrv.send("timeFormat=", s_timeFormat);
-                                        return;}
-
-    CMD_EQUALS("set_timeFormat"){       s_timeFormat = param.to_uint32();
-                                        if(s_state == CLOCK){clearWithOutHeaderFooter();}
-                                        SerialPrintfln("TimeFormat:  " ANSI_ESC_YELLOW "new time format: " ANSI_ESC_BLUE "%sh" ANSI_ESC_RESET, param.c_get());
                                         return;}
 
     CMD_EQUALS("get_sleepMode"){        webSrv.send("sleepMode=", s_sleepMode); return;}
@@ -5404,7 +5383,6 @@ void graphicObjects_OnClick(ps_ptr<char> name, uint8_t val) { // val = 0 --> is 
         }
         if (val && name.equals("btn_CL_alarm")) { return; }
         if (val && name.equals("btn_CL_radio")) { return; }
-        if (val && name.equals("clk_CL_12")) { return; }
         if (val && name.equals("clk_CL_24")) { return; }
         if (val && name.equals("btn_CL_off")) { return; }
     }
@@ -5736,11 +5714,6 @@ void graphicObjects_OnRelease(ps_ptr<char> name, releasedArg ra) {
             s_clockSubMenue = 0;
             s_radioSubMenue = 0;
             changeState(RADIO);
-            return;
-        }
-        if (name.equals("clk_CL_12")) {
-            s_clockSubMenue = 1;
-            changeState(CLOCK);
             return;
         }
         if (name.equals("clk_CL_24")) {

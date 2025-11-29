@@ -251,32 +251,32 @@ namespace layout_800x480 {
 //  +-------------------------------------------+ 480
 //                                             800
 constexpr uint16_t h_res = 800, v_res = 480;
-constexpr uint16_t v_footer = 50;
-constexpr uint16_t vh_btn = 76 + 4; // 76x76 + padding
+constexpr uint16_t h_footer = 50;
+constexpr uint16_t hw_btn = 76 + 4; // 76x76 + padding
 
-constexpr uint16_t v_area = (v_res - 2 * v_footer) / 2;  // 190
-constexpr uint16_t y_area2 = v_res - v_footer - v_area;  // 480 - 50 - 190
-constexpr uint16_t y_btn = v_res - v_footer - vh_btn;   // 480 - 50 - 80
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 190
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 480 - 50 - 190
+constexpr uint16_t y_btn = v_res - h_footer - hw_btn;   // 480 - 50 - 80
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(h_res, v_footer);
-constexpr coor winLogo = coor().pos(0, v_footer).size(v_area, v_area).pad(4, 4, 4, 4);
-constexpr coor winName = coor().pos(v_area, v_footer).size(h_res - v_area, v_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, v_footer).size(h_res, v_area).pad(5, 5, 0, 0);    // FileName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(v_area, v_footer).pad(0, 4, 0, 0);
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
 constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
 constexpr coor winProgbar = coor().pos(0, 290).size(h_res, 14).pad(5, 5, 0, 0);
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res, v_area).pad(15, 5, 2, 2);
-constexpr coor winSTitle = coor().pos(0, y_area2).size(768, v_area).pad(10, 5, 2, 2);
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res, h_area).pad(15, 5, 2, 2);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(768, h_area).pad(10, 5, 2, 2);
 constexpr coor winVUmeter = coor().pos(768, 280).size(32, 150);
-constexpr coor winFooter = coor().pos(0, 430).size(h_res, v_footer);
-constexpr coor winStaNr = coor().pos(0, 290).size(85, v_footer);
-constexpr coor winSleep = coor().pos(85, 290).size(87, v_footer);
-constexpr coor winButton = coor().pos(0, y_btn).size(vh_btn, vh_btn).pad(4, 4 , 0, 0);
-constexpr coor winDigits = coor().pos(0, v_footer).size(h_res, 295);
-constexpr coor winWoHF = coor().pos(0, v_footer).size(h_res, 380);
+constexpr coor winFooter = coor().pos(0, 430).size(h_res, h_footer);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, h_footer);
+constexpr coor winSleep = coor().pos(85, 290).size(87, h_footer);
+constexpr coor winButton = coor().pos(0, y_btn).size(hw_btn, hw_btn).pad(4, 4 , 0, 0);
+constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, 295);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, 380);
 constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
 constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
 constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
@@ -322,47 +322,47 @@ namespace layout_1024x600 {
 //  | Header                                    |       winHeader=60px
 //  +-------------------------------------------+ _yName=50
 //  |                                           |
-//  | Logo                   StationName        |       winFName=240px
+//  | Logo                   StationName        |       winFName=240px, area1
 //  |                                           |
 //  +-------------------------------------------+ _yTitle=300
 //  |                                           |
-//  |              StreamTitle                  |       winTitle=240px
+//  |              StreamTitle                  |       winTitle=240px, area2
 //  |                                           |
 //  +-------------------------------------------+ _yFooter=430
 //  | Footer                                    |       winFooter=60px
 //  +-------------------------------------------+ 600
 //                                            1024
 
-constexpr uint16_t h_res = 1024, v_res = 600;
-constexpr uint16_t v_footer = 60;
-constexpr uint16_t vh_btn = 96 + 4; // 96x96 + padding
-constexpr uint16_t h_progBar = 40;
-constexpr uint16_t h_vuMeter = 70;
+constexpr uint16_t h_res = 1024, v_res = 600; // horizontal - vertical resolution
+constexpr uint16_t h_footer = 60; // footer height
+constexpr uint16_t hw_btn = 96 + 4; // 96x96 + padding
+constexpr uint16_t h_progBar = 40;  // height progressBar and volumeSlider
+constexpr uint16_t w_vuMeter = 70; // width vuMeter
 
-constexpr uint16_t v_area = (v_res - 2 * v_footer) / 2;  // 240
-constexpr uint16_t y_area2 = v_res - v_footer - v_area;  // 600 - 60 - 240
-constexpr uint16_t y_btn = y_area2 + v_area / 2 + (v_area / 4 - vh_btn / 2);   // center in the lower half of area2
-constexpr uint16_t y_progbar  = y_area2 + (v_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
+constexpr uint16_t h_area = (v_res - 2 * h_footer) / 2;  // 240, height area1 and  area2
+constexpr uint16_t y_area2 = v_res - h_footer - h_area;  // 600 - 60 - 240, yPos area2
+constexpr uint16_t y_btn = y_area2 + h_area / 2 + (h_area / 4 - hw_btn / 2);   // center in the lower half of area2
+constexpr uint16_t y_progbar  = y_area2 + (h_area / 4 - h_progBar / 2) +  h_progBar / 4;   // center in upper half of area2 # 1/4 h_progBar
 
 // -----------------------------------------------------------------------------------
 // window definitions .pos(x, y) .size(w, h) .padding(l, r, t, b)
 // -----------------------------------------------------------------------------------
-constexpr coor winHeader = coor().pos(0, 0).size(h_res, v_footer);
-constexpr coor winLogo = coor().pos(0, v_footer).size(v_area, v_area).pad(4, 4, 4, 4);
-constexpr coor winName = coor().pos(v_area, v_footer).size(h_res - v_area, v_area).pad(15, 5, 0, 0); // StationName
-constexpr coor winFName = coor().pos(0, v_footer).size(h_res, v_area).pad(5, 5, 0, 0);    // FileName
-constexpr coor winFileNr = coor().pos(0, y_area2).size(v_area, v_footer).pad(0, 4, 0, 0);
+constexpr coor winHeader = coor().pos(0, 0).size(h_res, h_footer);
+constexpr coor winLogo = coor().pos(0, h_footer).size(h_area, h_area).pad(4, 4, 4, 4);
+constexpr coor winName = coor().pos(h_area, h_footer).size(h_res - h_area, h_area).pad(15, 5, 0, 0); // StationName
+constexpr coor winFName = coor().pos(0, h_footer).size(h_res, h_area).pad(5, 5, 0, 0);    // FileName
+constexpr coor winFileNr = coor().pos(0, y_area2).size(h_area, h_footer).pad(0, 4, 0, 0);
 constexpr coor winVolBox = coor().pos(200, 73).size(258, 144);
 constexpr coor winProgbar = coor().pos(0, y_progbar).size(h_res, h_progBar).pad(15, 15, 0, 0); // or volume slider
-constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - h_vuMeter, v_area).pad(15, 5, 2, 2);
-constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - h_vuMeter, v_area).pad(15, 5, 2, 2);
-constexpr coor winVUmeter = coor().pos(h_res - h_vuMeter, y_area2).size(h_vuMeter, v_area);
-constexpr coor winFooter = coor().pos(0, v_res - v_footer).size(h_res, v_footer);
-constexpr coor winStaNr = coor().pos(0, 290).size(85, v_area);
-constexpr coor winSleep = coor().pos(85, 290).size(87, v_area);
-constexpr coor winButton = coor().pos(15, y_btn).size(vh_btn, vh_btn);
-constexpr coor winDigits = coor().pos(0, v_area).size(h_res, 295);
-constexpr coor winWoHF = coor().pos(0, v_footer).size(h_res, v_area * 2);
+constexpr coor winTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
+constexpr coor winSTitle = coor().pos(0, y_area2).size(h_res - w_vuMeter, h_area).pad(15, 5, 2, 2);
+constexpr coor winVUmeter = coor().pos(h_res - w_vuMeter, y_area2).size(w_vuMeter, h_area);
+constexpr coor winFooter = coor().pos(0, v_res - h_footer).size(h_res, h_footer);
+constexpr coor winStaNr = coor().pos(0, 290).size(85, h_area);
+constexpr coor winSleep = coor().pos(85, 290).size(87, h_area);
+constexpr coor winButton = coor().pos(15, y_btn).size(hw_btn, hw_btn);
+constexpr coor winDigits = coor().pos(0, h_footer).size(h_res, h_area + h_area / 2);
+constexpr coor winWoHF = coor().pos(0, h_footer).size(h_res, h_area * 2);
 constexpr coor sdrHP = coor().pos(200, 53).size(300, 73);
 constexpr coor sdrBP = coor().pos(200, 126).size(300, 73);
 constexpr coor sdrLP = coor().pos(200, 199).size(300, 73);
@@ -484,7 +484,6 @@ progressbar  pgb_DL_progress("pgb_DL_progress");
 dlnaList lst_DLNA("lst_DLNA");
 // CLOCK
 imgClock24   clk_CL_24("clk_CL_24");
-imgClock12   clk_CL_12("clk_CL_12");
 button2state btn_CL_mute("btn_CL_mute");
 button1state btn_CL_alarm("btn_CL_alarm"), btn_CL_radio("btn_CL_radio"), btn_CL_off("btn_CL_off");
 slider       sdr_CL_volume("sdr_CL_volume");
@@ -710,7 +709,6 @@ void placingGraphicObjects() { // and initialize them
     lst_DLNA.begin(layout.winWoHF.x, layout.winWoHF.y, layout.winWoHF.w, layout.winWoHF.h, displayConfig.tftSize, displayConfig.listFontSize);
     // CLOCK -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     clk_CL_24.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
-    clk_CL_12.begin(layout.winDigits.x, layout.winDigits.y, layout.winDigits.w, layout.winDigits.h);
     btn_CL_alarm.begin(layout.winButton.x + 0 * layout.winButton.w, layout.winButton.y, layout.winButton.w, layout.winButton.h);
     btn_CL_alarm.setDefaultPicturePath("/btn/Button_Bell_Green.png");
     btn_CL_alarm.setClickedPicturePath("/btn/Button_Bell_Yellow.png");
