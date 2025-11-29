@@ -5400,8 +5400,9 @@ class displayHeader : public RegisterTable {
     uint16_t     m_itemColor = TFT_GREENYELLOW;
     uint16_t     m_volumeColor = TFT_DEEPSKYBLUE;
     uint16_t     m_timeColor = TFT_GREENYELLOW;
+    //------------------------------------------------------------------------------------------------------------------------------------------------
 #if TFT_CONTROLLER < 2 // 320 x 240px
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
         uint16_t w = 165;
@@ -5442,8 +5443,9 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time;      // time object
+    //------------------------------------------------------------------------------------------------------------------------------------------------
 #elif TFT_CONTROLLER < 7 // 480 x 320px
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
         uint16_t w = 240;
@@ -5484,8 +5486,9 @@ class displayHeader : public RegisterTable {
         uint8_t  pt = 0;
         uint8_t  pb = 0;
     } const s_time; // time object
-#else                    // 800 x 480px
-    //------------------------------------------------------------------------padding-left-right-top-bottom--------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+#elif TFT_CONTROLLER == 7                 // 800 x 480px
+    //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_i {
         uint16_t x = 0;
         uint16_t w = 400;
@@ -5520,6 +5523,49 @@ class displayHeader : public RegisterTable {
     } const s_RSSID; // RSSID symbol 64 x 48 px
     struct w_t {
         uint16_t x = 640;
+        uint16_t w = 160;
+        uint8_t  pl = 2;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_time; // time object
+    //------------------------------------------------------------------------------------------------------------------------------------------------
+#elif TFT_CONTROLLER == 8                 // 1024 x 600px
+    //------------------------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_i {
+        uint16_t x = 0;
+        uint16_t w = 400;
+        uint8_t  pl = 5;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Item; // Radio, Player, Clock...
+    struct w_l {
+        uint16_t x = 400;
+        uint16_t w = 75;
+        uint8_t  pl = 1;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Speaker; // loudspeaker symbol 69 x 56 px
+    struct w_v {
+        uint16_t x = 475;
+        uint16_t w = 100;
+        uint8_t  pl = 10;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_Volume; // volume
+    struct w_r {
+        uint16_t x = 740;
+        uint16_t w = 80;
+        uint8_t  pl = 2;
+        uint8_t  pr = 0;
+        uint8_t  pt = 1;
+        uint8_t  pb = 0;
+    } const s_RSSID; // RSSID symbol 75 x 56 px
+    struct w_t {
+        uint16_t x = 840;
         uint16_t w = 160;
         uint8_t  pl = 2;
         uint8_t  pr = 0;
@@ -5704,6 +5750,7 @@ class displayFooter : public RegisterTable {
     releasedArg  m_ra;
     const char   m_stationSymbol[22] = "/common/Antenna.png";
     const char   m_hourGlassymbol[2][27] = {"/common/Hourglass_blue.png", "/common/Hourglass_red.png"};
+    //-----------------------------------------------------------------------------------------------------------------------------------
 #if TFT_CONTROLLER < 2 // 320 x 240px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
@@ -5932,8 +5979,8 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 2;
     } const s_BitRate;
     struct w_i {
-        uint16_t x = 650;
-        uint16_t w = 350;
+        uint16_t x = 700;
+        uint16_t w = 324;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
         uint8_t  pt = 0;
