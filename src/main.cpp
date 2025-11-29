@@ -1514,7 +1514,7 @@ ps_ptr<char> scaleImage(ps_ptr<char> path) {
     ps_ptr<char>tfts = displayConfig.tftSize;
     tfts += "/";
     path.insert(tfts.c_get(), idx + 1); // "/logo/0N 90s.jpg" --> "/logo/s/0N 90s.jpg"
-    MWR_LOG_WARN("path %s", path.c_get());
+    MWR_LOG_DEBUG("path %s", path.c_get());
     return path;
 }
 
@@ -4619,7 +4619,7 @@ void tp_pressed(uint16_t x, uint16_t y) {
     //  SerialPrintfln(ANSI_ESC_YELLOW "Touchpoint  x=%d, y=%d", x, y);
     if (s_f_sleeping) return; // awake in tp_released()
     const char* objName = NULL;
-    if (s_state == RADIO && y > layout.winHeader.y + layout.winHeader.h && y < layout.sdrOvBtns.y) {
+    if (s_state == RADIO && y > layout.winHeader.y + layout.winHeader.h && y < layout.winProgbar.y) {
         objName = "backpane";
         s_radioSubMenue++;
         if (s_radioSubMenue == 3) s_radioSubMenue = 0;

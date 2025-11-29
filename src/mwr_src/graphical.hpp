@@ -66,6 +66,7 @@ class slider : public RegisterTable {
         m_y = y; // y pos
         m_w = w; // width
         m_h = h; // high
+        m_spotRadius = h / 2;
         m_padding_left = paddig_left;
         m_padding_right = paddig_right;
         m_padding_top = paddig_top;                                                     // unused
@@ -5821,7 +5822,7 @@ class displayFooter : public RegisterTable {
         uint8_t  pb = 0;
     } const s_IPaddr;
     //-----------------------------------------------------------------------------------------------------------------------------------
-#else                    // 800 x 480px
+#elif  TFT_CONTROLLER == 7                  // 800 x 480px
     //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
     struct w_a {
         uint16_t x = 0;
@@ -5873,6 +5874,65 @@ class displayFooter : public RegisterTable {
     } const s_BitRate;
     struct w_i {
         uint16_t x = 450;
+        uint16_t w = 350;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_IPaddr;
+    //-----------------------------------------------------------------------------------------------------------------------------------
+#elif  TFT_CONTROLLER == 8                  // 1024 x 600px
+    //-----------------------------------------------------------padding-left-right-top-bottom-------------------------------------------
+    struct w_a { // antenna
+        uint16_t x = 0;
+        uint16_t w = 60;
+        uint8_t  pl = 15;
+        uint8_t  pr = 0;
+        uint8_t  pt = 1;
+        uint8_t  pb = 0;
+    } const s_Antenna; // Antenna.png: 55 x 56 px
+    struct w_s { // station number
+        uint16_t x = 80;
+        uint16_t w = 100;
+        uint8_t  pl = 5;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_StaNr;
+    struct w_f { // flags
+        uint16_t x = 180;
+        uint16_t w = 110;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 5;
+        uint8_t  pb = 0;
+    } const s_Flag; // Flags:  max 100 x 50 px
+    struct w_h {
+        uint16_t x = 300;
+        uint16_t w = 40;
+        uint8_t  pl = 2;
+        uint8_t  pr = 0;
+        uint8_t  pt = 3;
+        uint8_t  pb = 0;
+    } const s_Hourglass; // Hourglass:   45 x 56 px
+    struct w_o {
+        uint16_t x = 360;
+        uint16_t w = 80;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 0;
+    } const s_OffTimer;
+    struct w_b {
+        uint16_t x = 450;
+        uint16_t w = 110;
+        uint8_t  pl = 0;
+        uint8_t  pr = 0;
+        uint8_t  pt = 0;
+        uint8_t  pb = 2;
+    } const s_BitRate;
+    struct w_i {
+        uint16_t x = 650;
         uint16_t w = 350;
         uint8_t  pl = 0;
         uint8_t  pr = 0;
